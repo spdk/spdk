@@ -22,6 +22,47 @@
       "revId": "a95920e71990b70a411da47a35bafe6398b15ae1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f03face_fefcbaf7",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1280,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-09T14:02:52Z",
+      "side": 1,
+      "message": "good catch Changpeng",
+      "parentUuid": "fe683db7_19746681",
+      "range": {
+        "startLine": 1280,
+        "startChar": 1,
+        "endLine": 1280,
+        "endChar": 16
+      },
+      "revId": "a95920e71990b70a411da47a35bafe6398b15ae1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1483f34_4cc2d606",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1288,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-09T14:02:52Z",
+      "side": 1,
+      "message": "you should check tr-\u003ereq here (replacing the was_active check)",
+      "revId": "a95920e71990b70a411da47a35bafe6398b15ae1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
