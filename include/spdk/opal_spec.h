@@ -35,6 +35,7 @@
 #define SPDK_OPAL_SPEC_H
 
 #include "spdk/stdinc.h"
+#include "spdk/assert.h"
 
 /*
  * TCG Storage Architecture Core Spec v2.01 r1.00
@@ -189,6 +190,7 @@ struct spdk_d0_header {
 	uint32_t reserved_1;
 	uint8_t vendor_specfic[32];
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_header) == 48, "Incorrect size");
 
 /*
  * TCG Storage Architecture Core Spec v2.01 r1.00
@@ -208,10 +210,11 @@ struct spdk_d0_tper_features {
 	uint8_t comid_management : 1;
 	uint8_t reserved_2 : 1;
 
-	uint32_t reserved_3;
+	uint8_t reserved_3[3];
 	uint32_t reserved_4;
 	uint32_t reserved_5;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_tper_features) == 16, "Incorrect size");
 
 /*
  * TCG Storage Architecture Core Spec v2.01 r1.00
@@ -222,7 +225,6 @@ struct spdk_d0_locking_features {
 	uint8_t reserved_0 : 4;
 	uint8_t version : 4;
 	uint8_t length;
-
 	uint8_t locking_supported : 1;
 	uint8_t locking_enabled : 1;
 	uint8_t locked : 1;
@@ -232,10 +234,11 @@ struct spdk_d0_locking_features {
 	uint8_t reserved_1 : 1;
 	uint8_t reserved_2 : 1;
 
-	uint32_t reserved_3;
+	uint8_t reserved_3[3];
 	uint32_t reserved_4;
 	uint32_t reserved_5;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_locking_features) == 16, "Incorrect size");
 
 /*
  * TCG Storage Opal Feature Set Single User Mode v1.00 r2.00
@@ -247,7 +250,6 @@ struct spdk_d0_sum {
 	uint8_t version : 4;
 	uint8_t length;
 	uint32_t num_locking_objects;
-
 	uint8_t any : 1;
 	uint8_t all : 1;
 	uint8_t policy : 1;
@@ -257,6 +259,7 @@ struct spdk_d0_sum {
 	uint16_t reserved_3;
 	uint32_t reserved_4;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_sum) == 16, "Incorrect size");
 
 /*
  * TCG Storage Opal v2.01 r1.00
@@ -267,7 +270,6 @@ struct spdk_d0_geo_features {
 	uint8_t reserved_0 : 4;
 	uint8_t version : 4;
 	uint8_t length;
-
 	uint8_t align : 1;
 	uint8_t reserved_1 : 7;
 	uint8_t reserved_2[7];
@@ -275,6 +277,7 @@ struct spdk_d0_geo_features {
 	uint64_t alignment_granularity;
 	uint64_t lowest_aligned_lba;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_geo_features) == 32, "Incorrect size");
 
 /*
  * TCG Storage Opal Feature Set Additional DataStore Tables v1.00 r1.00
@@ -285,12 +288,12 @@ struct spdk_d0_datastore_features {
 	uint8_t reserved_0 : 4;
 	uint8_t version : 4;
 	uint8_t length;
-
 	uint16_t reserved_1;
 	uint16_t max_tables;
 	uint32_t max_table_size;
 	uint32_t alignment;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_datastore_features) == 16, "Incorrect size");
 
 /*
  * Opal SSC 1.00 r3.00 Final
@@ -311,30 +314,31 @@ struct spdk_d0_opal_v100 {
 	uint32_t reserved_4;
 	uint32_t reserved_5;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_opal_v100) == 20, "Incorrect size");
 
 /*
  * TCG Storage Opal v2.01 r1.00
  * 3.1.1.4 Geometry Reporting Feature
  * 3.1.1.5 Opal SSC V2.00 Feature
  */
-struct spdk_d0_opal_v200 {
+struct __attribute__((packed)) spdk_d0_opal_v200 {
 	uint16_t featureCode;
 	uint8_t reserved_0 : 4;
 	uint8_t version : 4;
 	uint8_t length;
 	uint16_t base_comid;
 	uint16_t num_comids;
-
 	uint8_t range_crossing : 1;
 	uint8_t reserved_1 : 7;
-
 	uint16_t num_locking_admin_auth; /* Number of Locking SP Admin Authorities Supported */
 	uint16_t num_locking_user_auth;
 	uint8_t initial_pin;
 	uint8_t reverted_pin;
+
 	uint8_t reserved_2;
 	uint32_t reserved_3;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_d0_opal_v200) == 20, "Incorrect size");
 
 /*
  * TCG Storage Architecture Core Spec v2.01 r1.00
@@ -348,23 +352,23 @@ struct spdk_opal_compacket {
 	uint32_t reserved;
 	uint8_t comid[2];
 	uint8_t extended_comid[2];
-
 	uint32_t outstanding_data;
 	uint32_t min_transfer;
 	uint32_t length;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_compacket) == 20, "Incorrect size");
 
 /* packet header format */
 struct spdk_opal_packet {
 	uint32_t session_tsn;
 	uint32_t session_hsn;
 	uint32_t seq_number;
-
 	uint16_t reserved;
 	uint16_t ack_type;
 	uint32_t acknowledgment;
 	uint32_t length;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_packet) == 24, "Incorrect size");
 
 /* data subpacket header */
 struct spdk_opal_data_subpacket {
@@ -372,5 +376,6 @@ struct spdk_opal_data_subpacket {
 	uint16_t kind;
 	uint32_t length;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_opal_data_subpacket) == 12, "Incorrect size");
 
 #endif
