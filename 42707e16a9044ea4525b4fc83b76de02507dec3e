@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b643872b_b43b3721",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1450,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-09T04:08:56Z",
+      "side": 1,
+      "message": "This section is not required.",
+      "range": {
+        "startLine": 1448,
+        "startChar": 3,
+        "endLine": 1450,
+        "endChar": 4
+      },
+      "revId": "42707e16a9044ea4525b4fc83b76de02507dec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbd6a81a_43c4214c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1471,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-09T04:08:56Z",
+      "side": 1,
+      "message": "move to after line 1441.",
+      "range": {
+        "startLine": 1471,
+        "startChar": 3,
+        "endLine": 1471,
+        "endChar": 62
+      },
+      "revId": "42707e16a9044ea4525b4fc83b76de02507dec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e710136_81d05659",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1473,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-09T04:08:56Z",
+      "side": 1,
+      "message": "move to line 1439.",
+      "revId": "42707e16a9044ea4525b4fc83b76de02507dec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
