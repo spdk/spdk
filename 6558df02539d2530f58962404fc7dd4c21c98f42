@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fba04a71_ddf8cb00",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-09T23:32:34Z",
+      "side": 1,
+      "message": "For asynchronous operations related to destruction - it can be simpler to just have the context in the structure being destructed.  This is because we know we cannot destroy it twice.  It also can make it simpler to make sure we do not start to destroy it once, and then start to destroy a second time before the first completed.  And one less memory allocation that can fail.  :-)\n\nSo in this case, just add destruct_cb_fn and destruct_cb_arg to spdk_iscsi_tgt_node.  You can then fail this function if destruct_cb_fn !\u003d NULL - this means someone has already started to destruct it.",
+      "revId": "6558df02539d2530f58962404fc7dd4c21c98f42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
