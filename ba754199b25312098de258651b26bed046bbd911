@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "639c2038_ff7a3f84",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-04-09T08:52:28Z",
+      "side": 1,
+      "message": "hi chunyang, it can fix the misalignment issue. but you need to allocate extra memory, and don\u0027t\nfree it .\nwhat about try to add :\n#pragma pack(push,1)\n...\n#pragma pack(pop)\nin include/spdk/opal_spec.h",
+      "revId": "ba754199b25312098de258651b26bed046bbd911",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
