@@ -134,6 +134,9 @@ struct spdk_fs_cb_args {
 	struct spdk_filesystem *fs;
 	struct spdk_file *file;
 	int rc;
+	struct iovec *iovs;
+	uint32_t iovcnt;
+	struct iovec iov;
 	union {
 		struct {
 			TAILQ_HEAD(, spdk_deleted_file)	deleted_files;
@@ -143,7 +146,6 @@ struct spdk_fs_cb_args {
 		} truncate;
 		struct {
 			struct spdk_io_channel	*channel;
-			void		*user_buf;
 			void		*pin_buf;
 			int		is_read;
 			off_t		offset;
@@ -260,9 +262,17 @@ struct spdk_fs_thread_ctx {
 };
 
 static struct spdk_fs_request *
-alloc_fs_request(struct spdk_fs_channel *channel)
+alloc_fs_request_with_iov(struct spdk_fs_channel *channel, uint32_t iovcnt)
 {
 	struct spdk_fs_request *req;
+	struct iovec *iovs = NULL;
+
+	if (iovcnt > 1) {
+		iovs = calloc(iovcnt, sizeof(struct iovec));
+		if (!iovs) {
+			return NULL;
+		}
+	}
 
 	if (channel->sync) {
 		pthread_spin_lock(&channel->lock);
@@ -279,18 +289,35 @@ alloc_fs_request(struct spdk_fs_channel *channel)
 
 	if (req == NULL) {
 		SPDK_ERRLOG("Cannot allocate req on spdk_fs_channel =%p\n", channel);
+		free(iovs);
 		return NULL;
 	}
 	memset(req, 0, sizeof(*req));
 	req->channel = channel;
+	if (iovcnt > 1) {
+		req->args.iovs = iovs;
+	} else {
+		req->args.iovs = &req->args.iov;
+	}
+	req->args.iovcnt = iovcnt;
 
 	return req;
+}
+
+static struct spdk_fs_request *
+alloc_fs_request(struct spdk_fs_channel *channel)
+{
+	return alloc_fs_request_with_iov(channel, 0);
 }
 
 static void
 free_fs_request(struct spdk_fs_request *req)
 {
 	struct spdk_fs_channel *channel = req->channel;
+
+	if (req->args.iovcnt > 1) {
+		free(req->args.iovs);
+	}
 
 	if (channel->sync) {
 		pthread_spin_lock(&channel->lock);
@@ -1596,14 +1623,14 @@ __read_done(void *ctx, int bserrno)
 
 	assert(req != NULL);
 	if (args->op.rw.is_read) {
-		memcpy(args->op.rw.user_buf,
+		memcpy(args->iovs[0].iov_base,
 		       args->op.rw.pin_buf + (args->op.rw.offset & (args->op.rw.blocklen - 1)),
-		       args->op.rw.length);
+		       args->iovs[0].iov_len);
 		__rw_done(req, 0);
 	} else {
 		memcpy(args->op.rw.pin_buf + (args->op.rw.offset & (args->op.rw.blocklen - 1)),
-		       args->op.rw.user_buf,
-		       args->op.rw.length);
+		       args->iovs[0].iov_base,
+		       args->iovs[0].iov_len);
 		spdk_blob_io_write(args->file->blob, args->op.rw.channel,
 				   args->op.rw.pin_buf,
 				   args->op.rw.start_lba, args->op.rw.num_lba,
@@ -1655,7 +1682,7 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 		return;
 	}
 
-	req = alloc_fs_request(channel);
+	req = alloc_fs_request_with_iov(channel, 1);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -1668,10 +1695,10 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 	args->arg = cb_arg;
 	args->file = file;
 	args->op.rw.channel = channel->bs_channel;
-	args->op.rw.user_buf = payload;
+	args->iovs[0].iov_base = payload;
+	args->iovs[0].iov_len = (size_t)length;
 	args->op.rw.is_read = is_read;
 	args->op.rw.offset = offset;
-	args->op.rw.length = length;
 	args->op.rw.blocklen = lba_size;
 
 	pin_buf_length = num_lba * lba_size;
@@ -2092,12 +2119,12 @@ __rw_from_file(void *ctx)
 	struct spdk_file *file = args->file;
 
 	if (args->op.rw.is_read) {
-		spdk_file_read_async(file, file->fs->sync_target.sync_io_channel, args->op.rw.user_buf,
-				     args->op.rw.offset, args->op.rw.length,
+		spdk_file_read_async(file, file->fs->sync_target.sync_io_channel, args->iovs[0].iov_base,
+				     args->op.rw.offset, (uint64_t)args->iovs[0].iov_len,
 				     __rw_from_file_done, req);
 	} else {
-		spdk_file_write_async(file, file->fs->sync_target.sync_io_channel, args->op.rw.user_buf,
-				      args->op.rw.offset, args->op.rw.length,
+		spdk_file_write_async(file, file->fs->sync_target.sync_io_channel, args->iovs[0].iov_base,
+				      args->op.rw.offset, (uint64_t)args->iovs[0].iov_len,
 				      __rw_from_file_done, req);
 	}
 }
@@ -2110,7 +2137,7 @@ __send_rw_from_file(struct spdk_file *file, void *payload,
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 
-	req = alloc_fs_request(channel);
+	req = alloc_fs_request_with_iov(channel, 1);
 	if (req == NULL) {
 		sem_post(&channel->sem);
 		return -ENOMEM;
@@ -2119,9 +2146,9 @@ __send_rw_from_file(struct spdk_file *file, void *payload,
 	args = &req->args;
 	args->file = file;
 	args->sem = &channel->sem;
-	args->op.rw.user_buf = payload;
+	args->iovs[0].iov_base = payload;
+	args->iovs[0].iov_len = (size_t)length;
 	args->op.rw.offset = offset;
-	args->op.rw.length = length;
 	args->op.rw.is_read = is_read;
 	file->fs->send_request(__rw_from_file, req);
 	return 0;
