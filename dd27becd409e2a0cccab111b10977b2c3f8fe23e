@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c9c96b3_45c7a5f4",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-09T05:10:18Z",
+      "side": 1,
+      "message": "if (!buf || !resp) {\n    return -EINVAL;\n}",
+      "range": {
+        "startLine": 297,
+        "startChar": 1,
+        "endLine": 303,
+        "endChar": 2
+      },
+      "revId": "dd27becd409e2a0cccab111b10977b2c3f8fe23e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

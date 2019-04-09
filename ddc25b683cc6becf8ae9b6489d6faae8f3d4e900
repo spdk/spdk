@@ -16,6 +16,23 @@
       "revId": "ddc25b683cc6becf8ae9b6489d6faae8f3d4e900",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44f74107_05606e99",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-09T05:10:18Z",
+      "side": 1,
+      "message": "Is there any special meaning for 5/4/1 here, if this is related to the header length, I think you can add a parameter to spdk_opal_resp_token to record the variable.",
+      "revId": "ddc25b683cc6becf8ae9b6489d6faae8f3d4e900",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
