@@ -105,7 +105,7 @@ ftl_rwb_batch_full(const struct ftl_rwb_batch *batch, size_t batch_size)
 	return batch_size == rwb->xfer_size;
 }
 
-static void
+static int
 ftl_rwb_batch_init_entry(struct ftl_rwb_batch *batch, size_t pos)
 {
 	struct ftl_rwb *rwb = batch->rwb;
@@ -118,7 +118,11 @@ ftl_rwb_batch_init_entry(struct ftl_rwb_batch *batch, size_t pos)
 	entry->md = rwb->md_size ? ((char *)batch->md_buffer) + rwb->md_size * batch_offset : NULL;
 	entry->batch = batch;
 	entry->rwb = batch->rwb;
-	pthread_spin_init(&entry->lock, PTHREAD_PROCESS_PRIVATE);
+
+	if (pthread_spin_init(&entry->lock, PTHREAD_PROCESS_PRIVATE)) {
+		SPDK_ERRLOG("Spinlock initialization failure\n");
+		return -1;
+	}
 
 	if (batch_offset > 0) {
 		prev = &batch->entries[batch_offset - 1];
@@ -126,6 +130,8 @@ ftl_rwb_batch_init_entry(struct ftl_rwb_batch *batch, size_t pos)
 	} else {
 		LIST_INSERT_HEAD(&batch->entry_list, entry, list_entry);
 	}
+
+	return 0;
 }
 
 static int
@@ -143,32 +149,28 @@ ftl_rwb_batch_init(struct ftl_rwb *rwb, struct ftl_rwb_batch *batch, unsigned in
 		return -1;
 	}
 
+	LIST_INIT(&batch->entry_list);
+
 	batch->buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * rwb->xfer_size,
 					 FTL_BLOCK_SIZE, NULL);
 	if (!batch->buffer) {
-		goto error;
+		return -1;
 	}
 
 	if (md_size > 0) {
 		batch->md_buffer = spdk_dma_zmalloc(md_size, FTL_BLOCK_SIZE, NULL);
 		if (!batch->md_buffer) {
-			goto error;
+			return -1;
 		}
 	}
 
-	LIST_INIT(&batch->entry_list);
-
 	for (i = 0; i < rwb->xfer_size; ++i) {
-		ftl_rwb_batch_init_entry(batch, pos * rwb->xfer_size + i);
+		if (ftl_rwb_batch_init_entry(batch, pos * rwb->xfer_size + i)) {
+			return -1;
+		}
 	}
 
 	return 0;
-error:
-	free(batch->entries);
-	batch->entries = NULL;
-	spdk_dma_free(batch->buffer);
-	batch->buffer = NULL;
-	return -1;
 }
 
 struct ftl_rwb *
@@ -183,8 +185,13 @@ ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size)
 		goto error;
 	}
 
-	assert(conf->rwb_size % xfer_size == 0);
+	if (pthread_spin_init(&rwb->lock, PTHREAD_PROCESS_PRIVATE)) {
+		SPDK_ERRLOG("Spinlock initialization failure\n");
+		free(rwb);
+		return NULL;
+	}
 
+	assert(conf->rwb_size % xfer_size == 0);
 	rwb->xfer_size = xfer_size;
 	rwb->md_size = md_size;
 	rwb->num_batches = conf->rwb_size / (FTL_BLOCK_SIZE * xfer_size);
@@ -227,7 +234,6 @@ ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size)
 		rwb->limits[i] = ftl_rwb_entry_cnt(rwb);
 	}
 
-	pthread_spin_init(&rwb->lock, PTHREAD_PROCESS_PRIVATE);
 	return rwb;
 error:
 	ftl_rwb_free(rwb);
@@ -244,16 +250,21 @@ ftl_rwb_free(struct ftl_rwb *rwb)
 		return;
 	}
 
-	for (size_t i = 0; i < rwb->num_batches; ++i) {
-		batch = &rwb->batches[i];
+	if (rwb->batches) {
+		for (size_t i = 0; i < rwb->num_batches; ++i) {
+			batch = &rwb->batches[i];
 
-		ftl_rwb_foreach(entry, batch) {
-			pthread_spin_destroy(&entry->lock);
+			if (batch->entries) {
+				ftl_rwb_foreach(entry, batch) {
+					pthread_spin_destroy(&entry->lock);
+				}
+
+				free(batch->entries);
+			}
+
+			spdk_dma_free(batch->buffer);
+			spdk_dma_free(batch->md_buffer);
 		}
-
-		spdk_dma_free(batch->buffer);
-		spdk_dma_free(batch->md_buffer);
-		free(batch->entries);
 	}
 
 	pthread_spin_destroy(&rwb->lock);
