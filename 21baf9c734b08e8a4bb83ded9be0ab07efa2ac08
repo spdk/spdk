@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dadb78ed_ec3101ce",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1744,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-09T16:44:12Z",
+      "side": 1,
+      "message": "typo",
+      "range": {
+        "startLine": 1744,
+        "startChar": 15,
+        "endLine": 1744,
+        "endChar": 43
+      },
+      "revId": "21baf9c734b08e8a4bb83ded9be0ab07efa2ac08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01323ad5_0209d9ed",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1745,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-09T16:44:12Z",
+      "side": 1,
+      "message": "typo",
+      "range": {
+        "startLine": 1745,
+        "startChar": 16,
+        "endLine": 1745,
+        "endChar": 26
+      },
+      "revId": "21baf9c734b08e8a4bb83ded9be0ab07efa2ac08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
