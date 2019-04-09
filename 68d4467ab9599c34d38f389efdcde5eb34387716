@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e48d9aca_7bf24e1f",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-04-09T10:28:30Z",
+      "side": 1,
+      "message": "Yes, it should. But what if client application will send malicious data? We still want to check the params here as well.",
+      "parentUuid": "2d7fd862_a26ac30f",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 2
+      },
+      "revId": "68d4467ab9599c34d38f389efdcde5eb34387716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e290109d_ef372ccc",
         "filename": "lib/event/rpc/notify_rpc.c",
         "patchSetId": 45
@@ -45,6 +69,30 @@
       "revId": "68d4467ab9599c34d38f389efdcde5eb34387716",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bc49203_4c03c3b8",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-04-09T10:28:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e290109d_ef372ccc",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 113,
+        "endChar": 15
+      },
+      "revId": "68d4467ab9599c34d38f389efdcde5eb34387716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
