@@ -36,6 +36,8 @@
 
 #include "spdk/stdinc.h"
 
+#pragma pack(push, 1)
+
 /*
  * TCG Storage Architecture Core Spec v2.01 r1.00
  * 3.2.2.3 Tokens
@@ -373,4 +375,5 @@ struct spdk_opal_data_subpacket {
 	uint32_t length;
 };
 
+#pragma pack(pop)
 #endif
