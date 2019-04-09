@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e74afc3a_ee7783af",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1455,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-09T05:24:22Z",
+      "side": 1,
+      "message": "Got it.",
+      "revId": "ebd37072267abb9b56e87eaf07d7f3fe2d59b70a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9eb1baf_c7f17241",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1481,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-09T05:24:22Z",
+      "side": 1,
+      "message": "I believe this part should be done before submit_request() call, any special reason moving after that?",
+      "range": {
+        "startLine": 1475,
+        "startChar": 1,
+        "endLine": 1481,
+        "endChar": 3
+      },
+      "revId": "ebd37072267abb9b56e87eaf07d7f3fe2d59b70a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
