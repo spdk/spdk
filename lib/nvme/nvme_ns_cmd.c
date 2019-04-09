@@ -382,7 +382,7 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 		req_current_length += sge_length;
 		num_sges++;
 
-		if (num_sges < max_sges) {
+		if (num_sges < max_sges && req_current_length < req->payload_size) {
 			continue;
 		}
 
