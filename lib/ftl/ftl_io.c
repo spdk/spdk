@@ -157,30 +157,50 @@ ftl_io_iovec_len_left(struct ftl_io *io)
 	return iov[io->iov_pos].iov_len / PAGE_SIZE - io->iov_off;
 }
 
-int
-ftl_io_init_iovec(struct ftl_io *io, void *buf,
-		  size_t iov_cnt, size_t req_size)
+static void
+_ftl_io_init_iovec(struct ftl_io *io, void *buf, size_t iov_cnt, size_t req_size)
 {
 	struct iovec *iov;
 	size_t i;
 
-	if (iov_cnt > 1) {
-		iov = io->iov.vector = calloc(iov_cnt, sizeof(*iov));
-		if (!iov) {
-			return -ENOMEM;
-		}
-	} else {
-		iov = &io->iov.single;
-	}
-
 	io->iov_pos = 0;
 	io->iov_cnt = iov_cnt;
+	io->lbk_cnt = iov_cnt * req_size;
+
+	iov = ftl_io_iovec(io);
 	for (i = 0; i < iov_cnt; ++i) {
 		iov[i].iov_base = (char *)buf + i * req_size * PAGE_SIZE;
 		iov[i].iov_len = req_size * PAGE_SIZE;
 	}
+}
+
+static int
+ftl_io_init_iovec(struct ftl_io *io, void *buf, size_t iov_cnt, size_t req_size)
+{
+	if (iov_cnt > 1) {
+		io->iov.vector = calloc(iov_cnt, sizeof(struct iovec));
+		if (!io->iov.vector) {
+			return -ENOMEM;
+		}
+	}
+
+	_ftl_io_init_iovec(io, buf, iov_cnt, req_size);
 
 	return 0;
+}
+
+void
+ftl_io_shrink_iovec(struct ftl_io *io, char *buf, size_t iov_cnt, size_t req_size)
+{
+	assert(io->iov_cnt >= iov_cnt);
+	assert(io->lbk_cnt >= iov_cnt * req_size);
+	assert(io->pos == 0 && io->iov_pos == 0 && io->iov_off == 0);
+
+	if (iov_cnt == 1 && io->iov_cnt > 1) {
+		free(io->iov.vector);
+	}
+
+	_ftl_io_init_iovec(io, buf, iov_cnt, req_size);
 }
 
 static void
@@ -218,7 +238,6 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	ftl_io_clear(io);
 	ftl_io_init(io, dev, opts->fn, io, opts->flags | FTL_IO_INTERNAL, opts->type);
 
-	io->lbk_cnt = opts->iov_cnt * opts->req_size;
 	io->rwb_batch = opts->rwb_batch;
 	io->band = opts->band;
 	io->md = opts->md;
@@ -441,9 +460,10 @@ void
 ftl_io_clear(struct ftl_io *io)
 {
 	io->pos = 0;
-	io->req_cnt = 0;
 	io->iov_pos = 0;
 	io->iov_off = 0;
+	io->done = false;
+	io->req_cnt = 0;
 	io->flags = 0;
 	io->rwb_batch = NULL;
 	io->band = NULL;
