@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abf64bfb_5b4e59e9",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T23:07:06Z",
+      "side": 1,
+      "message": "Don\u0027t think this function is required, please see below.",
+      "range": {
+        "startLine": 667,
+        "startChar": 0,
+        "endLine": 683,
+        "endChar": 1
+      },
+      "revId": "e5e8386358c4f53235b725a26e271c8c9f1ef4f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88911e7c_85e6597d",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T23:07:06Z",
+      "side": 1,
+      "message": "Why not use the queue_poll() function to poll ? It is a special queue on separate poller, but mechanic of polling it is the same. I don\u0027t see it changed in future patches - did I miss something ?",
+      "range": {
+        "startLine": 713,
+        "startChar": 36,
+        "endLine": 713,
+        "endChar": 51
+      },
+      "revId": "e5e8386358c4f53235b725a26e271c8c9f1ef4f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
