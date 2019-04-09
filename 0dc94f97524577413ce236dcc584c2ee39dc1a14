@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9bfacf7e_f230de3b",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-09T15:00:39Z",
+      "side": 1,
+      "message": "Is this needed? Yes\nThis is a reference counting stuff for cases when single bdev being examined by multiple OCF bdevs.\nI guess you think this should be simpler, so I implemented dumb version using just int pointer.",
+      "parentUuid": "407ce9ed_a4293df4",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 115,
+        "endChar": 1
+      },
+      "revId": "0dc94f97524577413ce236dcc584c2ee39dc1a14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba1d52c9_ab07de7b",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "30447c28_86de9155",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-09T15:00:39Z",
+      "side": 1,
+      "message": "We wouldn\u0027t get much from that because examine_start(), examine_done() and determining \u0027bdev\u0027 variable would need to be moved to examine_config()\n\nAnyway this function is gone in current patchset.",
+      "parentUuid": "ba1d52c9_ab07de7b",
+      "range": {
+        "startLine": 1179,
+        "startChar": 0,
+        "endLine": 1179,
+        "endChar": 98
+      },
+      "revId": "0dc94f97524577413ce236dcc584c2ee39dc1a14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1153e46_cd6b9218",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2019-04-08T23:34:11Z",
       "side": 1,
       "message": "Instead vbdev_ocf_examine_disk() should check if bdev is on g_ocf_vbdev_head list, and if both cache/core were attached. If yes, then proceed with register_vbdev(). Otherwise do nothing.",
+      "range": {
+        "startLine": 1235,
+        "startChar": 0,
+        "endLine": 1236,
+        "endChar": 59
+      },
+      "revId": "0dc94f97524577413ce236dcc584c2ee39dc1a14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d03ceb1_5b5c146f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-09T15:00:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c1153e46_cd6b9218",
       "range": {
         "startLine": 1235,
         "startChar": 0,
@@ -100,6 +172,24 @@
       "side": 1,
       "message": "Darek\u0027s comment above was after discussing it with me offline. As we I\u0027ve noted, what you are describing is the correct way to handle this. This is done later in the series: https://review.gerrithub.io/#/c/spdk/spdk/+/447428/14/lib/bdev/ocf/vbdev_ocf.c\n\n@Vitaliy\nChanges in this patch might make things overly complex. It should focus on moving code around in preparation for async OCF calls.\nexamine_config should:\n- check config\n- attach_base_bdevs if config is matched (it claims the bdev)\n\nexamine_disk should:\n- perform register_vbdev\n- call spdk_bdev_module_examine_done\n\nActual callbacks to async ocf functions in register_vbdev, can be added in patch https://review.gerrithub.io/#/c/spdk/spdk/+/447428",
       "parentUuid": "e7221ddb_a9fad15f",
+      "revId": "0dc94f97524577413ce236dcc584c2ee39dc1a14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fa2e366_e1345869",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1238,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-09T15:00:39Z",
+      "side": 1,
+      "message": "I will respond based on new implementation, OK?\n\n\u003e We want to get rid of the blocking COF functions \n\nYes. Even more -we are forced to with new OCF API.\n\n\u003e The vbdev_ocf_construct() can be already asynchronous if the core or cache bdev is not present\n\nI am not sure I got this. If you mean that we should invoke callback even if base device is not present, then examine could still be asynchronous.\nThe reason why vbdev_ocf_construct() is not asynchronous when some device is missing is that the wait time is really unpredictable, callback may never be called if base never appears. As a consequence, for example, RPC would almost always report timeout error.\n\n\u003e So we want to make that ocf bdev creation asynchronous, and with this patch it works this \nway:\n\nHere is the way:\nrpc ocf_create -\u003e\n  - insert vbdev info to list\n  - start asynchronously if all devices present\n  - dont start but return 0 if some device is missing. Then start asynchronously at examine\nexamine_config -\u003e claim and open base bdevs\nexamine_disk -\u003e lookup list, if both present ... async\n\n\u003e Currently examine_isdone() returns true if the device was never meant to be used by the ocf module, which works but is really unintuitive\n\nI guess that\u0027s the name issue. It should be called \"examine_is_this_bdev_used_in_async_register_Q\"\n\n\u003e Generally, the role of examine_config is to do static configuration, e.g. add mark the bdev as claimed and add it to a global list somewhere\n\nAck, I changed the implementation so it works like you described.\n\n\u003e Would it make sense to refactor this as follows?\n\nAck. Except for that rpc ocf_create not only adds to list, but also starts asynchronously if bases are present. I guess you meant that, but just to clarify.\n\n@Tomasz, Ack, I have changed the implementation so that async part is in examine_disk()\n\n\u003e Actual callbacks to async ocf functions in register_vbdev, can be added in patch\n\nThey are needed earlier. It\u0027s not Piotr\u0027s patch that makes construct asynchronous, it\u0027s the folliwing patch is this series - \"use trylock in vbdev.c\"",
+      "parentUuid": "2570b76b_9125f1f8",
       "revId": "0dc94f97524577413ce236dcc584c2ee39dc1a14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
