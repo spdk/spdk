@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1623137b_7b4d5c5a",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1829,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-09T16:47:32Z",
+      "side": 1,
+      "message": "fyi - this will be already printed by SPDK_*LOG itself",
+      "range": {
+        "startLine": 1829,
+        "startChar": 36,
+        "endLine": 1829,
+        "endChar": 65
+      },
+      "revId": "436416686e19449a3abb18f75831946b7083ca09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
