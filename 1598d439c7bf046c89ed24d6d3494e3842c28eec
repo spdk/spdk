@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61a30ba4_aa141841",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T11:06:28Z",
+      "side": 1,
+      "message": "may move this parameter to above line",
+      "range": {
+        "startLine": 1364,
+        "startChar": 2,
+        "endLine": 1364,
+        "endChar": 17
+      },
+      "revId": "1598d439c7bf046c89ed24d6d3494e3842c28eec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44fb9946_3e96c202",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1381,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T11:06:28Z",
+      "side": 1,
+      "message": "if I read lines 1371-1372 correctly, ctrlr-\u003enum_avail_log_pages could be 0 at line 1372 check where unit_log_len will always \u003e 0. In that case, avail_log_len is set to unit_log_len and here it tries to return all zeroed log page.\n\nIn this way, could we move this code block of checking ctrlr-\u003enum_avail_log_pages \u003d\u003d 0 to an earlier place.",
+      "range": {
+        "startLine": 1381,
+        "startChar": 1,
+        "endLine": 1381,
+        "endChar": 33
+      },
+      "revId": "1598d439c7bf046c89ed24d6d3494e3842c28eec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
