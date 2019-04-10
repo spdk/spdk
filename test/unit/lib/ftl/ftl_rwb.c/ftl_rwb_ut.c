@@ -38,19 +38,33 @@
 
 #include "ftl/ftl_rwb.c"
 
-#define RWB_SIZE	(1024 * 1024)
-#define RWB_ENTRY_COUNT	(RWB_SIZE / FTL_BLOCK_SIZE)
-#define XFER_SIZE	16
-#define METADATA_SIZE	64
+#define RWB_SIZE		(1024 * 1024)
+#define XFER_SIZE		16
+#define METADATA_SIZE		64
+#define NUM_INTERLEAVE_UNITS	4	/* interleaving units per xfer_size : 1 for default */
+#define INTERLEAVE_OFFSET	(XFER_SIZE / NUM_INTERLEAVE_UNITS)
+#define NUM_PUNITS		8
+
+#if (NUM_INTERLEAVE_UNITS > 1)
+#define RWB_BATCH_COUNT		(RWB_SIZE / (FTL_BLOCK_SIZE * XFER_SIZE) + NUM_PUNITS)
+#define RWB_MAX_ACTIVE_BATCH	NUM_PUNITS
+#else
+#define RWB_BATCH_COUNT		(RWB_SIZE / (FTL_BLOCK_SIZE * XFER_SIZE) + 1)
+#define RWB_MAX_ACTIVE_BATCH	1
+#endif
+
+#define RWB_ENTRY_COUNT		(RWB_BATCH_COUNT * XFER_SIZE)
 
 static struct ftl_rwb *g_rwb;
 
 static void
 setup_rwb(void)
 {
-	struct spdk_ftl_conf conf = { .rwb_size = RWB_SIZE };
+	struct spdk_ftl_conf conf = { .rwb_size = RWB_SIZE,
+		       .num_interleave_units = NUM_INTERLEAVE_UNITS
+	};
 
-	g_rwb = ftl_rwb_init(&conf, XFER_SIZE, METADATA_SIZE);
+	g_rwb = ftl_rwb_init(&conf, XFER_SIZE, METADATA_SIZE, NUM_PUNITS);
 	SPDK_CU_ASSERT_FATAL(g_rwb != NULL);
 }
 
@@ -68,6 +82,7 @@ test_rwb_acquire(void)
 	struct ftl_rwb_entry *entry;
 
 	setup_rwb();
+
 	/* Verify that it's possible to acquire all of the entries */
 	for (i = 0; i < RWB_ENTRY_COUNT; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
@@ -85,12 +100,15 @@ test_rwb_pop(void)
 {
 	struct ftl_rwb_entry *entry;
 	struct ftl_rwb_batch *batch;
-	size_t entry_count, i;
+	size_t entry_count, i, i_reset = 0, i_offset = 0;
+	uint64_t expected_lba;
 
 	setup_rwb();
+
 	/* Acquire all entries */
 	for (i = 0; i < RWB_ENTRY_COUNT; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
+
 		SPDK_CU_ASSERT_FATAL(entry);
 		entry->lba = i;
 		ftl_rwb_push(entry);
@@ -103,7 +121,25 @@ test_rwb_pop(void)
 		entry_count = 0;
 
 		ftl_rwb_foreach(entry, batch) {
-			CU_ASSERT_EQUAL(entry->lba, i * XFER_SIZE + entry_count);
+			if (NUM_INTERLEAVE_UNITS > 1) {
+
+				if (i % RWB_MAX_ACTIVE_BATCH == 0) {
+					i_offset = i * XFER_SIZE;
+				}
+
+				if (entry_count % INTERLEAVE_OFFSET == 0) {
+					i_reset = i % RWB_MAX_ACTIVE_BATCH +
+						  (entry_count / INTERLEAVE_OFFSET) * RWB_MAX_ACTIVE_BATCH;
+				}
+
+				expected_lba = i_offset +
+					       i_reset * INTERLEAVE_OFFSET +
+					       entry_count % INTERLEAVE_OFFSET;
+			} else {
+				expected_lba = i * XFER_SIZE + entry_count;
+			}
+
+			CU_ASSERT_EQUAL(entry->lba, expected_lba);
 			entry_count++;
 		}
 
@@ -119,12 +155,15 @@ test_rwb_pop(void)
 	}
 
 	/* Pop one batch and check we can acquire XFER_SIZE entries */
-	batch = ftl_rwb_pop(g_rwb);
-	SPDK_CU_ASSERT_FATAL(batch);
-	ftl_rwb_batch_release(batch);
+	for (i = 0; i < RWB_MAX_ACTIVE_BATCH; i++) {
+		batch = ftl_rwb_pop(g_rwb);
+		SPDK_CU_ASSERT_FATAL(batch);
+		ftl_rwb_batch_release(batch);
+	}
 
-	for (i = 0; i < XFER_SIZE; ++i) {
+	for (i = 0; i < XFER_SIZE * RWB_MAX_ACTIVE_BATCH; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
+
 		SPDK_CU_ASSERT_FATAL(entry);
 		ftl_rwb_push(entry);
 	}
@@ -325,7 +364,7 @@ test_rwb_limits_applied(void)
 	CU_ASSERT_PTR_NULL(entry);
 
 	/* Check positive limits */
-#define TEST_LIMIT XFER_SIZE
+#define TEST_LIMIT (XFER_SIZE * RWB_MAX_ACTIVE_BATCH)
 	limits[FTL_RWB_TYPE_USER] = ftl_rwb_entry_cnt(g_rwb);
 	limits[FTL_RWB_TYPE_INTERNAL] = TEST_LIMIT;
 	ftl_rwb_set_limits(g_rwb, limits);
@@ -340,10 +379,12 @@ test_rwb_limits_applied(void)
 	entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_INTERNAL);
 	CU_ASSERT_PTR_NULL(entry);
 
-	/* Complete the entries and check we can retrieve the entries once again */
-	batch = ftl_rwb_pop(g_rwb);
-	SPDK_CU_ASSERT_FATAL(batch);
-	ftl_rwb_batch_release(batch);
+	for (i = 0; i < TEST_LIMIT / XFER_SIZE ; ++i) {
+		/* Complete the entries and check we can retrieve the entries once again */
+		batch = ftl_rwb_pop(g_rwb);
+		SPDK_CU_ASSERT_FATAL(batch);
+		ftl_rwb_batch_release(batch);
+	}
 
 	entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_INTERNAL);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(entry);
