@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c24d5ac_ca14a566",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1016332
+      },
+      "writtenOn": "2019-04-10T12:06:04Z",
+      "side": 1,
+      "message": "spdk_mempool_count(\u003cpool\u003e) returns pool utilization value at sample reporting time. What meaning of the value will be, if divide it on number of its changes during the sample time? Maybe there should be sum of all values of spdk_mempool_count(\u003cpool\u003e), that were during the sample, divided on number of its changes?\nAlso if number of changes is zero, there will be divizion on zero.",
+      "range": {
+        "startLine": 325,
+        "startChar": 0,
+        "endLine": 330,
+        "endChar": 41
+      },
+      "revId": "5b9e0bc980a44dc0bf616f08e3367daf8276ba67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
