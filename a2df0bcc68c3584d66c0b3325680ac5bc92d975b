@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c72e1a32_12832a2e",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T03:48:17Z",
+      "side": 1,
+      "message": "Do we know how often the metadata updater is run ?\nWith current implementation it triggers once per kick. I wonder if just a single call of poll when kicked would be enough. Maybe register/unregister poller similar to cleaner ?",
+      "range": {
+        "startLine": 357,
+        "startChar": 1,
+        "endLine": 357,
+        "endChar": 18
+      },
+      "revId": "a2df0bcc68c3584d66c0b3325680ac5bc92d975b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
