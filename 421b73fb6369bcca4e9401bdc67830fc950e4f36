@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d053380c_40f4960d",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T22:39:53Z",
+      "side": 1,
+      "message": "we never freed this before - but I\u0027m thinking now that we\u0027re changing it to calloc, maybe we should?\n\nI think you can just do it in spdk_iscsi_fini() just a bit later in this file.",
+      "revId": "421b73fb6369bcca4e9401bdc67830fc950e4f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
