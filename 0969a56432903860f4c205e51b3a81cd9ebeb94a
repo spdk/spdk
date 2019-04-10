@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3d3c7299_e34c0e37",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T07:03:15Z",
+      "side": 1,
+      "message": "It is required - cleaner submits requests to its queue, then we run the queue. This is usual way OCF queues work.",
+      "parentUuid": "a26cd536_9221d877",
+      "range": {
+        "startLine": 304,
+        "startChar": 0,
+        "endLine": 306,
+        "endChar": 2
+      },
+      "revId": "0969a56432903860f4c205e51b3a81cd9ebeb94a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "864bc81a_4d53c760",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 13
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "7c05ab70_06d9de79",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 697,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T07:03:15Z",
+      "side": 1,
+      "message": "It is guaranteed by the fact that OCF does not create threads by its own.\nThe only way we could have callback (start_cache_cmpl()) on other thread than source operation (ocf_cache_attach()) is if we woudl run management queue on different thread, but that is not the case.\n\nLater, attach core does not have that guarantee because core could be added from different thread than cache was started on (related to multicore situations only). Secretely we know that examine and RPC work from single thread, so adding core without spdk_thread_send_msg() would be valid, but I don\u0027t want to exploit such coincidence.",
+      "parentUuid": "864bc81a_4d53c760",
+      "range": {
+        "startLine": 696,
+        "startChar": 0,
+        "endLine": 697,
+        "endChar": 62
+      },
+      "revId": "0969a56432903860f4c205e51b3a81cd9ebeb94a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "63b22bd5_75483c3b",
         "filename": "lib/bdev/ocf/volume.c",
         "patchSetId": 13
@@ -59,6 +107,30 @@
       "writtenOn": "2019-04-10T03:36:21Z",
       "side": 1,
       "message": "Isn\u0027t cache_channel and cleaner_channel basically the same as cache_ch and core_ch on threads that do IO and perform cleaner duties ? Since get_io_channel() should have returned the same pointer when requesting either.",
+      "range": {
+        "startLine": 247,
+        "startChar": 0,
+        "endLine": 250,
+        "endChar": 38
+      },
+      "revId": "0969a56432903860f4c205e51b3a81cd9ebeb94a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c035804a_b0d4e925",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T07:03:15Z",
+      "side": 1,
+      "message": "No, cleaner runs its IO on its own thread (remember ocf_queue_run_single() in ctx.c?).\nIn OCF, cleaner does not know about other threads or other queues.",
+      "parentUuid": "63b22bd5_75483c3b",
       "range": {
         "startLine": 247,
         "startChar": 0,
