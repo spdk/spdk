@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e32dea10_9e6a5f1f",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T17:15:21Z",
+      "side": 1,
+      "message": "SPDK_NVME_SC_SUCCESS is 0.  So we should set rsp-\u003estatus.sc to something other than 0 before calling nvmf_ns_reservation_acquire.  Then we know for sure that the sc was set to 0, and is not accidentally 0.\n\nThis goes for all of the unit tests below.  This is a key part of unit testing - we should *always* do this in unit tests, set the value to some failing value first, then when we check the value we know it was definitely set to that value.",
+      "revId": "dc9ffb216e6eb650de83216afa85fbaf8bd25303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
