@@ -71,6 +71,11 @@ struct ftl_rwb {
 	/* Number of batches */
 	size_t					num_batches;
 
+	/* Information for interleaving */
+	size_t                                  interleave_offset;
+	/* Maximum number of active batches */
+	size_t                                  max_active_batches;
+
 	/* Number of entries per batch */
 	size_t					xfer_size;
 
@@ -83,11 +88,15 @@ struct ftl_rwb {
 	/* User/internal limits */
 	size_t					limits[FTL_RWB_TYPE_MAX];
 
-	/* Current batch */
-	struct ftl_rwb_batch			*current;
+	/* Active batch queue */
+	STAILQ_HEAD(, ftl_rwb_batch)            active_queue;
+	/* Number of active batches */
+	unsigned int                            num_active_batches;
 
 	/* Free batch queue */
 	STAILQ_HEAD(, ftl_rwb_batch)		free_queue;
+	/* Number of active batches */
+	unsigned int                            num_free_batches;
 
 	/* Submission batch queue */
 	struct spdk_ring			*submit_queue;
@@ -174,11 +183,17 @@ error:
 }
 
 struct ftl_rwb *
-ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size)
+ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size, size_t num_punits)
 {
-	struct ftl_rwb *rwb;
+	struct ftl_rwb *rwb = NULL;
 	struct ftl_rwb_batch *batch;
 	size_t i;
+
+	if (xfer_size % conf->num_interleave_units) {
+		SPDK_ERRLOG("Invalid configuration : num_interleave_units(=%zd)\n",
+			    conf->num_interleave_units);
+		goto error;
+	}
 
 	rwb = calloc(1, sizeof(*rwb));
 	if (!rwb) {
@@ -188,8 +203,10 @@ ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size)
 	assert(conf->rwb_size % xfer_size == 0);
 
 	rwb->xfer_size = xfer_size;
+	rwb->interleave_offset = xfer_size / conf->num_interleave_units;
+	rwb->max_active_batches = conf->num_interleave_units == 1 ? 1 : num_punits;
 	rwb->md_size = md_size;
-	rwb->num_batches = conf->rwb_size / (FTL_BLOCK_SIZE * xfer_size);
+	rwb->num_batches = conf->rwb_size / (FTL_BLOCK_SIZE * xfer_size) + rwb->max_active_batches;
 
 	rwb->batches = calloc(rwb->num_batches, sizeof(*rwb->batches));
 	if (!rwb->batches) {
@@ -206,6 +223,7 @@ ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size)
 
 	/* TODO: use rte_ring with SP / MC */
 	STAILQ_INIT(&rwb->free_queue);
+	STAILQ_INIT(&rwb->active_queue);
 
 	for (i = 0; i < rwb->num_batches; ++i) {
 		batch = &rwb->batches[i];
@@ -216,6 +234,7 @@ ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size)
 		}
 
 		STAILQ_INSERT_TAIL(&rwb->free_queue, batch, stailq);
+		rwb->num_free_batches++;
 	}
 
 	for (unsigned int i = 0; i < FTL_RWB_TYPE_MAX; ++i) {
@@ -275,6 +294,7 @@ ftl_rwb_batch_release(struct ftl_rwb_batch *batch)
 
 	pthread_spin_lock(&rwb->lock);
 	STAILQ_INSERT_TAIL(&rwb->free_queue, batch, stailq);
+	rwb->num_free_batches++;
 	pthread_spin_unlock(&rwb->lock);
 }
 
@@ -318,6 +338,12 @@ ftl_rwb_num_acquired(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
 	return __atomic_load_n(&rwb->num_acquired[type], __ATOMIC_SEQ_CST);
 }
 
+size_t
+ftl_rwb_get_active_batches(const struct ftl_rwb *rwb)
+{
+	return rwb->num_active_batches;
+}
+
 void
 ftl_rwb_batch_revert(struct ftl_rwb_batch *batch)
 {
@@ -352,6 +378,28 @@ ftl_rwb_check_limits(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
 	return ftl_rwb_num_acquired(rwb, type) >= rwb->limits[type];
 }
 
+static struct ftl_rwb_batch *
+_ftl_rwb_acquire_batch(struct ftl_rwb *rwb)
+{
+	struct ftl_rwb_batch *batch;
+	size_t i;
+
+	if (rwb->num_free_batches < rwb->max_active_batches) {
+		return NULL;
+	}
+
+	for (i = 0; i < rwb->max_active_batches; i++) {
+		batch = STAILQ_FIRST(&rwb->free_queue);
+		STAILQ_REMOVE(&rwb->free_queue, batch, ftl_rwb_batch, stailq);
+		rwb->num_free_batches--;
+
+		STAILQ_INSERT_TAIL(&rwb->active_queue, batch, stailq);
+		rwb->num_active_batches++;
+	}
+
+	return STAILQ_FIRST(&rwb->active_queue);
+}
+
 struct ftl_rwb_entry *
 ftl_rwb_acquire(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
 {
@@ -364,22 +412,28 @@ ftl_rwb_acquire(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
 
 	pthread_spin_lock(&rwb->lock);
 
-	current = rwb->current;
+	current = STAILQ_FIRST(&rwb->active_queue);
 	if (!current) {
-		current = STAILQ_FIRST(&rwb->free_queue);
+		current = _ftl_rwb_acquire_batch(rwb);
 		if (!current) {
 			goto error;
 		}
-
-		STAILQ_REMOVE(&rwb->free_queue, current, ftl_rwb_batch, stailq);
-		rwb->current = current;
 	}
 
 	entry = &current->entries[current->num_acquired++];
 
-	/* If the whole batch is filled, clear the current batch pointer */
 	if (current->num_acquired >= rwb->xfer_size) {
-		rwb->current = NULL;
+		/* If the whole batch is filled, */
+		/* remove the current batch from active_queue */
+		/* since it will need to move to submit_queue */
+		STAILQ_REMOVE(&rwb->active_queue, current, ftl_rwb_batch, stailq);
+		rwb->num_active_batches--;
+	} else if (current->num_acquired % rwb->interleave_offset == 0) {
+		/* If the current batch is filled by the interleaving offset, */
+		/* move the current batch at the tail of active_queue */
+		/* to place the next logical blocks into another batch. */
+		STAILQ_REMOVE(&rwb->active_queue, current, ftl_rwb_batch, stailq);
+		STAILQ_INSERT_TAIL(&rwb->active_queue, current, stailq);
 	}
 
 	pthread_spin_unlock(&rwb->lock);
@@ -388,6 +442,30 @@ ftl_rwb_acquire(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
 error:
 	pthread_spin_unlock(&rwb->lock);
 	return NULL;
+}
+
+void
+ftl_rwb_disable_interleaving(struct ftl_rwb *rwb)
+{
+	struct ftl_rwb_batch *batch, *temp;
+
+	pthread_spin_lock(&rwb->lock);
+	rwb->max_active_batches = 1;
+	rwb->interleave_offset = rwb->xfer_size;
+
+	STAILQ_FOREACH_SAFE(batch, &rwb->active_queue, stailq, temp) {
+		if (batch->num_acquired == 0) {
+			STAILQ_REMOVE(&rwb->active_queue, batch, ftl_rwb_batch, stailq);
+			rwb->num_active_batches--;
+
+			assert(batch->num_ready == 0);
+			assert(batch->num_acquired == 0);
+
+			STAILQ_INSERT_TAIL(&rwb->free_queue, batch, stailq);
+			rwb->num_free_batches++;
+		}
+	}
+	pthread_spin_unlock(&rwb->lock);
 }
 
 struct ftl_rwb_batch *
