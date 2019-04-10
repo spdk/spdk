@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1851e6c2_a564e3fe",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 2129,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T17:06:23Z",
+      "side": 1,
+      "message": "should we at least have an SPDK_ERRLOG here?",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71536fc7_fbfdd92f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1319,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T17:06:23Z",
+      "side": 1,
+      "message": "spdk_uuid_compare is not used consistently in this patch - here you use \u003d\u003d 0, but later you use ! to detect equality",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73fc8b63_676aaeeb",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T17:06:23Z",
+      "side": 1,
+      "message": "returning 0 in this case doesn\u0027t seem right - should we just assert instead, break (without setting num_hostid \u003d 0) and return max_num_hostid?",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98ca7e67_610e08c2",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1349,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T17:06:23Z",
+      "side": 1,
+      "message": "Calculate",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "363f3f0a_22a879e3",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1356,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T17:06:23Z",
+      "side": 1,
+      "message": "I\u0027m not sure about \"remanent\" - do you mean \"remaining\"?",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52697c8e_8ae1d8f5",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1776,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T17:06:23Z",
+      "side": 1,
+      "message": "notification",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6078900f_20200b2c",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T17:06:23Z",
+      "side": 1,
+      "message": "It doesn\u0027t seem like these unit tests are really testing any of the new code.",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
