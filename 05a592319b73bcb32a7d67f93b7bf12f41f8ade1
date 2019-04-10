@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "208c2874_dd100f74",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1331,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T06:41:30Z",
+      "side": 1,
+      "message": "Why \u0027data\u0027 is used for vbdev_ocf name and core name ? That shouldn\u0027t be the case.",
+      "range": {
+        "startLine": 1331,
+        "startChar": 12,
+        "endLine": 1331,
+        "endChar": 16
+      },
+      "revId": "05a592319b73bcb32a7d67f93b7bf12f41f8ade1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08af0f3a_7fa11ba6",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1331,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T06:41:30Z",
+      "side": 1,
+      "message": "Where is the cache_mode_name assigned when probing ?",
+      "range": {
+        "startLine": 1331,
+        "startChar": 18,
+        "endLine": 1331,
+        "endChar": 38
+      },
+      "revId": "05a592319b73bcb32a7d67f93b7bf12f41f8ade1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "893598d8_819aef76",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T06:41:30Z",
+      "side": 1,
+      "message": "Aren\u0027t we missing some steps after this function ?\nAt this point cache has been detected, started and this function was called for each core. init_vbdev() creates vbdev_ocf structures for all cache+core pairs.\n1) If the core devices do not exist at this point, they will be examine_config first, then registered in examine_disk\n2) If core devices already exist, then they should be registered. This step is not happening here right now.",
+      "range": {
+        "startLine": 1333,
+        "startChar": 0,
+        "endLine": 1333,
+        "endChar": 10
+      },
+      "revId": "05a592319b73bcb32a7d67f93b7bf12f41f8ade1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c234045_bfd96244",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1384,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T06:41:30Z",
+      "side": 1,
+      "message": "This function should be merged in series with https://review.gerrithub.io/#/c/spdk/spdk/+/447888/18/lib/bdev/ocf/vbdev_ocf.c\n\nBasically having two parts consecutive parts:\n1) first check if present among vbdev bases from config\n2) then do whats done here - read metadata from disk to check if the device is a OCF cache with md",
+      "range": {
+        "startLine": 1384,
+        "startChar": 0,
+        "endLine": 1384,
+        "endChar": 22
+      },
+      "revId": "05a592319b73bcb32a7d67f93b7bf12f41f8ade1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
