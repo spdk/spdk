@@ -1096,6 +1096,8 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, qpair);
 		send_wr = &rdma_req->data.wr;
 		*data_posted = 1;
+	} else {
+		rdma_req->num_outstanding_data_wr = 0;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, qpair);
