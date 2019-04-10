@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b108860d_9cfbae19",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1857,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T00:32:38Z",
+      "side": 1,
+      "message": "is this ERRLOG required?  I don\u0027t think this should ever happen, so maybe it is good to keep the ERRLOG just in case\n\nbut I was thinking maybe this whole function could be simplified - just loop over the raid_bdev-\u003enum_base_bdevs, and don\u0027t even look at the raid_cfg; this is called as part of deleting the raid_cfg anyways, so it could be much simpler code if we just cleanup whatever bdevs were opened, and not try to match them up with the raid_cfg\n\nthis is just an idea - there may be some key points I am missing",
+      "revId": "5402d0540fd5233217ea8361ec034689c727d2ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
