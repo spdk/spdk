@@ -134,7 +134,6 @@ struct spdk_fs_cb_args {
 	struct spdk_filesystem *fs;
 	struct spdk_file *file;
 	int rc;
-	bool from_request;
 	union {
 		struct {
 			TAILQ_HEAD(, spdk_deleted_file)	deleted_files;
@@ -284,7 +283,6 @@ alloc_fs_request(struct spdk_fs_channel *channel)
 	}
 	memset(req, 0, sizeof(*req));
 	req->channel = channel;
-	req->args.from_request = true;
 
 	return req;
 }
