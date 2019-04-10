@@ -768,7 +768,7 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 }
 
 static void
-iscsi_conns_start_exit(void)
+iscsi_conns_start_exit(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_conn	*conn;
 	int			i;
@@ -778,6 +778,10 @@ iscsi_conns_start_exit(void)
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
 		conn = find_iscsi_connection_by_id(i);
 		if (conn == NULL) {
+			continue;
+		}
+
+		if (target != NULL && conn->target != target) {
 			continue;
 		}
 
@@ -795,7 +799,7 @@ iscsi_conns_start_exit(void)
 void
 spdk_shutdown_iscsi_conns(void)
 {
-	iscsi_conns_start_exit();
+	iscsi_conns_start_exit(NULL);
 
 	g_shutdown_timer = spdk_poller_register(iscsi_conn_check_shutdown, NULL, 1000);
 }
