@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7b5736d1_53d75212",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-10T22:40:32Z",
+      "side": 1,
+      "message": "Tests for snapshots and clones are grouped together and start from 750.",
+      "parentUuid": "fd45615a_79e8a6c5",
+      "range": {
+        "startLine": 74,
+        "startChar": 36,
+        "endLine": 74,
+        "endChar": 59
+      },
+      "revId": "ac19214bcd5cef0a47ab187e4083308b59756bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5d2abd9_ea02fdcf",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-08T22:20:57Z",
       "side": 1,
       "message": "or",
+      "range": {
+        "startLine": 2950,
+        "startChar": 16,
+        "endLine": 2950,
+        "endChar": 19
+      },
+      "revId": "ac19214bcd5cef0a47ab187e4083308b59756bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74600b81_95b72fab",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 2950,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-10T22:40:32Z",
+      "side": 1,
+      "message": "I think both values should be true.",
+      "parentUuid": "a5d2abd9_ea02fdcf",
       "range": {
         "startLine": 2950,
         "startChar": 16,
