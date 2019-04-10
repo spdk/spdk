@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5906ed1e_ceb5e630",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-10T07:31:09Z",
+      "side": 1,
+      "message": "This assert is not needed here - complete bool rely on LIST_EMPTY(\u0026io-\u003echildren)",
+      "revId": "68eb515410bbe9b4d9db83d79fa73e5e26aa9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d44f5118_045c2a1e",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-10T07:31:09Z",
+      "side": 1,
+      "message": "Why do you remove this const?",
+      "revId": "68eb515410bbe9b4d9db83d79fa73e5e26aa9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0def70aa_bf25e673",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-10T07:31:09Z",
+      "side": 1,
+      "message": "This is declared as inline few lines above?",
+      "revId": "68eb515410bbe9b4d9db83d79fa73e5e26aa9760",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
