@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a26cd536_9221d877",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T03:36:21Z",
+      "side": 1,
+      "message": "Are \u0027normal\u0027 IO requests submitted to cleaner queue and have to be processed by something else than ocf_cleaner_run ? I wonder if this part is required.",
+      "range": {
+        "startLine": 304,
+        "startChar": 0,
+        "endLine": 306,
+        "endChar": 2
+      },
+      "revId": "0969a56432903860f4c205e51b3a81cd9ebeb94a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "864bc81a_4d53c760",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 697,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T03:36:21Z",
+      "side": 1,
+      "message": "How is it guaranteed ? Since _later_ in the register_path, attach_core does spdk_thread_send_msg() to the cleaner_thread",
+      "range": {
+        "startLine": 696,
+        "startChar": 0,
+        "endLine": 697,
+        "endChar": 62
+      },
+      "revId": "0969a56432903860f4c205e51b3a81cd9ebeb94a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63b22bd5_75483c3b",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T03:36:21Z",
+      "side": 1,
+      "message": "Isn\u0027t cache_channel and cleaner_channel basically the same as cache_ch and core_ch on threads that do IO and perform cleaner duties ? Since get_io_channel() should have returned the same pointer when requesting either.",
+      "range": {
+        "startLine": 247,
+        "startChar": 0,
+        "endLine": 250,
+        "endChar": 38
+      },
+      "revId": "0969a56432903860f4c205e51b3a81cd9ebeb94a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

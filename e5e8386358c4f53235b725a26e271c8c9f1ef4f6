@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "236bb374_a81ede8b",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T03:36:21Z",
+      "side": 0,
+      "message": "Adding this assert and removing rc does not belong to this patch. Lets keep the patches lean :)",
+      "range": {
+        "startLine": 211,
+        "startChar": 0,
+        "endLine": 225,
+        "endChar": 28
+      },
+      "revId": "e5e8386358c4f53235b725a26e271c8c9f1ef4f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
