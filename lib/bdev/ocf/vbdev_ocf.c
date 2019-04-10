@@ -50,6 +50,8 @@
 
 static struct spdk_bdev_module ocf_if;
 
+static pthread_mutex_t g_queues_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static TAILQ_HEAD(, vbdev_ocf) g_ocf_vbdev_head
 	= TAILQ_HEAD_INITIALIZER(g_ocf_vbdev_head);
 
@@ -693,7 +695,10 @@ io_device_create_cb(void *io_device, void *ctx_buf)
 	struct vbdev_ocf_qcxt *qctx = ctx_buf;
 	int rc;
 
+	pthread_mutex_lock(&g_queues_mutex);
 	rc = ocf_queue_create(vbdev->ocf_cache, &qctx->queue, &queue_ops);
+	pthread_mutex_unlock(&g_queues_mutex);
+
 	if (rc) {
 		return rc;
 	}
@@ -727,7 +732,9 @@ io_device_destroy_cb(void *io_device, void *ctx_buf)
 			    spdk_strerror(ENOMEM));
 	}
 
+	pthread_mutex_lock(&g_queues_mutex);
 	ocf_queue_put(qctx->queue);
+	pthread_mutex_unlock(&g_queues_mutex);
 }
 
 /* Start OCF cache and register vbdev_ocf at bdev layer */
