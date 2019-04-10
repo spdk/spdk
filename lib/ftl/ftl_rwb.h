@@ -90,7 +90,9 @@ struct ftl_rwb_entry {
 	LIST_ENTRY(ftl_rwb_entry)		list_entry;
 };
 
-struct ftl_rwb *ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size);
+struct ftl_rwb *ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size,
+			     size_t md_size, size_t num_punits);
+size_t	ftl_rwb_get_active_batches(const struct ftl_rwb *rwb);
 void	ftl_rwb_free(struct ftl_rwb *rwb);
 void	ftl_rwb_batch_release(struct ftl_rwb_batch *batch);
 void	ftl_rwb_push(struct ftl_rwb_entry *entry);
@@ -110,6 +112,7 @@ void	ftl_rwb_batch_revert(struct ftl_rwb_batch *batch);
 struct ftl_rwb_entry *ftl_rwb_batch_first_entry(struct ftl_rwb_batch *batch);
 void	*ftl_rwb_batch_get_data(struct ftl_rwb_batch *batch);
 void	*ftl_rwb_batch_get_md(struct ftl_rwb_batch *batch);
+void	ftl_rwb_disable_interleaving(struct ftl_rwb *rwb);
 
 static inline void
 _ftl_rwb_entry_set_valid(struct ftl_rwb_entry *entry, bool valid)
