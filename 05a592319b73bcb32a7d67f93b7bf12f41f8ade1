@@ -91,6 +91,30 @@
       "revId": "05a592319b73bcb32a7d67f93b7bf12f41f8ade1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "104e30ab_01937112",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1384,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-10T14:34:14Z",
+      "side": 1,
+      "message": "Rereading my comment second time it might be confusing. By \u0027merged\u0027 I meant - put in series so that any merge conflicts would be resolved already.",
+      "parentUuid": "2c234045_bfd96244",
+      "range": {
+        "startLine": 1384,
+        "startChar": 0,
+        "endLine": 1384,
+        "endChar": 22
+      },
+      "revId": "05a592319b73bcb32a7d67f93b7bf12f41f8ade1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
