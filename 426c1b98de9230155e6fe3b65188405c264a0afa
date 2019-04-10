@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48c31439_205708bc",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-04-10T01:32:28Z",
+      "side": 1,
+      "message": "HI, chunyang,\nmay need to change your commit message. this change is to fix an issue :\n runtime error: member access within misaligned address 0x6230000009d4 for type \u0027const union spdk_discovery0_features\u0027, which requires 8 byte alignment\n0x6230000009d4: note: pointer points here\n  00 00 00 00 02\u003c 03 10 10  08 00 00 01 00 00 04 00  09 00 00 00 00 00 00 00  04 02 10 0c 00 00 00 00\nwe use one byte alignment not only to solve this issue but also keeping compact structures.\nand Asserts should be a different patch,I think,then we can follow Ben\u0027s suggestion.",
+      "revId": "426c1b98de9230155e6fe3b65188405c264a0afa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
