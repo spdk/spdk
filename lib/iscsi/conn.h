@@ -172,6 +172,8 @@ extern struct spdk_iscsi_conn *g_conns_array;
 
 int spdk_initialize_iscsi_conns(void);
 void spdk_shutdown_iscsi_conns(void);
+void spdk_iscsi_conns_start_exit(struct spdk_iscsi_tgt_node *target);
+int spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target);
 
 int spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal, struct spdk_sock *sock);
 void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn);
