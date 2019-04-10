@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e131ab6e_e4bc7587",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1369,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-10T03:00:37Z",
+      "side": 1,
+      "message": "may also move this line after the below check and above line 1376.",
+      "range": {
+        "startLine": 1369,
+        "startChar": 1,
+        "endLine": 1369,
+        "endChar": 70
+      },
+      "revId": "520245c68b601aba5c383ab9361257bdcb38e6ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
