@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4327c1e9_25ab4cd2",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-10T08:41:31Z",
+      "side": 1,
+      "message": "What\u0027s the reason behind swapping these two?",
+      "range": {
+        "startLine": 747,
+        "startChar": 2,
+        "endLine": 748,
+        "endChar": 30
+      },
+      "revId": "bd992bbd78ab36f3bcfe74d4d0b9a8753aa18383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4e0e4d3_08893656",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1001,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-10T08:41:31Z",
+      "side": 1,
+      "message": "Why isn\u0027t it aligned with the other variables? Either let the variables by unaligned or align all of them.",
+      "range": {
+        "startLine": 1001,
+        "startChar": 5,
+        "endLine": 1001,
+        "endChar": 7
+      },
+      "revId": "bd992bbd78ab36f3bcfe74d4d0b9a8753aa18383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b12d52b_09d758c7",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-10T08:41:31Z",
+      "side": 1,
+      "message": "I think you should return a static error code here (e.g -EIO) instead of what\u0027s returned by the NVMe driver function. If it returns EAGAIN for some reason, the behavior won\u0027t be correct.",
+      "range": {
+        "startLine": 1020,
+        "startChar": 9,
+        "endLine": 1020,
+        "endChar": 11
+      },
+      "revId": "bd992bbd78ab36f3bcfe74d4d0b9a8753aa18383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fd3f8ac_dc284ed2",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-10T08:41:31Z",
+      "side": 1,
+      "message": "Let\u0027s just do\nif (spdk_unlikely(rc)) {\n if (rc \u003d\u003d -EAGAIN) {\n  wptr-\u003ecurrent_io \u003d io;\n } else {\n  ftl_io_fail(io, rc);\n }\n\n break;\n}",
+      "range": {
+        "startLine": 1051,
+        "startChar": 0,
+        "endLine": 1058,
+        "endChar": 3
+      },
+      "revId": "bd992bbd78ab36f3bcfe74d4d0b9a8753aa18383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e6528e7_74be0cac",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1063,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-10T08:41:31Z",
+      "side": 1,
+      "message": "These two needs to be swapped. Otherwise all of the blocks are shifted by one (with the last block overrunning the memory).\n\nAlso, I\u0027m a bit worried that we won\u0027t see fails on our traces... Perhaps we should add another trace type?",
+      "range": {
+        "startLine": 1061,
+        "startChar": 0,
+        "endLine": 1063,
+        "endChar": 52
+      },
+      "revId": "bd992bbd78ab36f3bcfe74d4d0b9a8753aa18383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16c36e0b_e1070c55",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-10T08:41:31Z",
+      "side": 1,
+      "message": "I think we should be moving these type of functions to the files they\u0027re used. Let\u0027s move it to ftl_core.c.",
+      "range": {
+        "startLine": 226,
+        "startChar": 0,
+        "endLine": 258,
+        "endChar": 0
+      },
+      "revId": "bd992bbd78ab36f3bcfe74d4d0b9a8753aa18383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
