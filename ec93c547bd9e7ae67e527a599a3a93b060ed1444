@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b38d86c_7788a594",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T22:25:34Z",
+      "side": 1,
+      "message": "spdk_scsi_remove_cb_t takes an spdk_scsi_lun * argument.  That does not seem right for use in spdk_scsi_dev_destruct.  Maybe we need a new function pointer typedef here?",
+      "revId": "ec93c547bd9e7ae67e527a599a3a93b060ed1444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "321124d0_94015425",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T22:25:34Z",
+      "side": 1,
+      "message": "I think we need to call the cb_fn in this case.\n\nProbably the callback function needs to take an int parameter for status.  Then in this case it can return an error status since the dev is already being removed.\n\nI think for dev \u003d\u003d NULL, we should have an assert, and maybe status returned is -EINVAL.  dev-\u003eremoved should be treated differently I think - probably no assert, and maybe -EBUSY for status.",
+      "revId": "ec93c547bd9e7ae67e527a599a3a93b060ed1444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
