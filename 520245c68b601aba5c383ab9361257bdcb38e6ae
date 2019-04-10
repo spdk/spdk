@@ -22,6 +22,30 @@
       "revId": "520245c68b601aba5c383ab9361257bdcb38e6ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1b5f6c4_a9dda62c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1369,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-10T04:37:16Z",
+      "side": 1,
+      "message": "The variable is used in line 1372, so it\u0027s OK leave it here.",
+      "parentUuid": "e131ab6e_e4bc7587",
+      "range": {
+        "startLine": 1369,
+        "startChar": 1,
+        "endLine": 1369,
+        "endChar": 70
+      },
+      "revId": "520245c68b601aba5c383ab9361257bdcb38e6ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
