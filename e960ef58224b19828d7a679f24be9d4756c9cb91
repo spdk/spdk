@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e8ac96f9_d2a65e6e",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-10T13:24:45Z",
+      "side": 1,
+      "message": "Yes, it can be a problem. Thanks for spotting that. I will make g_app_free_core_mask read only during application life-time, what should solve this problem.",
+      "parentUuid": "d2999dc7_583f78f6",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5851de0d_319952db",
         "filename": "lib/event/app.c",
         "patchSetId": 24
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "8d63034e_2a37eb05",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-10T13:24:45Z",
+      "side": 1,
+      "message": "It is already done in line 151 when new affinity group is added.",
+      "parentUuid": "5851de0d_319952db",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "85345951_36bbad11",
         "filename": "lib/event/app.c",
         "patchSetId": 24
@@ -47,6 +83,30 @@
       "writtenOn": "2019-04-05T10:41:09Z",
       "side": 1,
       "message": "I think we can use spdk_app_get_free_core_mask() here",
+      "range": {
+        "startLine": 129,
+        "startChar": 1,
+        "endLine": 132,
+        "endChar": 2
+      },
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b9124c9_007294d0",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-10T13:24:45Z",
+      "side": 1,
+      "message": "I will move g_app_free_core_mask initialization out of this function to be sure it always initialized and solve problem with multi-threading, you\u0027ve mentioned before.",
+      "parentUuid": "85345951_36bbad11",
       "range": {
         "startLine": 129,
         "startChar": 1,
@@ -82,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "f23d8e49_745224cc",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-10T13:24:45Z",
+      "side": 1,
+      "message": "Ow, yes. You\u0027re right.",
+      "parentUuid": "8f402aa3_318df7a4",
+      "range": {
+        "startLine": 135,
+        "startChar": 1,
+        "endLine": 137,
+        "endChar": 35
+      },
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "88862b10_6d6df035",
         "filename": "lib/event/app.c",
         "patchSetId": 24
@@ -96,6 +180,24 @@
       "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ba11f2e_542eaec2",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-10T13:24:45Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "88862b10_6d6df035",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -116,6 +218,24 @@
     },
     {
       "key": {
+        "uuid": "a49a57fc_dfce9026",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-10T13:24:45Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9219f4de_d002f173",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8283fe88_8d872cfa",
         "filename": "lib/event/app.c",
         "patchSetId": 24
@@ -133,6 +253,24 @@
     },
     {
       "key": {
+        "uuid": "fa7230ca_13e75a65",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-10T13:24:45Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8283fe88_8d872cfa",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3bd98422_bff5602c",
         "filename": "lib/event/app.c",
         "patchSetId": 24
@@ -147,6 +285,24 @@
       "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e653d88_cb5315bb",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-10T13:24:45Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3bd98422_bff5602c",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
