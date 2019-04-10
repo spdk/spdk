@@ -2244,9 +2244,10 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 }
 
 static void
-__readahead_done(void *arg, int bserrno)
+__readahead_done(void *ctx, int bserrno)
 {
-	struct spdk_fs_cb_args *args = arg;
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
 	struct cache_buffer *cache_buffer = args->op.readahead.cache_buffer;
 	struct spdk_file *file = args->file;
 
@@ -2258,13 +2259,14 @@ __readahead_done(void *arg, int bserrno)
 	cache_buffer->in_progress = false;
 	pthread_spin_unlock(&file->lock);
 
-	__free_args(args);
+	free_fs_request(req);
 }
 
 static void
-__readahead(void *_args)
+__readahead(void *ctx)
 {
-	struct spdk_fs_cb_args *args = _args;
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *file = args->file;
 	uint64_t offset, length, start_lba, num_lba;
 	uint32_t lba_size;
@@ -2279,7 +2281,7 @@ __readahead(void *_args)
 		     offset, length, start_lba, num_lba);
 	spdk_blob_io_read(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
 			  args->op.readahead.cache_buffer->buf,
-			  start_lba, num_lba, __readahead_done, args);
+			  start_lba, num_lba, __readahead_done, req);
 }
 
 static uint64_t
@@ -2289,8 +2291,10 @@ __next_cache_buffer_offset(uint64_t offset)
 }
 
 static void
-check_readahead(struct spdk_file *file, uint64_t offset)
+check_readahead(struct spdk_file *file, uint64_t offset,
+		struct spdk_fs_channel *channel)
 {
+	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 
 	offset = __next_cache_buffer_offset(offset);
@@ -2298,10 +2302,11 @@ check_readahead(struct spdk_file *file, uint64_t offset)
 		return;
 	}
 
-	args = calloc(1, sizeof(*args));
-	if (args == NULL) {
+	req = alloc_fs_request(channel);
+	if (req == NULL) {
 		return;
 	}
+	args = &req->args;
 
 	BLOBFS_TRACE(file, "offset=%jx\n", offset);
 
@@ -2310,7 +2315,7 @@ check_readahead(struct spdk_file *file, uint64_t offset)
 	args->op.readahead.cache_buffer = cache_insert_buffer(file, offset);
 	if (!args->op.readahead.cache_buffer) {
 		BLOBFS_TRACE(file, "Cannot allocate buf for offset=%jx\n", offset);
-		free(args);
+		free_fs_request(req);
 		return;
 	}
 
@@ -2320,7 +2325,7 @@ check_readahead(struct spdk_file *file, uint64_t offset)
 	} else {
 		args->op.readahead.length = CACHE_BUFFER_SIZE;
 	}
-	file->fs->send_request(__readahead, args);
+	file->fs->send_request(__readahead, req);
 }
 
 static int
@@ -2385,8 +2390,8 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	file->seq_byte_count += length;
 	file->next_seq_offset = offset + length;
 	if (file->seq_byte_count >= CACHE_READAHEAD_THRESHOLD) {
-		check_readahead(file, offset);
-		check_readahead(file, offset + CACHE_BUFFER_SIZE);
+		check_readahead(file, offset, channel);
+		check_readahead(file, offset + CACHE_BUFFER_SIZE, channel);
 	}
 
 	final_length = 0;
