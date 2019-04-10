@@ -45,6 +45,30 @@
       "revId": "3041fd3b4a00bcd56abd965c6b717cf0495410d4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d108e7f8_74055823",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-10T08:49:08Z",
+      "side": 1,
+      "message": "Yes. The problem is that several servers do not have the \"bc\" command available. So that I use the \"awk\" command instead so as not to change the configuration of the server.",
+      "parentUuid": "48f2c8f8_9e1392dc",
+      "range": {
+        "startLine": 75,
+        "startChar": 2,
+        "endLine": 76,
+        "endChar": 63
+      },
+      "revId": "3041fd3b4a00bcd56abd965c6b717cf0495410d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
