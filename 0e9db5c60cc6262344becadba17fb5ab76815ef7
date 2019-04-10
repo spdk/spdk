@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "eb3ba9ee_7e5d102a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:06:52Z",
+      "side": 1,
+      "message": "It is to keep things modular. Alternatives are:\n- add this code to remove_core_poll and detach_base\n- squash these two functions into one and place it after remove_core_poll and detach_base\n\nNeither is good IMO\nDo you have other solutions?",
+      "parentUuid": "a7cd2c81_5202c99b",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 1
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3db1eacd_ea342522",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-09T22:49:21Z",
       "side": 1,
       "message": "Can\u0027t we use ocf_core_t from vbdev-\u003eocf_core instead of getting it from ocf_cache ?",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 205,
+        "endChar": 2
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2484fa0a_8146ae67",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:06:52Z",
+      "side": 1,
+      "message": "Ack, we can",
+      "parentUuid": "3db1eacd_ea342522",
       "range": {
         "startLine": 201,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "e1aa908e_e0cb4fa2",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:06:52Z",
+      "side": 1,
+      "message": "Ack, I will use proposed rearranging.\n\n\u003e shouldn\u0027t Core case always call remove_core_poll anyway\n\nNo, there needs to be check because if cache is not running I don\u0027t know what to expect from ocf_mngt_cache_lock()",
+      "parentUuid": "41ace9d6_46b57d60",
+      "range": {
+        "startLine": 225,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 2
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b8f5cf8e_6ca5e093",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -82,6 +154,30 @@
       "writtenOn": "2019-04-09T22:49:21Z",
       "side": 1,
       "message": "Please correct me if I\u0027m wrong but from what I see there are multiple steps that can be consolidated, since no trylock or async operation occurs in between.\ndetach_cache \u003e close_cache_bdev \u003e detach_core have no such delays between each other.\nSame with detach_core \u003e close_core_bdev \u003e unregister_finish.",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 291,
+        "endChar": 19
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fa65e2f_ffb8df53",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:06:52Z",
+      "side": 1,
+      "message": "You are right that they can be consolidated, but they are splitted on purpose.",
+      "parentUuid": "b8f5cf8e_6ca5e093",
       "range": {
         "startLine": 285,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "c01bae82_f763527d",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:06:52Z",
+      "side": 1,
+      "message": "Version that does callbacks juggling is much harder to follow (I assume that is the alternative)",
+      "parentUuid": "26fc48bc_8bbf57cb",
+      "range": {
+        "startLine": 283,
+        "startChar": 0,
+        "endLine": 293,
+        "endChar": 2
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f398485c_6feeeaa4",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -128,6 +248,30 @@
       "writtenOn": "2019-04-09T22:49:21Z",
       "side": 1,
       "message": "Might be more clear to call it on \u0027existing\u0027, since line above does exactly that with the ocf_cache_t.",
+      "range": {
+        "startLine": 664,
+        "startChar": 37,
+        "endLine": 664,
+        "endChar": 53
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23120e4c_b3eeacad",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:06:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f398485c_6feeeaa4",
       "range": {
         "startLine": 664,
         "startChar": 37,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "ccf58c4f_be8de25d",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1111,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:06:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "46c9cc86_79acf3a2",
+      "range": {
+        "startLine": 1111,
+        "startChar": 1,
+        "endLine": 1111,
+        "endChar": 56
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0f4e862_7a64a837",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -174,6 +342,30 @@
       "writtenOn": "2019-04-09T22:49:21Z",
       "side": 1,
       "message": "I think this is better suited to patch previous in series. (Please see comment there)",
+      "range": {
+        "startLine": 1247,
+        "startChar": 0,
+        "endLine": 1256,
+        "endChar": 9
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c5e00c4_e496462e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1256,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:06:52Z",
+      "side": 1,
+      "message": "No, as I responded, examine_end() is not suited for synchronous register.",
+      "parentUuid": "d0f4e862_7a64a837",
       "range": {
         "startLine": 1247,
         "startChar": 0,
