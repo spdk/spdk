@@ -705,7 +705,7 @@ ftl_read_md_cb(void *arg, int status)
 
 static struct ftl_md_io *
 ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data, struct ftl_ppa ppa,
-		    struct ftl_band *band, size_t lbk_cnt, size_t req_size, ftl_md_pack_fn fn,
+		    struct ftl_band *band, size_t lbk_cnt, ftl_md_pack_fn fn,
 		    const struct ftl_cb *cb)
 {
 	struct ftl_md_io *io;
@@ -717,8 +717,8 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data, str
 		.size		= sizeof(*io),
 		.flags		= FTL_IO_MD | FTL_IO_PPA_MODE,
 		.type		= FTL_IO_READ,
-		.iov_cnt	= spdk_divide_round_up(lbk_cnt, req_size),
-		.req_size	= req_size,
+		.iov_cnt	= 1,
+		.req_size	= lbk_cnt,
 		.fn		= ftl_read_md_cb,
 		.data		= data,
 	};
@@ -810,8 +810,7 @@ ftl_band_lba_map_ppa(struct ftl_band *band)
 
 static int
 ftl_band_read_md(struct ftl_band *band, struct ftl_md *md, void *data, size_t lbk_cnt,
-		 size_t req_size, struct ftl_ppa start_ppa, ftl_md_pack_fn unpack_fn,
-		 const struct ftl_cb *cb)
+		 struct ftl_ppa start_ppa, ftl_md_pack_fn unpack_fn, const struct ftl_cb *cb)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_md_io *io;
@@ -821,7 +820,7 @@ ftl_band_read_md(struct ftl_band *band, struct ftl_md *md, void *data, size_t lb
 	}
 
 	io = ftl_io_init_md_read(dev, md, data, start_ppa, band, lbk_cnt,
-				 req_size, unpack_fn, cb);
+				 unpack_fn, cb);
 	if (!io) {
 		return -ENOMEM;
 	}
@@ -836,7 +835,6 @@ ftl_band_read_tail_md(struct ftl_band *band, struct ftl_md *md,
 {
 	return ftl_band_read_md(band, md, data,
 				ftl_tail_md_num_lbks(band->dev),
-				band->dev->xfer_size,
 				ppa,
 				ftl_unpack_tail_md,
 				cb);
@@ -850,7 +848,6 @@ ftl_band_read_lba_map(struct ftl_band *band, struct ftl_md *md,
 	/* reading whole metadata */
 	return ftl_band_read_md(band, md, data,
 				ftl_lba_map_num_lbks(band->dev),
-				band->dev->xfer_size,
 				ftl_band_lba_map_ppa(band),
 				ftl_unpack_lba_map,
 				cb);
@@ -862,7 +859,6 @@ ftl_band_read_head_md(struct ftl_band *band, struct ftl_md *md,
 {
 	return ftl_band_read_md(band, md, data,
 				ftl_head_md_num_lbks(band->dev),
-				band->dev->xfer_size,
 				ftl_band_head_md_ppa(band),
 				ftl_unpack_head_md,
 				cb);
