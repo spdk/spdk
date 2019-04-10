@@ -288,9 +288,21 @@ vbdev_ocf_ctx_data_secure_erase(ctx_data_t *ctx_data)
 	}
 }
 
+int vbdev_ocf_queue_create(ocf_cache_t cache, ocf_queue_t *queue, const struct ocf_queue_ops *ops)
+{
+	int rc;
+	struct vbdev_ocf_cache_ctx *ctx = ocf_cache_get_priv(cache);
+
+	pthread_mutex_lock(&ctx->lock);
+	rc = ocf_queue_create(cache, queue, ops);
+	pthread_mutex_unlock(&ctx->lock);
+	return rc;
+}
+
 void vbdev_ocf_ctx_cache_ctx_put(struct vbdev_ocf_cache_ctx *ctx)
 {
 	if (env_atomic_dec_return(&ctx->refcnt) == 0) {
+		pthread_mutex_destroy(&ctx->lock);
 		free(ctx);
 	}
 }
@@ -372,7 +384,7 @@ vbdev_ocf_ctx_cleaner_init(ocf_cleaner_t cleaner)
 		return -ENOMEM;
 	}
 
-	rc = ocf_queue_create(cache, &priv->queue, &cleaner_queue_ops);
+	rc = vbdev_ocf_queue_create(cache, &priv->queue, &cleaner_queue_ops);
 	if (rc) {
 		free(priv);
 		return rc;

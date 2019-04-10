@@ -49,6 +49,7 @@ struct vbdev_ocf_cache_ctx {
 	struct spdk_thread          *cleaner_thread;
 	ocf_queue_t                  cleaner_queue;
 	struct spdk_io_channel      *cache_channel;
+	pthread_mutex_t              lock;
 	env_atomic                   refcnt;
 };
 
@@ -57,5 +58,7 @@ void vbdev_ocf_ctx_cache_ctx_get(struct vbdev_ocf_cache_ctx *ctx);
 
 int vbdev_ocf_ctx_init(void);
 void vbdev_ocf_ctx_cleanup(void);
+
+int vbdev_ocf_queue_create(ocf_cache_t cache, ocf_queue_t *queue, const struct ocf_queue_ops *ops);
 
 #endif
