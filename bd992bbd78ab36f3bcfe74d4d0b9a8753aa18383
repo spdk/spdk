@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "488d90fe_7acd0277",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-10T10:48:21Z",
+      "side": 1,
+      "message": "It\u0027s more readable - multiple breaks/continues always makes the code harder to read. Please change it. As for the spdk_unlikely, it\u0027s just something that underlines the fact that this path should be rare.",
+      "parentUuid": "14ebbc4e_a25c069b",
+      "range": {
+        "startLine": 1051,
+        "startChar": 0,
+        "endLine": 1058,
+        "endChar": 3
+      },
+      "revId": "bd992bbd78ab36f3bcfe74d4d0b9a8753aa18383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1e6528e7_74be0cac",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 14
