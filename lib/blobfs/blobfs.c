@@ -1774,7 +1774,7 @@ spdk_fs_get_cache_size(void)
 	return g_fs_cache_size / (1024 * 1024);
 }
 
-static void __file_flush(void *_args);
+static void __file_flush(void *ctx);
 
 static void *
 alloc_cache_memory_buffer(struct spdk_file *context)
@@ -1965,9 +1965,10 @@ __check_sync_reqs(struct spdk_file *file)
 }
 
 static void
-__file_flush_done(void *arg, int bserrno)
+__file_flush_done(void *ctx, int bserrno)
 {
-	struct spdk_fs_cb_args *args = arg;
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *file = args->file;
 	struct cache_buffer *next = args->op.flush.cache_buffer;
 
@@ -1996,13 +1997,14 @@ __file_flush_done(void *arg, int bserrno)
 
 	__check_sync_reqs(file);
 
-	__file_flush(args);
+	__file_flush(req);
 }
 
 static void
-__file_flush(void *_args)
+__file_flush(void *ctx)
 {
-	struct spdk_fs_cb_args *args = _args;
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *file = args->file;
 	struct cache_buffer *next;
 	uint64_t offset, length, start_lba, num_lba;
@@ -2016,7 +2018,7 @@ __file_flush(void *_args)
 		 *  progress.  So return immediately - if a flush I/O is in
 		 *  progress we will flush more data after that is completed.
 		 */
-		__free_args(args);
+		free_fs_request(req);
 		if (next == NULL) {
 			/*
 			 * For cases where a file's cache was evicted, and then the
@@ -2040,7 +2042,7 @@ __file_flush(void *_args)
 	offset = next->offset + next->bytes_flushed;
 	length = next->bytes_filled - next->bytes_flushed;
 	if (length == 0) {
-		__free_args(args);
+		free_fs_request(req);
 		pthread_spin_unlock(&file->lock);
 		return;
 	}
@@ -2055,7 +2057,7 @@ __file_flush(void *_args)
 	pthread_spin_unlock(&file->lock);
 	spdk_blob_io_write(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
 			   next->buf + (start_lba * lba_size) - next->offset,
-			   start_lba, num_lba, __file_flush_done, args);
+			   start_lba, num_lba, __file_flush_done, req);
 }
 
 static void
@@ -2142,7 +2144,7 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		void *payload, uint64_t offset, uint64_t length)
 {
 	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
-	struct spdk_fs_cb_args *args;
+	struct spdk_fs_request *flush_req;
 	uint64_t rem_length, copy, blob_size, cluster_sz;
 	uint32_t cache_buffers_filled = 0;
 	uint8_t *cur_payload;
@@ -2229,13 +2231,13 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		return 0;
 	}
 
-	args = calloc(1, sizeof(*args));
-	if (args == NULL) {
+	flush_req = alloc_fs_request(channel);
+	if (flush_req == NULL) {
 		return -ENOMEM;
 	}
 
-	args->file = file;
-	file->fs->send_request(__file_flush, args);
+	flush_req->args.file = file;
+	file->fs->send_request(__file_flush, flush_req);
 	return 0;
 }
 
@@ -2457,7 +2459,7 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 	pthread_spin_unlock(&file->lock);
 
 	flush_args->file = file;
-	channel->send_request(__file_flush, flush_args);
+	channel->send_request(__file_flush, flush_req);
 }
 
 int
