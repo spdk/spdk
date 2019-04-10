@@ -87,6 +87,8 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	.max_active_relocs = 3,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
 	.user_io_pool_size = 2048,
+	/* 3 for 3D TLC NAND and 1 for others */
+	.osp_num_pages = 3,
 };
 
 static void ftl_dev_free_sync(struct spdk_ftl_dev *dev);
@@ -884,7 +886,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 		goto fail_sync;
 	}
 
-	dev->rwb = ftl_rwb_init(&dev->conf, dev->geo.ws_opt, dev->md_size);
+	dev->rwb = ftl_rwb_init(&dev->conf, dev->geo.ws_opt, dev->md_size, ftl_dev_num_punits(dev));
 	if (!dev->rwb) {
 		SPDK_ERRLOG("Unable to initialize rwb structures\n");
 		goto fail_sync;

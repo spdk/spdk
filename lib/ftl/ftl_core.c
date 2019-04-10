@@ -589,17 +589,27 @@ ftl_process_shutdown(struct spdk_ftl_dev *dev)
 {
 	size_t size = ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_INTERNAL) +
 		      ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_USER);
+	size_t unit = dev->xfer_size * ftl_rwb_get_active_batches(dev->rwb);
 
-	if (size >= dev->xfer_size) {
+	if (unit == 0) {
+		unit = dev->xfer_size;
+	}
+
+	ftl_rwb_process_shutdown(dev->rwb);
+	if (size >= unit) {
 		return;
 	}
 
 	/* If we reach this point we need to remove free bands */
 	/* and pad current wptr band to the end */
-	ftl_remove_free_bands(dev);
+	if (size <= dev->xfer_size) {
+		ftl_remove_free_bands(dev);
+	}
 
 	/* Pad write buffer until band is full */
-	ftl_rwb_pad(dev, dev->xfer_size - size);
+	/* TODO : It would be better to request padding to as many as PUs possible */
+	/* instead of requesting to one PU at a time */
+	ftl_rwb_pad(dev, unit - size);
 }
 
 static int
