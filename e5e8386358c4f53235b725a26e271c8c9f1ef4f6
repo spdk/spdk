@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "370488da_ab4ddb2f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T07:09:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "abf64bfb_5b4e59e9",
+      "range": {
+        "startLine": 667,
+        "startChar": 0,
+        "endLine": 683,
+        "endChar": 1
+      },
+      "revId": "e5e8386358c4f53235b725a26e271c8c9f1ef4f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88911e7c_85e6597d",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 12
@@ -45,6 +69,30 @@
       "revId": "e5e8386358c4f53235b725a26e271c8c9f1ef4f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82a67d1d_9c88c485",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T07:09:57Z",
+      "side": 1,
+      "message": "Queue_poll recieves vbdev_ocf_queue_ctx that is specific to IO operations.\nWe could do the other way around redefining queue_poll since mngt_queue_poll is more general:\nqueue_poll(opaque) {\n   queue \u003d opaque-\u003equeue;\n   mngt_queue_poll(queue); /* Or create new function like \u0027common_poll\u0027\n}\n\nBut I am not sure if that is better. What do you think?",
+      "parentUuid": "88911e7c_85e6597d",
+      "range": {
+        "startLine": 713,
+        "startChar": 36,
+        "endLine": 713,
+        "endChar": 51
+      },
+      "revId": "e5e8386358c4f53235b725a26e271c8c9f1ef4f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
