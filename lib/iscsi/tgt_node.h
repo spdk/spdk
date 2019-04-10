@@ -89,6 +89,7 @@ struct spdk_iscsi_tgt_node {
 	TAILQ_HEAD(, spdk_iscsi_pg_map) pg_map_head;
 	TAILQ_ENTRY(spdk_iscsi_tgt_node) tailq;
 
+	struct spdk_poller *destruct_poller;
 	iscsi_tgt_node_destruct_cb destruct_cb_fn;
 	void *destruct_cb_arg;
 };
