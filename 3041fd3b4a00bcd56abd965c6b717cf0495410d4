@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f7897e37_6fa266d0",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-10T09:05:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf1393f1_2a7ce770",
+      "range": {
+        "startLine": 60,
+        "startChar": 19,
+        "endLine": 60,
+        "endChar": 20
+      },
+      "revId": "3041fd3b4a00bcd56abd965c6b717cf0495410d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48f2c8f8_9e1392dc",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 15
