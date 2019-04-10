@@ -86,6 +86,9 @@ struct spdk_ftl_conf {
 		/* User writes limits */
 		struct spdk_ftl_limit		limits[SPDK_FTL_LIMIT_MAX];
 	} defrag;
+
+	/* Number of interleaving units per ws_opt */
+	size_t                                  num_interleave_units;
 };
 
 /* Range of parallel units (inclusive) */
