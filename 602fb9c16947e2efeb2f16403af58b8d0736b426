@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "15b28b21_bb77d8fe",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:11:28Z",
+      "side": 1,
+      "message": "This patch provides functions that are going to be used later. It is worse to have changes to examine in patches for features, than to have functions that are not used.",
+      "parentUuid": "0803b74f_9e0e8243",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 11
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d36f4df9_9d9bf79f",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-09T21:05:49Z",
       "side": 1,
       "message": "The original EPERM seems to be more intuitive error to give, since the operation could not be performed on that vbdev for one of three reasons. Not that incorrect vbdev_ocf was provided.",
+      "range": {
+        "startLine": 740,
+        "startChar": 2,
+        "endLine": 740,
+        "endChar": 17
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74fa7c91_67166aca",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:11:28Z",
+      "side": 1,
+      "message": "Operation is invalid because of third case: you cannot start a device second time",
+      "parentUuid": "d36f4df9_9d9bf79f",
       "range": {
         "startLine": 740,
         "startChar": 2,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "c9f8f66a_0dc2e27f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:11:28Z",
+      "side": 1,
+      "message": "This is the way bdev layer async functions behave.\nI think the reason is that you know who is responsible for error.\nAlso, the overhead can be",
+      "parentUuid": "5aadc9ef_5ceb1e36",
+      "range": {
+        "startLine": 781,
+        "startChar": 0,
+        "endLine": 785,
+        "endChar": 15
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb2beee1_1350de8c",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -82,6 +154,30 @@
       "writtenOn": "2019-04-09T21:05:49Z",
       "side": 1,
       "message": "Have you considered to return vbdev_ocf in the callback, since this is what is created in this function.\n\nIt would simplify for the caller to just access that, instead of searching the vbdev_ocf by saved name. This happens later in the series in RPC https://review.gerrithub.io/#/c/spdk/spdk/+/449776/10/lib/bdev/ocf/vbdev_ocf_rpc.c",
+      "range": {
+        "startLine": 1076,
+        "startChar": 6,
+        "endLine": 1076,
+        "endChar": 29
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1caf0169_ab900a08",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:11:28Z",
+      "side": 1,
+      "message": "I try to keep things as general as possible, to not have to consider every case of every RPC method.",
+      "parentUuid": "cb2beee1_1350de8c",
       "range": {
         "startLine": 1076,
         "startChar": 6,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "fc25f490_e7352c98",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1173,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:11:28Z",
+      "side": 1,
+      "message": "I don\u0027t agree that topic of the patch forces to use functionality it provides. We would really need to force change you propose and later rework it anyway.\nThis patch provides functions that are going to be used later. It is worse to have changes to examine in patches for features, than to have functions that are not used.\nexamine_end() is a placeholder for future patches, this is stated in commit message.\n\nI used the callback in previus patchset, but scanbuild considered it bad\nhttps://review.gerrithub.io/c/spdk/spdk/+/450033/4/lib/bdev/ocf/vbdev_ocf.c#1174",
+      "parentUuid": "49897d49_67ca7d50",
+      "range": {
+        "startLine": 1173,
+        "startChar": 25,
+        "endLine": 1173,
+        "endChar": 35
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ba7333f_d4c04a1c",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -137,6 +257,30 @@
       "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cbfa268_d23a2711",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-10T08:11:28Z",
+      "side": 1,
+      "message": "I agree with observations, but I don\u0027t understand why to use this coincidence related to vbdev_ocf_get_base_by_name()?",
+      "parentUuid": "3ba7333f_d4c04a1c",
+      "range": {
+        "startLine": 1176,
+        "startChar": 0,
+        "endLine": 1179,
+        "endChar": 3
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
