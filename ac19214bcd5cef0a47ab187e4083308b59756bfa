@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "fd45615a_79e8a6c5",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-10T08:37:57Z",
+      "side": 1,
+      "message": "Shouldnt this have number like 75* and be grouped together with other snapshot tests?",
+      "range": {
+        "startLine": 74,
+        "startChar": 36,
+        "endLine": 74,
+        "endChar": 59
+      },
+      "revId": "ac19214bcd5cef0a47ab187e4083308b59756bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5d2abd9_ea02fdcf",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 2
