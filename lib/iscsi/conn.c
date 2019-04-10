@@ -579,8 +579,8 @@ spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	}
 }
 
-static int
-iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target)
+int
+spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_conn *conn;
 	int num = 0;
@@ -626,7 +626,7 @@ iscsi_conn_check_shutdown(void *arg)
 {
 	struct spdk_event *event;
 
-	if (iscsi_get_active_conns(NULL) != 0) {
+	if (spdk_iscsi_get_active_conns(NULL) != 0) {
 		return 1;
 	}
 
@@ -770,8 +770,8 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 	iscsi_poll_group_remove_conn(conn);
 }
 
-static void
-iscsi_conns_start_exit(struct spdk_iscsi_tgt_node *target)
+void
+spdk_iscsi_conns_start_exit(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_conn	*conn;
 	int			i;
@@ -802,7 +802,7 @@ iscsi_conns_start_exit(struct spdk_iscsi_tgt_node *target)
 void
 spdk_shutdown_iscsi_conns(void)
 {
-	iscsi_conns_start_exit(NULL);
+	spdk_iscsi_conns_start_exit(NULL);
 
 	g_shutdown_timer = spdk_poller_register(iscsi_conn_check_shutdown, NULL, 1000);
 }
