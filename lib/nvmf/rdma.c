@@ -1045,6 +1045,7 @@ static int
 request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 {
 	int				rc;
+	int				num_outstanding_data_wr = 0;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
@@ -1096,6 +1097,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, qpair);
 		send_wr = &rdma_req->data.wr;
 		*data_posted = 1;
+		num_outstanding_data_wr = rdma_req->num_outstanding_data_wr;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, qpair);
@@ -1107,7 +1109,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 		return rc;
 	}
 	/* +1 for the rsp wr */
-	rqpair->current_send_depth += rdma_req->num_outstanding_data_wr + 1;
+	rqpair->current_send_depth += num_outstanding_data_wr + 1;
 
 	return 0;
 }
