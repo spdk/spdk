@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d8f8d5a5_4e8c6645",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-10T07:16:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55592211_b2e058b1",
+      "range": {
+        "startLine": 302,
+        "startChar": 1,
+        "endLine": 303,
+        "endChar": 21
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ad2f212_5b2ebca0",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 12
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-09T10:48:24Z",
       "side": 1,
       "message": "better to add a SPDK_ERRLOG() to print out the unexpected length",
+      "range": {
+        "startLine": 319,
+        "startChar": 2,
+        "endLine": 319,
+        "endChar": 17
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b83dbbaf_d3714916",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-10T07:16:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0ad2f212_5b2ebca0",
       "range": {
         "startLine": 319,
         "startChar": 2,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "309133ae_3e6378a2",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-10T07:16:42Z",
+      "side": 1,
+      "message": "Hi Gang, thanks for your review. Well, I believe in rare cases, it might happen. It\u0027s better to add a check here.",
+      "parentUuid": "c09b376f_fc4e6bbd",
+      "range": {
+        "startLine": 323,
+        "startChar": 1,
+        "endLine": 325,
+        "endChar": 20
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6824e10b_2a90dd99",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 12
@@ -82,6 +154,30 @@
       "writtenOn": "2019-04-09T10:48:24Z",
       "side": 1,
       "message": "Looks like this function could return a negative value, should we check the return status and return the error properly like line 344-347.",
+      "range": {
+        "startLine": 329,
+        "startChar": 3,
+        "endLine": 329,
+        "endChar": 61
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1772b9f4_43dc6757",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-10T07:16:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6824e10b_2a90dd99",
       "range": {
         "startLine": 329,
         "startChar": 3,
