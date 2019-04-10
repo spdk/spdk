@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "938aa18c_02b2c0b4",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-10T22:15:17Z",
+      "side": 1,
+      "message": "I think we should put one struct iovec directly in this structure.  Then when user calls alloc_fs_request with iovcnt \u003d\u003d 1, it just sets iov to point to this iovec, avoiding an extra calloc in the common case.  When freeing the request, it can check if iovcnt \u003d\u003d 1, or if iov points to this iovec, to know whether it must be freed.",
+      "revId": "c3407fa311359f981dd10c2162e5358fac45c243",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
