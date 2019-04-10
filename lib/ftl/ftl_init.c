@@ -87,6 +87,9 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	.max_active_relocs = 3,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
 	.user_io_pool_size = 2048,
+	/* Number of interleaving units per ws_opt */
+	/* 1 for default and 3 for 3D TLC NAND */
+	.num_interleave_units = 1,
 };
 
 static void ftl_dev_free_sync(struct spdk_ftl_dev *dev);
@@ -116,7 +119,8 @@ ftl_band_init_md(struct ftl_band *band)
 }
 
 static int
-ftl_check_conf(const struct spdk_ftl_conf *conf)
+ftl_check_conf(const struct spdk_ftl_conf *conf,
+	       const struct spdk_ocssd_geometry_data *geo)
 {
 	size_t i;
 
@@ -133,6 +137,9 @@ ftl_check_conf(const struct spdk_ftl_conf *conf)
 		return -1;
 	}
 	if (conf->rwb_size % FTL_BLOCK_SIZE != 0) {
+		return -1;
+	}
+	if (geo->ws_opt % conf->num_interleave_units != 0) {
 		return -1;
 	}
 
@@ -157,7 +164,7 @@ ftl_check_init_opts(const struct spdk_ftl_dev_init_opts *opts,
 		return -1;
 	}
 
-	if (ftl_check_conf(opts->conf)) {
+	if (ftl_check_conf(opts->conf, geo)) {
 		return -1;
 	}
 
@@ -883,7 +890,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
-	dev->rwb = ftl_rwb_init(&dev->conf, dev->geo.ws_opt, dev->md_size);
+	dev->rwb = ftl_rwb_init(&dev->conf, dev->geo.ws_opt, dev->md_size, ftl_dev_num_punits(dev));
 	if (!dev->rwb) {
 		SPDK_ERRLOG("Unable to initialize rwb structures\n");
 		goto fail_sync;
@@ -1019,6 +1026,8 @@ spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *cb_arg)
 	dev->halt_cb = cb;
 	dev->halt_arg = cb_arg;
 	dev->halt = 1;
+
+	ftl_rwb_disable_interleaving(dev->rwb);
 
 	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_add_halt_poller, dev);
 	return 0;
