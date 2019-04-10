@@ -143,6 +143,23 @@
     },
     {
       "key": {
+        "uuid": "908355e4_b91c6707",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-10T15:27:22Z",
+      "side": 1,
+      "message": "Right now you have to check the return code in two places - right after calling vbdev_ocf_construct() and then in the callback. There\u0027s no need for that. You can make the function always succeed and make it always call the callback. This simplifies the error handling for upper layers.\n\nThis will also require the cb to the non-null, which is probably the way to go here.",
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cb2beee1_1350de8c",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -187,6 +204,23 @@
       "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afdd2555_07c13ae1",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1165,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-10T15:27:22Z",
+      "side": 1,
+      "message": "refcnt can be null",
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
