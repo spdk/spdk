@@ -580,7 +580,7 @@ spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 }
 
 static int
-iscsi_get_active_conns(void)
+iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_conn *conn;
 	int num = 0;
@@ -590,6 +590,9 @@ iscsi_get_active_conns(void)
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
 		conn = find_iscsi_connection_by_id(i);
 		if (conn == NULL) {
+			continue;
+		}
+		if (target != NULL && conn->target != target) {
 			continue;
 		}
 		num++;
@@ -623,7 +626,7 @@ iscsi_conn_check_shutdown(void *arg)
 {
 	struct spdk_event *event;
 
-	if (iscsi_get_active_conns() != 0) {
+	if (iscsi_get_active_conns(NULL) != 0) {
 		return 1;
 	}
 
