@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf1393f1_2a7ce770",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-10T08:44:30Z",
+      "side": 1,
+      "message": "Other lines in this file use $() syntax for command execution instead of backticks. I suggest we stick to that.",
+      "range": {
+        "startLine": 60,
+        "startChar": 19,
+        "endLine": 60,
+        "endChar": 20
+      },
+      "revId": "3041fd3b4a00bcd56abd965c6b717cf0495410d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48f2c8f8_9e1392dc",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-10T08:44:30Z",
+      "side": 1,
+      "message": "bc can do the same without awk\u0027s printf and its syntax\ndown_limit\u003d`echo \"$qos_limit*0.9\" | bc`",
+      "range": {
+        "startLine": 75,
+        "startChar": 2,
+        "endLine": 76,
+        "endChar": 63
+      },
+      "revId": "3041fd3b4a00bcd56abd965c6b717cf0495410d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
