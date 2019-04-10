@@ -86,6 +86,9 @@ struct spdk_ftl_conf {
 		/* User writes limits */
 		struct spdk_ftl_limit		limits[SPDK_FTL_LIMIT_MAX];
 	} defrag;
+
+	/* The number of pages per One Shot Program : it should be moved into device's geometry */
+	size_t                                  osp_num_pages;
 };
 
 /* Range of parallel units (inclusive) */
