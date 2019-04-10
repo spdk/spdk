@@ -214,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "2acbad26_43598204",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-10T11:10:46Z",
+      "side": 1,
+      "message": "Ok, but I\u0027ve suggested I prefer to add next patch with similar pattern on submit_read.",
+      "parentUuid": "488d90fe_7acd0277",
+      "range": {
+        "startLine": 1051,
+        "startChar": 0,
+        "endLine": 1058,
+        "endChar": 3
+      },
+      "revId": "bd992bbd78ab36f3bcfe74d4d0b9a8753aa18383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1e6528e7_74be0cac",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 14
