@@ -589,17 +589,23 @@ ftl_process_shutdown(struct spdk_ftl_dev *dev)
 {
 	size_t size = ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_INTERNAL) +
 		      ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_USER);
+	size_t num_active = dev->xfer_size * ftl_rwb_get_active_batches(dev->rwb);
 
-	if (size >= dev->xfer_size) {
+	num_active = num_active ? num_active : dev->xfer_size;
+	if (size >= num_active) {
 		return;
 	}
 
 	/* If we reach this point we need to remove free bands */
 	/* and pad current wptr band to the end */
-	ftl_remove_free_bands(dev);
+	if (ftl_rwb_get_active_batches(dev->rwb) <= 1) {
+		ftl_remove_free_bands(dev);
+	}
 
 	/* Pad write buffer until band is full */
-	ftl_rwb_pad(dev, dev->xfer_size - size);
+	/* TODO : It would be better to request padding to as many as PUs possible */
+	/* instead of requesting to one PU at a time */
+	ftl_rwb_pad(dev, num_active - size);
 }
 
 static int
@@ -1018,7 +1024,7 @@ static void
 ftl_flush_pad_batch(struct spdk_ftl_dev *dev)
 {
 	struct ftl_rwb *rwb = dev->rwb;
-	size_t size;
+	size_t size, num_entries;
 
 	size = ftl_rwb_num_acquired(rwb, FTL_RWB_TYPE_INTERNAL) +
 	       ftl_rwb_num_acquired(rwb, FTL_RWB_TYPE_USER);
@@ -1030,8 +1036,9 @@ ftl_flush_pad_batch(struct spdk_ftl_dev *dev)
 	/* Only add padding when there's less than xfer size */
 	/* entries in the buffer. Otherwise we just have to wait */
 	/* for the entries to become ready. */
-	if (size < dev->xfer_size) {
-		ftl_rwb_pad(dev, dev->xfer_size - (size % dev->xfer_size));
+	num_entries = ftl_rwb_get_active_batches(dev->rwb) * dev->xfer_size;
+	if (size < num_entries) {
+		ftl_rwb_pad(dev, num_entries - (size % num_entries));
 	}
 }
 
