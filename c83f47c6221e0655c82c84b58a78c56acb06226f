@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6db07919_a715290a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1015584
+      },
+      "writtenOn": "2019-04-10T22:39:21Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "82878642_60670aa9",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4fc6dd74_1b37699c",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 16
@@ -33,6 +51,24 @@
       "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed9cbac2_14b810e4",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1015584
+      },
+      "writtenOn": "2019-04-10T22:39:21Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "4fc6dd74_1b37699c",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "65826a77_b4299a70",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1226,
+      "author": {
+        "id": 1015584
+      },
+      "writtenOn": "2019-04-10T22:39:21Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9a02397c_162ad6bb",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9db2047a_dc7ab765",
         "filename": "scripts/rpc/nvmf.py",
         "patchSetId": 16
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "dbddce45_19830326",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1015584
+      },
+      "writtenOn": "2019-04-10T22:39:21Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "9db2047a_dc7ab765",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "68a71df8_eda28fb4",
         "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
         "patchSetId": 16
@@ -81,6 +153,24 @@
       "writtenOn": "2019-04-04T16:05:04Z",
       "side": 1,
       "message": "can you double check that this DEFINE_STUB is needed?  I don\u0027t see any code added to lib/nvmf/ctrlr.c that calls spdk_nvmf_subsystem_get_ns, so I don\u0027t think this stub should be needed",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c245f24_1dc9e7d4",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1015584
+      },
+      "writtenOn": "2019-04-10T22:39:21Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "68a71df8_eda28fb4",
       "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
