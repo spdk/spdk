@@ -1643,7 +1643,6 @@ iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 		conn->sess->initiator_port = initiator_port;
 		conn->StatSN = from_be32(&rsph->stat_sn);
 		conn->sess->isid = iscsi_get_isid(rsph->isid);
-		conn->sess->target = target;
 
 		/* Initiator port TransportID */
 		spdk_scsi_port_set_iscsi_transport_id(conn->sess->initiator_port,
@@ -4749,7 +4748,7 @@ create_iscsi_sess(struct spdk_iscsi_conn *conn,
 	sess->connections++;
 
 	sess->params = NULL;
-	sess->target = NULL;
+	sess->target = target;
 	sess->isid = 0;
 	sess->session_type = session_type;
 	sess->current_text_itt = 0xffffffffU;
