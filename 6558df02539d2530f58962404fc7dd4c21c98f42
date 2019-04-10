@@ -16,6 +16,24 @@
       "revId": "6558df02539d2530f58962404fc7dd4c21c98f42",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dba580b5_f59d6858",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-10T01:10:46Z",
+      "side": 1,
+      "message": "Very reasonable. I used the idea in SCSI bdev because it was the only one, but I will use it here too.",
+      "parentUuid": "fba04a71_ddf8cb00",
+      "revId": "6558df02539d2530f58962404fc7dd4c21c98f42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
