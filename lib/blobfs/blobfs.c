@@ -1925,20 +1925,6 @@ __file_cache_finish_sync(void *ctx, int bserrno)
 }
 
 static void
-__free_args(struct spdk_fs_cb_args *args)
-{
-	struct spdk_fs_request *req;
-
-	if (!args->from_request) {
-		free(args);
-	} else {
-		/* Depends on args being at the start of the spdk_fs_request structure. */
-		req = (struct spdk_fs_request *)args;
-		free_fs_request(req);
-	}
-}
-
-static void
 __check_sync_reqs(struct spdk_file *file)
 {
 	struct spdk_fs_request *sync_req;
@@ -2092,50 +2078,54 @@ __file_extend_blob(void *_args)
 }
 
 static void
-__rw_from_file_done(void *arg, int bserrno)
+__rw_from_file_done(void *ctx, int bserrno)
 {
-	struct spdk_fs_cb_args *args = arg;
+	struct spdk_fs_request *req = ctx;
 
-	__wake_caller(args, bserrno);
-	__free_args(args);
+	__wake_caller(&req->args, bserrno);
+	free_fs_request(req);
 }
 
 static void
-__rw_from_file(void *_args)
+__rw_from_file(void *ctx)
 {
-	struct spdk_fs_cb_args *args = _args;
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *file = args->file;
 
 	if (args->op.rw.is_read) {
 		spdk_file_read_async(file, file->fs->sync_target.sync_io_channel, args->op.rw.user_buf,
 				     args->op.rw.offset, args->op.rw.length,
-				     __rw_from_file_done, args);
+				     __rw_from_file_done, req);
 	} else {
 		spdk_file_write_async(file, file->fs->sync_target.sync_io_channel, args->op.rw.user_buf,
 				      args->op.rw.offset, args->op.rw.length,
-				      __rw_from_file_done, args);
+				      __rw_from_file_done, req);
 	}
 }
 
 static int
-__send_rw_from_file(struct spdk_file *file, sem_t *sem, void *payload,
-		    uint64_t offset, uint64_t length, bool is_read)
+__send_rw_from_file(struct spdk_file *file, void *payload,
+		    uint64_t offset, uint64_t length, bool is_read,
+		    struct spdk_fs_channel *channel)
 {
+	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 
-	args = calloc(1, sizeof(*args));
-	if (args == NULL) {
-		sem_post(sem);
+	req = alloc_fs_request(channel);
+	if (req == NULL) {
+		sem_post(&channel->sem);
 		return -ENOMEM;
 	}
 
+	args = &req->args;
 	args->file = file;
-	args->sem = sem;
+	args->sem = &channel->sem;
 	args->op.rw.user_buf = payload;
 	args->op.rw.offset = offset;
 	args->op.rw.length = length;
 	args->op.rw.is_read = is_read;
-	file->fs->send_request(__rw_from_file, args);
+	file->fs->send_request(__rw_from_file, req);
 	return 0;
 }
 
@@ -2173,8 +2163,7 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 
 		file->append_pos += length;
 		pthread_spin_unlock(&file->lock);
-		rc = __send_rw_from_file(file, &channel->sem, payload,
-					 offset, length, false);
+		rc = __send_rw_from_file(file, payload, offset, length, false, channel);
 		sem_wait(&channel->sem);
 		return rc;
 	}
@@ -2325,7 +2314,8 @@ check_readahead(struct spdk_file *file, uint64_t offset,
 }
 
 static int
-__file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t length, sem_t *sem)
+__file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t length,
+	    struct spdk_fs_channel *channel)
 {
 	struct cache_buffer *buf;
 	int rc;
@@ -2333,7 +2323,7 @@ __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t len
 	buf = spdk_tree_find_filled_buffer(file->tree, offset);
 	if (buf == NULL) {
 		pthread_spin_unlock(&file->lock);
-		rc = __send_rw_from_file(file, sem, payload, offset, length, true);
+		rc = __send_rw_from_file(file, payload, offset, length, true, channel);
 		pthread_spin_lock(&file->lock);
 		return rc;
 	}
@@ -2352,7 +2342,7 @@ __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t len
 		pthread_spin_unlock(&g_caches_lock);
 	}
 
-	sem_post(sem);
+	sem_post(&channel->sem);
 	return 0;
 }
 
@@ -2397,7 +2387,7 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		if (length > (final_offset - offset)) {
 			length = final_offset - offset;
 		}
-		rc = __file_read(file, payload, offset, length, &channel->sem);
+		rc = __file_read(file, payload, offset, length, channel);
 		if (rc == 0) {
 			final_length += length;
 		} else {
