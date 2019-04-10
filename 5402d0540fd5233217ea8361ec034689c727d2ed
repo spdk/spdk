@@ -16,6 +16,24 @@
       "revId": "5402d0540fd5233217ea8361ec034689c727d2ed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ea521ba_6a23054a",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1857,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-10T08:58:19Z",
+      "side": 1,
+      "message": "Thank you for the nice suggestion, Jim. I spent time to check but I didn\u0027t see any issue to take your suggestion.",
+      "parentUuid": "b108860d_9cfbae19",
+      "revId": "5402d0540fd5233217ea8361ec034689c727d2ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
