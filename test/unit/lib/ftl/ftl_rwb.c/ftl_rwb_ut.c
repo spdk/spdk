@@ -38,19 +38,91 @@
 
 #include "ftl/ftl_rwb.c"
 
-#define RWB_SIZE	(1024 * 1024)
-#define RWB_ENTRY_COUNT	(RWB_SIZE / FTL_BLOCK_SIZE)
-#define XFER_SIZE	16
-#define METADATA_SIZE	64
+struct ftl_rwb_ut {
+	/* configuration */
+	struct	spdk_ftl_conf conf;
+	size_t	metadata_size;
+	size_t	num_punits;
+	size_t	xfer_size;
+
+	/* the below fields are calculated by the above configurations */
+	size_t	max_batches;
+	size_t	max_active_batches;
+	size_t	max_entries;
+	size_t	max_allocable_entries;	/* maximum avalable entries to allocate at once */
+	size_t	interleave_offset;
+
+};
 
 static struct ftl_rwb *g_rwb;
+static struct ftl_rwb_ut g_ut;
+
+static int _init_suite(void);
+
+static int
+init_suite1(void)
+{
+	g_ut.conf.rwb_size = 1024 * 1024;
+	g_ut.conf.num_interleave_units = 1;
+	g_ut.metadata_size = 64;
+	g_ut.num_punits = 4;
+	g_ut.xfer_size = 16;
+
+	return _init_suite();
+}
+
+static int
+init_suite2(void)
+{
+	g_ut.conf.rwb_size = 2 * 1024 * 1024;
+	g_ut.conf.num_interleave_units = 4;
+	g_ut.metadata_size = 64;
+	g_ut.num_punits = 8;
+	g_ut.xfer_size = 16;
+
+	return _init_suite();
+}
+
+static int
+_init_suite(void)
+{
+	struct spdk_ftl_conf *conf = &g_ut.conf;
+
+	if (conf->num_interleave_units == 0 ||
+	    g_ut.xfer_size % conf->num_interleave_units ||
+	    g_ut.num_punits == 0) {
+		return -1;
+	}
+
+	g_ut.max_batches = conf->rwb_size / (FTL_BLOCK_SIZE * g_ut.xfer_size);
+	if (conf->num_interleave_units > 1) {
+		g_ut.max_batches += g_ut.num_punits;
+		g_ut.max_active_batches = g_ut.num_punits;
+	} else {
+		g_ut.max_batches++;
+		g_ut.max_active_batches = 1;
+	}
+
+	g_ut.max_entries = g_ut.max_batches * g_ut.xfer_size;
+	g_ut.max_allocable_entries = (g_ut.max_batches / g_ut.max_active_batches) *
+				     g_ut.max_active_batches * g_ut.xfer_size;
+
+	g_ut.interleave_offset = g_ut.xfer_size / conf->num_interleave_units;
+
+	/* if max_batches is less than max_active_batches * 2, */
+	/* test_rwb_limits_applied will be failed. */
+	if (g_ut.max_batches < g_ut.max_active_batches * 2) {
+		return -1;
+	}
+
+	return 0;
+}
 
 static void
 setup_rwb(void)
 {
-	struct spdk_ftl_conf conf = { .rwb_size = RWB_SIZE };
-
-	g_rwb = ftl_rwb_init(&conf, XFER_SIZE, METADATA_SIZE);
+	g_rwb = ftl_rwb_init(&g_ut.conf, g_ut.xfer_size,
+			     g_ut.metadata_size, g_ut.num_punits);
 	SPDK_CU_ASSERT_FATAL(g_rwb != NULL);
 }
 
@@ -64,12 +136,12 @@ cleanup_rwb(void)
 static void
 test_rwb_acquire(void)
 {
-	size_t i;
 	struct ftl_rwb_entry *entry;
+	size_t i;
 
 	setup_rwb();
 	/* Verify that it's possible to acquire all of the entries */
-	for (i = 0; i < RWB_ENTRY_COUNT; ++i) {
+	for (i = 0; i < g_ut.max_allocable_entries; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
 		SPDK_CU_ASSERT_FATAL(entry);
 		ftl_rwb_push(entry);
@@ -85,52 +157,107 @@ test_rwb_pop(void)
 {
 	struct ftl_rwb_entry *entry;
 	struct ftl_rwb_batch *batch;
-	size_t entry_count, i;
+	size_t entry_count, i, i_reset = 0, i_offset = 0;
+	uint64_t expected_lba;
 
 	setup_rwb();
+
 	/* Acquire all entries */
-	for (i = 0; i < RWB_ENTRY_COUNT; ++i) {
+	for (i = 0; i < g_ut.max_allocable_entries; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
+
 		SPDK_CU_ASSERT_FATAL(entry);
 		entry->lba = i;
 		ftl_rwb_push(entry);
 	}
 
 	/* Pop all batches and free them */
-	for (i = 0; i < RWB_ENTRY_COUNT / XFER_SIZE; ++i) {
+	for (i = 0; i < g_ut.max_allocable_entries / g_ut.xfer_size; ++i) {
 		batch = ftl_rwb_pop(g_rwb);
 		SPDK_CU_ASSERT_FATAL(batch);
 		entry_count = 0;
 
 		ftl_rwb_foreach(entry, batch) {
-			CU_ASSERT_EQUAL(entry->lba, i * XFER_SIZE + entry_count);
+			if (i % g_ut.max_active_batches == 0) {
+				i_offset = i * g_ut.xfer_size;
+			}
+
+			if (entry_count % g_ut.interleave_offset == 0) {
+				i_reset = i % g_ut.max_active_batches +
+					  (entry_count / g_ut.interleave_offset) *
+					  g_ut.max_active_batches;
+			}
+
+			expected_lba = i_offset +
+				       i_reset * g_ut.interleave_offset +
+				       entry_count % g_ut.interleave_offset;
+
+			CU_ASSERT_EQUAL(entry->lba, expected_lba);
 			entry_count++;
 		}
 
-		CU_ASSERT_EQUAL(entry_count, XFER_SIZE);
+		CU_ASSERT_EQUAL(entry_count, g_ut.xfer_size);
 		ftl_rwb_batch_release(batch);
 	}
 
 	/* Acquire all entries once more */
-	for (i = 0; i < RWB_ENTRY_COUNT; ++i) {
+	for (i = 0; i < g_ut.max_allocable_entries; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
 		SPDK_CU_ASSERT_FATAL(entry);
 		ftl_rwb_push(entry);
 	}
 
-	/* Pop one batch and check we can acquire XFER_SIZE entries */
-	batch = ftl_rwb_pop(g_rwb);
-	SPDK_CU_ASSERT_FATAL(batch);
-	ftl_rwb_batch_release(batch);
+	/* Pop one batch and check we can acquire xfer_size entries */
+	for (i = 0; i < g_ut.max_active_batches; i++) {
+		batch = ftl_rwb_pop(g_rwb);
+		SPDK_CU_ASSERT_FATAL(batch);
+		ftl_rwb_batch_release(batch);
+	}
 
-	for (i = 0; i < XFER_SIZE; ++i) {
+	for (i = 0; i < g_ut.xfer_size * g_ut.max_active_batches; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
+
 		SPDK_CU_ASSERT_FATAL(entry);
 		ftl_rwb_push(entry);
 	}
 
 	entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
 	CU_ASSERT_PTR_NULL(entry);
+
+	/* Pop and Release all batches */
+	for (i = 0; i < g_ut.max_allocable_entries / g_ut.xfer_size; ++i) {
+		batch = ftl_rwb_pop(g_rwb);
+		SPDK_CU_ASSERT_FATAL(batch);
+		ftl_rwb_batch_release(batch);
+	}
+
+	ftl_rwb_disable_interleaving(g_rwb);
+
+	/* Acquire all entries */
+	for (i = 0; i < g_ut.max_allocable_entries; ++i) {
+		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
+
+		SPDK_CU_ASSERT_FATAL(entry);
+		entry->lba = i;
+		ftl_rwb_push(entry);
+	}
+
+	/* Pop all batches and free them */
+	for (i = 0; i < g_ut.max_allocable_entries / g_ut.xfer_size; ++i) {
+		batch = ftl_rwb_pop(g_rwb);
+		SPDK_CU_ASSERT_FATAL(batch);
+		entry_count = 0;
+
+		ftl_rwb_foreach(entry, batch) {
+			expected_lba = i * g_ut.xfer_size + entry_count;
+			CU_ASSERT_EQUAL(entry->lba, expected_lba);
+			entry_count++;
+		}
+
+		CU_ASSERT_EQUAL(entry_count, g_ut.xfer_size);
+		ftl_rwb_batch_release(batch);
+	}
+
 	cleanup_rwb();
 }
 
@@ -142,7 +269,7 @@ test_rwb_batch_revert(void)
 	size_t i;
 
 	setup_rwb();
-	for (i = 0; i < RWB_ENTRY_COUNT; ++i) {
+	for (i = 0; i < g_ut.max_allocable_entries; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
 		SPDK_CU_ASSERT_FATAL(entry);
 		ftl_rwb_push(entry);
@@ -155,7 +282,7 @@ test_rwb_batch_revert(void)
 	ftl_rwb_batch_revert(batch);
 
 	/* Verify all of the batches */
-	for (i = 0; i < RWB_ENTRY_COUNT / XFER_SIZE; ++i) {
+	for (i = 0; i < g_ut.max_allocable_entries / g_ut.xfer_size; ++i) {
 		batch = ftl_rwb_pop(g_rwb);
 		CU_ASSERT_PTR_NOT_NULL_FATAL(batch);
 	}
@@ -170,7 +297,7 @@ test_rwb_entry_from_offset(void)
 	size_t i;
 
 	setup_rwb();
-	for (i = 0; i < RWB_ENTRY_COUNT; ++i) {
+	for (i = 0; i < g_ut.max_allocable_entries; ++i) {
 		ppa.offset = i;
 
 		entry = ftl_rwb_entry_from_offset(g_rwb, i);
@@ -179,15 +306,18 @@ test_rwb_entry_from_offset(void)
 	cleanup_rwb();
 }
 
+static size_t g_entries_per_worker;
+
 static void *
 test_rwb_worker(void *ctx)
 {
-#define ENTRIES_PER_WORKER (16 * RWB_ENTRY_COUNT)
 	struct ftl_rwb_entry *entry;
 	unsigned int *num_done = ctx;
 	size_t i;
 
-	for (i = 0; i < ENTRIES_PER_WORKER; ++i) {
+	g_entries_per_worker = 16 * g_ut.max_allocable_entries;
+
+	for (i = 0; i < g_entries_per_worker; ++i) {
 		while (1) {
 			entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
 			if (entry) {
@@ -251,7 +381,7 @@ test_rwb_parallel(void)
 		}
 	}
 
-	CU_ASSERT_TRUE(num_entries == NUM_PARALLEL_WORKERS * ENTRIES_PER_WORKER);
+	CU_ASSERT_TRUE(num_entries == NUM_PARALLEL_WORKERS * g_entries_per_worker);
 	cleanup_rwb();
 }
 
@@ -282,6 +412,7 @@ test_rwb_limits_set(void)
 	size_t i;
 
 	setup_rwb();
+
 	/* Check valid limits */
 	ftl_rwb_get_limits(g_rwb, limits);
 	memcpy(check, limits, sizeof(limits));
@@ -307,9 +438,11 @@ test_rwb_limits_applied(void)
 	struct ftl_rwb_entry *entry;
 	struct ftl_rwb_batch *batch;
 	size_t limits[FTL_RWB_TYPE_MAX];
+	const size_t test_limit = g_ut.xfer_size * g_ut.max_active_batches;
 	size_t i;
 
 	setup_rwb();
+
 	/* Check that it's impossible to acquire any entries when the limits are */
 	/* set to 0 */
 	ftl_rwb_get_limits(g_rwb, limits);
@@ -325,11 +458,10 @@ test_rwb_limits_applied(void)
 	CU_ASSERT_PTR_NULL(entry);
 
 	/* Check positive limits */
-#define TEST_LIMIT XFER_SIZE
 	limits[FTL_RWB_TYPE_USER] = ftl_rwb_entry_cnt(g_rwb);
-	limits[FTL_RWB_TYPE_INTERNAL] = TEST_LIMIT;
+	limits[FTL_RWB_TYPE_INTERNAL] = test_limit;
 	ftl_rwb_set_limits(g_rwb, limits);
-	for (i = 0; i < TEST_LIMIT; ++i) {
+	for (i = 0; i < test_limit; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_INTERNAL);
 		SPDK_CU_ASSERT_FATAL(entry);
 		entry->flags = FTL_IO_INTERNAL;
@@ -340,20 +472,22 @@ test_rwb_limits_applied(void)
 	entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_INTERNAL);
 	CU_ASSERT_PTR_NULL(entry);
 
-	/* Complete the entries and check we can retrieve the entries once again */
-	batch = ftl_rwb_pop(g_rwb);
-	SPDK_CU_ASSERT_FATAL(batch);
-	ftl_rwb_batch_release(batch);
+	for (i = 0; i < test_limit / g_ut.xfer_size; ++i) {
+		/* Complete the entries and check we can retrieve the entries once again */
+		batch = ftl_rwb_pop(g_rwb);
+		SPDK_CU_ASSERT_FATAL(batch);
+		ftl_rwb_batch_release(batch);
+	}
 
 	entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_INTERNAL);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(entry);
 	entry->flags = FTL_IO_INTERNAL;
 
 	/* Set the same limit but this time for user entries */
-	limits[FTL_RWB_TYPE_USER] = TEST_LIMIT;
+	limits[FTL_RWB_TYPE_USER] = test_limit;
 	limits[FTL_RWB_TYPE_INTERNAL] = ftl_rwb_entry_cnt(g_rwb);
 	ftl_rwb_set_limits(g_rwb, limits);
-	for (i = 0; i < TEST_LIMIT; ++i) {
+	for (i = 0; i < test_limit; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_USER);
 		SPDK_CU_ASSERT_FATAL(entry);
 		ftl_rwb_push(entry);
@@ -365,45 +499,68 @@ test_rwb_limits_applied(void)
 
 	/* Check that we're still able to acquire a number of internal entries */
 	/* while the user entires are being throttled */
-	for (i = 0; i < TEST_LIMIT; ++i) {
+	for (i = 0; i < g_ut.xfer_size; ++i) {
 		entry = ftl_rwb_acquire(g_rwb, FTL_RWB_TYPE_INTERNAL);
 		SPDK_CU_ASSERT_FATAL(entry);
 	}
+
 	cleanup_rwb();
 }
 
 int
 main(int argc, char **argv)
 {
-	CU_pSuite suite;
+	CU_pSuite suite1, suite2;
 	unsigned int num_failures;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
 	}
 
-	suite = CU_add_suite("ftl_rwb_suite", NULL, NULL);
-	if (!suite) {
+	suite1 = CU_add_suite("suite1", init_suite1, NULL);
+	if (!suite1) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	suite2 = CU_add_suite("suite2", init_suite2, NULL);
+	if (!suite2) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
 
 	if (
-		CU_add_test(suite, "test_rwb_acquire",
+		CU_add_test(suite1, "test_rwb_acquire",
 			    test_rwb_acquire) == NULL
-		|| CU_add_test(suite, "test_rwb_pop",
+		|| CU_add_test(suite1, "test_rwb_pop",
 			       test_rwb_pop) == NULL
-		|| CU_add_test(suite, "test_rwb_batch_revert",
+		|| CU_add_test(suite1, "test_rwb_batch_revert",
 			       test_rwb_batch_revert) == NULL
-		|| CU_add_test(suite, "test_rwb_entry_from_offset",
+		|| CU_add_test(suite1, "test_rwb_entry_from_offset",
 			       test_rwb_entry_from_offset) == NULL
-		|| CU_add_test(suite, "test_rwb_parallel",
+		|| CU_add_test(suite1, "test_rwb_parallel",
 			       test_rwb_parallel) == NULL
-		|| CU_add_test(suite, "test_rwb_limits_base",
+		|| CU_add_test(suite1, "test_rwb_limits_base",
 			       test_rwb_limits_base) == NULL
-		|| CU_add_test(suite, "test_rwb_limits_set",
+		|| CU_add_test(suite1, "test_rwb_limits_set",
 			       test_rwb_limits_set) == NULL
-		|| CU_add_test(suite, "test_rwb_limits_applied",
+		|| CU_add_test(suite1, "test_rwb_limits_applied",
+			       test_rwb_limits_applied) == NULL
+		|| CU_add_test(suite2, "test_rwb_acquire",
+			       test_rwb_acquire) == NULL
+		|| CU_add_test(suite2, "test_rwb_pop",
+			       test_rwb_pop) == NULL
+		|| CU_add_test(suite2, "test_rwb_batch_revert",
+			       test_rwb_batch_revert) == NULL
+		|| CU_add_test(suite2, "test_rwb_entry_from_offset",
+			       test_rwb_entry_from_offset) == NULL
+		|| CU_add_test(suite2, "test_rwb_parallel",
+			       test_rwb_parallel) == NULL
+		|| CU_add_test(suite2, "test_rwb_limits_base",
+			       test_rwb_limits_base) == NULL
+		|| CU_add_test(suite2, "test_rwb_limits_set",
+			       test_rwb_limits_set) == NULL
+		|| CU_add_test(suite2, "test_rwb_limits_applied",
 			       test_rwb_limits_applied) == NULL
 	) {
 		CU_cleanup_registry();
