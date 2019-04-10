@@ -16,6 +16,24 @@
       "revId": "426c1b98de9230155e6fe3b65188405c264a0afa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e65d0b35_81fad5ef",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-10T04:44:01Z",
+      "side": 1,
+      "message": "Hi Yidong, thanks for your review. I don\u0027t think we need to add the log in the commit message. I think it is OK we put the size check together with the fix. Because of the size check, we find the problems and fix it. Thank you.",
+      "parentUuid": "48c31439_205708bc",
+      "revId": "426c1b98de9230155e6fe3b65188405c264a0afa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
