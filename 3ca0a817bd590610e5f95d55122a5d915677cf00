@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea4cb366_19f8fa5e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1100,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-10T07:11:33Z",
+      "side": 1,
+      "message": "Could we user another local variable,e.g.,\n\nnum_outstanding_data_wr \u003d 0 with default value after line 1054. Then set it in after line 1098 with:\n\nnum_outstanding_data_wr \u003d rdma_req-\u003enum_outstanding_data_wr;\n\nThen change line 1112:\nrqpair-\u003ecurrent_send_depth +\u003d num_outstanding_data_wr + 1;",
+      "range": {
+        "startLine": 1100,
+        "startChar": 1,
+        "endLine": 1100,
+        "endChar": 40
+      },
+      "revId": "3ca0a817bd590610e5f95d55122a5d915677cf00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
