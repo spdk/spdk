@@ -729,6 +729,25 @@ struct spdk_pci_driver *spdk_pci_virtio_get_driver(void);
 int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
+ * Begin iterating over enumerated PCI device by calling this function to get
+ * the first PCI device. If there no PCI devices enumerated, return NULL
+ *
+ * \return a pointer to a PCI device on success, NULL otherwise.
+ */
+struct spdk_pci_device *spdk_pci_get_first_device(void);
+
+/**
+ * Continue iterating over enumerated PCI devices.
+ * If no additional PCI devices, return NULL
+ *
+ * \param prev Previous PCI device returned from \ref spdk_pci_get_first_device
+ * or \ref spdk_pci_get_next_device
+ *
+ * \return a pointer to the next PCI device on success, NULL otherwise.
+ */
+struct spdk_pci_device *spdk_pci_get_next_device(struct spdk_pci_device *prev);
+
+/**
  * Map a PCI BAR in the current process.
  *
  * \param dev PCI device.
