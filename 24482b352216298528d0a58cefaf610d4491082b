@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2b3771b3_82e4fdf0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 2129,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-11T02:00:01Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "1851e6c2_a564e3fe",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "71536fc7_fbfdd92f",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 27
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "b6e7416d_23470fce",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-11T02:00:01Z",
+      "side": 1,
+      "message": "Yes, I will add an assertion and return max_num_hostid instead.",
+      "parentUuid": "73fc8b63_676aaeeb",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98ca7e67_610e08c2",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 27
@@ -64,6 +100,24 @@
       "writtenOn": "2019-04-10T17:06:23Z",
       "side": 1,
       "message": "Calculate",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e1eeb75_5cb91d31",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1349,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-11T02:00:01Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "98ca7e67_610e08c2",
       "revId": "24482b352216298528d0a58cefaf610d4491082b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "40bbf889_069b6af1",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1356,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-11T02:00:01Z",
+      "side": 1,
+      "message": "yes, it should be \"remaining\".",
+      "parentUuid": "363f3f0a_22a879e3",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "52697c8e_8ae1d8f5",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 27
@@ -98,6 +170,24 @@
       "writtenOn": "2019-04-10T17:06:23Z",
       "side": 1,
       "message": "notification",
+      "revId": "24482b352216298528d0a58cefaf610d4491082b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60bc488b_b40a30b8",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1776,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-11T02:00:01Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "52697c8e_8ae1d8f5",
       "revId": "24482b352216298528d0a58cefaf610d4491082b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
