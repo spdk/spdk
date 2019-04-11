@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c77ae55e_b85efeee",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-11T07:18:06Z",
+      "side": 1,
+      "message": "num_outstanding_data_wr  \u003d 0;",
+      "range": {
+        "startLine": 1048,
+        "startChar": 8,
+        "endLine": 1048,
+        "endChar": 31
+      },
+      "revId": "85ab8c02108c2fa4133d7389e49de491d591ae8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ee2bf67_2e764c4b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-11T07:18:06Z",
+      "side": 1,
+      "message": "You can directly assign 0 in the beginning.",
+      "range": {
+        "startLine": 1056,
+        "startChar": 0,
+        "endLine": 1056,
+        "endChar": 29
+      },
+      "revId": "85ab8c02108c2fa4133d7389e49de491d591ae8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
