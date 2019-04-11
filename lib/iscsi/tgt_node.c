@@ -1284,8 +1284,9 @@ spdk_iscsi_shutdown_tgt_nodes(void)
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
 
-int
-spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name)
+void
+spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name,
+				     iscsi_tgt_node_destruct_cb cb_fn, void *cb_arg)
 {
 	struct spdk_iscsi_tgt_node *target;
 
@@ -1297,11 +1298,16 @@ spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name)
 
 		iscsi_tgt_node_destruct(target);
 
-		return 0;
+		if (cb_fn) {
+			cb_fn(cb_arg, 0);
+		}
+		return;
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-	return -ENOENT;
+	if (cb_fn) {
+		cb_fn(cb_arg, -ENOENT);
+	}
 }
 
 bool
