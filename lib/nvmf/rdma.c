@@ -1625,6 +1625,8 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	}
 
 #ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
+	/* Go back to the last descriptor in the list. */
+	desc--;
 	if ((device->attr.device_cap_flags & IBV_DEVICE_MEM_MGT_EXTENSIONS) != 0) {
 		if (desc->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY) {
 			rdma_req->rsp.wr.opcode = IBV_WR_SEND_WITH_INV;
