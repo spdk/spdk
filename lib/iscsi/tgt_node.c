@@ -657,9 +657,7 @@ iscsi_tgt_node_destruct_poller_cb(void *arg)
 	iscsi_tgt_node_delete_all_pg_maps(target);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-	spdk_scsi_dev_destruct(target->dev);
-
-	iscsi_tgt_node_destruct_done(target, 0);
+	spdk_scsi_dev_destruct(target->dev, iscsi_tgt_node_destruct_done, target);
 
 	return 1;
 }
