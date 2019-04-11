@@ -237,7 +237,7 @@ scsi_lun_check_io_channel(void *arg)
 static void
 scsi_lun_notify_hot_remove(struct spdk_scsi_lun *lun)
 {
-	struct spdk_scsi_desc *desc, *tmp;
+	struct spdk_scsi_lun_desc *desc, *tmp;
 
 	if (lun->hotremove_cb) {
 		lun->hotremove_cb(lun, lun->hotremove_ctx);
@@ -368,10 +368,10 @@ spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 }
 
 int
-spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb,
-		   void *hotremove_ctx, struct spdk_scsi_desc **_desc)
+spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_lun_remove_cb_t hotremove_cb,
+		   void *hotremove_ctx, struct spdk_scsi_lun_desc **_desc)
 {
-	struct spdk_scsi_desc *desc;
+	struct spdk_scsi_lun_desc *desc;
 
 	desc = calloc(1, sizeof(*desc));
 	if (desc == NULL) {
@@ -390,7 +390,7 @@ spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb
 }
 
 void
-spdk_scsi_lun_close(struct spdk_scsi_desc *desc)
+spdk_scsi_lun_close(struct spdk_scsi_lun_desc *desc)
 {
 	struct spdk_scsi_lun *lun = desc->lun;
 
@@ -441,7 +441,7 @@ _spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
 }
 
 int
-spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_desc *desc)
+spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun_desc *desc)
 {
 	struct spdk_scsi_lun *lun = desc->lun;
 
@@ -449,7 +449,7 @@ spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_desc *desc)
 }
 
 void
-spdk_scsi_lun_free_io_channel(struct spdk_scsi_desc *desc)
+spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun_desc *desc)
 {
 	struct spdk_scsi_lun *lun = desc->lun;
 
