@@ -16,6 +16,24 @@
       "revId": "ae3eec176995563e6d317f04d6b3b4d6862f2522",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3720374f_05c87355",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-11T01:33:26Z",
+      "side": 1,
+      "message": "Thank you. I added removed in the previous patch and took your advice in it.\n\ntarget-\u003edestructed and (target-\u003edestruct_cb_fn !\u003d NULL) have the same meaning, but iscsi.c have referred the member of struct spdk_iscsi_tgt_node directly and (target-\u003edestruct_cb !\u003d NULL) is hard to understand in iscsi.c. So I want to add both destructed and destruct_cb_fn to struct spdk_iscsi_tgt_node.",
+      "parentUuid": "d6102b72_df78933f",
+      "revId": "ae3eec176995563e6d317f04d6b3b4d6862f2522",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
