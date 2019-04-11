@@ -38,6 +38,7 @@
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
+#include "spdk/vmd.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
@@ -184,6 +185,8 @@ static int g_outstanding_commands;
 
 static bool g_latency_ssd_tracking_enable = false;
 static int g_latency_sw_tracking_level = 0;
+
+static bool g_vmd = false;
 
 static struct ctrlr_entry *g_controllers = NULL;
 static int g_controllers_found = 0;
@@ -1494,7 +1497,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:U:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILMV:U:")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
@@ -1588,6 +1591,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'L':
 			g_latency_sw_tracking_level++;
+			break;
+		case 'V':
+			g_vmd = true;
 			break;
 		default:
 			usage(argv[0]);
@@ -1807,6 +1813,11 @@ register_controllers(void)
 	struct trid_entry *trid_entry;
 
 	printf("Initializing NVMe Controllers\n");
+
+	if (g_vmd && spdk_vmd_init()) {
+		printf("Failed to initialize VMD\n");
+		return -1;
+	}
 
 	TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
 		if (spdk_nvme_probe(&trid_entry->trid, trid_entry, probe_cb, attach_cb, NULL) != 0) {
