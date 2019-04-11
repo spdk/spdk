@@ -657,9 +657,7 @@ iscsi_tgt_node_destruct_poller_cb(void *arg)
 
 	spdk_poller_unregister(&target->destruct_poller);
 
-	spdk_scsi_dev_destruct(target->dev);
-
-	iscsi_tgt_node_destruct_done(target, 0);
+	spdk_scsi_dev_destruct(target->dev, iscsi_tgt_node_destruct_done, target);
 	return 1;
 }
 
