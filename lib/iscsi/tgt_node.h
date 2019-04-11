@@ -86,12 +86,15 @@ struct spdk_iscsi_tgt_node {
 	int num_pg_maps;
 	TAILQ_HEAD(, spdk_iscsi_pg_map) pg_map_head;
 	TAILQ_ENTRY(spdk_iscsi_tgt_node) tailq;
+
+	bool destructed;
 };
 
 int spdk_iscsi_parse_tgt_nodes(void);
 
 void spdk_iscsi_shutdown_tgt_nodes(void);
 int spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name);
+bool spdk_iscsi_tgt_node_is_destructed(struct spdk_iscsi_tgt_node *target);
 int spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 			 const char *iaddr, const char *tiqn, uint8_t *data, int alloc_len,
 			 int data_len);
