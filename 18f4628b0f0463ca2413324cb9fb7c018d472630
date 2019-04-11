@@ -16,6 +16,24 @@
       "revId": "18f4628b0f0463ca2413324cb9fb7c018d472630",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6a48aa7_bc25b8f3",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-11T08:45:56Z",
+      "side": 1,
+      "message": "Done. Thanks for your review.",
+      "parentUuid": "101bbf5e_0b57d7fb",
+      "revId": "18f4628b0f0463ca2413324cb9fb7c018d472630",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
