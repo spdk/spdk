@@ -194,6 +194,8 @@ struct spdk_fs_cb_args {
 };
 
 static void cache_free_buffers(struct spdk_file *file);
+static void spdk_fs_io_device_unregister(struct spdk_filesystem *fs);
+static void spdk_fs_free_io_channels(struct spdk_filesystem *fs);
 
 void
 spdk_fs_opts_init(struct spdk_blobfs_opts *opts)
@@ -512,12 +514,8 @@ spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel, 0);
 	if (req == NULL) {
-		spdk_put_io_channel(fs->md_target.md_io_channel);
-		spdk_io_device_unregister(&fs->md_target, NULL);
-		spdk_put_io_channel(fs->sync_target.sync_io_channel);
-		spdk_io_device_unregister(&fs->sync_target, NULL);
-		spdk_io_device_unregister(&fs->io_target, NULL);
-		free(fs);
+		spdk_fs_free_io_channels(fs);
+		spdk_fs_io_device_unregister(fs);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
