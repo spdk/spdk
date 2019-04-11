@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "101bbf5e_0b57d7fb",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-11T07:21:12Z",
+      "side": 1,
+      "message": "It\u0027s better to add the __attribute__((packed)) here too.",
+      "revId": "18f4628b0f0463ca2413324cb9fb7c018d472630",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
