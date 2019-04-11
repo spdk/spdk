@@ -414,8 +414,8 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		case SPDK_SPC_VPD_EXTENDED_INQUIRY_DATA: {
 			struct spdk_scsi_vpd_ext_inquiry *vext = (struct spdk_scsi_vpd_ext_inquiry *)vpage;
 
-			memset(vext, 0, sizeof(*vext));
 			hlen = 4;
+			memset((uint8_t *)vext + hlen, 0, sizeof(*vext) - hlen);
 
 			/* RTO(3) GRD_CHK(2) APP_CHK(1) REF_CHK(0) */
 
