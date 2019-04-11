@@ -631,6 +631,13 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 		return;
 	}
 
+	if (target->destructed) {
+		SPDK_ERRLOG("Destructing %s is already started\n", target->name);
+		return;
+	}
+
+	target->destructed = true;
+
 	spdk_scsi_dev_destruct(target->dev);
 
 	free(target->name);
@@ -1265,6 +1272,12 @@ spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name)
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
 	return -ENOENT;
+}
+
+bool
+spdk_iscsi_tgt_node_is_destructed(struct spdk_iscsi_tgt_node *target)
+{
+	return target->destructed;
 }
 
 int
