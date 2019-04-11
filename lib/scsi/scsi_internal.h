@@ -61,18 +61,20 @@ struct spdk_scsi_port {
 };
 
 struct spdk_scsi_dev {
-	int			id;
-	int			is_allocated;
-	bool			removed;
+	int				id;
+	int				is_allocated;
+	bool				removed;
+	spdk_scsi_dev_destruct_cb_t	remove_cb;
+	void				*remove_ctx;
 
-	char			name[SPDK_SCSI_DEV_MAX_NAME + 1];
+	char				name[SPDK_SCSI_DEV_MAX_NAME + 1];
 
-	struct spdk_scsi_lun	*lun[SPDK_SCSI_DEV_MAX_LUN];
+	struct spdk_scsi_lun		*lun[SPDK_SCSI_DEV_MAX_LUN];
 
-	int			num_ports;
-	struct spdk_scsi_port	port[SPDK_SCSI_DEV_MAX_PORTS];
+	int				num_ports;
+	struct spdk_scsi_port		port[SPDK_SCSI_DEV_MAX_PORTS];
 
-	uint8_t			protocol_id;
+	uint8_t				protocol_id;
 };
 
 struct spdk_scsi_lun_desc {
