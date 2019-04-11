@@ -20,6 +20,7 @@ used_vms=""
 wwpn_prefix="naa.5001405bc6498"
 
 fio_bin="--fio-bin=/home/sys_sgsw/fio_ubuntu"
+fio_retries=1
 precond_fio_bin="/usr/src/fio/fio"
 
 function usage()
@@ -33,6 +34,7 @@ function usage()
 	echo "                            Binary will be copied to VM, static compilation"
 	echo "                            of binary is recommended."
 	echo "    --fio-job=PATH          Fio config to use for test."
+	echo "    --fio-retries=INT       Number of times to run specified workload."
 	echo "    --vm-count=INT          Total number of virtual machines to launch in this test;"
 	echo "                            Each VM will get one bdev (lvol or split vbdev)"
 	echo "                            to run FIO test."
@@ -108,6 +110,7 @@ while getopts 'xh-:' optchar; do
 			help) usage $0 ;;
 			fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
 			fio-job=*) fio_job="${OPTARG#*=}" ;;
+			fio-retries=*) fio_retries="${OPTARG#*=}" ;;
 			vm-count=*) vm_count="${OPTARG#*=}" ;;
 			vm-memory=*) vm_memory="${OPTARG#*=}" ;;
 			vm-image=*) vm_image="${OPTARG#*=}" ;;
@@ -344,26 +347,33 @@ for vm_num in $used_vms; do
 done
 
 # Run FIO traffic
-run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" --json $fio_disks &
-fio_pid=$!
+fio_job_fname=$(basename $fio_job)
+fio_log_fname="${fio_job_fname%%.*}.log"
+for i in $(seq 1 $fio_retries); do
+	echo "Running FIO iteration $i"
+	run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" --json $fio_disks &
+	fio_pid=$!
 
-if $vm_sar_enable; then
-	sleep $vm_sar_delay
-	mkdir -p $TEST_DIR/fio_results/sar_stats
-	pids=""
-	for vm_num in $used_vms; do
-		vm_ssh "$vm_num" "mkdir -p /root/sar; sar -P ALL $vm_sar_interval $vm_sar_count >> /root/sar/sar_stats_VM${vm_num}.txt" &
-		pids+=" $!"
-	done
-	for j in $pids; do
-		wait $j
-	done
-	for vm_num in $used_vms; do
-		vm_scp "$vm_num" "root@127.0.0.1:/root/sar/sar_stats_VM${vm_num}.txt" "$TEST_DIR/fio_results/sar_stats"
-	done
-fi
+	if $vm_sar_enable; then
+		sleep $vm_sar_delay
+		mkdir -p $TEST_DIR/fio_results/sar_stats
+		pids=""
+		for vm_num in $used_vms; do
+			vm_ssh "$vm_num" "mkdir -p /root/sar; sar -P ALL $vm_sar_interval $vm_sar_count >> /root/sar/sar_stats_VM${vm_num}_run${i}.txt" &
+			pids+=" $!"
+		done
+		for j in $pids; do
+			wait $j
+		done
+		for vm_num in $used_vms; do
+			vm_scp "$vm_num" "root@127.0.0.1:/root/sar/sar_stats_VM${vm_num}_run${i}.txt" "$TEST_DIR/fio_results/sar_stats"
+		done
+	fi
 
-wait $fio_pid
+	wait $fio_pid
+	mv $TEST_DIR/fio_results/$fio_log_fname $TEST_DIR/fio_results/$fio_log_fname.$i
+	sleep 1
+done
 
 notice "Shutting down virtual machines..."
 vm_shutdown_all
