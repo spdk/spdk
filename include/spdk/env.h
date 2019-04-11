@@ -701,6 +701,22 @@ struct spdk_pci_driver *spdk_pci_virtio_get_driver(void);
 int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
+ * Get first enumerated PCI device
+ *
+ * \return PCI device on success, NULL otherwise.
+ */
+struct spdk_pci_device *spdk_pci_get_first_device(void);
+
+/**
+ * Get next enumerated PCI device.
+ *
+ * \param prev previous PCI device
+
+ * \return next PCI device on success, NULL otherwise.
+ */
+struct spdk_pci_device *spdk_pci_get_next_device(struct spdk_pci_device *prev);
+
+/**
  * Map a PCI BAR in the current process.
  *
  * \param dev PCI device.
