@@ -1295,7 +1295,7 @@ nvmf_ns_reservation_get_registrant(struct spdk_nvmf_ns *ns,
 	struct spdk_nvmf_registrant *reg, *tmp;
 
 	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
-		if (spdk_uuid_compare(&reg->hostid, uuid) == 0) {
+		if (!spdk_uuid_compare(&reg->hostid, uuid)) {
 			return reg;
 		}
 	}
