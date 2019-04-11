@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5eaf6406_f4d3e97a",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-11T08:48:21Z",
+      "side": 1,
+      "message": "spdk_pci_device_is_removed(dev) can be used here, so adding spdk_pci_device_is_attached(dev) as a helper function may be usable.",
+      "range": {
+        "startLine": 140,
+        "startChar": 8,
+        "endLine": 140,
+        "endChar": 37
+      },
+      "revId": "a47e077dab4d736b938388ab304cf7f2c4235520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
