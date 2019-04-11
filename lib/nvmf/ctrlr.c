@@ -2385,7 +2385,8 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	ns_info = &group->sgroups[ctrlr->subsys->id].ns_info[nsid - 1];
 	if (nvmf_ns_reservation_request_check(ns_info, ctrlr, req)) {
-		SPDK_NOTICELOG("Reservation Conflict for nsid %u, opcode %u\n", cmd->nsid, cmd->opc);
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Reservation Conflict for nsid %u, opcode %u\n",
+			      cmd->nsid, cmd->opc);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
