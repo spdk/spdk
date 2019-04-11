@@ -107,16 +107,16 @@ DEFINE_STUB(spdk_scsi_dev_has_pending_tasks, bool,
 	    (const struct spdk_scsi_dev *dev), true);
 
 DEFINE_STUB(spdk_scsi_lun_open, int,
-	    (struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb,
-	     void *hotremove_ctx, struct spdk_scsi_desc **desc),
+	    (struct spdk_scsi_lun *lun, spdk_scsi_lun_remove_cb_t hotremove_cb,
+	     void *hotremove_ctx, struct spdk_scsi_lun_desc **desc),
 	    0);
 
-DEFINE_STUB_V(spdk_scsi_lun_close, (struct spdk_scsi_desc *desc));
+DEFINE_STUB_V(spdk_scsi_lun_close, (struct spdk_scsi_lun_desc *desc));
 
 DEFINE_STUB(spdk_scsi_lun_allocate_io_channel, int,
-	    (struct spdk_scsi_desc *desc), 0);
+	    (struct spdk_scsi_lun_desc *desc), 0);
 
-DEFINE_STUB_V(spdk_scsi_lun_free_io_channel, (struct spdk_scsi_desc *desc));
+DEFINE_STUB_V(spdk_scsi_lun_free_io_channel, (struct spdk_scsi_lun_desc *desc));
 
 DEFINE_STUB(spdk_scsi_lun_get_id, int, (const struct spdk_scsi_lun *lun), 0);
 
