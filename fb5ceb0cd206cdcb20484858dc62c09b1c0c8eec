@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9682e49d_43e6ef40",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2234,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-11T16:53:54Z",
+      "side": 1,
+      "message": "This failure makes me nervous. If the system is unable to begin this flush, they can\u0027t start the operation again because the files are append only. Does syncing work as a mechanism to recover here? How does the user know if the error was that their write didn\u0027t happen, or just that the cache wasn\u0027t flushed since there are multiple paths that return -ENOMEM?\n\nBefore when this was a calloc it had a similar problem, but the calloc is far less likely to fail. Obtaining a request fails all the time because we have limited queue depth.",
+      "revId": "fb5ceb0cd206cdcb20484858dc62c09b1c0c8eec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
