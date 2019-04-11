@@ -638,14 +638,14 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 
 	target->destructed = true;
 
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	iscsi_tgt_node_delete_all_pg_maps(target);
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
 	spdk_scsi_dev_destruct(target->dev);
 
 	free(target->name);
 	free(target->alias);
-
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	iscsi_tgt_node_delete_all_pg_maps(target);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
 	pthread_mutex_destroy(&target->mutex);
 	free(target);
