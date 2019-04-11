@@ -25,6 +25,8 @@ if __name__ == "__main__":
     parser.add_argument('-p', dest='port',
                         help='RPC port number (if server_addr is IP address)',
                         default=5260, type=int)
+    parser.add_argument('-m', dest='mutate',
+                        help='RPC request using the mutate for test', action='store_true')
     parser.add_argument('-t', dest='timeout',
                         help='Timeout as a floating point number expressed in seconds waiting for response. Default: 60.0',
                         default=60.0, type=float)
@@ -1790,7 +1792,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     args = parser.parse_args()
 
-    with rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper())) as client:
+    with rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, args.mutate,
+                                  log_level=getattr(logging, args.verbose.upper())) as client:
         try:
             args.client = client
             args.func(args)
