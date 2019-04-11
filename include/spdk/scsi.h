@@ -148,9 +148,9 @@ struct spdk_scsi_task {
 struct spdk_scsi_port;
 struct spdk_scsi_dev;
 struct spdk_scsi_lun;
-struct spdk_scsi_desc;
+struct spdk_scsi_lun_desc;
 
-typedef void (*spdk_scsi_remove_cb_t)(struct spdk_scsi_lun *, void *);
+typedef void (*spdk_scsi_lun_remove_cb_t)(struct spdk_scsi_lun *, void *);
 
 /**
  * Initialize SCSI layer.
@@ -492,15 +492,15 @@ void spdk_scsi_task_process_abort(struct spdk_scsi_task *task);
  * \param desc Output parameter for the descriptor when operation is successful.
  * \return 0 if operation is successful, suitable errno value otherwise
  */
-int spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb,
-		       void *hotremove_ctx, struct spdk_scsi_desc **desc);
+int spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_lun_remove_cb_t hotremove_cb,
+		       void *hotremove_ctx, struct spdk_scsi_lun_desc **desc);
 
 /**
  * Close an opened logical unit.
  *
  * \param desc Descriptor of the logical unit.
  */
-void spdk_scsi_lun_close(struct spdk_scsi_desc *desc);
+void spdk_scsi_lun_close(struct spdk_scsi_lun_desc *desc);
 
 /**
  * Allocate I/O channel for the LUN
@@ -509,14 +509,14 @@ void spdk_scsi_lun_close(struct spdk_scsi_desc *desc);
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_desc *desc);
+int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun_desc *desc);
 
 /**
  * Free I/O channel from the logical unit
  *
  * \param desc Descriptor of the logical unit.
  */
-void spdk_scsi_lun_free_io_channel(struct spdk_scsi_desc *desc);
+void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun_desc *desc);
 
 /**
  * Get DIF context for SCSI LUN and SCSI command.
