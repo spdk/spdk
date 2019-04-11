@@ -138,7 +138,7 @@ static void
 dev_destruct_null_dev(void)
 {
 	/* pass null for the dev */
-	spdk_scsi_dev_destruct(NULL);
+	spdk_scsi_dev_destruct(NULL, NULL, NULL);
 }
 
 static void
@@ -149,7 +149,7 @@ dev_destruct_zero_luns(void)
 	/* No luns attached to the dev */
 
 	/* free the dev */
-	spdk_scsi_dev_destruct(&dev);
+	spdk_scsi_dev_destruct(&dev, NULL, NULL);
 }
 
 static void
@@ -161,7 +161,7 @@ dev_destruct_null_lun(void)
 	dev.lun[0] = NULL;
 
 	/* free the dev */
-	spdk_scsi_dev_destruct(&dev);
+	spdk_scsi_dev_destruct(&dev, NULL, NULL);
 }
 
 static void
@@ -176,7 +176,7 @@ dev_destruct_success(void)
 	CU_ASSERT(rc == 0);
 
 	/* free the dev */
-	spdk_scsi_dev_destruct(&dev);
+	spdk_scsi_dev_destruct(&dev, NULL, NULL);
 
 }
 
@@ -256,7 +256,7 @@ dev_construct_success(void)
 	CU_ASSERT_TRUE(dev != NULL);
 
 	/* free the dev */
-	spdk_scsi_dev_destruct(dev);
+	spdk_scsi_dev_destruct(dev, NULL, NULL);
 }
 
 static void
@@ -273,7 +273,7 @@ dev_construct_success_lun_zero_not_first(void)
 	CU_ASSERT_TRUE(dev != NULL);
 
 	/* free the dev */
-	spdk_scsi_dev_destruct(dev);
+	spdk_scsi_dev_destruct(dev, NULL, NULL);
 }
 
 static void
@@ -297,7 +297,7 @@ dev_queue_mgmt_task_success(void)
 
 	spdk_scsi_task_put(task);
 
-	spdk_scsi_dev_destruct(dev);
+	spdk_scsi_dev_destruct(dev, NULL, NULL);
 }
 
 static void
@@ -320,7 +320,7 @@ dev_queue_task_success(void)
 
 	spdk_scsi_task_put(task);
 
-	spdk_scsi_dev_destruct(dev);
+	spdk_scsi_dev_destruct(dev, NULL, NULL);
 }
 
 static void
@@ -585,7 +585,7 @@ dev_add_lun_success1(void)
 
 	CU_ASSERT_EQUAL(rc, 0);
 
-	spdk_scsi_dev_destruct(&dev);
+	spdk_scsi_dev_destruct(&dev, NULL, NULL);
 }
 
 static void
@@ -598,7 +598,7 @@ dev_add_lun_success2(void)
 
 	CU_ASSERT_EQUAL(rc, 0);
 
-	spdk_scsi_dev_destruct(&dev);
+	spdk_scsi_dev_destruct(&dev, NULL, NULL);
 }
 
 int
