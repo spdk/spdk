@@ -607,6 +607,7 @@ iscsi_conns_cleanup(void)
 	free(g_num_connections);
 	munmap(g_conns_array, sizeof(struct spdk_iscsi_conn) *
 	       MAX_ISCSI_CONNECTIONS);
+	g_conns_array = MAP_FAILED;
 	shm_unlink(g_shm_name);
 	if (g_conns_array_fd >= 0) {
 		close(g_conns_array_fd);
