@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8b8e462d_fb11f56a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1016244
+      },
+      "writtenOn": "2019-04-11T07:15:22Z",
+      "side": 1,
+      "message": "in rdma.c 916 if rdma_create_qp create fail ,  resources will be null .",
+      "parentUuid": "395cfe92_5d74ca7d",
+      "revId": "aa6f317c06ffb0eeea5cecb13fc8296600a518d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ed38670f_53c569b2",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
