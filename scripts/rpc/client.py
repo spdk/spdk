@@ -4,6 +4,7 @@ import time
 import os
 import logging
 import copy
+from rpc.radamsa import mutate
 
 
 def print_dict(d):
@@ -16,7 +17,7 @@ class JSONRPCException(Exception):
 
 
 class JSONRPCClient(object):
-    def __init__(self, addr, port=None, timeout=60.0, **kwargs):
+    def __init__(self, addr, port=None, timeout=60.0, mutate=False, **kwargs):
         self.sock = None
         ch = logging.StreamHandler()
         ch.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
@@ -26,6 +27,7 @@ class JSONRPCClient(object):
         self.set_log_level(kwargs.get('log_level', logging.ERROR))
 
         self.timeout = timeout
+        self.mutate = mutate
         self._request_id = 0
         self._recv_buf = ""
         self._reqs = []
@@ -94,7 +96,11 @@ class JSONRPCClient(object):
         reqstr = "\n".join(json.dumps(req, indent=2) for req in self._reqs)
         self._reqs = []
         self._logger.info("Requests:\n%s\n", reqstr)
-        self.sock.sendall(reqstr.encode("utf-8"))
+        if self.mutate:
+            reqstr = mutate(reqstr)
+            self.sock.sendall(reqstr)
+        else:
+            self.sock.sendall(reqstr.encode("utf-8"))
 
     def send(self, method, params=None):
         id = self.add_request(method, params)
