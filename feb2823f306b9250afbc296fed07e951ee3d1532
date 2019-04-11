@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "febbb839_8d986cab",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-11T05:01:22Z",
+      "side": 1,
+      "message": "when destroy_ctx-\u003eorig_thread is NULL? changing if-else to assert(destroy_ctx-\u003eorig_thread) is better?",
+      "range": {
+        "startLine": 385,
+        "startChar": 0,
+        "endLine": 387,
+        "endChar": 2
+      },
+      "revId": "feb2823f306b9250afbc296fed07e951ee3d1532",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
