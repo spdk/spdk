@@ -151,6 +151,7 @@ struct spdk_scsi_lun;
 struct spdk_scsi_lun_desc;
 
 typedef void (*spdk_scsi_lun_remove_cb_t)(struct spdk_scsi_lun *, void *);
+typedef void (*spdk_scsi_dev_destruct_cb_t)(void *cb_arg, int rc);
 
 /**
  * Initialize SCSI layer.
@@ -241,8 +242,11 @@ bool spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev);
  * Destruct the SCSI decice.
  *
  * \param dev SCSI device.
+ * \param cb_fn Callback function.
+ * \param cb_arg Argument to callback function.
  */
-void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);
+void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev,
+			    spdk_scsi_dev_destruct_cb_t cb_fn, void *cb_arg);
 
 /**
  * Execute the SCSI management task.

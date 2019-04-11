@@ -646,14 +646,6 @@ iscsi_tgt_node_destruct_done(void *cb_arg, int rc)
 	}
 }
 
-static void
-_iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
-{
-	spdk_scsi_dev_destruct(target->dev);
-
-	iscsi_tgt_node_destruct_done(target, 0);
-}
-
 static int
 iscsi_tgt_node_destruct_poller_cb(void *arg)
 {
@@ -665,7 +657,7 @@ iscsi_tgt_node_destruct_poller_cb(void *arg)
 
 	spdk_poller_unregister(&target->destruct_poller);
 
-	_iscsi_tgt_node_destruct(target);
+	spdk_scsi_dev_destruct(target->dev, iscsi_tgt_node_destruct_done, target);
 
 	return 1;
 }
@@ -699,7 +691,7 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target,
 		target->destruct_poller = spdk_poller_register(iscsi_tgt_node_destruct_poller_cb,
 					  target, 10);
 	} else {
-		_iscsi_tgt_node_destruct(target);
+		spdk_scsi_dev_destruct(target->dev, iscsi_tgt_node_destruct_done, target);
 	}
 }
 
