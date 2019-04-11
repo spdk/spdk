@@ -127,6 +127,9 @@ struct raid_bdev {
 
 	/* Set to true if destruct is called for this raid bdev */
 	bool                        destruct_called;
+
+	/* Set to true if destroy of this raid bdev is started. */
+	bool                        destroy_started;
 };
 
 /*
