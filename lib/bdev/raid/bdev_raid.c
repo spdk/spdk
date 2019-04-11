@@ -1848,6 +1848,17 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
 		return;
 	}
 
+	if (raid_bdev->destroy_started) {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "destroying raid bdev %s is already started\n",
+			      raid_cfg->name);
+		if (cb_fn) {
+			cb_fn(cb_arg, -EBUSY);
+		}
+		return;
+	}
+
+	raid_bdev->destroy_started = true;
+
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		info = &raid_bdev->base_bdev_info[i];
 
