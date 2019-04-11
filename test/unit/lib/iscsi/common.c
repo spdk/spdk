@@ -161,7 +161,8 @@ DEFINE_STUB(spdk_scsi_dev_construct, struct spdk_scsi_dev *,
 	     void *hotremove_ctx),
 	    NULL);
 
-DEFINE_STUB_V(spdk_scsi_dev_destruct, (struct spdk_scsi_dev *dev));
+DEFINE_STUB_V(spdk_scsi_dev_destruct,
+	      (struct spdk_scsi_dev *dev, spdk_scsi_dev_destruct_cb_t cb_fn, void *cb_arg));
 
 DEFINE_STUB(spdk_scsi_dev_add_port, int,
 	    (struct spdk_scsi_dev *dev, uint64_t id, const char *name), 0);
