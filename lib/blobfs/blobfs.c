@@ -1517,7 +1517,7 @@ fs_truncate_resize_cb(void *ctx, int bserrno)
 		file->append_pos = file->length;
 	}
 
-	spdk_blob_sync_md(file->blob, fs_truncate_complete_cb, args);
+	spdk_blob_sync_md(file->blob, fs_truncate_complete_cb, req);
 }
 
 static uint64_t
