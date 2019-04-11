@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "4ccdfc3c_09fc8e0a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-11T15:28:47Z",
+      "side": 1,
+      "message": "EINVAL usually relates to arguments provided to the function by the caller. For example if argument is a device, when that device is of wrong type. Usually when you call function again it should always return EINVAL, since argument stays invalid. Here the return depends on vbdev state.\n\nHere best would seem EPERM for vbdev-\u003estate.started, since you cannot start the vbdev after it has been started.\nFor \".attached\", vbdev cannot start before core and cache have been attached. EPERM might not be best one here, but cannot think of better one.\n\nNormally I wouldn\u0027t delve upon that so much, but I see no need to change the errno that was already fine.",
+      "parentUuid": "74fa7c91_67166aca",
+      "range": {
+        "startLine": 740,
+        "startChar": 2,
+        "endLine": 740,
+        "endChar": 17
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5aadc9ef_5ceb1e36",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -131,6 +155,30 @@
       "side": 1,
       "message": "This is the way bdev layer async functions behave.\nI think the reason is that you know who is responsible for error.\nAlso, the overhead can be",
       "parentUuid": "5aadc9ef_5ceb1e36",
+      "range": {
+        "startLine": 781,
+        "startChar": 0,
+        "endLine": 785,
+        "endChar": 15
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "322b4136_3b81c8ca",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-11T15:28:47Z",
+      "side": 1,
+      "message": "On bdev layer only the functions performing IO are behaving in such way. Probably only to mirror behavior of usual posix read/write/etc (return number of bytes submitted).\n\nMost importantly, it is being changed in very next patch.\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/447888/19/lib/bdev/ocf/vbdev_ocf.c\nBoth register_ocf_bdev() and register_vbdev() return void.",
+      "parentUuid": "c9f8f66a_0dc2e27f",
       "range": {
         "startLine": 781,
         "startChar": 0,
@@ -207,6 +255,30 @@
     },
     {
       "key": {
+        "uuid": "bcb674b1_c5b9a338",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-11T15:28:47Z",
+      "side": 1,
+      "message": "It is not general, it is unclear for the caller. Caller has to know in advance what was created (or not) and search for it (vbdev_ocf_get_by_name()) by keeping details on the relevant object in context. It is akin to function creating an object, but not returning it - even though caller has to use it later.",
+      "parentUuid": "1caf0169_ab900a08",
+      "range": {
+        "startLine": 1076,
+        "startChar": 6,
+        "endLine": 1076,
+        "endChar": 29
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "afdd2555_07c13ae1",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -271,6 +343,30 @@
     },
     {
       "key": {
+        "uuid": "04fb19ac_cc64db6d",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1173,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-11T15:28:47Z",
+      "side": 1,
+      "message": "What do you mean by rework it later ? The callbacks are done in patch later anyway https://review.gerrithub.io/#/c/spdk/spdk/+/447888/18/lib/bdev/ocf/vbdev_ocf.c\n\nPatch set 4 failed because you\u0027ve called examine_end() on success from register_vbdev() _and_ as a callback [deceasing the refcnt twice in single register]. You have it correct in patch 447888.",
+      "parentUuid": "fc25f490_e7352c98",
+      "range": {
+        "startLine": 1173,
+        "startChar": 25,
+        "endLine": 1173,
+        "endChar": 35
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ba7333f_d4c04a1c",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -306,6 +402,30 @@
       "side": 1,
       "message": "I agree with observations, but I don\u0027t understand why to use this coincidence related to vbdev_ocf_get_base_by_name()?",
       "parentUuid": "3ba7333f_d4c04a1c",
+      "range": {
+        "startLine": 1176,
+        "startChar": 0,
+        "endLine": 1179,
+        "endChar": 3
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b573cc3_f5c3ed7f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-11T15:28:47Z",
+      "side": 1,
+      "message": "Depending on whether we want to work off the assumption that core name and cache name will never be the same (they shouldn\u0027t!). If not, then more than one loop around g_ocf_vbdev_head would be needed. Using vbdev_ocf_get_base_by_name() would be just simple way to do that.\n\nI\u0027m fine with keeping it either way.",
+      "parentUuid": "1cbfa268_d23a2711",
       "range": {
         "startLine": 1176,
         "startChar": 0,
