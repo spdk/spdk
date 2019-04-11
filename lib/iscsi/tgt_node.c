@@ -631,6 +631,13 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 		return;
 	}
 
+	if (target->destructed) {
+		SPDK_ERRLOG("Destructing %s is already started\n", target->name);
+		return;
+	}
+
+	target->destructed = true;
+
 	spdk_scsi_dev_destruct(target->dev);
 
 	free(target->name);

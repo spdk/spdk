@@ -1428,6 +1428,12 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 		rsph->status_detail = ISCSI_LOGIN_TARGET_NOT_FOUND;
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
+	if (!(*target)->destructed) {
+		SPDK_ERRLOG("target %s is removed\n", target_name);
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_TARGET_REMOVED;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+	}
 	result = spdk_iscsi_tgt_node_access(conn, *target,
 					    conn->initiator_name,
 					    conn->initiator_addr);

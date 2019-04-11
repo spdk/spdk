@@ -86,6 +86,8 @@ struct spdk_iscsi_tgt_node {
 	int num_pg_maps;
 	TAILQ_HEAD(, spdk_iscsi_pg_map) pg_map_head;
 	TAILQ_ENTRY(spdk_iscsi_tgt_node) tailq;
+
+	bool destructed;
 };
 
 int spdk_iscsi_parse_tgt_nodes(void);
