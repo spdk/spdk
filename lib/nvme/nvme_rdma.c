@@ -60,7 +60,7 @@
 /*
  * NVME RDMA qpair Resource Defaults
  */
-#define NVME_RDMA_DEFAULT_TX_SGE		2
+#define NVME_RDMA_DEFAULT_TX_SGE		16
 #define NVME_RDMA_DEFAULT_RX_SGE		1
 
 
@@ -138,6 +138,7 @@ struct spdk_nvme_rdma_req {
 
 	struct nvme_request			*req;
 
+	/* TODO: break out the send_sgl array from the request. We typically only use 1. */
 	struct ibv_sge				send_sgl[NVME_RDMA_DEFAULT_TX_SGE];
 
 	TAILQ_ENTRY(spdk_nvme_rdma_req)		link;
