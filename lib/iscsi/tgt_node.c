@@ -664,8 +664,7 @@ iscsi_tgt_node_check_active_conns(void *arg)
 
 	spdk_poller_unregister(&target->destruct_poller);
 
-	spdk_scsi_dev_destruct(target->dev);
-	_iscsi_tgt_node_destruct(target, 0);
+	spdk_scsi_dev_destruct(target->dev, _iscsi_tgt_node_destruct, target);
 
 	return 1;
 }
@@ -699,8 +698,7 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target,
 		target->destruct_poller = spdk_poller_register(iscsi_tgt_node_check_active_conns,
 					  target, 10);
 	} else {
-		spdk_scsi_dev_destruct(target->dev);
-		_iscsi_tgt_node_destruct(target, 0);
+		spdk_scsi_dev_destruct(target->dev, _iscsi_tgt_node_destruct, target);
 	}
 
 }
