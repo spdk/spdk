@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ccb5e43_44dbed6f",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-11T04:49:49Z",
+      "side": 1,
+      "message": "copying req to arg-\u003ereq is not necessary and we can use arg-\u003ereq directly.\n\nhow about the following?\n\narg \u003d calloc(1, sizeof(*arg));\n\nret \u003d spdk_json_decode_object(params ..., \u0026arg-\u003ereq);\n\nif (ret) {\n  free_rpc_construct_ocf_bdev(\u0026arg-\u003ereq);\n  free(arg);\n}",
+      "range": {
+        "startLine": 97,
+        "startChar": 1,
+        "endLine": 97,
+        "endChar": 44
+      },
+      "revId": "c7df1058e413c7dc92e03d93893bdadb77d8a561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
