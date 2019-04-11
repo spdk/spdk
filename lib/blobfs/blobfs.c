@@ -1385,7 +1385,7 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 		/* If the ref > 0, we mark the file as deleted and delete it when we close it. */
 		f->is_deleted = true;
 		spdk_blob_set_xattr(f->blob, "is_deleted", &f->is_deleted, sizeof(bool));
-		spdk_blob_sync_md(f->blob, blob_delete_cb, args);
+		spdk_blob_sync_md(f->blob, blob_delete_cb, req);
 		return;
 	}
 
