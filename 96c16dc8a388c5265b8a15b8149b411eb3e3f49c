@@ -16,6 +16,24 @@
       "revId": "96c16dc8a388c5265b8a15b8149b411eb3e3f49c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3852065_f7cfdbad",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-12T21:26:58Z",
+      "side": 1,
+      "message": "Unfortunately we can\u0027t do that now. If we always start the poller, shutdown path fails. This is my lazy but I saw the same issue for SCSI LUN hot removal and I starts poller only when necessary.",
+      "parentUuid": "ed640664_049a9e13",
+      "revId": "96c16dc8a388c5265b8a15b8149b411eb3e3f49c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
