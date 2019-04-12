@@ -2195,6 +2195,12 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		}
 	}
 
+	args = calloc(1, sizeof(*args));
+	if (args == NULL) {
+		pthread_spin_unlock(&file->lock);
+		return -ENOMEM;
+	}
+
 	last = file->last;
 	rem_length = length;
 	cur_payload = payload;
@@ -2217,6 +2223,7 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 			last = cache_append_buffer(file);
 			if (last == NULL) {
 				BLOBFS_TRACE(file, "nomem\n");
+				__free_args(args);
 				pthread_spin_unlock(&file->lock);
 				return -ENOMEM;
 			}
@@ -2226,12 +2233,8 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	pthread_spin_unlock(&file->lock);
 
 	if (cache_buffers_filled == 0) {
+		__free_args(args);
 		return 0;
-	}
-
-	args = calloc(1, sizeof(*args));
-	if (args == NULL) {
-		return -ENOMEM;
 	}
 
 	args->file = file;
