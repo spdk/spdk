@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "a1c9fd4d_a2dcd6b9",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T15:14:32Z",
+      "side": 1,
+      "message": "I don\u0027t think it\u0027s a good idea to duplicate the same data in two places. If we can retrieve easily from some other structure, we should do it. That\u0027s way I think extracting it from bdev is a better option here.",
+      "parentUuid": "f9034b2f_e040776f",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c79c6713_2e19d823",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 11
@@ -245,6 +263,24 @@
       "side": 1,
       "message": "So why you are using cache_addr variable? I think we could refactor IO struct at some point but we were already adding fields to it with less justification.",
       "parentUuid": "04621423_2b6aeee9",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e41fd8dd_b5fd0626",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T15:14:32Z",
+      "side": 1,
+      "message": "I\u0027m using it, because it\u0027s just a local variable, so the impact is smaller. Sure, we could refactor I/O, but until then, let\u0027s try to limit the number of stuff we add there.",
+      "parentUuid": "6b16eb64_93dcd0de",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -441,6 +477,30 @@
     },
     {
       "key": {
+        "uuid": "e1dbc52e_919bfa47",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T15:14:32Z",
+      "side": 1,
+      "message": "All right, I\u0027ll add some comments.",
+      "parentUuid": "17d554ac_e25859d6",
+      "range": {
+        "startLine": 976,
+        "startChar": 0,
+        "endLine": 990,
+        "endChar": 3
+      },
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b7f20d51_5d2588d5",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 11
@@ -524,6 +584,24 @@
       "side": 1,
       "message": "I don\u0027t really understand - let\u0027s simplify it if we can here.",
       "parentUuid": "6f1f976a_e8a88ecc",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2293e9d2_033d902a",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T15:14:32Z",
+      "side": 1,
+      "message": "I don\u0027t want to add unrelated changes to this patch. I\u0027m worried that this might create some unforeseen consequences.",
+      "parentUuid": "2f21613c_9f8ede2d",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
