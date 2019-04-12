@@ -22,6 +22,7 @@ fi
 run_test suite test/nvmf/lvol/nvmf_lvol.sh
 #TODO: disabled due to intermittent failures. Need to triage.
 # run_test suite test/nvmf/srq_overwhelm/srq_overwhelm.sh
+run_test suite test/nvmf/vhost/nvmf_vhost.sh
 run_test suite test/nvmf/shutdown/shutdown.sh
 run_test suite test/nvmf/bdev_io_wait/bdev_io_wait.sh
 run_test suite test/nvmf/create_transport/create_transport.sh
