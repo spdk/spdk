@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd4f0f78_f0443a48",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-12T08:49:35Z",
+      "side": 1,
+      "message": "this case has been tested in unit tests and CI failed. So remove this.",
+      "range": {
+        "startLine": 81,
+        "startChar": 2,
+        "endLine": 81,
+        "endChar": 16
+      },
+      "revId": "2f7c90d44a03782a64b4c3cc06c9eb1522be4b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
