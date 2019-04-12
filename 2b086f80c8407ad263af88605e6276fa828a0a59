@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "718d582e_a573141e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 3130,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-12T22:00:49Z",
+      "side": 1,
+      "message": "snapshot, not lvol_bdev",
+      "range": {
+        "startLine": 3130,
+        "startChar": 26,
+        "endLine": 3130,
+        "endChar": 35
+      },
+      "revId": "2b086f80c8407ad263af88605e6276fa828a0a59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
