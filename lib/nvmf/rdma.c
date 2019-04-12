@@ -878,7 +878,9 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	if (rqpair->cm_id) {
-		rdma_destroy_qp(rqpair->cm_id);
+		if (rqpair->cm_id->qp != NULL) {
+			rdma_destroy_qp(rqpair->cm_id);
+		}
 		rdma_destroy_id(rqpair->cm_id);
 
 		if (rqpair->poller != NULL && rqpair->srq == NULL) {
@@ -887,7 +889,9 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	if (rqpair->srq == NULL) {
-		nvmf_rdma_resources_destroy(rqpair->resources);
+		if (rqpair->resources != NULL) {
+			nvmf_rdma_resources_destroy(rqpair->resources);
+		}
 	}
 
 	free(rqpair);
