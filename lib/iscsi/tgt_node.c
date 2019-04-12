@@ -625,6 +625,37 @@ iscsi_tgt_node_delete_all_pg_maps(struct spdk_iscsi_tgt_node *target)
 }
 
 static void
+_iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
+{
+	free(target->name);
+	free(target->alias);
+
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	iscsi_tgt_node_delete_all_pg_maps(target);
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+	pthread_mutex_destroy(&target->mutex);
+	free(target);
+}
+
+static int
+iscsi_tgt_node_check_active_conns(void *arg)
+{
+	struct spdk_iscsi_tgt_node *target = arg;
+
+	if (spdk_iscsi_get_active_conns(target) != 0) {
+		return 1;
+	}
+
+	spdk_poller_unregister(&target->destruct_poller);
+
+	spdk_scsi_dev_destruct(target->dev);
+	_iscsi_tgt_node_destruct(target);
+
+	return 1;
+}
+
+static void
 iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 {
 	if (target == NULL) {
@@ -638,17 +669,16 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 
 	target->destructed = true;
 
-	spdk_scsi_dev_destruct(target->dev);
+	spdk_iscsi_conns_start_exit(target);
 
-	free(target->name);
-	free(target->alias);
+	if (spdk_iscsi_get_active_conns(target) != 0) {
+		target->destruct_poller = spdk_poller_register(iscsi_tgt_node_check_active_conns,
+					  target, 10);
+	} else {
+		spdk_scsi_dev_destruct(target->dev);
+		_iscsi_tgt_node_destruct(target);
+	}
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	iscsi_tgt_node_delete_all_pg_maps(target);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-
-	pthread_mutex_destroy(&target->mutex);
-	free(target);
 }
 
 static int
