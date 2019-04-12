@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "ca38ea66_65f786a1",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-12T22:07:31Z",
+      "side": 1,
+      "message": "I removed carelessly the following.\n\nif (dev-\u003eremove_fn) {\n  dev-\u003eremove_fn(dev-\u003eremove_ctx, 0);\n}",
+      "revId": "a0d40b1a270fb421e29a91f640e12a62b47d7186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86b4722e_8dd948fd",
         "filename": "lib/scsi/dev.c",
         "patchSetId": 15
@@ -30,6 +47,24 @@
       "writtenOn": "2019-04-12T12:20:41Z",
       "side": 1,
       "message": "This case should return success because scsi dev is turned into removed if all luns are hot removed, but iscsi target still exists.",
+      "revId": "a0d40b1a270fb421e29a91f640e12a62b47d7186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac7f1498_cbceb05d",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-12T22:07:31Z",
+      "side": 1,
+      "message": "This was wrong. -EBUSY is correct",
+      "parentUuid": "86b4722e_8dd948fd",
       "revId": "a0d40b1a270fb421e29a91f640e12a62b47d7186",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
