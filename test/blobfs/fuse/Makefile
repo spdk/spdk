@@ -44,6 +44,8 @@ SPDK_LIB_LIST += event_bdev event_copy event_vmd
 SPDK_LIB_LIST += bdev copy event thread util conf trace \
 		log jsonrpc json rpc sock notify
 
-LIBS+= -L/usr/local/lib -lfuse3
+LIBS+= -lfuse
+
+CFLAGS += -D_FILE_OFFSET_BITS=64
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
