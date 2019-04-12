@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bec21259_1e17198f",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-12T15:38:58Z",
+      "side": 1,
+      "message": "I would name it \"clones\" as there are actually 2 clones there - the original lvol in this case is also a clone of the snapshot.",
+      "range": {
+        "startLine": 76,
+        "startChar": 63,
+        "endLine": 76,
+        "endChar": 68
+      },
+      "revId": "2c95d098dbb592aabd384027f6a3f7887ac2209a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67f47973_407c9749",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 3129,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-12T15:38:58Z",
+      "side": 1,
+      "message": "snapshot",
+      "range": {
+        "startLine": 3129,
+        "startChar": 26,
+        "endLine": 3129,
+        "endChar": 35
+      },
+      "revId": "2c95d098dbb592aabd384027f6a3f7887ac2209a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
