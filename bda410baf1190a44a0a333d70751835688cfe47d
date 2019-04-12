@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "f9034b2f_e040776f",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T13:02:18Z",
+      "side": 1,
+      "message": "I think this code will be look easier if we remember cache size in inetrnal cache structure. In this fucntion you could remove bdev and cache size temp varaibles and get rid of spdk_bdev_desc_get_bdev call",
+      "parentUuid": "4cef1b29_9b0e7acc",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c79c6713_2e19d823",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 11
@@ -209,6 +227,24 @@
       "side": 1,
       "message": "ftl_ppa is a union of an 64-bit unsigned integer and some other fields describing OC drive\u0027s geometry. It doesn\u0027t matter if it\u0027s contiguous or not - PPA is just an address that is supposed to a physical location on the SSD (as opposed to a logical address used by the user of the FTL).\nHere the 64 bit int portion of the union is used. I really don\u0027t see the point in adding yet another field to an already large structure (ftl_io), especially as we don\u0027t really need to as the IO either goes to OC drive or cache drive. Creating a union with an uint64_t and ftl_ppa will only complicate things and doesn\u0027t make sense, as ftl_ppa by definition is uint64_t.",
       "parentUuid": "03217ed7_2e3da1c0",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b16eb64_93dcd0de",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T13:02:18Z",
+      "side": 1,
+      "message": "So why you are using cache_addr variable? I think we could refactor IO struct at some point but we were already adding fields to it with less justification.",
+      "parentUuid": "04621423_2b6aeee9",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -381,6 +417,30 @@
     },
     {
       "key": {
+        "uuid": "17d554ac_e25859d6",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T13:02:18Z",
+      "side": 1,
+      "message": "I have different feel - I thinks this FTL_LBA_INVALID and shring case should be commented.",
+      "parentUuid": "d49a64bd_383f0e56",
+      "range": {
+        "startLine": 976,
+        "startChar": 0,
+        "endLine": 990,
+        "endChar": 3
+      },
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b7f20d51_5d2588d5",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 11
@@ -446,6 +506,24 @@
       "side": 1,
       "message": "The only thing added here is additional check, that the IO is not directed to the non-volatile cache. I\u0027m not changing the other part of the condition, as it\u0027s not a subject of this patch.",
       "parentUuid": "c93f52b4_81081389",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f21613c_9f8ede2d",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T13:02:18Z",
+      "side": 1,
+      "message": "I don\u0027t really understand - let\u0027s simplify it if we can here.",
+      "parentUuid": "6f1f976a_e8a88ecc",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
