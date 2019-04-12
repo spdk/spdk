@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f5b9bc8_4ca75f3d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1066,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-12T07:25:43Z",
+      "side": 1,
+      "message": "Repeated preliminary question. Will you give some explanation how this speculative update is processed in the error case?",
+      "range": {
+        "startLine": 1066,
+        "startChar": 1,
+        "endLine": 1066,
+        "endChar": 27
+      },
+      "revId": "fd365a9d6b47c61f090106274b079585c829c863",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

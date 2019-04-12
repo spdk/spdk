@@ -34,6 +34,24 @@
       "revId": "d4a4f3c9b6693254f356543ceb9995743a5d0d0b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aeabbfdc_43eb8376",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3149,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-12T07:25:43Z",
+      "side": 1,
+      "message": "Thank you for kind explanation. I could understand it.",
+      "parentUuid": "927d2c93_80e29f09",
+      "revId": "d4a4f3c9b6693254f356543ceb9995743a5d0d0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
