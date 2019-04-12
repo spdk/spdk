@@ -497,7 +497,7 @@ class UIISCSIConnection(UINode):
 
     def refresh(self):
         self._children = set([])
-        for key, val in self.ic.iteritems():
+        for key, val in self.ic.items():
             if key == "id":
                 continue
             UIISCSIConnectionDetails("%s: %s" % (key, val), self)
