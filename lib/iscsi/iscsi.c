@@ -2458,7 +2458,6 @@ iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 static int
 iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
-	char buf[MAX_TMPBUF];
 	struct spdk_iscsi_pdu *rsp_pdu;
 	uint32_t task_tag;
 	uint32_t CmdSN;
@@ -2553,12 +2552,12 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		 * login failed but initiator still sent a logout rather than
 		 *  just closing the TCP connection.
 		 */
-		snprintf(buf, sizeof buf, "Logout(login failed) from %s (%s) on"
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout(login failed) from %s (%s) on"
 			 " (%s:%s,%d)\n",
 			 conn->initiator_name, conn->initiator_addr,
 			 conn->portal_host, conn->portal_port, conn->pg_tag);
 	} else if (spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
-		snprintf(buf, sizeof buf, "Logout from %s (%s) on %s tgt_node%d"
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout from %s (%s) on %s tgt_node%d"
 			 " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			 " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			 conn->initiator_name, conn->initiator_addr,
@@ -2571,7 +2570,7 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			  ? "on" : "off"));
 	} else {
 		/* discovery session */
-		snprintf(buf, sizeof buf, "Logout(discovery) from %s (%s) on"
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Logout(discovery) from %s (%s) on"
 			 " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			 " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			 conn->initiator_name, conn->initiator_addr,
@@ -2582,8 +2581,6 @@ iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			 (spdk_iscsi_param_eq_val(conn->params, "DataDigest", "CRC32C")
 			  ? "on" : "off"));
 	}
-
-	SPDK_NOTICELOG("%s", buf);
 
 	return 0;
 }
