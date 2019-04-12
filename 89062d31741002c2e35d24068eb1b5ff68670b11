@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "53f6ec4d_f93d22d1",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-12T17:51:35Z",
+      "side": 1,
+      "message": "I was thinking of the case that it fails to allocate rwb-\u003ebatches on L199/L201 in ftl_rwb.c. Then batches and rwb-\u003ebatches will be NULL here. Then you will see a segmentation fault when you access batch-\u003eentries. The original code also has this issue because it accesses batch-\u003eentry through ftl_rwb_foreach(entry, batch) without checking for NULL.",
+      "range": {
+        "startLine": 256,
+        "startChar": 13,
+        "endLine": 256,
+        "endChar": 20
+      },
+      "revId": "89062d31741002c2e35d24068eb1b5ff68670b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "afa421d9_06916e6d",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 3
