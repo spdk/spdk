@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "d0d107d0_2f6a2fa3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T11:26:41Z",
+      "side": 1,
+      "message": "But to use this getter you need to call spdk_bdev_desc_get_bdev(), I don\u0027t like idea that we propagating bdev among FTL code. Let\u0027s keep this separate as possiable.",
+      "parentUuid": "19007a2b_c1905359",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c79c6713_2e19d823",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 11
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "The function that sets this callback is called ftl_submit_nv_cache, so I believe this name is appropriate.",
       "parentUuid": "c79c6713_2e19d823",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "569f12a0_dddc29d3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T11:26:41Z",
+      "side": 1,
+      "message": "We have read_cb, write_cb, write_md_cb etc. - I prefer to keep this notation",
+      "parentUuid": "3aa47a63_666fa9ac",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -107,6 +143,24 @@
     },
     {
       "key": {
+        "uuid": "03217ed7_2e3da1c0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T11:26:41Z",
+      "side": 1,
+      "message": "We are operating on offset during cache write, so it is quite diffrent concept - ppa addresses are not contiguous.",
+      "parentUuid": "1d880403_bf653c3b",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "caefb241_aa5413b7",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 11
@@ -136,6 +190,24 @@
       "side": 1,
       "message": "What\u0027s the difference? It\u0027d just make the code more complicated.",
       "parentUuid": "caefb241_aa5413b7",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7bd2fef_5192ea49",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T11:26:41Z",
+      "side": 1,
+      "message": "I think we should rely on flt_io_completion and not call ftl_io_free directly. Also I think we shouldn\u0027t have those return statments inside loops but do breaks so we can have one place where we are doing spdk_thread_send_msg(thread, _ftl_write_nv_cache, io);",
+      "parentUuid": "b81fd869_9c7ec6a2",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -189,6 +261,30 @@
     },
     {
       "key": {
+        "uuid": "a84b2548_3360b05b",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T11:26:41Z",
+      "side": 1,
+      "message": "During review process those condition was not so obvious to me e.g cache_addr \u003d\u003d FTL_LBA_INVALID  You could add comment that there is no avaiable cache right now so let\u0027s try one more time - you could also wrap this condtion in something like ftl_cache_avaiable similar like we are doing it in ftl_read_retry.",
+      "parentUuid": "2319d341_e3444a69",
+      "range": {
+        "startLine": 976,
+        "startChar": 0,
+        "endLine": 990,
+        "endChar": 3
+      },
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b7f20d51_5d2588d5",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 11
@@ -218,6 +314,24 @@
       "side": 1,
       "message": "I don\u0027t really see a point. It\u0027s just a simple flag check, we\u0027re doing it all over the code with other flags.",
       "parentUuid": "b7f20d51_5d2588d5",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c93f52b4_81081389",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T11:26:41Z",
+      "side": 1,
+      "message": "I think this condition is too much complex right now - !(io-\u003eflags \u0026 FTL_IO_CACHE) \u0026\u0026 io-\u003etype\u003d\u003d FTL_IO_WRITE wouldn\u0027t be sufficient?",
+      "parentUuid": "0efa46ae_13665c4c",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
