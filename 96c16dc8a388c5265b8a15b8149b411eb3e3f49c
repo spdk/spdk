@@ -34,6 +34,24 @@
       "revId": "96c16dc8a388c5265b8a15b8149b411eb3e3f49c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c1d5dd1_2ce912ec",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-12T21:32:05Z",
+      "side": 1,
+      "message": "OK - never mind my comment then.",
+      "parentUuid": "b3852065_f7cfdbad",
+      "revId": "96c16dc8a388c5265b8a15b8149b411eb3e3f49c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
