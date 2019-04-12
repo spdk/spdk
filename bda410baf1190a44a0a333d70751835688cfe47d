@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "19007a2b_c1905359",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T10:46:58Z",
+      "side": 1,
+      "message": "I don\u0027t see a point in doing so - it\u0027s just a simple getter, what\u0027s the point in keeping the same info in two places?",
+      "parentUuid": "6ef799ed_cad88ad7",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c79c6713_2e19d823",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 11
@@ -30,6 +48,24 @@
       "writtenOn": "2019-04-12T10:02:13Z",
       "side": 1,
       "message": "ftl_nv_cache_write_cb?",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3aa47a63_666fa9ac",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T10:46:58Z",
+      "side": 1,
+      "message": "The function that sets this callback is called ftl_submit_nv_cache, so I believe this name is appropriate.",
+      "parentUuid": "c79c6713_2e19d823",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "1d880403_bf653c3b",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T10:46:58Z",
+      "side": 1,
+      "message": "Let\u0027s not clutter ftl_io with another variable, especially when we have one that can hold this data perfectly well - PPA that is supposed to point at some area on the SSD, while LBA is always our logical address.",
+      "parentUuid": "d6580363_a8c685f6",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "caefb241_aa5413b7",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 11
@@ -64,6 +118,24 @@
       "writtenOn": "2019-04-12T10:02:13Z",
       "side": 1,
       "message": "Do we need to free such IO, why just not to retry it?",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b81fd869_9c7ec6a2",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T10:46:58Z",
+      "side": 1,
+      "message": "What\u0027s the difference? It\u0027d just make the code more complicated.",
+      "parentUuid": "caefb241_aa5413b7",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -93,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "2319d341_e3444a69",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T10:46:58Z",
+      "side": 1,
+      "message": "I don\u0027t see a point. There\u0027s no magic here, the code is pretty self explanatory.",
+      "parentUuid": "3c69482b_6cce7349",
+      "range": {
+        "startLine": 976,
+        "startChar": 0,
+        "endLine": 990,
+        "endChar": 3
+      },
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b7f20d51_5d2588d5",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 11
@@ -104,6 +200,24 @@
       "writtenOn": "2019-04-12T10:02:13Z",
       "side": 1,
       "message": "Please move this condition to separete funciotn.",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0efa46ae_13665c4c",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T10:46:58Z",
+      "side": 1,
+      "message": "I don\u0027t really see a point. It\u0027s just a simple flag check, we\u0027re doing it all over the code with other flags.",
+      "parentUuid": "b7f20d51_5d2588d5",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -124,6 +238,24 @@
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b3e67cf_77b990f2",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T10:46:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4186124c_53f76f3a",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
