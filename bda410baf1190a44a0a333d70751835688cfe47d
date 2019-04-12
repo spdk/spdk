@@ -1,0 +1,129 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ef799ed_cad88ad7",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T10:02:13Z",
+      "side": 1,
+      "message": "Why not to keep this cache_size with other cache members and set it during init - it can\u0027t be changed during runtime and you need to get bdev each time to retrive this information.",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c79c6713_2e19d823",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T10:02:13Z",
+      "side": 1,
+      "message": "ftl_nv_cache_write_cb?",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6580363_a8c685f6",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T10:02:13Z",
+      "side": 1,
+      "message": "We should add cache_addr/offset to IO instead relying on physical page address. Also this cache_addr variable could be removed.",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "caefb241_aa5413b7",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T10:02:13Z",
+      "side": 1,
+      "message": "Do we need to free such IO, why just not to retry it?",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c69482b_6cce7349",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T10:02:13Z",
+      "side": 1,
+      "message": "Please comment each of those \"if\u0027s\"",
+      "range": {
+        "startLine": 976,
+        "startChar": 0,
+        "endLine": 990,
+        "endChar": 3
+      },
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7f20d51_5d2588d5",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T10:02:13Z",
+      "side": 1,
+      "message": "Please move this condition to separete funciotn.",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4186124c_53f76f3a",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T10:02:13Z",
+      "side": 1,
+      "message": "^",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a24aea40_d92e4475",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T10:02:13Z",
+      "side": 1,
+      "message": "Not sure is this a best name - I think we should have ftl_alloc_io_nv_cache (and alloc child request there) and ftl_alloc_child_io_nv_cache.",
+      "revId": "55ffe6d85db6f9af549de66ab35b08e217a85e83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
