@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac4d8ab5_4c346a76",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T13:34:57Z",
+      "side": 1,
+      "message": "Why you moved it from ftl_io_init? This function should init iov part of io?",
+      "revId": "e2932613e589390452ee49c1ce8787c0f8d02b24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f603fc2_58b023a6",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T13:34:57Z",
+      "side": 1,
+      "message": "Can\u0027t we just memset it?",
+      "range": {
+        "startLine": 458,
+        "startChar": 0,
+        "endLine": 465,
+        "endChar": 17
+      },
+      "revId": "e2932613e589390452ee49c1ce8787c0f8d02b24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
