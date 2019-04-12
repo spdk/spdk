@@ -863,7 +863,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	if (rqpair->poller) {
 		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
 
-		if (rqpair->srq != NULL) {
+		if (rqpair->srq != NULL && rqpair->resources != NULL) {
 			/* Drop all received but unprocessed commands for this queue and return them to SRQ */
 			STAILQ_FOREACH_SAFE(rdma_recv, &rqpair->resources->incoming_queue, link, recv_tmp) {
 				if (rqpair == rdma_recv->qpair) {
@@ -878,7 +878,9 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	if (rqpair->cm_id) {
-		rdma_destroy_qp(rqpair->cm_id);
+		if (rqpair->cm_id->qp != NULL) {
+			rdma_destroy_qp(rqpair->cm_id);
+		}
 		rdma_destroy_id(rqpair->cm_id);
 
 		if (rqpair->poller != NULL && rqpair->srq == NULL) {
@@ -886,7 +888,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 		}
 	}
 
-	if (rqpair->srq == NULL) {
+	if (rqpair->srq == NULL && rqpair->resources != NULL) {
 		nvmf_rdma_resources_destroy(rqpair->resources);
 	}
 
