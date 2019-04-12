@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb998fed_a8db67c0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 3018,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-12T15:35:46Z",
+      "side": 1,
+      "message": "\"part\" or \"1/3\"",
+      "range": {
+        "startLine": 3018,
+        "startChar": 21,
+        "endLine": 3018,
+        "endChar": 25
+      },
+      "revId": "809754c4e5b1ba101c2bcb9863754e20849dd21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72d49e9c_6267fb86",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 3021,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-12T15:35:46Z",
+      "side": 1,
+      "message": "You are writing again to \u003c0;first part\u003e space (line 2941), but you should write to \u003cfirst part;second part\u003e space. This way we will be able to verify more functionality underneath.",
+      "range": {
+        "startLine": 3021,
+        "startChar": 50,
+        "endLine": 3021,
+        "endChar": 66
+      },
+      "revId": "809754c4e5b1ba101c2bcb9863754e20849dd21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc850547_738d204a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 3057,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-12T15:35:46Z",
+      "side": 1,
+      "message": "And here write to \u003csecond part;end\u003e space.",
+      "range": {
+        "startLine": 3057,
+        "startChar": 51,
+        "endLine": 3057,
+        "endChar": 76
+      },
+      "revId": "809754c4e5b1ba101c2bcb9863754e20849dd21e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
