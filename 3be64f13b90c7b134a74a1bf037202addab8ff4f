@@ -1,0 +1,418 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb49d2b0_d8067172",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Please rename it to num_lbks_interleaved, since this is really talking about logical blocks (according to OC 2.0) and not pages.",
+      "range": {
+        "startLine": 91,
+        "startChar": 41,
+        "endLine": 91,
+        "endChar": 54
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "127f8f29_d61ccdf7",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Let\u0027s call this num_active_blocks.",
+      "range": {
+        "startLine": 592,
+        "startChar": 8,
+        "endLine": 592,
+        "endChar": 13
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b66e3f3c_bc2a2acb",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "ftl_process_shutdown is called periodically, however ftl_rwb_process_shutdown needs to be called only once. Move it to spdk_ftl_dev_free, just after dev-\u003ehalt \u003d 1 assignment.",
+      "range": {
+        "startLine": 598,
+        "startChar": 0,
+        "endLine": 598,
+        "endChar": 36
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df980ef7_01094167",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Agreed, that\u0027s been on our TODO list for some time now... Feel free to post a patch ;-)",
+      "range": {
+        "startLine": 610,
+        "startChar": 0,
+        "endLine": 611,
+        "endChar": 48
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "163ded50_f7df9a6d",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Let\u0027s make \u00271\u0027 the default behavior.",
+      "range": {
+        "startLine": 91,
+        "startChar": 18,
+        "endLine": 91,
+        "endChar": 19
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f116f39a_6d5c07e0",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "I know it\u0027s related to the performance of the reads, but in the write buffer code, I think \u0027interleave_offset\u0027 would be a more fitting name.",
+      "range": {
+        "startLine": 75,
+        "startChar": 41,
+        "endLine": 75,
+        "endChar": 47
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8996658_48469b1c",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Rename to max_active_batches please.",
+      "range": {
+        "startLine": 77,
+        "startChar": 41,
+        "endLine": 77,
+        "endChar": 59
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "998963f2_6501532a",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Do we really need this flag? Can\u0027t we set active_batches_opt \u003d rs_opt \u003d 1?",
+      "range": {
+        "startLine": 79,
+        "startChar": 41,
+        "endLine": 79,
+        "endChar": 45
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "319e4250_568d37f6",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Can we get rid of the \u0027current\u0027 pointer? Let\u0027s keep the current batch on the active queue. Just keep it as the first element, until it the number of acquired entries reaches rs_opt (which would place at the end of the queue). If osp_num_pages \u003d\u003d 1, just keep the active_queue size \u003d\u003d 1 too.",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 54
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a99f6589_c37aeca8",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Not really needed, calloc zeroes memory.",
+      "range": {
+        "startLine": 216,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 15
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07d3bc4d_047969ea",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 229,
+        "startChar": 0,
+        "endLine": 230,
+        "endChar": 29
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98e0c3d9_e2205889",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "It\u0027s not used anywhere.",
+      "range": {
+        "startLine": 345,
+        "startChar": 0,
+        "endLine": 349,
+        "endChar": 1
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40c5980e_d26f7b33",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Drop the parenthesis.",
+      "range": {
+        "startLine": 354,
+        "startChar": 8,
+        "endLine": 354,
+        "endChar": 54
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4f00741_061c5264",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Let\u0027s make this function only allocate one batch at a time and let subsequent calls take care of further allocations. If number of active batches is lower than the desired amount (active_batches_opt), otherwise return the first item from the active_queue.",
+      "range": {
+        "startLine": 391,
+        "startChar": 0,
+        "endLine": 392,
+        "endChar": 43
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a209bc03_074c0dfe",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Another advantage of making this function acquire one batch at a time is the fact that you don\u0027t have to track the number of free batches anymore.",
+      "range": {
+        "startLine": 399,
+        "startChar": 0,
+        "endLine": 402,
+        "endChar": 2
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fb20c11_d0122e36",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Unfortunately SPDK doesn\u0027t allow declarations inside the for loop. Move it outside.",
+      "range": {
+        "startLine": 404,
+        "startChar": 6,
+        "endLine": 404,
+        "endChar": 13
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a975993_cccfdcf3",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Let\u0027s merge this into the _ftl_rwb_acquire_batch, make it return struct ftl_rwb_batch * instead of an int and perhaps rename it to ftl_rwb_select_batch. Also it should be called every time now (instead of under the condition that rwb-\u003ecurrent \u003d\u003d NULL).",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 445,
+        "endChar": 28
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3034b638_280bce75",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T13:56:15Z",
+      "side": 1,
+      "message": "Let\u0027s call this ftl_rwb_disable_interleaving().",
+      "range": {
+        "startLine": 477,
+        "startChar": 0,
+        "endLine": 482,
+        "endChar": 1
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
