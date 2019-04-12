@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43aea3ae_225c1e62",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 1028,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-12T22:19:06Z",
+      "side": 1,
+      "message": "There is possibility of starving connections that are later on the list, since we are quitting after getting to max_events. Please note that epoll_wait() does not suffer from this since it picks events in round robin fashion.\nhttp://man7.org/linux/man-pages/man2/epoll_wait.2.html\n\n\"       If more than maxevents file descriptors are ready when epoll_wait()\n       is called, then successive epoll_wait() calls will round robin\n       through the set of ready file descriptors.  This behavior helps avoid\n       starvation scenarios, where a process fails to notice that additional\n       file descriptors are ready because it focuses on a set of file\n       descriptors that are already known to be ready.\"",
+      "range": {
+        "startLine": 1028,
+        "startChar": 19,
+        "endLine": 1028,
+        "endChar": 35
+      },
+      "revId": "d3d1f8b15c39fa402df520af6376b0c3b132f60d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97690e0e_6462b176",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-12T22:19:06Z",
+      "side": 1,
+      "message": "else block with break is missing, we will go over the socks[] array limit if there are more events than max_events.",
+      "range": {
+        "startLine": 1031,
+        "startChar": 3,
+        "endLine": 1033,
+        "endChar": 4
+      },
+      "revId": "d3d1f8b15c39fa402df520af6376b0c3b132f60d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
