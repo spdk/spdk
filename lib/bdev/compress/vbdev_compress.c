@@ -521,7 +521,13 @@ _comp_reduce_compress(struct spdk_reduce_backing_dev *dev,
 		      struct iovec *dst_iovs, int dst_iovcnt,
 		      struct spdk_reduce_vol_cb_args *cb_arg)
 {
-	_compress_operation(dev, src_iovs, src_iovcnt, dst_iovs, dst_iovcnt, true, cb_arg);
+	int rc;
+
+	rc = _compress_operation(dev, src_iovs, src_iovcnt, dst_iovs, dst_iovcnt, true, cb_arg);
+	if (rc) {
+		SPDK_ERRLOG("with compress operation.\n");
+		cb_arg->cb_fn(cb_arg->cb_arg, -1);
+	}
 }
 
 /* Entry point for reduce lib to issue a decompress operation. */
@@ -531,7 +537,13 @@ _comp_reduce_decompress(struct spdk_reduce_backing_dev *dev,
 			struct iovec *dst_iovs, int dst_iovcnt,
 			struct spdk_reduce_vol_cb_args *cb_arg)
 {
-	_compress_operation(dev, src_iovs, src_iovcnt, dst_iovs, dst_iovcnt, false, cb_arg);
+	int rc;
+
+	rc = _compress_operation(dev, src_iovs, src_iovcnt, dst_iovs, dst_iovcnt, false, cb_arg);;
+	if (rc) {
+		SPDK_ERRLOG("with decompress operation.\n");
+		cb_arg->cb_fn(cb_arg->cb_arg, -1);
+	}
 }
 
 /* Callback for getting a buf from the bdev pool in the event that the caller passed
