@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "c3c5e645_dc014391",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-12T09:42:40Z",
+      "side": 1,
+      "message": "You are right. Ack",
+      "parentUuid": "4ccdfc3c_09fc8e0a",
+      "range": {
+        "startLine": 740,
+        "startChar": 2,
+        "endLine": 740,
+        "endChar": 17
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5aadc9ef_5ceb1e36",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -191,6 +215,30 @@
     },
     {
       "key": {
+        "uuid": "78f895aa_91b922e4",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-12T09:42:40Z",
+      "side": 1,
+      "message": "Ack, I will change it to return void.\n\nIn next patch it worked the same way - register_vbdev returned int.",
+      "parentUuid": "322b4136_3b81c8ca",
+      "range": {
+        "startLine": 781,
+        "startChar": 0,
+        "endLine": 785,
+        "endChar": 15
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "908355e4_b91c6707",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -205,6 +253,24 @@
       "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a67ed6bf_ff21926f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-12T09:42:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "908355e4_b91c6707",
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -279,6 +345,30 @@
     },
     {
       "key": {
+        "uuid": "f8156430_eefc9772",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-12T09:42:40Z",
+      "side": 1,
+      "message": "It is general because all management operations have the same callback signature.\nCaller doesn\u0027t have to use vbdev later, RPC example shows that.\nAnyway, passing vbdev in callback would need some changes to vbdev_ocfmngt_ interface because it relies on callback that has general signature so this is not a topic for this patch.",
+      "parentUuid": "bcb674b1_c5b9a338",
+      "range": {
+        "startLine": 1076,
+        "startChar": 6,
+        "endLine": 1076,
+        "endChar": 29
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "afdd2555_07c13ae1",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -293,6 +383,24 @@
       "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d57d4358_f244871b",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1165,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-12T09:42:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "afdd2555_07c13ae1",
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -367,6 +475,30 @@
     },
     {
       "key": {
+        "uuid": "9c6e9207_c4b491f4",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1173,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-12T09:42:40Z",
+      "side": 1,
+      "message": "I mean that they cannot be written the same way as in following patch.\nIn patchset 4, I called examine_end() on failure from register_vbdev(), so there shouldn\u0027t be any issues.",
+      "parentUuid": "04fb19ac_cc64db6d",
+      "range": {
+        "startLine": 1173,
+        "startChar": 25,
+        "endLine": 1173,
+        "endChar": 35
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3ba7333f_d4c04a1c",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
@@ -435,6 +567,30 @@
       "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8356449f_1524548e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-12T09:42:40Z",
+      "side": 1,
+      "message": "Ack, I will keep it.\n\nI don\u0027t understand why vbdev_ocf_get_base_by_name() is simpler.\nThis code also relies on the assumption that core name is unique.",
+      "parentUuid": "3b573cc3_f5c3ed7f",
+      "range": {
+        "startLine": 1176,
+        "startChar": 0,
+        "endLine": 1179,
+        "endChar": 3
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
