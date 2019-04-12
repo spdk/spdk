@@ -239,6 +239,30 @@
     },
     {
       "key": {
+        "uuid": "f0c5eb20_7efe7cdc",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-12T13:13:04Z",
+      "side": 1,
+      "message": "Sorry, I actually reverted it back to int. Reason is.. scanbuild.\nI spent so much time trying to make it happy, but apparently only the int version is bugfree.\n\nOther possibility would be to add #ifdef __clang_analyzer__ ignore() #endif, but we don\u0027t do that very often.\n\nIf you know how to make void version work, let me know and I will change it.",
+      "parentUuid": "78f895aa_91b922e4",
+      "range": {
+        "startLine": 781,
+        "startChar": 0,
+        "endLine": 785,
+        "endChar": 15
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "908355e4_b91c6707",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
