@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9bd52c7f_f2f81148",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-12T12:35:55Z",
+      "side": 1,
+      "message": "Or scsi_dev_destruct returns enodev and return 0 here if rc is enodev",
+      "revId": "a0d40b1a270fb421e29a91f640e12a62b47d7186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86b4722e_8dd948fd",
         "filename": "lib/scsi/dev.c",
         "patchSetId": 15
