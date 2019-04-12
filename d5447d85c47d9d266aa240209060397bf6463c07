@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "484fc14c_cb526d1d",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T08:53:23Z",
+      "side": 1,
+      "message": "We have already one write buffer cache - please add to this description that this is persistent write buffer",
+      "revId": "d5447d85c47d9d266aa240209060397bf6463c07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4b577bb_9ef9709b",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T08:53:23Z",
+      "side": 1,
+      "message": "This could be separate structure?",
+      "range": {
+        "startLine": 142,
+        "startChar": 1,
+        "endLine": 148,
+        "endChar": 33
+      },
+      "revId": "d5447d85c47d9d266aa240209060397bf6463c07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bd4736f_a349d949",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T08:53:23Z",
+      "side": 1,
+      "message": "Please add comment with explanation why we are requesting two bands capacity.",
+      "revId": "d5447d85c47d9d266aa240209060397bf6463c07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7045bb5e_9e053ae1",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 963,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-12T08:53:23Z",
+      "side": 1,
+      "message": "After you moved spdk_io_device_register to this point it could probably fail on spdk_io_device_unregister when we jump in some of fail_sync path.",
+      "revId": "d5447d85c47d9d266aa240209060397bf6463c07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
