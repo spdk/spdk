@@ -625,8 +625,19 @@ iscsi_tgt_node_delete_all_pg_maps(struct spdk_iscsi_tgt_node *target)
 }
 
 static void
-_iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
+_iscsi_tgt_node_destruct(void *cb_arg, int rc)
 {
+	struct spdk_iscsi_tgt_node *target = cb_arg;
+	iscsi_tgt_node_destruct_cb destruct_cb_fn = target->destruct_cb_fn;
+	void *destruct_cb_arg = target->destruct_cb_arg;
+
+	if (rc != 0) {
+		if (destruct_cb_fn) {
+			destruct_cb_fn(destruct_cb_arg, rc);
+		}
+		return;
+	}
+
 	free(target->name);
 	free(target->alias);
 
@@ -636,6 +647,10 @@ _iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 
 	pthread_mutex_destroy(&target->mutex);
 	free(target);
+
+	if (destruct_cb_fn) {
+		destruct_cb_fn(destruct_cb_arg, 0);
+	}
 }
 
 static int
@@ -650,24 +665,33 @@ iscsi_tgt_node_check_active_conns(void *arg)
 	spdk_poller_unregister(&target->destruct_poller);
 
 	spdk_scsi_dev_destruct(target->dev);
-	_iscsi_tgt_node_destruct(target);
+	_iscsi_tgt_node_destruct(target, 0);
 
 	return 1;
 }
 
 static void
-iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
+iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target,
+			iscsi_tgt_node_destruct_cb cb_fn, void *cb_arg)
 {
 	if (target == NULL) {
+		if (cb_fn) {
+			cb_fn(cb_arg, -ENOENT);
+		}
 		return;
 	}
 
 	if (target->destructed) {
 		SPDK_ERRLOG("Destructing %s is already started\n", target->name);
+		if (cb_fn) {
+			cb_fn(cb_arg, -EBUSY);
+		}
 		return;
 	}
 
 	target->destructed = true;
+	target->destruct_cb_fn = cb_fn;
+	target->destruct_cb_arg = cb_arg;
 
 	spdk_iscsi_conns_start_exit(target);
 
@@ -676,7 +700,7 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 					  target, 10);
 	} else {
 		spdk_scsi_dev_destruct(target->dev);
-		_iscsi_tgt_node_destruct(target);
+		_iscsi_tgt_node_destruct(target, 0);
 	}
 
 }
@@ -951,7 +975,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	rc = pthread_mutex_init(&target->mutex, NULL);
 	if (rc != 0) {
 		SPDK_ERRLOG("tgt_node%d: mutex_init() failed\n", target->num);
-		iscsi_tgt_node_destruct(target);
+		iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -960,7 +984,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	target->name = strdup(fullname);
 	if (!target->name) {
 		SPDK_ERRLOG("Could not allocate TargetName\n");
-		iscsi_tgt_node_destruct(target);
+		iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -970,7 +994,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 		target->alias = strdup(alias);
 		if (!target->alias) {
 			SPDK_ERRLOG("Could not allocate TargetAlias\n");
-			iscsi_tgt_node_destruct(target);
+			iscsi_tgt_node_destruct(target, NULL, NULL);
 			return NULL;
 		}
 	}
@@ -979,7 +1003,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 					      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
 	if (!target->dev) {
 		SPDK_ERRLOG("Could not construct SCSI device\n");
-		iscsi_tgt_node_destruct(target);
+		iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -987,7 +1011,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	rc = spdk_iscsi_tgt_node_add_pg_ig_maps(target, pg_tag_list, ig_tag_list, num_maps);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not add map to target\n");
-		iscsi_tgt_node_destruct(target);
+		iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -1009,7 +1033,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	rc = iscsi_tgt_node_register(target);
 	if (rc != 0) {
 		SPDK_ERRLOG("register target is failed\n");
-		iscsi_tgt_node_destruct(target);
+		iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -1277,7 +1301,7 @@ spdk_iscsi_shutdown_tgt_nodes(void)
 
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-		iscsi_tgt_node_destruct(target);
+		iscsi_tgt_node_destruct(target, NULL, NULL);
 
 		pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	}
@@ -1296,7 +1320,7 @@ spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name,
 		iscsi_tgt_node_unregister(target);
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-		iscsi_tgt_node_destruct(target);
+		iscsi_tgt_node_destruct(target, cb_fn, cb_arg);
 
 		if (cb_fn) {
 			cb_fn(cb_arg, 0);
