@@ -152,6 +152,12 @@ DEFINE_STUB(rte_socket_id, unsigned, (void), 0);
 DEFINE_STUB(rte_eal_get_configuration, struct rte_config *, (void), NULL);
 DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
 DEFINE_STUB_V(rte_mempool_free, (struct rte_mempool *mp));
+DEFINE_STUB(rte_compressdev_dequeue_burst, uint16_t,
+	    (uint8_t dev_id, uint16_t qp_id, struct rte_comp_op **ops, uint16_t nb_ops), 0);
+DEFINE_STUB(rte_compressdev_enqueue_burst, uint16_t,
+	    (uint8_t dev_id, uint16_t qp_id, struct rte_comp_op **ops, uint16_t nb_ops), 0);
+DEFINE_STUB_V(rte_comp_op_free, (struct rte_comp_op *op));
+DEFINE_STUB(rte_comp_op_alloc, struct rte_comp_op *, (struct rte_mempool *mempool), NULL);
 
 struct spdk_bdev_io *g_bdev_io;
 struct spdk_io_channel *g_io_ch;

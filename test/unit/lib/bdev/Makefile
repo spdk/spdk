@@ -42,7 +42,7 @@ endif
 
 ifeq ($(CONFIG_REDUCE),y)
 # enable once new mocks are added for compressdev
-#DIRS-y += compress.c
+DIRS-y += compress.c
 endif
 
 DIRS-$(CONFIG_PMDK) += pmem
