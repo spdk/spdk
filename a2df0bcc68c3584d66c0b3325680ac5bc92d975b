@@ -22,6 +22,30 @@
       "revId": "a2df0bcc68c3584d66c0b3325680ac5bc92d975b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "360f4028_1e0c10a4",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-04-12T14:19:50Z",
+      "side": 1,
+      "message": "What is kick is called from another thread? We just want to signal that metadata should be updated.",
+      "parentUuid": "c72e1a32_12832a2e",
+      "range": {
+        "startLine": 357,
+        "startChar": 1,
+        "endLine": 357,
+        "endChar": 18
+      },
+      "revId": "a2df0bcc68c3584d66c0b3325680ac5bc92d975b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
