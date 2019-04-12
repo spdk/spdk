@@ -14,7 +14,7 @@ function suite()
 
 timing_enter ocf
 
-suite "$testdir/integrity/fio-mallocs.sh"
+suite "$testdir/integrity/fio-modes.sh"
 suite "$testdir/integrity/bdevperf-iotypes.sh"
 suite "$testdir/management/create-destruct.sh"
 suite "$testdir/management/multicore.sh"
