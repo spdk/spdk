@@ -52,6 +52,24 @@
       "revId": "55ffe6d85db6f9af549de66ab35b08e217a85e83",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd06d0e9_5f91bec3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T12:41:26Z",
+      "side": 1,
+      "message": "The function can be useful for other types of IOs too, so I don\u0027t think limiting it just for the cache seems like a good idea. We\u0027re already planning on changing the way IOs are sent to accommodate for the parent/child relations, so it\u0027ll probably find a use there.",
+      "parentUuid": "62adeb80_8c36048b",
+      "revId": "55ffe6d85db6f9af549de66ab35b08e217a85e83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }

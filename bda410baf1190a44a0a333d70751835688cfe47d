@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "4cef1b29_9b0e7acc",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T12:41:26Z",
+      "side": 1,
+      "message": "What do you mean by propagating bdev among FTL code? We\u0027re using bdev interface, so of course we\u0027re using its functions. Also we\u0027re going to have much more bdev calls soon, while implementing zoned namespaces (which will replace all the NVMe driver calls with bdev ones).",
+      "parentUuid": "d0d107d0_2f6a2fa3",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c79c6713_2e19d823",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 11
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "We have read_cb, write_cb, write_md_cb etc. - I prefer to keep this notation",
       "parentUuid": "3aa47a63_666fa9ac",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e46f6f0_e367be49",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T12:41:26Z",
+      "side": 1,
+      "message": "We also have ftl_nv_cache_write which is not really related to this, therefore I believe this name is better and don\u0027t think it needs to be changed.",
+      "parentUuid": "569f12a0_dddc29d3",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -161,6 +197,24 @@
     },
     {
       "key": {
+        "uuid": "04621423_2b6aeee9",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T12:41:26Z",
+      "side": 1,
+      "message": "ftl_ppa is a union of an 64-bit unsigned integer and some other fields describing OC drive\u0027s geometry. It doesn\u0027t matter if it\u0027s contiguous or not - PPA is just an address that is supposed to a physical location on the SSD (as opposed to a logical address used by the user of the FTL).\nHere the 64 bit int portion of the union is used. I really don\u0027t see the point in adding yet another field to an already large structure (ftl_io), especially as we don\u0027t really need to as the IO either goes to OC drive or cache drive. Creating a union with an uint64_t and ftl_ppa will only complicate things and doesn\u0027t make sense, as ftl_ppa by definition is uint64_t.",
+      "parentUuid": "03217ed7_2e3da1c0",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "caefb241_aa5413b7",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 11
@@ -208,6 +262,24 @@
       "side": 1,
       "message": "I think we should rely on flt_io_completion and not call ftl_io_free directly. Also I think we shouldn\u0027t have those return statments inside loops but do breaks so we can have one place where we are doing spdk_thread_send_msg(thread, _ftl_write_nv_cache, io);",
       "parentUuid": "b81fd869_9c7ec6a2",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8424fdf8_f631fcab",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T12:41:26Z",
+      "side": 1,
+      "message": "Why shouldn\u0027t we call ftl_io_free directly? It\u0027s perfectly valid thing to do, if the IO cannot be sent for some reason. The return statement can be replaced with a break, sure.",
+      "parentUuid": "a7bd2fef_5192ea49",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -285,6 +357,30 @@
     },
     {
       "key": {
+        "uuid": "d49a64bd_383f0e56",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T12:41:26Z",
+      "side": 1,
+      "message": "By that logic every condition should be commented. I really don\u0027t think the code here is complicated enough to require extensive comments. Also, there\u0027s tons of places we\u0027re just checking comparing the result of a function.",
+      "parentUuid": "a84b2548_3360b05b",
+      "range": {
+        "startLine": 976,
+        "startChar": 0,
+        "endLine": 990,
+        "endChar": 3
+      },
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b7f20d51_5d2588d5",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 11
@@ -332,6 +428,24 @@
       "side": 1,
       "message": "I think this condition is too much complex right now - !(io-\u003eflags \u0026 FTL_IO_CACHE) \u0026\u0026 io-\u003etype\u003d\u003d FTL_IO_WRITE wouldn\u0027t be sufficient?",
       "parentUuid": "0efa46ae_13665c4c",
+      "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f1f976a_e8a88ecc",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-12T12:41:26Z",
+      "side": 1,
+      "message": "The only thing added here is additional check, that the IO is not directed to the non-volatile cache. I\u0027m not changing the other part of the condition, as it\u0027s not a subject of this patch.",
+      "parentUuid": "c93f52b4_81081389",
       "revId": "bda410baf1190a44a0a333d70751835688cfe47d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
