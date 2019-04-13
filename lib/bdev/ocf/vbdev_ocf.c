@@ -1213,14 +1213,21 @@ vbdev_ocf_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&ocf_if);
 }
 
+struct ocf_ref {
+	unsigned cnt;
+};
+
 /* Decrement reference and if it's 0 report examine_done */
 static void
 examine_end(int status, void *cb_arg)
 {
-	int *refcnt = cb_arg;
-	if (--(*refcnt) == 0) {
+	struct ocf_ref *ref = cb_arg;
+
+	assert(ref->cnt > 0);
+	ref->cnt--;
+	if (ref->cnt == 0) {
 		spdk_bdev_module_examine_done(&ocf_if);
-		free(refcnt);
+		free(ref);
 	}
 }
 
@@ -1233,7 +1240,7 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 {
 	const char *bdev_name = spdk_bdev_get_name(bdev);
 	struct vbdev_ocf *vbdev;
-	int *refcnt;
+	struct ocf_ref *refcnt;
 
 	refcnt = malloc(sizeof(*refcnt));
 	if (refcnt == NULL) {
@@ -1241,7 +1248,7 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 		return;
 	}
 
-	*refcnt = 1;
+	refcnt->cnt = 1;
 
 	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
 		if (vbdev->state.doing_finish || vbdev->state.started) {
@@ -1249,12 +1256,14 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 		}
 
 		if (!strcmp(bdev_name, vbdev->cache.name)) {
-			(*refcnt)++;
+			refcnt->cnt++;
+			assert(refcnt->cnt > 1);
 			register_vbdev(vbdev, examine_end, refcnt);
 			continue;
 		}
 		if (!strcmp(bdev_name, vbdev->core.name)) {
-			(*refcnt)++;
+			refcnt->cnt++;
+			assert(refcnt->cnt > 1);
 			register_vbdev(vbdev, examine_end, refcnt);
 			break;
 		}
