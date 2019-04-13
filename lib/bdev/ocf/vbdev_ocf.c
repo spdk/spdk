@@ -1250,11 +1250,13 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 
 		if (!strcmp(bdev_name, vbdev->cache.name)) {
 			(*refcnt)++;
+			assert(*refcnt > 1);
 			register_vbdev(vbdev, examine_end, refcnt);
 			continue;
 		}
 		if (!strcmp(bdev_name, vbdev->core.name)) {
 			(*refcnt)++;
+			assert(*refcnt > 1);
 			register_vbdev(vbdev, examine_end, refcnt);
 			break;
 		}
