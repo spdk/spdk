@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6b94da0_58f815b2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-13T10:51:49Z",
+      "side": 1,
+      "message": "SPDK_DEBUGLOG",
+      "range": {
+        "startLine": 12,
+        "startChar": 21,
+        "endLine": 12,
+        "endChar": 32
+      },
+      "revId": "33c7f9dc82d533d53f8739b5d846b6cd428b4d73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
