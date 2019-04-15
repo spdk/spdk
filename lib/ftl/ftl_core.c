@@ -841,7 +841,7 @@ ftl_process_flush(struct spdk_ftl_dev *dev, struct ftl_rwb_batch *batch)
 		offset = ftl_rwb_batch_get_offset(batch);
 
 		if (spdk_bit_array_get(flush->bmap, offset)) {
-			spdk_bit_array_set(flush->bmap, offset);
+			spdk_bit_array_clear(flush->bmap, offset);
 			if (!(--flush->num_req)) {
 				ftl_complete_flush(flush);
 			}
