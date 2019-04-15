@@ -515,16 +515,36 @@ _bdev_io_set_bounce_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
 }
 
 static void
+_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	bool buf_allocated;
+	uint64_t alignment;
+	void *aligned_buf;
+
+	alignment = spdk_bdev_get_buf_align(bdev);
+	buf_allocated = _is_buf_allocated(bdev_io->u.bdev.iovs);
+	aligned_buf = (void *)(((uintptr_t)buf + (alignment - 1)) & ~(alignment - 1));
+
+	if (buf_allocated) {
+		_bdev_io_set_bounce_buf(bdev_io, aligned_buf, len);
+	} else {
+		spdk_bdev_io_set_buf(bdev_io, aligned_buf, len);
+	}
+
+	bdev_io->internal.buf = buf;
+	bdev_io->internal.get_buf_cb(bdev_io->internal.ch->channel, bdev_io, true);
+}
+
+static void
 spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_mempool *pool;
 	struct spdk_bdev_io *tmp;
-	void *buf, *aligned_buf;
 	bdev_io_stailq_t *stailq;
 	struct spdk_bdev_mgmt_channel *ch;
-	uint64_t buf_len;
-	uint64_t alignment;
-	bool buf_allocated;
+	uint64_t buf_len, alignment;
+	void *buf;
 
 	buf = bdev_io->internal.buf;
 	buf_len = bdev_io->internal.buf_len;
@@ -546,21 +566,8 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 		spdk_mempool_put(pool, buf);
 	} else {
 		tmp = STAILQ_FIRST(stailq);
-
-		alignment = spdk_bdev_get_buf_align(tmp->bdev);
-		buf_allocated = _is_buf_allocated(tmp->u.bdev.iovs);
-
-		aligned_buf = (void *)(((uintptr_t)buf +
-					(alignment - 1)) & ~(alignment - 1));
-		if (buf_allocated) {
-			_bdev_io_set_bounce_buf(tmp, aligned_buf, tmp->internal.buf_len);
-		} else {
-			spdk_bdev_io_set_buf(tmp, aligned_buf, tmp->internal.buf_len);
-		}
-
 		STAILQ_REMOVE_HEAD(stailq, internal.buf_link);
-		tmp->internal.buf = buf;
-		tmp->internal.get_buf_cb(tmp->internal.ch->channel, tmp, true);
+		_bdev_io_set_buf(tmp, buf, tmp->internal.buf_len);
 	}
 }
 
@@ -588,10 +595,10 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 {
 	struct spdk_mempool *pool;
 	bdev_io_stailq_t *stailq;
-	void *buf, *aligned_buf;
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
 	uint64_t alignment;
 	bool buf_allocated;
+	void *buf;
 
 	assert(cb != NULL);
 
@@ -628,19 +635,10 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	}
 
 	buf = spdk_mempool_get(pool);
-
 	if (!buf) {
 		STAILQ_INSERT_TAIL(stailq, bdev_io, internal.buf_link);
 	} else {
-		aligned_buf = (void *)(((uintptr_t)buf + (alignment - 1)) & ~(alignment - 1));
-
-		if (buf_allocated) {
-			_bdev_io_set_bounce_buf(bdev_io, aligned_buf, len);
-		} else {
-			spdk_bdev_io_set_buf(bdev_io, aligned_buf, len);
-		}
-		bdev_io->internal.buf = buf;
-		bdev_io->internal.get_buf_cb(bdev_io->internal.ch->channel, bdev_io, true);
+		_bdev_io_set_buf(bdev_io, buf, len);
 	}
 }
 
