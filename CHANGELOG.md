@@ -30,6 +30,8 @@ poll group for the qpair. And `ConnectionScheduler` configuration is added into 
 [Nvmf] section in etc/spdk/nvmf.conf.in to demonstrate how to configure the connection
 scheduling strategy among different spdk threads.
 
+Added infrastructure to retrieve global and per poll group NVMf statistics.
+
 ### notify
 
 The function `spdk_notify_get_types()` and `spdk_notify_get_events()` were
@@ -98,6 +100,8 @@ spdk_sock_group_create() is updated to allow input the user provided ctx.
 ### rpc
 
 Added thread_get_stats RPC method to retrieve existing statistics.
+
+Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
 
 ## v19.04:
 

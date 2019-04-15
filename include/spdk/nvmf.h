@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -78,6 +78,15 @@ struct spdk_nvmf_transport_opts {
 	bool		dif_insert_or_strip;
 };
 
+struct spdk_nvmf_poll_group_stat {
+	char *name;
+	STAILQ_ENTRY(spdk_nvmf_poll_group_stat) link;
+};
+
+struct spdk_nvmf_stat {
+	STAILQ_HEAD(, spdk_nvmf_poll_group_stat) poll_groups;
+};
+
 /**
  * Construct an NVMe-oF target.
  *
@@ -106,6 +115,29 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
  * \param tgt The NVMe-oF target
  */
 void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Function to be called once all the target statistics is collected.
+ * Statistics is only valid and may be accessed when status is
+ * true. Memory allocated for statistics is immediately released on
+ * return from this callback.
+ *
+ * \param status true if succeeded, false otherwise.
+ * \param stat Pointer to structure filled in with statistics.
+ * \param ctx Context argument passed to this function.
+ */
+typedef void (*spdk_nvmf_tgt_get_stat_done_fn)(bool status, struct spdk_nvmf_stat *stat, void *ctx);
+
+/**
+ * Collect NVMe-oF target statistics.
+ *
+ * \param tgt The NVMe-oF target
+ * \param done_cb A callback to be called when all statistics is collected
+ * \param done_ctx Context argument that will be passed to done_cb callback
+ */
+void spdk_nvmf_tgt_get_stat(struct spdk_nvmf_tgt *tgt,
+			    spdk_nvmf_tgt_get_stat_done_fn done_cb,
+			    void *done_ctx);
 
 /**
  * Function to be called once the target is listening.
