@@ -38,19 +38,23 @@
 
 #include "ftl/ftl_rwb.c"
 
-#define RWB_SIZE	(1024 * 1024)
-#define RWB_ENTRY_COUNT	(RWB_SIZE / FTL_BLOCK_SIZE)
-#define XFER_SIZE	16
-#define METADATA_SIZE	64
+#define RWB_SIZE		(1024 * 1024)
+#define RWB_ENTRY_COUNT		(RWB_SIZE / FTL_BLOCK_SIZE)
+#define XFER_SIZE		16
+#define METADATA_SIZE		64
+#define NUM_INTERLEAVE_UNITS	2
+#define NUM_PU			4
 
 static struct ftl_rwb *g_rwb;
 
 static void
 setup_rwb(void)
 {
-	struct spdk_ftl_conf conf = { .rwb_size = RWB_SIZE };
+	struct spdk_ftl_conf conf = { .rwb_size = RWB_SIZE,
+		       .num_interleave_units = NUM_INTERLEAVE_UNITS
+	};
 
-	g_rwb = ftl_rwb_init(&conf, XFER_SIZE, METADATA_SIZE);
+	g_rwb = ftl_rwb_init(&conf, XFER_SIZE, METADATA_SIZE, NUM_PU);
 	SPDK_CU_ASSERT_FATAL(g_rwb != NULL);
 }
 

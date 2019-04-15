@@ -87,8 +87,8 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	.max_active_relocs = 3,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
 	.user_io_pool_size = 2048,
-	/* 3 for 3D TLC NAND and 1 for others */
-	.osp_num_pages = 3,
+	/* 1 for default and 3 for 3D TLC NAND */
+	.num_interleave_units = 1,
 };
 
 static void ftl_dev_free_sync(struct spdk_ftl_dev *dev);
@@ -1022,6 +1022,8 @@ spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *cb_arg)
 	dev->halt_cb = cb;
 	dev->halt_arg = cb_arg;
 	dev->halt = 1;
+
+	ftl_rwb_disable_interleaving(dev->rwb);
 
 	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_add_halt_poller, dev);
 	return 0;

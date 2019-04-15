@@ -87,8 +87,10 @@ struct spdk_ftl_conf {
 		struct spdk_ftl_limit		limits[SPDK_FTL_LIMIT_MAX];
 	} defrag;
 
-	/* The number of pages per One Shot Program : it should be moved into device's geometry */
-	size_t                                  osp_num_pages;
+	/* Number of interleaving units per ws_opt. */
+	/* FTL can get rs_opt through this information : rs_opt = ws_opt / num_interleave_units */
+	/* rs_opt should be moved into device's geometry. */
+	size_t                                  num_interleave_units;
 };
 
 /* Range of parallel units (inclusive) */
