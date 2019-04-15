@@ -25,6 +25,47 @@
     },
     {
       "key": {
+        "uuid": "f16d6bf6_ac2eda06",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "The page in osp_num_pages is differnt from the page of PAGE_SIZE. PAGE_SIZE is 4KB, but the size of the page in osp_num_pages is ws_opt in OC spec.\n\nI actually needed the size of rs_opt but it depends on the type of NAND on a system. FTL gets the information through device geometry. So I didn\u0027t want to get the exact number of rs_opt in spdk_ftl_conf.\n\nI added only a divider for ws_opt to get rs_opt because I can calculate rs_opt \u003d ws_opt / divier. (ex, rs_opt \u003d 24 / 3 \u003d 8 or rs_opt \u003d 16 / 1 \u003d 16)\n\nnum_lbks_interleaved sounds like interleave_offset. Is it right?\n\nIf you don\u0027t want to use osp_num_pages, how about num_interleave_units? It means the number of interleave units per ws_opt.",
+      "parentUuid": "fb49d2b0_d8067172",
+      "range": {
+        "startLine": 91,
+        "startChar": 41,
+        "endLine": 91,
+        "endChar": 54
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5629642_4262459b",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "I want to understand better how ftl_process_shutdown() and ftl_process_flush() work. It will be helpful for me to modify them properly. \n\nIn this patch, even if \u0027size\u0027 is smaller than xfer_size, the acquired entries can be spread over more than two batches. In that case, is there a possibility that there is not enough free space in the current band?\n\nIf then, I will need to change the condition as below. I\u0027ll put this in the next patch set. Please advise.\n\n\tif (uint \u003c\u003d dev-\u003exfer_size) {\n\t\t/* If we reach this point we need to remove free bands */\n\t\t/* and pad current wptr band to the end */\n\n\t\tftl_remove_free_bands(dev);\n\t}",
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "127f8f29_d61ccdf7",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
@@ -48,6 +89,30 @@
     },
     {
       "key": {
+        "uuid": "54fac8fa_f089fbaa",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "I changed unit into num_active and size into num_acquired.",
+      "parentUuid": "127f8f29_d61ccdf7",
+      "range": {
+        "startLine": 592,
+        "startChar": 8,
+        "endLine": 592,
+        "endChar": 13
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b66e3f3c_bc2a2acb",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
@@ -68,6 +133,30 @@
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d821229b_9af09f5e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "Good point. I moved this function into spdk_ftl_dev_free().",
+      "parentUuid": "b66e3f3c_bc2a2acb",
+      "range": {
+        "startLine": 598,
+        "startChar": 0,
+        "endLine": 598,
+        "endChar": 36
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +206,30 @@
     },
     {
       "key": {
+        "uuid": "7f921611_850f0702",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "Sure! I also thought that it should be 1 in master branch.\n\nProbably, 3 would not be acceptable on your test environment. \nBTW, can it be tested when osp_num_pages is set to 2 then?",
+      "parentUuid": "163ded50_f7df9a6d",
+      "range": {
+        "startLine": 91,
+        "startChar": 18,
+        "endLine": 91,
+        "endChar": 19
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f116f39a_6d5c07e0",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 1
@@ -137,6 +250,30 @@
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d602c232_d97ada3e",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "That sounds good!",
+      "parentUuid": "f116f39a_6d5c07e0",
+      "range": {
+        "startLine": 75,
+        "startChar": 41,
+        "endLine": 75,
+        "endChar": 47
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +300,30 @@
     },
     {
       "key": {
+        "uuid": "50034ec1_843ccccc",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8996658_48469b1c",
+      "range": {
+        "startLine": 77,
+        "startChar": 41,
+        "endLine": 77,
+        "endChar": 59
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "998963f2_6501532a",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 1
@@ -183,6 +344,30 @@
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "449ccef0_e29c3512",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "I removed the flag, but interleave_offset should be xfer_size.\n\nrwb-\u003emax_active_batches \u003d 1;\nrwb-\u003einterleave_offset \u003d rwb-\u003exfer_size;",
+      "parentUuid": "998963f2_6501532a",
+      "range": {
+        "startLine": 79,
+        "startChar": 41,
+        "endLine": 79,
+        "endChar": 45
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -209,6 +394,30 @@
     },
     {
       "key": {
+        "uuid": "380d92b2_2e781084",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "Young Tack also gave me the same feedback. I removed rwb-\u003ecurrent.",
+      "parentUuid": "319e4250_568d37f6",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 54
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a99f6589_c37aeca8",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 1
@@ -229,6 +438,30 @@
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92d0c4c6_63b0c944",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a99f6589_c37aeca8",
+      "range": {
+        "startLine": 216,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 15
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -255,6 +488,30 @@
     },
     {
       "key": {
+        "uuid": "0a39401b_51160270",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07d3bc4d_047969ea",
+      "range": {
+        "startLine": 229,
+        "startChar": 0,
+        "endLine": 230,
+        "endChar": 29
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98e0c3d9_e2205889",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 1
@@ -275,6 +532,30 @@
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd07680e_32978676",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "98e0c3d9_e2205889",
+      "range": {
+        "startLine": 345,
+        "startChar": 0,
+        "endLine": 349,
+        "endChar": 1
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -301,6 +582,30 @@
     },
     {
       "key": {
+        "uuid": "bc5687de_74ce6b97",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "40c5980e_d26f7b33",
+      "range": {
+        "startLine": 354,
+        "startChar": 8,
+        "endLine": 354,
+        "endChar": 54
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4f00741_061c5264",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 1
@@ -312,6 +617,30 @@
       "writtenOn": "2019-04-12T13:56:15Z",
       "side": 1,
       "message": "Let\u0027s make this function only allocate one batch at a time and let subsequent calls take care of further allocations. If number of active batches is lower than the desired amount (active_batches_opt), otherwise return the first item from the active_queue.",
+      "range": {
+        "startLine": 391,
+        "startChar": 0,
+        "endLine": 392,
+        "endChar": 43
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "637efa0f_0d82f25c",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "I allocated the optimal number of batches at a time because there ia a certain case that we don\u0027t need to allocate a new batch for active_queue until the optimal buffers are filled. While we fill the allocated buffer, the completely filled batch are going to submit queue so the number of active batches are less than the desired amount at this time.\n\nIf I allocate one batch at a time, it is more complicated to distinguish the two different cases - (1)the case to allocate a new batch (2) the case that we have enough buffer to fill.\n\nPlease read the following scenarios and advise me.\n\nLet\u0027s assume.. \n- active_batches_opt \u003d 4\n- ws_opt \u003d xfer_size \u003d 6\n- rs_opt \u003d 2\n\n* initial state\nfree_queue   -- 8 - (XXXX.XXXX.XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX) (XXXX.XXXX.XXXX) (XXXX.XXXX.XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX)\nactive_queue -- 0 \nsubmit_queue -- 0 \n\n* write data (lbk 0 - 23)\n\n[1] allocate 4 active batches (need to allocate eventually the number of active_batches_opt, 4)\n\tfree_queue   -- 4 - (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX)\n                            (XXXX-XXXX-XXXX)\n\tactive_queue -- 4 - (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX) \n                            (XXXX-XXXX-XXXX)\n\tsubmit_queue -- 0 \n\n[2] place data\n\tfree_queue   -- 4 - (XXXX-XXXX.XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX)\n                            (XXXX-XXXX-XXXX)\n\tactive_queue -- 4 - (00.01-XXXX-XXXX) (02.03-XXXX-XXXX) (04.05-XXXX-XXXX) \n                            (06.07-XXXX-XXXX)\n\tsubmit_queue -- 0                  \n\t\n[3] place data (..continue)\t\t \n\tfree_queue   -- 4 - (XXXX-XXXX.XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX) \n                            (XXXX-XXXX-XXXX)\n\tactive_queue -- 4 - (00.01-08.09-XXXX) (02.03-10.11-XXXX) (04.05-12.13-XXXX)\n                            (06.07-14.15-XXXX) \n\tsubmit_queue -- 0    \n\t\n[4] place data (..continue)\t\t \n\tfree_queue   -- 4 - (XXXX-XXXX.XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX)\n                            (XXXX-XXXX-XXXX)\n\tactive_queue -- 4 - (00.01-08.09-16.17) (02.03-10.11-XXXX) (04.05-12.13-XXXX)\n                            (06.07-14.15-XXXX)\n\tsubmit_queue -- 0\n\t\n[5] place data (..continue) \u0026 submit the fully filled batch\t\t \n\tfree_queue   -- 4 - (XXXX-XXXX.XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX)\n                            (XXXX-XXXX-XXXX)\n\tactive_queue -- 3 - (02.03-10.11-XXXX) (04.05-12.13-XXXX) (06.07-14.15-XXXX)\n\tsubmit_queue -- 1 - (00.01-08.09-16.17)\n\t\n[6] place data (..continue) \u0026 submit the fully filled batch\t\t \n\tfree_queue   -- 4 - (XXXX-XXXX.XXXX) (XXXX-XXXX-XXXX) (XXXX-XXXX-XXXX)\n                            (XXXX-XXXX-XXXX)\n\tactive_queue -- 2 - (04.05-12.13-XXXX) (06.07-14.15-XXXX)\n\tsubmit_queue -- 2 - (00.01-08.09-16.17) (02.03-10.11-18.19)\n\nIn [5],[6], I thought we don\u0027t need to allocate a new batch in active_queue.\n\nIf we have enough free batches, we can allocate it when an active batch goes into submit queue or the number of active batches are less than the active_batches_opt.\n\nWe don\u0027t need to allocate a batch and put it into the active queue at this point if we consider the case that there is not enough buffer at this point.\n\nIf we allocate one batch at a time and always allocate it if there are less active_batches_opt, we have to allocate this time too.\n\n* ex, write data (lbk 50-80) \n[7] place data \t\t \n\tfree_queue   -- 2 - (XXXX-XXXX.XXXX) (XXXX-XXXX.XXXX) \n\tactive_queue -- 0 - \n\tsubmit_queue -- 7 - (00.01-08.09-16.17) (02.03-10.11-18.19) (04.05-12.13-20.21) (06.07-14.15-23.24) (80.81-86.87-92.93) (82.83-88.89-94.95) (84.85-90.91-96.97)\n\n[8] place data \t- allocate active batch at a time\n\tfree_queue   -- 1 - (XXXX-XXXX.XXXX) \n\tactive_queue -- 1 - (50.51-XXXX.XXXX) \n\tsubmit_queue -- 4 - (00.01-08.09-16.17) (02.03-10.11-18.19) (04.05-12.13-20.21) (06.07-14.15-23.24) (80.81-86.87-92.93) (82.83-88.89-94.95) (84.85-90.91-96.97)\t\n\t\nIn [8], to place the next lbks #52, #53, we can allocate a new batch here with the condition that there are less active batches than active_batches_opt.\n\nIf I allocate the desired batches at once, the case [8] will not happen so I don\u0027t need to consider the case.",
+      "parentUuid": "f4f00741_061c5264",
       "range": {
         "startLine": 391,
         "startChar": 0,
@@ -370,6 +699,30 @@
     },
     {
       "key": {
+        "uuid": "0a4d7597_02867d98",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3fb20c11_d0122e36",
+      "range": {
+        "startLine": 404,
+        "startChar": 6,
+        "endLine": 404,
+        "endChar": 13
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a975993_cccfdcf3",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 1
@@ -381,6 +734,30 @@
       "writtenOn": "2019-04-12T13:56:15Z",
       "side": 1,
       "message": "Let\u0027s merge this into the _ftl_rwb_acquire_batch, make it return struct ftl_rwb_batch * instead of an int and perhaps rename it to ftl_rwb_select_batch. Also it should be called every time now (instead of under the condition that rwb-\u003ecurrent \u003d\u003d NULL).",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 445,
+        "endChar": 28
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "908e2b66_c8bc0d64",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "I merged this part into _ftl_rwb_acquire_batch(), but I didn\u0027t change the function name.\nPlease check the new patch set, and let me know.",
+      "parentUuid": "2a975993_cccfdcf3",
       "range": {
         "startLine": 434,
         "startChar": 0,
@@ -413,6 +790,30 @@
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7870cb88_45b1f78e",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-15T07:58:32Z",
+      "side": 1,
+      "message": "That sounds good.\nDone",
+      "parentUuid": "3034b638_280bce75",
+      "range": {
+        "startLine": 477,
+        "startChar": 0,
+        "endLine": 482,
+        "endChar": 1
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
