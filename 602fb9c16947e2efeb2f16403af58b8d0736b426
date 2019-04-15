@@ -393,6 +393,30 @@
     },
     {
       "key": {
+        "uuid": "cc75cd86_54e609c1",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-15T20:46:52Z",
+      "side": 1,
+      "message": "This patch adds callback to vbdev_ocf_construct(), which should return the struct vbdev_ocf. As it is usual for functions creating anything - it should be returned.\n\nAs for modifying vbdev_ocf_mngt_*, well one can create another cb that will return the struct as well. This patch does not use the vbdev_ocf_mngt_* functions in construct path anyway. So such modification can be done in next patch in this series.",
+      "parentUuid": "f8156430_eefc9772",
+      "range": {
+        "startLine": 1076,
+        "startChar": 6,
+        "endLine": 1076,
+        "endChar": 29
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "afdd2555_07c13ae1",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
