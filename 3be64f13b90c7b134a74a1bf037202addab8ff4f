@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "10950c2a_78d0c2c1",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-15T13:33:47Z",
+      "side": 1,
+      "message": "Could you explain how one shot program is different from ws_min? The name \"one shot program\" sounds very similar - ws_min describes the minimum number of blocks that can be programmed at a time. Is there any relation between these two?",
+      "parentUuid": "f16d6bf6_ac2eda06",
+      "range": {
+        "startLine": 91,
+        "startChar": 41,
+        "endLine": 91,
+        "endChar": 54
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d5629642_4262459b",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
@@ -60,6 +84,24 @@
       "writtenOn": "2019-04-15T07:58:32Z",
       "side": 1,
       "message": "I want to understand better how ftl_process_shutdown() and ftl_process_flush() work. It will be helpful for me to modify them properly. \n\nIn this patch, even if \u0027size\u0027 is smaller than xfer_size, the acquired entries can be spread over more than two batches. In that case, is there a possibility that there is not enough free space in the current band?\n\nIf then, I will need to change the condition as below. I\u0027ll put this in the next patch set. Please advise.\n\n\tif (uint \u003c\u003d dev-\u003exfer_size) {\n\t\t/* If we reach this point we need to remove free bands */\n\t\t/* and pad current wptr band to the end */\n\n\t\tftl_remove_free_bands(dev);\n\t}",
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50766f18_6efc8878",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-15T13:33:47Z",
+      "side": 1,
+      "message": "ftl_process_flush iterates through the list of ftl_flush objects and checks if the batch is on the flush bitmap. If it is, it means that the flush was requested when the batch was being written to (it wasn\u0027t empty). Once a flush request comes, we need to force out all of the remaining batches, otherwise, if there are no incoming writes, we\u0027d never complete the flush. This is done by ftl_flush_pad_batch. Now that you mention it, I\u0027ve noticed that it should also  be changed it to accommodate multiple active batches. I think that changing ftl_flush_pad_batch like this should be sufficient:\n\n\tif (size \u003c dev-\u003exfer_size) {\n\t\tftl_rwb_pad(dev, dev-\u003exfer_size - (size % dev-\u003exfer_size));\n\t}\ninto:\n\tnum_entries \u003d ftl_rwb_get_active_batches(dev-\u003erwb) * dev-\u003exfer_size;\n\tif (size \u003c num_entries) {\n\t\tftl_rwb_pad(dev, num_entries - (size % num_entries));\n\t}\n\nAs for the ftl_process_shutdown, you\u0027re right, the entries could be spread out over more than one batch, which could mean that we cannot fit it inside currently open band. The change you\u0027ve proposed makes sense, I\u0027d only check (ftl_rwb_get_active_batches() \u003c\u003d 1) directly, as I think it\u0027d be more readable this way.",
+      "parentUuid": "d5629642_4262459b",
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -230,6 +272,30 @@
     },
     {
       "key": {
+        "uuid": "7af0114e_4594efc6",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-15T13:33:47Z",
+      "side": 1,
+      "message": "Yeah, for sure we could test it with osp_num_pages set to something different than 1 (3 might be tricky, since I think xfer_size on our test machines is not divisible by 3, but 2 should be fine).",
+      "parentUuid": "7f921611_850f0702",
+      "range": {
+        "startLine": 91,
+        "startChar": 18,
+        "endLine": 91,
+        "endChar": 19
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f116f39a_6d5c07e0",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 1
@@ -359,6 +425,30 @@
       "side": 1,
       "message": "I removed the flag, but interleave_offset should be xfer_size.\n\nrwb-\u003emax_active_batches \u003d 1;\nrwb-\u003einterleave_offset \u003d rwb-\u003exfer_size;",
       "parentUuid": "998963f2_6501532a",
+      "range": {
+        "startLine": 79,
+        "startChar": 41,
+        "endLine": 79,
+        "endChar": 45
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bb54dc2_b50a72a1",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-15T13:33:47Z",
+      "side": 1,
+      "message": "Yeah, of course, you\u0027re correct.",
+      "parentUuid": "449ccef0_e29c3512",
       "range": {
         "startLine": 79,
         "startChar": 41,
@@ -653,6 +743,30 @@
     },
     {
       "key": {
+        "uuid": "8ec5880a_b7412575",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-15T13:33:47Z",
+      "side": 1,
+      "message": "All right, I get it know, thanks for great explanation! We want to allow the batches to be filled completely (even if num_active_batches \u003c max_active_batches), but at the same time avoid situation when we\u0027re acquiring new set of batches, but the free_queue is empty (in which case we\u0027d break the interleaving if we\u0027ve started writing to one of the active batches). Makes sense.",
+      "parentUuid": "637efa0f_0d82f25c",
+      "range": {
+        "startLine": 391,
+        "startChar": 0,
+        "endLine": 392,
+        "endChar": 43
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a209bc03_074c0dfe",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 1
@@ -673,6 +787,30 @@
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed2fa5ff_c523b0d8",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-15T13:33:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a209bc03_074c0dfe",
+      "range": {
+        "startLine": 399,
+        "startChar": 0,
+        "endLine": 402,
+        "endChar": 2
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -767,6 +905,30 @@
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6bd9638_7dc9117d",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-15T13:33:47Z",
+      "side": 1,
+      "message": "Yeah, the way you\u0027ve changed it is fine and the name is appropriate too, since you\u0027re actually acquiring the band instead of selecting it. My suggestion doesn\u0027t really make sense until the function allocates one batch at a time.",
+      "parentUuid": "908e2b66_c8bc0d64",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 445,
+        "endChar": 28
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
