@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f5d1450_bfb4243c",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-15T17:39:06Z",
+      "side": 1,
+      "message": "It might be good to make this return const and notate in the function call that the return value should be read-only.",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
