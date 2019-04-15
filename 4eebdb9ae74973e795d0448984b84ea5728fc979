@@ -1,0 +1,176 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f861ec33_c3f62db7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-15T10:38:34Z",
+      "side": 1,
+      "message": "You should probably mention that we\u0027re not going to provide executables in the repository and if someone wants to run the test, then it need to be downloaded manually.\n\n I cannot remember now but v1 and v2 tests were available somewhere from here:\nhttps://docs.microsoft.com/en-us/windows-hardware/test/hlk/testref/d1f2fbbe-d5e4-439d-819a-dc100df0e9ba#running-the-test\n\nhttps://technet.microsoft.com/en-us/windows/jj124001(v\u003dvs.80)\n\nI think you can ask Tomek Z, maybe he remembers.",
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48dbb792_bf9fceed",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-15T10:38:34Z",
+      "side": 1,
+      "message": "rename to windows_scsi_compliance.sh",
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52e732cf_855ced40",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-15T10:38:34Z",
+      "side": 1,
+      "message": "This should be configurable",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 75
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5eb7ab6f_f83125fa",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-15T10:38:34Z",
+      "side": 1,
+      "message": "Do we need this? THere\u0027s already error_exit() function in common.sh",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 1
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "397ae522_967064fb",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-15T10:38:34Z",
+      "side": 1,
+      "message": "I know it\u0027s in the original config, but I think we can skip using split malloc bdev. I don\u0027t think it makes much difference using it...",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 39
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b54ae5f_57e939bf",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-15T10:38:34Z",
+      "side": 1,
+      "message": "Take a look at windows/windows.sh and make password a variable",
+      "range": {
+        "startLine": 44,
+        "startChar": 11,
+        "endLine": 44,
+        "endChar": 17
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4261434c_221af925",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-15T10:38:34Z",
+      "side": 1,
+      "message": "This will / may not probably work, even if it works on your system now.\nReason is - you already might have something in .ssh/known_hosts, which will make the scp/ssh command fail either due to strict host key checking or already known host identity.\nPlease take a look at windows/windows.sh for function vm_sshpass().\nYou will probably need to move it into common.sh to re-use it here.",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 30
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4645b440_f884c442",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-15T10:38:34Z",
+      "side": 1,
+      "message": "some notice() calls would be nice before shutting everything down.\nBTW, if you want to clean-up manually here at the end then you probably should remove the trap with \"trap -\".\nOtherwise you clean everything here on lines 48-49, then at EXIT signal (when the script exits) trap will kick off with \"exit_on_error()\" function and will give weird error messages because nothing is running to be shut down.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 15
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
