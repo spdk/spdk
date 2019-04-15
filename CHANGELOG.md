@@ -8,6 +8,8 @@ Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.
 
+Added infrastructure to retrieve global and per poll group NVMf statistics.
+
 ### notify
 
 The function `spdk_notify_get_types()` and `spdk_notify_get_events()` were
@@ -23,6 +25,8 @@ and "bdevs" array with the per-bdev statistics.
 ### rpc
 
 Added get_threads_stat RPC method to retrieve existing statistics.
+
+Added get_nvmf_stat RPC method to retrieve NVMf susbsystem statistics.
 
 ## v19.04:
 

@@ -1531,6 +1531,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-d', '--disable', action='store_true', help='Disable allowing any host')
     p.set_defaults(func=nvmf_subsystem_allow_any_host)
 
+    def get_nvmf_stat(args):
+        print_dict(rpc.nvmf.get_nvmf_stat(args.client))
+
+    p = subparsers.add_parser(
+        'get_nvmf_stat', help='Display current statistics for NVMf subsystem')
+    p.set_defaults(func=get_nvmf_stat)
+
     # pmem
     def create_pmem_pool(args):
         num_blocks = int((args.total_size * 1024 * 1024) / args.block_size)

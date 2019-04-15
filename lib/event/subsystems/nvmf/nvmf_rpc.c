@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1627,3 +1627,46 @@ spdk_rpc_get_nvmf_transports(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_nvmf_transports", spdk_rpc_get_nvmf_transports, SPDK_RPC_RUNTIME)
+
+static void
+rpc_get_nvmf_stat_done(bool status, struct spdk_nvmf_stat *stat, void *ctx)
+{
+	struct spdk_jsonrpc_request *request = ctx;
+	struct spdk_nvmf_poll_group_stat *pg_stat;
+	struct spdk_json_write_ctx *w;
+
+	if (status) {
+		w = spdk_jsonrpc_begin_result(request);
+		if (w) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_array_begin(w, "poll_groups");
+			STAILQ_FOREACH(pg_stat, &stat->poll_groups, link) {
+				spdk_json_write_object_begin(w);
+				spdk_json_write_named_string(w, "name", pg_stat->name);
+				spdk_json_write_object_end(w);
+			}
+			spdk_json_write_array_end(w);
+			spdk_json_write_object_end(w);
+			spdk_jsonrpc_end_result(request, w);
+		}
+	} else {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	}
+}
+
+static void
+spdk_rpc_get_nvmf_stat(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'get_nvmf_stat' requires no arguments");
+		return;
+	}
+
+	spdk_nvmf_tgt_get_stat(g_spdk_nvmf_tgt,
+			       rpc_get_nvmf_stat_done,
+			       request);
+}
+
+SPDK_RPC_REGISTER("get_nvmf_stat", spdk_rpc_get_nvmf_stat, SPDK_RPC_RUNTIME)

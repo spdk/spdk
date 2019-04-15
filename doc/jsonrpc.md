@@ -4049,6 +4049,44 @@ Example response:
 }
 ~~~
 
+## get_nvmf_stat method {#rpc_get_nvmf_stat}
+
+Retrieve current statistics of the NVMf subsystem.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+The response is an object containing NVMf subsystem statistics.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_nvmf_stat",
+  "id": 1
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "poll_groups": [
+      {
+        "name": "app_thread"
+      }
+    ]
+  }
+}
+~~~
+
 # Vhost Target {#jsonrpc_components_vhost_tgt}
 
 The following common preconditions need to be met in all target types.
