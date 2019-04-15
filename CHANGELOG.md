@@ -99,6 +99,8 @@ is specified, use that specified nbd device. If it's not specified, pick availab
 
 Added get_threads_stat RPC method to retrieve existing statistics.
 
+Added get_nvmf_stat RPC method to retrieve NVMf susbsystem statistics.
+
 ### Opal
 
 Add Opal scan support for NVMe to check whether it supports SED Opal and dump
@@ -110,6 +112,10 @@ This module should be considered experimental pending additional features and te
 
 DIF strip and insert is now supported. DIF settings are not exposed to the iSCSI initiator.
 DIF is attached into data for write I/O and stripped from data for read I/O.
+
+### nvmf
+
+Added infrastructure to retrieve global and per poll group NVMf statistics.
 
 ## v19.01:
 
