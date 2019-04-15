@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1642,3 +1642,72 @@ spdk_rpc_get_nvmf_transports(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_nvmf_transports", spdk_rpc_get_nvmf_transports, SPDK_RPC_RUNTIME)
+
+struct rpc_nvmf_get_stats_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+rpc_nvmf_get_stats_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct rpc_nvmf_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	spdk_json_write_array_end(ctx->w);
+	spdk_json_write_object_end(ctx->w);
+	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+	free(ctx);
+}
+
+static void
+rpc_nvmf_get_stats(struct spdk_io_channel_iter *i)
+{
+	struct rpc_nvmf_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_poll_group_stat stat;
+
+	if (0 == spdk_nvmf_poll_group_get_stat(g_spdk_nvmf_tgt, &stat)) {
+		spdk_json_write_object_begin(ctx->w);
+		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(spdk_get_thread()));
+		spdk_json_write_object_end(ctx->w);
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+
+static void
+spdk_rpc_nvmf_get_stats(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
+{
+	struct rpc_nvmf_get_stats_ctx *ctx;
+
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'nvmf_get_stats' requires no arguments");
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error");
+		return;
+	}
+	ctx->request = request;
+
+	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
+	if (NULL == ctx->w) {
+		free(ctx);
+		return;
+	}
+
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_array_begin(ctx->w, "poll_groups");
+
+	spdk_for_each_channel(g_spdk_nvmf_tgt,
+			      rpc_nvmf_get_stats,
+			      ctx,
+			      rpc_nvmf_get_stats_done);
+}
+
+SPDK_RPC_REGISTER("nvmf_get_stats", spdk_rpc_nvmf_get_stats, SPDK_RPC_RUNTIME)

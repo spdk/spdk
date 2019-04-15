@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -76,6 +76,10 @@ struct spdk_nvmf_transport_opts {
 	bool		no_srq;
 	bool		c2h_success;
 	bool		dif_insert_or_strip;
+};
+
+struct spdk_nvmf_poll_group_stat {
+	int dummy;
 };
 
 /**
@@ -189,6 +193,18 @@ void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
  */
 int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 			     struct spdk_nvmf_qpair *qpair);
+
+/**
+ * Get current poll group statistics.
+ *
+ * \param tgt The NVMf target.
+ * \param stat Pointer to allocated statistics structure to fill with values.
+ *
+ * \return 0 upon success.
+ * \return -EINVAL if either group or stat is NULL.
+ */
+int spdk_nvmf_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
+				  struct spdk_nvmf_poll_group_stat *stat);
 
 typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
 

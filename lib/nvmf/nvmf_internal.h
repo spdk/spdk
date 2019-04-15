@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -172,6 +172,9 @@ struct spdk_nvmf_poll_group {
 
 	/* All of the queue pairs that belong to this poll group */
 	TAILQ_HEAD(, spdk_nvmf_qpair)			qpairs;
+
+	/* Statistics */
+	struct spdk_nvmf_poll_group_stat		stat;
 };
 
 typedef enum _spdk_nvmf_request_exec_status {
