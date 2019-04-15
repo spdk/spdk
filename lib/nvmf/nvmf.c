@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -74,6 +74,12 @@ struct nvmf_qpair_disconnect_many_ctx {
 	struct spdk_nvmf_poll_group *group;
 	spdk_nvmf_poll_group_mod_done cpl_fn;
 	void *cpl_ctx;
+};
+
+struct nvmf_get_stat_ctx {
+	struct spdk_nvmf_stat stat;
+	spdk_nvmf_tgt_get_stat_done_fn done_cb;
+	void *done_ctx;
 };
 
 static void
@@ -480,6 +486,67 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 		spdk_nvmf_write_subsystem_config_json(w, subsystem);
 		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
 	}
+}
+
+static void
+nvmf_poll_group_get_stat_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvmf_get_stat_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_poll_group_stat *pg_stat, *tmp;
+
+	ctx->done_cb((status == 0) ? true : false, &ctx->stat, ctx->done_ctx);
+	STAILQ_FOREACH_SAFE(pg_stat, &ctx->stat.poll_groups, link, tmp) {
+		free(pg_stat->name);
+		free(pg_stat);
+	}
+	free(ctx);
+}
+
+static void
+nvmf_poll_group_get_stat(struct spdk_io_channel_iter *i)
+{
+	struct nvmf_get_stat_ctx *ctx;
+	struct spdk_nvmf_poll_group_stat *pg_stat;
+	int status = 0;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+
+	pg_stat = calloc(1, sizeof(struct spdk_nvmf_poll_group_stat));
+	if (pg_stat) {
+		pg_stat->name = strdup(spdk_thread_get_name(spdk_get_thread()));
+		if (pg_stat->name) {
+			STAILQ_INSERT_TAIL(&ctx->stat.poll_groups, pg_stat, link);
+		} else {
+			free(pg_stat);
+			status = 1;
+		}
+	} else {
+		status = 1;
+	}
+
+	spdk_for_each_channel_continue(i, status);
+}
+
+void
+spdk_nvmf_tgt_get_stat(struct spdk_nvmf_tgt *tgt,
+		       spdk_nvmf_tgt_get_stat_done_fn done_cb,
+		       void *done_ctx)
+{
+	struct nvmf_get_stat_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		done_cb(false, NULL, done_ctx);
+		return;
+	}
+	ctx->done_cb = done_cb;
+	ctx->done_ctx = done_ctx;
+	STAILQ_INIT(&ctx->stat.poll_groups);
+
+	spdk_for_each_channel(tgt,
+			      nvmf_poll_group_get_stat,
+			      ctx,
+			      nvmf_poll_group_get_stat_done);
 }
 
 void
