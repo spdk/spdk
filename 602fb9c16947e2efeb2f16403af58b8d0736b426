@@ -417,6 +417,30 @@
     },
     {
       "key": {
+        "uuid": "f817063d_a22406c1",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-16T07:39:07Z",
+      "side": 1,
+      "message": "In vbdev OCF all asynchronous management functions don\u0027t return struct vbdev_ocf.\nModification of vbdev_ocf_mngt_* does not belong to next patch as well.\nI can make all management functions return vbdev, would that be OK?",
+      "parentUuid": "cc75cd86_54e609c1",
+      "range": {
+        "startLine": 1076,
+        "startChar": 6,
+        "endLine": 1076,
+        "endChar": 29
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "afdd2555_07c13ae1",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
