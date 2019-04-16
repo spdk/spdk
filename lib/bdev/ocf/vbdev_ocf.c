@@ -1243,6 +1243,7 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 
 	*refcnt = 1;
 
+#ifndef __clang_analyzer__
 	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
 		if (vbdev->state.doing_finish || vbdev->state.started) {
 			continue;
@@ -1259,6 +1260,7 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 			break;
 		}
 	}
+#endif
 
 	examine_end(0, refcnt);
 }
