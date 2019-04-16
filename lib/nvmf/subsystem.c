@@ -1575,6 +1575,7 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 				status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 				goto exit;
 			}
+			update_sgroup = true;
 		} else {
 			/* register with same key is not an error */
 			if (reg->rkey != key.nrkey) {
@@ -1623,6 +1624,7 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 			goto exit;
 		}
 		reg->rkey = key.nrkey;
+		update_sgroup = true;
 		break;
 	default:
 		status = SPDK_NVME_SC_INVALID_FIELD;
