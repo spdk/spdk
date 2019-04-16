@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "ca3042bd_644101d5",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-16T05:31:31Z",
+      "side": 1,
+      "message": "Right. The page for traditional NAND flash is the same as ws_min in a single plane. When NAND flash has multiple planes, ws_opt can be ws_min * num_of_planes because ws_min * num_of_planes can be programmed at a time.\n\nOne-shot program technique is come for 3D NAND. For 3D TLC NAND, \"one-shot program\" unit is the same as ws_min in a single plane. Our TLC NAND has two-plane, so our ws_opt is ws_min * 2. TLC NAND stores 3 bits per cell and 3D TLC NAND allows 3 pages of data to be programmed in one programming cycle. Thus, for 3D TLC NAND, ws_min is the same as 3 pages, and ws_min * num_of_planes \u003d ws_opt \u003d 3 * 2-plane pages. Even though 3D TLC NAND allows 3 pages of data to be programmed in one programming cycle, the read unit is still one N-plane page. It doesn\u0027t allow 3 pages to read at a time. To read data, it requires tR time per one N-plane page, so to read 3 N-plane pages, it requirs 3 * tR time (plus data transfer time).\n\n* Reference for 3D NAND\nhttps://www.toshiba.com/tma/technologymoves/pdfs/SM_Toshiba_BiCS.pdf\nhttps://thememoryguy.com/videos-demystify-mlc-nand-programming/\nhttps://www.anandtech.com/show/8216/samsung-ssd-850-pro-128gb-256gb-1tb-review-enter-the-3d-era/2\nhttps://www.anandtech.com/show/8216/samsung-ssd-850-pro-128gb-256gb-1tb-review-enter-the-3d-era/3\nhttp://reports-archive.adm.cs.cmu.edu/anon/anon/usr/ftp/usr0/ftp/2018/CMU-CS-18-101.pdf",
+      "parentUuid": "10950c2a_78d0c2c1",
+      "range": {
+        "startLine": 91,
+        "startChar": 41,
+        "endLine": 91,
+        "endChar": 54
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d5629642_4262459b",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
