@@ -1673,3 +1673,93 @@ spdk_rpc_get_nvmf_stat(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("get_nvmf_stat", spdk_rpc_get_nvmf_stat, SPDK_RPC_RUNTIME)
+
+struct rpc_get_nvmf_transport_stat_ctx {
+	enum spdk_nvme_transport_type trtype;
+	struct spdk_jsonrpc_request *request;
+};
+
+static const struct spdk_json_object_decoder rpc_get_nvmf_transport_stat_decoder[] = {
+	{ "trtype", 0, spdk_json_decode_string }
+};
+
+static void
+write_nvmf_rdma_stat(struct spdk_json_write_ctx *w, void *stat)
+{
+	struct spdk_nvmf_rdma_stat *rdma_stat = stat;
+	struct spdk_nvmf_rdma_poll_group_stat *pg_stat;
+
+	spdk_json_write_named_array_begin(w, "poll_groups");
+	STAILQ_FOREACH(pg_stat, &rdma_stat->poll_groups, link) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "name", pg_stat->name);
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+}
+
+static void
+rpc_get_nvmf_transport_stat_done(bool status, void *stat, void *arg)
+{
+	struct rpc_get_nvmf_transport_stat_ctx *ctx = arg;
+	struct spdk_json_write_ctx *w;
+
+	if (status) {
+		w = spdk_jsonrpc_begin_result(ctx->request);
+		if (w) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_string(w, "trtype",
+						     spdk_nvme_transport_id_trtype_str(ctx->trtype));
+			if (SPDK_NVME_TRANSPORT_RDMA == ctx->trtype) {
+				write_nvmf_rdma_stat(w, stat);
+			}
+			spdk_json_write_object_end(w);
+			spdk_jsonrpc_end_result(ctx->request, w);
+		}
+	} else {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	}
+	free(ctx);
+}
+
+static void
+spdk_rpc_get_nvmf_transport_stat(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct rpc_get_nvmf_transport_stat_ctx *ctx;
+	char *trtype_str = NULL;
+	enum spdk_nvme_transport_type trtype;
+
+	if (spdk_json_decode_object(params, rpc_get_nvmf_transport_stat_decoder,
+				    SPDK_COUNTOF(rpc_get_nvmf_transport_stat_decoder),
+				    &trtype_str)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		free(trtype_str);
+		return;
+	}
+
+	if (spdk_nvme_transport_id_parse_trtype(&trtype, trtype_str)) {
+		SPDK_ERRLOG("Invalid transport type '%s'\n", trtype_str);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid transport type '%s'\n", trtype_str);
+		free(trtype_str);
+		return;
+	}
+	free(trtype_str);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+	ctx->request = request;
+	ctx->trtype = trtype;
+
+	spdk_nvmf_tgt_transport_get_stat(g_spdk_nvmf_tgt,
+					 trtype,
+					 rpc_get_nvmf_transport_stat_done,
+					 ctx);
+}
+
+SPDK_RPC_REGISTER("get_nvmf_transport_stat", spdk_rpc_get_nvmf_transport_stat, SPDK_RPC_RUNTIME)

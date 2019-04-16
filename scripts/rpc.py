@@ -1538,6 +1538,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'get_nvmf_stat', help='Display current statistics for NVMf subsystem')
     p.set_defaults(func=get_nvmf_stat)
 
+    def get_nvmf_transport_stat(args):
+        print_dict(rpc.nvmf.get_nvmf_transport_stat(args.client,
+                                                    args.trtype))
+
+    p = subparsers.add_parser(
+        'get_nvmf_transport_stat', help='Display statistics for NVMf subsystem transport')
+    p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
+    p.set_defaults(func=get_nvmf_transport_stat)
+
     # pmem
     def create_pmem_pool(args):
         num_blocks = int((args.total_size * 1024 * 1024) / args.block_size)

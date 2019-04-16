@@ -321,3 +321,16 @@ def get_nvmf_stat(client):
         Current NVMf statistics.
     """
     return client.call('get_nvmf_stat')
+
+
+def get_nvmf_transport_stat(client, trtype):
+    """Query NVMf transport statistics.
+
+    Args:
+        trtype: Transport type, e.g. "RDMA".
+
+    Returns:
+        Current NVMf transport statistics.
+    """
+    params = {'trtype': trtype}
+    return client.call('get_nvmf_transport_stat', params)

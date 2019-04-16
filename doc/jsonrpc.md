@@ -4090,6 +4090,50 @@ Example response:
 }
 ~~~
 
+## get_nvmf_transport_stat method {#rpc_get_nvmf_transport_stat}
+
+Retrieve current statistics of the NVMf transport layer.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+trtype                  | Required | string      | Transport type, e.g. "RDMA"
+
+### Response
+
+The response is an object containing NVMf transport statistics.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_nvmf_transport_stat",
+  "id": 1,
+  "params": {
+    "trtype": "rdma"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "trtype": "RDMA",
+    "poll_groups": [
+      {
+        "name": "app_thread"
+      }
+    ]
+  }
+}
+~~~
+
 # Vhost Target {#jsonrpc_components_vhost_tgt}
 
 The following common preconditions need to be met in all target types.
