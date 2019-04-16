@@ -101,6 +101,8 @@ Added get_threads_stat RPC method to retrieve existing statistics.
 
 Added get_nvmf_stat RPC method to retrieve NVMf susbsystem statistics.
 
+Added get_nvmf_transport_stat RPC method to retrieve NVMf transport specific statistics.
+
 ### Opal
 
 Add Opal scan support for NVMe to check whether it supports SED Opal and dump
@@ -116,6 +118,8 @@ DIF is attached into data for write I/O and stripped from data for read I/O.
 ### nvmf
 
 Added infrastructure to retrieve global and per poll group NVMf statistics.
+
+Added infrastructure to retrieve NVMf transport statistics.
 
 ## v19.01:
 
