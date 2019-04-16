@@ -47,6 +47,7 @@ struct bdevperf_task {
 	struct iovec			iov;
 	struct io_target		*target;
 	void				*buf;
+	void				*md_buf;
 	uint64_t			offset_blocks;
 	enum spdk_bdev_io_type		io_type;
 	TAILQ_ENTRY(bdevperf_task)	link;
@@ -116,26 +117,34 @@ static int g_target_count = 0;
 static size_t g_min_alignment = 8;
 
 static void
-generate_data(void *buf, int buf_len, int block_size, int md_size,
+generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
 	      int num_blocks, int seed)
 {
-	int offset_blocks = 0;
+	int offset_blocks = 0, md_offset;
 
 	if (buf_len < num_blocks * block_size) {
 		return;
 	}
 
+	if (md_buf == NULL) {
+		md_buf = (char *)buf + block_size - md_size;
+		md_offset = block_size;
+	} else {
+		md_offset = md_size;
+	}
+
 	while (offset_blocks < num_blocks) {
-		memset(buf, seed, block_size - md_size);
-		memset(buf + block_size - md_size, 0, md_size);
+		memset(buf, seed, block_size);
+		memset(md_buf, seed, md_size);
 		buf += block_size;
+		md_buf += md_offset;
 		offset_blocks++;
 	}
 }
 
 static bool
-verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len,
-	    int block_size, int md_size, int num_blocks)
+verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int block_size,
+	    void *wr_md_buf, void *rd_md_buf, int md_size, int num_blocks)
 {
 	int offset_blocks = 0;
 
@@ -147,6 +156,18 @@ verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len,
 		if (memcmp(wr_buf, rd_buf, block_size - md_size) != 0) {
 			return false;
 		}
+
+		if (wr_md_buf || rd_md_buf) {
+			assert(wr_md_buf != NULL && rd_md_buf != NULL);
+
+			if (memcmp(wr_md_buf, rd_md_buf, md_size) != 0) {
+				return false;
+			}
+
+			wr_md_buf += md_size;
+			rd_md_buf += md_size;
+		}
+
 		wr_buf += block_size;
 		rd_buf += block_size;
 		offset_blocks++;
@@ -191,6 +212,7 @@ bdevperf_free_target(struct io_target *target)
 	TAILQ_FOREACH_SAFE(task, &target->task_list, link, tmp) {
 		TAILQ_REMOVE(&target->task_list, task, link);
 		spdk_dma_free(task->buf);
+		spdk_dma_free(task->md_buf);
 		free(task);
 	}
 
@@ -227,7 +249,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 {
 	struct io_target *target;
 	size_t align;
-	int block_size, md_size, data_block_size;
+	int block_size, data_block_size;
 	int rc;
 
 	*_target = NULL;
@@ -266,14 +288,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 	target->offset_in_ios = 0;
 
 	block_size = spdk_bdev_get_block_size(bdev);
-	md_size = spdk_bdev_get_md_size(bdev);
-	if (md_size != 0 && !spdk_bdev_is_md_interleaved(bdev)) {
-		SPDK_ERRLOG("Separate metadata is not expected.\n");
-		free(target->name);
-		free(target);
-		return -EINVAL;
-	}
-	data_block_size = block_size - md_size;
+	data_block_size = spdk_bdev_get_data_block_size(bdev);
 	target->io_size_blocks = g_io_size / data_block_size;
 	if ((g_io_size % data_block_size) != 0) {
 		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
@@ -380,6 +395,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		assert(iovs != NULL);
 		if (!verify_data(task->buf, g_buf_size, iovs[0].iov_base, iovs[0].iov_len,
 				 spdk_bdev_get_block_size(target->bdev),
+				 task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
 				 spdk_bdev_get_md_size(target->bdev),
 				 target->io_size_blocks) != 0) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset_blocks);
@@ -423,8 +439,16 @@ bdevperf_verify_submit_read(void *cb_arg)
 	target = task->target;
 
 	/* Read the data back in */
-	rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL, task->offset_blocks,
-				   target->io_size_blocks, bdevperf_complete, task);
+	if (spdk_bdev_is_md_separate(target->bdev)) {
+		rc = spdk_bdev_read_blocks_with_md(target->bdev_desc, target->ch, NULL, NULL,
+						   task->offset_blocks, target->io_size_blocks,
+						   bdevperf_complete, task);
+	} else {
+		rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL,
+					   task->offset_blocks, target->io_size_blocks,
+					   bdevperf_complete, task);
+	}
+
 	if (rc == -ENOMEM) {
 		task->bdev_io_wait.bdev = target->bdev;
 		task->bdev_io_wait.cb_fn = bdevperf_verify_submit_read;
@@ -470,7 +494,7 @@ bdevperf_prep_task(struct bdevperf_task *task)
 	if (g_verify || g_reset) {
 		generate_data(task->buf, g_buf_size,
 			      spdk_bdev_get_block_size(target->bdev),
-			      spdk_bdev_get_md_size(target->bdev),
+			      task->md_buf, spdk_bdev_get_md_size(target->bdev),
 			      target->io_size_blocks, rand_r(&seed) % 256);
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_buf_size;
@@ -512,9 +536,19 @@ bdevperf_generate_dif(struct bdevperf_task *task)
 		return rc;
 	}
 
-	rc = spdk_dif_generate(&task->iov, 1, target->io_size_blocks, &dif_ctx);
+	if (spdk_bdev_is_md_interleaved(bdev)) {
+		rc = spdk_dif_generate(&task->iov, 1, target->io_size_blocks, &dif_ctx);
+	} else {
+		struct iovec md_iov = {
+			.iov_base	= task->md_buf,
+			.iov_len	= spdk_bdev_get_md_size(bdev) * target->io_size_blocks,
+		};
+
+		rc = spdk_dix_generate(&task->iov, 1, &md_iov, target->io_size_blocks, &dif_ctx);
+	}
+
 	if (rc != 0) {
-		fprintf(stderr, "Generation of DIF failed\n");
+		fprintf(stderr, "Generation of DIF/DIX failed\n");
 	}
 
 	return rc;
@@ -541,8 +575,19 @@ bdevperf_submit_task(void *arg)
 		}
 		if (rc == 0) {
 			cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
-			rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
-						     target->io_size_blocks, cb_fn, task);
+
+			if (spdk_bdev_is_md_separate(target->bdev)) {
+				rc = spdk_bdev_writev_blocks_with_md(desc, ch, &task->iov, 1,
+								     task->md_buf,
+								     task->offset_blocks,
+								     target->io_size_blocks,
+								     cb_fn, task);
+			} else {
+				rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1,
+							     task->offset_blocks,
+							     target->io_size_blocks,
+							     cb_fn, task);
+			}
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
@@ -559,8 +604,16 @@ bdevperf_submit_task(void *arg)
 		break;
 	case SPDK_BDEV_IO_TYPE_READ:
 		rbuf = g_zcopy ? NULL : task->buf;
-		rc = spdk_bdev_read_blocks(desc, ch, rbuf, task->offset_blocks,
-					   target->io_size_blocks, bdevperf_complete, task);
+
+		if (spdk_bdev_is_md_separate(target->bdev)) {
+			rc = spdk_bdev_read_blocks_with_md(desc, ch, rbuf, task->md_buf,
+							   task->offset_blocks,
+							   target->io_size_blocks,
+							   bdevperf_complete, task);
+		} else {
+			rc = spdk_bdev_read_blocks(desc, ch, rbuf, task->offset_blocks,
+						   target->io_size_blocks, bdevperf_complete, task);
+		}
 		break;
 	default:
 		assert(false);
@@ -811,6 +864,17 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
 		free(task);
 		return NULL;
+	}
+
+	if (spdk_bdev_is_md_separate(target->bdev)) {
+		task->md_buf = spdk_dma_zmalloc(target->io_size_blocks *
+						spdk_bdev_get_md_size(target->bdev), 0, NULL);
+		if (!task->md_buf) {
+			fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
+			free(task->buf);
+			free(task);
+			return NULL;
+		}
 	}
 
 	task->target = target;
