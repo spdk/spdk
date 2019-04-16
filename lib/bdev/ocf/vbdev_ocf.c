@@ -1213,6 +1213,8 @@ vbdev_ocf_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&ocf_if);
 }
 
+static bool g_in_examine_context;
+
 /* Decrement reference and if it's 0 report examine_done */
 static void
 examine_end(int status, void *cb_arg)
@@ -1220,7 +1222,9 @@ examine_end(int status, void *cb_arg)
 	int *refcnt = cb_arg;
 	if (--(*refcnt) == 0) {
 		spdk_bdev_module_examine_done(&ocf_if);
-		free(refcnt);
+		if (!g_in_examine_context) {
+			free(refcnt);
+		}
 	}
 }
 
@@ -1241,6 +1245,7 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 		return;
 	}
 
+	g_in_examine_context = true;
 	*refcnt = 1;
 
 	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
@@ -1260,6 +1265,7 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 		}
 	}
 
+	g_in_examine_context = false;
 	examine_end(0, refcnt);
 }
 
