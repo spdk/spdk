@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "c35a2de5_660c8892",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-16T16:06:51Z",
+      "side": 1,
+      "message": "Thanks for your explanation, I understand it now. The reason I want to change the name from osp_num_pages is that it is something that should be taken from geometry and not specified by the user. \u0027num_lbks_interleaved\u0027 or \u0027num_interleave_units\u0027 suggests that it only changes the way write buffer works and it isn\u0027t tied to the geometry of the SSD we\u0027re working with. \u0027num_interleave_units\u0027 is fine with me.",
+      "parentUuid": "ca3042bd_644101d5",
+      "range": {
+        "startLine": 91,
+        "startChar": 41,
+        "endLine": 91,
+        "endChar": 54
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d5629642_4262459b",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
@@ -529,6 +553,29 @@
       "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9eb2f64_9a977409",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-16T16:06:51Z",
+      "side": 1,
+      "message": "An assertion here is fine, but since osp_num_pages is something that is provided by the user, I think we should check it makes sense and error out if it doesn\u0027t somewhere during early initialization process. Please add this check to ftl_check_init_opts in ftl_init.c.",
+      "range": {
+        "startLine": 203,
+        "startChar": 8,
+        "endLine": 203,
+        "endChar": 39
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
