@@ -16,6 +16,222 @@
       "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5380a69a_5963d9f9",
+        "filename": "lib/event/app.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "I think we should check whether spdk_cpuset_alloc() returns NULL.",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7acd6495_d10e5f30",
+        "filename": "lib/event/app.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "Ditto.",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "902ce2d3_4115c8ee",
+        "filename": "lib/event/app.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "Move this statement just before line 151, so we don\u0027t need to restore g_app_free_core_mask if error occurs",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5c6844c_ee4a1f7f",
+        "filename": "lib/event/app.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "Free cpuset.",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd3af8d4_074af4b2",
+        "filename": "lib/event/app.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "Free cpuset.",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94a7a4a2_a6e57d0c",
+        "filename": "lib/event/app.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "Unnecessary, since we have defined g_app_affinity_groups as\n\n  static TAILQ_HEAD(, spdk_app_affinity_group) g_app_affinity_groups \u003d\n        TAILQ_HEAD_INITIALIZER(g_app_affinity_groups);",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21d7b310_09d57cb7",
+        "filename": "lib/event/app.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "spdk_cpuset_alloc() may return NULL",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d5cb71b_d2fc5049",
+        "filename": "lib/event/app.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "void, because it seems that this function never return error.",
+      "range": {
+        "startLine": 163,
+        "startChar": 7,
+        "endLine": 163,
+        "endChar": 10
+      },
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cf5b17a_b76c3524",
+        "filename": "lib/event/app.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "Add TAILQ_REMOVE, just like clean_affinity_groups() does.",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "056a4d0f_6baf9d06",
+        "filename": "test/unit/lib/event/app.c/app_ut.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "void",
+      "range": {
+        "startLine": 65,
+        "startChar": 7,
+        "endLine": 65,
+        "endChar": 10
+      },
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0ebb872_2e71276f",
+        "filename": "test/unit/lib/event/app.c/app_ut.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "Can we use spdk_app_free_affinity_groups() to replace this function? These two functions looks much the same.",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed22a4c3_543e7c40",
+        "filename": "test/unit/lib/event/app.c/app_ut.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:05:10Z",
+      "side": 1,
+      "message": "Could you add some test case to test error handling?",
+      "revId": "68a02349edef76e477b20a4c16c725a9e062da34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
