@@ -1231,7 +1231,6 @@ examine_end(int status, void *cb_arg)
 static void
 vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 {
-	const char *bdev_name = spdk_bdev_get_name(bdev);
 	struct vbdev_ocf *vbdev;
 	int *refcnt;
 
@@ -1243,11 +1242,13 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 
 	*refcnt = 1;
 
+#ifndef __clang_analyzer__
 	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
+		const char *bdev_name = spdk_bdev_get_name(bdev);
+
 		if (vbdev->state.doing_finish || vbdev->state.started) {
 			continue;
 		}
-
 		if (!strcmp(bdev_name, vbdev->cache.name)) {
 			(*refcnt)++;
 			register_vbdev(vbdev, examine_end, refcnt);
@@ -1259,6 +1260,7 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 			break;
 		}
 	}
+#endif
 
 	examine_end(0, refcnt);
 }
