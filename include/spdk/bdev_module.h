@@ -436,6 +436,9 @@ struct spdk_bdev_io {
 			/** For SG buffer cases, number of iovecs in iovec array. */
 			int iovcnt;
 
+			/* Metadata buffer */
+			void *md_buf;
+
 			/** Total size of data to be transferred. */
 			uint64_t num_blocks;
 
@@ -532,6 +535,9 @@ struct spdk_bdev_io {
 		 */
 		bool in_submit_request;
 
+		/** Indicates that the IO is supposed to use separate buffer for metadata */
+		bool md_separate;
+
 		/** Status for the IO */
 		int8_t status;
 
@@ -545,6 +551,7 @@ struct spdk_bdev_io {
 		struct iovec  bounce_iov;
 		struct iovec *orig_iovs;
 		int           orig_iovcnt;
+		void	     *orig_md_buf;
 
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
@@ -741,6 +748,15 @@ void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb 
  *
  */
 void spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len);
+
+/**
+ * Set the given buffer as metadata buffer described by this bdev_io.
+ *
+ * \param bdev_io I/O to set the buffer on.
+ * \param md_buf The buffer to set as the active metadata buffer.
+ * \param len The length of the metadata buffer.
+ */
+void spdk_bdev_io_set_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t len);
 
 /**
  * Complete a bdev_io
