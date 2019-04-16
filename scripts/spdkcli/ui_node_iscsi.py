@@ -1,3 +1,4 @@
+from configshell_fb import ExecutionError
 from rpc.client import JSONRPCException
 from .ui_node import UINode
 
@@ -306,6 +307,9 @@ class UIPortalGroups(UINode):
             cpumask = None
             if "@" in portal:
                 host, cpumask = portal.split("@")
+            if ":" not in host:
+                raise ExecutionError("Incorrect format of portal group. Port is missing."
+                                     "Use 'help create' to see the command syntax.")
             host, port = host.rsplit(":", -1)
             portals.append({'host': host, 'port': port})
             if cpumask:
