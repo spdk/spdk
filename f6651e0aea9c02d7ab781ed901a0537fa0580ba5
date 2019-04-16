@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "bdbc4c0a_0937dc79",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:47:55Z",
+      "side": 1,
+      "message": "The return value is not used. Or we should write this function as:\n\n  static uint32_t spdk_nvmf_get_first_core_rr(void)\n  {\n\tuint32_t core \u003d spdk_env_get_first_core();\n\twhile (!spdk_cpuset_get_cpu(g_tgt_affinity, core)) {\n\t\tcore \u003d spdk_env_get_next_core(core);\n\t}\n\treturn core;\n  }\n\nThen change line 398 to:\n\n  g_tgt_core \u003d spdk_nvmf_get_first_core_rr();",
+      "range": {
+        "startLine": 141,
+        "startChar": 7,
+        "endLine": 141,
+        "endChar": 15
+      },
+      "revId": "f6651e0aea9c02d7ab781ed901a0537fa0580ba5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "861d87fd_caf340a6",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-16T12:47:55Z",
+      "side": 1,
+      "message": "I don\u0027t understand why we need suffixed with _rr?",
+      "range": {
+        "startLine": 142,
+        "startChar": 24,
+        "endLine": 142,
+        "endChar": 27
+      },
+      "revId": "f6651e0aea9c02d7ab781ed901a0537fa0580ba5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b8305eb9_f9660553",
         "filename": "lib/iscsi/portal_grp.c",
         "patchSetId": 12
