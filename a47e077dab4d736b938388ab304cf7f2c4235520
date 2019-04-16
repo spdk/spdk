@@ -22,6 +22,30 @@
       "revId": "a47e077dab4d736b938388ab304cf7f2c4235520",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7504cb5d_4b772bbc",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-16T23:20:26Z",
+      "side": 1,
+      "message": "Well, we don\u0027t have a use case for spdk_pci_device_is_attached() right now, so I\u0027d rather avoid adding dead APIs. We can certainly add it when a use case pops up.",
+      "parentUuid": "5eaf6406_f4d3e97a",
+      "range": {
+        "startLine": 140,
+        "startChar": 8,
+        "endLine": 140,
+        "endChar": 37
+      },
+      "revId": "a47e077dab4d736b938388ab304cf7f2c4235520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
