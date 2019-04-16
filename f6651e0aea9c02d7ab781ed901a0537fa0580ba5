@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9f60732f_2bbf5125",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-16T15:14:45Z",
+      "side": 1,
+      "message": "I like better to not use g_tgt_core outside of spdk_nvmf_get_core_rr nor spdk_nvmf_get_first_core, so I remove it.",
+      "parentUuid": "bdbc4c0a_0937dc79",
+      "range": {
+        "startLine": 141,
+        "startChar": 7,
+        "endLine": 141,
+        "endChar": 15
+      },
+      "revId": "f6651e0aea9c02d7ab781ed901a0537fa0580ba5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "861d87fd_caf340a6",
         "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
         "patchSetId": 12
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-16T12:47:55Z",
       "side": 1,
       "message": "I don\u0027t understand why we need suffixed with _rr?",
+      "range": {
+        "startLine": 142,
+        "startChar": 24,
+        "endLine": 142,
+        "endChar": 27
+      },
+      "revId": "f6651e0aea9c02d7ab781ed901a0537fa0580ba5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb39692a_0f5e286f",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-16T15:14:45Z",
+      "side": 1,
+      "message": "I have used it by analogy to spdk_nvmf_get_core_rr(), but now I see that have not lot of sense.",
+      "parentUuid": "861d87fd_caf340a6",
       "range": {
         "startLine": 142,
         "startChar": 24,
@@ -68,6 +116,30 @@
       "revId": "f6651e0aea9c02d7ab781ed901a0537fa0580ba5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8cfbadc8_84557cbb",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-16T15:14:45Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b8305eb9_f9660553",
+      "range": {
+        "startLine": 124,
+        "startChar": 17,
+        "endLine": 124,
+        "endChar": 27
+      },
+      "revId": "f6651e0aea9c02d7ab781ed901a0537fa0580ba5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
