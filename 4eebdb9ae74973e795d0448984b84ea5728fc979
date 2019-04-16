@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7cad9a07_3cf1f3b2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-16T08:12:44Z",
+      "side": 1,
+      "message": "To be done",
+      "parentUuid": "f861ec33_c3f62db7",
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48dbb792_bf9fceed",
         "filename": "test/vhost/windows/windows_scsi.sh",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "de2de418_bed4d48f",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-16T08:12:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "48dbb792_bf9fceed",
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52e732cf_855ced40",
         "filename": "test/vhost/windows/windows_scsi.sh",
         "patchSetId": 2
@@ -47,6 +83,30 @@
       "writtenOn": "2019-04-15T10:38:34Z",
       "side": 1,
       "message": "This should be configurable",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 75
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb433a18_b1165ad8",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-16T08:12:44Z",
+      "side": 1,
+      "message": "To be done",
+      "parentUuid": "52e732cf_855ced40",
       "range": {
         "startLine": 7,
         "startChar": 0,
@@ -82,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "4384d135_581aefbf",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-16T08:12:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5eb7ab6f_f83125fa",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 1
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "397ae522_967064fb",
         "filename": "test/vhost/windows/windows_scsi.sh",
         "patchSetId": 2
@@ -93,6 +177,30 @@
       "writtenOn": "2019-04-15T10:38:34Z",
       "side": 1,
       "message": "I know it\u0027s in the original config, but I think we can skip using split malloc bdev. I don\u0027t think it makes much difference using it...",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 39
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3493d1d0_80156755",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-16T08:12:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "397ae522_967064fb",
       "range": {
         "startLine": 28,
         "startChar": 0,
@@ -128,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "dd45a7b4_cd7a920d",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-16T08:12:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b54ae5f_57e939bf",
+      "range": {
+        "startLine": 44,
+        "startChar": 11,
+        "endLine": 44,
+        "endChar": 17
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4261434c_221af925",
         "filename": "test/vhost/windows/windows_scsi.sh",
         "patchSetId": 2
@@ -151,6 +283,30 @@
     },
     {
       "key": {
+        "uuid": "b973a3b0_bf5bfbb7",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-16T08:12:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4261434c_221af925",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 30
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4645b440_f884c442",
         "filename": "test/vhost/windows/windows_scsi.sh",
         "patchSetId": 2
@@ -162,6 +318,30 @@
       "writtenOn": "2019-04-15T10:38:34Z",
       "side": 1,
       "message": "some notice() calls would be nice before shutting everything down.\nBTW, if you want to clean-up manually here at the end then you probably should remove the trap with \"trap -\".\nOtherwise you clean everything here on lines 48-49, then at EXIT signal (when the script exits) trap will kick off with \"exit_on_error()\" function and will give weird error messages because nothing is running to be shut down.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 15
+      },
+      "revId": "4eebdb9ae74973e795d0448984b84ea5728fc979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34dde59b_51d41c9c",
+        "filename": "test/vhost/windows/windows_scsi.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-16T08:12:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4645b440_f884c442",
       "range": {
         "startLine": 48,
         "startChar": 0,
