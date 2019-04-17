@@ -31,17 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += hello_world identify perf reserve nvme_manage arbitration \
-	hotplug cmb_copy cuse
+APP = cuse
 
-DIRS-$(CONFIG_FIO_PLUGIN) += fio_plugin
+CFLAGS += -D_FILE_OFFSET_BITS=64
+#CFLAGS += -I$(SPDK_ROOT_DIR)/../libfuse
+#LDFLAGS += -L$(SPDK_ROOT_DIR)/../libfuse/lib/.libs
+#SYS_LIBS += -lfuse3
 
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
