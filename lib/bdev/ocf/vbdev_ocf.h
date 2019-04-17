@@ -128,6 +128,9 @@ struct vbdev_ocf_base {
 	/* True if SPDK bdev has been claimed and opened for writing */
 	bool                         attached;
 
+	/* Channel for cleaner operations */
+	struct spdk_io_channel      *cleaner_channel;
+
 	/* Reference to main vbdev */
 	struct vbdev_ocf            *parent;
 };
