@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa7e9274_5ecc4ed3",
+        "filename": "autobuild.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-17T08:24:07Z",
+      "side": 1,
+      "message": "Not needed. In test/common/autotest_common.sh config_params is initialized.",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 2
+      },
+      "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "544bbb18_b6cb1a52",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-17T08:24:07Z",
+      "side": 1,
+      "message": "This should be checked in test/vhost/autotest_common.sh as in this script config file is parsed",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 2
+      },
+      "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "027b59e1_fd305b9d",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-17T08:24:07Z",
+      "side": 1,
+      "message": "This should be checked in test/common/autotest_common.sh as in this file config file is parsed.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 2
+      },
+      "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
