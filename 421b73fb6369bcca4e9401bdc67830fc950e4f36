@@ -16,6 +16,24 @@
       "revId": "421b73fb6369bcca4e9401bdc67830fc950e4f36",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da851c1c_5b2d3d7b",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-17T23:05:25Z",
+      "side": 1,
+      "message": "Done, although overall we still leak a lot of memory in some of the error cases below. I tried to fix those before but I eventually gave up.",
+      "parentUuid": "d053380c_40f4960d",
+      "revId": "421b73fb6369bcca4e9401bdc67830fc950e4f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
