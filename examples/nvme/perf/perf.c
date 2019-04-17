@@ -1153,7 +1153,7 @@ print_performance(void)
 	printf("========================================================\n");
 	printf("%103s\n", "Latency(us)");
 	printf("%-55s: %10s %10s %10s %10s %10s\n",
-	       "Device Information", "IOPS", "MB/s", "Average", "min", "max");
+	       "Device Information", "IOPS", "MiB/s", "Average", "min", "max");
 
 	worker = g_workers;
 	while (worker) {
