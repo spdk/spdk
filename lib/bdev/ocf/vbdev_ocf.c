@@ -331,8 +331,33 @@ wait_for_requests(struct vbdev_ocf *vbdev)
 	vbdev_ocf_mngt_poll(vbdev, wait_for_requests_poll);
 }
 
+static void
+flush_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
+{
+	ocf_mngt_cache_unlock(cache);
+	vbdev_ocf_mngt_continue(priv, error);
+}
+
+static void
+flush_vbdev_poll(struct vbdev_ocf *vbdev)
+{
+	if (ocf_mngt_cache_trylock(vbdev->ocf_cache)) {
+		return;
+	}
+
+	vbdev_ocf_mngt_poll(vbdev, NULL);
+	ocf_mngt_cache_flush(vbdev->ocf_cache, false, flush_vbdev_cmpl, vbdev);
+}
+
+static void
+flush_vbdev(struct vbdev_ocf *vbdev)
+{
+	vbdev_ocf_mngt_poll(vbdev, flush_vbdev_poll);
+}
+
 /* Procedures called during unregister */
 vbdev_ocf_mngt_fn unregister_path[] = {
+	flush_vbdev,
 	wait_for_requests,
 	stop_vbdev,
 	detach_cache,
