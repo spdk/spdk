@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b393b89c_a5612ba5",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T08:07:10Z",
+      "side": 1,
+      "message": "tabs/spaces consistency",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 8
+      },
+      "revId": "1e89e89048c80c325cb2367de1a3d4c78b32f07a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01ec6c1b_4268977c",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T08:07:10Z",
+      "side": 1,
+      "message": "I think we can dropp the \"(whole event line: $event_line\")\nand just do:\n echo \"ERROR: expected event \u0027$1\u0027 but got \u0027$event_line\"",
+      "range": {
+        "startLine": 73,
+        "startChar": 65,
+        "endLine": 73,
+        "endChar": 106
+      },
+      "revId": "1e89e89048c80c325cb2367de1a3d4c78b32f07a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89f8f3ef_2495d132",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T08:07:10Z",
+      "side": 1,
+      "message": "Not 100% sure about this comment, but aren\u0027t you inconsistent in how you add things to array? Sometimes you use quotes, sometimes you dont..\nDoesn\u0027t look like it would matter",
+      "range": {
+        "startLine": 168,
+        "startChar": 3,
+        "endLine": 168,
+        "endChar": 24
+      },
+      "revId": "1e89e89048c80c325cb2367de1a3d4c78b32f07a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
