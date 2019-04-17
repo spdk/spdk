@@ -288,6 +288,18 @@ vbdev_ocf_ctx_data_secure_erase(ctx_data_t *ctx_data)
 	}
 }
 
+void vbdev_ocf_ctx_cache_ctx_put(struct vbdev_ocf_cache_ctx *ctx)
+{
+	if (env_atomic_dec_return(&ctx->refcnt) == 0) {
+		free(ctx);
+	}
+}
+
+void vbdev_ocf_ctx_cache_ctx_get(struct vbdev_ocf_cache_ctx *ctx)
+{
+	env_atomic_inc(&ctx->refcnt);
+}
+
 static int
 vbdev_ocf_ctx_cleaner_init(ocf_cleaner_t c)
 {
