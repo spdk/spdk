@@ -855,17 +855,29 @@ start_cache(struct vbdev_ocf *vbdev)
 			       vbdev->name, vbdev->cache.name);
 		vbdev->ocf_cache = existing;
 		vbdev->cache.id = ocf_cache_get_id(existing);
+		vbdev->cache_ctx = ocf_cache_get_priv(existing);
+		vbdev_ocf_cache_ctx_get(vbdev->cache_ctx);
 		vbdev_ocf_mngt_continue(vbdev, 0);
 		return;
 	}
 
+	vbdev->cache_ctx = calloc(1, sizeof(struct vbdev_ocf_cache_ctx));
+	if (vbdev->cache_ctx == NULL) {
+		vbdev_ocf_mngt_continue(vbdev, -ENOMEM);
+		return;
+	}
+
+	vbdev_ocf_cache_ctx_get(vbdev->cache_ctx);
+
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
 	if (rc) {
+		vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
 		vbdev_ocf_mngt_continue(vbdev, rc);
 		return;
 	}
 
 	vbdev->cache.id = ocf_cache_get_id(vbdev->ocf_cache);
+	ocf_cache_set_priv(vbdev->ocf_cache, vbdev->cache_ctx);
 
 	ocf_mngt_cache_attach(vbdev->ocf_cache, &vbdev->cfg.device, start_cache_cmpl, vbdev);
 }
