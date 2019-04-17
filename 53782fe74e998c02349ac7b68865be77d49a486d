@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ba14e6a9_bcc60240",
+        "filename": "autobuild.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T13:53:50Z",
+      "side": 1,
+      "message": "yeah, I think it\u0027s the same as autotest_common.sh@21",
+      "parentUuid": "fa7e9274_5ecc4ed3",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 2
+      },
+      "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "544bbb18_b6cb1a52",
         "filename": "autotest.sh",
         "patchSetId": 10
