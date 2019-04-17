@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += hello_world identify perf reserve nvme_manage arbitration \
-	hotplug cmb_copy
+	hotplug cmb_copy cuse
 
 DIRS-$(CONFIG_FIO_PLUGIN) += fio_plugin
 

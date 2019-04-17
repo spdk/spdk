@@ -1104,4 +1104,7 @@ _is_page_aligned(uint64_t address, uint64_t page_size)
 	return (address & (page_size - 1)) == 0;
 }
 
+int nvme_cuse_start(char *dev_name);
+void nvme_cuse_stop(void);
+
 #endif /* __NVME_INTERNAL_H__ */
