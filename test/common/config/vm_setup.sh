@@ -213,7 +213,7 @@ function install_vpp()
         # The actions taken under the vpp_setup script are necessary to fix this issue.
         if [ -d vpp_setup ]; then
             echo "vpp setup already done."
-        else
+        elif [ "$PACKAGEMNG" = "dnf" ]; then
             echo "%_topdir  $HOME/vpp_setup/src/rpm" >> ~/.rpmmacros
             sudo dnf install -y perl-generators
             mkdir -p ~/vpp_setup/src/rpm
@@ -237,25 +237,35 @@ function install_vpp()
         else
             git clone "${GIT_REPO_VPP}"
             git -C ./vpp checkout v18.01.1
-            # VPP 18.01.1 does not support OpenSSL 1.1.
-            # For compilation, a compatibility package is used temporarily.
-            sudo dnf install -y --allowerasing compat-openssl10-devel
-            # Installing required dependencies for building VPP
-            yes | make -C ./vpp install-dep
+            if [ "$PACKAGEMNG" = "dnf" ]; then
+                # VPP 18.01.1 does not support OpenSSL 1.1.
+                # For compilation, a compatibility package is used temporarily.
+                sudo dnf install -y --allowerasing compat-openssl10-devel
+                # Installing required dependencies for building VPP
+                yes | make -C ./vpp install-dep
 
-            make -C ./vpp pkg-rpm -j${jobs}
-            # Reinstall latest OpenSSL devel package.
-            sudo dnf install -y --allowerasing openssl-devel
-            sudo dnf install -y \
-                ./vpp/build_root/vpp-lib-18.01.1-release.x86_64.rpm \
-                ./vpp/build_root/vpp-devel-18.01.1-release.x86_64.rpm \
-                ./vpp/build_root/vpp-18.01.1-release.x86_64.rpm
-            # Since hugepage configuration is done via spdk/scripts/setup.sh,
-            # this default config is not needed.
-            #
-            # NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
-            # very low count and cause issues with hugepage total sizes above 1GB.
-            sudo rm -f /etc/sysctl.d/80-vpp.conf
+                make -C ./vpp pkg-rpm -j${jobs}
+                # Reinstall latest OpenSSL devel package.
+                sudo dnf install -y --allowerasing openssl-devel
+                sudo dnf install -y \
+                    ./vpp/build_root/vpp-lib-18.01.1-release.x86_64.rpm \
+                    ./vpp/build_root/vpp-devel-18.01.1-release.x86_64.rpm \
+                    ./vpp/build_root/vpp-18.01.1-release.x86_64.rpm
+                # Since hugepage configuration is done via spdk/scripts/setup.sh,
+                # this default config is not needed.
+                #
+                # NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
+                # very low count and cause issues with hugepage total sizes above 1GB.
+                sudo rm -f /etc/sysctl.d/80-vpp.conf
+            elif [ "$PACKAGEMNG" = "apt-get" ]; then
+                yes | make -C ./vpp install-dep
+                make -C ./vpp bootstrap -j${jobs}
+                make -C ./vpp pkg-deb -j${jobs}
+                yes | sudo dpkg -i vpp/build-root/vpp-lib_18.01.1-release_amd64.deb \
+                    vpp/build-root/vpp-dev_18.01.1-release_amd64.deb \
+                    vpp/build-root/vpp_18.01.1-release_amd64.deb
+                sudo rm -f /etc/sysctl.d/80-vpp.conf
+            fi
         fi
     fi
 }
