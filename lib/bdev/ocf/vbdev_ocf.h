@@ -154,6 +154,8 @@ struct vbdev_ocf {
 
 	/* Management context */
 	struct vbdev_ocf_mngt_ctx    mngt_ctx;
+	/* Cache conext */
+	struct vbdev_ocf_cache_ctx  *cache_ctx;
 
 	/* Exposed SPDK bdev. Registered in bdev layer */
 	struct spdk_bdev             exp_bdev;
