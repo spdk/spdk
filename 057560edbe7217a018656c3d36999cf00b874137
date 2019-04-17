@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95dfcde3_a03f66b5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T10:22:58Z",
+      "side": 1,
+      "message": "Definetly provide more info about the binaries, like I suggested earlier.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 50
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79ddccef_b21e07f3",
+        "filename": "test/vhost/windows/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T10:22:58Z",
+      "side": 1,
+      "message": "This does not have to be in a new file. How about using test/vhost/common/common.sh?\n\nAlso - you added the function into common.sh, but there is still a fucntion definition in test/vhost/windows/windows.sh which you should remove.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 1
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5a20eec_4752006f",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T10:22:58Z",
+      "side": 1,
+      "message": "I will get back to this script later.\nWe can probably improve it.",
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2320b8b_df1bbe5d",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T10:22:58Z",
+      "side": 1,
+      "message": "shoudl point to py3, like all other scripts in repo",
+      "range": {
+        "startLine": 1,
+        "startChar": 15,
+        "endLine": 1,
+        "endChar": 21
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "069c3823_b32f54d5",
+        "filename": "test/vhost/windows/windows_scsi_compliance.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T10:22:58Z",
+      "side": 1,
+      "message": "Shebang in py file should point to python3. So here you just have to do \"python\"",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 7
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
