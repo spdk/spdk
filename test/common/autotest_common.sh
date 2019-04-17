@@ -33,6 +33,12 @@ if ! hash pmempool; then
 	SPDK_TEST_PMDK=0
 fi
 
+# FIXIT: This is temporal solution for VPP and should be solved another way.
+#        This change is not intended to be merged.
+if [ $SPDK_RUN_VPP -eq 1 ]; then
+	SPDK_RUN_UBSAN=0
+fi
+
 # Set defaults for missing test config options
 : ${SPDK_BUILD_DOC=1}; export SPDK_BUILD_DOC
 : ${SPDK_BUILD_SHARED_OBJECT=1}; export SPDK_BUILD_SHARED_OBJECT
