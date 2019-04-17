@@ -82,6 +82,12 @@ else
 	export DEPENDENCY_DIR
 fi
 
+# FIXIT: This is temporal solution for VPP and should be solved another way.
+#        This change is not intended to be merged.
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	SPDK_RUN_UBSAN=0
+fi
+
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''
