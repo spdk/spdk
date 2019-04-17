@@ -167,7 +167,6 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 
 	io = opaque;
 	io_ctx = ocf_get_io_ctx(io);
-
 	assert(io_ctx != NULL);
 
 	if (!success) {
@@ -179,6 +178,9 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 		case SPDK_BDEV_IO_TYPE_READ:
 		case SPDK_BDEV_IO_TYPE_WRITE:
 			env_free(bdev_io->u.bdev.iovs);
+			break;
+		case SPDK_BDEV_IO_TYPE_FLUSH:
+			/* No iovs were allocated for flush request */
 			break;
 		default:
 			assert(false);
@@ -237,7 +239,7 @@ prepare_submit(struct ocf_io *io)
 	cache = ocf_queue_get_cache(q);
 	cctx = ocf_cache_get_priv(cache);
 
-	if (q == cctx->mngt_queue) {
+	if (q == cctx->cleaner_queue || q == cctx->mngt_queue) {
 		io_ctx->ch = base->management_channel;
 		return 0;
 	}
@@ -262,11 +264,6 @@ vbdev_ocf_volume_submit_flush(struct ocf_io *io)
 	struct vbdev_ocf_base *base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int status;
-
-	if (base->is_cache) {
-		io->end(io, 0);
-		return;
-	}
 
 	status = prepare_submit(io);
 	if (status) {
