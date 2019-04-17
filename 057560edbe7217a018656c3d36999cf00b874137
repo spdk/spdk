@@ -48,6 +48,23 @@
     },
     {
       "key": {
+        "uuid": "1430d851_7b9c8000",
+        "filename": "test/vhost/windows/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T13:01:39Z",
+      "side": 1,
+      "message": "Will fail at check format due to 2xtrailing line. Remove one.",
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5a20eec_4752006f",
         "filename": "test/vhost/windows/windows_scsi_compliance.py",
         "patchSetId": 4
@@ -81,6 +98,167 @@
         "startChar": 15,
         "endLine": 1,
         "endChar": 21
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95e16fed_845d7fb5",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T13:01:39Z",
+      "side": 1,
+      "message": "Last thing: change file permissions on this file to 755. Error from check_format:\nChecking file permissions...ERROR: test/vhost/windows/windows_scsi_compliance.py is not marked executable but starts with a shebang.",
+      "range": {
+        "startLine": 1,
+        "startChar": 15,
+        "endLine": 1,
+        "endChar": 21
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f623113e_26eda413",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T13:01:39Z",
+      "side": 1,
+      "message": "We can remove that.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 17
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "536ed627_04a8008a",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T13:01:39Z",
+      "side": 1,
+      "message": "Let\u0027s change that to \"with open\"\nAlso, change all \"FH\" occurrences in file to \"fh\"",
+      "range": {
+        "startLine": 47,
+        "startChar": 8,
+        "endLine": 49,
+        "endChar": 18
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12c9d42c_0707bf9e",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T13:01:39Z",
+      "side": 1,
+      "message": "Lol, let\u0027s use os.path.dirname() instead.",
+      "range": {
+        "startLine": 54,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 30
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cae028b_f3a21d23",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T13:01:39Z",
+      "side": 1,
+      "message": "Let\u0027s change the name to be more meaningful.\n\"matches\"? \"matching_objects\"? Something like that.",
+      "range": {
+        "startLine": 62,
+        "startChar": 4,
+        "endLine": 62,
+        "endChar": 6
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67dcd838_1bc7116f",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T13:01:39Z",
+      "side": 1,
+      "message": "Let\u0027s change the name to be more meaningful.\ntc_result maybe?",
+      "range": {
+        "startLine": 72,
+        "startChar": 8,
+        "endLine": 72,
+        "endChar": 14
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86a57e8e_4360f68b",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-17T13:01:39Z",
+      "side": 1,
+      "message": "Change to \"fh\", or just to lwercase",
+      "range": {
+        "startLine": 94,
+        "startChar": 54,
+        "endLine": 94,
+        "endChar": 56
       },
       "revId": "057560edbe7217a018656c3d36999cf00b874137",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
