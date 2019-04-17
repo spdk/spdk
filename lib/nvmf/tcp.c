@@ -122,6 +122,7 @@ static const char *spdk_nvmf_tcp_term_req_fes_str[] = {
 #define TRACE_TCP_REQUEST_STATE_COMPLETED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x9)
 #define TRACE_TCP_FLUSH_WRITEBUF_START					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xA)
 #define TRACE_TCP_FLUSH_WRITEBUF_DONE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xB)
+#define TRACE_TCP_READ_FROM_SOCKET_DONE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xC)
 
 SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 {
@@ -161,6 +162,9 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 					OWNER_NONE, OBJECT_NONE, 0, 0, "");
 	spdk_trace_register_description("TCP_FLUSH_WRITEBUF_DONE", "",
 					TRACE_TCP_FLUSH_WRITEBUF_DONE,
+					OWNER_NONE, OBJECT_NONE, 0, 0, "");
+	spdk_trace_register_description("TCP_READ_FROM_SOCKET_DONE", "",
+					TRACE_TCP_READ_FROM_SOCKET_DONE,
 					OWNER_NONE, OBJECT_NONE, 0, 0, "");
 }
 
@@ -1898,6 +1902,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 				return NVME_TCP_PDU_FATAL;
 			} else if (rc > 0) {
 				pdu->ch_valid_bytes += rc;
+				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE, 0, rc, 0, 0);
 				if (spdk_likely(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY)) {
 					spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
 				}
@@ -1939,9 +1944,11 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 							(void *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
 				if (rc < 0) {
 					return NVME_TCP_PDU_FATAL;
+				} else if (rc > 0) {
+					spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE,
+							  0, rc, 0, 0);
+					pdu->psh_valid_bytes += rc;
 				}
-
-				pdu->psh_valid_bytes += rc;
 				if (pdu->psh_valid_bytes < psh_len) {
 					return NVME_TCP_PDU_IN_PROGRESS;
 				}
