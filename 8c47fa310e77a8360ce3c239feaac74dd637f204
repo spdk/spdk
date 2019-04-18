@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b2db7825_0fa72bc8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4372,
+      "author": {
+        "id": 1014438
+      },
+      "writtenOn": "2019-04-18T20:30:54Z",
+      "side": 1,
+      "message": "I wasn\u0027t so sure about this. The thing is if the previous branch on bserrno was not taken, it means the sync of md origblob succeeded. I figured swapping here would result in an inconsistency because the command is _spdk_bs_clone_snapshot_origblob_cleanup, not _spdk_bs_clone_snapshot_newblob_cleanup . Swapping at this point would return the non-empty cluster map to origblob and the zeros to newblob, but the next call is to ..._origblob_cleanup , doesn\u0027t this mean we\u0027ll lose the cluster map? Or is that a typo that should have been ..._newblob_cleanup?",
+      "parentUuid": "002bccb1_3b6bee3b",
+      "revId": "8c47fa310e77a8360ce3c239feaac74dd637f204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fea311ab_39798bfb",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2019-04-18T20:09:23Z",
       "side": 1,
       "message": "newblob",
+      "range": {
+        "startLine": 4482,
+        "startChar": 13,
+        "endLine": 4482,
+        "endChar": 21
+      },
+      "revId": "8c47fa310e77a8360ce3c239feaac74dd637f204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5e3d719_e2ef0048",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4482,
+      "author": {
+        "id": 1014438
+      },
+      "writtenOn": "2019-04-18T20:30:54Z",
+      "side": 1,
+      "message": "Yeah, I was wondering about that. Technically it is eventually going to be the origblob\u0027s cluster map after the swap, so the comment can go either way.",
+      "parentUuid": "fea311ab_39798bfb",
       "range": {
         "startLine": 4482,
         "startChar": 13,
