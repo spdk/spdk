@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "002bccb1_3b6bee3b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4372,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-18T20:09:23Z",
+      "side": 1,
+      "message": "Add _spdk_bs_snapshot_swap_cluster_maps(newblob, origblob) here as well.",
+      "revId": "8c47fa310e77a8360ce3c239feaac74dd637f204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fea311ab_39798bfb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4482,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-18T20:09:23Z",
+      "side": 1,
+      "message": "newblob",
+      "range": {
+        "startLine": 4482,
+        "startChar": 13,
+        "endLine": 4482,
+        "endChar": 21
+      },
+      "revId": "8c47fa310e77a8360ce3c239feaac74dd637f204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
