@@ -188,6 +188,30 @@
       "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8641131_52f141a0",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-18T14:10:44Z",
+      "side": 1,
+      "message": "Ok. My previous comments were wrong.\nI think configuration file is not needed here.\nCode from autotest.sh:\n   source \"$rootdir/test/common/autotest_common.sh\"\nlooks for config file in autotest_common.sh code:\n   if [[ ! -z $1 ]]; then\n   \tif [ -f $1 ]; then\n\t\tsource $1\n\tfi\n   fi\nBut I think this config file is not needed if we want to use default settings ?",
+      "parentUuid": "1a300ec5_a1ee785e",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 2
+      },
+      "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
