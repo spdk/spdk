@@ -1037,8 +1037,10 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 				uint32_t	nsid = i + 1;
 
 				nvme_bdev = &nvme_bdev_ctrlr->bdevs[nsid - 1];
-				assert(nvme_bdev->id == nsid);
-				if (nvme_bdev->active) {
+				if (!nvme_bdev->active) {
+					continue;
+				} else {
+					assert(nvme_bdev->id == nsid);
 					spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
 				}
 			}
