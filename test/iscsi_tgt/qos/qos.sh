@@ -77,7 +77,7 @@ fio_py="$rootdir/scripts/fio.py"
 
 timing_enter start_iscsi_tgt
 
-$ISCSI_APP &
+$ISCSI_APP -m 0x2 &
 pid=$!
 echo "Process pid: $pid"
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
