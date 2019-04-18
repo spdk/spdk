@@ -480,7 +480,7 @@ static const struct ocf_ctx_config vbdev_ocf_ctx_cfg = {
 		},
 
 		.logger = {
-			.printf = vbdev_ocf_ctx_log_printf,
+			.print = vbdev_ocf_ctx_log_printf,
 			.dump_stack = NULL,
 		},
 
