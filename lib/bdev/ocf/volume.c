@@ -44,7 +44,7 @@
 #include "vbdev_ocf.h"
 
 static int
-vbdev_ocf_volume_open(ocf_volume_t volume)
+vbdev_ocf_volume_open(ocf_volume_t volume, void *volume_params)
 {
 	struct vbdev_ocf_base **priv = ocf_volume_get_priv(volume);
 	struct vbdev_ocf_base *base = vbdev_ocf_get_base_by_name(ocf_volume_get_uuid(volume)->data);
