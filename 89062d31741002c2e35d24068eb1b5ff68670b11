@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "cd6211e6_f56bcfa3",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-18T19:56:24Z",
+      "side": 1,
+      "message": "This will protect from coredump.\n\nif (!batch) {\n    return;\n}",
+      "range": {
+        "startLine": 255,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 1
+      },
+      "revId": "89062d31741002c2e35d24068eb1b5ff68670b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "53f6ec4d_f93d22d1",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 3
