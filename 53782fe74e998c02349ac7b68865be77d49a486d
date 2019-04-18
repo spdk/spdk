@@ -212,6 +212,30 @@
       "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8807c92_2e22ab21",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-04-18T14:40:29Z",
+      "side": 1,
+      "message": "The point is that if there is no config file with tests provided then there is no reason to run autotest since all test would be disabled in default setting.",
+      "parentUuid": "f8641131_52f141a0",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 2
+      },
+      "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
