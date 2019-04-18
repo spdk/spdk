@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "a3271e18_6be0bb70",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4372,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-18T21:20:15Z",
+      "side": 1,
+      "message": "That\u0027s true. I think that we still should switch back the maps, but after that we should sync origblob again before returning with failure. We also end up with unusable snapshot, which we should probably try to remove at this point. This looks like something that should be fixed in separate patch. For this one, I think, what we have right now should be enough. Adding Jim and Ben to reviewers list for second opinion.",
+      "parentUuid": "b2db7825_0fa72bc8",
+      "revId": "8c47fa310e77a8360ce3c239feaac74dd637f204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fea311ab_39798bfb",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 2
