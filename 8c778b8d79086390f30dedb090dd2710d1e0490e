@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84e177e6_584db320",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T09:29:22Z",
+      "side": 1,
+      "message": "This assertion doesn\u0027t really give us anything, let\u0027s get rid of it.",
+      "range": {
+        "startLine": 393,
+        "startChar": 2,
+        "endLine": 393,
+        "endChar": 24
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd771b9a_378c4960",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T09:29:22Z",
+      "side": 1,
+      "message": "Shouldn\u0027t these two be changed under the lock?",
+      "range": {
+        "startLine": 453,
+        "startChar": 0,
+        "endLine": 454,
+        "endChar": 41
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9d73583_f3e39508",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T09:29:22Z",
+      "side": 1,
+      "message": "Let\u0027s calculate these in runtime based on num_interleave_units.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 6
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0f3a356_12f0b789",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T09:29:22Z",
+      "side": 1,
+      "message": "Let\u0027s make this take spdk_ftl_conf * as a parameter and use the defaults if it is NULL.",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 9
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1978857f_cd84d003",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T09:29:22Z",
+      "side": 1,
+      "message": "Let\u0027s move it to a new line.",
+      "range": {
+        "startLine": 63,
+        "startChar": 31,
+        "endLine": 63,
+        "endChar": 52
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70622c2b_38ba6b2d",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T09:29:22Z",
+      "side": 1,
+      "message": "I\u0027d like to simultaneously test num_interleave_unit \u003d\u003d 1 as well as num_interleave units \u003e 1. Let\u0027s change test_rwb_pop to take spdk_ftl_conf * as parameter and call it from test_rwb_pop_interleaving with num_interleave_units \u003e 1 and test_rwb_pop_contiguous with num_interleave_units \u003d\u003d 1.",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 12
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b21122a_0f3c495a",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T09:29:22Z",
+      "side": 1,
+      "message": "Shouldn\u0027t the same calculation be valid for num_interleave_units \u003d\u003d 1? RWB_MAX_ACTIVE_BATCH would be 1, so i_offset becomes i * XFER_SIZE, i_reset becomes 0, and entry_count % interleave_offset becomes entry_count.",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 140,
+        "endChar": 4
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
