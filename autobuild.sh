@@ -14,17 +14,6 @@ cd $rootdir
 date -u
 git describe --tags
 
-if [ "$SPDK_TEST_OCF" -eq 1 ]; then
-	# We compile OCF sources ourselves
-	# They don't need to be checked with scanbuild and code coverage is not applicable
-	# So we precompile OCF now for further use as standalone static library
-	./configure $(echo $config_params | sed 's/--enable-coverage//g')
-	$MAKE $MAKEFLAGS include/spdk/config.h
-	CC=gcc CCAR=ar $MAKE $MAKEFLAGS -C lib/bdev/ocf/env exportlib O=$rootdir/build/ocf.a
-	# Set config to use precompiled library
-	config_params="$config_params --with-ocf=/$rootdir/build/ocf.a"
-fi
-
 ./configure $config_params
 
 # Print some test system info out for the log
