@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "9d34db15_b1ea8d0d",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-19T17:51:55Z",
+      "side": 1,
+      "message": "The patchset4 resolved this in a better way.",
+      "parentUuid": "720221b9_10cfb5d0",
+      "range": {
+        "startLine": 255,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 1
+      },
+      "revId": "89062d31741002c2e35d24068eb1b5ff68670b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "53f6ec4d_f93d22d1",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 3
@@ -93,6 +117,30 @@
       "revId": "89062d31741002c2e35d24068eb1b5ff68670b11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06b31b0f_6bc6e1de",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-19T17:51:55Z",
+      "side": 1,
+      "message": "The patchset4 resolved this. Sorry that I missed patchset 4. :)",
+      "parentUuid": "3cdd0f5a_ec578bc6",
+      "range": {
+        "startLine": 256,
+        "startChar": 13,
+        "endLine": 256,
+        "endChar": 20
+      },
+      "revId": "89062d31741002c2e35d24068eb1b5ff68670b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
