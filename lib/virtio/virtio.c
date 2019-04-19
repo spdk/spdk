@@ -145,6 +145,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		SPDK_ERRLOG("can not allocate vq\n");
 		return -ENOMEM;
 	}
+	memset(vq, 0, size);
 	dev->vqs[vtpci_queue_idx] = vq;
 
 	vq->vdev = dev;
