@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "96f35f20_5012d8e9",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-19T20:37:05Z",
+      "side": 1,
+      "message": "Can you add similar cleanup, as the it may failed while several null block devices were added.\n\n    TAILQ_FOREACH(bdev, \u0026g_null_bdev_head, tailq) {\n        TAILQ_REMOVE(\u0026g_null_bdev_head, bdev, tailq);\n        spdk_bdev_unregister(bdev, NULL, NULL);\n     }",
+      "revId": "33c50d6b4144d61bf3fb50d41604575849dfac7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0318bd95_0303e963",
         "filename": "lib/bdev/null/bdev_null.c",
         "patchSetId": 3
