@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5cdac4e_5762248c",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T11:28:11Z",
+      "side": 1,
+      "message": "Couldn\u0027t you calculate this based on LBA map\u0027s lbk offset? Something like this:\nmap_offset \u003d ftl_band_lbkoff_from_ppa(band, ftl_band_lba_map_ppa(band));\npart_offset \u003d ftl_band_lbkoff_from_ppa(band, io-\u003eppa) - map_offset;",
+      "range": {
+        "startLine": 838,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 1
+      },
+      "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
