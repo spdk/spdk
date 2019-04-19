@@ -3933,8 +3933,6 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
 
-	assert(desc->thread == spdk_get_thread());
-
 	pthread_mutex_lock(&bdev->internal.mutex);
 
 	TAILQ_REMOVE(&bdev->internal.open_descs, desc, link);
