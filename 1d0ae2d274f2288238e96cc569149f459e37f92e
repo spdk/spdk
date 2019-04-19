@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a680a0d_3cfef11b",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-19T18:02:34Z",
+      "side": 1,
+      "message": "Would -EINVAL be better here?\n\nI think -EBUSY indicates user should try this again later.  But if dev-\u003eremoved is set, it means user already called spdk_scsi_dev_destruct, so it is invalid that they called it again.  User should not try to call spdk_scsi_dev_destruct() again later.",
+      "revId": "1d0ae2d274f2288238e96cc569149f459e37f92e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
