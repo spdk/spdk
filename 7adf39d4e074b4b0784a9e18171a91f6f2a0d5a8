@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecfe200e_36db205e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1234,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-19T08:45:47Z",
+      "side": 1,
+      "message": "Not used\nI suggest removing these",
+      "range": {
+        "startLine": 1230,
+        "startChar": 20,
+        "endLine": 1234,
+        "endChar": 29
+      },
+      "revId": "7adf39d4e074b4b0784a9e18171a91f6f2a0d5a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ebd2f35_e92fafeb",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1235,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-19T08:45:47Z",
+      "side": 1,
+      "message": "3 is enough?",
+      "range": {
+        "startLine": 1235,
+        "startChar": 22,
+        "endLine": 1235,
+        "endChar": 23
+      },
+      "revId": "7adf39d4e074b4b0784a9e18171a91f6f2a0d5a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1c14742_1a25d35a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1259,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-19T08:45:47Z",
+      "side": 1,
+      "message": "+1 ?",
+      "range": {
+        "startLine": 1259,
+        "startChar": 15,
+        "endLine": 1259,
+        "endChar": 45
+      },
+      "revId": "7adf39d4e074b4b0784a9e18171a91f6f2a0d5a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac95cb6e_39afee4d",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1260,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-19T08:45:47Z",
+      "side": 1,
+      "message": "Shouldn\u0027t the vbdev_ocf_construct() be used here instead?",
+      "range": {
+        "startLine": 1260,
+        "startChar": 2,
+        "endLine": 1260,
+        "endChar": 12
+      },
+      "revId": "7adf39d4e074b4b0784a9e18171a91f6f2a0d5a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "444ce38c_27a4fc27",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-19T08:45:47Z",
+      "side": 1,
+      "message": "One too much lines between functions here",
+      "range": {
+        "startLine": 1264,
+        "startChar": 0,
+        "endLine": 1267,
+        "endChar": 1
+      },
+      "revId": "7adf39d4e074b4b0784a9e18171a91f6f2a0d5a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
