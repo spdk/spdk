@@ -2,6 +2,897 @@
   "comments": [
     {
       "key": {
+        "uuid": "fd2003a0_8f2c860a",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Use consistent naming for these variables. This one is named ROOTDIR without the \"_\" between ROOT and DIR but the one above is named BASE_DIR.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 7
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13c76bb3_48057860",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "I think you want to define the BASE_DIR and ROOTDIR before using them above to find the plugins. In this TC, I see that you\u0027re defining them in the run_perf.sh before including common.sh so your not getting an error. However, if someone just used the common.sh they would not have them defined before they tried to use them.",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 41
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f02bdb64_04a22ac7",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Why don\u0027t we check if the device is using the vfio-pci or uio_pci_generic driver? Is that to support a use case like the Linux AIO bdev that does not have the above requirement? I think it might be worth documenting that here so that is someone new is looking at this code they will understand why we did this different for bdev vs. nvme plugin",
+      "range": {
+        "startLine": 54,
+        "startChar": 3,
+        "endLine": 54,
+        "endChar": 55
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13b44785_aae7ba09",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Why are you not using the function get_cores_numa_node? I think we want to keep this logic in one place so that if something changes or someone uses this in another environment where the mechanism for finding the core NUMA node is different they only have to change it in one place.",
+      "range": {
+        "startLine": 106,
+        "startChar": 12,
+        "endLine": 106,
+        "endChar": 83
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63d7dee8_fd5fd584",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Change to \"NVM\"",
+      "range": {
+        "startLine": 215,
+        "startChar": 11,
+        "endLine": 215,
+        "endChar": 14
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "baf49759_2ea6f17b",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "How about changing this to \"run the workload for the specified period of time\"",
+      "range": {
+        "startLine": 218,
+        "startChar": 45,
+        "endLine": 218,
+        "endChar": 100
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20e1a5a4_fd527a7e",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Let\u0027s change this to \"I/Os\"",
+      "range": {
+        "startLine": 225,
+        "startChar": 43,
+        "endLine": 225,
+        "endChar": 52
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d787888a_37adbc58",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "How about changing this to \"Comma-separated list of CPU cores used to run the workload\"",
+      "range": {
+        "startLine": 226,
+        "startChar": 33,
+        "endLine": 226,
+        "endChar": 76
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07c62a00_9a5efe0f",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "How about changing this to \" runs NVMe PMD/BDEV performance test\"",
+      "range": {
+        "startLine": 3,
+        "startChar": 24,
+        "endLine": 3,
+        "endChar": 60
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb9dbae7_474e1449",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "How about changing this to \"Please run the scripts/setup.sh before running this script to bind disks to VFIO/UIO driver\"",
+      "range": {
+        "startLine": 4,
+        "startChar": 29,
+        "endLine": 4,
+        "endChar": 101
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab8cc4c2_9e614135",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Modify to \"This script should be run as root\"",
+      "range": {
+        "startLine": 4,
+        "startChar": 2,
+        "endLine": 4,
+        "endChar": 27
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af5272bd_e8f00f66",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "I would move the example after an explanation of the parameters and make it a subsection with a header like \"An Example Performance Test Run\"",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 13
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64d5a8d7_87f80d83",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Add \"This script takes the following parameters:\"",
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecd1173b_77044687",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Please specify the parameters just like a user would do at the command prompt. E.g. for this one the user would pass it as \"--run-time\"",
+      "range": {
+        "startLine": 11,
+        "startChar": 2,
+        "endLine": 11,
+        "endChar": 10
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76af0f83_9302e948",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "How about changing to \"the run time for the workload in seconds\"",
+      "range": {
+        "startLine": 11,
+        "startChar": 13,
+        "endLine": 11,
+        "endChar": 46
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fcabf5e_f21d781c",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to --ramp-time",
+      "range": {
+        "startLine": 12,
+        "startChar": 2,
+        "endLine": 12,
+        "endChar": 11
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e9a6992_4d9ead2e",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "How about changing to match the help option \"Fio will run the specified workload for this amount of time before logging any performance numbers\"",
+      "range": {
+        "startLine": 12,
+        "startChar": 14,
+        "endLine": 12,
+        "endChar": 121
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "109fe9bf_d5c5875a",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "A comma-separated list of CPU cores used to run the workload.",
+      "range": {
+        "startLine": 13,
+        "startChar": 16,
+        "endLine": 13,
+        "endChar": 39
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "582e7782_963e4f8c",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to --cpu-allowed",
+      "range": {
+        "startLine": 13,
+        "startChar": 2,
+        "endLine": 13,
+        "endChar": 13
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87fa236e_7586d9d4",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "add \"the\"",
+      "range": {
+        "startLine": 13,
+        "startChar": 46,
+        "endLine": 13,
+        "endChar": 47
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21a02e70_ccf60d75",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to \"their\"",
+      "range": {
+        "startLine": 14,
+        "startChar": 15,
+        "endLine": 14,
+        "endChar": 18
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ecf28b7_918cc9f7",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Change to \"but if there are\"",
+      "range": {
+        "startLine": 14,
+        "startChar": 109,
+        "endLine": 15,
+        "endChar": 8
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c909fd3c_99254361",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to \"on the\"",
+      "range": {
+        "startLine": 15,
+        "startChar": 74,
+        "endLine": 15,
+        "endChar": 78
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9ebc983_3b4087be",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to \",\"",
+      "range": {
+        "startLine": 16,
+        "startChar": 57,
+        "endLine": 16,
+        "endChar": 58
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42931d27_f188d956",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to small caps \"on a\"",
+      "range": {
+        "startLine": 16,
+        "startChar": 59,
+        "endLine": 16,
+        "endChar": 62
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c9931ad_5ceb9c7c",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to small caps \"system\"",
+      "range": {
+        "startLine": 16,
+        "startChar": 62,
+        "endLine": 16,
+        "endChar": 69
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eaf1a4d2_f2fa7bb7",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to \"uses\"",
+      "range": {
+        "startLine": 17,
+        "startChar": 62,
+        "endLine": 17,
+        "endChar": 75
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7fa93e5d_b6e203b7",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "how about changing this to \"on each CPU core\"",
+      "range": {
+        "startLine": 18,
+        "startChar": 39,
+        "endLine": 18,
+        "endChar": 110
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87b04ee2_5e43d9c5",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Change to \"However, if the test will use 10 CPU cores, then ...\"",
+      "range": {
+        "startLine": 18,
+        "startChar": 112,
+        "endLine": 18,
+        "endChar": 127
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71de8f06_d23fc13f",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to \"results in a NUMA-balanced configuration with \"",
+      "range": {
+        "startLine": 18,
+        "startChar": 2,
+        "endLine": 18,
+        "endChar": 28
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e7713fe_7a4748aa",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "1Does this set up have 16 devices? If there 16 devices, then 8 are assigned to CPU cores 1 - 4 and 6 are assigned to cores 28 - 33 at 1 device per core so I think we are still missing 2 cores",
+      "range": {
+        "startLine": 19,
+        "startChar": 39,
+        "endLine": 20,
+        "endChar": 84
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "beee9f4e_371f408f",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to --iodepth",
+      "range": {
+        "startLine": 21,
+        "startChar": 2,
+        "endLine": 21,
+        "endChar": 9
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4bcdb868_4c74f2ac",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to match the help option \"Number of I/Os to keep in flight per fio job\"",
+      "range": {
+        "startLine": 21,
+        "startChar": 12,
+        "endLine": 21,
+        "endChar": 41
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d720be5_500c5903",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "Change to \"--fio-plugin\"",
+      "range": {
+        "startLine": 22,
+        "startChar": 2,
+        "endLine": 22,
+        "endChar": 12
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "963c571f_ce9b9483",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to \"The SPDK fio plugin used in this test\"",
+      "range": {
+        "startLine": 22,
+        "startChar": 15,
+        "endLine": 22,
+        "endChar": 30
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23214ab0_d6f2e02f",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to \"the script will precondition disks to put them in a steady state\"",
+      "range": {
+        "startLine": 23,
+        "startChar": 55,
+        "endLine": 23,
+        "endChar": 127
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31bee353_9f1e6afe",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to --no-preconditioning",
+      "range": {
+        "startLine": 23,
+        "startChar": 2,
+        "endLine": 23,
+        "endChar": 20
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d40ce3e_adf05a10",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "change to \"However, preconditioning could be skipped, for example, .. \"",
+      "range": {
+        "startLine": 24,
+        "startChar": 26,
+        "endLine": 24,
+        "endChar": 127
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5dd7a7a5_22a7ed18",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 37
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-19T15:52:03Z",
+      "side": 1,
+      "message": "You shouldn\u0027t need to define these variables here if you put them in the right place in common.sh",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 41
+      },
+      "revId": "755c70b36b92a70643055f989f6f320050a1d051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0a61aceb_01ea0777",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 37
