@@ -1584,7 +1584,7 @@ bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		data = spdk_scsi_task_gather_data(task, &data_len);
 		if (data) {
 			desc_count = __copy_desc(ctx, data, data_len);
-			spdk_dma_free(data);
+			free(data);
 		}
 	}
 
@@ -1809,7 +1809,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 	case SPDK_SPC_INQUIRY:
 		alloc_len = from_be16(&cdb[3]);
 		data_len = spdk_max(4096, alloc_len);
-		data = spdk_dma_zmalloc(data_len, 0, NULL);
+		data = calloc(1, data_len);
 		assert(data != NULL);
 		rc = bdev_scsi_inquiry(bdev, task, cdb, data, data_len);
 		data_len = spdk_min(rc, data_len);
@@ -1833,7 +1833,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		}
 
 		data_len = spdk_max(4096, alloc_len);
-		data = spdk_dma_zmalloc(data_len, 0, NULL);
+		data = calloc(1, data_len);
 		assert(data != NULL);
 		rc = bdev_scsi_report_luns(task->lun, sel, data, data_len);
 		data_len = rc;
@@ -1941,7 +1941,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		}
 
 		data_len = rc;
-		data = spdk_dma_zmalloc(data_len, 0, NULL);
+		data = calloc(1, data_len);
 		assert(data != NULL);
 
 		/* First call with no buffer to discover needed buffer size */
@@ -1983,7 +1983,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
 
 		data_len = task->sense_data_len;
-		data = spdk_dma_zmalloc(data_len, 0, NULL);
+		data = calloc(1, data_len);
 		assert(data != NULL);
 		memcpy(data, task->sense_data, data_len);
 		break;
@@ -2034,7 +2034,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 	}
 
 	if (data) {
-		spdk_dma_free(data);
+		free(data);
 	}
 
 	return SPDK_SCSI_TASK_COMPLETE;

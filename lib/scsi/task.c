@@ -169,7 +169,7 @@ spdk_scsi_task_gather_data(struct spdk_scsi_task *task, int *len)
 		return NULL;
 	}
 
-	buf = spdk_dma_malloc(buf_len, 0, NULL);
+	buf = calloc(1, buf_len);
 	if (buf == NULL) {
 		*len = -1;
 		return NULL;
