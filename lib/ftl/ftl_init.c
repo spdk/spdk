@@ -59,7 +59,7 @@ struct ftl_admin_cmpl {
 };
 
 static STAILQ_HEAD(, spdk_ftl_dev)	g_ftl_queue = STAILQ_HEAD_INITIALIZER(g_ftl_queue);
-static pthread_mutex_t		g_ftl_queue_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t			g_ftl_queue_lock = PTHREAD_MUTEX_INITIALIZER;
 static const struct spdk_ftl_conf	g_default_conf = {
 	.defrag = {
 		.limits = {
@@ -116,6 +116,36 @@ ftl_band_init_md(struct ftl_band *band)
 }
 
 static int
+ftl_check_conf(const struct spdk_ftl_conf *conf)
+{
+	size_t i;
+
+	if (conf->defrag.invalid_thld >= 100) {
+		return -1;
+	}
+	if (conf->lba_rsvd >= 100) {
+		return -1;
+	}
+	if (conf->lba_rsvd == 0) {
+		return -1;
+	}
+	if (conf->rwb_size == 0) {
+		return -1;
+	}
+	if (conf->rwb_size % FTL_BLOCK_SIZE != 0) {
+		return -1;
+	}
+
+	for (i = 0; i < SPDK_FTL_LIMIT_MAX; ++i) {
+		if (conf->defrag.limits[i].limit > 100) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static int
 ftl_check_init_opts(const struct spdk_ftl_dev_init_opts *opts,
 		    const struct spdk_ocssd_geometry_data *geo)
 {
@@ -124,6 +154,10 @@ ftl_check_init_opts(const struct spdk_ftl_dev_init_opts *opts,
 	int rc = 0;
 
 	if (opts->range.begin > opts->range.end || opts->range.end >= num_punits) {
+		return -1;
+	}
+
+	if (ftl_check_conf(opts->conf)) {
 		return -1;
 	}
 
@@ -413,36 +447,6 @@ ftl_dev_nvme_init(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts 
 		/* Metadata pointer must be dword aligned */
 		SPDK_ERRLOG("Unsupported metadata size (%zu)\n", dev->md_size);
 		return -1;
-	}
-
-	return 0;
-}
-
-static int
-ftl_conf_validate(const struct spdk_ftl_conf *conf)
-{
-	size_t i;
-
-	if (conf->defrag.invalid_thld >= 100) {
-		return -1;
-	}
-	if (conf->lba_rsvd >= 100) {
-		return -1;
-	}
-	if (conf->lba_rsvd == 0) {
-		return -1;
-	}
-	if (conf->rwb_size == 0) {
-		return -1;
-	}
-	if (conf->rwb_size % FTL_BLOCK_SIZE != 0) {
-		return -1;
-	}
-
-	for (i = 0; i < SPDK_FTL_LIMIT_MAX; ++i) {
-		if (conf->defrag.limits[i].limit > 100) {
-			return -1;
-		}
 	}
 
 	return 0;
@@ -814,24 +818,18 @@ ftl_io_channel_destroy_cb(void *io_device, void *ctx)
 }
 
 int
-spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb, void *cb_arg)
+spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn cb, void *cb_arg)
 {
 	struct spdk_ftl_dev *dev;
+	struct spdk_ftl_dev_init_opts opts = *_opts;
 
 	dev = calloc(1, sizeof(*dev));
 	if (!dev) {
 		return -ENOMEM;
 	}
 
-	if (opts->conf) {
-		if (ftl_conf_validate(opts->conf)) {
-			SPDK_ERRLOG("Invalid configuration\n");
-			goto fail_sync;
-		}
-
-		memcpy(&dev->conf, opts->conf, sizeof(dev->conf));
-	} else {
-		spdk_ftl_conf_init_defaults(&dev->conf);
+	if (!opts.conf) {
+		opts.conf = &g_default_conf;
 	}
 
 	spdk_io_device_register(dev, ftl_io_channel_create_cb, ftl_io_channel_destroy_cb,
@@ -839,20 +837,21 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 				NULL);
 
 	TAILQ_INIT(&dev->retry_queue);
+	dev->conf = *opts.conf;
 	dev->ioch = spdk_get_io_channel(dev);
 	dev->init_cb = cb;
 	dev->init_arg = cb_arg;
-	dev->range = opts->range;
+	dev->range = opts.range;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
-	dev->cache_bdev_desc = opts->cache_bdev_desc;
+	dev->cache_bdev_desc = opts.cache_bdev_desc;
 
-	dev->name = strdup(opts->name);
+	dev->name = strdup(opts.name);
 	if (!dev->name) {
 		SPDK_ERRLOG("Unable to set device name\n");
 		goto fail_sync;
 	}
 
-	if (ftl_dev_nvme_init(dev, opts)) {
+	if (ftl_dev_nvme_init(dev, &opts)) {
 		SPDK_ERRLOG("Unable to initialize NVMe structures\n");
 		goto fail_sync;
 	}
@@ -864,7 +863,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 		goto fail_sync;
 	}
 
-	if (ftl_check_init_opts(opts, &dev->geo)) {
+	if (ftl_check_init_opts(&opts, &dev->geo)) {
 		SPDK_ERRLOG("Invalid device configuration\n");
 		goto fail_sync;
 	}
@@ -896,19 +895,19 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 		goto fail_sync;
 	}
 
-	if (ftl_dev_init_threads(dev, opts)) {
+	if (ftl_dev_init_threads(dev, &opts)) {
 		SPDK_ERRLOG("Unable to initialize device threads\n");
 		goto fail_sync;
 	}
 
-	if (opts->mode & SPDK_FTL_MODE_CREATE) {
+	if (opts.mode & SPDK_FTL_MODE_CREATE) {
 		if (ftl_setup_initial_state(dev)) {
 			SPDK_ERRLOG("Failed to setup initial state of the device\n");
 			goto fail_async;
 		}
 
 	} else {
-		if (ftl_restore_state(dev, opts)) {
+		if (ftl_restore_state(dev, &opts)) {
 			SPDK_ERRLOG("Unable to restore device's state from the SSD\n");
 			goto fail_async;
 		}

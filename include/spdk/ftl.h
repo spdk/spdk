@@ -113,7 +113,7 @@ struct spdk_ftl_dev_init_opts {
 	struct spdk_thread			*read_thread;
 
 	/* Device's config */
-	struct spdk_ftl_conf			*conf;
+	const struct spdk_ftl_conf		*conf;
 	/* Device's name */
 	const char				*name;
 	/* Parallel unit range */
