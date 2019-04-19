@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "9e088cb0_ac32041f",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-19T18:04:23Z",
+      "side": 1,
+      "message": "agreed - it would be better to just pass rc directly (same below)",
+      "parentUuid": "479a7bcd_26555abf",
+      "range": {
+        "startLine": 529,
+        "startChar": 32,
+        "endLine": 529,
+        "endChar": 34
+      },
+      "revId": "66d13f9ebbb5a73bffdf6529e92096ac4ccb172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fa0c7d13_db456a54",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 1
