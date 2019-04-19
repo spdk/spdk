@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5cf8ee5_def76129",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-19T19:54:53Z",
+      "side": 1,
+      "message": "This is very error-prone if the device throughput is around the bandwidth limit.\n\nIf the bdev maxes out an 21MB/s on one run, it may just as well do 19MB/s on another. A case like that will break this test.\n\nCan we measure the IOPS once, set IOPS_LIMIT\u003dmeasured/2 and then run all the qos tests unconditionally?",
+      "revId": "45a1a37e2687a658701cc5627c9f2a3a3471fba4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
