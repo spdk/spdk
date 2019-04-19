@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "720221b9_10cfb5d0",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T07:16:16Z",
+      "side": 1,
+      "message": "Sure, but it relies on i \u003d\u003d 0. Checking rwb-\u003ebatches seems more intuitive and won\u0027t cause a segfault too.",
+      "parentUuid": "cd6211e6_f56bcfa3",
+      "range": {
+        "startLine": 255,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 1
+      },
+      "revId": "89062d31741002c2e35d24068eb1b5ff68670b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "53f6ec4d_f93d22d1",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-12T17:51:35Z",
       "side": 1,
       "message": "I was thinking of the case that it fails to allocate rwb-\u003ebatches on L199/L201 in ftl_rwb.c. Then batches and rwb-\u003ebatches will be NULL here. Then you will see a segmentation fault when you access batch-\u003eentries. The original code also has this issue because it accesses batch-\u003eentry through ftl_rwb_foreach(entry, batch) without checking for NULL.",
+      "range": {
+        "startLine": 256,
+        "startChar": 13,
+        "endLine": 256,
+        "endChar": 20
+      },
+      "revId": "89062d31741002c2e35d24068eb1b5ff68670b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cdd0f5a_ec578bc6",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-19T07:16:16Z",
+      "side": 1,
+      "message": "But it won\u0027t happen, because the for loop is executed only if rwb-\u003ebatches !\u003d NULL (see patchset 4).",
+      "parentUuid": "53f6ec4d_f93d22d1",
       "range": {
         "startLine": 256,
         "startChar": 13,
