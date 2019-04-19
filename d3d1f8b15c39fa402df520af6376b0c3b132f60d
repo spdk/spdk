@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0afa45e7_9db56496",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 1028,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "43aea3ae_225c1e62",
+      "range": {
+        "startLine": 1028,
+        "startChar": 19,
+        "endLine": 1028,
+        "endChar": 35
+      },
+      "revId": "d3d1f8b15c39fa402df520af6376b0c3b132f60d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97690e0e_6462b176",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 72
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-12T22:19:06Z",
       "side": 1,
       "message": "else block with break is missing, we will go over the socks[] array limit if there are more events than max_events.",
+      "range": {
+        "startLine": 1031,
+        "startChar": 3,
+        "endLine": 1033,
+        "endChar": 4
+      },
+      "revId": "d3d1f8b15c39fa402df520af6376b0c3b132f60d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67148d0d_a535221d",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "97690e0e_6462b176",
       "range": {
         "startLine": 1031,
         "startChar": 3,

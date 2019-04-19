@@ -22,6 +22,30 @@
       "revId": "60b746416d00336d1a8daf0d13d0c4c5c308ce10",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05a46c31_0111bf6d",
+        "filename": "lib/sock/vpp/Makefile",
+        "patchSetId": 69
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Yes. It comes from VPP header files.",
+      "parentUuid": "54e8010c_d3b51987",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 68
+      },
+      "revId": "60b746416d00336d1a8daf0d13d0c4c5c308ce10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "3d3e2b34_2d093bc2",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Yes.",
+      "parentUuid": "ae68ca78_593f798d",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 18
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f9980609_e2ffd656",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -60,6 +84,30 @@
       "writtenOn": "2019-03-19T10:13:20Z",
       "side": 1,
       "message": "Unused (might be a separate patch)",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 21
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8357157_3772f576",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f9980609_e2ffd656",
       "range": {
         "startLine": 82,
         "startChar": 0,
@@ -118,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "7a24d3f5_7a6f70e6",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 708,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7901659e_27cc5749",
+      "range": {
+        "startLine": 708,
+        "startChar": 2,
+        "endLine": 708,
+        "endChar": 14
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e475a906_23b6f2ae",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -129,6 +201,30 @@
       "writtenOn": "2019-03-19T10:44:28Z",
       "side": 1,
       "message": "goto end",
+      "range": {
+        "startLine": 720,
+        "startChar": 0,
+        "endLine": 723,
+        "endChar": 15
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a09f1de_fec09c23",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e475a906_23b6f2ae",
       "range": {
         "startLine": 720,
         "startChar": 0,
@@ -164,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "45ad251d_22f070e1",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c73ac7ce_f7bd741f",
+      "range": {
+        "startLine": 732,
+        "startChar": 0,
+        "endLine": 735,
+        "endChar": 15
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a2d1846_5dc3034d",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -187,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "339f1f9c_bdeb1e73",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a2d1846_5dc3034d",
+      "range": {
+        "startLine": 865,
+        "startChar": 0,
+        "endLine": 894,
+        "endChar": 0
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5186a060_66888ba2",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -198,6 +342,30 @@
       "writtenOn": "2019-03-19T10:13:20Z",
       "side": 1,
       "message": "Can we change all clib_warning to relevant SPDK logs ?",
+      "range": {
+        "startLine": 1098,
+        "startChar": 2,
+        "endLine": 1098,
+        "endChar": 14
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38746117_033fc215",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "I have moved it to another patch. This information is required for debugging.",
+      "parentUuid": "5186a060_66888ba2",
       "range": {
         "startLine": 1098,
         "startChar": 2,
@@ -280,6 +448,30 @@
     },
     {
       "key": {
+        "uuid": "7aa43ff6_0fb32257",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1298,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "This is size of memory used by clib. I can change it to define.",
+      "parentUuid": "9e1c6827_ec04c00d",
+      "range": {
+        "startLine": 1298,
+        "startChar": 30,
+        "endLine": 1298,
+        "endChar": 39
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81cc0554_69c409a8",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -291,6 +483,30 @@
       "writtenOn": "2019-03-19T10:44:28Z",
       "side": 1,
       "message": "Can we move all the logging of VPP error codes to separate patch ? I see they are used only for posting, rather as proper return codes to users of the API.\nWe need to come up with good way to print those in SPDK friendly way. I think to make this patch simpler to review, printing error code as a number is fine, lets work on improving that in separate patch.",
+      "range": {
+        "startLine": 1305,
+        "startChar": 0,
+        "endLine": 1307,
+        "endChar": 8
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cf0c234_43c16334",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1307,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "81cc0554_69c409a8",
       "range": {
         "startLine": 1305,
         "startChar": 0,
@@ -350,6 +566,30 @@
     },
     {
       "key": {
+        "uuid": "bbb601a5_042567da",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1324,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "I will move it to the function for readability.",
+      "parentUuid": "ab0b55f5_0efe41c1",
+      "range": {
+        "startLine": 1316,
+        "startChar": 0,
+        "endLine": 1324,
+        "endChar": 8
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e2e896d_db557f2a",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -384,6 +624,30 @@
       "writtenOn": "2019-03-19T10:44:28Z",
       "side": 1,
       "message": "app_name is not freed",
+      "range": {
+        "startLine": 1330,
+        "startChar": 2,
+        "endLine": 1330,
+        "endChar": 11
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10d199fe_0a285986",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1330,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5c1bb46d_39e17bb7",
       "range": {
         "startLine": 1330,
         "startChar": 2,
@@ -443,6 +707,30 @@
     },
     {
       "key": {
+        "uuid": "8895a1d3_61cf141e",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "612f917c_aefcecdb",
+      "range": {
+        "startLine": 1333,
+        "startChar": 0,
+        "endLine": 1333,
+        "endChar": 58
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0197ddd0_aad58727",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -466,6 +754,30 @@
     },
     {
       "key": {
+        "uuid": "9c260781_cd41bfa9",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0197ddd0_aad58727",
+      "range": {
+        "startLine": 1335,
+        "startChar": 1,
+        "endLine": 1335,
+        "endChar": 11
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da891a92_57fa128a",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -477,6 +789,30 @@
       "writtenOn": "2019-03-19T14:03:40Z",
       "side": 1,
       "message": "I don\u0027t see this being used anywhere, is it needed ?",
+      "range": {
+        "startLine": 1339,
+        "startChar": 0,
+        "endLine": 1339,
+        "endChar": 44
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97f161ce_8159940b",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1339,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Yes",
+      "parentUuid": "da891a92_57fa128a",
       "range": {
         "startLine": 1339,
         "startChar": 0,
@@ -582,6 +918,30 @@
     },
     {
       "key": {
+        "uuid": "00768782_85e4a815",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1357,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "We need to poll a queue from VPP to handle messages when session is enabled and application attached. I split it into two pollers.",
+      "parentUuid": "528ebf39_049dc9c0",
+      "range": {
+        "startLine": 1355,
+        "startChar": 0,
+        "endLine": 1357,
+        "endChar": 73
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e52316f6_3f6b3517",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -593,6 +953,30 @@
       "writtenOn": "2019-03-19T10:44:28Z",
       "side": 1,
       "message": "free(app_name) is needed",
+      "range": {
+        "startLine": 1361,
+        "startChar": 0,
+        "endLine": 1361,
+        "endChar": 4
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2dd2f810_b22ca8c6",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1361,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-04-19T16:18:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e52316f6_3f6b3517",
       "range": {
         "startLine": 1361,
         "startChar": 0,
