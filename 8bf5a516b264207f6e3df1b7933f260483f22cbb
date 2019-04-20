@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "faf34331_01d366de",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-20T11:13:35Z",
+      "side": 1,
+      "message": "Free cpuset before return. Or we can allocate tmp in stack, so we don\u0027t need to worry about spdk_cpuset_alloc() fails.",
+      "revId": "8bf5a516b264207f6e3df1b7933f260483f22cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26ef7d1d_ee7a59a5",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-20T11:13:35Z",
+      "side": 1,
+      "message": "Assert g_app_free_core_mask is non-null, or allocate storage for g_app_free_core_mask immediately when define it (i.e. do not define it as pointer)",
+      "revId": "8bf5a516b264207f6e3df1b7933f260483f22cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6afa6535_49697003",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-20T11:13:35Z",
+      "side": 1,
+      "message": "Check whether core_mask is null. Or allocate core_mask in stack.",
+      "revId": "8bf5a516b264207f6e3df1b7933f260483f22cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1445fbb7_8338e6e9",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-20T11:13:35Z",
+      "side": 1,
+      "message": "Ditto.",
+      "revId": "8bf5a516b264207f6e3df1b7933f260483f22cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
