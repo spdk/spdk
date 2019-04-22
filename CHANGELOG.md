@@ -52,6 +52,10 @@ instead.
 A mechanism for acquiring and releasing data buffers from bdev modules, used
 to perform zero copy operations, was added.
 
+New APIs spdk_bdev_get_md_size(), spdk_bdev_is_md_interleaved(), spdk_bdev_get_dif_type(),
+spdk_bdev_is_dif_head_of_md(), and spdk_bdev_is_dif_check_enabled() have been
+added to get metadata and DIF settings.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
