@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39c114f8_02d6acb1",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T18:44:13Z",
+      "side": 1,
+      "message": "This needs to be moved up to the 19.04 section of the CHANGELOG.",
+      "revId": "847f4247054a2615ddff468f62f11b296059896f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
