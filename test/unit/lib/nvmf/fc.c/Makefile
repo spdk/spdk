@@ -1,8 +1,8 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) 2018 Broadcom.  All Rights Reserved.
+#  The term "Broadcom" refers to Broadcom Limited and/or its subsidiaries.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -31,18 +31,24 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../../)
 
-DIRS-y = tcp.c ctrlr.c subsystem.c ctrlr_discovery.c ctrlr_bdev.c
+CFLAGS += -I$(SPDK_ROOT_DIR)/test/common/lib -I$(SPDK_ROOT_DIR)/lib \
+-I$(SPDK_ROOT_DIR)/lib/nvmf
 
-DIRS-$(CONFIG_RDMA) += rdma.c
+CFLAGS += $(ENV_CFLAGS)
+TEST_FILE = fc_ut.c
 
-DIRS-$(CONFIG_FC) += fc.c fc_ls.c
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
 
-.PHONY: all clean $(DIRS-y)
+# Disable clang warning: taking address of packed member of class or structure may result in an unaligned pointer value [-Werror,-Waddress-of-packed-member]
+ifeq ($(CC),clang)
+	CLANG_VERSION := $(shell $(CC) -v 2>&1 | \
+		        sed -n "s/.*version \([0-9]*\.[0-9]*\).*/\1/p")
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+CLANG_MAJOR_VERSION := $(shell echo $(CLANG_VERSION) | cut -f1 -d.)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+ifeq ($(shell test $(CLANG_MAJOR_VERSION) -ge 4 && echo 1), 1)
+	CFLAGS += -Wno-address-of-packed-member
+endif
+endif

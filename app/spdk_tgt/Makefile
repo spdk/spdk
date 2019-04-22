@@ -58,6 +58,10 @@ ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
 endif
 
+ifeq ($(CONFIG_FC),y)
+SPDK_LIB_LIST += fc
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 install: $(APP)
