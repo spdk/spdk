@@ -316,6 +316,7 @@ test_connect(void)
 	memset(&transport, 0, sizeof(transport));
 	transport.opts.max_aq_depth = 32;
 	transport.opts.max_queue_depth = 64;
+	transport.opts.max_aq_depth = 32;
 	transport.opts.max_qpairs_per_ctrlr = 3;
 	transport.tgt = &tgt;
 
