@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e81f28e1_88e94140",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-22T19:44:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "41f553dc_528b9b74",
+      "range": {
+        "startLine": 7,
+        "startChar": 31,
+        "endLine": 7,
+        "endChar": 40
+      },
+      "revId": "66d13f9ebbb5a73bffdf6529e92096ac4ccb172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "479a7bcd_26555abf",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 1
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "dfc6b566_16ff812b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-22T19:44:50Z",
+      "side": 1,
+      "message": "Yeah, since we always use negative errnos that should be safe.  Right now at least reducelib doesn\u0027t care what the specific error is so that\u0027s why I just did a generic -1 but I can change it.",
+      "parentUuid": "9e088cb0_ac32041f",
+      "range": {
+        "startLine": 529,
+        "startChar": 32,
+        "endLine": 529,
+        "endChar": 34
+      },
+      "revId": "66d13f9ebbb5a73bffdf6529e92096ac4ccb172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "52d446b2_c3de5809",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 1
@@ -95,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "aafa0157_97024ae3",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-22T19:44:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52d446b2_c3de5809",
+      "range": {
+        "startLine": 542,
+        "startChar": 90,
+        "endLine": 542,
+        "endChar": 91
+      },
+      "revId": "66d13f9ebbb5a73bffdf6529e92096ac4ccb172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa0c7d13_db456a54",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 1
@@ -106,6 +178,30 @@
       "writtenOn": "2019-04-13T10:44:31Z",
       "side": 1,
       "message": "Ditto.",
+      "range": {
+        "startLine": 545,
+        "startChar": 32,
+        "endLine": 545,
+        "endChar": 34
+      },
+      "revId": "66d13f9ebbb5a73bffdf6529e92096ac4ccb172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "456559ba_7871127a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-22T19:44:50Z",
+      "side": 1,
+      "message": "Ditto :)",
+      "parentUuid": "fa0c7d13_db456a54",
       "range": {
         "startLine": 545,
         "startChar": 32,
