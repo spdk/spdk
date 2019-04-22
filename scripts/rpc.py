@@ -315,6 +315,30 @@ if __name__ == "__main__":
                    help='How often the hotplug is processed for insert and remove events', type=int)
     p.set_defaults(func=set_bdev_nvme_hotplug)
 
+    def set_bdev_nvme_err_injection(args):
+        rpc.bdev.set_bdev_nvme_err_injection(args.client,
+                                             name=args.name,
+                                             timeout=args.timeout,
+                                             count=args.count,
+                                             opc=args.opc,
+                                             sct=args.sct,
+                                             sc=args.sc,
+                                             admin=args.admin,
+                                             submit=args.submit)
+
+    p = subparsers.add_parser('set_bdev_nvme_err_injection',
+                              help='Set specified error command to NVMe controller.')
+    p.add_argument('-n', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
+    p.add_argument('--timeout', help="Timeout for the specified command, in microseconds.", type=int, required=True)
+    p.add_argument('--count', help="Error count for the specified NVMe command.", type=int, required=True)
+    p.add_argument('--opc', help="NVMe command opcode.", type=int, required=True)
+    p.add_argument('--sct', help="Status code type.", type=int, required=True)
+    p.add_argument('--sc', help="Generic command status code.", type=int, required=True)
+    p.add_argument('--admin', help="The error command is for Admin queue.", default=False, action='store_false')
+    p.add_argument('--submit', help="The commands match with error injection will be submitted to backend.",
+                   default=True, action='store_true')
+    p.set_defaults(func=set_bdev_nvme_err_injection)
+
     def construct_nvme_bdev(args):
         print_array(rpc.bdev.construct_nvme_bdev(args.client,
                                                  name=args.name,

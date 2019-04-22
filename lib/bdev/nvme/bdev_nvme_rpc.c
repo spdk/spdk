@@ -796,3 +796,97 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 	}
 }
 SPDK_RPC_REGISTER("apply_nvme_firmware", spdk_rpc_apply_nvme_firmware, SPDK_RPC_RUNTIME)
+
+struct rpc_nvme_set_err_injection {
+	char		*name;
+	uint64_t	timeout;
+	uint32_t	count;
+	uint16_t	opc;
+	uint16_t	sct;
+	uint16_t	sc;
+	bool		admin;
+	bool		submit;
+};
+
+static const struct spdk_json_object_decoder rpc_nvme_set_err_injection_decoders[] = {
+	{"name", offsetof(struct rpc_nvme_set_err_injection, name), spdk_json_decode_string},
+	{"timeout", offsetof(struct rpc_nvme_set_err_injection, timeout), spdk_json_decode_uint64},
+	{"count", offsetof(struct rpc_nvme_set_err_injection, count), spdk_json_decode_uint32},
+	{"opc", offsetof(struct rpc_nvme_set_err_injection, opc), spdk_json_decode_uint16},
+	{"sct", offsetof(struct rpc_nvme_set_err_injection, sct), spdk_json_decode_uint16},
+	{"sc", offsetof(struct rpc_nvme_set_err_injection, sc), spdk_json_decode_uint16},
+	{"admin", offsetof(struct rpc_nvme_set_err_injection, admin), spdk_json_decode_bool, true},
+	{"submit", offsetof(struct rpc_nvme_set_err_injection, submit), spdk_json_decode_bool, true},
+};
+
+static void
+spdk_rpc_set_bdev_nvme_err_injection(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
+{
+	struct rpc_nvme_set_err_injection	req = {0};
+	struct spdk_json_write_ctx		*w;
+	int					rc;
+	struct nvme_bdev_ctrlr			*ctrlr;
+	struct spdk_nvme_qpair			*qpair;
+	struct spdk_nvme_ctrlr_opts		opts;
+	uint32_t				qid;
+	int					error;
+
+	if (spdk_json_decode_object(params, rpc_nvme_set_err_injection_decoders,
+				    SPDK_COUNTOF(rpc_nvme_set_err_injection_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		error = SPDK_JSONRPC_ERROR_PARSE_ERROR;
+		goto exit;
+	}
+
+	ctrlr = nvme_bdev_ctrlr_get_by_name(req.name);
+	if (ctrlr == NULL) {
+		SPDK_ERRLOG("Can't get %s controller\n", req.name);
+		error = SPDK_JSONRPC_ERROR_INVALID_PARAMS;
+		goto exit;
+	}
+
+	if (req.admin) {
+		rc = spdk_nvme_qpair_add_cmd_error_injection(ctrlr->ctrlr, NULL,
+				req.opc, !req.submit, req.timeout,
+				req.count, req.sct, req.sc);
+		if (rc) {
+			error = SPDK_JSONRPC_ERROR_INTERNAL_ERROR;
+			goto exit;
+		}
+
+	} else {
+		spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
+		for (qid = 1; qid <= opts.num_io_queues; qid++) {
+			qpair = spdk_nvme_ctrlr_get_qpair_by_qid(ctrlr->ctrlr, qid);
+			if (!qpair) {
+				break;
+			}
+			rc = spdk_nvme_qpair_add_cmd_error_injection(ctrlr->ctrlr, qpair,
+					req.opc, !req.submit, req.timeout,
+					req.count, req.sct, req.sc);
+			if (rc) {
+				error = SPDK_JSONRPC_ERROR_INTERNAL_ERROR;
+				goto exit;
+			}
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		free(req.name);
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+	free(req.name);
+	return;
+
+exit:
+	free(req.name);
+	spdk_jsonrpc_send_error_response(request, error, "Invalid parameters");
+}
+SPDK_RPC_REGISTER("set_bdev_nvme_err_injection", spdk_rpc_set_bdev_nvme_err_injection,
+		  SPDK_RPC_RUNTIME)
