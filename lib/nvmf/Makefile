@@ -59,4 +59,9 @@ endif
 endif
 endif
 
+ifeq ($(CONFIG_FC),y)
+C_SRCS += fc.c fc_ls.c fc_poller_api.c
+CFLAGS += $(ENV_CFLAGS)
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
