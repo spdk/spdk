@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb860756_990bae82",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T21:57:46Z",
+      "side": 1,
+      "message": "Unnecessary change, may be related with rebase issue?",
+      "range": {
+        "startLine": 478,
+        "startChar": 0,
+        "endLine": 490,
+        "endChar": 2
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
