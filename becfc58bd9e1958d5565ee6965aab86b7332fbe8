@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e13fed4b_02bbc8ae",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 5060,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T15:54:29Z",
+      "side": 1,
+      "message": "This looks good - moving this code here after we\u0027ve opened the blob.\n\nBut I think you should move this code in a separate patch before this one.  This is actually more accurate, even before adding your new locked_operation_in_progress flag.  Currently (without your patch), someone could create a clone of this blob while it is being opened for deletion.  So I think you can have one patch that moves this code and explains why it is being moved.  Then this patch here only adds the locked_operation_in_progress flag.",
+      "revId": "becfc58bd9e1958d5565ee6965aab86b7332fbe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a39b0d5a_4800a85c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 6546,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T15:54:29Z",
+      "side": 1,
+      "message": "I think you should delete the blob at the end here just to show that it can be deleted.",
+      "revId": "becfc58bd9e1958d5565ee6965aab86b7332fbe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
