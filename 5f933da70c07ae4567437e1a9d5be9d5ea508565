@@ -111,6 +111,120 @@
     },
     {
       "key": {
+        "uuid": "b3a75ee2_b2320dae",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:26:49Z",
+      "side": 1,
+      "message": "unnecessary empty line, we only need one here.",
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a1f29f2_071f2784",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:26:49Z",
+      "side": 1,
+      "message": "Move the two definition out side the if",
+      "range": {
+        "startLine": 180,
+        "startChar": 2,
+        "endLine": 181,
+        "endChar": 31
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46132f55_6d3716ef",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:26:49Z",
+      "side": 1,
+      "message": "unnecessary empty line",
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "626dba68_67b208f0",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:26:49Z",
+      "side": 1,
+      "message": "suggest an empty line after this statement.",
+      "range": {
+        "startLine": 304,
+        "startChar": 0,
+        "endLine": 304,
+        "endChar": 2
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b70d590_1fbe4b8b",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1177,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:26:49Z",
+      "side": 1,
+      "message": "Remove one empty line.",
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd0556ce_9123dd7c",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1372,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:26:49Z",
+      "side": 1,
+      "message": "Remove one empty line.",
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8dabe112_cdc4c338",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 4
@@ -127,6 +241,29 @@
         "startChar": 10,
         "endLine": 851,
         "endChar": 47
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68a91f93_5a2f88e0",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:26:49Z",
+      "side": 1,
+      "message": "Can we move this definition out of this structure?",
+      "range": {
+        "startLine": 190,
+        "startChar": 0,
+        "endLine": 190,
+        "endChar": 31
       },
       "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
