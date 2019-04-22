@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41b6f38c_e7a0c402",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1136,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T21:50:05Z",
+      "side": 1,
+      "message": "Will this value should be sent from the initiator side?\n\n\nFrom the code in nvme_rdma.c, we use.\n\nparam.private_data \u003d \u0026request_data;\n\tparam.private_data_len \u003d sizeof(request_data);\n\tparam.retry_count \u003d 7;\n\tparam.rnr_retry_count \u003d 7;\n\nIf there is issue related with kernel initiator, it means that the kernel initiator should use the correct parameter.\n\nEven if you want to initiate this value, it should be set according to the value from the initiator instead of setting it to static value (7) directly.",
+      "range": {
+        "startLine": 1136,
+        "startChar": 1,
+        "endLine": 1136,
+        "endChar": 62
+      },
+      "revId": "3389868c27f667b1dd5aeed3bf426329c431a07c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
