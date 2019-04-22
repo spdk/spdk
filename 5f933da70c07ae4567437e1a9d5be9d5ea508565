@@ -22,6 +22,184 @@
       "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "901cbb4c_9bd37caa",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:14:20Z",
+      "side": 1,
+      "message": "In our parser code, it seems that we do not need the number to count the Transport (although we compare the prefix), it will be always be [Transport]",
+      "range": {
+        "startLine": 105,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 12
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8f1e516_ea81f53b",
+        "filename": "include/spdk/nvmf_fc_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:14:20Z",
+      "side": 1,
+      "message": "Add an mepty line before this #endif line",
+      "range": {
+        "startLine": 412,
+        "startChar": 1,
+        "endLine": 412,
+        "endChar": 6
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca776b3d_4c0ac28d",
+        "filename": "lib/nvmf/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:14:20Z",
+      "side": 1,
+      "message": "unnecessary empty line",
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b02e815b_890a7d69",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:14:20Z",
+      "side": 1,
+      "message": "For this code modification, I expect that a separate patch can be submitted, since it is not related with any specific transport",
+      "range": {
+        "startLine": 568,
+        "startChar": 0,
+        "endLine": 582,
+        "endChar": 2
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dabe112_cdc4c338",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 851,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:14:20Z",
+      "side": 1,
+      "message": "The code here change the function definition of spdk_nvmf_transport_poll_group_create, since it is also not related with any specific transport. Though, I also prefer a separate patch for this function parameter change.",
+      "range": {
+        "startLine": 851,
+        "startChar": 10,
+        "endLine": 851,
+        "endChar": 47
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f38994f_312ccb5f",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:14:20Z",
+      "side": 1,
+      "message": "Do we need this change here or it is caused by the code refactoring?",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 30
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb94de6e_543eb845",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:14:20Z",
+      "side": 1,
+      "message": "Can we move the definition of type_str after the definition of i.",
+      "range": {
+        "startLine": 104,
+        "startChar": 2,
+        "endLine": 104,
+        "endChar": 22
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0668bc0_4bbdcaff",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-22T22:14:20Z",
+      "side": 1,
+      "message": "As mentioned, for this functional change, a separate patch is recommended.",
+      "range": {
+        "startLine": 178,
+        "startChar": 39,
+        "endLine": 178,
+        "endChar": 79
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
