@@ -503,7 +503,10 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		comp_op->private_xform = comp_bdev->device_qp->device->decomp_xform;
 	}
 
-	rte_compressdev_enqueue_burst(cdev_id, 0, &comp_op, 1);
+	if (rte_compressdev_enqueue_burst(cdev_id, 0, &comp_op, 1) != 1) {
+		rc = -EINVAL;
+	}
+
 	return rc;
 
 	/* Error cleanup paths. */
