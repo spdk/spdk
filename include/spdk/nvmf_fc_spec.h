@@ -1,7 +1,7 @@
 /*
  *   BSD LICENSE
  *
- *   Copyright (c) 2018 Broadcom.  All Rights Reserved.
+ *   Copyright (c) 2018-2019 Broadcom.  All Rights Reserved.
  *   The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -399,5 +399,15 @@ struct spdk_nvmf_fc_ls_rjt {
 	struct spdk_nvmf_fc_lsdesc_rjt rjt;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fc_ls_rjt) == 40, "size_mismatch");
+
+/*
+ * FC World Wide Name
+ */
+struct spdk_nvmf_fc_wwn {
+	union {
+		uint64_t wwn; /* World Wide Names consist of eight bytes */
+		uint8_t octets[sizeof(uint64_t)];
+	} u;
+};
 
 #endif
