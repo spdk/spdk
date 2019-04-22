@@ -17,6 +17,7 @@ direct=1
 bs=%(blocksize)d
 iodepth=%(iodepth)d
 norandommap=%(norandommap)d
+numjobs=%(numjobs)s
 %(verify)s
 verify_dump=1
 
@@ -44,9 +45,9 @@ def interrupt_handler(signum, frame):
 def main():
 
     global fio
-    if (len(sys.argv) < 6):
+    if (len(sys.argv) < 7):
         print("usage:")
-        print("  " + sys.argv[0] + " <nvmf/iscsi> <io_size> <queue_depth> <test_type> <runtime>")
+        print("  " + sys.argv[0] + " <nvmf/iscsi> <io_size> <queue_depth> <test_type> <runtime> <num_jobs>")
         print("advanced usage:")
         print("If you want to run fio with verify, please add verify string after runtime.")
         print("Currently fio.py only support write rw randwrite randrw with verify enabled.")
@@ -57,8 +58,10 @@ def main():
     queue_depth = int(sys.argv[3])
     test_type = sys.argv[4]
     runtime = sys.argv[5]
+    num_jobs = sys.argv[6]
+
     verify = False
-    if len(sys.argv) > 6:
+    if len(sys.argv) > 7:
         verify = True
 
     if app == "nvmf":
@@ -81,7 +84,7 @@ def main():
     signal.signal(signal.SIGTERM, interrupt_handler)
     signal.signal(signal.SIGINT, interrupt_handler)
     fio = Popen([fio_executable, '-'], stdin=PIPE)
-    fio.communicate(create_fio_config(io_size, queue_depth, device_paths, test_type, runtime, verify).encode())
+    fio.communicate(create_fio_config(io_size, queue_depth, device_paths, test_type, runtime, num_jobs, verify).encode())
     fio.stdin.close()
     rc = fio.wait()
     print("FIO completed with code %d\n" % rc)
@@ -99,7 +102,7 @@ def get_nvmf_target_devices():
     return re.findall("(nvme[0-9]+n[0-9]+)\n", output)
 
 
-def create_fio_config(size, q_depth, devices, test, run_time, verify):
+def create_fio_config(size, q_depth, devices, test, run_time, num_jobs, verify):
     norandommap = 0
     if not verify:
         verifyfio = ""
@@ -108,7 +111,8 @@ def create_fio_config(size, q_depth, devices, test, run_time, verify):
         verifyfio = verify_template
     fiofile = fio_template % {"blocksize": size, "iodepth": q_depth,
                               "testtype": test, "runtime": run_time,
-                              "norandommap": norandommap, "verify": verifyfio}
+                              "norandommap": norandommap, "verify": verifyfio,
+                              "numjobs": num_jobs}
     for (i, dev) in enumerate(devices):
         fiofile += fio_job_template % {"jobnumber": i, "device": dev}
     return fiofile
