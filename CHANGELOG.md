@@ -58,6 +58,10 @@ The size of a shared receive queue is defined by transport configuration file pa
 `MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
 Default size is 4096.
 
+DIF passthrough feature has been added. DIF settings of the allocated bdevs is
+exposed to the NVMe-oF initiator and data and DIF from the NVMe-oF initiator is
+transfered to the allocated bdevs without modification.
+
 ### env
 
 The `phys_addr` parameter in spdk_malloc() and spdk_zmalloc() has been deprecated.
