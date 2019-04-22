@@ -833,6 +833,8 @@ void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
+int	nvme_qpair_submit_request_raw(struct spdk_nvme_qpair *qpair,
+				      struct nvme_request *req);
 
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);
@@ -993,6 +995,7 @@ struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	int nvme_ ## name ## _qpair_reset(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_fail(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req); \
+	int nvme_ ## name ## _qpair_submit_request_raw(struct spdk_nvme_qpair *qpair, struct nvme_request *req); \
 	int32_t nvme_ ## name ## _qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions);
 
 DECLARE_TRANSPORT(transport) /* generic transport dispatch functions */

@@ -487,6 +487,35 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 	spdk_dma_free(qpair->req_buf);
 }
 
+/*
+ *	This function allows a caller to submit a request that has
+ *	been completely defined, right down to physical addresses.
+ *	A restriction on this call is that there can be NO child I/O requests.
+ */
+
+int
+nvme_qpair_submit_request_raw(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+
+	if (ctrlr->is_failed) {
+		nvme_free_request(req);
+		return -ENXIO;
+	}
+
+	/* assign submit_tick before submitting req to specific transport */
+	if (spdk_unlikely(ctrlr->timeout_enabled)) {
+		if (req->submit_tick == 0) { /* req submitted for the first time */
+			req->submit_tick = spdk_get_ticks();
+			req->timed_out = false;
+		}
+	} else {
+		req->submit_tick = 0;
+	}
+
+	return nvme_transport_qpair_submit_request(qpair, req);
+}
+
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {

@@ -33,6 +33,36 @@
 
 #include "nvme_internal.h"
 
+/*
+ * This function allows a caller to submit an I/O request that is
+ * COMPLETELY pre-defined, right down to the "physical" memory buffers.
+ * It is intended for testing hardware, specifying exact buffer location,
+ * alignment, and offset.  It also allows for specific choice of PRP
+ * and SGLs.
+ */
+
+int
+spdk_nvme_ctrlr_cmd_raw(struct spdk_nvme_ctrlr *ctrlr,
+			struct spdk_nvme_qpair *qpair,
+			struct spdk_nvme_cmd *cmd,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request	*req;
+	struct nvme_payload payload;
+
+	memset((uint8_t *) &payload, 0, sizeof(struct nvme_payload));
+	req = nvme_allocate_request(qpair, &payload, 0, cb_fn, cb_arg);
+
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	memcpy(&req->cmd, cmd, sizeof(req->cmd));
+
+	return nvme_qpair_submit_request_raw(qpair, req);
+}
+
+
 int
 spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 			   struct spdk_nvme_qpair *qpair,

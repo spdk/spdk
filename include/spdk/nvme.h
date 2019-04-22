@@ -988,6 +988,40 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
 int spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair);
 
 /**
+ * Send the given NVM I/O command, I/O buffers, lists and all to the NVMe controller.
+ *
+ * This is a low level interface for submitting I/O commands directly.
+ *
+ * This function allows a caller to submit an I/O request that is
+ * COMPLETELY pre-defined, right down to the "physical" memory buffers.
+ * It is intended for testing hardware, specifying exact buffer location,
+ * alignment, and offset.  It also allows for specific choice of PRP
+ * and SGLs.
+ *
+ * The driver sets the CID.  EVERYTHING else is assumed set by the caller.
+ * Needless to say, this is potentially extremely dangerous for both the host
+ * (accidental/malicionus storage usage/corruption), and the device.
+ * Thus its intent is for very specific hardware testing and environment
+ * reproduction.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param qpair I/O qpair to submit command.
+ * \param cmd NVM I/O command to submit.
+ * \param cb_fn Callback function invoked when the I/O command completes.
+ * \param cb_arg Argument passed to callback function.
+ *
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_nvme_ctrlr_cmd_raw(struct spdk_nvme_ctrlr *ctrlr,
+			    struct spdk_nvme_qpair *qpair,
+			    struct spdk_nvme_cmd *cmd,
+			    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * Send the given NVM I/O command to the NVMe controller.
  *
  * This is a low level interface for submitting I/O commands directly. Prefer

@@ -1983,6 +1983,54 @@ nvme_pcie_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 	return pqpair->flags.is_enabled;
 }
 
+/*
+ *	This function allows callers to submit a command
+ *	from a caller who has filled in ALL of the I/O "physical"
+ *	addresses.  The use case is for hardware validation tests that
+ *	require that memory be at specific location ranges and/or
+ *	specific alignments and offsets.
+ *	Needless to say, this should be used with extreme caution.
+ */
+
+int
+nvme_pcie_qpair_submit_request_raw(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	struct nvme_tracker	*tr;
+	int			rc = 0;
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+
+	nvme_pcie_qpair_check_enabled(qpair);
+
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
+		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	}
+
+	tr = TAILQ_FIRST(&pqpair->free_tr);
+
+	if (tr == NULL || !pqpair->flags.is_enabled) {
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		goto exit;
+	}
+
+	TAILQ_REMOVE(&pqpair->free_tr, tr, tq_list);
+	TAILQ_INSERT_TAIL(&pqpair->outstanding_tr, tr, tq_list);
+	tr->req = req;
+	tr->cb_fn = req->cb_fn;
+	tr->cb_arg = req->cb_arg;
+	req->cmd.cid = tr->cid;
+
+	nvme_pcie_qpair_submit_tracker(qpair, tr);
+
+exit:
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	}
+
+	return rc;
+}
+
+
 int
 nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
