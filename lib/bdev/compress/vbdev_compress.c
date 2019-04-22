@@ -119,9 +119,22 @@ struct vbdev_compress {
 };
 static TAILQ_HEAD(, vbdev_compress) g_vbdev_comp = TAILQ_HEAD_INITIALIZER(g_vbdev_comp);
 
+/* For queueing up compression operations that we can't submit for some reason */
+struct vbdev_comp_op {
+	struct spdk_reduce_backing_dev *backing_dev;
+	struct iovec *src_iovs;
+	int src_iovcnt;
+	struct iovec *dst_iovs;
+	int dst_iovcnt;
+	bool compress;
+	void *cb_arg;
+	TAILQ_ENTRY(vbdev_comp_op)	link;
+};
+
 /* The comp vbdev channel struct. It is allocated and freed on my behalf by the io channel code.
  */
 struct comp_io_channel {
+	TAILQ_HEAD(, vbdev_comp_op)	queued_comp_ops;
 	struct spdk_io_channel_iter	*iter;	/* used with for_each_channel in reset */
 };
 
@@ -351,45 +364,6 @@ error_create_mbuf:
 	return rc;
 }
 
-/* Poller for the DPDK compression driver. */
-static int
-comp_dev_poller(void *args)
-{
-	struct vbdev_compress *comp_bdev = args;
-	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
-	struct rte_comp_op *deq_ops;
-	uint16_t num_deq;
-	struct spdk_reduce_vol_cb_args *reduce_args;
-
-	num_deq = rte_compressdev_dequeue_burst(cdev_id, 0, &deq_ops, 1);
-
-	if (num_deq > 0) {
-		reduce_args = (struct spdk_reduce_vol_cb_args *)deq_ops->m_src->userdata;
-
-		if (deq_ops->status != RTE_COMP_OP_STATUS_SUCCESS) {
-			SPDK_ERRLOG("deque status %u\n", deq_ops->status);
-
-			/* TODO update produced with translated -errno */
-			/*
-			 * RTE_COMP_OP_STATUS_SUCCESS = 0,
-			 * RTE_COMP_OP_STATUS_NOT_PROCESSED,
-			 * RTE_COMP_OP_STATUS_INVALID_ARGS,
-			 * RTE_COMP_OP_STATUS_ERROR,
-			 * RTE_COMP_OP_STATUS_INVALID_STATE,
-			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_TERMINATED,
-			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_RECOVERABLE,
-			 */
-		}
-		reduce_args->cb_fn(reduce_args->cb_arg, deq_ops->produced);
-
-		/* Now bulk free both mbufs and the compress operation. */
-		spdk_mempool_put(g_mbuf_mp, deq_ops->m_src);
-		spdk_mempool_put(g_mbuf_mp, deq_ops->m_dst);
-		rte_comp_op_free(deq_ops);
-	}
-	return 0;
-}
-
 /* Completion callback for r/w that were issued via reducelib. */
 static void
 spdk_reduce_rw_blocks_cb(void *arg, int reduce_errno)
@@ -425,26 +399,25 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	int rc = 0;
 	struct rte_mbuf_ext_shared_info shinfo_src;
 	struct rte_mbuf_ext_shared_info shinfo_dst;
+	struct vbdev_comp_op *op_to_queue;
 
 	assert(src_iovcnt < MAX_MBUFS_PER_OP);
 	comp_op = rte_comp_op_alloc(g_comp_op_mp);
 	if (!comp_op) {
 		SPDK_ERRLOG("trying to get a comp op!\n");
-		return -ENOMEM;
+		goto error_get_op;
 	}
 
 	/* get an mbuf per iov, src and dst */
 	rc = spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], src_iovcnt);
 	if (rc) {
 		SPDK_ERRLOG("trying to get src_mbufs!\n");
-		rc = -ENOMEM;
 		goto error_get_src;
 
 	}
 	rc = spdk_mempool_get_bulk(g_mbuf_mp, (void **)&dst_mbufs[0], dst_iovcnt);
 	if (rc) {
 		SPDK_ERRLOG("trying to get dst_mbufs!\n");
-		rc = -ENOMEM;
 		goto error_get_dst;
 	}
 
@@ -501,15 +474,96 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		comp_op->private_xform = comp_bdev->device_qp->device->decomp_xform;
 	}
 
-	rte_compressdev_enqueue_burst(cdev_id, 0, &comp_op, 1);
-	return rc;
+	rc = rte_compressdev_enqueue_burst(cdev_id, 0, &comp_op, 1);
+	assert(rc <= 1);
 
-	/* Error cleanup paths. */
+	/* We always expect 1 got queued, if 0 then we need to queue it up. */
+	if (rc == 1) {
+		return 0;
+	}
+
+	/* Need to queue the comp op for later. Free everything we allocated
+	 * here, it will get allocated again on resubmission.
+	 */
+	spdk_mempool_put_bulk(g_mbuf_mp, (void **)&dst_mbufs[0], dst_iovcnt);
 error_get_dst:
 	spdk_mempool_put_bulk(g_mbuf_mp, (void **)&src_mbufs[0], src_iovcnt);
 error_get_src:
 	rte_comp_op_free(comp_op);
-	return rc;
+error_get_op:
+	op_to_queue = calloc(1, sizeof(struct vbdev_comp_op));
+	if (op_to_queue == NULL) {
+		SPDK_ERRLOG("unable to alocate operation for queueing.\n");
+		return -ENOMEM;
+	}
+	op_to_queue->backing_dev = backing_dev;
+	op_to_queue->src_iovs = src_iovs;
+	op_to_queue->src_iovcnt = src_iovcnt;
+	op_to_queue->dst_iovs = dst_iovs;
+	op_to_queue->dst_iovcnt = dst_iovcnt;
+	op_to_queue->compress = compress;
+	op_to_queue->cb_arg = cb_arg;
+	TAILQ_INSERT_TAIL(&comp_bdev->comp_ch->queued_comp_ops,
+			  op_to_queue,
+			  link);
+	return 0;
+}
+
+/* Poller for the DPDK compression driver. */
+static int
+comp_dev_poller(void *args)
+{
+	struct vbdev_compress *comp_bdev = args;
+	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
+	struct rte_comp_op *deq_ops;
+	uint16_t num_deq;
+	struct spdk_reduce_vol_cb_args *reduce_args;
+	struct vbdev_comp_op *op_to_resubmit;
+	int rc;
+
+	num_deq = rte_compressdev_dequeue_burst(cdev_id, 0, &deq_ops, 1);
+
+	if (num_deq > 0) {
+		reduce_args = (struct spdk_reduce_vol_cb_args *)deq_ops->m_src->userdata;
+
+		if (deq_ops->status != RTE_COMP_OP_STATUS_SUCCESS) {
+			SPDK_ERRLOG("deque status %u\n", deq_ops->status);
+
+			/* TODO update produced with translated -errno */
+			/*
+			 * RTE_COMP_OP_STATUS_SUCCESS = 0,
+			 * RTE_COMP_OP_STATUS_NOT_PROCESSED,
+			 * RTE_COMP_OP_STATUS_INVALID_ARGS,
+			 * RTE_COMP_OP_STATUS_ERROR,
+			 * RTE_COMP_OP_STATUS_INVALID_STATE,
+			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_TERMINATED,
+			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_RECOVERABLE,
+			 */
+		}
+		reduce_args->cb_fn(reduce_args->cb_arg, deq_ops->produced);
+
+		/* Now bulk free both mbufs and the compress operation. */
+		spdk_mempool_put(g_mbuf_mp, deq_ops->m_src);
+		spdk_mempool_put(g_mbuf_mp, deq_ops->m_dst);
+		rte_comp_op_free(deq_ops);
+
+		while (!TAILQ_EMPTY(&comp_bdev->comp_ch->queued_comp_ops)) {
+			op_to_resubmit = TAILQ_FIRST(&comp_bdev->comp_ch->queued_comp_ops);
+			rc = _compress_operation(op_to_resubmit->backing_dev,
+						 op_to_resubmit->src_iovs,
+						 op_to_resubmit->src_iovcnt,
+						 op_to_resubmit->dst_iovs,
+						 op_to_resubmit->dst_iovcnt,
+						 op_to_resubmit->compress,
+						 op_to_resubmit->cb_arg);
+			if (rc > 0) {
+				TAILQ_REMOVE(&comp_bdev->comp_ch->queued_comp_ops, op_to_resubmit, link);
+				free(op_to_resubmit);
+			}
+
+		}
+	}
+	return 0;
 }
 
 /* Entry point for reduce lib to issue a compress operation. */
@@ -1030,10 +1084,14 @@ static int
 comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 {
 	struct vbdev_compress *comp_bdev = io_device;
+	struct comp_io_channel *comp_ch = ctx_buf;
 	struct comp_device_qp *device_qp;
 
 	/* We use this queue to track outstanding IO in our lyaer. */
 	TAILQ_INIT(&comp_bdev->pending_comp_ios);
+
+	/* We use this to queue up compression operations as needed. */
+	TAILQ_INIT(&comp_ch->queued_comp_ops);
 
 	/* Now set the reduce channel if it's not already set. */
 	pthread_mutex_lock(&comp_bdev->reduce_lock);
