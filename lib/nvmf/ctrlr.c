@@ -461,7 +461,8 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_tgt *tgt = qpair->transport->tgt;
+	struct spdk_nvmf_transport *transport = qpair->transport;
+	struct spdk_nvmf_tgt *tgt = transport->tgt;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_subsystem *subsystem;
 	const char *subnqn, *hostnqn;
@@ -555,7 +556,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 
 	/*
 	 * SQSIZE is a 0-based value, so it must be at least 1 (minimum queue depth is 2) and
-	 *  strictly less than max_queue_depth.
+	 * strictly less than max_queue_depth.
 	 */
 	if (cmd->sqsize == 0 || cmd->sqsize >= qpair->transport->opts.max_queue_depth) {
 		SPDK_ERRLOG("Invalid SQSIZE %u (min 1, max %u)\n",
@@ -563,6 +564,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, sqsize);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+
 	qpair->sq_head_max = cmd->sqsize;
 	qpair->qid = cmd->qid;
 
