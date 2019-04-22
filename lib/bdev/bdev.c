@@ -58,6 +58,8 @@
 int __itt_init_ittlib(const char *, __itt_group_id);
 #endif
 
+#define CHANNEL_DESTROY_MAX_DELAY_VALUE		100
+
 #define SPDK_BDEV_IO_POOL_SIZE			(64 * 1024)
 #define SPDK_BDEV_IO_CACHE_SIZE			256
 #define BUF_SMALL_POOL_SIZE			8192
@@ -254,6 +256,8 @@ struct spdk_bdev_channel {
 	bdev_io_tailq_t		queued_resets;
 
 	uint32_t		flags;
+
+	uint32_t		delay_counter;
 
 	struct spdk_histogram_data *histogram;
 
@@ -1873,15 +1877,22 @@ spdk_bdev_channel_poll_qos(void *arg)
 }
 
 static void
-_spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
+__spdk_bdev_channel_destroy_resource(void *arg)
 {
+	struct spdk_bdev_channel *ch = arg;
 	struct spdk_bdev_shared_resource *shared_resource;
 
-	spdk_put_io_channel(ch->channel);
+	assert(ch->delay_counter < CHANNEL_DESTROY_MAX_DELAY_VALUE);
+
+	if (ch->io_outstanding != 0) {
+		ch->delay_counter++;
+		/* defer destroying resource */
+		spdk_thread_send_msg(spdk_get_thread(), __spdk_bdev_channel_destroy_resource, ch);
+		return;
+	}
 
 	shared_resource = ch->shared_resource;
 
-	assert(ch->io_outstanding == 0);
 	assert(shared_resource->ref > 0);
 	shared_resource->ref--;
 	if (shared_resource->ref == 0) {
@@ -1890,6 +1901,14 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 		spdk_put_io_channel(spdk_io_channel_from_ctx(shared_resource->mgmt_ch));
 		free(shared_resource);
 	}
+}
+
+static void
+_spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
+{
+	spdk_put_io_channel(ch->channel);
+
+	__spdk_bdev_channel_destroy_resource(ch);
 }
 
 /* Caller must hold bdev->internal.mutex. */
