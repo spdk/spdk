@@ -208,5 +208,6 @@ bool spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
 
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
+extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc;
 
 #endif /* SPDK_NVMF_TRANSPORT_H */
