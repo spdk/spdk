@@ -10,6 +10,14 @@ Blobfs file asynchronous operations were added to public APIs.
 
 A new file API `spdk_posix_file_load` was added to load file content into a data buffer.
 
+
+### NVME-oF Target (FC)
+
+New Fibre Channel transport for NVMe over Fabrics target. Requires an FC HBA to use.
+Also, requires a Fibre Channel HBA low level driver (lld).  This driver source code must be
+put in the SPDK top-level 'fc' directory and is built with the SPDK build when the FC option
+is enabled. Use configure with the "--with-fc" option to build with the FC transport.
+
 ### NVMe-oF Target
 
 Persistent reservation emulation has been added to the NVMe-oF target. Persistent reservation

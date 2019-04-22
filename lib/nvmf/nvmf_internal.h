@@ -371,6 +371,7 @@ void spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
+int spdk_nvmf_request_abort(struct spdk_nvmf_request *req);
 
 bool spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx);
 
