@@ -72,6 +72,11 @@ LIB += isalbuild
 DPDK_DEPS += isalbuild
 endif
 
+ifeq ($(CONFIG_FC),y)
+FCDRVRBUILD = fc
+DIRS-y += fc
+endif
+
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
@@ -88,7 +93,8 @@ dpdkbuild: $(DPDK_DEPS)
 endif
 
 shared_lib: lib
-lib: $(DPDKBUILD)
+fc: $(DPDKBUILD)
+lib: $(FCDRVRBUILD) $(DPDKBUILD)
 app: $(LIB)
 test: $(LIB)
 examples: $(LIB)
