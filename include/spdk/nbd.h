@@ -45,7 +45,6 @@ extern "C" {
 struct spdk_bdev;
 struct spdk_nbd_disk;
 struct spdk_json_write_ctx;
-struct spdk_event;
 
 /**
  * Initialize the network block device layer.
