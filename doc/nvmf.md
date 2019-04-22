@@ -125,6 +125,31 @@ Using .ini style configuration files for configuration of the NVMe-oF target is 
 be replaced with JSON based RPCs. .ini style configuration files can be converted to json format by way
 of the new script `scripts/config_converter.py`.
 
+## FC transport support {#nvmf_fc_transport}
+
+To build nvmf_tgt with the FC transport, there is an additional FC LLD (Low Level Driver) code dependency.
+Please contact your FC vendor for instructions to obtain FC driver module.
+
+### Broadcom FC LLD code
+FC LLD driver for Broadcom FC NVMe capable adapters can be obtained from,
+https://github.com/ecdufcdrvr/bcmufctdrvr.
+
+### Fetch FC LLD module and then build SPDK with FC enabled:
+After cloning SPDK repo and initialize submodules, FC LLD library is built which then can be linked with
+the fc transport.
+
+~~~{.sh}
+git clone https://github.com/spdk/spdk spdk
+git clone https://github.com/ecdufcdrvr/bcmufctdrvr fc
+cd spdk
+git submodule update --init
+cd ../fc
+make DPDK_DIR=../spdk/dpdk/build SPDK_DIR=../spdk
+cd ../spdk
+./configure --with-fc=../fc/build
+make
+~~~
+
 ### Using RPCs {#nvmf_config_rpc}
 
 Start the nvmf_tgt application with elevated privileges. Once the target is started,
