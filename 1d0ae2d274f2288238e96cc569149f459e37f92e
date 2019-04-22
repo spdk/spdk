@@ -16,6 +16,24 @@
       "revId": "1d0ae2d274f2288238e96cc569149f459e37f92e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e87d3609_80776416",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-22T03:39:50Z",
+      "side": 1,
+      "message": "Definitely. I change -EBUSY to -EINVAL.",
+      "parentUuid": "1a680a0d_3cfef11b",
+      "revId": "1d0ae2d274f2288238e96cc569149f459e37f92e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
