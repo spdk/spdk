@@ -380,10 +380,10 @@ int main(int argc, char **argv)
 
 	spdk_thread_lib_init(NULL, 0);
 
-	thread = spdk_thread_create("test_thread");
+	thread = spdk_thread_create("test_thread", NULL);
 	spdk_set_thread(thread);
 
-	g_dispatch_thread = spdk_thread_create("dispatch_thread");
+	g_dispatch_thread = spdk_thread_create("dispatch_thread", NULL);
 	pthread_create(&spdk_tid, NULL, spdk_thread, g_dispatch_thread);
 
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);

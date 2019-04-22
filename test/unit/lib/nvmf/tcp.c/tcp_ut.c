@@ -233,7 +233,7 @@ test_nvmf_tcp_create(void)
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_transport_opts opts;
 
-	thread = spdk_thread_create(NULL);
+	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 
@@ -305,7 +305,7 @@ test_nvmf_tcp_destroy(void)
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_transport_opts opts;
 
-	thread = spdk_thread_create(NULL);
+	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 
@@ -335,7 +335,7 @@ test_nvmf_tcp_poll_group_create(void)
 	struct spdk_thread *thread;
 	struct spdk_nvmf_transport_opts opts;
 
-	thread = spdk_thread_create(NULL);
+	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 
