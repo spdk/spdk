@@ -178,6 +178,9 @@ union nvmf_c2h_msg {
 };
 SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 
+/* FC request state count */
+#define MAX_REQ_STATES       16
+
 struct spdk_nvmf_request {
 	struct spdk_nvmf_qpair		*qpair;
 	uint32_t			length;
@@ -347,6 +350,7 @@ void spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
+int spdk_nvmf_request_abort(struct spdk_nvmf_request *req);
 
 void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, struct iovec *iov,
 				      uint32_t iovcnt, uint64_t offset, uint32_t length);

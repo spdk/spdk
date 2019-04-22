@@ -134,6 +134,22 @@
   # Set the number of shared buffers to be cached per poll group
   #BufCacheSize 32
 
+# Define FC transport
+#[Transport]
+  # Set FC transport type.
+  #Type FC
+
+  # Set the maximum number of submission and completion queues per session.
+  # Setting this to '8', for example, allows for 8 submission and 8 completion queues
+  # per session.
+  #MaxQueuesPerSession 5
+
+  # Set the maximum number of outstanding I/O per queue.
+  #MaxQueueDepth 128
+
+  # Set the maximum I/O size. Must be a multiple of 4096.
+  #MaxIOSize 65536
+
 [Nvme]
   # NVMe Device Whitelist
   # Users may specify which NVMe devices to claim by their transport id.
