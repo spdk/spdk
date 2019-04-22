@@ -311,6 +311,34 @@ def set_bdev_nvme_hotplug(client, enable, period_us=None):
     return client.call('set_bdev_nvme_hotplug', params)
 
 
+def set_bdev_nvme_err_injection(client, name, timeout, count,
+                                opc, sct, sc, admin, submit):
+    """Build a error NVMe command, all the NVMe commands match with will return error to user.
+    Args:
+        name: Block device name of the NVMe controller.
+        timeout: Timeout in microseconds for the commands to be returned.
+        count: Number of error commands should be returned for one opcode.
+        opc: Opcode for the error command.
+        sct: Status code types.
+        sc: Generic command status codes.
+        admin: Admin command if true.
+        submit: Submit to the hardware queue.
+    Returns:
+        None.
+    """
+
+    params = {'name': name,
+              'timeout': timeout,
+              'count': count,
+              'opc': opc,
+              'sct': sct,
+              'sc': sc,
+              'admin': admin,
+              'submit': submit}
+
+    return client.call('set_bdev_nvme_err_injection', params)
+
+
 def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                         subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None,
                         prchk_reftag=None, prchk_guard=None):
