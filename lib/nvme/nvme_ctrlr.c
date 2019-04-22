@@ -2837,3 +2837,21 @@ spdk_nvme_ctrlr_get_flags(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return ctrlr->flags;
 }
+
+struct spdk_nvme_qpair *
+spdk_nvme_ctrlr_get_qpair_by_qid(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid)
+{
+	struct spdk_nvme_qpair		*qpair;
+
+	if (qid == 0 && ctrlr->adminq) {
+		return ctrlr->adminq;
+	}
+
+	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
+		if (qpair->id == qid) {
+			return qpair;
+		}
+	}
+
+	return NULL;
+}
