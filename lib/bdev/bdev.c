@@ -1873,15 +1873,44 @@ spdk_bdev_channel_poll_qos(void *arg)
 }
 
 static void
+__spdk_bdev_channel_destroy_resource(void *arg)
+{
+	struct spdk_bdev_channel *ch = arg;
+	struct spdk_bdev_shared_resource *shared_resource;
+
+	if (ch->io_outstanding != 0) {
+		/* defer destroying resource */
+		spdk_thread_send_msg(spdk_get_thread(), __spdk_bdev_channel_destroy_resource, ch);
+		return;
+	}
+
+	shared_resource = ch->shared_resource;
+
+	assert(shared_resource->ref > 0);
+	shared_resource->ref--;
+	if (shared_resource->ref == 0) {
+		assert(shared_resource->io_outstanding == 0);
+		TAILQ_REMOVE(&shared_resource->mgmt_ch->shared_resources, shared_resource, link);
+		spdk_put_io_channel(spdk_io_channel_from_ctx(shared_resource->mgmt_ch));
+		free(shared_resource);
+	}
+}
+
+static void
 _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_shared_resource *shared_resource;
 
 	spdk_put_io_channel(ch->channel);
 
+	if (ch->io_outstanding != 0) {
+		/* defer destroying resource */
+		spdk_thread_send_msg(spdk_get_thread(), __spdk_bdev_channel_destroy_resource, ch);
+		return;
+	}
+
 	shared_resource = ch->shared_resource;
 
-	assert(ch->io_outstanding == 0);
 	assert(shared_resource->ref > 0);
 	shared_resource->ref--;
 	if (shared_resource->ref == 0) {
