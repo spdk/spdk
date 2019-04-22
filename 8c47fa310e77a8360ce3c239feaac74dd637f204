@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "250b5c4d_d31fc9fa",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4372,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T18:49:13Z",
+      "side": 1,
+      "message": "Yeah - I\u0027m fine with how the patch looks right now (version 3).",
+      "parentUuid": "a3271e18_6be0bb70",
+      "revId": "8c47fa310e77a8360ce3c239feaac74dd637f204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fea311ab_39798bfb",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 2
