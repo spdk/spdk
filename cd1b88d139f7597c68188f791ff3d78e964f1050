@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fb3d3c0b_f697c7d9",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T16:59:33Z",
+      "side": 1,
+      "message": "No - these events are not associated with any states.  These events occur during the TRANSFERRING_HOST_TO_CONTROLLER and TRANSFERRING_CONTROLLER_TO_HOST states.",
+      "parentUuid": "547e6a50_fcd30c58",
+      "range": {
+        "startLine": 125,
+        "startChar": 8,
+        "endLine": 125,
+        "endChar": 44
+      },
+      "revId": "cd1b88d139f7597c68188f791ff3d78e964f1050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "105cdbae_9f80cbb1",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-18T20:17:26Z",
       "side": 1,
       "message": "Make tracepoint naming consistent with other tracepoints in the tracepoint group. The name should be something like TCP_REQ_READ_FROM_SOCKET_DONE",
+      "range": {
+        "startLine": 166,
+        "startChar": 34,
+        "endLine": 166,
+        "endChar": 59
+      },
+      "revId": "cd1b88d139f7597c68188f791ff3d78e964f1050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e14357ce_6298facf",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T16:59:33Z",
+      "side": 1,
+      "message": "The REQ is omitted because the TCP request is not associated with this event.  At this point we may not even have a request yet - i.e. it could be reading the NVMe command buffer.",
+      "parentUuid": "105cdbae_9f80cbb1",
       "range": {
         "startLine": 166,
         "startChar": 34,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9f868ca0_655151bc",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1905,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T16:59:33Z",
+      "side": 1,
+      "message": "This is similar to how the iSCSI events work.  I agree this could be improved but would prefer to do that in a later patch.",
+      "parentUuid": "b3b81f4d_a95545e9",
+      "range": {
+        "startLine": 1905,
+        "startChar": 22,
+        "endLine": 1905,
+        "endChar": 53
+      },
+      "revId": "cd1b88d139f7597c68188f791ff3d78e964f1050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ed2dd213_14ec2c82",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2019-04-18T20:17:26Z",
       "side": 1,
       "message": "I think this is a different tracepoint that has a little more than what was logged in the previous trace record.",
+      "range": {
+        "startLine": 1948,
+        "startChar": 23,
+        "endLine": 1948,
+        "endChar": 54
+      },
+      "revId": "cd1b88d139f7597c68188f791ff3d78e964f1050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e636b830_94c92437",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1948,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T16:59:33Z",
+      "side": 1,
+      "message": "Both of these tracepoints record data read off the socket.  We can improve this in later patches.  This just makes the NVMf TCP tracepoints behave similar to the iSCSI ones.",
+      "parentUuid": "ed2dd213_14ec2c82",
       "range": {
         "startLine": 1948,
         "startChar": 23,
