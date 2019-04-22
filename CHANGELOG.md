@@ -22,6 +22,12 @@ and `spdk_dix_remap_ref_tag` have been added to remap DIF reference tag.
 New APIs `spdk_dif_update_crc32c` and `spdk_dif_update_crc32c_stream` have been
 added to compute CRC-32C checksum for extended LBA payload.
 
+### NVME-oF Target (FC)
+
+New Fibre Channel transport for NVMe over Fabrics target. Requires an FC HBA to use.
+Also, requires a Fibre Channel HBA low level driver (lld) library. The driver library
+and API header file path can be provided as an argument to "--with-fc".
+
 ### NVMe-oF Target
 
 Persistent reservation emulation has been added to the NVMe-oF target. Persistent reservation
