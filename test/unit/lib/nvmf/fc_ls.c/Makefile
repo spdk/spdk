@@ -1,8 +1,8 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) 2018 Broadcom.  All Rights Reserved.
+#  The term "Broadcom" refers to Broadcom Limited and/or its subsidiaries.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -31,40 +31,15 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../../)
+include $(SPDK_ROOT_DIR)/mk/config.mk
 
-C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
-	 subsystem.c nvmf.c transport.c tcp.c
+CFLAGS += -I$(SPDK_ROOT_DIR)/test/common/lib -I$(SPDK_ROOT_DIR)/lib/nvmf
 
-C_SRCS-$(CONFIG_RDMA) += rdma.c
-LIBNAME = nvmf
-LOCAL_SYS_LIBS = -luuid
-ifeq ($(CONFIG_RDMA),y)
-LOCAL_SYS_LIBS += -libverbs -lrdmacm
-#Attach only if FreeBSD and RDMA is specified with configure
-ifeq ($(OS),FreeBSD)
-# Mellanox - MLX4 HBA Userspace Library
-ifneq ("$(wildcard /usr/lib/libmlx4.*)","")
-LOCAL_SYS_LIBS += -lmlx4
-endif
-# Mellanox - MLX5 HBA Userspace Library
-ifneq ("$(wildcard /usr/lib/libmlx5.*)","")
-LOCAL_SYS_LIBS += -lmlx5
-endif
-# Chelsio HBA Userspace Library
-ifneq ("$(wildcard /usr/lib/libcxgb4.*)","")
-LOCAL_SYS_LIBS += -lcxgb4
-endif
-endif
-endif
-
-ifeq ($(CONFIG_FC),y)
-C_SRCS += fc.c fc_ls.c
-CFLAGS += -I$(CURDIR)
 ifneq ($(strip $(CONFIG_FC_PATH)),)
 CFLAGS += -I$(CONFIG_FC_PATH)
 endif
-endif
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+TEST_FILE = fc_ls_ut.c
+
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
