@@ -514,12 +514,14 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		 * queue on the compress side is full.
 		 */
 		rc = -ENOMEM;
-		goto error_get_dst;
+		goto error_enqueue;
 	}
 
 	return rc;
 
 	/* Error cleanup paths. */
+error_enqueue:
+	spdk_mempool_put_bulk(g_mbuf_mp, (void **)&dst_mbufs[0], dst_iovcnt);
 error_get_dst:
 	spdk_mempool_put_bulk(g_mbuf_mp, (void **)&src_mbufs[0], src_iovcnt);
 error_get_src:
