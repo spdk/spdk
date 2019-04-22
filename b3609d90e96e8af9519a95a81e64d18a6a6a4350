@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6c16c2b_e3cc470d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1430,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-22T09:42:04Z",
+      "side": 1,
+      "message": "Hi John, Anil,\n\nDo you need this change? This has caused a few scan build failures, and doesn\u0027t look necessary to me because both req-\u003edata and req-\u003eiovcnt are set simultaneously.",
+      "range": {
+        "startLine": 1430,
+        "startChar": 23,
+        "endLine": 1430,
+        "endChar": 38
+      },
+      "revId": "b3609d90e96e8af9519a95a81e64d18a6a6a4350",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
