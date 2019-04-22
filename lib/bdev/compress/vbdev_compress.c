@@ -503,7 +503,20 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		comp_op->private_xform = comp_bdev->device_qp->device->decomp_xform;
 	}
 
-	rte_compressdev_enqueue_burst(cdev_id, 0, &comp_op, 1);
+	rc = rte_compressdev_enqueue_burst(cdev_id, 0, &comp_op, 1);
+	assert(rc <= 1);
+
+	if (rc == 1) {
+		/* We always expect 1 to be the rc as we only submit 1 at a time. */
+		rc = 0;
+	} else if (rc == 0) {
+		/* If nothing was submitted, treat as no memory as this likely means the
+		 * queue on the compress side is full.
+		 */
+		rc = -ENOMEM;
+		goto error_get_dst;
+	}
+
 	return rc;
 
 	/* Error cleanup paths. */
