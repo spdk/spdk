@@ -2032,7 +2032,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	}
 
 	if (req->payload_size == 0) {
-		/* Null payload - leave PRP fields zeroed */
+		/* Null payload - leave PRP fields untouched */
 		rc = 0;
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
 		rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
