@@ -40,6 +40,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/cpuset.h"
 #include "spdk/queue.h"
 
 #ifdef __cplusplus
@@ -196,10 +197,13 @@ void spdk_thread_lib_fini(void);
  * \param name Human-readable name for the thread; can be retrieved with spdk_thread_get_name().
  * The string is copied, so the pointed-to data only needs to be valid during the
  * spdk_thread_create() call. May be NULL to specify no name.
+ * \param cpumask Optional mask of CPU cores on which to schedule this thread. This is only
+ * a suggestion to the scheduler. The value is copied, so cpumask may be released when
+ * this function returns. May be NULL if no mask is required.
  *
  * \return a pointer to the allocated thread on success or NULL on failure..
  */
-struct spdk_thread *spdk_thread_create(const char *name);
+struct spdk_thread *spdk_thread_create(const char *name, struct spdk_cpuset *cpumask);
 
 /**
  * Release any resources related to the given thread and destroy it. Execution

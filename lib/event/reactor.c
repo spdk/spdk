@@ -323,7 +323,7 @@ spdk_reactors_start(void)
 
 			/* For now, for each reactor spawn one thread. */
 			snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-			spdk_thread_create(thread_name);
+			spdk_thread_create(thread_name, NULL);
 		}
 		spdk_cpuset_set_cpu(g_spdk_app_core_mask, i, true);
 	}
