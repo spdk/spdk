@@ -1,0 +1,625 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f93d607_6b272932",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "change to \"e\"",
+      "range": {
+        "startLine": 1,
+        "startChar": 26,
+        "endLine": 1,
+        "endChar": 27
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "473ebbac_f6843502",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Change to \"using command-line options.\"",
+      "range": {
+        "startLine": 4,
+        "startChar": 22,
+        "endLine": 4,
+        "endChar": 69
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "528d38c3_fad81bbd",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "I don\u0027t think we need this.",
+      "range": {
+        "startLine": 22,
+        "startChar": 27,
+        "endLine": 22,
+        "endChar": 48
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5bc56de_1319e1b0",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "I would suggest changing to \"The Linux Kernel driver has ...\"",
+      "range": {
+        "startLine": 22,
+        "startChar": 67,
+        "endLine": 23,
+        "endChar": 2
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca1a4611_7405379a",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "I would suggest changing this to \"The SPDK driver supports 2 fio_plugin modes: bdev and NVMe PMD\"",
+      "range": {
+        "startLine": 24,
+        "startChar": 51,
+        "endLine": 25,
+        "endChar": 40
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97325120_e7b81974",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Change to \" you will need to bind NVMe devics to the Linux uio_pci_generic or vfio-pci driver\"",
+      "range": {
+        "startLine": 25,
+        "startChar": 73,
+        "endLine": 26,
+        "endChar": 51
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57bb739e_d72d6061",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Change to \" When running test with the Kernel driver, NVMe devices use the Kernel driver.\"",
+      "range": {
+        "startLine": 26,
+        "startChar": 53,
+        "endLine": 27,
+        "endChar": 18
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07f278ff_115c0bbb",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Change to \"There are 5 valid values for this option:\"",
+      "range": {
+        "startLine": 27,
+        "startChar": 20,
+        "endLine": 27,
+        "endChar": 73
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b630b8ae_c8fd9f20",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Change to \"are\"",
+      "range": {
+        "startLine": 32,
+        "startChar": 75,
+        "endLine": 32,
+        "endChar": 82
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b3dcc38_f9db7386",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Change to \"Only one\"",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 3
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05decb9c_2f43e936",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Change to \"Specifies the CPU\"",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 7
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10fac298_ce660cf6",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "change to \" for \"",
+      "range": {
+        "startLine": 41,
+        "startChar": 32,
+        "endLine": 41,
+        "endChar": 36
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa9317d0_222eb137",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "change to \"from the other\"",
+      "range": {
+        "startLine": 43,
+        "startChar": 97,
+        "endLine": 43,
+        "endChar": 107
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb0aa2e1_8e9de45f",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "change to \"but\"",
+      "range": {
+        "startLine": 43,
+        "startChar": 18,
+        "endLine": 43,
+        "endChar": 21
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5703ca76_bb3b802f",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "change to \"within the CPU core\"",
+      "range": {
+        "startLine": 43,
+        "startChar": 48,
+        "endLine": 43,
+        "endChar": 66
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58ac4c95_457aa918",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "change to \"there are\"",
+      "range": {
+        "startLine": 43,
+        "startChar": 25,
+        "endLine": 43,
+        "endChar": 31
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21283a99_2b691223",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "change to \"alignment\"",
+      "range": {
+        "startLine": 44,
+        "startChar": 75,
+        "endLine": 44,
+        "endChar": 85
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "713fcde2_dd3c5bee",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Why did you change the name? I think the name plugin closely matches the fio parameter name.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 6
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05744540_001a6686",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "I think some explanation of how you\u0027re doing the core assignment for kernel would help. Include an example of say 4 devices 2 CPU cores on the same NUMA node. I think what this code would generate in this example is something like\n\n[filename0]\nfile\u003d/dev/nvme0n1\ncpu_allowed\u003d0,1\n\n[filename1]\nfile\u003d/dev/nvme1n1\ncpu_allowed\u003d0,1\n\n[filename2]\nfile\u003d/dev/nvme2n1\ncpu_allowed\u003d0,1\n\n[filename3]\nfile\u003d/dev/nvme3n1\ncpu_allowed\u003d0,1",
+      "range": {
+        "startLine": 121,
+        "startChar": 4,
+        "endLine": 121,
+        "endChar": 6
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2d46f89_33c26da1",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Do you need this? The if above should handle anything that is not nvme or bdev so this code will never execute.",
+      "range": {
+        "startLine": 156,
+        "startChar": 5,
+        "endLine": 158,
+        "endChar": 7
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d6ec8db_c90d36a9",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Does this mean that we will precondition all the disk instead of just the ones that are used in the test? I think we need to only precondition the disks that are used in the test.",
+      "range": {
+        "startLine": 184,
+        "startChar": 5,
+        "endLine": 184,
+        "endChar": 44
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ed031f5_c989504b",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Let\u0027s change this to something like\n\"This parameter is used to set the ioengine and other fio parameters that determine how fio jobs issue I/O. SPDK supports two modes (nvme and bdev): to use the SPDK BDEV fio plugin set the value to bdev, set the value to nvme to use the SPDK NVME PMD.\nThere are 3 modes available for Linux Kernel driver: set the value to kernel-libaio to use the Linux asynchronous I/O engine, set the value to kernel-classic-polling to use the pvsynch2 ioengine in classic polling mode (100% load on the polling CPU core), set the value to kernel-hybrid-polling to use the pvsynch2 ioengine in hybrid polling mode where the polling thread sleeps for half the mean device execution time. \"",
+      "range": {
+        "startLine": 22,
+        "startChar": 11,
+        "endLine": 26,
+        "endChar": 99
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa404d55_b453c3d8",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Lets change this to \"Number of fio threads running the workload\"",
+      "range": {
+        "startLine": 30,
+        "startChar": 12,
+        "endLine": 30,
+        "endChar": 37
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5007587_9965237e",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Let\u0027s change this one to \"Kernel Classic Polling ioengine parameters\"",
+      "range": {
+        "startLine": 50,
+        "startChar": 1,
+        "endLine": 50,
+        "endChar": 26
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1162d7ee_28a35b6e",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Let\u0027s change this one to \"KernelHybrid Polling ioengine parameters\"",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 27
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86172f3a_8cd35e46",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "Is that correct for kernel modes? Or should this be done for SPDK only?",
+      "range": {
+        "startLine": 86,
+        "startChar": 2,
+        "endLine": 86,
+        "endChar": 25
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b883ffd1_a18f977f",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-22T17:53:55Z",
+      "side": 1,
+      "message": "QD\u003diodepth X K. Is that correct for kernel modes??",
+      "range": {
+        "startLine": 97,
+        "startChar": 44,
+        "endLine": 97,
+        "endChar": 47
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
