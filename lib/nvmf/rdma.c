@@ -1133,6 +1133,12 @@ spdk_nvmf_rdma_event_accept(struct rdma_cm_id *id, struct spdk_nvmf_rdma_qpair *
 		ctrlr_event_data.initiator_depth = rqpair->max_read_depth;
 	}
 
+	/* Configure infinite retries for the initiator side qpair */
+	/* This prevents us from failing with RNR_RETRY_EXCEEDED errors when the target is overwhelmed. */
+	if (rqpair->srq != NULL) {
+		ctrlr_event_data.rnr_retry_count = 0x7;
+	}
+
 	rc = rdma_accept(id, &ctrlr_event_data);
 	if (rc) {
 		SPDK_ERRLOG("Error %d on rdma_accept\n", errno);
