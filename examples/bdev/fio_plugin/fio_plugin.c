@@ -104,7 +104,7 @@ spdk_fio_init_thread(struct thread_data *td)
 	fio_thread->td = td;
 	td->io_ops_data = fio_thread;
 
-	fio_thread->thread = spdk_thread_create("fio_thread");
+	fio_thread->thread = spdk_thread_create("fio_thread", NULL);
 	if (!fio_thread->thread) {
 		free(fio_thread);
 		SPDK_ERRLOG("failed to allocate thread\n");

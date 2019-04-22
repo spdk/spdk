@@ -113,6 +113,8 @@ struct spdk_thread {
 	TAILQ_ENTRY(spdk_thread)	tailq;
 	char				*name;
 
+	struct spdk_cpuset		*cpumask;
+
 	uint64_t			tsc_last;
 	struct spdk_thread_stats	stats;
 
@@ -200,7 +202,7 @@ spdk_thread_lib_fini(void)
 }
 
 struct spdk_thread *
-spdk_thread_create(const char *name)
+spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 {
 	struct spdk_thread *thread;
 	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
@@ -210,6 +212,19 @@ spdk_thread_create(const char *name)
 	if (!thread) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
 		return NULL;
+	}
+
+	thread->cpumask = spdk_cpuset_alloc();
+	if (!thread->cpumask) {
+		free(thread);
+		SPDK_ERRLOG("Unable to allocate memory for CPU mask\n");
+		return NULL;
+	}
+
+	if (cpumask) {
+		spdk_cpuset_copy(thread->cpumask, cpumask);
+	} else {
+		spdk_cpuset_negate(thread->cpumask);
 	}
 
 	TAILQ_INIT(&thread->io_channels);
@@ -303,6 +318,8 @@ spdk_thread_exit(struct spdk_thread *thread)
 		TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
 		free(poller);
 	}
+
+	spdk_cpuset_free(thread->cpumask);
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	assert(g_thread_count > 0);
