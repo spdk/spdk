@@ -66,6 +66,10 @@ function usage()
 	echo "                           No path required."
 	echo " rdma                      Build RDMA transport for NVMf target and initiator."
 	echo "                           No path required."
+	echo " fc                        Build FC transport for NVMf target."
+	echo "                           If an argument is provided, it is considered a directory containing"
+	echo "                           libufc.a and fc_lld.h. Otherwise the regular system paths will"
+	echo "                           be searched."
 	echo " shared                    Build spdk shared libraries."
 	echo "                           No path required."
 	echo " iscsi-initiator           Build with iscsi bdev module."
@@ -210,6 +214,18 @@ for i in "$@"; do
 			;;
 		--without-rdma)
 			CONFIG[RDMA]=n
+			;;
+		--with-fc=*)
+			CONFIG[FC]=y
+			CONFIG[FC_PATH]=$(readlink -f ${i#*=})
+			;;
+		--with-fc)
+			CONFIG[FC]=y
+			CONFIG[FC_PATH]=
+			;;
+		--without-fc)
+			CONFIG[FC]=n
+			CONFIG[FC_PATH]=
 			;;
 		--with-shared)
 			CONFIG[SHARED]=y
@@ -479,6 +495,15 @@ be unable to leverage that operation using the currently installed version
 of libibverbs, so Linux kernel NVMe-oF initiators based on kernels greater
 than or equal to 4.14 will see significantly reduced performance.
 *******************************************************************************"
+	fi
+fi
+
+if [[ "${CONFIG[FC]}" = "y" ]]; then
+	if [[ -n "${CONFIG[FC_PATH]}" ]]; then
+		if [ ! -d "${CONFIG[FC_PATH]}" ]; then
+			echo "${CONFIG[FC_PATH]}: directory not found"
+			exit 1
+		fi
 	fi
 fi
 
