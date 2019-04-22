@@ -152,7 +152,15 @@ $valgrind $testdir/lib/util/string.c/string_ut
 $valgrind $testdir/lib/util/dif.c/dif_ut
 
 if [ $(uname -s) = Linux ]; then
-$valgrind $testdir/lib/vhost/vhost.c/vhost_ut
+	$valgrind $testdir/lib/vhost/vhost.c/vhost_ut
+fi
+
+if [ -e $testdir/lib/nvmf/fc.c/fc_ut ]; then
+	$valgrind $testdir/lib/nvmf/fc.c/fc_ut
+fi
+
+if [ -e $testdir/lib/nvmf/fc_ls.c/fc_ls_ut ]; then
+	$valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
 fi
 
 if grep -q '#define SPDK_CONFIG_FTL 1' $rootdir/include/spdk/config.h; then
