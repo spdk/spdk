@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e24e2a42_ba6f4810",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3936,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T16:06:02Z",
+      "side": 0,
+      "message": "Let\u0027s change this to something like:\n\nif (desc-\u003ethread !\u003d spdk_get_thread()) {\n  SPDK_ERRLOG(...);\n}\n\nThen it\u0027s still visible until we fix vhost like we discussed.",
+      "revId": "88a73d274ce02152e1507c1017203c53fd31701a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
