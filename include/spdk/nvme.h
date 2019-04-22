@@ -2289,6 +2289,16 @@ int spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
 		uint8_t opc);
+/**
+ * \brief Get the qpair of the specified NVMe controller by queue id.
+ *
+ * \param ctrlr NVMe controller.
+ * \param qid Queue pair ID.
+ *
+ * \return queue pair for the specified queue id on success and NULL otherwise.
+ */
+struct spdk_nvme_qpair *
+spdk_nvme_ctrlr_get_qpair_by_qid(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid);
 
 #ifdef SPDK_CONFIG_RDMA
 struct ibv_context;
