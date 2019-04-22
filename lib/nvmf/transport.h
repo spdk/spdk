@@ -175,7 +175,7 @@ void spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport
 		struct spdk_nvmf_discovery_log_page_entry *entry);
 
 struct spdk_nvmf_transport_poll_group *spdk_nvmf_transport_poll_group_create(
-	struct spdk_nvmf_transport *transport);
+	struct spdk_nvmf_transport *transport, struct spdk_nvmf_poll_group *poll_group);
 
 void spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
@@ -208,5 +208,7 @@ bool spdk_nvmf_transport_opts_init(enum spdk_nvme_transport_type type,
 
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
+
+extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc;
 
 #endif /* SPDK_NVMF_TRANSPORT_H */
