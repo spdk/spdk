@@ -98,6 +98,11 @@ is specified, use that specified nbd device. If it's not specified, pick availab
 Add Opal scan support for NVMe to check whether it supports SED Opal and dump
 device info. nvme_manage tool can be used to invoke this.
 
+### iSCSI target
+
+DIF strip and insert is now supported. DIF settings are not exposed to the iSCSI initiator.
+DIF is attached into data for write I/O and stripped from data for read I/O.
+
 ## v19.01:
 
 ### ocf bdev
