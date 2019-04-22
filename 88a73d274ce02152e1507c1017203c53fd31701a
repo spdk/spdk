@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "150f4cd8_bc97ed9b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T16:10:57Z",
+      "side": 1,
+      "message": "Do we need this in the CHANGELOG?\n\nI know this is a change in behavior, but I feel like it\u0027s more a bug fix than an API change.",
+      "revId": "88a73d274ce02152e1507c1017203c53fd31701a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9115fb7_e35de74d",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T16:10:57Z",
+      "side": 1,
+      "message": "it only notifies those descriptors that specified a hot remove cb",
+      "revId": "88a73d274ce02152e1507c1017203c53fd31701a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a50733e_63957cbd",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T16:10:57Z",
+      "side": 1,
+      "message": "descriptors",
+      "revId": "88a73d274ce02152e1507c1017203c53fd31701a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff504312_095964a4",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-22T16:10:57Z",
+      "side": 1,
+      "message": "good unit test",
+      "revId": "88a73d274ce02152e1507c1017203c53fd31701a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
