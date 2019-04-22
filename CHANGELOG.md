@@ -64,6 +64,10 @@ Default size is 4096.
 Add model number as parameter to construct_nvmf_subsystem (-d option),
 rather than using hardcoded define.
 
+DIF passthrough feature has been added. DIF setting of the allocated bdevs is
+exposed to the NVMe-oF initiator and data with DIF from the NVMe-oF initiator is
+passed through to the allocated bdevs.
+
 ### env
 
 The `phys_addr` parameter in spdk_malloc() and spdk_zmalloc() has been deprecated.
