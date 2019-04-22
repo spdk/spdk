@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fca1c38f_3635edbd",
+        "filename": "test/app/fuzz/Makefile",
+        "patchSetId": 18
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Yeah, I guess that could get unwieldy. I added another directory level to allow for multiple fuzzers with each one in its own directory.",
+      "parentUuid": "d6480073_603fc51a",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e9875cdd_b715ebef",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2019-04-02T23:59:50Z",
       "side": 1,
       "message": "I\u0027d suggest adding an extra CFLAG to the Makefile for the lib/nvme directory, rather than putting relative path names in the source code\n\nsee app/iscsi_tgt and app/iscsi_top - they add -I$(SPDK_ROOT_DIR)/lib to CFLAGS (or CXXFLAGS) and then just include the equivalent of nvme/nvme_internal.h here",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26093768_cf48c53e",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Ah, thanks! that\u0027s a lot cleaner.",
+      "parentUuid": "e9875cdd_b715ebef",
       "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "721c46b1_d14ef088",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9ae3959c_d0b37345",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ffbf0f00_734a8d78",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 18
@@ -67,6 +121,24 @@
       "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e953354_744038d1",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ffbf0f00_734a8d78",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "122ab49d_129b261c",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eee8f468_efe41d9d",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d9e90e36_7e43f63f",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 18
@@ -101,6 +191,24 @@
       "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6fe51bc_05f37fbd",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d9e90e36_7e43f63f",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "41aa968f_60f2ad9d",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fdc7ce94_845068bf",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "664dc861_47d029e0",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 18
@@ -135,6 +261,24 @@
       "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9d16146_ae45d534",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "664dc861_47d029e0",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "4952b96d_52e5402f",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aa9d5d10_895438d8",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88e2789f_c995c545",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 18
@@ -169,6 +331,24 @@
       "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9acae784_289e2fef",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "88e2789f_c995c545",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "00539cfd_6bec74f6",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de69339c_8a759389",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8c9e818_b00a7f8c",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 18
@@ -203,6 +401,24 @@
       "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2aed3ce_297d6c55",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8c9e818_b00a7f8c",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -223,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "d00fdd69_278204ab",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99bba9cd_6592e0e5",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3bb967b0_6f2e3a99",
         "filename": "test/nvmf/fuzz/fuzz.sh",
         "patchSetId": 18
@@ -234,6 +468,24 @@
       "writtenOn": "2019-04-02T23:59:50Z",
       "side": 1,
       "message": "if the fuzz tester fails, will this get reported back up as a test failure with the \"|| true\"?\n\nI guess I\u0027m thinking we want this to just fail like any other test, if it returns an error.  This isn\u0027t probably something we\u0027ll run in per-patch testing - it\u0027s more a nightly test kind of thing that we run for a longer period of time.  At least that\u0027s my current thinking.",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ceb0ffd8_eacc8a12",
+        "filename": "test/nvmf/fuzz/fuzz.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:27:27Z",
+      "side": 1,
+      "message": "Yeah, I should remove the | true part. I think I put it in there to clean up the files after failure, but I should just put that in the trap.",
+      "parentUuid": "3bb967b0_6f2e3a99",
       "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
