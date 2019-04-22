@@ -154,13 +154,15 @@ DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
 DEFINE_STUB_V(rte_mempool_free, (struct rte_mempool *mp));
 DEFINE_STUB(rte_compressdev_dequeue_burst, uint16_t,
 	    (uint8_t dev_id, uint16_t qp_id, struct rte_comp_op **ops, uint16_t nb_ops), 0);
-DEFINE_STUB(rte_compressdev_enqueue_burst, uint16_t,
-	    (uint8_t dev_id, uint16_t qp_id, struct rte_comp_op **ops, uint16_t nb_ops), 0);
 DEFINE_STUB_V(rte_comp_op_free, (struct rte_comp_op *op));
 DEFINE_STUB(rte_comp_op_alloc, struct rte_comp_op *, (struct rte_mempool *mempool), NULL);
 
 struct spdk_bdev_io *g_bdev_io;
 struct spdk_io_channel *g_io_ch;
+struct rte_comp_op g_comp_op;
+struct vbdev_compress g_comp_bdev;
+struct comp_device_qp g_device_qp;
+struct compress_dev g_device;
 
 void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
@@ -233,11 +235,40 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	g_completion_called = true;
 }
 
+struct rte_comp_op ut_expected_op;
+uint16_t
+rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op **ops,
+			      uint16_t nb_ops)
+{
+
+	/* by design the compress module will never send more than 1 op at a time */
+	CU_ASSERT(ops->private_xform == ut_expected_op.private_xform);
+
+	/* by design we don't look at the
+	return 0;
+}
 
 /* Global setup for all tests that share a bunch of preparation... */
 static int
 test_setup(void)
 {
+
+	/* Allocate a real mbuf pool so we can test error paths */
+	g_mbuf_mp = spdk_mempool_create("mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
+					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					SPDK_ENV_SOCKET_ID_ANY);
+	assert(g_mbuf_mp != NULL);
+
+	g_comp_bdev.backing_dev.unmap = _comp_reduce_unmap;
+	g_comp_bdev.backing_dev.readv = _comp_reduce_readv;
+	g_comp_bdev.backing_dev.writev = _comp_reduce_writev;
+	g_comp_bdev.backing_dev.compress = _comp_reduce_compress;
+	g_comp_bdev.backing_dev.decompress = _comp_reduce_decompress;
+	g_comp_bdev.backing_dev.blocklen = 512;
+	g_comp_bdev.backing_dev.blockcnt = 1024*16;
+
+	g_comp_bdev.device_qp = &g_device_qp;
+	g_comp_bdev.device_qp->device = &g_device;
 
 	return 0;
 }
@@ -249,6 +280,50 @@ test_cleanup(void)
 
 	return 0;
 }
+
+static void
+test_compress_operation(void)
+{
+	struct iovec src_iovs[16];
+	int src_iovcnt;
+	struct iovec dst_iovs[16];
+	int dst_iovcnt;
+	struct spdk_reduce_vol_cb_args cb_arg;
+	void * src_test_buf;
+	void * dst_test_buf;
+	int rc;
+
+	src_test_buf = calloc(1, 64);
+	SPDK_CU_ASSERT_FATAL(src_test_buf != NULL);
+
+	dst_test_buf = calloc(1, 64);
+	SPDK_CU_ASSERT_FATAL(dst_test_buf != NULL);
+
+	src_iovcnt = dst_iovcnt = 1;
+	src_iovs[0].iov_base = src_test_buf;
+	src_iovs[0].iov_len = 1024 * 4;
+	src_iovs[0].iov_base = dst_test_buf;
+	src_iovs[0].iov_len = 1024 * 4;
+
+	/* test rte_comp_op_alloc failure */
+	MOCK_SET(rte_comp_op_alloc, NULL);
+	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], src_iovcnt,
+				 &dst_iovs[0], dst_iovcnt, true, &cb_arg);
+	CU_ASSERT(rc == -ENOMEM);
+	MOCK_SET(rte_comp_op_alloc, &g_comp_op);
+
+	/* test mempool get failure */
+	MOCK_SET(spdk_mempool_get, NULL);
+	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], src_iovcnt,
+				 &dst_iovs[0], dst_iovcnt, true, &cb_arg);
+	CU_ASSERT(rc == -ENOMEM);
+	MOCK_CLEAR(spdk_mempool_get);
+
+
+	free(dst_test_buf);
+	free(src_test_buf);
+}
+
 
 static void
 test_error_paths(void)
@@ -316,6 +391,8 @@ main(int argc, char **argv)
 
 	if (CU_add_test(suite, "test_error_paths",
 			test_error_paths) == NULL ||
+	    CU_add_test(suite, "test_compress_operation",
+			test_compress_operation) == NULL ||
 	    CU_add_test(suite, "test_simple_write",
 			test_simple_write) == NULL ||
 	    CU_add_test(suite, "test_simple_read",
