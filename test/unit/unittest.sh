@@ -164,6 +164,14 @@ $valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
 $valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
 fi
 
+if [ -e $testdir/lib/nvmf/fc.c/fc_ut ]; then
+	$valgrind $testdir/lib/nvmf/fc.c/fc_ut
+fi
+
+if [ -e $testdir/lib/nvmf/fc_ls.c/fc_ls_ut ]; then
+	$valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
+fi
+
 # local unit test coverage
 if [ "$cov_avail" = "yes" ]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
