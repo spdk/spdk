@@ -88,7 +88,7 @@ dpdkbuild: $(DPDK_DEPS)
 endif
 
 shared_lib: lib
-lib: $(DPDKBUILD)
+lib: $(FCDRVRBUILD) $(DPDKBUILD)
 app: $(LIB)
 test: $(LIB)
 examples: $(LIB)
