@@ -49,6 +49,10 @@ block except for metadata.
 spdk_vbdev_register() has been deprecated.  spdk_bdev_register() should be used
 instead.
 
+New APIs spdk_bdev_get_md_size(), spdk_bdev_is_md_interleaved(), spdk_bdev_get_dif_type(),
+spdk_bdev_is_dif_head_of_md(), and spdk_bdev_is_dif_check_enabled() have been
+added to get metadata and DIF settings.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
