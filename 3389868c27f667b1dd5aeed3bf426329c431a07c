@@ -22,6 +22,30 @@
       "revId": "3389868c27f667b1dd5aeed3bf426329c431a07c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c3d64dc_06038ca3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1136,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-22T22:42:55Z",
+      "side": 1,
+      "message": "Yeah, this gets a little confusing. Ben and I thought along the same lines as you at first as well. But it turns out that the rnr_retry_count value set in the rdma_conn_param structure and passed to rdma_connect (initiator side) and rdma_accept (target side) is not a statement to the nic local to that operation, but rather a directive to the nic on the other side of the connection. To put it more simply,\n\nin nvme_rdma.c, when we set rnr_retry to 7 and send an rdma_connect request, we are telling the target to try to submit SEND operations as many times as it takes until there is a posted RECV in the initiator\u0027s receive queue.\nin rdma.c, when we set rnr_retry to 7 and set an rdma_accept response, we are telling the initiator to try to submit SEND operations as many times as it takes until there is a posted RECV in the target\u0027s shared receive queue.\n\nThe man pages for rdma_connect and rdma_accept give a little more insight here.\n\nThe second case is what we need to properly support SRQ, but we were only setting the first case.\n\nUnlike other connection parameters (e.g. initiator_depth) the rnr_retry values sent by the initiator and the target are not a negotiation for a single shared value (or two dependent values), instead they represent two distinct values governing opposite ends of the connection. So they don\u0027t need to be the same value.\n\nIn terms of rnr_retry, 7 is a special value indicating an infinite number of retries. So picking 7 is not arbitrary. It is necessary for supporting SRQ.",
+      "parentUuid": "41b6f38c_e7a0c402",
+      "range": {
+        "startLine": 1136,
+        "startChar": 1,
+        "endLine": 1136,
+        "endChar": 62
+      },
+      "revId": "3389868c27f667b1dd5aeed3bf426329c431a07c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
