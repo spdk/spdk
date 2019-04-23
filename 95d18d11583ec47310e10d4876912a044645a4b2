@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2f8a0e6_b1269196",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5154,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T18:26:07Z",
+      "side": 1,
+      "message": "what happens if system crashes in the middle of these sync_md operations?",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fecffc45_8fcec2aa",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5287,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T18:26:07Z",
+      "side": 1,
+      "message": "it\u0027s cleaner to do:\n\nif (snapshot_entry \u003d\u003d NULL) {\n  return 0;\n}\n\nthen the rest of the code does not need to be indented",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "422bfa4a_ea027b48",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T18:26:07Z",
+      "side": 1,
+      "message": "can this function reuse _spdk_blob_get_snapshot_and_clone_entries at all?\n\nalso, doesn\u0027t snapshot_entry already keep the clone_count?",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44d6e781_ba98fe27",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5315,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T18:26:07Z",
+      "side": 1,
+      "message": "a lot of the code here is from the old _spdk_bs_delete_open_cpl function - if you keep the same function name, this code may not show up as a complete diff - it may only show the specific lines that have been changed\n\nif not - please do something to put this code into a common function, as a separate patch, so that this patch doesn\u0027t incur the huge difference",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43f11b6a_30cec681",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5385,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T18:26:07Z",
+      "side": 1,
+      "message": "do we need to change this function name in this patch?",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
