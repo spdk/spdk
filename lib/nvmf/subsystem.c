@@ -1583,7 +1583,14 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 	rrega = cmd->cdw10 & 0x7u;
 	iekey = (cmd->cdw10 >> 3) & 0x1u;
 	cptpl = (cmd->cdw10 >> 30) & 0x3u;
-	memcpy(&key, req->data, sizeof(key));
+
+	if (req->data && req->length >= sizeof(key)) {
+		memcpy(&key, req->data, sizeof(key));
+	} else {
+		SPDK_ERRLOG("No key provided. Failing request.\n");
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "REGISTER: RREGA %u, IEKEY %u, CPTPL %u, "
 		      "NRKEY 0x%"PRIx64", NRKEY 0x%"PRIx64"\n",
@@ -1697,7 +1704,14 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	racqa = cmd->cdw10 & 0x7u;
 	iekey = (cmd->cdw10 >> 3) & 0x1u;
 	rtype = (cmd->cdw10 >> 8) & 0xffu;
-	memcpy(&key, req->data, sizeof(key));
+
+	if (req->data && req->length >= sizeof(key)) {
+		memcpy(&key, req->data, sizeof(key));
+	} else {
+		SPDK_ERRLOG("No key provided. Failing request.\n");
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ACQUIRE: RACQA %u, IEKEY %u, RTYPE %u, "
 		      "NRKEY 0x%"PRIx64", PRKEY 0x%"PRIx64"\n",
@@ -1847,7 +1861,14 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	rrela = cmd->cdw10 & 0x7u;
 	iekey = (cmd->cdw10 >> 3) & 0x1u;
 	rtype = (cmd->cdw10 >> 8) & 0xffu;
-	memcpy(&crkey, req->data, sizeof(crkey));
+
+	if (req->data && req->length >= sizeof(crkey)) {
+		memcpy(&crkey, req->data, sizeof(crkey));
+	} else {
+		SPDK_ERRLOG("No key provided. Failing request.\n");
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "RELEASE: RRELA %u, IEKEY %u, RTYPE %u, "
 		      "CRKEY 0x%"PRIx64"\n",  rrela, iekey, rtype, crkey);
@@ -1938,6 +1959,13 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 	uint32_t len, count = 0;
 	uint32_t regctl = 0;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
+
+	if (req->data == NULL) {
+		SPDK_ERRLOG("No data transfer specified for request. "
+			    " Unable to transfer back response.\n");
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
 
 	/* NVMeoF uses Extended Data Structure */
 	if ((cmd->cdw11 & 0x00000001u) == 0) {
