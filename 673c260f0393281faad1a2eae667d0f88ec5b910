@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e2d4fbd_33b143e0",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2190,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-23T23:57:35Z",
+      "side": 1,
+      "message": "I dunno how relevant this is but since we\u0027re trying to squeak every little bit of perf out of this stuff, does it make sense to have the perf path condition in the true clause for both this outer conditional as well as the one below for a device fw workaround which I assume isn\u0027t the common case.",
+      "revId": "673c260f0393281faad1a2eae667d0f88ec5b910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
