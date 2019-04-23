@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ae1f403_6211dafb",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-23T16:58:58Z",
+      "side": 1,
+      "message": "If this is not 1, there\u0027s two scenarios that need to be handled. If it returns 0, then the queue is full. We need to handle that scenario by going to the error clean up path below and returning ENOMEM. If it returns greater than 1, that seems like it should just be an assert - it should never happen.",
+      "revId": "9730dc04202784a694ef3fa8b78a5477e4e14ac8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
