@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1bd24d85_ba684a49",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-23T19:35:23Z",
+      "side": 1,
+      "message": "delete this line",
+      "revId": "a1bc91db5b5c286a4e339df11f7776ef9170cf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
