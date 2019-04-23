@@ -43,49 +43,64 @@
 #include "iscsi/conn.h"
 #include "iscsi/portal_grp.h"
 
-#define ACCEPT_TIMEOUT_US 1000 /* 1ms */
-
-static int
-iscsi_portal_accept(void *arg)
+static void
+iscsi_portal_accept(void *arg, struct spdk_sock_group *group,
+		    struct spdk_sock *sock)
 {
 	struct spdk_iscsi_portal	*portal = arg;
-	struct spdk_sock		*sock;
+	struct spdk_sock		*accept_sock;
 	int				rc;
-	int				count = 0;
 
 	if (portal->sock == NULL) {
-		return -1;
+		return;
 	}
 
 	while (1) {
-		sock = spdk_sock_accept(portal->sock);
-		if (sock != NULL) {
-			rc = spdk_iscsi_conn_construct(portal, sock);
+		accept_sock = spdk_sock_accept(portal->sock);
+		if (accept_sock != NULL) {
+			rc = spdk_iscsi_conn_construct(portal, accept_sock);
 			if (rc < 0) {
-				spdk_sock_close(&sock);
+				spdk_sock_close(&accept_sock);
 				SPDK_ERRLOG("spdk_iscsi_connection_construct() failed\n");
-				break;
+				return;
 			}
-			count++;
 		} else {
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
 				SPDK_ERRLOG("accept error(%d): %s\n", errno, spdk_strerror(errno));
 			}
-			break;
+			return;
 		}
 	}
-
-	return count;
 }
 
 void
 spdk_iscsi_acceptor_start(struct spdk_iscsi_portal *p)
 {
-	p->acceptor_poller = spdk_poller_register(iscsi_portal_accept, p, ACCEPT_TIMEOUT_US);
+	struct spdk_iscsi_poll_group *poll_group;
+	int rc;
+
+	p->lcore = spdk_env_get_current_core();
+	poll_group = &g_spdk_iscsi.poll_group[p->lcore];
+
+	rc = spdk_sock_group_add_sock(poll_group->sock_group, p->sock,
+				      iscsi_portal_accept, p);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to add sock=%p of portal=%p\n", p->sock, p);
+	}
 }
 
 void
 spdk_iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
 {
-	spdk_poller_unregister(&p->acceptor_poller);
+	struct spdk_iscsi_poll_group *poll_group;
+	int rc;
+
+	assert(p->lcore == spdk_env_get_current_core());
+
+	poll_group = &g_spdk_iscsi.poll_group[p->lcore];
+
+	rc = spdk_sock_group_remove_sock(poll_group->sock_group, p->sock);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to remove sock=%p of portal=%p\n", p->sock, p);
+	}
 }
