@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "626d2903_3402fa0f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 5128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T22:59:15Z",
+      "side": 1,
+      "message": "Where does the snapshot actually get deleted?",
+      "revId": "ac08c10c49db0e81a805de84408d3606738b6d2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
