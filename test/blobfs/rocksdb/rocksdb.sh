@@ -30,7 +30,8 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 
-DB_BENCH_DIR=/usr/src/rocksdb
+# In the autotest job, we copy the rocksdb source to just outside the spdk directory.
+DB_BENCH_DIR="$rootdir/../rocksdb"
 DB_BENCH=$DB_BENCH_DIR/db_bench
 ROCKSDB_CONF=$testdir/rocksdb.conf
 
@@ -52,7 +53,7 @@ timing_exit db_bench_build
 
 $rootdir/scripts/gen_nvme.sh > $ROCKSDB_CONF
 
-trap 'run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
+trap 'cat insert_db_bench.txt; ls -l; run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
 timing_enter mkfs
 $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
