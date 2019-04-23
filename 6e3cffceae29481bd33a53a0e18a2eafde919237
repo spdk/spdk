@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "316b52ec_80f7a892",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-23T23:50:00Z",
+      "side": 1,
+      "message": "I think this should be either \"After a namespace is destroyed, all the fields associated.. \" or\n\"After a namespace is destroyed, all the fileds associated \" - if there is such a thing as a fileds, I dunno :)\n\nAlso does the entire comment belong here? It doesn\u0027t jump out to me as to how this is relevant here.",
+      "revId": "6e3cffceae29481bd33a53a0e18a2eafde919237",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
