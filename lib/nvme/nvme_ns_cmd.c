@@ -44,11 +44,15 @@ static bool
 spdk_nvme_ns_check_request_length(uint32_t lba_count, uint32_t sectors_per_max_io,
 				  uint32_t sectors_per_stripe, uint32_t qdepth)
 {
-	uint32_t child_per_io;
+	uint32_t child_per_io = UINT32_MAX;
 
+	/* After a namespace is destroyed(e.g. hotplug), all the fields associated with the
+	 * namespace will be cleared to zero, the function will return TRUE for this case,
+	 * and -EINVAL will be returned to caller.
+	 */
 	if (sectors_per_stripe > 0) {
 		child_per_io = (lba_count + sectors_per_stripe - 1) / sectors_per_stripe;
-	} else {
+	} else if (sectors_per_max_io > 0) {
 		child_per_io = (lba_count + sectors_per_max_io - 1) / sectors_per_max_io;
 	}
 
