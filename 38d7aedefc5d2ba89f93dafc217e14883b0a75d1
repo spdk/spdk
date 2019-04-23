@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e2c86dc_f8213f85",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T17:58:58Z",
+      "side": 1,
+      "message": "I don\u0027t think is quite right.  If sectors_per_max_io \u003d\u003d 0, then this function will return false (since 0 is not \u003e\u003d qdepth).  All of the callers of this function look at the return value, and if this function returns false, the calling function will return -ENOMEM instead of -EINVAL.\n\nI think if the namespace has been removed, we want the calling function to return -EINVAL rather than -ENOMEM.\n\nActually, it\u0027s probably better if the calling function returns -ENODEV in this case, but that requires more changes.\n\nAlso, please add a comment to this function describing why you\u0027ve added this check - otherwise future readers will be confused.",
+      "revId": "38d7aedefc5d2ba89f93dafc217e14883b0a75d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
