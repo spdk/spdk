@@ -98,6 +98,8 @@ function raid_function_test() {
 		fi
 
 		killprocess $raid_pid
+	else
+		echo "skipping bdev raid tests."
 	fi
 
 	return 0
