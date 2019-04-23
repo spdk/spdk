@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "9f513b0b_089c9f35",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5054,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-23T18:31:18Z",
+      "side": 1,
+      "message": "This is actually fixed in next patch.",
+      "parentUuid": "fb863870_98d0e723",
+      "revId": "f2c525cd70bae83fa09459e5e5fbba242dadfdb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42eb8351_8739d2d5",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 8
