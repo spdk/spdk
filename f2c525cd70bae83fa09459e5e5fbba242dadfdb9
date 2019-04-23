@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f329863_3d4ae1bf",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4519,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T17:32:29Z",
+      "side": 1,
+      "message": "I don\u0027t understand how the cleanup works here.  In this case, the blob is locked.  So we call _spdk_bs_clone_snapshot_origblob_cleanup(), which will call _spdk_bs_snapshot_unfreeze_cpl(), and _spdk_bs_snapshot_unfreeze_cpl() will clear the locked flag.\n\nLooks like we need some more unit tests to cover a lot of these corner cases.",
+      "revId": "f2c525cd70bae83fa09459e5e5fbba242dadfdb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fff9556f_757026ab",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5054,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T17:32:29Z",
+      "side": 1,
+      "message": "We don\u0027t close the blob in this error case.  That\u0027s not related to your patch but needs to be fixed at some point.",
+      "revId": "f2c525cd70bae83fa09459e5e5fbba242dadfdb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42eb8351_8739d2d5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 5076,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T17:32:29Z",
+      "side": 1,
+      "message": "_spdk_bs_blob_list_remove only returns 0.  So this whole check can be removed, and _spdk_bs_blob_list_remove should return void.  Can you do that in a separate cleanup patch?",
+      "revId": "f2c525cd70bae83fa09459e5e5fbba242dadfdb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
