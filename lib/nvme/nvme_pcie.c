@@ -1088,7 +1088,12 @@ static inline void
 nvme_pcie_copy_command(struct spdk_nvme_cmd *dst, const struct spdk_nvme_cmd *src)
 {
 	/* dst and src are known to be non-overlapping and 64-byte aligned. */
-#if defined(__AVX__)
+#if defined(__AVX512F__)
+	__m512i *d512 = (__m512i *)dst;
+	const __m512i *s512 = (const __m512i *)src;
+
+	_mm512_stream_si512(&d512, _mm512_load_si512(&s512));
+#elif defined(__AVX__)
 	__m256i *d256 = (__m256i *)dst;
 	const __m256i *s256 = (const __m256i *)src;
 
