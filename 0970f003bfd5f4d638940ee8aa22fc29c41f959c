@@ -237,6 +237,24 @@
     },
     {
       "key": {
+        "uuid": "7509863c_4b21935f",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1016066
+      },
+      "writtenOn": "2019-04-23T23:34:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "785cdfd2_30a16f43",
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc32e9d6_4f55125d",
         "filename": "lib/vmd/vmdpci.c",
         "patchSetId": 1
@@ -251,6 +269,24 @@
       "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "576964ed_d9d5d9b3",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1016066
+      },
+      "writtenOn": "2019-04-23T23:34:41Z",
+      "side": 1,
+      "message": "Preparing a new review with all the suggested changes.\nIn this case, if we use interrupt in hot plug, the type 1 (root ports and switches under vmd) pci devices need to have MSI initialized to vmd msix vector 0.",
+      "parentUuid": "bc32e9d6_4f55125d",
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
