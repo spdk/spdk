@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "354732f9_430ad33e",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-23T22:37:25Z",
+      "side": 1,
+      "message": "\"to\"",
+      "range": {
+        "startLine": 228,
+        "startChar": 48,
+        "endLine": 228,
+        "endChar": 50
+      },
+      "revId": "6f74dccd3d4cc547a974204a9b16230b20b76359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eca4676a_01f82bc3",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-23T22:37:25Z",
+      "side": 1,
+      "message": "Change to \"W\"",
+      "range": {
+        "startLine": 8,
+        "startChar": 82,
+        "endLine": 8,
+        "endChar": 85
+      },
+      "revId": "6f74dccd3d4cc547a974204a9b16230b20b76359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e916026b_fc4d2417",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-23T22:37:25Z",
+      "side": 1,
+      "message": "Change to \"on the same NUMA node\"",
+      "range": {
+        "startLine": 9,
+        "startChar": 112,
+        "endLine": 10,
+        "endChar": 6
+      },
+      "revId": "6f74dccd3d4cc547a974204a9b16230b20b76359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d71b43d6_3775dc39",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-23T22:37:25Z",
+      "side": 1,
+      "message": "add \"other\"",
+      "range": {
+        "startLine": 10,
+        "startChar": 101,
+        "endLine": 10,
+        "endChar": 102
+      },
+      "revId": "6f74dccd3d4cc547a974204a9b16230b20b76359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5dfe7319_e37cb00f",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-23T22:37:25Z",
+      "side": 1,
+      "message": "change to \"in the same NUMA node as the CPU Core\"",
+      "range": {
+        "startLine": 10,
+        "startChar": 46,
+        "endLine": 10,
+        "endChar": 69
+      },
+      "revId": "6f74dccd3d4cc547a974204a9b16230b20b76359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bce5fde_82b38e9f",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-23T22:37:25Z",
+      "side": 1,
+      "message": "Checking the count, CPU cores 1 -4 and 28 have 2 devices each so a total of 10 devices but they are only 8 devices on NUMA node 0\n28 \u0026 29 have 4 devices\n30 - 33 have 4 devices.\nTotal devices are 18 but there are only 16 devices.",
+      "range": {
+        "startLine": 14,
+        "startChar": 114,
+        "endLine": 15,
+        "endChar": 11
+      },
+      "revId": "6f74dccd3d4cc547a974204a9b16230b20b76359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f91c0e66_997904f7",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-23T22:37:25Z",
+      "side": 1,
+      "message": "I think this is per devices, since for SPDK jobs your multiplying the iodepth by the number of devices per job.",
+      "range": {
+        "startLine": 16,
+        "startChar": 49,
+        "endLine": 16,
+        "endChar": 60
+      },
+      "revId": "6f74dccd3d4cc547a974204a9b16230b20b76359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bcac9aa_b261f0fa",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 38
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-23T22:37:25Z",
+      "side": 1,
+      "message": "Change to \"Repeat\"",
+      "range": {
+        "startLine": 21,
+        "startChar": 16,
+        "endLine": 21,
+        "endChar": 19
+      },
+      "revId": "6f74dccd3d4cc547a974204a9b16230b20b76359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
