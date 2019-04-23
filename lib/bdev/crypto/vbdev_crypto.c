@@ -1345,6 +1345,7 @@ vbdev_crypto_finish(void)
 	struct vbdev_dev *device;
 	struct device_qp *dev_qp;
 	unsigned i;
+	int rc;
 
 	while ((name = TAILQ_FIRST(&g_bdev_names))) {
 		TAILQ_REMOVE(&g_bdev_names, name, link);
@@ -1367,6 +1368,13 @@ vbdev_crypto_finish(void)
 		if (rte_dev->dev_ops->queue_pair_release != NULL) {
 			for (i = 0; i < device->cdev_info.max_nb_queue_pairs; i++) {
 				rte_dev->dev_ops->queue_pair_release(rte_dev, i);
+			}
+		}
+
+		if (strcmp(device->cdev_info.driver_name, AESNI_MB) == 0) {
+			rc = rte_vdev_uninit(AESNI_MB);
+			if (rc) {
+				SPDK_ERRLOG("%d from rte_vdev_uninit\n", rc);
 			}
 		}
 
