@@ -16,6 +16,57 @@
       "revId": "a1bc91db5b5c286a4e339df11f7776ef9170cf16",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbef0b36_e0cdd9cb",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T21:22:25Z",
+      "side": 1,
+      "message": "0 for first parameter?  should this be 1 instead?",
+      "revId": "a1bc91db5b5c286a4e339df11f7776ef9170cf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2fe0546_e68ca6dc",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1130,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T21:22:25Z",
+      "side": 1,
+      "message": "should have an empty line after variable declarations are completed\n\nit\u0027s also more common to do the calloc just before !opal_key check - rather than inlining it with the variable declaration",
+      "revId": "a1bc91db5b5c286a4e339df11f7776ef9170cf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5e271df_d323930b",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1221,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T21:22:25Z",
+      "side": 1,
+      "message": "you can remove this line, and just return ret instead of return 0 at the end of the function",
+      "revId": "a1bc91db5b5c286a4e339df11f7776ef9170cf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
