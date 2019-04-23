@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f277f4aa_00b75ffb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5154,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-23T22:20:24Z",
+      "side": 1,
+      "message": "We will end up with clone that is correctly configured, snapshot that is usable and uses same cluster map as clone (but only reads, so it should be safe). Examine functionality should handle such case. Snapshot no longer sees clone as its own.\n\nIn such case we can try to remove snapshot again and it should work. I didn\u0027t find any risky scenario here.",
+      "parentUuid": "e2f8a0e6_b1269196",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fecffc45_8fcec2aa",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 22
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "29841d98_aed3f0e4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5287,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-23T22:20:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "fecffc45_8fcec2aa",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "422bfa4a_ea027b48",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 22
@@ -47,6 +83,24 @@
       "writtenOn": "2019-04-23T18:26:07Z",
       "side": 1,
       "message": "can this function reuse _spdk_blob_get_snapshot_and_clone_entries at all?\n\nalso, doesn\u0027t snapshot_entry already keep the clone_count?",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b95fd40_d27358db",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5289,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-23T22:20:24Z",
+      "side": 1,
+      "message": "_spdk_blob_get_snapshot_and_clone_entries returns parent snapshot of provided blob, but in this case we want to know if our blob is at the same time a snapshot.\n\nYeah, I can use clone_count from snapshot_entry.",
+      "parentUuid": "422bfa4a_ea027b48",
       "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "d49ad644_233eb070",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5315,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-23T22:20:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "44d6e781_ba98fe27",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43f11b6a_30cec681",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 22
@@ -81,6 +153,24 @@
       "writtenOn": "2019-04-23T18:26:07Z",
       "side": 1,
       "message": "do we need to change this function name in this patch?",
+      "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf231155_1d615ece",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 5385,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-23T22:20:24Z",
+      "side": 1,
+      "message": "No :) i\u0027ll revert the name.",
+      "parentUuid": "43f11b6a_30cec681",
       "revId": "95d18d11583ec47310e10d4876912a044645a4b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
