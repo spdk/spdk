@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a6507c1_445f4165",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-23T17:03:23Z",
+      "side": 1,
+      "message": "Not blocking for this patch, but are we to the point now where the user essentially must provide a remove_cb? Should we stop accepting NULL?",
+      "revId": "bc6f0466ebed853209bb77d80c2d1429515ecaa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
