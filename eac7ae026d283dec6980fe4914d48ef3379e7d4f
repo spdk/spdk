@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95b2e714_365f81f4",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1307,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T17:45:43Z",
+      "side": 1,
+      "message": "just return directly - it avoids the need for the \"out\" label",
+      "revId": "eac7ae026d283dec6980fe4914d48ef3379e7d4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf840931_33e0edd0",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1315,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T17:45:43Z",
+      "side": 1,
+      "message": "don\u0027t need a return at the end of a void function",
+      "revId": "eac7ae026d283dec6980fe4914d48ef3379e7d4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
