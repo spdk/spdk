@@ -16,6 +16,24 @@
       "revId": "72a32e8118c77baef22b0014c8c594fa727b68c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96475e96_b782a031",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1112,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-23T21:47:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9d2af40_d70114d8",
+      "revId": "72a32e8118c77baef22b0014c8c594fa727b68c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
