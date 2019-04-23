@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "91aac32f_6cf84352",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-23T09:13:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "03786fef_f38d3966",
+      "revId": "88a73d274ce02152e1507c1017203c53fd31701a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9115fb7_e35de74d",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 3
@@ -48,6 +66,24 @@
       "writtenOn": "2019-04-22T16:10:57Z",
       "side": 1,
       "message": "it only notifies those descriptors that specified a hot remove cb",
+      "revId": "88a73d274ce02152e1507c1017203c53fd31701a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e87cca4_3a21a45f",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-23T09:13:11Z",
+      "side": 1,
+      "message": "Ok, I clarified that in spdk_bdev_open().",
+      "parentUuid": "c9115fb7_e35de74d",
       "revId": "88a73d274ce02152e1507c1017203c53fd31701a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
