@@ -276,7 +276,7 @@ eventq_enqueue(struct spdk_vhost_scsi_session *svsession, unsigned scsi_dev_num,
 	assert(scsi_dev_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
 	vq = &vsession->virtqueue[VIRTIO_SCSI_EVENTQ];
 
-	if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
+	if (vq->vring.desc == NULL || spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
 		SPDK_ERRLOG("Controller %s: Failed to send virtio event (no avail ring entries?).\n",
 			    vdev->name);
 		return;
