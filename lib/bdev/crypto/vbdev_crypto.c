@@ -1345,6 +1345,7 @@ vbdev_crypto_finish(void)
 	struct vbdev_dev *device;
 	struct device_qp *dev_qp;
 	unsigned i;
+	int rc;
 
 	while ((name = TAILQ_FIRST(&g_bdev_names))) {
 		TAILQ_REMOVE(&g_bdev_names, name, link);
@@ -1369,8 +1370,11 @@ vbdev_crypto_finish(void)
 				rte_dev->dev_ops->queue_pair_release(rte_dev, i);
 			}
 		}
-
 		free(device);
+	}
+	rc = rte_vdev_uninit(AESNI_MB);
+	if (rc) {
+		SPDK_ERRLOG("%d from rte_vdev_uninit\n", rc);
 	}
 
 	while ((dev_qp = TAILQ_FIRST(&g_device_qp))) {
