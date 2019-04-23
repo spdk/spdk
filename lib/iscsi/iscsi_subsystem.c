@@ -599,6 +599,8 @@ iscsi_read_config_file_params(struct spdk_conf_section *sp,
 			}
 		}
 		if (opts->mutual_chap && !opts->require_chap) {
+			free(opts->authfile);
+			free(opts->nodebase);
 			SPDK_ERRLOG("CHAP must set to be required when using mutual CHAP.\n");
 			return -EINVAL;
 		}
