@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32324494_db19bce7",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T17:43:55Z",
+      "side": 1,
+      "message": "How do we keep two calls to this function from racing?\n\nI think it would be better to save the cb_fn, cb_arg, and orig_thread in the subsystem itself.  First, it avoids the need for an extra memory allocation.  Then it also give you an easy way to fail this function (with errno -EBUSY) if the destroy_cb_fn is already !\u003d NULL.",
+      "revId": "dd240d2b29523efaccb2ef501321e06b893d29cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
