@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22165682_be95b55f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 4540,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T22:43:38Z",
+      "side": 1,
+      "message": "let\u0027s add a flag to the ctx named \"locked\" - set that flag immediately after setting the associated flag on the blob\n\nthen in the origblob_cleanup function, if this flag is set on the ctx, you know that you need to clear the flag on the blob",
+      "revId": "bc44175653135bc8e1245a342a6ee7f711e70ba8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d73bab2_6b772783",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 5100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T22:43:38Z",
+      "side": 1,
+      "message": "I think you can and should wait to set the locked flag until here.  Then you avoid having to clear it in these three error cases.",
+      "revId": "bc44175653135bc8e1245a342a6ee7f711e70ba8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
