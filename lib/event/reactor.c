@@ -43,6 +43,14 @@
 #include "spdk/env.h"
 #include "spdk/util.h"
 
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
+
+#ifdef __FreeBSD__
+#include <pthread_np.h>
+#endif
+
 #define SPDK_EVENT_BATCH_SIZE		8
 
 enum spdk_reactor_state {
@@ -219,6 +227,18 @@ spdk_reactor_context_switch_monitor_enabled(void)
 	return g_context_switch_monitor_enabled;
 }
 
+static void
+_set_thread_name(const char *thread_name)
+{
+#if defined(__linux__)
+	prctl(PR_SET_NAME, thread_name, 0, 0, 0);
+#elif defined(__FreeBSD__)
+	pthread_set_name_np(pthread_self(), thread_name);
+#else
+#error missing platform support for thread name
+#endif
+}
+
 static int
 _spdk_reactor_run(void *arg)
 {
@@ -226,8 +246,15 @@ _spdk_reactor_run(void *arg)
 	struct spdk_thread	*thread;
 	uint64_t		last_rusage = 0;
 	struct spdk_lw_thread	*lw_thread, *tmp;
+	char			thread_name[32];
 
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
+
+	/* Rename the POSIX thread because the reactor is tied to the POSIX
+	 * thread in the SPDK event library.
+	 */
+	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
+	_set_thread_name(thread_name);
 
 	while (1) {
 		uint64_t now;

@@ -149,18 +149,6 @@ _get_thread(void)
 	return tls_thread;
 }
 
-static void
-_set_thread_name(const char *thread_name)
-{
-#if defined(__linux__)
-	prctl(PR_SET_NAME, thread_name, 0, 0, 0);
-#elif defined(__FreeBSD__)
-	pthread_set_name_np(pthread_self(), thread_name);
-#else
-#error missing platform support for thread name
-#endif
-}
-
 int
 spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
 {
@@ -239,7 +227,6 @@ spdk_thread_create(const char *name)
 	}
 
 	if (name) {
-		_set_thread_name(name);
 		thread->name = strdup(name);
 	} else {
 		thread->name = spdk_sprintf_alloc("%p", thread);
