@@ -254,6 +254,7 @@ struct spdk_fs_channel {
 	struct spdk_io_channel		*bs_channel;
 	fs_send_request_fn		send_request;
 	bool				sync;
+	uint32_t			outstanding_reqs;
 	pthread_spinlock_t		lock;
 };
 
@@ -282,6 +283,7 @@ alloc_fs_request_with_iov(struct spdk_fs_channel *channel, uint32_t iovcnt)
 
 	req = TAILQ_FIRST(&channel->reqs);
 	if (req) {
+		channel->outstanding_reqs++;
 		TAILQ_REMOVE(&channel->reqs, req, link);
 	}
 
@@ -326,6 +328,7 @@ free_fs_request(struct spdk_fs_request *req)
 	}
 
 	TAILQ_INSERT_HEAD(&req->channel->reqs, req, link);
+	channel->outstanding_reqs--;
 
 	if (channel->sync) {
 		pthread_spin_unlock(&channel->lock);
@@ -343,6 +346,7 @@ _spdk_fs_channel_create(struct spdk_filesystem *fs, struct spdk_fs_channel *chan
 		return -1;
 	}
 
+	channel->outstanding_reqs = 0;
 	TAILQ_INIT(&channel->reqs);
 	sem_init(&channel->sem, 0, 0);
 
@@ -392,6 +396,11 @@ static void
 _spdk_fs_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_fs_channel *channel = ctx_buf;
+
+	if (channel->outstanding_reqs > 0) {
+		SPDK_ERRLOG("channel freed with %" PRIu32 " outstanding requests!\n",
+			    channel->outstanding_reqs);
+	}
 
 	free(channel->req_mem);
 	if (channel->bs_channel != NULL) {
@@ -1781,6 +1790,18 @@ spdk_fs_alloc_thread_ctx(struct spdk_filesystem *fs)
 void
 spdk_fs_free_thread_ctx(struct spdk_fs_thread_ctx *ctx)
 {
+	assert(ctx->ch.sync == 1);
+
+	while (true) {
+		pthread_spin_lock(&ctx->ch.lock);
+		if (ctx->ch.outstanding_reqs == 0) {
+			pthread_spin_unlock(&ctx->ch.lock);
+			break;
+		}
+		pthread_spin_unlock(&ctx->ch.lock);
+		usleep(1000);
+	}
+
 	_spdk_fs_channel_destroy(NULL, &ctx->ch);
 	free(ctx);
 }
