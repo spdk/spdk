@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3898f3a4_0a9382a9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5069,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T16:38:08Z",
+      "side": 1,
+      "message": "I think this line 5069 should be added in this patch, not the previous one.  Then it matches where it was set to true in this patch on line 5044",
+      "revId": "85b5e6e009ea040447f27a06624bcccbac95a982",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
