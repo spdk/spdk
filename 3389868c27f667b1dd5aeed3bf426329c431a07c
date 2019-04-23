@@ -46,6 +46,30 @@
       "revId": "3389868c27f667b1dd5aeed3bf426329c431a07c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "110a432d_80d8e360",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1136,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-23T17:15:40Z",
+      "side": 1,
+      "message": "Hi Seth,\n\nCould we add some comments before 1139 to explain this value, which will be much clear for the futher understanding.",
+      "parentUuid": "2c3d64dc_06038ca3",
+      "range": {
+        "startLine": 1136,
+        "startChar": 1,
+        "endLine": 1136,
+        "endChar": 62
+      },
+      "revId": "3389868c27f667b1dd5aeed3bf426329c431a07c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
