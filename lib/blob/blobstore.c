@@ -2374,7 +2374,7 @@ _spdk_bs_blob_list_add(struct spdk_blob *blob)
 	return 0;
 }
 
-static int
+static void
 _spdk_bs_blob_list_remove(struct spdk_blob *blob)
 {
 	struct spdk_blob_list *snapshot_entry = NULL;
@@ -2383,7 +2383,7 @@ _spdk_bs_blob_list_remove(struct spdk_blob *blob)
 	_spdk_blob_get_snapshot_and_clone_entries(blob, &snapshot_entry, &clone_entry);
 
 	if (snapshot_entry == NULL) {
-		return 0;
+		return;
 	}
 
 	blob->parent_id = SPDK_BLOBID_INVALID;
@@ -2392,7 +2392,7 @@ _spdk_bs_blob_list_remove(struct spdk_blob *blob)
 
 	snapshot_entry->clone_count--;
 
-	return 0;
+	return;
 }
 
 static int
@@ -5072,12 +5072,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		}
 	}
 
-	bserrno = _spdk_bs_blob_list_remove(blob);
-	if (bserrno != 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Remove blob #%" PRIu64 " from a list\n", blob->id);
-		spdk_bs_sequence_finish(seq, bserrno);
-		return;
-	}
+	_spdk_bs_blob_list_remove(blob);
 
 	if (blob->locked_operation_in_progress) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot remove blob - another operation in progress\n");
