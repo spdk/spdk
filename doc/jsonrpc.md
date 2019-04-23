@@ -4080,9 +4080,10 @@ Example response:
   "result": {
     "poll_groups": [
       {
-        "name": "app_thread"
+        "name": "app_thread",
         "admin_qpairs": 1,
-        "io_qpairs": 4
+        "io_qpairs": 4,
+        "pending_bdev_io": 1721
       }
     ]
   }
