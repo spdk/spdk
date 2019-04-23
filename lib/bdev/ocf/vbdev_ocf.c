@@ -723,7 +723,7 @@ io_device_create_cb(void *io_device, void *ctx_buf)
 	struct vbdev_ocf_qcxt *qctx = ctx_buf;
 	int rc;
 
-	rc = ocf_queue_create(vbdev->ocf_cache, &qctx->queue, &queue_ops);
+	rc = vbdev_ocf_queue_create(vbdev->ocf_cache, &qctx->queue, &queue_ops);
 	if (rc) {
 		return rc;
 	}
@@ -757,7 +757,7 @@ io_device_destroy_cb(void *io_device, void *ctx_buf)
 			    spdk_strerror(ENOMEM));
 	}
 
-	ocf_queue_put(qctx->queue);
+	vbdev_ocf_queue_put(qctx->queue);
 }
 
 /* Create exported spdk object */
@@ -790,42 +790,6 @@ register_ocf_bdev(struct vbdev_ocf *vbdev)
 	}
 
 	vbdev_ocf_mngt_continue(vbdev, result);
-}
-
-static void
-add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
-{
-	struct vbdev_ocf *vbdev = priv;
-
-	ocf_mngt_cache_unlock(cache);
-
-	if (error) {
-		SPDK_ERRLOG("Failed to add core device to cache instance\n");
-	} else {
-		vbdev->ocf_core = core;
-		vbdev->core.id  = ocf_core_get_id(core);
-	}
-
-	vbdev_ocf_mngt_continue(vbdev, error);
-}
-
-/* Try to lock cache, then add core */
-static void
-attach_core_poll(struct vbdev_ocf *vbdev)
-{
-	if (ocf_mngt_cache_trylock(vbdev->ocf_cache)) {
-		return;
-	}
-
-	vbdev_ocf_mngt_poll(vbdev, NULL);
-	ocf_mngt_cache_add_core(vbdev->ocf_cache, &vbdev->cfg.core, add_core_cmpl, vbdev);
-}
-
-/* Add core for existing OCF cache instance */
-static void
-attach_core(struct vbdev_ocf *vbdev)
-{
-	vbdev_ocf_mngt_poll(vbdev, attach_core_poll);
 }
 
 static void
@@ -868,6 +832,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	}
 
 	vbdev_ocf_cache_ctx_get(vbdev->cache_ctx);
+	pthread_mutex_init(&vbdev->cache_ctx->lock, NULL);
 
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
 	if (rc) {
@@ -880,6 +845,42 @@ start_cache(struct vbdev_ocf *vbdev)
 	ocf_cache_set_priv(vbdev->ocf_cache, vbdev->cache_ctx);
 
 	ocf_mngt_cache_attach(vbdev->ocf_cache, &vbdev->cfg.device, start_cache_cmpl, vbdev);
+}
+
+static void
+add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
+{
+	struct vbdev_ocf *vbdev = priv;
+
+	ocf_mngt_cache_unlock(cache);
+
+	if (error) {
+		SPDK_ERRLOG("Failed to add core device to cache instance\n");
+	} else {
+		vbdev->ocf_core = core;
+		vbdev->core.id  = ocf_core_get_id(core);
+	}
+
+	vbdev_ocf_mngt_continue(vbdev, error);
+}
+
+/* Try to lock cache, then add core */
+static void
+attach_core_poll(struct vbdev_ocf *vbdev)
+{
+	if (ocf_mngt_cache_trylock(vbdev->ocf_cache)) {
+		return;
+	}
+
+	vbdev_ocf_mngt_poll(vbdev, NULL);
+	ocf_mngt_cache_add_core(vbdev->ocf_cache, &vbdev->cfg.core, add_core_cmpl, vbdev);
+}
+
+/* Add core for existing OCF cache instance */
+static void
+attach_core(struct vbdev_ocf *vbdev)
+{
+	vbdev_ocf_mngt_poll(vbdev, attach_core_poll);
 }
 
 /* Procedures called during register operation */
