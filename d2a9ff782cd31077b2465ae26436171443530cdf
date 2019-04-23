@@ -16,6 +16,24 @@
       "revId": "d2a9ff782cd31077b2465ae26436171443530cdf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ec721e2_64d39594",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T20:35:58Z",
+      "side": 1,
+      "message": "see spdk_strerror()",
+      "parentUuid": "21e8f092_440385f1",
+      "revId": "d2a9ff782cd31077b2465ae26436171443530cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
