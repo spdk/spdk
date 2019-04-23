@@ -3,7 +3,7 @@
   PT Malloc3 TestPT
 
 [Malloc]
-  NumberOfLuns 7
+  NumberOfLuns 8
   LunSizeInMB 32
 
 [Split]
