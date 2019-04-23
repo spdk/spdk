@@ -717,6 +717,30 @@
     },
     {
       "key": {
+        "uuid": "8a6b435d_bfc475d0",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-23T06:32:40Z",
+      "side": 1,
+      "message": "That sounds good. I reviewed the patch and it looked OK to me. \nI will rebase this on top of that after your patch is merged into master, and then I\u0027ll add this check.",
+      "parentUuid": "bd96498a_713121c9",
+      "range": {
+        "startLine": 203,
+        "startChar": 8,
+        "endLine": 203,
+        "endChar": 39
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a99f6589_c37aeca8",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 1
@@ -1176,6 +1200,30 @@
       "side": 1,
       "message": "That sounds good.\nDone",
       "parentUuid": "3034b638_280bce75",
+      "range": {
+        "startLine": 477,
+        "startChar": 0,
+        "endLine": 482,
+        "endChar": 1
+      },
+      "revId": "3be64f13b90c7b134a74a1bf037202addab8ff4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1c1d0f2_7c517cc0",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-23T06:32:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7870cb88_45b1f78e",
       "range": {
         "startLine": 477,
         "startChar": 0,

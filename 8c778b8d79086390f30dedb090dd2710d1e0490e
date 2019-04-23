@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d1fc0e82_555b76d7",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-23T06:32:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "84e177e6_584db320",
+      "range": {
+        "startLine": 393,
+        "startChar": 2,
+        "endLine": 393,
+        "endChar": 24
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd771b9a_378c4960",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "6e9ea1d1_b8d108b3",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-23T06:32:40Z",
+      "side": 1,
+      "message": "I think so. I put them under the lock.",
+      "parentUuid": "fd771b9a_378c4960",
+      "range": {
+        "startLine": 453,
+        "startChar": 0,
+        "endLine": 454,
+        "endChar": 41
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d9d73583_f3e39508",
         "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
         "patchSetId": 3
@@ -68,6 +116,30 @@
       "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c792d5b5_09d406cb",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-23T06:32:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d9d73583_f3e39508",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 6
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "45df18cc_87b30863",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-23T06:32:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1978857f_cd84d003",
+      "range": {
+        "startLine": 63,
+        "startChar": 31,
+        "endLine": 63,
+        "endChar": 52
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70622c2b_38ba6b2d",
         "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
         "patchSetId": 3
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "53abab7c_abd0fe67",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-23T06:32:40Z",
+      "side": 1,
+      "message": "That\u0027s a good idea. I changed ftl_rwb_ut.c to be able to test some different configurations in Patchset 4.",
+      "parentUuid": "70622c2b_38ba6b2d",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 12
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b21122a_0f3c495a",
         "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
         "patchSetId": 3
@@ -160,6 +280,30 @@
       "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdce62da_3875e06d",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-23T06:32:40Z",
+      "side": 1,
+      "message": "Yes, the result is the same. I merged it in one flow.\nBy the way, I added a test case to check after ftl_rwb_disable_interleaving() is called.\nFor num_interleave_units \u003d\u003d 1, it might be redundant. Let me know.",
+      "parentUuid": "4b21122a_0f3c495a",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 140,
+        "endChar": 4
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
