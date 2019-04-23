@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a587882_2e3f52cb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-23T17:25:25Z",
+      "side": 1,
+      "message": "Change your commit message to this:\n\nbdev/raid: Print a message indicating that RAID tests were skipped\n\nRAID tests are skipped when the OS is not Linux or if nbd isn\u0027t available.",
+      "revId": "81e0d30a346a3685433d10435af8d034189e1931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db963ab7_648fe2a4",
+        "filename": "test/bdev/bdev_raid.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-23T17:25:25Z",
+      "side": 1,
+      "message": "Not blocking this patch, but why is nbd required to test RAID? Just use bdevperf.",
+      "revId": "81e0d30a346a3685433d10435af8d034189e1931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
