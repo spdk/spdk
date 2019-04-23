@@ -42,14 +42,6 @@
 #include "spdk_internal/log.h"
 #include "spdk_internal/thread.h"
 
-#ifdef __linux__
-#include <sys/prctl.h>
-#endif
-
-#ifdef __FreeBSD__
-#include <pthread_np.h>
-#endif
-
 #define SPDK_MSG_BATCH_SIZE		8
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -149,18 +141,6 @@ _get_thread(void)
 	return tls_thread;
 }
 
-static void
-_set_thread_name(const char *thread_name)
-{
-#if defined(__linux__)
-	prctl(PR_SET_NAME, thread_name, 0, 0, 0);
-#elif defined(__FreeBSD__)
-	pthread_set_name_np(pthread_self(), thread_name);
-#else
-#error missing platform support for thread name
-#endif
-}
-
 int
 spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
 {
@@ -239,7 +219,6 @@ spdk_thread_create(const char *name)
 	}
 
 	if (name) {
-		_set_thread_name(name);
 		thread->name = strdup(name);
 	} else {
 		thread->name = spdk_sprintf_alloc("%p", thread);
