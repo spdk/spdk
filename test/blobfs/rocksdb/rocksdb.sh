@@ -25,7 +25,8 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 
-DB_BENCH_DIR=/usr/src/rocksdb
+# In the autotest job, we copy the rocksdb source to just outside the spdk directory.
+DB_BENCH_DIR="$rootdir/../rocksdb"
 DB_BENCH=$DB_BENCH_DIR/db_bench
 ROCKSDB_CONF=$testdir/rocksdb.conf
 
