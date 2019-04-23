@@ -61,6 +61,9 @@ The size of a shared receive queue is defined by transport configuration file pa
 `MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
 Default size is 4096.
 
+Add model number as parameter to construct_nvmf_subsystem (-d option),
+rather than using hardcoded define.
+
 ### env
 
 The `phys_addr` parameter in spdk_malloc() and spdk_zmalloc() has been deprecated.
@@ -90,11 +93,6 @@ is specified, use that specified nbd device. If it's not specified, pick availab
 
 Add Opal scan support for NVMe to check whether it supports SED Opal and dump
 device info. nvme_manage tool can be used to invoke this.
-
-### nvmf
-
-Add model number as parameter to construct_nvmf_subsystem (-d option),
-rather than using hardcoded define.
 
 ## v19.01:
 
