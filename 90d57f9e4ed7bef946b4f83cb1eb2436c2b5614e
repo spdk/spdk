@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eed8ec69_1c204753",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-23T21:23:32Z",
+      "side": 1,
+      "message": "Since everything for Opal was added this release, let\u0027s just make a single entry here describing all of the Opal functionality.",
+      "revId": "90d57f9e4ed7bef946b4f83cb1eb2436c2b5614e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
