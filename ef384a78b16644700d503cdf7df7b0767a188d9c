@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e59d6f64_10797655",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T23:22:27Z",
+      "side": 1,
+      "message": "commit titles should be more like:\n\nnvme: add spdk_nvme_ctrlr_cmd_io_raw_no_payload_build",
+      "revId": "ef384a78b16644700d503cdf7df7b0767a188d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfcabbd3_bac66e66",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T23:22:27Z",
+      "side": 1,
+      "message": "how about spdk_nvme_ctrlr_cmd_io_raw_no_payload_build?\n\nI\u0027d like to keep the \"spdk_nvme_ctrlr_cmd_io_raw\" part in there - the \"io\" part specifically makes it clear that this is only for io qpairs.  \"no_payload_build\" means we don\u0027t try to build anything in the cmd structure related to data payload.",
+      "revId": "ef384a78b16644700d503cdf7df7b0767a188d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b7d94fa_724ab05c",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T23:22:27Z",
+      "side": 1,
+      "message": "this should tab payload over to match with req",
+      "revId": "ef384a78b16644700d503cdf7df7b0767a188d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a39569a_c63cee43",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T23:22:27Z",
+      "side": 1,
+      "message": "I think we only want to support this on PCIe devices.  So you\u0027ll want to fail this if someone tries to use this with a fabrics controller.\n\nSo something like:\n\nif (ctrlr-\u003etrid.trtype !\u003d SPDK_NVME_TRANSPORT_PCIE) {\n  return -EINVAL;\n}\n\nPlease also document in the header that this can only be used on PCIe controllers and qpairs.",
+      "revId": "ef384a78b16644700d503cdf7df7b0767a188d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c782dd9f_cd38de7c",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T23:22:27Z",
+      "side": 1,
+      "message": "This can just be:\n\nmemset(\u0026payload, 0, sizeof(payload));",
+      "revId": "ef384a78b16644700d503cdf7df7b0767a188d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d06ed4f7_a6067d27",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1996,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T23:22:27Z",
+      "side": 1,
+      "message": "I\u0027d rather you use nvme_pcie_qpair_submit_request directly, instead of adding this new function.\n\nI think as long as you set req-\u003epayload_size \u003d 0, it will skip trying to do any kind of PRP/SGL setup.  See note below.",
+      "revId": "ef384a78b16644700d503cdf7df7b0767a188d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb261683_82192aad",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2072,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T23:22:27Z",
+      "side": 1,
+      "message": "if req-\u003epayload_size \u003d\u003d 0, all of this code will be skipped",
+      "revId": "ef384a78b16644700d503cdf7df7b0767a188d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "990638a0_43b27fa0",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2082,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T23:22:27Z",
+      "side": 1,
+      "message": "if req-\u003epayload_size \u003d\u003d 0, we skip everything related to building PRP/SGL\n\nbut we should fix this comment - instead, just say:\n\n/* Null payload - leave PRP fields untouched */",
+      "revId": "ef384a78b16644700d503cdf7df7b0767a188d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0b3f6b7_2cece286",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T23:22:27Z",
+      "side": 1,
+      "message": "can you just use nvme_qpair_submit_request instead?\n\nreq-\u003enum_children will be 0, so that part of the function will be skipped\nthe err_cmd_head check should fail too - this functionality is only enabled when trying to do error injection (which is disabled by default)",
+      "revId": "ef384a78b16644700d503cdf7df7b0767a188d9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
