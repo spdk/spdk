@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "929a09bc_70286d94",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2395,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T20:01:22Z",
+      "side": 1,
+      "message": "return not needed at end of void function (seems you missed this comment from my last review)",
+      "revId": "b15ba24245ffcf7f69359a0f931ca75bc7377a5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
