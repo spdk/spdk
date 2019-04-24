@@ -36,6 +36,9 @@
 static inline struct spdk_nvme_ns_data *
 _nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
+	assert(ns != NULL);
+	assert(ns->ctrlr != NULL);
+
 	return &ns->ctrlr->nsdata[ns->id - 1];
 }
 
