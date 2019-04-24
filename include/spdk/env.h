@@ -672,7 +672,7 @@ struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
  *
  * \return PCI driver.
  */
-struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
+struct spdk_pci_driver *spdk_pci_vmd_get_driver(void);
 
 /**
  * Get the I/OAT PCI driver object.
