@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "e5231c17_6c797150",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3331,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T23:24:47Z",
+      "side": 1,
+      "message": "I do not think this is a right fix. Currently, spdk_put_io_channel will be async, it means that it will generate a thread messaging event, so the bdev_io will be always complete before the real io_channel put.",
+      "range": {
+        "startLine": 3331,
+        "startChar": 1,
+        "endLine": 3331,
+        "endChar": 33
+      },
+      "revId": "78351ebea094f170a6091cc1285f47cae41a1630",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e407576_c49d9481",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
