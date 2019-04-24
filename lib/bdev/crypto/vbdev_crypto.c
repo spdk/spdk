@@ -665,7 +665,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	io_ctx->cryop_cnt_remaining = cryop_cnt;
 
 	/* As we don't support chaining because of a decision to use LBA as IV, construction
-	 * of crypto operaations is straightforward. We build both the op, the mbuf and the
+	 * of crypto operations is straightforward. We build both the op, the mbuf and the
 	 * dst_mbuf in our local arrays by looping through the length of the bdev IO and
 	 * picking off LBA sized blocks of memory from the IOVs as we walk through them. Each
 	 * LBA sized chunck of memory will correspond 1:1 to a crypto operation and a single
@@ -891,14 +891,15 @@ _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 		if (_crypto_operation(orig_io, RTE_CRYPTO_CIPHER_OP_DECRYPT)) {
 			SPDK_ERRLOG("ERROR decrypting\n");
-			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
-			spdk_bdev_free_io(bdev_io);
+		} {
+			return;
 		}
 	} else {
 		SPDK_ERRLOG("ERROR on read prior to decrypting\n");
-		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
-		spdk_bdev_free_io(bdev_io);
 	}
+
+	spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+	spdk_bdev_free_io(bdev_io);
 }
 
 /* Callback for getting a buf from the bdev pool in the event that the caller passed
@@ -1548,7 +1549,6 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
 			goto error_claim;
 		}
-
 
 		/* To init the session we have to get the cryptoDev device ID for this vbdev */
 		TAILQ_FOREACH(device, &g_vbdev_devs, link) {
