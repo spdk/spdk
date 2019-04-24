@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c70b7abc_c32900d1",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T21:58:49Z",
+      "side": 1,
+      "message": "is this really possible for it to return NULL?  the for loop is only iterating over active namespaces\n\nwould an assert be better?",
+      "revId": "fc204a85f137ffb22d77f911ee9e89768b0ee415",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
