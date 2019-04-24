@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5f7ef31_aec554d3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 4532,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-24T20:05:37Z",
+      "side": 1,
+      "message": "At this point, the only cleanup necessary is to just call spdk_blob_close. Instead of calling this function here (and on line 4527) why not just close the blob? That eliminates the need for this double flag thing.",
+      "revId": "e054ccf13c9d60a2efce8ac96053afd22bacdd5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
