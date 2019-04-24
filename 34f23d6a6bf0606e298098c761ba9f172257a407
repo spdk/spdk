@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5c4aaf6_5e368e29",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:35:22Z",
+      "side": 1,
+      "message": "Could we add a prefix  SESSION_",
+      "range": {
+        "startLine": 92,
+        "startChar": 1,
+        "endLine": 92,
+        "endChar": 11
+      },
+      "revId": "34f23d6a6bf0606e298098c761ba9f172257a407",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02c5c62a_0e34cf30",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:35:22Z",
+      "side": 1,
+      "message": "Add empty line after this line.",
+      "range": {
+        "startLine": 195,
+        "startChar": 1,
+        "endLine": 195,
+        "endChar": 21
+      },
+      "revId": "34f23d6a6bf0606e298098c761ba9f172257a407",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e086c018_e3a04b57",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:35:22Z",
+      "side": 1,
+      "message": "Add empty line after 210",
+      "range": {
+        "startLine": 210,
+        "startChar": 1,
+        "endLine": 210,
+        "endChar": 27
+      },
+      "revId": "34f23d6a6bf0606e298098c761ba9f172257a407",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56678b15_dd566f2e",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:35:22Z",
+      "side": 1,
+      "message": "Could we also print this:\nSPDK_ERRLOG(\"Wrong session\u003d%p\\n\", session);",
+      "range": {
+        "startLine": 301,
+        "startChar": 1,
+        "endLine": 301,
+        "endChar": 33
+      },
+      "revId": "34f23d6a6bf0606e298098c761ba9f172257a407",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3336eb62_01f5cb8e",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:35:22Z",
+      "side": 1,
+      "message": "Add empty line after this statement.",
+      "range": {
+        "startLine": 418,
+        "startChar": 1,
+        "endLine": 418,
+        "endChar": 28
+      },
+      "revId": "34f23d6a6bf0606e298098c761ba9f172257a407",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f18fdf3e_18b1aa0d",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:35:22Z",
+      "side": 1,
+      "message": "Do we have vl_msg_api_calloc like function?",
+      "range": {
+        "startLine": 462,
+        "startChar": 6,
+        "endLine": 462,
+        "endChar": 23
+      },
+      "revId": "34f23d6a6bf0606e298098c761ba9f172257a407",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3faa303a_48d7adae",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:35:22Z",
+      "side": 1,
+      "message": "I think that we can not not assume this here.",
+      "range": {
+        "startLine": 996,
+        "startChar": 1,
+        "endLine": 997,
+        "endChar": 10
+      },
+      "revId": "34f23d6a6bf0606e298098c761ba9f172257a407",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ec2a5ad_60419d70",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 1073,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:35:22Z",
+      "side": 1,
+      "message": "Add empty line after this statement.",
+      "range": {
+        "startLine": 1073,
+        "startChar": 1,
+        "endLine": 1073,
+        "endChar": 25
+      },
+      "revId": "34f23d6a6bf0606e298098c761ba9f172257a407",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
