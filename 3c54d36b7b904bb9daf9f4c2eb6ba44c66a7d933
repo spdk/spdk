@@ -848,6 +848,30 @@
     },
     {
       "key": {
+        "uuid": "02265481_b7384059",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5fa3d15e_57b44f82",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 6
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "05744540_001a6686",
         "filename": "test/nvme/perf/common.sh",
         "patchSetId": 24
@@ -892,6 +916,30 @@
       "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eee10c55_d464f5d5",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8b7083e6_a8976bbc",
+      "range": {
+        "startLine": 121,
+        "startChar": 4,
+        "endLine": 121,
+        "endChar": 6
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -942,6 +990,30 @@
     },
     {
       "key": {
+        "uuid": "de25eeb5_3e32edfd",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5c62fef3_f082f58d",
+      "range": {
+        "startLine": 156,
+        "startChar": 5,
+        "endLine": 158,
+        "endChar": 7
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d6ec8db_c90d36a9",
         "filename": "test/nvme/perf/common.sh",
         "patchSetId": 24
@@ -977,6 +1049,30 @@
       "side": 1,
       "message": "Yes, we are preconditioning all disks, picking less disks wouldn\u0027t shorten precondition process",
       "parentUuid": "3d6ec8db_c90d36a9",
+      "range": {
+        "startLine": 184,
+        "startChar": 5,
+        "endLine": 184,
+        "endChar": 44
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1b73d89_7868cc83",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Pawel,\nYour only preconditioning disk that are using UIO or VFIO driver only. Right! Any disk that is still using the is using the kernel driver will not be pre-conditioned. Right",
+      "parentUuid": "6f087041_f7ca878b",
       "range": {
         "startLine": 184,
         "startChar": 5,
@@ -1036,6 +1132,30 @@
     },
     {
       "key": {
+        "uuid": "ba689b09_d6e994a8",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "860edfe5_45c3e3ed",
+      "range": {
+        "startLine": 22,
+        "startChar": 11,
+        "endLine": 26,
+        "endChar": 99
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aa404d55_b453c3d8",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 24
@@ -1080,6 +1200,30 @@
       "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2ebf094_5b3f114b",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "063382b4_31b0eeba",
+      "range": {
+        "startLine": 30,
+        "startChar": 12,
+        "endLine": 30,
+        "endChar": 37
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -1130,6 +1274,30 @@
     },
     {
       "key": {
+        "uuid": "8a421f86_b2b033e4",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "485fb524_d155806f",
+      "range": {
+        "startLine": 50,
+        "startChar": 1,
+        "endLine": 50,
+        "endChar": 26
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1162d7ee_28a35b6e",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 24
@@ -1174,6 +1342,30 @@
       "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2b3d60f_93f72537",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "08d32af3_54e92f08",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 27
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -1224,6 +1416,30 @@
     },
     {
       "key": {
+        "uuid": "197cc946_6d6c017e",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2a07bcc4_808436a6",
+      "range": {
+        "startLine": 86,
+        "startChar": 2,
+        "endLine": 86,
+        "endChar": 25
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b883ffd1_a18f977f",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 24
@@ -1268,6 +1484,30 @@
       "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ddf81e00_8cd91c80",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "820404cf_a6bea08b",
+      "range": {
+        "startLine": 97,
+        "startChar": 44,
+        "endLine": 97,
+        "endChar": 47
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

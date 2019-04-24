@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "8e1c0be5_02ce3da0",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 26
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Change to \"The 5 valid values for this option are ....\"",
+      "range": {
+        "startLine": 23,
+        "startChar": 308,
+        "endLine": 23,
+        "endChar": 349
+      },
+      "revId": "874c643eb496f7c8bca78edacab60594411be558",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b3b16ae_705fa9ae",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 26
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "Change to \" will be used by fio to execute the performance test cases\"",
+      "range": {
+        "startLine": 37,
+        "startChar": 29,
+        "endLine": 37,
+        "endChar": 55
+      },
+      "revId": "874c643eb496f7c8bca78edacab60594411be558",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2f46cd9_a0631e0e",
+        "filename": "test/nvme/perf/README.md",
+        "patchSetId": 26
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-04-24T20:41:57Z",
+      "side": 1,
+      "message": "How about changing to\"the script attempts to assign NVMe devices to CPU cores on the same NUMA node\"",
+      "range": {
+        "startLine": 37,
+        "startChar": 85,
+        "endLine": 38,
+        "endChar": 43
+      },
+      "revId": "874c643eb496f7c8bca78edacab60594411be558",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "21af8c30_28901edd",
         "filename": "test/nvme/perf/common.sh",
         "patchSetId": 26
