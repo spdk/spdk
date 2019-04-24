@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6831c26_d66cc89a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 4524,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T00:21:53Z",
+      "side": 1,
+      "message": "I would suggest checking locked_operation_in_progress right before you set it.  That way readers don\u0027t have to try to understand if there\u0027s a reason why the data_ro and md_ro checks are done before setting the flag.",
+      "revId": "440554df73026e75cc2f1e2f6fc917484e0a978f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7dfabbe_b885496b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 4634,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T00:21:53Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "440554df73026e75cc2f1e2f6fc917484e0a978f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
