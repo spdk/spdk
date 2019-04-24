@@ -185,9 +185,6 @@ _ftl_band_set_free(struct ftl_band *band)
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_band *lband, *prev;
 
-	/* Verify band's previous state */
-	assert(band->state == FTL_BAND_STATE_CLOSED);
-
 	if (band == dev->df_band) {
 		dev->df_band = NULL;
 	}
@@ -231,8 +228,6 @@ _ftl_band_set_preparing(struct ftl_band *band)
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_md *md = &band->md;
 
-	/* Verify band's previous state */
-	assert(band->state == FTL_BAND_STATE_FREE);
 	/* Remove band from free list */
 	LIST_REMOVE(band, list_entry);
 
@@ -249,11 +244,6 @@ _ftl_band_set_closed(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_chunk *chunk;
-
-	/* TODO: add this kind of check in band_set_state() */
-	if (band->state == FTL_BAND_STATE_CLOSED) {
-		return;
-	}
 
 	/* Set the state as free_md() checks for that */
 	band->state = FTL_BAND_STATE_CLOSED;
@@ -467,15 +457,20 @@ ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state)
 {
 	switch (state) {
 	case FTL_BAND_STATE_FREE:
+		assert(band->state == FTL_BAND_STATE_CLOSED);
 		_ftl_band_set_free(band);
 		break;
 
 	case FTL_BAND_STATE_PREP:
+		assert(band->state == FTL_BAND_STATE_FREE);
 		_ftl_band_set_preparing(band);
 		break;
 
 	case FTL_BAND_STATE_CLOSED:
-		_ftl_band_set_closed(band);
+		if (band->state != FTL_BAND_STATE_CLOSED) {
+			assert(band->state == FTL_BAND_STATE_CLOSING);
+			_ftl_band_set_closed(band);
+		}
 		break;
 
 	default:
