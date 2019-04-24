@@ -236,6 +236,30 @@
       "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e7d1b2d_8ba2892c",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-24T15:17:34Z",
+      "side": 1,
+      "message": "Ok. I agree. We can check if config is provided, as now all defaults values are set to zero. To test something some value should be set to one.",
+      "parentUuid": "f8807c92_2e22ab21",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 2
+      },
+      "revId": "53782fe74e998c02349ac7b68865be77d49a486d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
