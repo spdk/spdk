@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf0066d2_b556fed2",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1549,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T23:13:40Z",
+      "side": 1,
+      "message": "Same, we may also check the data len?",
+      "range": {
+        "startLine": 1549,
+        "startChar": 5,
+        "endLine": 1549,
+        "endChar": 14
+      },
+      "revId": "56a51c791c07710e9246c504b1a1762ec446ca2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01e7e5e1_1ccd1ca7",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1670,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T23:13:40Z",
+      "side": 1,
+      "message": "Do we need to check the length of data?",
+      "range": {
+        "startLine": 1670,
+        "startChar": 1,
+        "endLine": 1670,
+        "endChar": 15
+      },
+      "revId": "56a51c791c07710e9246c504b1a1762ec446ca2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56d1a4e9_80538689",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1827,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T23:13:40Z",
+      "side": 1,
+      "message": "Shall we also check the length of the req-\u003edata, i.e. req-\u003elength?",
+      "range": {
+        "startLine": 1827,
+        "startChar": 5,
+        "endLine": 1827,
+        "endChar": 14
+      },
+      "revId": "56a51c791c07710e9246c504b1a1762ec446ca2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
