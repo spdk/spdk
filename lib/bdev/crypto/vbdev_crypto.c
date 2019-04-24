@@ -1689,8 +1689,8 @@ vbdev_crypto_examine(struct spdk_bdev *bdev)
 
 	rc = vbdev_crypto_claim(bdev);
 	if (rc) {
-		spdk_bdev_module_examine_done(&crypto_if);
-		return;
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_crypto, "Failed to claim crypto bdev on bdev: %s\n",
+			      bdev->name);
 	}
 
 	spdk_bdev_module_examine_done(&crypto_if);
