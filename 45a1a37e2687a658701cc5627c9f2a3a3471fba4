@@ -16,6 +16,24 @@
       "revId": "45a1a37e2687a658701cc5627c9f2a3a3471fba4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a236918_ea187cf7",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-24T16:41:07Z",
+      "side": 1,
+      "message": "Agreed, to make it not that error-prone, we could add a more strict check like Limit \u003c\u003d actual_measured/2",
+      "parentUuid": "a5cf8ee5_def76129",
+      "revId": "45a1a37e2687a658701cc5627c9f2a3a3471fba4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
