@@ -580,7 +580,7 @@ opal_check_geometry(struct spdk_opal_dev *dev, const void *data)
 
 	opal_info->geometry = 1;
 	opal_info->geometry_align = geo->align;
-	opal_info->geometry_logical_block_size = from_be64(&geo->logical_block_size);
+	opal_info->geometry_logical_block_size = from_be32(&geo->logical_block_size);
 	opal_info->geometry_lowest_aligned_lba = lowest_lba;
 	opal_info->geometry_alignment_granularity = align;
 }
