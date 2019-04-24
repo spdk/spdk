@@ -137,8 +137,8 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_da
 			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE3;
 			break;
 		default:
-			SPDK_ERRLOG("Unknown DIF type: %d\n", spdk_bdev_get_dif_type(bdev));
-			assert(false);
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Protection Disabled\n");
+			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
 			break;
 		}
 	}
