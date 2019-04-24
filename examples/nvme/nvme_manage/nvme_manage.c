@@ -223,6 +223,7 @@ display_namespace(struct spdk_nvme_ns *ns)
 static void
 display_controller(struct dev *dev, int model)
 {
+	struct spdk_nvme_ns			*ns;
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	uint8_t					str[128];
 	uint32_t				nsid;
@@ -269,6 +270,11 @@ display_controller(struct dev *dev, int model)
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(dev->ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(dev->ctrlr, nsid)) {
 		display_namespace(spdk_nvme_ctrlr_get_ns(dev->ctrlr, nsid));
+		ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, nsid);
+		if (ns == NULL) {
+			continue;
+		}
+		display_namespace(ns);
 	}
 }
 
