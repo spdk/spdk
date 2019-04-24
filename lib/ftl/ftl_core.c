@@ -304,7 +304,7 @@ ftl_submit_erase(struct ftl_io *io)
 		ftl_trace_submission(dev, io, ppa, 1);
 		rc = spdk_nvme_ocssd_ns_cmd_vector_reset(dev->ns, ftl_get_write_qpair(dev),
 				&ppa_packed, 1, NULL, ftl_io_cmpl_cb, io);
-		if (rc) {
+		if (spdk_unlikely(rc)) {
 			ftl_io_fail(io, rc);
 			SPDK_ERRLOG("Vector reset failed with status: %d\n", rc);
 			break;
@@ -831,11 +831,12 @@ ftl_submit_read(struct ftl_io *io)
 					   ftl_io_iovec_addr(io),
 					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
 					   ftl_io_cmpl_cb, io, 0);
-		if (rc == -ENOMEM) {
-			ftl_add_to_retry_queue(io);
-			break;
-		} else if (rc) {
-			ftl_io_fail(io, rc);
+		if (spdk_unlikely(rc)) {
+			if (rc == -ENOMEM) {
+				ftl_add_to_retry_queue(io);
+			} else {
+				ftl_io_fail(io, rc);
+			}
 			break;
 		}
 
@@ -1244,11 +1245,12 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 		}
 
 		rc = ftl_submit_child_write(wptr, io, dev->xfer_size);
-		if (rc == -EAGAIN) {
-			TAILQ_INSERT_TAIL(&wptr->pending_queue, io, retry_entry);
-			break;
-		} else if (rc) {
-			ftl_io_fail(io, rc);
+		if (spdk_unlikely(rc)) {
+			if (rc == -EAGAIN) {
+				TAILQ_INSERT_TAIL(&wptr->pending_queue, io, retry_entry);
+			} else {
+				ftl_io_fail(io, rc);
+			}
 			break;
 		}
 
