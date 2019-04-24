@@ -330,7 +330,7 @@ error_out:
 }
 
 struct spdk_iscsi_portal_grp *
-spdk_iscsi_portal_grp_create(int tag)
+spdk_iscsi_portal_grp_create(int tag, int recv_buf_size, int send_buf_size)
 {
 	struct spdk_iscsi_portal_grp *pg = malloc(sizeof(*pg));
 
@@ -341,6 +341,8 @@ spdk_iscsi_portal_grp_create(int tag)
 
 	pg->ref = 0;
 	pg->tag = tag;
+	pg->recv_buf_size = recv_buf_size;
+	pg->send_buf_size = send_buf_size;
 
 	TAILQ_INIT(&pg->head);
 
@@ -434,7 +436,7 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp));
+	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp), 0, 0);
 	if (!pg) {
 		SPDK_ERRLOG("portal group malloc error (%s)\n", spdk_conf_section_get_name(sp));
 		return -1;
@@ -669,6 +671,12 @@ iscsi_portal_grp_info_json(struct spdk_iscsi_portal_grp *pg,
 	}
 	spdk_json_write_array_end(w);
 
+	if (pg->recv_buf_size != 0) {
+		spdk_json_write_named_int32(w, "recv_buf_size", pg->recv_buf_size);
+	}
+	if (pg->send_buf_size != 0) {
+		spdk_json_write_named_int32(w, "send_buf_size", pg->send_buf_size);
+	}
 	spdk_json_write_object_end(w);
 }
 

@@ -362,17 +362,24 @@ def add_pg_ig_maps(client, pg_ig_maps, name):
     return client.call('add_pg_ig_maps', params)
 
 
-def add_portal_group(client, portals, tag):
+def add_portal_group(client, portals, tag, recv_buf_size=None, send_buf_size=None):
     """Add a portal group.
 
     Args:
         portals: List of portals, e.g. [{'host': ip, 'port': port}] or [{'host': ip, 'port': port, 'cpumask': cpumask}]
         tag: Initiator group tag (unique, integer > 0)
+        recv_buf_size: Maximum receive buffer size for socket (optional)
+        send_buf_size: Maximum send buffer size for socket (optional)
 
     Returns:
         True or False
     """
     params = {'tag': tag, 'portals': portals}
+
+    if recv_buf_size:
+        params['recv_buf_size'] = recv_buf_size
+    if send_buf_size:
+        params['send_buf_size'] = send_buf_size
     return client.call('add_portal_group', params)
 
 

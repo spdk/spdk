@@ -754,6 +754,8 @@ struct rpc_portal_list {
 struct rpc_portal_group {
 	int32_t tag;
 	struct rpc_portal_list portal_list;
+	int32_t recv_buf_size;
+	int32_t send_buf_size;
 };
 
 static void
@@ -809,6 +811,8 @@ decode_rpc_portal_list(const struct spdk_json_val *val, void *out)
 static const struct spdk_json_object_decoder rpc_portal_group_decoders[] = {
 	{"tag", offsetof(struct rpc_portal_group, tag), spdk_json_decode_int32},
 	{"portals", offsetof(struct rpc_portal_group, portal_list), decode_rpc_portal_list},
+	{"recv_buf_size", offsetof(struct rpc_portal_group, recv_buf_size), spdk_json_decode_int32, true},
+	{"send_buf_size", offsetof(struct rpc_portal_group, send_buf_size), spdk_json_decode_int32, true},
 };
 
 static void
@@ -829,7 +833,7 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	pg = spdk_iscsi_portal_grp_create(req.tag);
+	pg = spdk_iscsi_portal_grp_create(req.tag, req.recv_buf_size, req.send_buf_size);
 	if (pg == NULL) {
 		SPDK_ERRLOG("portal_grp_create failed\n");
 		goto out;
