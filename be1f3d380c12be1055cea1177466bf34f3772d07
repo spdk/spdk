@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4866cd25_20c0539c",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-24T09:04:09Z",
+      "side": 1,
+      "message": "Let\u0027s calculate it once before the workers are started.",
+      "range": {
+        "startLine": 318,
+        "startChar": 0,
+        "endLine": 318,
+        "endChar": 56
+      },
+      "revId": "be1f3d380c12be1055cea1177466bf34f3772d07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

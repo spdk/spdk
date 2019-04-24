@@ -166,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "bc043607_e3919c1e",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-24T09:04:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0f3a356_12f0b789",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 9
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1978857f_cd84d003",
         "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
         "patchSetId": 3
@@ -295,6 +319,30 @@
       "side": 1,
       "message": "Yes, the result is the same. I merged it in one flow.\nBy the way, I added a test case to check after ftl_rwb_disable_interleaving() is called.\nFor num_interleave_units \u003d\u003d 1, it might be redundant. Let me know.",
       "parentUuid": "4b21122a_0f3c495a",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 140,
+        "endChar": 4
+      },
+      "revId": "8c778b8d79086390f30dedb090dd2710d1e0490e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3ba2a54_8e896265",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-24T09:04:09Z",
+      "side": 1,
+      "message": "Yeah, additional tests are always welcome. I think running it for num_interleave_unit \u003d\u003d 1 make sense too, just to verify the code works for all configurations (and it doesn\u0027t really cost us anything to execute it). I\u0027d consider extracting it to a separate function, as this one\u0027s getting pretty large.",
+      "parentUuid": "bdce62da_3875e06d",
       "range": {
         "startLine": 124,
         "startChar": 0,
