@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aadbaf2d_4e94b50f",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:52:38Z",
+      "side": 1,
+      "message": "Can we do  char passwd[..] \u003d {0}; Then we may not need to use memset later.",
+      "range": {
+        "startLine": 1008,
+        "startChar": 1,
+        "endLine": 1008,
+        "endChar": 32
+      },
+      "revId": "ec462e82fae8f84e4d26ef773ab867adf8ccb338",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b254f59f_ac73dfbd",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1032,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:52:38Z",
+      "side": 1,
+      "message": "could we printf which ctrlr does not support?",
+      "range": {
+        "startLine": 1032,
+        "startChar": 43,
+        "endLine": 1032,
+        "endChar": 55
+      },
+      "revId": "ec462e82fae8f84e4d26ef773ab867adf8ccb338",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "884e65fe_feebb111",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1039,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:52:38Z",
+      "side": 1,
+      "message": "The two printf seems same, should we merge the strings and make it into one printf.",
+      "range": {
+        "startLine": 1037,
+        "startChar": 2,
+        "endLine": 1039,
+        "endChar": 57
+      },
+      "revId": "ec462e82fae8f84e4d26ef773ab867adf8ccb338",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

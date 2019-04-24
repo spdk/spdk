@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff2eeeb0_b0d8350b",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 908,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:52:38Z",
+      "side": 1,
+      "message": "We should add a statement here to free the opal_key.\n\nfree(dev-\u003edev_key);",
+      "range": {
+        "startLine": 908,
+        "startChar": 1,
+        "endLine": 908,
+        "endChar": 22
+      },
+      "revId": "fc205b73d4c974fa41157a893b234e7b716875c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8bbd335_28a092e8",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:52:38Z",
+      "side": 1,
+      "message": "empty line should be after this statement.",
+      "range": {
+        "startLine": 1230,
+        "startChar": 1,
+        "endLine": 1230,
+        "endChar": 13
+      },
+      "revId": "fc205b73d4c974fa41157a893b234e7b716875c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e53e7f5_515214d8",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1254,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:52:38Z",
+      "side": 1,
+      "message": "to make it easier read, I think that you may need move the callo state in line 1261 before opal_key check.",
+      "range": {
+        "startLine": 1253,
+        "startChar": 32,
+        "endLine": 1254,
+        "endChar": 36
+      },
+      "revId": "fc205b73d4c974fa41157a893b234e7b716875c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20de8238_aba415d1",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1268,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T22:52:38Z",
+      "side": 1,
+      "message": "I did not see anywhere you free the opal_key after your code.",
+      "range": {
+        "startLine": 1268,
+        "startChar": 1,
+        "endLine": 1268,
+        "endChar": 9
+      },
+      "revId": "fc205b73d4c974fa41157a893b234e7b716875c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
