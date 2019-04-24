@@ -1685,14 +1685,7 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 static void
 vbdev_crypto_examine(struct spdk_bdev *bdev)
 {
-	int rc;
-
-	rc = vbdev_crypto_claim(bdev);
-	if (rc) {
-		spdk_bdev_module_examine_done(&crypto_if);
-		return;
-	}
-
+	vbdev_crypto_claim(bdev);
 	spdk_bdev_module_examine_done(&crypto_if);
 }
 
