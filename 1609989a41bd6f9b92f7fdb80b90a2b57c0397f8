@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ce4ce12f_ff7adcc9",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-24T20:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a8f86bcd_e7a13ebe",
+      "revId": "1609989a41bd6f9b92f7fdb80b90a2b57c0397f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db3b0577_f1c92df7",
         "filename": "examples/nvme/nvme_manage/nvme_manage.c",
         "patchSetId": 13
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "efe2cc21_8e95da7b",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1010,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-24T20:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db3b0577_f1c92df7",
+      "revId": "1609989a41bd6f9b92f7fdb80b90a2b57c0397f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f0397d04_28d5e220",
         "filename": "examples/nvme/nvme_manage/nvme_manage.c",
         "patchSetId": 13
@@ -47,6 +83,30 @@
       "writtenOn": "2019-04-24T20:27:53Z",
       "side": 1,
       "message": "I know you car reusing the code in nvme_mange.c file, but you can optimize this piece of code like this:\nwhile (exit_flag) {\n    opal_usage();\n    //read the input\n    //switch case.\n}",
+      "range": {
+        "startLine": 1016,
+        "startChar": 1,
+        "endLine": 1048,
+        "endChar": 2
+      },
+      "revId": "1609989a41bd6f9b92f7fdb80b90a2b57c0397f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1124108_be6d4b72",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-24T20:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f0397d04_28d5e220",
       "range": {
         "startLine": 1016,
         "startChar": 1,
