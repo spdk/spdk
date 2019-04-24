@@ -372,6 +372,20 @@ test_connect(void)
 	free(qpair.ctrlr);
 	qpair.ctrlr = NULL;
 
+	/* Valid admin connect command with kato = 0 */
+	cmd.connect_cmd.kato = 0;
+	memset(&rsp, 0, sizeof(rsp));
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+	rc = spdk_nvmf_ctrlr_connect(&req);
+	poll_threads();
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
+	CU_ASSERT(qpari.ctrlr != NULL && qpair.ctrlr->keep_alive_poller == NULL);
+	spdk_bit_array_free(&qpair.ctrlr->qpair_mask);
+	free(qpair.ctrlr);
+	qpair.ctrlr = NULL;
+	cmd.connect_cmd.kato = 120000;
+
 	/* Invalid data length */
 	memset(&rsp, 0, sizeof(rsp));
 	req.length = sizeof(connect_data) - 1;
@@ -534,6 +548,20 @@ test_connect(void)
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.iattr == 0);
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.ipo == 42);
 	CU_ASSERT(qpair.ctrlr == NULL);
+
+	/* I/O connect to discovery controller kepp-alive-timeout should be 0 */
+	cmd.connect_cmd.qid = 0;
+	memset(&rsp, 0, sizeof(rsp));
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+	rc = spdk_nvmf_ctrlr_connect(&req);
+	poll_threads();
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	CU_ASSERT(qpair.ctrlr == NULL);
+	cmd.connect_cmd.qid = 1;
 	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
 
 	/* I/O connect to disabled controller */
