@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef1546fd_e85f159f",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T17:35:24Z",
+      "side": 1,
+      "message": "Should this be a DEBUGLOG instead?  If this is a valid configuration, I think we should avoid a NOTICELOG.",
+      "revId": "dede60de69e2451ef1523fcac071c279627d27c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
