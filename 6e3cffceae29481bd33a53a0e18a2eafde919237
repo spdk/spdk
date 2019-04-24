@@ -16,6 +16,24 @@
       "revId": "6e3cffceae29481bd33a53a0e18a2eafde919237",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "250049e8_3ccd2ea1",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T00:05:18Z",
+      "side": 1,
+      "message": "It\u0027s relevant because without it\u0027s not clear why sectors_per_max_io could be zero here.\n\nWe could make a fix that avoids modifying this function in the hotplug case, but it would require changing about 15 different callers of this function.  So we wanted to go with this patch for now, with the comment to explain this a bit to future readers of the code.",
+      "parentUuid": "316b52ec_80f7a892",
+      "revId": "6e3cffceae29481bd33a53a0e18a2eafde919237",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
