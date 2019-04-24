@@ -218,6 +218,7 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 	thread->messages = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	if (!thread->messages) {
 		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
+		spdk_cpuset_free(thread->cpumask);
 		free(thread);
 		return NULL;
 	}
