@@ -1133,15 +1133,6 @@ spdk_nvmf_rdma_event_accept(struct rdma_cm_id *id, struct spdk_nvmf_rdma_qpair *
 		ctrlr_event_data.initiator_depth = rqpair->max_read_depth;
 	}
 
-	/* Configure infinite retries for the initiator side qpair.
-	 * When using a shared receive queue on the target side,
-	 * we need to pass this value to the initiator to prevent the
-	 * initiator side NIC from completing SEND requests back to the
-	 * initiator with status rnr_retry_count_exceeded. */
-	if (rqpair->srq != NULL) {
-		ctrlr_event_data.rnr_retry_count = 0x7;
-	}
-
 	rc = rdma_accept(id, &ctrlr_event_data);
 	if (rc) {
 		SPDK_ERRLOG("Error %d on rdma_accept\n", errno);
