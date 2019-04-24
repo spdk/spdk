@@ -274,6 +274,7 @@ _spdk_blob_freeze_io(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
+		SPDK_ERRLOG("ENOMEM\n");
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -301,6 +302,7 @@ _spdk_blob_unfreeze_io(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
+		SPDK_ERRLOG("ENOMEM\n");
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -334,6 +336,7 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 		assert(blob->active.clusters);
 		clusters = calloc(blob->active.num_clusters, sizeof(*blob->active.clusters));
 		if (!clusters) {
+			SPDK_ERRLOG("ENOMEM\n");
 			return -ENOMEM;
 		}
 		memcpy(clusters, blob->active.clusters, blob->active.num_clusters * sizeof(*clusters));
@@ -344,6 +347,7 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 		pages = calloc(blob->active.num_pages, sizeof(*blob->active.pages));
 		if (!pages) {
 			free(clusters);
+			SPDK_ERRLOG("ENOMEM\n");
 			return -ENOMEM;
 		}
 		memcpy(pages, blob->active.pages, blob->active.num_pages * sizeof(*pages));
@@ -384,12 +388,14 @@ _spdk_blob_deserialize_xattr(struct spdk_blob *blob,
 
 	xattr = calloc(1, sizeof(*xattr));
 	if (xattr == NULL) {
+		SPDK_ERRLOG("ENOMEM\n");
 		return -ENOMEM;
 	}
 
 	xattr->name = malloc(desc_xattr->name_length + 1);
 	if (xattr->name == NULL) {
 		free(xattr);
+		SPDK_ERRLOG("ENOMEM\n");
 		return -ENOMEM;
 	}
 	memcpy(xattr->name, desc_xattr->name, desc_xattr->name_length);
@@ -399,6 +405,7 @@ _spdk_blob_deserialize_xattr(struct spdk_blob *blob,
 	if (xattr->value == NULL) {
 		free(xattr->name);
 		free(xattr);
+		SPDK_ERRLOG("ENOMEM\n");
 		return -ENOMEM;
 	}
 	xattr->value_len = desc_xattr->value_length;
@@ -489,6 +496,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			}
 			tmp = realloc(blob->active.clusters, cluster_count * sizeof(uint64_t));
 			if (tmp == NULL) {
+				SPDK_ERRLOG("ENOMEM\n");
 				return -ENOMEM;
 			}
 			blob->active.clusters = tmp;
@@ -608,6 +616,7 @@ _spdk_blob_serialize_add_page(const struct spdk_blob *blob,
 	if (*pages == NULL) {
 		*page_count = 0;
 		*last_page = NULL;
+		SPDK_ERRLOG("ENOMEM\n");
 		return -ENOMEM;
 	}
 
@@ -970,6 +979,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->pages = spdk_realloc(ctx->pages, (sizeof(*page) * ctx->num_pages),
 					  sizeof(*page));
 		if (ctx->pages == NULL) {
+			SPDK_ERRLOG("ENOMEM\n");
 			ctx->cb_fn(seq, ctx->cb_arg, -ENOMEM);
 			free(ctx);
 			return;
@@ -1036,6 +1046,7 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
+		SPDK_ERRLOG("ENOMEM\n");
 		cb_fn(seq, cb_arg, -ENOMEM);
 		return;
 	}
@@ -1044,6 +1055,7 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->pages = spdk_realloc(ctx->pages, SPDK_BS_PAGE_SIZE, SPDK_BS_PAGE_SIZE);
 	if (!ctx->pages) {
 		free(ctx);
+		SPDK_ERRLOG("ENOMEM\n");
 		cb_fn(seq, cb_arg, -ENOMEM);
 		return;
 	}
@@ -1369,6 +1381,7 @@ _spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 		 */
 		tmp = realloc(blob->active.clusters, sizeof(uint64_t) * sz);
 		if (sz > 0 && tmp == NULL) {
+			SPDK_ERRLOG("ENOMEM\n");
 			return -ENOMEM;
 		}
 		memset(tmp + blob->active.cluster_array_size, 0,
@@ -1426,6 +1439,7 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 	/* Resize the cache of page indices */
 	tmp = realloc(blob->active.pages, blob->active.num_pages * sizeof(*blob->active.pages));
 	if (!tmp) {
+		SPDK_ERRLOG("ENOMEM\n");
 		_spdk_blob_persist_complete(seq, ctx, -ENOMEM);
 		return;
 	}
@@ -1511,6 +1525,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
+		SPDK_ERRLOG("ENOMEM\n");
 		cb_fn(seq, cb_arg, -ENOMEM);
 		return;
 	}
@@ -1523,6 +1538,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 		ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
 					  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		if (!ctx->super) {
+			SPDK_ERRLOG("ENOMEM\n");
 			cb_fn(seq, cb_arg, -ENOMEM);
 			free(ctx);
 			return;
@@ -1807,6 +1823,7 @@ _spdk_blob_request_submit_op_split(struct spdk_io_channel *ch, struct spdk_blob 
 
 	ctx = calloc(1, sizeof(struct op_split_ctx));
 	if (ctx == NULL) {
+		SPDK_ERRLOG("ENOMEM\n");
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
