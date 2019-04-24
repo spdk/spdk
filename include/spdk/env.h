@@ -2,7 +2,6 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation.
- *   Copyright (c) NetApp, Inc.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -666,6 +665,13 @@ typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev)
  * \return PCI driver.
  */
 struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
+
+/**
+ * Get the VMD PCI driver object.
+ *
+ * \return PCI driver.
+ */
+struct spdk_pci_driver *spdk_pci_vmd_get_driver(void);
 
 /**
  * Get the I/OAT PCI driver object.
