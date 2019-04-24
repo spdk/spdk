@@ -22,10 +22,13 @@ function check_qos_works_well() {
 	end_io_count=$(jq -r '.[1].num_read_ops' <<< "$iostats")
 	end_bytes_read=$(jq -r '.[1].bytes_read' <<< "$iostats")
 
+	IOPS_RESULT=$(((end_io_count-start_io_count)/5))
+	BANDWIDTH_RESULT=$(((end_bytes_read-start_bytes_read)/5))
+
 	if [ $LIMIT_TYPE = IOPS ]; then
-		read_result=$(((end_io_count-start_io_count)/5))
+		read_result=$IOPS_RESULT
 	else
-		read_result=$(((end_bytes_read-start_bytes_read)/5))
+		read_result=$BANDWIDTH_RESULT
 	fi
 
 	if [ $enable_limit = true ]; then
@@ -38,14 +41,8 @@ function check_qos_works_well() {
 	else
 		retval=$(echo "$read_result > $qos_limit" | bc)
 		if [ $retval -eq 0 ]; then
-			if [ $check_qos = true ]; then
-				echo "$read_result less than $qos_limit - exit QoS testing"
-				ENABLE_QOS=false
-				exit 0
-			else
-				echo "$read_result less than $qos_limit - expected greater than"
-				exit 1
-			fi
+			echo "$read_result less than $qos_limit - expected greater than"
+			exit 1
 		fi
 	fi
 }
@@ -64,12 +61,13 @@ timing_enter qos
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
-ENABLE_QOS=true
-IOPS_LIMIT=20000
-BANDWIDTH_LIMIT_MB=20
-BANDWIDTH_LIMIT=$(($BANDWIDTH_LIMIT_MB*1024*1024))
-READ_BANDWIDTH_LIMIT_MB=10
-READ_BANDWIDTH_LIMIT=$(($READ_BANDWIDTH_LIMIT_MB*1024*1024))
+IOPS_RESULT=
+BANDWIDTH_RESULT=
+IOPS_LIMIT=
+BANDWIDTH_LIMIT=
+BANDWIDTH_LIMIT_MB=
+READ_BANDWIDTH_LIMIT=
+READ_BANDWIDTH_LIMIT_MB=
 LIMIT_TYPE=IOPS
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
@@ -100,37 +98,43 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
-# Check whether to enable the QoS testing.
-check_qos_works_well false $IOPS_LIMIT Malloc0 true
+# Run FIO without any QOS limits to determine the raw performance
+check_qos_works_well false 0 Malloc0
 
-if [ $ENABLE_QOS = true ]; then
-	# Limit the I/O rate by RPC, then confirm the observed rate matches.
-	$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
-	check_qos_works_well true $IOPS_LIMIT Malloc0 false
+# Set IOPS/bandwidth limit to some % of the actual unrestrained performance.
+# Also round it down to nearest multiple of either 10000 IOPS or 10MB BW
+IOPS_LIMIT=$(($IOPS_RESULT/2/10000*10000))
+BANDWIDTH_LIMIT=$(($BANDWIDTH_RESULT/2/10485760*10485760))
+BANDWIDTH_LIMIT_MB=$(($BANDWIDTH_LIMIT/1024/1024))
+READ_BANDWIDTH_LIMIT=$(($BANDWIDTH_LIMIT/2))
+READ_BANDWIDTH_LIMIT_MB=$(($READ_BANDWIDTH_LIMIT/1024/1024))
 
-	# Now disable the rate limiting, and confirm the observed rate is not limited anymore.
-	$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 0
-	check_qos_works_well false $IOPS_LIMIT Malloc0 false
+# Limit the I/O rate by RPC, then confirm the observed rate matches.
+$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
+check_qos_works_well true $IOPS_LIMIT Malloc0
 
-	# Limit the I/O rate again.
-	$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
-	check_qos_works_well true $IOPS_LIMIT Malloc0 false
-	echo "I/O rate limiting tests successful"
+# Now disable the rate limiting, and confirm the observed rate is not limited anymore.
+$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 0
+check_qos_works_well false $IOPS_LIMIT Malloc0
 
-	# Limit the I/O bandwidth rate by RPC, then confirm the observed rate matches.
-	LIMIT_TYPE=BANDWIDTH
-	$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 0 --rw_mbytes_per_sec $BANDWIDTH_LIMIT_MB
-	check_qos_works_well true $BANDWIDTH_LIMIT Malloc0 false
+# Limit the I/O rate again.
+$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec $IOPS_LIMIT
+check_qos_works_well true $IOPS_LIMIT Malloc0
+echo "I/O rate limiting tests successful"
 
-	# Now disable the bandwidth rate limiting, and confirm the observed rate is not limited anymore.
-	$rpc_py set_bdev_qos_limit Malloc0 --rw_mbytes_per_sec 0
-	check_qos_works_well false $BANDWIDTH_LIMIT Malloc0 false
+# Limit the I/O bandwidth rate by RPC, then confirm the observed rate matches.
+LIMIT_TYPE=BANDWIDTH
+$rpc_py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 0 --rw_mbytes_per_sec $BANDWIDTH_LIMIT_MB
+check_qos_works_well true $BANDWIDTH_LIMIT Malloc0
 
-	# Limit the I/O bandwidth rate again with both read/write and read/only.
-	$rpc_py set_bdev_qos_limit Malloc0 --rw_mbytes_per_sec $BANDWIDTH_LIMIT_MB --r_mbytes_per_sec $READ_BANDWIDTH_LIMIT_MB
-	check_qos_works_well true $READ_BANDWIDTH_LIMIT Malloc0 false
-	echo "I/O bandwidth limiting tests successful"
-fi
+# Now disable the bandwidth rate limiting, and confirm the observed rate is not limited anymore.
+$rpc_py set_bdev_qos_limit Malloc0 --rw_mbytes_per_sec 0
+check_qos_works_well false $BANDWIDTH_LIMIT Malloc0
+
+# Limit the I/O bandwidth rate again with both read/write and read/only.
+$rpc_py set_bdev_qos_limit Malloc0 --rw_mbytes_per_sec $BANDWIDTH_LIMIT_MB --r_mbytes_per_sec $READ_BANDWIDTH_LIMIT_MB
+check_qos_works_well true $READ_BANDWIDTH_LIMIT Malloc0
+echo "I/O bandwidth limiting tests successful"
 
 iscsicleanup
 $rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target1'
