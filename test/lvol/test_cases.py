@@ -152,7 +152,7 @@ def case_message(func):
             # Provisioning
             650: 'thin_provisioning_check_space',
             651: 'thin_provisioning_read_empty_bdev',
-            652: 'thin_provisionind_data_integrity_test',
+            652: 'thin_provisioning_data_integrity_test',
             653: 'thin_provisioning_resize',
             654: 'thin_overprovisioning',
             655: 'thin_provisioning_filling_disks_less_than_lvs_size',
