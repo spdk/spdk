@@ -10,26 +10,27 @@ function check_qos_works_well() {
 	local qos_limit=$2
 	local check_qos=$4
 	local retval=0
+	local iostats
 
 	if [ $LIMIT_TYPE = BANDWIDTH ]; then
 		qos_limit=$((qos_limit*1024*1024))
 	fi
 
-	if [ $LIMIT_TYPE = IOPS ]; then
-		start_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].num_read_ops')
-	else
-		start_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].bytes_read')
-	fi
+	iostats=$($rpc_py get_bdevs_iostat -b $3)
+	start_io_count=$(jq -r '.[1].num_read_ops' <<< "$iostats")
+	start_bytes_read=$(jq -r '.[1].bytes_read' <<< "$iostats")
 
 	$fio_py iscsi 1024 128 randread 5 1
 
-	if [ $LIMIT_TYPE = IOPS ]; then
-		end_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].num_read_ops')
-	else
-		end_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].bytes_read')
-	fi
+	iostats=$($rpc_py get_bdevs_iostat -b $3)
+	end_io_count=$(jq -r '.[1].num_read_ops' <<< "$iostats")
+	end_bytes_read=$(jq -r '.[1].bytes_read' <<< "$iostats")
 
-	read_result=$(((end_io_count-start_io_count)/5))
+	if [ $LIMIT_TYPE = IOPS ]; then
+		read_result=$(((end_io_count-start_io_count)/5))
+	else
+		read_result=$(((end_bytes_read-start_bytes_read)/5))
+	fi
 
 	if [ $enable_limit = true ]; then
 		#qos realization is related with bytes transfered.It currently have like 5% variation.
