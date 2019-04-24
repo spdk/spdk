@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1d46bd0_dfa7b9fc",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1035,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-24T20:33:25Z",
+      "side": 1,
+      "message": "this line can be removed.",
+      "revId": "2f3aac57f52e07fcfc3e26314b72fcf36bbd931a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8047f523_e4259784",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1269,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-24T20:33:25Z",
+      "side": 1,
+      "message": "The mutex can be moved after memcpy in line 1270.",
+      "revId": "2f3aac57f52e07fcfc3e26314b72fcf36bbd931a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
