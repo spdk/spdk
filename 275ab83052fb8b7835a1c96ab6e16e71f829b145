@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cbb5fcf_fd3cff87",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-24T16:59:01Z",
+      "side": 1,
+      "message": "As stated in my previous patch, the change in this file, can be a seperate patch.",
+      "range": {
+        "startLine": 465,
+        "startChar": 0,
+        "endLine": 465,
+        "endChar": 44
+      },
+      "revId": "275ab83052fb8b7835a1c96ab6e16e71f829b145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
