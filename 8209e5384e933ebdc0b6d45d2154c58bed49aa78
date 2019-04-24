@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c36134cf_3862f77f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 5073,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-24T21:44:23Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this one also close the blob?",
+      "revId": "8209e5384e933ebdc0b6d45d2154c58bed49aa78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
