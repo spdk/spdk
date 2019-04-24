@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5819ee0c_c55c0804",
+        "filename": "test/nvmf/srq_overwhelm/srq_overwhelm.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-24T09:21:55Z",
+      "side": 1,
+      "message": "We could create those mallocs directly in the loop below. Then we wouldn\u0027t even need a table to store them.",
+      "revId": "9747f1e0939de06ce3704a31b9d6a14da0dfeb3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
