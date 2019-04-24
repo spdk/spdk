@@ -149,6 +149,7 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 	char buf16[16 + 1];
 	size_t total;
 	unsigned int idx;
+	int ret;
 
 	fprintf(fp, "%s\n", label);
 
@@ -162,19 +163,35 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 			total = 0;
 		}
 		if (idx % 16 == 0) {
-			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-					  "%08x ", idx);
+			ret = snprintf(tmpbuf + total, sizeof tmpbuf - total,
+				       "%08x ", idx);
+			if (ret < 0) {
+				return;
+			}
+			total += ret;
 		}
 		if (idx % 8 == 0) {
-			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-					  "%s", " ");
+			ret = snprintf(tmpbuf + total, sizeof tmpbuf - total,
+				       "%s", " ");
+			if (ret < 0) {
+				return;
+			}
+			total += ret;
 		}
-		total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-				  "%2.2x ", buf[idx] & 0xff);
+		ret = snprintf(tmpbuf + total, sizeof tmpbuf - total,
+			       "%2.2x ", buf[idx] & 0xff);
+		if (ret < 0) {
+			return;
+		}
+		total += ret;
 		buf16[idx % 16] = isprint(buf[idx]) ? buf[idx] : '.';
 	}
 	for (; idx % 16 != 0; idx++) {
-		total += snprintf(tmpbuf + total, sizeof tmpbuf - total, "   ");
+		ret = snprintf(tmpbuf + total, sizeof tmpbuf - total, "   ");
+		if (ret < 0) {
+			return;
+		}
+		total += ret;
 		buf16[idx % 16] = ' ';
 	}
 	snprintf(tmpbuf + total, sizeof tmpbuf - total, "  %s", buf16);
