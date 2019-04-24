@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e57f93f_1fcc70bc",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T00:08:09Z",
+      "side": 1,
+      "message": "let\u0027s keep a space before the ampersand",
+      "revId": "1c07efb8166ccbb466d3176cba1ff78b6493af6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0955ee2e_161106c3",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T00:08:09Z",
+      "side": 1,
+      "message": "extra 1 not needed",
+      "revId": "1c07efb8166ccbb466d3176cba1ff78b6493af6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
