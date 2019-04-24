@@ -22,6 +22,47 @@
       "revId": "5b9e0bc980a44dc0bf616f08e3367daf8276ba67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f959bd6_41317954",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-24T14:01:04Z",
+      "side": 1,
+      "message": "The division doesn\u0027t make sense. I think you can just report the value of spdk_mempool_count every sample period in this poller. Then you don\u0027t need all these atomics throughout the code either. You could make this run more often too - possibly as frequently as every 1 or 10ms - to get more accurate samples.",
+      "parentUuid": "0c24d5ac_ca14a566",
+      "range": {
+        "startLine": 325,
+        "startChar": 0,
+        "endLine": 330,
+        "endChar": 41
+      },
+      "revId": "5b9e0bc980a44dc0bf616f08e3367daf8276ba67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "143fcda7_ed5af434",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1036,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-24T14:01:04Z",
+      "side": 1,
+      "message": "Move this down with the other VTUNE block",
+      "revId": "5b9e0bc980a44dc0bf616f08e3367daf8276ba67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
