@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "5c84e566_4e009061",
+        "filename": "test/vhost/windows/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-24T13:14:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79ddccef_b21e07f3",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 1
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1430d851_7b9c8000",
         "filename": "test/vhost/windows/common.sh",
         "patchSetId": 4
@@ -59,6 +83,24 @@
       "writtenOn": "2019-04-17T13:01:39Z",
       "side": 1,
       "message": "Will fail at check format due to 2xtrailing line. Remove one.",
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecdb9bf8_4c0c1a35",
+        "filename": "test/vhost/windows/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-24T13:14:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1430d851_7b9c8000",
       "revId": "057560edbe7217a018656c3d36999cf00b874137",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -128,6 +170,30 @@
     },
     {
       "key": {
+        "uuid": "55c11ac4_9de7f0a6",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-24T13:14:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "95e16fed_845d7fb5",
+      "range": {
+        "startLine": 1,
+        "startChar": 15,
+        "endLine": 1,
+        "endChar": 21
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f623113e_26eda413",
         "filename": "test/vhost/windows/windows_scsi_compliance.py",
         "patchSetId": 4
@@ -139,6 +205,30 @@
       "writtenOn": "2019-04-17T13:01:39Z",
       "side": 1,
       "message": "We can remove that.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 17
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3933d50_a6b46d23",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-24T13:14:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f623113e_26eda413",
       "range": {
         "startLine": 9,
         "startChar": 0,
@@ -174,6 +264,30 @@
     },
     {
       "key": {
+        "uuid": "9b88cdea_4b0fd76b",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-24T13:14:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "536ed627_04a8008a",
+      "range": {
+        "startLine": 47,
+        "startChar": 8,
+        "endLine": 49,
+        "endChar": 18
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12c9d42c_0707bf9e",
         "filename": "test/vhost/windows/windows_scsi_compliance.py",
         "patchSetId": 4
@@ -185,6 +299,30 @@
       "writtenOn": "2019-04-17T13:01:39Z",
       "side": 1,
       "message": "Lol, let\u0027s use os.path.dirname() instead.",
+      "range": {
+        "startLine": 54,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 30
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b4abb74_1234085e",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-24T13:14:02Z",
+      "side": 1,
+      "message": "We get dir name from filename. It is ok.",
+      "parentUuid": "12c9d42c_0707bf9e",
       "range": {
         "startLine": 54,
         "startChar": 3,
@@ -220,6 +358,30 @@
     },
     {
       "key": {
+        "uuid": "eb616b10_e84f3b28",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-24T13:14:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1cae028b_f3a21d23",
+      "range": {
+        "startLine": 62,
+        "startChar": 4,
+        "endLine": 62,
+        "endChar": 6
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67dcd838_1bc7116f",
         "filename": "test/vhost/windows/windows_scsi_compliance.py",
         "patchSetId": 4
@@ -231,6 +393,30 @@
       "writtenOn": "2019-04-17T13:01:39Z",
       "side": 1,
       "message": "Let\u0027s change the name to be more meaningful.\ntc_result maybe?",
+      "range": {
+        "startLine": 72,
+        "startChar": 8,
+        "endLine": 72,
+        "endChar": 14
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bfc6e2b_a6ae33c2",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-24T13:14:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67dcd838_1bc7116f",
       "range": {
         "startLine": 72,
         "startChar": 8,
