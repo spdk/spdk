@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64df3af8_700fafba",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-24T22:28:33Z",
+      "side": 1,
+      "message": "let\u0027s remove this SPDK_TEST_NOTIFY flag - it\u0027s not being used\n\nif we add a lot more tests for notify later, we can add it again - but for now let\u0027s just always run these tests",
+      "revId": "001c6b3ae8267e74fa905140a026e27b5526d146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
