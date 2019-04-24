@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "05f883f0_e3f13b57",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-04-24T06:41:38Z",
+      "side": 1,
+      "message": "Fixed,thanks.",
+      "parentUuid": "0a587882_2e3f52cb",
+      "revId": "81e0d30a346a3685433d10435af8d034189e1931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "db963ab7_648fe2a4",
         "filename": "test/bdev/bdev_raid.sh",
         "patchSetId": 1
