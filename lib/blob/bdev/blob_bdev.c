@@ -83,8 +83,9 @@ bdev_blob_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 	} else {
 		bserrno = -EIO;
 	}
-	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, bserrno);
+
 	spdk_bdev_free_io(bdev_io);
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, bserrno);
 }
 
 static void
