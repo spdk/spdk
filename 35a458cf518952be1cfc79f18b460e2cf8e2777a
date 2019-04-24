@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b745fa1_b9ef9817",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 3137,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-24T09:18:41Z",
+      "side": 1,
+      "message": "Expectation is that snapshot_bdev has field \u0027clone\u0027 set to false and \u0027snapshot\u0027 set to true. When either is set differently something went wrong.\nAnother thing is that this condition does not change at any point after snapshot creation (even when additional clone is set up on it).\n\nPlease either remove it, or put it just after snapshot creation and change condition to if clone !\u003d false or snapshot !\u003d true.",
+      "range": {
+        "startLine": 3135,
+        "startChar": 0,
+        "endLine": 3137,
+        "endChar": 27
+      },
+      "revId": "35a458cf518952be1cfc79f18b460e2cf8e2777a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
