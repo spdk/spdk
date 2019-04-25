@@ -512,15 +512,22 @@ spdk_ftl_conf_init_defaults(struct spdk_ftl_conf *conf)
 	*conf = g_default_conf;
 }
 
+static void
+ftl_lba_map_request_ctor(struct spdk_mempool *mp, void *opaque, void *obj, unsigned obj_idx)
+{
+	struct ftl_lba_map_request *request = obj;
+	struct spdk_ftl_dev *dev = opaque;
+
+	request->segments = spdk_bit_array_create(spdk_divide_round_up(
+				    ftl_num_band_lbks(dev), FTL_NUM_LBA_IN_BLOCK));
+}
+
 static int
-ftl_init_wptr_list(struct spdk_ftl_dev *dev)
+ftl_init_lba_map_pools(struct spdk_ftl_dev *dev)
 {
 #define POOL_NAME_LEN 128
 	char pool_name[POOL_NAME_LEN];
 	int rc;
-
-	LIST_INIT(&dev->wptr_list);
-	LIST_INIT(&dev->flush_list);
 
 	rc = snprintf(pool_name, sizeof(pool_name), "%s-%s", dev->name, "ocssd-lba-pool");
 	if (rc < 0 || rc >= POOL_NAME_LEN) {
@@ -533,14 +540,37 @@ ftl_init_wptr_list(struct spdk_ftl_dev *dev)
 	 * unnecessary overhead and should be replaced by different data structure.
 	 */
 	dev->lba_pool = spdk_mempool_create(pool_name, 2 + 8,
-					    ftl_lba_map_num_lbks(dev) * FTL_BLOCK_SIZE,
+					    ftl_lba_map_pool_elem_size(dev),
 					    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					    SPDK_ENV_SOCKET_ID_ANY);
 	if (!dev->lba_pool) {
 		return -ENOMEM;
 	}
 
+	rc = snprintf(pool_name, sizeof(pool_name), "%s-%s", dev->name, "ocssd-lbareq-pool");
+	if (rc < 0 || rc >= POOL_NAME_LEN) {
+		return -ENAMETOOLONG;
+	}
+
+	dev->lba_request_pool = spdk_mempool_create_ctor(pool_name,
+				dev->conf.max_reloc_qdepth * dev->conf.max_active_relocs,
+				sizeof(struct ftl_lba_map_request),
+				SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+				SPDK_ENV_SOCKET_ID_ANY,
+				ftl_lba_map_request_ctor,
+				dev);
+	if (!dev->lba_request_pool) {
+		return -ENOMEM;
+	}
+
 	return 0;
+}
+
+static void
+ftl_init_wptr_list(struct spdk_ftl_dev *dev)
+{
+	LIST_INIT(&dev->wptr_list);
+	LIST_INIT(&dev->flush_list);
 }
 
 static size_t
@@ -952,10 +982,12 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
-	if (ftl_init_wptr_list(dev)) {
-		SPDK_ERRLOG("Unable to init wptr\n");
+	if (ftl_init_lba_map_pools(dev)) {
+		SPDK_ERRLOG("Unable to init LBA map pools\n");
 		goto fail_sync;
 	}
+
+	ftl_init_wptr_list(dev);
 
 	if (ftl_dev_init_bands(dev)) {
 		SPDK_ERRLOG("Unable to initialize band array\n");
@@ -1017,6 +1049,14 @@ _ftl_halt_defrag(void *arg)
 }
 
 static void
+ftl_lba_map_request_dtor(struct spdk_mempool *mp, void *opaque, void *obj, unsigned obj_idx)
+{
+	struct ftl_lba_map_request *request = obj;
+
+	spdk_bit_array_free(&request->segments);
+}
+
+static void
 ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 {
 	struct spdk_ftl_dev *iter;
@@ -1053,6 +1093,10 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	}
 
 	spdk_mempool_free(dev->lba_pool);
+	if (dev->lba_request_pool) {
+		spdk_mempool_obj_iter(dev->lba_request_pool, ftl_lba_map_request_dtor, NULL);
+	}
+	spdk_mempool_free(dev->lba_request_pool);
 
 	ftl_rwb_free(dev->rwb);
 	ftl_reloc_free(dev->reloc);
