@@ -58,11 +58,31 @@ uint32_t g_lcore = 0;
 std::string g_bdev_name;
 volatile bool g_spdk_ready = false;
 volatile bool g_spdk_start_failure = false;
-struct sync_args {
+
+void SpdkInitializeThread(void);
+void SpdkFinalizeThread(void);
+
+class SpdkThreadCtx
+{
+public:
 	struct spdk_fs_thread_ctx *channel;
+
+	SpdkThreadCtx(void) : channel(NULL)
+	{
+		SpdkInitializeThread();
+	}
+
+	~SpdkThreadCtx(void)
+	{
+		SpdkFinalizeThread();
+	}
+
+private:
+	SpdkThreadCtx(const SpdkThreadCtx &);
+	SpdkThreadCtx &operator=(const SpdkThreadCtx &);
 };
 
-__thread struct sync_args g_sync_args;
+thread_local SpdkThreadCtx g_sync_args;
 
 static void
 __call_fn(void *arg1, void *arg2)
@@ -510,7 +530,6 @@ public:
 		}
 		return Status::OK();
 	}
-	virtual void StartThread(void (*function)(void *arg), void *arg) override;
 	virtual Status LockFile(const std::string &fname, FileLock **lock) override
 	{
 		std::string name = sanitize_path(fname, mDirectory);
@@ -583,7 +602,7 @@ void SpdkInitializeThread(void)
 {
 	struct spdk_thread *thread;
 
-	if (g_fs != NULL) {
+	if (g_fs != NULL && g_sync_args.channel == NULL) {
 		thread = spdk_thread_create("spdk_rocksdb", NULL);
 		spdk_set_thread(thread);
 		g_sync_args.channel = spdk_fs_alloc_thread_ctx(g_fs);
@@ -595,29 +614,6 @@ void SpdkFinalizeThread(void)
 	if (g_sync_args.channel) {
 		spdk_fs_free_thread_ctx(g_sync_args.channel);
 	}
-}
-
-struct SpdkThreadState {
-	void (*user_function)(void *);
-	void *arg;
-};
-
-static void SpdkStartThreadWrapper(void *arg)
-{
-	SpdkThreadState *state = reinterpret_cast<SpdkThreadState *>(arg);
-
-	SpdkInitializeThread();
-	state->user_function(state->arg);
-	SpdkFinalizeThread();
-	delete state;
-}
-
-void SpdkEnv::StartThread(void (*function)(void *arg), void *arg)
-{
-	SpdkThreadState *state = new SpdkThreadState;
-	state->user_function = function;
-	state->arg = arg;
-	EnvWrapper::StartThread(SpdkStartThreadWrapper, state);
 }
 
 static void
@@ -739,7 +735,6 @@ SpdkEnv::~SpdkEnv()
 		}
 	}
 
-	SpdkFinalizeThread();
 	spdk_app_start_shutdown();
 	pthread_join(mSpdkTid, NULL);
 }
