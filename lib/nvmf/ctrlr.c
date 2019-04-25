@@ -1232,6 +1232,7 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Async Event Request\n");
 
@@ -1256,6 +1257,10 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 		ctrlr->reservation_event.raw = 0;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+
+	/* AER cmd is an exception */
+	sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
+	sgroup->io_outstanding--;
 
 	ctrlr->aer_req = req;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
@@ -2396,6 +2401,8 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	/* weird,jenkins compiler reports dereference of null pointer */
+	assert(group != NULL && group->sgroups != NULL);
 	ns_info = &group->sgroups[ctrlr->subsys->id].ns_info[nsid - 1];
 	if (nvmf_ns_reservation_request_check(ns_info, ctrlr, req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Reservation Conflict for nsid %u, opcode %u\n",
@@ -2462,12 +2469,16 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
 
 	rsp->sqid = 0;
 	rsp->status.p = 0;
 	rsp->cid = req->cmd->nvme_cmd.cid;
 
 	qpair = req->qpair;
+	if (qpair->ctrlr) {
+		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF,
 		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
@@ -2477,6 +2488,17 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	TAILQ_REMOVE(&qpair->outstanding, req, link);
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
+	}
+
+	/* AER cmd is an exception, we don't count AER cmd */
+	if (sgroup != NULL && qpair->ctrlr->aer_req != req) {
+		assert(sgroup->io_outstanding > 0);
+		sgroup->io_outstanding--;
+		if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSING &&
+		    sgroup->io_outstanding == 0) {
+			sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+			sgroup->cb_fn(sgroup->cb_arg, 0);
+		}
 	}
 
 	spdk_nvmf_qpair_request_cleanup(qpair);
@@ -2533,27 +2555,36 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	spdk_nvmf_request_exec_status status;
+	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
 
 	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
+
+	if (qpair->ctrlr) {
+		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+	}
 
 	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 		/* Place the request on the outstanding list so we can keep track of it */
 		TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+		/* Still count the IO */
+		if (sgroup != NULL) {
+			sgroup->io_outstanding++;
+		}
 		spdk_nvmf_request_complete(req);
 		return;
 	}
 
 	/* Check if the subsystem is paused (if there is a subsystem) */
-	if (qpair->ctrlr) {
-		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+	if (sgroup != NULL) {
 		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
 			/* The subsystem is not currently active. Queue this request. */
 			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
 			return;
 		}
 
+		sgroup->io_outstanding++;
 	}
 
 	/* Place the request on the outstanding list so we can keep track of it */
