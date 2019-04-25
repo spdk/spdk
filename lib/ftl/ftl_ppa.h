@@ -42,6 +42,8 @@
 #define FTL_LBA_INVALID		((uint64_t)-1)
 /* Smallest data unit size */
 #define FTL_BLOCK_SIZE		4096
+/* Number of LBAs that could be stored in single block */
+#define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(uint64_t))
 
 /* This structure represents PPA address. It can have one of the following */
 /* formats: */
