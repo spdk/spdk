@@ -110,6 +110,13 @@ print_uint64(const char *arg_string, uint64_t arg)
 }
 
 static void
+print_string(const char *arg_string, uint64_t arg)
+{
+	char *str = (char *)&arg;
+	printf("%-7.7s%.8s ", arg_string, str);
+}
+
+static void
 print_size(uint32_t size)
 {
 	if (size > 0) {
@@ -132,17 +139,23 @@ print_float(const char *arg_string, float arg)
 }
 
 static void
-print_arg(bool arg_is_ptr, const char *arg_string, uint64_t arg)
+print_arg(uint8_t arg_type, const char *arg_string, uint64_t arg)
 {
 	if (arg_string[0] == 0) {
 		printf("%24s", "");
 		return;
 	}
 
-	if (arg_is_ptr) {
+	switch (arg_type) {
+	case SPDK_TRACE_ARG_TYPE_PTR:
 		print_ptr(arg_string, arg);
-	} else {
+		break;
+	case SPDK_TRACE_ARG_TYPE_INT:
 		print_uint64(arg_string, arg);
+		break;
+	case SPDK_TRACE_ARG_TYPE_STR:
+		print_string(arg_string, arg);
+		break;
 	}
 }
 
@@ -176,7 +189,7 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 	printf("%-*s ", (int)sizeof(d->name), d->name);
 	print_size(e->size);
 
-	print_arg(d->arg1_is_ptr, d->arg1_name, e->arg1);
+	print_arg(d->arg1_type, d->arg1_name, e->arg1);
 	if (d->new_object) {
 		print_object_id(d->object_type, stats->index[e->object_id]);
 	} else if (d->object_type != OBJECT_NONE) {
@@ -195,7 +208,7 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 			printf("id:    N/A");
 		}
 	} else if (e->object_id != 0) {
-		print_arg(true, "object: ", e->object_id);
+		print_arg(SPDK_TRACE_ARG_TYPE_PTR, "object: ", e->object_id);
 	}
 	printf("\n");
 }
