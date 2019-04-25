@@ -155,6 +155,9 @@ struct spdk_ftl_dev {
 	/* LBA map memory pool */
 	struct spdk_mempool			*lba_pool;
 
+	/* LBA map requests pool */
+	struct spdk_mempool			*lba_request_pool;
+
 	/* Statistics */
 	struct ftl_stats			stats;
 
