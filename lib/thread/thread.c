@@ -780,7 +780,6 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 	ct->ctx = ctx;
 	ct->cpl = cpl;
 
-	pthread_mutex_lock(&g_devlist_mutex);
 	thread = _get_thread();
 	if (!thread) {
 		SPDK_ERRLOG("No thread allocated\n");
@@ -789,6 +788,8 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 		return;
 	}
 	ct->orig_thread = thread;
+
+	pthread_mutex_lock(&g_devlist_mutex);
 	ct->cur_thread = TAILQ_FIRST(&g_threads);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
