@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a33c7838_1cffe43e",
+        "filename": "test/vhost/windows/windows_scsi_compliance.ps1",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-25T12:22:16Z",
+      "side": 1,
+      "message": "We can probably get rid of commented lines.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 15
+      },
+      "revId": "dbf435f0d5f40161bf896e7b958cc1c2c37a4d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7cb6f30_96b9e785",
+        "filename": "test/vhost/windows/windows_scsi_compliance.ps1",
+        "patchSetId": 7
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-25T12:22:16Z",
+      "side": 1,
+      "message": "White spaces everywhere :)",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 2
+      },
+      "revId": "dbf435f0d5f40161bf896e7b958cc1c2c37a4d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16027972_f29de7a4",
+        "filename": "test/vhost/windows/windows_scsi_compliance.ps1",
+        "patchSetId": 7
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-25T12:22:16Z",
+      "side": 1,
+      "message": "We can probably get rid of commented lines.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 37
+      },
+      "revId": "dbf435f0d5f40161bf896e7b958cc1c2c37a4d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

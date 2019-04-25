@@ -335,6 +335,30 @@
     },
     {
       "key": {
+        "uuid": "79c45056_f190e9db",
+        "filename": "test/vhost/windows/windows_scsi_compliance.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-25T12:22:16Z",
+      "side": 1,
+      "message": "Yes, I know that simple split() works as well, but I\u0027d prefer to use os.path.dirname(), since it\u0027s available, and then we dont need to do \"[0]\" as well.",
+      "parentUuid": "5b4abb74_1234085e",
+      "range": {
+        "startLine": 54,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 30
+      },
+      "revId": "057560edbe7217a018656c3d36999cf00b874137",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1cae028b_f3a21d23",
         "filename": "test/vhost/windows/windows_scsi_compliance.py",
         "patchSetId": 4
