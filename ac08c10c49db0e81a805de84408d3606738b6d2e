@@ -16,6 +16,24 @@
       "revId": "ac08c10c49db0e81a805de84408d3606738b6d2e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c41b5db5_97bacb89",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 5128,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-25T23:18:41Z",
+      "side": 1,
+      "message": "It is done with the cb_fn in _spdk_delete_snapshot_cleanup_finish function. Look at lined 5360 and 5058.",
+      "parentUuid": "626d2903_3402fa0f",
+      "revId": "ac08c10c49db0e81a805de84408d3606738b6d2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
