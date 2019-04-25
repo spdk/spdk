@@ -339,6 +339,23 @@ def set_bdev_nvme_err_injection(client, name, timeout, count,
     return client.call('set_bdev_nvme_err_injection', params)
 
 
+def remove_bdev_nvme_err_injection(client, name, opc, admin):
+    """Remove the error NVMe command setting.
+    Args:
+        name: Block device name of the NVMe controller.
+        opc: Opcode for the error command.
+        admin: Admin command if true.
+    Returns:
+        None.
+    """
+
+    params = {'name': name,
+              'opc': opc,
+              'admin': admin}
+
+    return client.call('remove_bdev_nvme_err_injection', params)
+
+
 def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                         subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None,
                         prchk_reftag=None, prchk_guard=None):
