@@ -34,6 +34,24 @@
       "revId": "02e59a164fe668f870911e4ba2e74690f81ee1e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83129eba_0ac3a6d8",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-25T14:13:43Z",
+      "side": 1,
+      "message": "Don\u0027t pass my test that described in https://github.com/spdk/spdk/issues/768\n\nSimple reproduce steps:\n1. ./nvmf_tgt -i 0 -r /var/tmp/spdk.spck.p\n2. ./nvmf_tgt -i 0 -r /var/tmp/spdk.sock\n\nThe we\u0027ll see secondary complains timeout, because primary has no ssd ctrl to initialize and g_spdk_nvme_driver-\u003einitialized will never be set to true.",
+      "parentUuid": "9e0c4ae9_c651d08a",
+      "revId": "02e59a164fe668f870911e4ba2e74690f81ee1e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
