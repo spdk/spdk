@@ -440,9 +440,9 @@ than or equal to 4.14 will see significantly reduced performance.
 fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	if [[ $(nasm -v | awk '{print $3}' | sed 's/[^0-9]*//g') -lt "21202" ]]; then
+	if [[ $(nasm -v | awk '{print $3}' | sed 's/[^0-9]*//g') -lt "21303" ]]; then
 		echo "Notice: ISA-L, compression & crypto auto-disabled due to nasm dependency."
-		echo "These features require NASM version 2.12.02 or newer.  Please install"
+		echo "These features require NASM version 2.13.03 or newer.  Please install"
 		echo "or upgrade then re-run this script."
 		CONFIG[ISAL]=n
 		CONFIG[CRYPTO]=n
