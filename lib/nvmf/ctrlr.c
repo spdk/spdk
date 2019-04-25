@@ -2474,6 +2474,23 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		      rsp->cid, rsp->cdw0, rsp->rsvd1,
 		      *(uint16_t *)&rsp->status);
 
+	/* active qpair and have a subsystem, judge group and sgroups for the unit test */
+	if (qpair->state == SPDK_NVMF_QPAIR_ACTIVE && qpair->ctrlr &&
+	    qpair->group && qpair->group->sgroups) {
+		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+
+		/* For the unit test */
+		if (sgroup != NULL) {
+			assert(sgroup->io_outstanding > 0);
+			sgroup->io_outstanding--;
+			if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSING &&
+			    sgroup->io_outstanding == 0) {
+				sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+				sgroup->cb_fn(sgroup->cb_arg, 0);
+			}
+		}
+	}
+
 	TAILQ_REMOVE(&qpair->outstanding, req, link);
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
@@ -2554,6 +2571,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 			return;
 		}
 
+		sgroup->io_outstanding++;
 	}
 
 	/* Place the request on the outstanding list so we can keep track of it */
