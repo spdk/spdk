@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d8406ed_399edf46",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-25T20:08:17Z",
+      "side": 1,
+      "message": "You can remove this comment.  This would be similar to other functions in this file, which just comment the declaration in the header.  It avoids duplicating the comments, or even worse, them getting out of sync over time.",
+      "revId": "0cac5b072d77b0f6e52f2dc92ff7ee7f4fad3bae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
