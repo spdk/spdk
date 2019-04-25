@@ -279,6 +279,7 @@ test_connect(void)
 {
 	struct spdk_nvmf_fabric_connect_data connect_data;
 	struct spdk_nvmf_poll_group group;
+	struct spdk_nvmf_subsystem_poll_group sgroup;
 	struct spdk_nvmf_transport transport;
 	struct spdk_nvmf_subsystem subsystem;
 	struct spdk_nvmf_request req;
@@ -298,6 +299,7 @@ test_connect(void)
 	int rc;
 
 	memset(&group, 0, sizeof(group));
+	memset(&sgroup, 0, sizeof(sgroup));
 	group.thread = spdk_get_thread();
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
@@ -338,6 +340,9 @@ test_connect(void)
 	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
+
+	sgroup.io_outstanding = 5;
+	group.sgroups = &sgroup;
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.connect_cmd.opcode = SPDK_NVME_OPC_FABRIC;

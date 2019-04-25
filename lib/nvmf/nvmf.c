@@ -1142,7 +1142,15 @@ spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 	}
 
 	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
-	/* TODO: This currently does not quiesce I/O */
+	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+
+	if (sgroup->io_outstanding > 0) {
+		sgroup->cb_fn = cb_fn;
+		sgroup->cb_arg = cb_arg;
+		return;
+	}
+
+	assert(sgroup->io_outstanding == 0);
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
 fini:
 	if (cb_fn) {
