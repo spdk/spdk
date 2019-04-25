@@ -88,6 +88,7 @@ struct spdk_iscsi_tgt_node {
 	TAILQ_ENTRY(spdk_iscsi_tgt_node) tailq;
 
 	bool destructed;
+	struct spdk_poller *destruct_poller;
 };
 
 int spdk_iscsi_parse_tgt_nodes(void);
