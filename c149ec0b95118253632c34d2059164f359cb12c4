@@ -22,6 +22,30 @@
       "revId": "c149ec0b95118253632c34d2059164f359cb12c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3916a9e5_e2b1c872",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-25T08:58:26Z",
+      "side": 1,
+      "message": "This was added for handling failures from write. ftl_band_wrtie_failed() set band to closed state but due to completion queue reordering we can have already closed band.",
+      "parentUuid": "7bfe59fc_4003e695",
+      "range": {
+        "startLine": 470,
+        "startChar": 2,
+        "endLine": 470,
+        "endChar": 45
+      },
+      "revId": "c149ec0b95118253632c34d2059164f359cb12c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
