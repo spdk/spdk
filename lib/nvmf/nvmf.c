@@ -1122,12 +1122,51 @@ fini:
 	}
 }
 
+struct sgroup_pause_ctx {
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	spdk_nvmf_poll_group_mod_done cb_fn;
+	void *cb_arg;
+	uint32_t next_index;
+};
+
+static void
+_spdk_nvmf_poll_group_pause_subsystem(void *arg)
+{
+	struct sgroup_pause_ctx *ctx = arg;
+	struct spdk_nvmf_subsystem_poll_group *sgroup = ctx->sgroup;
+	int rc = 0;
+	uint32_t i;
+
+	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSING);
+
+	/* To quiesce I/O */
+	for (i = ctx->next_index; i < sgroup->num_ns; i++) {
+		if (sgroup->ns_info[i].channel != NULL) {
+			rc = spdk_bdev_get_channel_io_outstanding(
+				     spdk_io_channel_get_ctx(sgroup->ns_info[i].channel));
+			if (rc != 0) {
+				ctx->next_index = i;
+				spdk_thread_send_msg(spdk_get_thread(), _spdk_nvmf_poll_group_pause_subsystem, ctx);
+			}
+		}
+	}
+
+	if (rc == 0) {
+		sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+		if (ctx->cb_fn) {
+			ctx->cb_fn(ctx->cb_arg, rc);
+		}
+		free(ctx);
+	}
+}
+
 void
 spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 				     struct spdk_nvmf_subsystem *subsystem,
 				     spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct sgroup_pause_ctx *ctx;
 	int rc = 0;
 
 	if (subsystem->id >= group->num_sgroups) {
@@ -1142,8 +1181,22 @@ spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 	}
 
 	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
-	/* TODO: This currently does not quiesce I/O */
-	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+
+	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		rc = -1;
+		goto fini;
+	}
+
+	ctx->sgroup = sgroup;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	_spdk_nvmf_poll_group_pause_subsystem(ctx);
+
+	return;
 fini:
 	if (cb_fn) {
 		cb_fn(cb_arg, rc);

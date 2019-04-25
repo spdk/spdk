@@ -555,6 +555,15 @@ uint64_t spdk_bdev_get_io_time(const struct spdk_bdev *bdev);
 uint64_t spdk_bdev_get_weighted_io_time(const struct spdk_bdev *bdev);
 
 /**
+ * Get the uncompleted I/Os of this bdev channel.
+ *
+ * \param io_ctx The bdev channel.
+ *
+ * \return The uncompleted I/Os.
+ */
+uint64_t spdk_bdev_get_channel_io_outstanding(void *io_ctx);
+
+/**
  * Obtain an I/O channel for the block device opened by the specified
  * descriptor. I/O channels are bound to threads, so the resulting I/O
  * channel may only be used from the thread it was originally obtained
