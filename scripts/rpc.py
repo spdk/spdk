@@ -339,6 +339,19 @@ if __name__ == "__main__":
                    default=True, action='store_true')
     p.set_defaults(func=set_bdev_nvme_err_injection)
 
+    def remove_bdev_nvme_err_injection(args):
+        rpc.bdev.remove_bdev_nvme_err_injection(args.client,
+                                                name=args.name,
+                                                opc=args.opc,
+                                                admin=args.admin)
+
+    p = subparsers.add_parser('remove_bdev_nvme_err_injection',
+                              help='Remove the error command.')
+    p.add_argument('-n', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
+    p.add_argument('-o', '--opc', help="NVMe command opcode.", type=int, required=True)
+    p.add_argument('-a', '--admin', help="The error command is for Admin queue.", default=False, action='store_false')
+    p.set_defaults(func=remove_bdev_nvme_err_injection)
+
     def construct_nvme_bdev(args):
         print_array(rpc.bdev.construct_nvme_bdev(args.client,
                                                  name=args.name,
