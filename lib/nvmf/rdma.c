@@ -868,6 +868,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 			STAILQ_FOREACH_SAFE(rdma_recv, &rqpair->resources->incoming_queue, link, recv_tmp) {
 				if (rqpair == rdma_recv->qpair) {
 					STAILQ_REMOVE_HEAD(&rqpair->resources->incoming_queue, link);
+					rdma_recv->qpair = NULL;
 					rc = ibv_post_srq_recv(rqpair->srq, &rdma_recv->wr, &bad_recv_wr);
 					if (rc) {
 						SPDK_ERRLOG("Unable to re-post rx descriptor\n");
