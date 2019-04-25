@@ -653,44 +653,69 @@ static const struct spdk_json_object_decoder rpc_delete_target_node_decoders[] =
 	{"name", offsetof(struct rpc_delete_target_node, name), spdk_json_decode_string},
 };
 
+struct rpc_delete_target_node_ctx {
+	struct rpc_delete_target_node req;
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+rpc_delete_target_node_done(void *cb_arg, int rc)
+{
+	struct rpc_delete_target_node_ctx *ctx = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	free_rpc_delete_target_node(&ctx->req);
+
+	w = spdk_jsonrpc_begin_result(ctx->request);
+	if (w == NULL) {
+		goto exit;
+	}
+
+	spdk_json_write_bool(w, rc == 0);
+	spdk_jsonrpc_end_result(ctx->request, w);
+exit:
+	free(ctx);
+}
+
 static void
 spdk_rpc_delete_target_node(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_delete_target_node req = {};
-	struct spdk_json_write_ctx *w;
+	struct rpc_delete_target_node_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(ENOMEM));
+		return;
+	}
 
 	if (spdk_json_decode_object(params, rpc_delete_target_node_decoders,
 				    SPDK_COUNTOF(rpc_delete_target_node_decoders),
-				    &req)) {
+				    &ctx->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	if (req.name == NULL) {
+	if (ctx->req.name == NULL) {
 		SPDK_ERRLOG("missing name param\n");
 		goto invalid;
 	}
 
-	if (spdk_iscsi_shutdown_tgt_node_by_name(req.name)) {
+	ctx->request = request;
+
+	if (spdk_iscsi_shutdown_tgt_node_by_name(ctx->req.name)) {
 		SPDK_ERRLOG("shutdown_tgt_node_by_name failed\n");
 		goto invalid;
 	}
 
-	free_rpc_delete_target_node(&req);
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
+	rpc_delete_target_node_done(ctx, 0);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_delete_target_node(&req);
+	free_rpc_delete_target_node(&ctx->req);
+	free(ctx);
 }
 SPDK_RPC_REGISTER("delete_target_node", spdk_rpc_delete_target_node, SPDK_RPC_RUNTIME)
 
