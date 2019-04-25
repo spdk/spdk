@@ -36,7 +36,6 @@
 #include "spdk_cunit.h"
 #include "common/lib/test_env.c"
 
-#include "ftl/ftl_core.c"
 #include "ftl/ftl_band.c"
 #include "../common/utils.c"
 
@@ -57,25 +56,50 @@ static struct spdk_ftl_punit_range g_range = {
 	.end		= 9,
 };
 
-static struct spdk_ftl_dev		*g_dev;
-static struct ftl_band	*g_band;
+#if defined(DEBUG)
+DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band), true);
+#endif
 
 static void
-setup_band(void)
+setup_band(struct ftl_band **band, const struct spdk_ocssd_geometry_data *geo,
+	   const struct spdk_ftl_punit_range *range)
 {
 	int rc;
+	struct spdk_ftl_dev *dev;
 
-	g_dev = test_init_ftl_dev(&g_geo, &g_range);
-	g_band = test_init_ftl_band(g_dev, TEST_BAND_IDX);
-	rc = ftl_band_alloc_lba_map(g_band);
-	CU_ASSERT_EQUAL_FATAL(rc, 0);
+	dev = test_init_ftl_dev(geo, range);
+	*band = test_init_ftl_band(dev, TEST_BAND_IDX);
+	rc = ftl_band_alloc_lba_map(*band);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	ftl_band_clear_lba_map(*band);
 }
 
 static void
-cleanup_band(void)
+cleanup_band(struct ftl_band *band)
 {
-	test_free_ftl_band(g_band);
-	test_free_ftl_dev(g_dev);
+	struct spdk_ftl_dev *dev = band->dev;
+
+	test_free_ftl_band(band);
+	test_free_ftl_dev(dev);
+}
+
+struct ftl_io *
+ftl_io_init_internal(const struct ftl_io_init_opts *opts)
+{
+	struct ftl_io *io;
+	size_t io_size = sizeof(struct ftl_md_io);
+
+	io = calloc(io_size, 1);
+	SPDK_CU_ASSERT_FATAL(io != NULL);
+
+	return io;
+}
+
+int
+ftl_io_read(struct ftl_io *io)
+{
+	free(io);
+	return 0;
 }
 
 static struct ftl_ppa
@@ -88,142 +112,190 @@ ppa_from_punit(uint64_t punit)
 	return ppa;
 }
 
+static int
+invalidate_addr(struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
+{
+	struct ftl_band *band = ftl_band_from_ppa(dev, ppa);
+	struct ftl_lba_map *lba_map = &band->lba_map;
+	uint64_t offset;
+
+	offset = ftl_band_lbkoff_from_ppa(band, ppa);
+
+	if (spdk_bit_array_get(lba_map->vld, offset)) {
+		assert(lba_map->num_vld > 0);
+		spdk_bit_array_clear(lba_map->vld, offset);
+		lba_map->num_vld--;
+		return 1;
+	}
+
+	return 0;
+}
+
+static void
+cb_fn_stub(void *ctx, int status)
+{
+	size_t *counter = ctx;
+
+	(*counter)++;
+	CU_ASSERT_EQUAL(status, 0);
+}
+
 static void
 test_band_lbkoff_from_ppa_base(void)
 {
+	struct ftl_band *band;
 	struct ftl_ppa ppa;
 	uint64_t offset, i, flat_lun = 0;
 
-	setup_band();
+	setup_band(&band, &g_geo, &g_range);
+
 	for (i = g_range.begin; i < g_range.end; ++i) {
 		ppa = ppa_from_punit(i);
 		ppa.chk = TEST_BAND_IDX;
 
-		offset = ftl_band_lbkoff_from_ppa(g_band, ppa);
-		CU_ASSERT_EQUAL(offset, flat_lun * ftl_dev_lbks_in_chunk(g_dev));
+		offset = ftl_band_lbkoff_from_ppa(band, ppa);
+		CU_ASSERT_EQUAL(offset, flat_lun * ftl_dev_lbks_in_chunk(band->dev));
 		flat_lun++;
 	}
-	cleanup_band();
+
+	cleanup_band(band);
 }
 
 static void
 test_band_lbkoff_from_ppa_lbk(void)
 {
+	struct ftl_band *band;
 	struct ftl_ppa ppa;
 	uint64_t offset, expect, i, j;
 
-	setup_band();
+	setup_band(&band, &g_geo, &g_range);
+
 	for (i = g_range.begin; i < g_range.end; ++i) {
 		for (j = 0; j < g_geo.clba; ++j) {
 			ppa = ppa_from_punit(i);
 			ppa.chk = TEST_BAND_IDX;
 			ppa.lbk = j;
 
-			offset = ftl_band_lbkoff_from_ppa(g_band, ppa);
+			offset = ftl_band_lbkoff_from_ppa(band, ppa);
 
-			expect = test_offset_from_ppa(ppa, g_band);
+			expect = test_offset_from_ppa(ppa, band);
 			CU_ASSERT_EQUAL(offset, expect);
 		}
 	}
-	cleanup_band();
+
+	cleanup_band(band);
 }
 
 static void
 test_band_ppa_from_lbkoff(void)
 {
+	struct ftl_band *band;
 	struct ftl_ppa ppa, expect;
 	uint64_t offset, i, j;
 
-	setup_band();
+	setup_band(&band, &g_geo, &g_range);
+
 	for (i = g_range.begin; i < g_range.end; ++i) {
 		for (j = 0; j < g_geo.clba; ++j) {
 			expect = ppa_from_punit(i);
 			expect.chk = TEST_BAND_IDX;
 			expect.lbk = j;
 
-			offset = ftl_band_lbkoff_from_ppa(g_band, expect);
-			ppa = ftl_band_ppa_from_lbkoff(g_band, offset);
+			offset = ftl_band_lbkoff_from_ppa(band, expect);
+			ppa = ftl_band_ppa_from_lbkoff(band, offset);
 
 			CU_ASSERT_EQUAL(ppa.ppa, expect.ppa);
 		}
 	}
-	cleanup_band();
+
+	cleanup_band(band);
 }
 
 static void
 test_band_set_addr(void)
 {
+	struct ftl_band *band;
 	struct ftl_lba_map *lba_map;
 	struct ftl_ppa ppa;
 	uint64_t offset = 0;
 
-	setup_band();
-	lba_map = &g_band->lba_map;
+	setup_band(&band, &g_geo, &g_range);
+
+	lba_map = &band->lba_map;
 	ppa = ppa_from_punit(g_range.begin);
 	ppa.chk = TEST_BAND_IDX;
 
 	CU_ASSERT_EQUAL(lba_map->num_vld, 0);
 
-	offset = test_offset_from_ppa(ppa, g_band);
+	offset = test_offset_from_ppa(ppa, band);
 
-	ftl_band_set_addr(g_band, TEST_LBA, ppa);
+	ftl_band_set_addr(band, TEST_LBA, ppa);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
 	CU_ASSERT_EQUAL(lba_map->map[offset], TEST_LBA);
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset));
 
 	ppa.pu++;
-	offset = test_offset_from_ppa(ppa, g_band);
-	ftl_band_set_addr(g_band, TEST_LBA + 1, ppa);
+	offset = test_offset_from_ppa(ppa, band);
+	ftl_band_set_addr(band, TEST_LBA + 1, ppa);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
 	CU_ASSERT_EQUAL(lba_map->map[offset], TEST_LBA + 1);
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset));
 	ppa.pu--;
-	offset = test_offset_from_ppa(ppa, g_band);
+	offset = test_offset_from_ppa(ppa, band);
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset));
-	cleanup_band();
+
+	cleanup_band(band);
 }
 
 static void
 test_invalidate_addr(void)
 {
+	struct ftl_band *band;
 	struct ftl_lba_map *lba_map;
 	struct ftl_ppa ppa;
 	uint64_t offset[2];
 
-	setup_band();
-	lba_map = &g_band->lba_map;
+	setup_band(&band, &g_geo, &g_range);
+
+	lba_map = &band->lba_map;
 	ppa = ppa_from_punit(g_range.begin);
 	ppa.chk = TEST_BAND_IDX;
-	offset[0] = test_offset_from_ppa(ppa, g_band);
+	offset[0] = test_offset_from_ppa(ppa, band);
 
-	ftl_band_set_addr(g_band, TEST_LBA, ppa);
+	ftl_band_set_addr(band, TEST_LBA, ppa);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset[0]));
-	ftl_invalidate_addr(g_band->dev, ppa);
+	invalidate_addr(band->dev, ppa);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 0);
 	CU_ASSERT_FALSE(spdk_bit_array_get(lba_map->vld, offset[0]));
 
-	offset[0] = test_offset_from_ppa(ppa, g_band);
-	ftl_band_set_addr(g_band, TEST_LBA, ppa);
+	offset[0] = test_offset_from_ppa(ppa, band);
+	ftl_band_set_addr(band, TEST_LBA, ppa);
 	ppa.pu++;
-	offset[1] = test_offset_from_ppa(ppa, g_band);
-	ftl_band_set_addr(g_band, TEST_LBA + 1, ppa);
+	offset[1] = test_offset_from_ppa(ppa, band);
+	ftl_band_set_addr(band, TEST_LBA + 1, ppa);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset[0]));
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset[1]));
-	ftl_invalidate_addr(g_band->dev, ppa);
+	invalidate_addr(band->dev, ppa);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
 	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset[0]));
 	CU_ASSERT_FALSE(spdk_bit_array_get(lba_map->vld, offset[1]));
-	cleanup_band();
+
+	cleanup_band(band);
 }
 
 static void
 test_next_xfer_ppa(void)
 {
+	struct ftl_band *band;
+	struct spdk_ftl_dev *dev;
 	struct ftl_ppa ppa, result, expect;
 
-	setup_band();
+	setup_band(&band, &g_geo, &g_range);
+
+	dev = band->dev;
+
 	/* Verify simple one lbk incremention */
 	ppa = ppa_from_punit(g_range.begin);
 	ppa.chk = TEST_BAND_IDX;
@@ -231,65 +303,193 @@ test_next_xfer_ppa(void)
 	expect = ppa;
 	expect.lbk = 1;
 
-	result = ftl_band_next_xfer_ppa(g_band, ppa, 1);
+	result = ftl_band_next_xfer_ppa(band, ppa, 1);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
 	/* Verify jumping between chunks */
 	expect = ppa_from_punit(g_range.begin + 1);
 	expect.chk = TEST_BAND_IDX;
-	result = ftl_band_next_xfer_ppa(g_band, ppa, g_dev->xfer_size);
+	result = ftl_band_next_xfer_ppa(band, ppa, dev->xfer_size);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
 	/* Verify jumping works with unaligned offsets */
 	expect = ppa_from_punit(g_range.begin + 1);
 	expect.chk = TEST_BAND_IDX;
 	expect.lbk = 3;
-	result = ftl_band_next_xfer_ppa(g_band, ppa, g_dev->xfer_size + 3);
+	result = ftl_band_next_xfer_ppa(band, ppa, dev->xfer_size + 3);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
 	/* Verify jumping from last chunk to the first one */
 	expect = ppa_from_punit(g_range.begin);
 	expect.chk = TEST_BAND_IDX;
-	expect.lbk = g_dev->xfer_size;
+	expect.lbk = dev->xfer_size;
 	ppa = ppa_from_punit(g_range.end);
 	ppa.chk = TEST_BAND_IDX;
-	result = ftl_band_next_xfer_ppa(g_band, ppa, g_dev->xfer_size);
+	result = ftl_band_next_xfer_ppa(band, ppa, dev->xfer_size);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
 	/* Verify jumping from last chunk to the first one with unaligned offset */
 	expect = ppa_from_punit(g_range.begin);
 	expect.chk = TEST_BAND_IDX;
-	expect.lbk = g_dev->xfer_size + 2;
+	expect.lbk = dev->xfer_size + 2;
 	ppa = ppa_from_punit(g_range.end);
 	ppa.chk = TEST_BAND_IDX;
-	result = ftl_band_next_xfer_ppa(g_band, ppa, g_dev->xfer_size + 2);
+	result = ftl_band_next_xfer_ppa(band, ppa, dev->xfer_size + 2);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
 	/* Verify large offset spanning across the whole band multiple times */
 	expect = ppa_from_punit(g_range.begin);
 	expect.chk = TEST_BAND_IDX;
-	expect.lbk = g_dev->xfer_size * 5 + 4;
+	expect.lbk = dev->xfer_size * 5 + 4;
 	ppa = ppa_from_punit(g_range.begin);
 	ppa.chk = TEST_BAND_IDX;
-	ppa.lbk = g_dev->xfer_size * 2 + 1;
-	result = ftl_band_next_xfer_ppa(g_band, ppa, 3 * g_dev->xfer_size *
-					ftl_dev_num_punits(g_dev) + 3);
+	ppa.lbk = dev->xfer_size * 2 + 1;
+	result = ftl_band_next_xfer_ppa(band, ppa, 3 * dev->xfer_size *
+					ftl_dev_num_punits(dev) + 3);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
 	/* Remove one chunk and verify it's skipped properly */
-	g_band->chunk_buf[1].state = FTL_CHUNK_STATE_BAD;
-	CIRCLEQ_REMOVE(&g_band->chunks, &g_band->chunk_buf[1], circleq);
-	g_band->num_chunks--;
+	band->chunk_buf[1].state = FTL_CHUNK_STATE_BAD;
+	CIRCLEQ_REMOVE(&band->chunks, &band->chunk_buf[1], circleq);
+	band->num_chunks--;
 	expect = ppa_from_punit(g_range.begin + 2);
 	expect.chk = TEST_BAND_IDX;
-	expect.lbk = g_dev->xfer_size * 5 + 4;
+	expect.lbk = dev->xfer_size * 5 + 4;
 	ppa = ppa_from_punit(g_range.begin);
 	ppa.chk = TEST_BAND_IDX;
-	ppa.lbk = g_dev->xfer_size * 2 + 1;
-	result = ftl_band_next_xfer_ppa(g_band, ppa, 3 * g_dev->xfer_size *
-					(ftl_dev_num_punits(g_dev) - 1) + g_dev->xfer_size + 3);
+	ppa.lbk = dev->xfer_size * 2 + 1;
+	result = ftl_band_next_xfer_ppa(band, ppa, 3 * dev->xfer_size *
+					(ftl_dev_num_punits(dev) - 1) + dev->xfer_size + 3);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
-	cleanup_band();
+
+	cleanup_band(band);
+}
+
+static void
+test_band_read_lba_map(void)
+{
+	struct ftl_band *band;
+	struct spdk_ftl_dev *dev;
+	struct ftl_lba_map *lba_map;
+	struct ftl_cb cb = {};
+	struct ftl_md_io io = {};
+	struct spdk_ocssd_geometry_data geo = g_geo;
+	size_t i, seg_max, offset, lba_cnt, cb_cnt = 0;
+
+	geo.clba = geo.ws_opt * 1024;
+	setup_band(&band, &geo, &g_range);
+
+	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
+	lba_map = &band->lba_map;
+	dev = band->dev;
+	cb.fn = cb_fn_stub;
+	cb.ctx = &cb_cnt;
+
+	seg_max = spdk_divide_round_up(ftl_num_band_lbks(dev), lba_map->seg_size);
+	for (i = 0; i < seg_max; ++i) {
+		CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_CLEAR);
+	}
+
+	/* Read whole lba map */
+	lba_cnt = ftl_num_band_lbks(dev);
+	CU_ASSERT_EQUAL(ftl_band_read_lba_map(band, 0, lba_cnt, cb), 0);
+
+	for (i = 0; i < seg_max; ++i) {
+		CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_PENDING);
+	}
+
+	io.cb = cb;
+	io.io.ppa = ftl_band_lba_map_ppa(band, 0);
+	io.io.lbk_cnt = spdk_divide_round_up(lba_cnt, FTL_NUM_LBA_IN_BLOCK);
+	io.io.dev = dev;
+	io.io.band = band;
+	ftl_read_lba_map_cb(&io, 0);
+	CU_ASSERT_EQUAL(cb_cnt, 1);
+
+	for (i = 0; i < seg_max; ++i) {
+		CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_CACHED);
+	}
+
+	ftl_band_release_lba_map(band);
+	SPDK_CU_ASSERT_FATAL(ftl_band_alloc_lba_map(band) == 0);
+
+	for (i = 0; i < seg_max; ++i) {
+		CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_CLEAR);
+	}
+
+
+	/* Read last lba */
+	offset = ftl_num_band_lbks(dev) - 1;
+	lba_cnt = 1;
+	CU_ASSERT_EQUAL(ftl_band_read_lba_map(band, offset, lba_cnt, cb), 0);
+
+	for (i = 0; i < seg_max; ++i) {
+		if (i >= offset / lba_map->seg_size) {
+			CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_PENDING);
+		} else {
+			CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_CLEAR);
+		}
+	}
+
+	cb_cnt = 0;
+	io.io.ppa = ftl_band_lba_map_ppa(band, offset / FTL_NUM_LBA_IN_BLOCK);
+	io.io.lbk_cnt = spdk_divide_round_up(lba_cnt, FTL_NUM_LBA_IN_BLOCK);
+	ftl_read_lba_map_cb(&io, 0);
+	CU_ASSERT_EQUAL(cb_cnt, 1);
+
+	for (i = 0; i < seg_max; ++i) {
+		if (i >= offset / lba_map->seg_size) {
+			CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_CACHED);
+		} else {
+			CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_CLEAR);
+		}
+	}
+
+	ftl_band_release_lba_map(band);
+	SPDK_CU_ASSERT_FATAL(ftl_band_alloc_lba_map(band) == 0);
+
+	for (i = 0; i < seg_max; ++i) {
+		CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_CLEAR);
+	}
+
+
+	/* Read overlapping regions */
+	CU_ASSERT_TRUE(ftl_num_band_lbks(dev) > 4);
+
+	offset = 0;
+	lba_cnt = ftl_num_band_lbks(dev);
+	CU_ASSERT_EQUAL(ftl_band_read_lba_map(band, offset, lba_cnt, cb), 0);
+
+	offset = 1;
+	lba_cnt = 1;
+	CU_ASSERT_EQUAL(ftl_band_read_lba_map(band, offset, lba_cnt, cb), 0);
+
+	offset = ftl_num_band_lbks(dev) - 2;
+	lba_cnt = 2;
+	CU_ASSERT_EQUAL(ftl_band_read_lba_map(band, offset, lba_cnt, cb), 0);
+
+	for (i = 0; i < seg_max; ++i) {
+		CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_PENDING);
+	}
+
+	cb_cnt = 0;
+	io.io.ppa = ftl_band_lba_map_ppa(band, 0);
+	io.io.lbk_cnt = spdk_divide_round_up(ftl_num_band_lbks(dev), FTL_NUM_LBA_IN_BLOCK);
+	ftl_read_lba_map_cb(&io, 0);
+	CU_ASSERT_EQUAL(cb_cnt, 3);
+
+	for (i = 0; i < seg_max; ++i) {
+		CU_ASSERT_EQUAL(lba_map->seg_state_map[i], FTL_LBA_MAP_SEG_CACHED);
+	}
+
+
+	/* Read cached range */
+	cb_cnt = 0;
+	CU_ASSERT_EQUAL(ftl_band_read_lba_map(band, offset, lba_cnt, cb), 0);
+	CU_ASSERT_EQUAL(ftl_band_read_lba_map(band, offset, lba_cnt, cb), 0);
+	CU_ASSERT_EQUAL(cb_cnt, 2);
+
+	cleanup_band(band);
 }
 
 int
@@ -321,6 +521,8 @@ main(int argc, char **argv)
 			       test_invalidate_addr) == NULL
 		|| CU_add_test(suite, "test_next_xfer_ppa",
 			       test_next_xfer_ppa) == NULL
+		|| CU_add_test(suite, "test_band_read_lba_map",
+			       test_band_read_lba_map) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
