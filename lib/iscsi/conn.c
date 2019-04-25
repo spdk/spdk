@@ -765,7 +765,8 @@ spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 	spdk_iscsi_poll_group_remove_conn(conn);
 }
 
-void spdk_shutdown_iscsi_conns(void)
+static void
+spdk_iscsi_conns_start_exit(void)
 {
 	struct spdk_iscsi_conn	*conn;
 	int			i;
@@ -787,6 +788,13 @@ void spdk_shutdown_iscsi_conns(void)
 	}
 
 	pthread_mutex_unlock(&g_conns_mutex);
+}
+
+void
+spdk_shutdown_iscsi_conns(void)
+{
+	spdk_iscsi_conns_start_exit();
+
 	g_shutdown_timer = spdk_poller_register(spdk_iscsi_conn_check_shutdown, NULL,
 						1000);
 }
