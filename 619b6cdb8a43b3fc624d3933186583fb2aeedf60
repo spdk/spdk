@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5758c73_80f4347a",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-25T15:34:49Z",
+      "side": 1,
+      "message": "You assigned the dev_key, however, you free opal_key in the endof this function. So it means after this function dev-\u003edev_key will point to a invalid address. But I did not see you have any operations to reset: dev-\u003edev_key \u003d NULL.",
+      "range": {
+        "startLine": 1263,
+        "startChar": 1,
+        "endLine": 1263,
+        "endChar": 25
+      },
+      "revId": "619b6cdb8a43b3fc624d3933186583fb2aeedf60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
