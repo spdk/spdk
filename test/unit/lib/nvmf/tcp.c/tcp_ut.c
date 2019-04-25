@@ -168,6 +168,12 @@ struct spdk_bdev {
 };
 
 int
+spdk_bdev_get_internal_status(struct spdk_bdev *bdev)
+{
+	return SPDK_BDEV_STATUS_READY;
+}
+
+int
 spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 			       const struct spdk_nvme_transport_id *trid2)
 {

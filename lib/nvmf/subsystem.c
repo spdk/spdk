@@ -994,6 +994,22 @@ spdk_nvmf_ns_hot_remove(void *remove_ctx)
 }
 
 void
+spdk_nvmf_ns_destroy_channel(void *ctx)
+{
+	uint64_t io_outstanding;
+	struct spdk_io_channel *io_ch = ctx;
+
+	io_outstanding = spdk_bdev_get_channel_io_outstanding(spdk_io_channel_get_ctx(io_ch));
+
+	/* waiting for all the I/Os have been completed, then destroy channel */
+	if (io_outstanding != 0) {
+		spdk_thread_send_msg(io_ch->thread, spdk_nvmf_ns_destroy_channel, io_ch);
+	} else {
+		spdk_put_io_channel(io_ch);
+	}
+}
+
+void
 spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
 {
 	/* All current fields are set to 0 by default. */

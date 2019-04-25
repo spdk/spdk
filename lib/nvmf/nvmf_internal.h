@@ -379,6 +379,8 @@ void spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 		struct spdk_nvmf_ns *ns,
 		enum spdk_nvme_reservation_notification_log_page_type type);
 
+void spdk_nvmf_ns_destroy_channel(void *io_ch);
+
 /*
  * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.
  * This function should be called when attempting to recover in error paths when it is OK for
