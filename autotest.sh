@@ -235,6 +235,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [ $SPDK_TEST_BDEV_FTL -eq 1 ]; then
 		run_test suite ./test/ftl/ftl.sh
 	fi
+
+	if [ $SPDK_TEST_OPAL -eq 1]; then
+		run_test suite ./test/nvme/opal.sh
 fi
 
 timing_enter cleanup
