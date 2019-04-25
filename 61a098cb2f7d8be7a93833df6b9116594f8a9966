@@ -46,6 +46,30 @@
       "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa17c2c8_76b01004",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-25T09:51:35Z",
+      "side": 1,
+      "message": "Then we should calculate it in a similar fashion instead of looping through all the lbks checking if PPAs match.",
+      "parentUuid": "fc0396db_27dd300b",
+      "range": {
+        "startLine": 838,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 1
+      },
+      "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
