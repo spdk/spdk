@@ -279,6 +279,7 @@ test_connect(void)
 {
 	struct spdk_nvmf_fabric_connect_data connect_data;
 	struct spdk_nvmf_poll_group group;
+	struct spdk_nvmf_subsystem_poll_group *sgroups;
 	struct spdk_nvmf_transport transport;
 	struct spdk_nvmf_subsystem subsystem;
 	struct spdk_nvmf_request req;
@@ -338,6 +339,10 @@ test_connect(void)
 	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
 	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
+
+	sgroups = calloc(subsystem.id + 1, sizeof(struct spdk_nvmf_subsystem_poll_group));
+	sgroups[subsystem.id].io_outstanding = 5;
+	group.sgroups = sgroups;
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.connect_cmd.opcode = SPDK_NVME_OPC_FABRIC;
@@ -643,6 +648,7 @@ test_connect(void)
 	MOCK_CLEAR(spdk_nvmf_poll_group_create);
 
 	spdk_bit_array_free(&ctrlr.qpair_mask);
+	free(sgroups);
 }
 
 static void
@@ -1081,6 +1087,7 @@ test_reservation_notification_log_page(void)
 	struct spdk_nvme_reservation_notification_log logs[3];
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
+	memset(&qpair, 0, sizeof(qpair));
 	ctrlr.thread = spdk_get_thread();
 	TAILQ_INIT(&ctrlr.log_head);
 	ns.nsid = 1;
