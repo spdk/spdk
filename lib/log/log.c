@@ -170,8 +170,9 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 					  "%s", " ");
 		}
 		total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-				  "%2.2x ", buf[idx] & 0xff);
-		buf16[idx % 16] = isprint(buf[idx]) ? buf[idx] : '.';
+				  "%2.2x ", *buf & 0xff);
+		buf16[idx % 16] = isprint(*buf) ? *buf : '.';
+		buf++;
 	}
 	for (; idx % 16 != 0; idx++) {
 		total += snprintf(tmpbuf + total, sizeof tmpbuf - total, "   ");
