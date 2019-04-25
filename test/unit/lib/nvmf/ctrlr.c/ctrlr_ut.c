@@ -164,6 +164,12 @@ DEFINE_STUB(spdk_nvmf_transport_req_complete,
 DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
 
 int
+spdk_bdev_get_internal_status(struct spdk_bdev *bdev)
+{
+	return SPDK_BDEV_STATUS_READY;
+}
+
+int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
 	return 0;

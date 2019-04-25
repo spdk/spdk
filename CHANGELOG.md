@@ -86,6 +86,11 @@ Bdevs claimed by the `examine_config` callback will be now further examined in t
 spdk_bdev_io_get_io_channel() was added as a convenient way to get an io_channel
 from a bdev_io.
 
+Add spdk_bdev_get_internal_status() function to get internal status of the bdev.
+
+Add spdk_bdev_get_channel_io_outstanding() function to get the uncompleted I/Os
+of this bdev channel.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.

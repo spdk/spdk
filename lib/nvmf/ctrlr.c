@@ -44,6 +44,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/version.h"
+#include "spdk/bdev.h"
 
 #include "spdk_internal/log.h"
 
@@ -2387,7 +2388,9 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 
 	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
-	if (ns == NULL || ns->bdev == NULL) {
+	if (ns == NULL ||
+	    ns->bdev == NULL ||
+	    spdk_bdev_get_internal_status(ns->bdev) != SPDK_BDEV_STATUS_READY) {
 		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		response->status.dnr = 1;
