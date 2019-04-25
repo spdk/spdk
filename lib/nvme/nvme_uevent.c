@@ -151,7 +151,7 @@ parse_event(const char *buf, struct spdk_uevent *event)
 		struct spdk_pci_addr pci_addr;
 
 		event->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
-		if (!strncmp(action, "add", 3)) {
+		if (!strncmp(action, "add", 3) || !strncmp(action, "bind", 4)) {
 			event->action = SPDK_NVME_UEVENT_ADD;
 		}
 		if (!strncmp(action, "remove", 6)) {
