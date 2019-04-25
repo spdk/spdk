@@ -49,8 +49,13 @@ extern "C" {
 #endif
 
 /**
- * Callback funcion for spdk_vhost_fini().
+ * Callback for spdk_vhost_init().
+ *
+ * \param rc 0 on success, negative errno on failure
  */
+typedef void (*spdk_vhost_init_cb)(int rc);
+
+/** Callback for spdk_vhost_fini(). */
 typedef void (*spdk_vhost_fini_cb)(void);
 
 /**
@@ -67,14 +72,14 @@ int spdk_vhost_set_socket_path(const char *basename);
 /**
  * Init vhost environment.
  *
- * \return 0 on success, -1 on failure.
+ * \param init_cb Function to be called when the initialization is complete.
  */
-int spdk_vhost_init(void);
+void spdk_vhost_init(spdk_vhost_init_cb init_cb);
 
 /**
- * Clean up the environment of vhost after finishing the vhost application.
+ * Clean up the environment of vhost.
  *
- * \param fini_cb Called when the cleanup operation completes.
+ * \param fini_cb Function to be called when the cleanup is complete.
  */
 void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
 
