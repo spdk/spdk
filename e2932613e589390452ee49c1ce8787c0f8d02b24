@@ -81,6 +81,30 @@
       "revId": "e2932613e589390452ee49c1ce8787c0f8d02b24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56e477f2_d19b824b",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-25T11:04:22Z",
+      "side": 1,
+      "message": "ftl_io_clear is used only in this module so we should make it static. It also is used with ftl_io_init which set dev pointer. Anyway let’s leave it as it is now - this is subject for cleanup in different patch.",
+      "parentUuid": "5d64b4d9_c3c50628",
+      "range": {
+        "startLine": 458,
+        "startChar": 0,
+        "endLine": 465,
+        "endChar": 17
+      },
+      "revId": "e2932613e589390452ee49c1ce8787c0f8d02b24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
