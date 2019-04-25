@@ -2274,6 +2274,13 @@ spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
 	}
 }
 
+uint64_t
+spdk_bdev_get_channel_io_outstanding(void *io_ctx)
+{
+	struct spdk_bdev_channel *ch = io_ctx;
+	return ch->io_outstanding;
+}
+
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {

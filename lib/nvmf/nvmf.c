@@ -937,7 +937,9 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			/* Both NULL. Leave empty */
 		} else if (ns == NULL && sgroup->ns_info[i].channel != NULL) {
 			/* There was a channel here, but the namespace is gone. */
-			spdk_put_io_channel(sgroup->ns_info[i].channel);
+			spdk_thread_send_msg(sgroup->ns_info[i].channel->thread,
+					     spdk_nvmf_ns_destroy_channel,
+					     sgroup->ns_info[i].channel);
 			sgroup->ns_info[i].channel = NULL;
 		} else if (ns != NULL && sgroup->ns_info[i].channel == NULL) {
 			/* A namespace appeared but there is no channel yet */
