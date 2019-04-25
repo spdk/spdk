@@ -48,6 +48,8 @@ struct spdk_json_write_ctx;
 #define MAX_TARGET_MAP			256
 #define SPDK_TN_TAG_MAX			0x0000ffff
 
+typedef void (*iscsi_tgt_node_destruct_cb)(void *cb_arg, int rc);
+
 struct spdk_iscsi_ig_map {
 	struct spdk_iscsi_init_grp *ig;
 	TAILQ_ENTRY(spdk_iscsi_ig_map) tailq;
@@ -94,7 +96,8 @@ struct spdk_iscsi_tgt_node {
 int spdk_iscsi_parse_tgt_nodes(void);
 
 void spdk_iscsi_shutdown_tgt_nodes(void);
-int spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name);
+void spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name,
+		iscsi_tgt_node_destruct_cb cb_fn, void *cb_arg);
 bool spdk_iscsi_tgt_node_is_destructed(struct spdk_iscsi_tgt_node *target);
 int spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 			 const char *iaddr, const char *tiqn, uint8_t *data, int alloc_len,
