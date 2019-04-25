@@ -294,6 +294,8 @@ Example response:
     "apply_nvme_firmware",
     "delete_nvme_controller",
     "construct_nvme_bdev",
+    "set_bdev_nvme_err_injection"
+    "remove_bdev_nvme_err_injection",
     "construct_null_bdev",
     "delete_malloc_bdev",
     "construct_malloc_bdev",
@@ -1554,6 +1556,94 @@ Example requests:
   },
   "jsonrpc": "2.0",
   "method": "delete_nvme_controller",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## set_bdev_nvme_err_injection {#rpc_set_bdev_nvme_err_injection}
+
+Set NVMe controller error command.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Controller name
+timeout                 | Required | number      | Error commands to be returned in microseconds
+count                   | Required | number      | Number of error commands to be returned
+opc                     | Required | number      | Opcode of NVMe commands
+sct                     | Required | number      | Status code types
+sc                      | Required | number      | Generic command status codes
+admin                   | Optional | boolean     | True if it is Admin command(default: false)
+submit                  | Optional | boolean     | True if it is submitted to hardware(default: true)
+
+### Example
+
+Example requests:
+
+~~~
+{
+  "params": {
+    "name": "Nvme0",
+    "timeout": 100000,
+    "count": 10,
+    "opc": 1,
+    "sct": 2,
+    "sc": 121,
+    "admin": false,
+    "submit": true
+  },
+  "jsonrpc": "2.0",
+  "method": "set_bdev_nvme_err_injection",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## remove_bdev_nvme_err_injection {#rpc_remove_bdev_nvme_err_injection}
+
+Remove specified NVMe controller error command.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Controller name
+opc                     | Required | number      | Opcode of NVMe commands
+admin                   | Optional | boolean     | True if it is Admin command(default: false)
+
+### Example
+
+Example requests:
+
+~~~
+{
+  "params": {
+    "name": "Nvme0",
+    "opc": 1,
+    "admin": false,
+  },
+  "jsonrpc": "2.0",
+  "method": "remove_bdev_nvme_err_injection",
   "id": 1
 }
 ~~~

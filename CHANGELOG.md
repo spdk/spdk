@@ -8,6 +8,11 @@ Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.
 
+### rpc
+
+New method `set_bdev_nvme_err_injection` and `remove_bdev_nvme_err_injection` were
+added to use NVMe error injection feature via RPC.
+
 ## v19.04:
 
 ### nvme
