@@ -308,7 +308,7 @@ nvme_robust_mutex_init_shared(pthread_mutex_t *mtx)
 }
 
 int
-nvme_driver_init(void)
+spdk_nvme_driver_init(void)
 {
 	int ret = 0;
 	/* Any socket ID */
@@ -1044,7 +1044,7 @@ spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
 	int rc;
 	struct spdk_nvme_probe_ctx *probe_ctx;
 
-	rc = nvme_driver_init();
+	rc = spdk_nvme_driver_init();
 	if (rc != 0) {
 		return NULL;
 	}
@@ -1103,7 +1103,7 @@ spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid,
 	spdk_nvme_probe_cb probe_cb = NULL;
 	struct spdk_nvme_probe_ctx *probe_ctx;
 
-	rc = nvme_driver_init();
+	rc = spdk_nvme_driver_init();
 	if (rc != 0) {
 		return NULL;
 	}

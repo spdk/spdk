@@ -460,6 +460,17 @@ const char *spdk_nvme_prchk_flags_str(uint32_t prchk_flags);
 bool spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype);
 
 /**
+ * Initialize the NVMe driver in current process. This is called automatically
+ * on any NVMe probe or connect, but may be called manually in a primary process
+ * to allow secondary processes initialize as well. The NVMe driver must be
+ * initialized in the primary process to allow secondary processes to probe
+ * or connect any NVMe devices. It's safe to call this function more than once.
+ *
+ * \return 0 on success, -1 on error
+ */
+int spdk_nvme_driver_init(void);
+
+/**
  * Callback for spdk_nvme_probe() enumeration.
  *
  * \param cb_ctx Opaque value passed to spdk_nvme_probe().

@@ -1364,6 +1364,7 @@ bdev_nvme_library_init(void)
 	bool hotplug_enabled = g_nvme_hotplug_enabled;
 
 	g_bdev_nvme_init_thread = spdk_get_thread();
+	spdk_nvme_driver_init();
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
 	if (sp == NULL) {

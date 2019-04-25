@@ -357,7 +357,7 @@ test_nvme_driver_init(void)
 	/* process is primary and mem already reserved */
 	MOCK_SET(spdk_process_is_primary, true);
 	dummy.initialized = true;
-	rc = nvme_driver_init();
+	rc = spdk_nvme_driver_init();
 	CU_ASSERT(rc == 0);
 
 	/*
@@ -367,21 +367,21 @@ test_nvme_driver_init(void)
 	g_spdk_nvme_driver = NULL;
 	MOCK_SET(spdk_process_is_primary, true);
 	MOCK_SET(spdk_memzone_reserve, NULL);
-	rc = nvme_driver_init();
+	rc = spdk_nvme_driver_init();
 	CU_ASSERT(rc == -1);
 
 	/* process is not primary, no mem already reserved */
 	MOCK_SET(spdk_process_is_primary, false);
 	MOCK_SET(spdk_memzone_lookup, NULL);
 	g_spdk_nvme_driver = NULL;
-	rc = nvme_driver_init();
+	rc = spdk_nvme_driver_init();
 	CU_ASSERT(rc == -1);
 
 	/* process is not primary, mem is already reserved & init'd */
 	MOCK_SET(spdk_process_is_primary, false);
 	MOCK_SET(spdk_memzone_lookup, (void *)&dummy);
 	dummy.initialized = true;
-	rc = nvme_driver_init();
+	rc = spdk_nvme_driver_init();
 	CU_ASSERT(rc == 0);
 
 	/* process is not primary, mem is reserved but not initialized */
@@ -389,7 +389,7 @@ test_nvme_driver_init(void)
 	MOCK_SET(spdk_process_is_primary, false);
 	MOCK_SET(spdk_memzone_reserve, (void *)&dummy);
 	dummy.initialized = false;
-	rc = nvme_driver_init();
+	rc = spdk_nvme_driver_init();
 	CU_ASSERT(rc == -1);
 
 	/* process is primary, got mem but mutex won't init */
@@ -398,7 +398,7 @@ test_nvme_driver_init(void)
 	MOCK_SET(pthread_mutexattr_init, -1);
 	g_spdk_nvme_driver = NULL;
 	dummy.initialized = true;
-	rc = nvme_driver_init();
+	rc = spdk_nvme_driver_init();
 	/* for FreeBSD we can't can't effectively mock this path */
 #ifndef __FreeBSD__
 	CU_ASSERT(rc != 0);
@@ -410,7 +410,7 @@ test_nvme_driver_init(void)
 	MOCK_SET(spdk_process_is_primary, true);
 	MOCK_CLEAR(pthread_mutexattr_init);
 	g_spdk_nvme_driver = NULL;
-	rc = nvme_driver_init();
+	rc = spdk_nvme_driver_init();
 	CU_ASSERT(g_spdk_nvme_driver->initialized == false);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->shared_attached_ctrlrs));
 	CU_ASSERT(rc == 0);

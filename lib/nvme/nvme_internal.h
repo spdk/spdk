@@ -713,8 +713,6 @@ struct nvme_driver {
 
 extern struct nvme_driver *g_spdk_nvme_driver;
 
-int nvme_driver_init(void);
-
 #define nvme_delay		usleep
 
 static inline bool
