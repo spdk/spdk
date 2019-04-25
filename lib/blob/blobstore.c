@@ -2114,10 +2114,12 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 		cpl.u.blob_basic.cb_arg = cb_arg;
 		if (blob->frozen_refcnt) {
 			/* This blob I/O is frozen */
+			enum spdk_blob_op_type op_type;
 			spdk_bs_user_op_t *op;
 			struct spdk_bs_channel *bs_channel = spdk_io_channel_get_ctx(_channel);
 
-			op = spdk_bs_user_op_alloc(_channel, &cpl, read, blob, iov, iovcnt, offset, length);
+			op_type = read ? SPDK_BLOB_READV : SPDK_BLOB_WRITEV;
+			op = spdk_bs_user_op_alloc(_channel, &cpl, op_type, blob, iov, iovcnt, offset, length);
 			if (!op) {
 				cb_fn(cb_arg, -ENOMEM);
 				return;
