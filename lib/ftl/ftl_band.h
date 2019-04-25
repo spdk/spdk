@@ -39,9 +39,10 @@
 #include "spdk/queue.h"
 
 #include "ftl_ppa.h"
+#include "ftl_io.h"
 
 struct spdk_ftl_dev;
-struct ftl_cb;
+struct ftl_lba_map_pending_read;
 
 enum ftl_chunk_state {
 	FTL_CHUNK_STATE_FREE,
@@ -84,6 +85,12 @@ enum ftl_md_status {
 	FTL_MD_INVALID_SIZE
 };
 
+enum ftl_lba_map_seg_state {
+	FTL_LBA_MAP_SEG_CLEAR,
+	FTL_LBA_MAP_SEG_PENDING,
+	FTL_LBA_MAP_SEG_CACHED
+};
+
 struct ftl_lba_map {
 	/* LBA/vld map lock */
 	pthread_spinlock_t			lock;
@@ -99,6 +106,14 @@ struct ftl_lba_map {
 
 	/* LBA map (only valid for open/relocating bands) */
 	uint64_t				*map;
+
+	/* LBA map segment size (granularity of single cached piece of lba map) */
+	uint32_t				seg_size;
+
+	/* LBA map segment state map (clear, pending, cached) */
+	uint8_t					*seg_state_map;
+
+	LIST_HEAD(, ftl_lba_map_pending_read)	pending_read_list;
 
 	/* Metadata DMA buffer (only valid for open/relocating bands) */
 	void					*dma_buf;
