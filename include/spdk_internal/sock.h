@@ -85,6 +85,11 @@ struct spdk_net_impl {
 	bool (*is_ipv6)(struct spdk_sock *sock);
 	bool (*is_ipv4)(struct spdk_sock *sock);
 
+	int (*enable_keepalive)(struct spdk_sock *sock, bool enabled);
+	int (*set_keepalive_count)(struct spdk_sock *sock, int count);
+	int (*set_keepalive_idle)(struct spdk_sock *sock, int time);
+	int (*set_keepalive_intvl)(struct spdk_sock *sock, int time);
+
 	struct spdk_sock_group_impl *(*group_impl_create)(void);
 	int (*group_impl_add_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
 	int (*group_impl_remove_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);

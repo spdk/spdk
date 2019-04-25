@@ -164,9 +164,9 @@ spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz)
 }
 
 int
-spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
+spdk_sock_set_keepalive_intvl(struct spdk_sock *sock, int intvl)
 {
-	return sock->net_impl->set_sendbuf(sock, sz);
+	return sock->net_impl->set_keepalive_intvl(sock, intvl);
 }
 
 bool
@@ -179,6 +179,30 @@ bool
 spdk_sock_is_ipv4(struct spdk_sock *sock)
 {
 	return sock->net_impl->is_ipv4(sock);
+}
+
+int
+spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
+{
+	return sock->net_impl->set_sendbuf(sock, sz);
+}
+
+int
+spdk_sock_enable_keepalive(struct spdk_sock *sock, bool enabled)
+{
+	return sock->net_impl->enable_keepalive(sock, enabled);
+}
+
+int
+spdk_sock_set_keepalive_count(struct spdk_sock *sock, int count)
+{
+	return sock->net_impl->set_keepalive_count(sock, count);
+}
+
+int
+spdk_sock_set_keepalive_idle(struct spdk_sock *sock, int time)
+{
+	return sock->net_impl->set_keepalive_idle(sock, time);
 }
 
 struct spdk_sock_group *

@@ -186,6 +186,50 @@ bool spdk_sock_is_ipv6(struct spdk_sock *sock);
 bool spdk_sock_is_ipv4(struct spdk_sock *sock);
 
 /**
+ * Enable sending keepalive probes on the given socket.
+ *
+ * \param sock Socket to enable keepalive probes for.
+ * \param enable Enable keepalive probes if true or disable otherwise.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_sock_enable_keepalive(struct spdk_sock *sock, bool enabled);
+
+/**
+ * Set the maximum number of keepalive probes TCP should send before dropping
+ * the connection on the given socket.
+ *
+ * \param sock Socket to set keepalive count for.
+ * \param count Maximum number of probes TCP should send before dropping
+ * the connection.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_sock_set_keepalive_count(struct spdk_sock *sock, int count);
+
+/**
+ * Set the time (in seconds) between the last data packet sent and the first
+ * keepalive probe.
+ *
+ * \param sock Socket to set the keepalive time for
+ * \param time Time (in seconds) between the last data packet sent and the
+ * first keepalive probe.
+ *
+ * \return 0 on succcess, -1 on failure.
+ */
+int spdk_sock_set_keepalive_idle(struct spdk_sock *sock, int time);
+
+/**
+ * Set the time between individual keepalive probes.
+ *
+ * \param sock Socket to set the keepalive interval for.
+ * \param intvl Time (in seconds) between individual keepalive probes.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_sock_set_keepalive_intvl(struct spdk_sock *sock, int intvl);
+
+/**
  * Callback function for spdk_sock_group_add_sock().
  *
  * \param arg Argument for the callback function.

@@ -469,6 +469,68 @@ spdk_posix_sock_is_ipv4(struct spdk_sock *_sock)
 	return (sa.ss_family == AF_INET);
 }
 
+static int
+spdk_posix_sock_enable_keepalive(struct spdk_sock *_sock, bool enabled)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int val;
+	int rc;
+
+	assert(sock != NULL);
+
+	val = enabled ? 1 : 0;
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof val);
+	if (rc != 0) {
+		return -1;
+	}
+	return 0;
+}
+
+static int
+spdk_posix_sock_set_keepalive_count(struct spdk_sock *_sock, int count)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	assert(sock != NULL);
+
+	rc = setsockopt(sock->fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof count);
+	if (rc != 0) {
+		return -1;
+	}
+	return 0;
+}
+
+static int
+spdk_posix_sock_set_keepalive_idle(struct spdk_sock *_sock, int idle)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	assert(sock != NULL);
+
+	rc = setsockopt(sock->fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof idle);
+	if (rc != 0) {
+		return -1;
+	}
+	return 0;
+}
+
+static  int
+spdk_posix_sock_set_keepalive_intvl(struct spdk_sock *_sock, int intvl)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	assert(sock != NULL);
+
+	rc = setsockopt(sock->fd, IPPROTO_TCP, TCP_KEEPINTVL, &intvl, sizeof intvl);
+	if (rc != 0) {
+		return -1;
+	}
+	return 0;
+}
+
 static struct spdk_sock_group_impl *
 spdk_posix_sock_group_impl_create(void)
 {
@@ -603,6 +665,10 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.set_sendbuf	= spdk_posix_sock_set_sendbuf,
 	.is_ipv6	= spdk_posix_sock_is_ipv6,
 	.is_ipv4	= spdk_posix_sock_is_ipv4,
+	.enable_keepalive	= spdk_posix_sock_enable_keepalive,
+	.set_keepalive_count	= spdk_posix_sock_set_keepalive_count,
+	.set_keepalive_idle	= spdk_posix_sock_set_keepalive_idle,
+	.set_keepalive_intvl	= spdk_posix_sock_set_keepalive_intvl,
 	.group_impl_create	= spdk_posix_sock_group_impl_create,
 	.group_impl_add_sock	= spdk_posix_sock_group_impl_add_sock,
 	.group_impl_remove_sock = spdk_posix_sock_group_impl_remove_sock,

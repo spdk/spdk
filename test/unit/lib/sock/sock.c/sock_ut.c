@@ -244,6 +244,30 @@ spdk_ut_sock_is_ipv4(struct spdk_sock *_sock)
 	return true;
 }
 
+static int
+spdk_ut_sock_enable_keepalive(struct spdk_sock *_sock, bool enabled)
+{
+	return 0;
+}
+
+static int
+spdk_ut_sock_set_keepalive_count(struct spdk_sock *_sock, int count)
+{
+	return 0;
+}
+
+static int
+spdk_ut_sock_set_keepalive_idle(struct spdk_sock *_sock, int time)
+{
+	return 0;
+}
+
+static int
+spdk_ut_sock_set_keepalive_intvl(struct spdk_sock *_sock, int intvl)
+{
+	return 0;
+}
+
 static struct spdk_sock_group_impl *
 spdk_ut_sock_group_impl_create(void)
 {
@@ -317,6 +341,10 @@ static struct spdk_net_impl g_ut_net_impl = {
 	.set_sendbuf	= spdk_ut_sock_set_sendbuf,
 	.is_ipv6	= spdk_ut_sock_is_ipv6,
 	.is_ipv4	= spdk_ut_sock_is_ipv4,
+	.enable_keepalive	= spdk_ut_sock_enable_keepalive,
+	.set_keepalive_count	= spdk_ut_sock_set_keepalive_count,
+	.set_keepalive_idle	= spdk_ut_sock_set_keepalive_idle,
+	.set_keepalive_intvl	= spdk_ut_sock_set_keepalive_intvl,
 	.group_impl_create	= spdk_ut_sock_group_impl_create,
 	.group_impl_add_sock	= spdk_ut_sock_group_impl_add_sock,
 	.group_impl_remove_sock = spdk_ut_sock_group_impl_remove_sock,
