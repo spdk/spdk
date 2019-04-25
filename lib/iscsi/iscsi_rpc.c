@@ -756,6 +756,10 @@ struct rpc_portal_group {
 	struct rpc_portal_list portal_list;
 	int32_t recv_buf_size;
 	int32_t send_buf_size;
+	bool enable_keepalive;
+	int keepalive_count;
+	int keepalive_idle;
+	int keepalive_intvl;
 };
 
 static void
@@ -813,6 +817,10 @@ static const struct spdk_json_object_decoder rpc_portal_group_decoders[] = {
 	{"portals", offsetof(struct rpc_portal_group, portal_list), decode_rpc_portal_list},
 	{"recv_buf_size", offsetof(struct rpc_portal_group, recv_buf_size), spdk_json_decode_int32, true},
 	{"send_buf_size", offsetof(struct rpc_portal_group, send_buf_size), spdk_json_decode_int32, true},
+	{"enable_keepalive", offsetof(struct rpc_portal_group, enable_keepalive), spdk_json_decode_bool, true},
+	{"keepalive_count", offsetof(struct rpc_portal_group, keepalive_count), spdk_json_decode_int32, true},
+	{"keepalive_idle", offsetof(struct rpc_portal_group, keepalive_idle), spdk_json_decode_int32,  true},
+	{"keepalive_intvl", offsetof(struct rpc_portal_group, keepalive_intvl), spdk_json_decode_int32, true},
 };
 
 static void
@@ -833,7 +841,9 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	pg = spdk_iscsi_portal_grp_create(req.tag, req.recv_buf_size, req.send_buf_size);
+	pg = spdk_iscsi_portal_grp_create(req.tag, req.recv_buf_size, req.send_buf_size,
+					  req.enable_keepalive, req.keepalive_count,
+					  req.keepalive_idle, req.keepalive_intvl);
 	if (pg == NULL) {
 		SPDK_ERRLOG("portal_grp_create failed\n");
 		goto out;

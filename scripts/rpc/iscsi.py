@@ -362,7 +362,9 @@ def add_pg_ig_maps(client, pg_ig_maps, name):
     return client.call('add_pg_ig_maps', params)
 
 
-def add_portal_group(client, portals, tag, recv_buf_size=None, send_buf_size=None):
+def add_portal_group(client, portals, tag, recv_buf_size=None, send_buf_size=None,
+                     enable_keepalive=None, keepalive_count=None,
+                     keepalive_idle=None, keepalive_intvl=None):
     """Add a portal group.
 
     Args:
@@ -370,6 +372,10 @@ def add_portal_group(client, portals, tag, recv_buf_size=None, send_buf_size=Non
         tag: Initiator group tag (unique, integer > 0)
         recv_buf_size: Maximum receive buffer size for socket (optional)
         send_buf_size: Maximum send buffer size for socket (optional)
+        enable_keepalive: Enable TCP keepalive for socket (optional)
+        keepalive_count: Number of probes before dropping the connection for socket (optional)
+        keepalive_idle: Time between the last data packet and the first probe for socket (optional)
+        keepalive_intvl: Time between individual probes for socket (optional)
 
     Returns:
         True or False
@@ -380,6 +386,14 @@ def add_portal_group(client, portals, tag, recv_buf_size=None, send_buf_size=Non
         params['recv_buf_size'] = recv_buf_size
     if send_buf_size:
         params['send_buf_size'] = send_buf_size
+    if enable_keepalive:
+        params['enable_keepalive'] = enable_keepalive
+    if keepalive_count:
+        params['keepalive_count'] = keepalive_count
+    if keepalive_idle:
+        params['keepalive_idle'] = keepalive_idle
+    if keepalive_intvl:
+        params['keepalive_intvl'] = keepalive_intvl
     return client.call('add_portal_group', params)
 
 

@@ -56,6 +56,10 @@ struct spdk_iscsi_portal_grp {
 	int tag;
 	int recv_buf_size;
 	int send_buf_size;
+	bool enable_keepalive;
+	int keepalive_count;
+	int keepalive_idle;
+	int keepalive_intvl;
 	TAILQ_ENTRY(spdk_iscsi_portal_grp)	tailq;
 	TAILQ_HEAD(, spdk_iscsi_portal)		head;
 };
@@ -67,7 +71,8 @@ struct spdk_iscsi_portal *spdk_iscsi_portal_create(const char *host, const char 
 void spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p);
 
 struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_create(int tag, int recv_buf_size,
-		int send_buf_size);
+		int send_buf_size, bool enable_keepalive, int keepalive_count,
+		int keepalive_idle, int keepalive_intvl);
 void spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
 				      struct spdk_iscsi_portal *p);
 void spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg);

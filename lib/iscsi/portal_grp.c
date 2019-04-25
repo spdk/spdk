@@ -330,7 +330,9 @@ error_out:
 }
 
 struct spdk_iscsi_portal_grp *
-spdk_iscsi_portal_grp_create(int tag, int recv_buf_size, int send_buf_size)
+spdk_iscsi_portal_grp_create(int tag, int recv_buf_size, int send_buf_size,
+			     bool enable_keepalive, int keepalive_count,
+			     int keepalive_idle, int keepalive_intvl)
 {
 	struct spdk_iscsi_portal_grp *pg = malloc(sizeof(*pg));
 
@@ -343,6 +345,10 @@ spdk_iscsi_portal_grp_create(int tag, int recv_buf_size, int send_buf_size)
 	pg->tag = tag;
 	pg->recv_buf_size = recv_buf_size;
 	pg->send_buf_size = send_buf_size;
+	pg->enable_keepalive = enable_keepalive;
+	pg->keepalive_count = keepalive_count;
+	pg->keepalive_idle = keepalive_idle;
+	pg->keepalive_intvl = keepalive_intvl;
 
 	TAILQ_INIT(&pg->head);
 
@@ -436,7 +442,7 @@ iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp), 0, 0);
+	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp), 0, 0, false, 0, 0, 0);
 	if (!pg) {
 		SPDK_ERRLOG("portal group malloc error (%s)\n", spdk_conf_section_get_name(sp));
 		return -1;

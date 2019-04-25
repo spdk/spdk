@@ -858,7 +858,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             portals=portals,
             tag=args.tag,
             recv_buf_size=args.recv_buf_size,
-            send_buf_size=args.send_buf_size)
+            send_buf_size=args.send_buf_size,
+            enable_keepalive=args.enable_keepalive,
+            keepalive_count=args.keepalive_count,
+            keepalive_idle=args.keepalive_idle,
+            keepalive_intvl=args.keepalive_intvl)
 
     p = subparsers.add_parser('add_portal_group', help='Add a portal group')
     p.add_argument(
@@ -868,6 +872,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262@0x1""")
     p.add_argument('-r', '--recv-buf-size', help='Maximum receive buffer size for socket.', type=int)
     p.add_argument('-s', '--send-buf-size', help='Maximum send buffer size for socket.', type=int)
+    p.add_argument('-k', '--enable-keepalive', help='Enable TCP keepalive', action='store_true')
+    p.add_argument('-c', '--keepalive-count', help='Number of probes before dropping the connection', type=int)
+    p.add_argument('-i', '--keepalive-idle', help='Time between the last data packet and the first probe', type=int)
+    p.add_argument('-t', '--keepalive-intvl', help='Time between the individual probes', type=int)
     p.set_defaults(func=add_portal_group)
 
     def add_initiator_group(args):

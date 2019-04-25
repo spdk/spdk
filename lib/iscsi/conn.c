@@ -341,6 +341,30 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 		goto error_return;
 	}
 
+	rc = spdk_sock_enable_keepalive(conn->sock, portal->group->enable_keepalive);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_sock_enable_keepalive() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_sock_set_keepalive_count(conn->sock, portal->group->keepalive_count);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_sock_set_keepalive_count() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_sock_set_keepalive_idle(conn->sock, portal->group->keepalive_idle);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_sock_set_keepalive_idle() failed\n");
+		goto error_return;
+	}
+
+	rc = spdk_sock_set_keepalive_intvl(conn->sock, portal->group->keepalive_intvl);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_sock_set_keepalive_intvl() failed\n");
+		goto error_return;
+	}
+
 	/* set default params */
 	rc = spdk_iscsi_conn_params_init(&conn->params);
 	if (rc < 0) {
