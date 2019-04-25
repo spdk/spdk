@@ -1445,8 +1445,8 @@ spdk_vhost_unlock(void)
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
-int
-spdk_vhost_init(void)
+void
+spdk_vhost_init(spdk_vhost_init_cb init_cb)
 {
 	uint32_t last_core;
 	size_t len;
@@ -1455,7 +1455,8 @@ spdk_vhost_init(void)
 	if (dev_dirname[0] == '\0') {
 		if (getcwd(dev_dirname, sizeof(dev_dirname) - 1) == NULL) {
 			SPDK_ERRLOG("getcwd failed (%d): %s\n", errno, spdk_strerror(errno));
-			return -1;
+			ret = -1;
+			goto out;
 		}
 
 		len = strlen(dev_dirname);
@@ -1470,30 +1471,36 @@ spdk_vhost_init(void)
 	if (!g_num_ctrlrs) {
 		SPDK_ERRLOG("Could not allocate array size=%u for g_num_ctrlrs\n",
 			    last_core + 1);
-		return -1;
+		ret = -1;
+		goto out;
 	}
 
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost controllers\n");
-		return -1;
+		ret = -1;
+		goto out;
 	}
 
 	ret = spdk_vhost_blk_controller_construct();
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
-		return -1;
+		ret = -1;
+		goto out;
 	}
 
 #ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
 	ret = spdk_vhost_nvme_controller_construct();
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost NVMe controllers\n");
-		return -1;
+		ret = -1;
+		goto out;
 	}
 #endif
 
-	return 0;
+	ret = 0;
+out:
+	init_cb(ret);
 }
 
 static void
