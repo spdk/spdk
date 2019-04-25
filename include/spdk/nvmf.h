@@ -297,6 +297,12 @@ int spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
 			     spdk_nvmf_subsystem_state_change_done cb_fn,
 			     void *cb_arg);
 
+void spdk_nvmf_poll_group_sgroup_add_io(void *arg);
+
+void spdk_nvmf_poll_group_sgroup_remove_io(void *arg);
+
+void spdk_nvmf_poll_group_sgroup_check(void *arg);
+
 /**
  * Transition an NVMe-oF subsystem from Active to Paused state.
  *

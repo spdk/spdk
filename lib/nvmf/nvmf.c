@@ -946,6 +946,8 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				SPDK_ERRLOG("Could not allocate I/O channel.\n");
 				return -ENOMEM;
 			}
+			spdk_bdev_set_sgroup(spdk_io_channel_get_ctx(sgroup->ns_info[i].channel),
+					     sgroup);
 		} else {
 			/* A namespace was present before and didn't change. */
 		}
@@ -1123,6 +1125,34 @@ fini:
 }
 
 void
+spdk_nvmf_poll_group_sgroup_add_io(void *arg)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup = arg;
+
+	sgroup->io_outstanding++;
+}
+
+void
+spdk_nvmf_poll_group_sgroup_remove_io(void *arg)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup = arg;
+
+	assert(sgroup->io_outstanding > 0);
+	sgroup->io_outstanding--;
+}
+
+void
+spdk_nvmf_poll_group_sgroup_check(void *arg)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup = arg;
+
+	if (sgroup->io_outstanding == 0 &&
+	    sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSING) {
+		sgroup->cb_fn(sgroup->cb_arg, 0);
+	}
+}
+
+void
 spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 				     struct spdk_nvmf_subsystem *subsystem,
 				     spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
@@ -1142,8 +1172,13 @@ spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 	}
 
 	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
-	/* TODO: This currently does not quiesce I/O */
-	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+
+	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+
+	if (sgroup->io_outstanding > 0) {
+		return;
+	}
+
 fini:
 	if (cb_fn) {
 		cb_fn(cb_arg, rc);

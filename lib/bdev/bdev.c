@@ -47,6 +47,7 @@
 #include "spdk/notify.h"
 #include "spdk/util.h"
 #include "spdk/trace.h"
+#include "spdk/nvmf.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -242,6 +243,9 @@ struct spdk_bdev_channel {
 
 	/* Per io_device per thread data */
 	struct spdk_bdev_shared_resource *shared_resource;
+
+	/* The channel belong to the sgroup */
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
 
 	struct spdk_bdev_io_stat stat;
 
@@ -1430,6 +1434,7 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos
 
 		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
 		ch->io_outstanding++;
+		spdk_nvmf_poll_group_sgroup_add_io(ch->sgroup);
 		shared_resource->io_outstanding++;
 		bdev_io->internal.in_submit_request = true;
 		bdev->fn_table->submit_request(ch->channel, bdev_io);
@@ -1694,6 +1699,7 @@ _spdk_bdev_io_submit(void *ctx)
 	bdev_io->internal.submit_tsc = tsc;
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_START, 0, 0, (uintptr_t)bdev_io, bdev_io->type);
 	bdev_ch->io_outstanding++;
+	spdk_nvmf_poll_group_sgroup_add_io(bdev_ch->sgroup);
 	shared_resource->io_outstanding++;
 	bdev_io->internal.in_submit_request = true;
 	if (spdk_likely(bdev_ch->flags == 0)) {
@@ -1701,6 +1707,7 @@ _spdk_bdev_io_submit(void *ctx)
 			bdev->fn_table->submit_request(ch, bdev_io);
 		} else {
 			bdev_ch->io_outstanding--;
+			spdk_nvmf_poll_group_sgroup_remove_io(bdev_ch->sgroup);
 			shared_resource->io_outstanding--;
 			TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, internal.link);
 		}
@@ -1708,6 +1715,7 @@ _spdk_bdev_io_submit(void *ctx)
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
 		bdev_ch->io_outstanding--;
+		spdk_nvmf_poll_group_sgroup_remove_io(bdev_ch->sgroup);
 		shared_resource->io_outstanding--;
 		TAILQ_INSERT_TAIL(&bdev->internal.qos->queued, bdev_io, internal.link);
 		_spdk_bdev_qos_io_submit(bdev_ch, bdev->internal.qos);
@@ -2088,6 +2096,7 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 			 */
 			if (bdev_io->type != SPDK_BDEV_IO_TYPE_RESET) {
 				ch->io_outstanding++;
+				spdk_nvmf_poll_group_sgroup_add_io(ch->sgroup);
 				ch->shared_resource->io_outstanding++;
 			}
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -2272,6 +2281,14 @@ spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
 		free(p->alias);
 		free(p);
 	}
+}
+
+void
+spdk_bdev_set_sgroup(void *io_ctx, void *sgroup)
+{
+	struct spdk_bdev_channel *ch = io_ctx;
+
+	ch->sgroup = sgroup;
 }
 
 struct spdk_io_channel *
@@ -3364,6 +3381,7 @@ _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 		bdev_io = TAILQ_FIRST(&shared_resource->nomem_io);
 		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, internal.link);
 		bdev_io->internal.ch->io_outstanding++;
+		spdk_nvmf_poll_group_sgroup_add_io(bdev_io->internal.ch->sgroup);
 		shared_resource->io_outstanding++;
 		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 		bdev->fn_table->submit_request(bdev_io->internal.ch->channel, bdev_io);
@@ -3517,6 +3535,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		assert(shared_resource->io_outstanding > 0);
 		bdev_ch->io_outstanding--;
 		shared_resource->io_outstanding--;
+		spdk_nvmf_poll_group_sgroup_remove_io(bdev_ch->sgroup);
 
 		if (spdk_unlikely(status == SPDK_BDEV_IO_STATUS_NOMEM)) {
 			assert(shared_resource->io_outstanding > 0);
@@ -3538,6 +3557,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	}
 
 	_spdk_bdev_io_complete(bdev_io);
+	spdk_nvmf_poll_group_sgroup_check(bdev_ch->sgroup);
 }
 
 void
