@@ -174,6 +174,11 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 		buf16[idx % 16] = isprint(buf[idx]) ? buf[idx] : '.';
 	}
 	for (; idx % 16 != 0; idx++) {
+		if (idx == 8) {
+			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
+					  " ");
+		}
+
 		total += snprintf(tmpbuf + total, sizeof tmpbuf - total, "   ");
 		buf16[idx % 16] = ' ';
 	}
