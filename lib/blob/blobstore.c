@@ -1128,7 +1128,7 @@ _spdk_blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 		free(blob->active.clusters);
 		blob->active.clusters = NULL;
 		blob->active.cluster_array_size = 0;
-	} else {
+	} else if (blob->active.num_clusters != blob->active.cluster_array_size) {
 		tmp = realloc(blob->active.clusters, sizeof(uint64_t) * blob->active.num_clusters);
 		assert(tmp != NULL);
 		blob->active.clusters = tmp;
