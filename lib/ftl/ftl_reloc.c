@@ -181,7 +181,8 @@ ftl_reloc_read_lba_map(struct ftl_band_reloc *breloc)
 		assert(false);
 	}
 
-	return ftl_band_read_lba_map(band, 0, ftl_num_band_lbks(dev), ftl_reloc_read_lba_map_cb, breloc);
+	return ftl_band_read_lba_map(band, 0, ftl_num_band_lbks(dev),
+				     ftl_reloc_read_lba_map_cb, breloc);
 }
 
 static void
