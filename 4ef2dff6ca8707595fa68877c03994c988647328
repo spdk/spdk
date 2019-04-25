@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b41c59e7_426931a2",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 909,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-25T04:16:28Z",
+      "side": 1,
+      "message": "This line can be removed.",
+      "revId": "4ef2dff6ca8707595fa68877c03994c988647328",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de8c123c_eaa6a702",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-25T04:16:28Z",
+      "side": 1,
+      "message": "I think you should release the opal_key here, it belongs to this function only.",
+      "revId": "4ef2dff6ca8707595fa68877c03994c988647328",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
