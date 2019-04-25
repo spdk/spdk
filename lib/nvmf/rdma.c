@@ -2777,12 +2777,10 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		return;
 	}
 
-	SPDK_NOTICELOG("Async event: %s\n",
-		       ibv_event_type_str(event.event_type));
-
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
 		rqpair = event.element.qp->qp_context;
+		SPDK_ERRLOG("Fatal event received for rqpair %p\n", rqpair);
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
@@ -2793,6 +2791,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		rqpair = event.element.qp->qp_context;
 		rqpair->last_wqe_reached = true;
 
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Last WQE reached event received for rqpair %p\n", rqpair);
 		/* This must be handled on the polling thread if it exists. Otherwise the timeout will catch it. */
 		if (rqpair->qpair.group) {
 			spdk_thread_send_msg(rqpair->qpair.group->thread, nvmf_rdma_destroy_drained_qpair, rqpair);
@@ -2808,6 +2807,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		 * the operations that the below calls make all happen to be thread
 		 * safe. */
 		rqpair = event.element.qp->qp_context;
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Last sq drained event received for rqpair %p\n", rqpair);
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		state = spdk_nvmf_rdma_update_ibv_state(rqpair);
@@ -2820,6 +2820,8 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	case IBV_EVENT_COMM_EST:
 	case IBV_EVENT_PATH_MIG:
 	case IBV_EVENT_PATH_MIG_ERR:
+		SPDK_NOTICELOG("Async event: %s\n",
+			       ibv_event_type_str(event.event_type));
 		rqpair = event.element.qp->qp_context;
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
@@ -2837,6 +2839,8 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 	case IBV_EVENT_CLIENT_REREGISTER:
 	case IBV_EVENT_GID_CHANGE:
 	default:
+		SPDK_NOTICELOG("Async event: %s\n",
+			       ibv_event_type_str(event.event_type));
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0, 0, event.event_type);
 		break;
 	}
