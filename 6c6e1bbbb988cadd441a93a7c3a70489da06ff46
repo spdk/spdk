@@ -22,6 +22,30 @@
       "revId": "6c6e1bbbb988cadd441a93a7c3a70489da06ff46",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d47f4e81_bdb74a44",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-25T08:31:23Z",
+      "side": 1,
+      "message": "That is good that we don\u0027t need it. I also wanted to remove it. :)",
+      "parentUuid": "a95995df_d2776626",
+      "range": {
+        "startLine": 41,
+        "startChar": 8,
+        "endLine": 41,
+        "endChar": 25
+      },
+      "revId": "6c6e1bbbb988cadd441a93a7c3a70489da06ff46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
