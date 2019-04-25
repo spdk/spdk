@@ -127,10 +127,16 @@ struct spdk_nvmf_subsystem_pg_ns_info {
 	struct spdk_uuid		reg_hostid[SPDK_NVMF_MAX_NUM_REGISTRANTS];
 };
 
+typedef void(*spdk_nvmf_poll_group_mod_done)(void *cb_arg, int status);
+
 struct spdk_nvmf_subsystem_poll_group {
 	/* Array of namespace information for each namespace indexed by nsid - 1 */
 	struct spdk_nvmf_subsystem_pg_ns_info	*ns_info;
 	uint32_t				num_ns;
+
+	uint64_t				io_outstanding;
+	spdk_nvmf_poll_group_mod_done		cb_fn;
+	void					*cb_arg;
 
 	enum spdk_nvmf_subsystem_state		state;
 
@@ -319,7 +325,6 @@ struct spdk_nvmf_subsystem {
 	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
 };
 
-typedef void(*spdk_nvmf_poll_group_mod_done)(void *cb_arg, int status);
 
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);

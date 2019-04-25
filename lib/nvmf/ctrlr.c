@@ -2369,6 +2369,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -2380,6 +2381,9 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+
+	sgroup = &req->qpair->group->sgroups[req->qpair->ctrlr->subsys->id];
+	sgroup->io_outstanding++;
 
 	if (spdk_unlikely(ctrlr->vcprop.cc.bits.en != 1)) {
 		SPDK_ERRLOG("I/O command sent to disabled controller\n");
@@ -2479,6 +2483,28 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Transport request completion error!\n");
 	}
 
+	/* io cmd */
+	if (qpair->ctrlr != NULL &&
+	    req->cmd->nvmf_cmd.opcode != SPDK_NVME_OPC_FABRIC &&
+	    !spdk_nvmf_qpair_is_admin_queue(qpair)) {
+		/* For the unit test, add the judgement */
+		if (qpair->group != NULL && qpair->group->sgroups != NULL) {
+			struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+			/* For the unit test, add the judgement */
+			if (sgroup != NULL) {
+				assert(sgroup->io_outstanding > 0);
+				sgroup->io_outstanding--;
+				if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSING &&
+				    sgroup->io_outstanding == 0) {
+					sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+					sgroup->cb_fn(sgroup->cb_arg, 0);
+				}
+			}
+
+		}
+
+	}
+
 	spdk_nvmf_qpair_request_cleanup(qpair);
 
 	return 0;
@@ -2533,6 +2559,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	spdk_nvmf_request_exec_status status;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
 
 	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
 
@@ -2541,19 +2568,27 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 		/* Place the request on the outstanding list so we can keep track of it */
 		TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+		/* add the sgroup->io_outstanding if it's a io cmd */
+		if (req->cmd->nvmf_cmd.opcode != SPDK_NVME_OPC_FABRIC &&
+		    !spdk_nvmf_qpair_is_admin_queue(qpair)) {
+			if (qpair->ctrlr) {
+				sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+				sgroup->io_outstanding++;
+			}
+		}
 		spdk_nvmf_request_complete(req);
 		return;
 	}
 
 	/* Check if the subsystem is paused (if there is a subsystem) */
 	if (qpair->ctrlr) {
-		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
-		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE &&
+		    qpair) {
 			/* The subsystem is not currently active. Queue this request. */
 			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
 			return;
 		}
-
 	}
 
 	/* Place the request on the outstanding list so we can keep track of it */
