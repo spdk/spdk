@@ -38,7 +38,7 @@ trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; 
 
 waitforlisten $nvmfpid
 # create the rdma transport with an intentionally small SRQ depth
-$rpc_py nvmf_create_transport -t RDMA -u 8192 -s 1024
+$rpc_py nvmf_create_transport -t RDMA -u 8192 -s 1536
 timing_exit start_nvmf_tgt
 
 modprobe -v nvme-rdma
