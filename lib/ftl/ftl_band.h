@@ -40,8 +40,12 @@
 
 #include "ftl_ppa.h"
 
+/* Number of LBAs that could be stored in a single block */
+#define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(uint64_t))
+
 struct spdk_ftl_dev;
 struct ftl_cb;
+struct ftl_lba_map_request;
 
 enum ftl_chunk_state {
 	FTL_CHUNK_STATE_FREE,
@@ -84,6 +88,12 @@ enum ftl_md_status {
 	FTL_MD_INVALID_SIZE
 };
 
+enum ftl_lba_map_seg_state {
+	FTL_LBA_MAP_SEG_CLEAR,
+	FTL_LBA_MAP_SEG_PENDING,
+	FTL_LBA_MAP_SEG_CACHED
+};
+
 struct ftl_lba_map {
 	/* LBA/vld map lock */
 	pthread_spinlock_t			lock;
@@ -99,6 +109,11 @@ struct ftl_lba_map {
 
 	/* LBA map (only valid for open/relocating bands) */
 	uint64_t				*map;
+
+	/* LBA map segment state map (clear, pending, cached) */
+	uint8_t					*segments;
+
+	LIST_HEAD(, ftl_lba_map_request)	request_list;
 
 	/* Metadata DMA buffer (only valid for open/relocating bands) */
 	void					*dma_buf;
