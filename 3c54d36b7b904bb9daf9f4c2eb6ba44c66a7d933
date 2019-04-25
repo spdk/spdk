@@ -1085,6 +1085,30 @@
     },
     {
       "key": {
+        "uuid": "b052dd50_240b0cfd",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-04-25T11:46:06Z",
+      "side": 1,
+      "message": "before preconditioning devices will be binded to vfio/uio driver and after preconditioning they will be unbinded if kernel driver is selected",
+      "parentUuid": "a1b73d89_7868cc83",
+      "range": {
+        "startLine": 184,
+        "startChar": 5,
+        "endLine": 184,
+        "endChar": 44
+      },
+      "revId": "3c54d36b7b904bb9daf9f4c2eb6ba44c66a7d933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ed031f5_c989504b",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 24
