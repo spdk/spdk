@@ -4,8 +4,10 @@ import time
 import os
 import logging
 import copy
+from logging.handlers import RotatingFileHandler
 from rpc.radamsa import mutate
 
+log_file = '/tmp/rpc.tmp'
 
 def print_dict(d):
     print(json.dumps(d, indent=2))
@@ -24,7 +26,13 @@ class JSONRPCClient(object):
         ch.setLevel(logging.DEBUG)
         self._logger = logging.getLogger("JSONRPCClient(%s)" % addr)
         self._logger.addHandler(ch)
-        self.set_log_level(kwargs.get('log_level', logging.ERROR))
+        if mutate:
+            file_handler = RotatingFileHandler(log_file, mode='a', maxBytes=5*1024*1024, 
+                                 backupCount=2, encoding=None, delay=0)  
+            self._logger.addHandler(file_handler)
+            self.set_log_level(logging.DEBUG)
+        else:
+            self.set_log_level(kwargs.get('log_level', logging.ERROR))
 
         self.timeout = timeout
         self.mutate = mutate
@@ -97,7 +105,9 @@ class JSONRPCClient(object):
         self._reqs = []
         self._logger.info("Requests:\n%s\n", reqstr)
         if self.mutate:
+            self._logger.debug("[radamsa] origin str : %s", reqstr)
             reqstr = mutate(reqstr)
+            self._logger.debug("[radamsa] mutate str : %s", reqstr)
             self.sock.sendall(reqstr)
         else:
             self.sock.sendall(reqstr.encode("utf-8"))
