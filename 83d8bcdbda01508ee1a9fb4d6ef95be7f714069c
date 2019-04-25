@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4f71634c_cea5ef9c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 5041,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-25T21:01:40Z",
+      "side": 1,
+      "message": "should this be called snapshot instead of blob?",
+      "revId": "83d8bcdbda01508ee1a9fb4d6ef95be7f714069c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7ddbbd5_cdc59ae7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 5042,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-25T21:01:40Z",
+      "side": 1,
+      "message": "let\u0027s call this snapshot_md_ro (assuming blob is named to snapshot)\n\nthat matches the name of md_ro in the blob structure itself",
+      "revId": "83d8bcdbda01508ee1a9fb4d6ef95be7f714069c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f25243ef_fd897db1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 5044,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-25T21:01:40Z",
+      "side": 1,
+      "message": "clone_md_ro",
+      "revId": "83d8bcdbda01508ee1a9fb4d6ef95be7f714069c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61bd26d5_fd19420b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 5118,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-25T21:01:40Z",
+      "side": 1,
+      "message": "Restore",
+      "revId": "83d8bcdbda01508ee1a9fb4d6ef95be7f714069c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17552a59_ff014299",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 5357,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-25T21:01:40Z",
+      "side": 1,
+      "message": "This function name doesn\u0027t seem right.  It\u0027s not preparing anything.  It\u0027s more checking if the blob can be deleted.\n\nI\u0027d also like to see a preparatory patch before this one that just adds and uses this function.  First version of the function just checks that there are no clones.  Then this patch can update it to allow deletion if only one clone.",
+      "revId": "83d8bcdbda01508ee1a9fb4d6ef95be7f714069c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a7c5261_0b234116",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 5363,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-25T21:01:40Z",
+      "side": 1,
+      "message": "in original function, this was right after the bserrno check - do we need to move it?",
+      "revId": "83d8bcdbda01508ee1a9fb4d6ef95be7f714069c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c62a721a_72beb5e2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 5365,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-25T21:01:40Z",
+      "side": 1,
+      "message": "This needs better comments.  I think overall this needs to be made more clear - for example, explain why update_clone affects how many open_refs are allowed.",
+      "revId": "83d8bcdbda01508ee1a9fb4d6ef95be7f714069c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
