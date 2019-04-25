@@ -147,7 +147,7 @@ def configure_devices(devices):
             qd = qd - 1
     if qd == 0:
         print("Could not set block device queue depths.")
-    else:
+    elif qd < requested_qd:
         print("Requested queue_depth {} but only {} is supported.".format(str(requested_qd), str(qd)))
     if not set_device_parameter(devices, "/sys/block/%s/queue/scheduler", "noop"):
         set_device_parameter(devices, "/sys/block/%s/queue/scheduler", "none")
