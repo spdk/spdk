@@ -38,13 +38,15 @@
 #include "spdk_internal/event.h"
 
 static void
+spdk_vhost_subsystem_init_done(int rc)
+{
+	spdk_subsystem_init_next(rc);
+}
+
+static void
 spdk_vhost_subsystem_init(void)
 {
-	int rc = 0;
-
-	rc = spdk_vhost_init();
-
-	spdk_subsystem_init_next(rc);
+	spdk_vhost_init(spdk_vhost_subsystem_init_done);
 }
 
 static void
