@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ec1ccb4_2666115f",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-04-25T10:30:50Z",
+      "side": 1,
+      "message": "Can you also fix this typo in test_cases.py?",
+      "range": {
+        "startLine": 57,
+        "startChar": 42,
+        "endLine": 57,
+        "endChar": 80
+      },
+      "revId": "0936150b4ec80e52a94d37b6420c82a0fc0a70d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
