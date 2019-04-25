@@ -5,20 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-MALLOC_BDEV_SIZE=64
-MALLOC_BLOCK_SIZE=512
-LVOL_BDEV_SIZE=10
-SUBSYS_NR=2
-LVOL_BDEVS_NR=6
-
 rpc_py="$rootdir/scripts/rpc.py"
-
-function disconnect_nvmf()
-{
-	for i in `seq 1 $SUBSYS_NR`; do
-		nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}" || true
-	done
-}
 
 set -e
 
@@ -44,10 +31,10 @@ fi
 timing_enter lvol_integrity
 timing_enter start_nvmf_tgt
 # Start up the NVMf target in another process
-$NVMF_APP -m 0xF &
+$NVMF_APP -m 0x1 &
 pid=$!
 
-trap "process_shm --id $NVMF_APP_SHM_ID; disconnect_nvmf; killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
@@ -55,66 +42,26 @@ timing_exit start_nvmf_tgt
 
 modprobe -v nvme-rdma
 
-lvol_stores=
-lvol_bdevs=
-# Create the first LVS from a Raid-0 bdev, which is created from two malloc bdevs
-# Create remaining LVSs from a malloc bdev, respectively
-for i in `seq 1 $SUBSYS_NR`; do
-	if [ $i -eq 1 ]; then
-		# construct RAID bdev and put its name in $bdev
-		malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
-		malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-		$rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$malloc_bdevs"
-		bdev="raid0"
-	else
-		# construct malloc bdev and put its name in $bdev
-		bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-	fi
-	ls_guid="$($rpc_py construct_lvol_store $bdev lvs_$i -c 524288)"
-	lvol_stores+="lvs_$i "
+bdev="$($rpc_py construct_nvme_bdev -t pcie -a 0000:03:00.0 -b Nvme0)"
+ls_guid="$($rpc_py construct_lvol_store $bdev lvs)"
+lvol_name="$($rpc_py construct_lvol_bdev -u $ls_guid lvol 2056)"
 
-	# 1 NVMe-OF subsystem per malloc bdev / lvol store / 10 lvol bdevs
-	ns_bdevs=""
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 $lvol_name
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-	# Create lvol bdevs on each lvol store
-	for j in `seq 1 $LVOL_BDEVS_NR`; do
-		lb_name="$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j $LVOL_BDEV_SIZE)"
-		lvol_bdevs+="$lb_name "
-		ns_bdevs+="$lb_name "
-	done
+./examples/nvme/perf/perf -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 2 -s 512 -w randwrite -t 10 -c 0x10 &
+perf_pid=$!
 
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i
-	for bdev in $ns_bdevs; do
-		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i $bdev
-	done
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-done
+sleep 1
 
-for i in `seq 1 $SUBSYS_NR`; do
-	k=$[$i-1]
-	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+$rpc_py snapshot_lvol_bdev $lvol_name "MY_SNAPSHOT"
 
-	for j in `seq 1 $LVOL_BDEVS_NR`; do
-		waitforblk "nvme${k}n${j}"
-	done
-done
+wait $perf_pid
 
-$rootdir/scripts/fio.py nvmf 262144 64 randwrite 10 1 verify
-
-sync
-disconnect_nvmf
-
-for i in `seq 1 $SUBSYS_NR`; do
-    $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i
-done
-
-for lb_name in $lvol_bdevs; do
-	 $rpc_py destroy_lvol_bdev "$lb_name"
-done
-
-for lvs in $lvol_stores; do
-         $rpc_py destroy_lvol_store -l $lvs
-done
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode0
+$rpc_py destroy_lvol_bdev $lvol_name
+$rpc_py destroy_lvol_store -l "lvs"
 
 rm -f ./local-job*
 
