@@ -7,18 +7,10 @@ source $rootdir/test/nvmf/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
-LVOL_BDEV_SIZE=10
-SUBSYS_NR=2
-LVOL_BDEVS_NR=6
+LVOL_BDEV_INIT_SIZE=20
+LVOL_BDEV_FINAL_SIZE=30
 
 rpc_py="$rootdir/scripts/rpc.py"
-
-function disconnect_nvmf()
-{
-	for i in `seq 1 $SUBSYS_NR`; do
-		nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}" || true
-	done
-}
 
 set -e
 
@@ -47,7 +39,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF &
 pid=$!
 
-trap "process_shm --id $NVMF_APP_SHM_ID; disconnect_nvmf; killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
@@ -55,66 +47,41 @@ timing_exit start_nvmf_tgt
 
 modprobe -v nvme-rdma
 
-lvol_stores=
-lvol_bdevs=
-# Create the first LVS from a Raid-0 bdev, which is created from two malloc bdevs
-# Create remaining LVSs from a malloc bdev, respectively
-for i in `seq 1 $SUBSYS_NR`; do
-	if [ $i -eq 1 ]; then
-		# construct RAID bdev and put its name in $bdev
-		malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
-		malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-		$rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$malloc_bdevs"
-		bdev="raid0"
-	else
-		# construct malloc bdev and put its name in $bdev
-		bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-	fi
-	ls_guid="$($rpc_py construct_lvol_store $bdev lvs_$i -c 524288)"
-	lvol_stores+="lvs_$i "
+# Construct a RAID volume for the logical volume store
+base_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
+base_bdevs+=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
+$rpc_py construct_raid_bdev -n raid0 -z 64 -r 0 -b "$base_bdevs"
 
-	# 1 NVMe-OF subsystem per malloc bdev / lvol store / 10 lvol bdevs
-	ns_bdevs=""
+# Create the logical volume store on the RAID volume
+lvs=$($rpc_py construct_lvol_store raid0 lvs)
 
-	# Create lvol bdevs on each lvol store
-	for j in `seq 1 $LVOL_BDEVS_NR`; do
-		lb_name="$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j $LVOL_BDEV_SIZE)"
-		lvol_bdevs+="$lb_name "
-		ns_bdevs+="$lb_name "
-	done
+# Create a logical volume on the logical volume store
+lvol=$($rpc_py construct_lvol_bdev -u $lvs lvol $LVOL_BDEV_INIT_SIZE)
 
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i
-	for bdev in $ns_bdevs; do
-		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i $bdev
-	done
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-done
+# Create an NVMe-oF subsystem and add the logical volume as a namespace
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 $lvol
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-for i in `seq 1 $SUBSYS_NR`; do
-	k=$[$i-1]
-	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+# Start random writes in the background
+./examples/nvme/perf/perf -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 2 -s 512 -w randwrite -t 10 -c 0x10 &
+perf_pid=$!
 
-	for j in `seq 1 $LVOL_BDEVS_NR`; do
-		waitforblk "nvme${k}n${j}"
-	done
-done
+sleep 1
 
-$rootdir/scripts/fio.py nvmf 262144 64 randwrite 10 1 verify
+# Perform some operations on the logical volume
+snapshot=$($rpc_py snapshot_lvol_bdev $lvol "MY_SNAPSHOT")
+$rpc_py resize_lvol_bdev $lvol $LVOL_BDEV_FINAL_SIZE
+clone=$($rpc_py clone_lvol_bdev $snapshot "MY_CLONE")
+$rpc_py inflate_lvol_bdev $clone
 
-sync
-disconnect_nvmf
+# Wait for I/O to complete
+wait $perf_pid
 
-for i in `seq 1 $SUBSYS_NR`; do
-    $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i
-done
-
-for lb_name in $lvol_bdevs; do
-	 $rpc_py destroy_lvol_bdev "$lb_name"
-done
-
-for lvs in $lvol_stores; do
-         $rpc_py destroy_lvol_store -l $lvs
-done
+# Clean up
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode0
+$rpc_py destroy_lvol_bdev $lvol
+$rpc_py destroy_lvol_store -u $lvs
 
 rm -f ./local-job*
 
