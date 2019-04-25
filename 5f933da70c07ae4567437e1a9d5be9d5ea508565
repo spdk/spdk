@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "10b012f3_21e47a58",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 4
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "41539088_312c29ed",
+      "range": {
+        "startLine": 138,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 18
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f8f1e516_ea81f53b",
         "filename": "include/spdk/nvmf_fc_spec.h",
         "patchSetId": 4
@@ -481,6 +505,30 @@
     },
     {
       "key": {
+        "uuid": "364c9414_f1524fc5",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "639c6684_71a55615",
+      "range": {
+        "startLine": 143,
+        "startChar": 2,
+        "endLine": 143,
+        "endChar": 14
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "596361ab_0205c3df",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 4
@@ -492,6 +540,30 @@
       "writtenOn": "2019-04-22T23:27:07Z",
       "side": 1,
       "message": "can we add any specific name for this enums?",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 4
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58643746_96132fea",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Actually the way the enum members are used, name is not necessary. Please check. Also kind of tricky to come up with a good name, may be \"validation_error_message_index\"?",
+      "parentUuid": "596361ab_0205c3df",
       "range": {
         "startLine": 52,
         "startChar": 0,
@@ -527,6 +599,30 @@
     },
     {
       "key": {
+        "uuid": "da5e0d8b_e1314566",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e765c26b_161fef5a",
+      "range": {
+        "startLine": 128,
+        "startChar": 53,
+        "endLine": 128,
+        "endChar": 54
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "596f2ff5_ae627c3a",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 4
@@ -538,6 +634,30 @@
       "writtenOn": "2019-04-22T23:27:07Z",
       "side": 1,
       "message": "-ENOMEM?",
+      "range": {
+        "startLine": 855,
+        "startChar": 10,
+        "endLine": 855,
+        "endChar": 16
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44c9fc3b_c944e075",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "596f2ff5_ae627c3a",
       "range": {
         "startLine": 855,
         "startChar": 10,
@@ -573,6 +693,30 @@
     },
     {
       "key": {
+        "uuid": "da909912_d3f36457",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "5989df06_9abae9db",
+      "range": {
+        "startLine": 52,
+        "startChar": 1,
+        "endLine": 52,
+        "endChar": 50
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c11f3b42_33707ed8",
         "filename": "lib/nvmf/fc_poller_api.c",
         "patchSetId": 4
@@ -584,6 +728,30 @@
       "writtenOn": "2019-04-22T23:27:07Z",
       "side": 1,
       "message": "this debug log is meaningful?",
+      "range": {
+        "startLine": 65,
+        "startChar": 1,
+        "endLine": 65,
+        "endChar": 50
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32b8d41b_8095f560",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "c11f3b42_33707ed8",
       "range": {
         "startLine": 65,
         "startChar": 1,
@@ -619,6 +787,30 @@
     },
     {
       "key": {
+        "uuid": "9433fdbb_c6011810",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "789dbe26_93d8933d",
+      "range": {
+        "startLine": 72,
+        "startChar": 3,
+        "endLine": 72,
+        "endChar": 51
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a7e1d1e_27987cbf",
         "filename": "lib/nvmf/fc_poller_api.c",
         "patchSetId": 4
@@ -630,6 +822,30 @@
       "writtenOn": "2019-04-22T23:27:07Z",
       "side": 1,
       "message": "group",
+      "range": {
+        "startLine": 104,
+        "startChar": 28,
+        "endLine": 104,
+        "endChar": 32
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9722caa2_1403ea3c",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a7e1d1e_27987cbf",
       "range": {
         "startLine": 104,
         "startChar": 28,
@@ -665,6 +881,30 @@
     },
     {
       "key": {
+        "uuid": "719c2f7a_ce5ab499",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "I_T Nexus. Updated comment to avoid confusion.",
+      "parentUuid": "2227f592_a12cf189",
+      "range": {
+        "startLine": 126,
+        "startChar": 71,
+        "endLine": 126,
+        "endChar": 73
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3f3e12f_e07e9c2d",
         "filename": "lib/nvmf/fc_poller_api.c",
         "patchSetId": 4
@@ -688,6 +928,30 @@
     },
     {
       "key": {
+        "uuid": "a822d2ae_bb953dd8",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3f3e12f_e07e9c2d",
+      "range": {
+        "startLine": 241,
+        "startChar": 3,
+        "endLine": 241,
+        "endChar": 10
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7921cbe_a3602c4d",
         "filename": "lib/nvmf/fc_poller_api.c",
         "patchSetId": 4
@@ -699,6 +963,30 @@
       "writtenOn": "2019-04-22T23:27:07Z",
       "side": 1,
       "message": "Please reduce two tubs.",
+      "range": {
+        "startLine": 357,
+        "startChar": 0,
+        "endLine": 358,
+        "endChar": 56
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c70b20ca_652ec23f",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "check_format.sh is automatically formatting and inserting those additional tabs.",
+      "parentUuid": "e7921cbe_a3602c4d",
       "range": {
         "startLine": 357,
         "startChar": 0,
@@ -757,6 +1045,30 @@
     },
     {
       "key": {
+        "uuid": "28fff528_10b52d8d",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Not required. Removed.",
+      "parentUuid": "9cb538b4_d1298ac2",
+      "range": {
+        "startLine": 188,
+        "startChar": 1,
+        "endLine": 188,
+        "endChar": 43
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68a91f93_5a2f88e0",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 4
@@ -768,6 +1080,30 @@
       "writtenOn": "2019-04-22T22:26:49Z",
       "side": 1,
       "message": "Can we move this definition out of this structure?",
+      "range": {
+        "startLine": 190,
+        "startChar": 0,
+        "endLine": 190,
+        "endChar": 31
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b27694d_2892c23a",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "68a91f93_5a2f88e0",
       "range": {
         "startLine": 190,
         "startChar": 0,
@@ -803,6 +1139,30 @@
     },
     {
       "key": {
+        "uuid": "8bc0d6af_bb6e3f27",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "renamed to io_resource_pool",
+      "parentUuid": "e308b384_c3f6cefd",
+      "range": {
+        "startLine": 192,
+        "startChar": 23,
+        "endLine": 192,
+        "endChar": 35
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90003dbd_bbbeca47",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 4
@@ -814,6 +1174,30 @@
       "writtenOn": "2019-04-22T23:27:07Z",
       "side": 1,
       "message": "this helper function is not referenced anywhere. Can we move this to a separate patch?",
+      "range": {
+        "startLine": 448,
+        "startChar": 0,
+        "endLine": 448,
+        "endChar": 27
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8010109_a8add66f",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-25T07:39:23Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "90003dbd_bbbeca47",
       "range": {
         "startLine": 448,
         "startChar": 0,
