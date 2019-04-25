@@ -577,7 +577,7 @@ spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	}
 }
 
-static int
+int
 spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_conn *conn;
@@ -768,7 +768,7 @@ spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 	spdk_iscsi_poll_group_remove_conn(conn);
 }
 
-static void
+void
 spdk_iscsi_conns_start_exit(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_conn	*conn;
