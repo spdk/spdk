@@ -130,6 +130,7 @@ cleanup_wptr_test(struct spdk_ftl_dev *dev)
 	size_t i;
 
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+		dev->bands[i].md.lba_map.seg_state_map = NULL;
 		test_free_ftl_band(&dev->bands[i]);
 	}
 
