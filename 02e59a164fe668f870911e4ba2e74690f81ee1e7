@@ -16,6 +16,24 @@
       "revId": "02e59a164fe668f870911e4ba2e74690f81ee1e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e0c4ae9_c651d08a",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-25T13:31:41Z",
+      "side": 1,
+      "message": "Please elaborate. It passes all tests on CI.",
+      "parentUuid": "dbbbdaaf_3e706f80",
+      "revId": "02e59a164fe668f870911e4ba2e74690f81ee1e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
