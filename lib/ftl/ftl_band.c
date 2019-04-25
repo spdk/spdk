@@ -86,6 +86,16 @@ struct __attribute__((packed)) ftl_head_md {
 	uint32_t		xfer_size;
 };
 
+struct ftl_lba_map_pending_read {
+	struct ftl_cb				cb;
+
+	size_t					offset;
+
+	size_t					lba_cnt;
+
+	LIST_ENTRY(ftl_lba_map_pending_read)	list_entry;
+};
+
 size_t
 ftl_tail_md_hdr_num_lbks(void)
 {
@@ -176,6 +186,7 @@ ftl_band_free_lba_map(struct ftl_band *band)
 	}
 
 	spdk_mempool_put(dev->lba_pool, lba_map->map);
+	free(lba_map->seg_state_map);
 	spdk_dma_free(lba_map->dma_buf);
 	lba_map->map = NULL;
 	lba_map->dma_buf = NULL;
@@ -419,7 +430,7 @@ ftl_unpack_head_md(struct ftl_band *band)
 struct ftl_ppa
 ftl_band_tail_md_ppa(struct ftl_band *band)
 {
-	struct ftl_ppa ppa;
+	struct ftl_ppa ppa = {};
 	struct ftl_chunk *chunk;
 	struct spdk_ftl_dev *dev = band->dev;
 	size_t xfer_size = dev->xfer_size;
@@ -685,10 +696,19 @@ ftl_band_alloc_lba_map(struct ftl_band *band)
 		return -1;
 	}
 
+	lba_map->seg_size = FTL_NUM_LBA_IN_BLOCK;
+	lba_map->seg_state_map = calloc(ftl_num_band_lbks(dev) / lba_map->seg_size,
+					sizeof(uint8_t));
+	if (!lba_map->seg_state_map) {
+		spdk_mempool_put(dev->lba_pool, lba_map->map);
+		return -1;
+	}
+
 	lba_map->dma_buf = spdk_dma_zmalloc(ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE,
 					    FTL_BLOCK_SIZE, NULL);
 	if (!lba_map->dma_buf) {
 		spdk_mempool_put(dev->lba_pool, lba_map->map);
+		free(lba_map->seg_state_map);
 		return -1;
 	}
 
@@ -724,10 +744,32 @@ ftl_read_md_cb(void *arg, int status)
 	md_io->cb.fn(md_io->cb.ctx, status);
 }
 
+static struct ftl_ppa
+ftl_band_lba_map_ppa(struct ftl_band *band, size_t offset)
+{
+	return ftl_band_next_xfer_ppa(band, band->tail_md_ppa,
+				      ftl_tail_md_hdr_num_lbks() +
+				      ftl_vld_map_num_lbks(band->dev) +
+				      offset);
+}
+
+static int
+ftl_lba_map_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
+{
+	int offset;
+	struct ftl_ppa start_ppa = ftl_band_lba_map_ppa(band, 0);
+
+	offset =  ftl_xfer_offset_from_ppa(band, ppa) - ftl_xfer_offset_from_ppa(band, start_ppa);
+
+	assert(offset < (int)ftl_lba_map_num_lbks(band->dev));
+
+	return offset;
+}
+
 static struct ftl_md_io *
 ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
-		    struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn fn,
-		    ftl_md_pack_fn pack_fn, struct ftl_cb cb)
+		    struct ftl_band *band, size_t lbk_cnt, void *buf,
+		    spdk_ftl_fn fn, ftl_md_pack_fn pack_fn, struct ftl_cb cb)
 {
 	struct ftl_md_io *io;
 	struct ftl_io_init_opts opts = {
@@ -741,7 +783,7 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 		.iov_cnt	= 1,
 		.req_size	= lbk_cnt,
 		.fn		= fn,
-		.data		= band->lba_map.dma_buf,
+		.data		= buf,
 	};
 
 	io = (struct ftl_md_io *)ftl_io_init_internal(&opts);
@@ -825,18 +867,9 @@ ftl_band_write_tail_md(struct ftl_band *band, spdk_ftl_fn cb)
 				 ftl_pack_tail_md, cb);
 }
 
-static struct ftl_ppa
-ftl_band_lba_map_ppa(struct ftl_band *band, size_t offset)
-{
-	return ftl_band_next_xfer_ppa(band, band->tail_md_ppa,
-				      ftl_tail_md_hdr_num_lbks() +
-				      ftl_vld_map_num_lbks(band->dev) +
-				      offset);
-}
-
 static int
 ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_ppa start_ppa,
-		 spdk_ftl_fn fn, ftl_md_pack_fn pack_fn, struct ftl_cb cb)
+		 void *buf, spdk_ftl_fn fn, ftl_md_pack_fn pack_fn, struct ftl_cb cb)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_md_io *io;
@@ -845,7 +878,7 @@ ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_ppa start_ppa
 		return -ENOENT;
 	}
 
-	io = ftl_io_init_md_read(dev, start_ppa, band, lbk_cnt, fn, pack_fn, cb);
+	io = ftl_io_init_md_read(dev, start_ppa, band, lbk_cnt, buf, fn, pack_fn, cb);
 	if (!io) {
 		return -ENOMEM;
 	}
@@ -857,20 +890,49 @@ ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_ppa start_ppa
 int
 ftl_band_read_tail_md(struct ftl_band *band, struct ftl_ppa ppa, struct ftl_cb cb)
 {
-	return ftl_band_read_md(band, ftl_tail_md_num_lbks(band->dev), ppa,
+	return ftl_band_read_md(band, ftl_tail_md_num_lbks(band->dev), ppa, band->lba_map.dma_buf,
 				ftl_read_md_cb, ftl_unpack_tail_md, cb);
 }
 
-static size_t
-ftl_lba_map_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
+static bool
+ftl_lba_map_range_cached(struct ftl_lba_map *lba_map, size_t offset, size_t lba_cnt)
 {
-	size_t offset;
-	struct ftl_ppa start_ppa = ftl_band_lba_map_ppa(band, 0);
+	size_t i, seg_max;
 
-	offset =  ftl_xfer_offset_from_ppa(band, ppa) - ftl_xfer_offset_from_ppa(band, start_ppa);
-	assert(offset < ftl_lba_map_num_lbks(band->dev));
+	seg_max = spdk_divide_round_up(offset + lba_cnt, lba_map->seg_size);
+	for (i = offset / lba_map->seg_size; i < seg_max; ++i) {
+		if (lba_map->seg_state_map[i] != FTL_LBA_MAP_SEG_CACHED) {
+			return false;
+		}
+	}
 
-	return offset;
+	return true;
+}
+
+static void
+ftl_lba_map_range_set_state(const struct ftl_lba_map *lba_map, size_t offset, size_t lba_cnt,
+			    enum ftl_lba_map_seg_state state)
+{
+	size_t i, seg_max;
+
+	seg_max = spdk_divide_round_up(offset + lba_cnt, lba_map->seg_size);
+	for (i = offset / lba_map->seg_size; i < seg_max; ++i) {
+		lba_map->seg_state_map[i] = state;
+	}
+}
+
+static void
+ftl_process_pending_lba_reads(struct ftl_lba_map *lba_map)
+{
+	struct ftl_lba_map_pending_read *pending_read, *tpending_read;
+
+	LIST_FOREACH_SAFE(pending_read, &lba_map->pending_read_list, list_entry, tpending_read) {
+		if (ftl_lba_map_range_cached(lba_map, pending_read->offset, pending_read->lba_cnt)) {
+			pending_read->cb.fn(pending_read->cb.ctx, 0);
+			LIST_REMOVE(pending_read, list_entry);
+			free(pending_read);
+		}
+	}
 }
 
 static void
@@ -879,17 +941,84 @@ ftl_read_lba_map_cb(void *arg, int status)
 	struct ftl_md_io *md_io = arg;
 	struct ftl_io *io = &md_io->io;
 	struct ftl_lba_map *lba_map = &io->band->lba_map;
-	uint64_t offset;
+	uint64_t lbk_off;
 
-	offset = ftl_lba_map_offset_from_ppa(io->band, io->ppa);
-	assert(offset + io->lbk_cnt <= ftl_lba_map_num_lbks(io->dev));
+	lbk_off = ftl_lba_map_offset_from_ppa(io->band, io->ppa);
+	assert(lbk_off + io->lbk_cnt <= ftl_lba_map_num_lbks(io->dev));
 
 	if (!status) {
-		memcpy((char *)lba_map->map + offset * FTL_BLOCK_SIZE, lba_map->dma_buf,
+		memcpy((char *)lba_map->map + lbk_off * FTL_BLOCK_SIZE,
+		       io->iov.single.iov_base,
 		       io->lbk_cnt * FTL_BLOCK_SIZE);
+
+		ftl_lba_map_range_set_state(lba_map, lbk_off * FTL_NUM_LBA_IN_BLOCK,
+					    io->lbk_cnt * FTL_NUM_LBA_IN_BLOCK,
+					    FTL_LBA_MAP_SEG_CACHED);
+
+		ftl_process_pending_lba_reads(lba_map);
 	}
 
 	md_io->cb.fn(md_io->cb.ctx, status);
+}
+
+static int
+ftl_lba_map_add_pending_read(struct ftl_lba_map *lba_map, struct ftl_cb cb, size_t offset,
+			     size_t lba_cnt)
+{
+	struct ftl_lba_map_pending_read *pending_read;
+
+	pending_read = calloc(1, sizeof(*pending_read));
+	if (!pending_read) {
+		return -ENOMEM;
+	}
+
+	pending_read->cb = cb;
+	pending_read->offset = offset;
+	pending_read->lba_cnt = lba_cnt;
+
+	LIST_INSERT_HEAD(&lba_map->pending_read_list, pending_read, list_entry);
+
+	return 0;
+}
+
+static void
+ftl_lba_map_get_read_range(struct ftl_lba_map *lba_map, size_t *offset, size_t *lba_cnt,
+			   bool *pending)
+{
+	size_t i, first_clear_seg, seg_max, seg_min;
+
+	seg_max = spdk_divide_round_up(*offset + *lba_cnt, lba_map->seg_size);
+	seg_min = *offset / lba_map->seg_size;
+	*offset = seg_min * lba_map->seg_size;
+	*lba_cnt = (seg_max - seg_min) * lba_map->seg_size;
+
+	/* Check if there are some cached/pending segments at range begin */
+	for (i = *offset / lba_map->seg_size; i < seg_max; ++i) {
+		if (lba_map->seg_state_map[i] == FTL_LBA_MAP_SEG_CLEAR) {
+			break;
+		}
+
+		if (lba_map->seg_state_map[i] == FTL_LBA_MAP_SEG_PENDING) {
+			*pending = true;
+		}
+
+		*offset += lba_map->seg_size;
+		*lba_cnt -= lba_map->seg_size;
+	}
+
+	/* Check if there are some cached/pending segments at range end */
+	first_clear_seg = i;
+	for (i = seg_max - 1; i > first_clear_seg; --i) {
+		if (lba_map->seg_state_map[i] == FTL_LBA_MAP_SEG_CLEAR) {
+			break;
+		}
+
+		if (lba_map->seg_state_map[i] == FTL_LBA_MAP_SEG_PENDING) {
+			*pending = true;
+		}
+
+		*lba_cnt -= lba_map->seg_size;
+	}
 }
 
 int
@@ -897,13 +1026,37 @@ ftl_band_read_lba_map(struct ftl_band *band, size_t offset, size_t lba_cnt,
 		      struct ftl_cb cb)
 {
 	size_t lbk_cnt, lbk_off;
+	size_t read_offset, read_lba_cnt;
+	struct ftl_lba_map *lba_map = &band->lba_map;
+	bool pending = false;
 
-	lbk_off = offset * sizeof(uint64_t) / FTL_BLOCK_SIZE;
-	lbk_cnt = spdk_divide_round_up(lba_cnt * sizeof(uint64_t), FTL_BLOCK_SIZE);
+	read_offset = offset;
+	read_lba_cnt = lba_cnt;
+
+	ftl_lba_map_get_read_range(lba_map, &read_offset, &read_lba_cnt, &pending);
+
+	lbk_off = read_offset / FTL_NUM_LBA_IN_BLOCK;
+	lbk_cnt = spdk_divide_round_up(read_lba_cnt, FTL_NUM_LBA_IN_BLOCK);
 
 	assert(lbk_off + lbk_cnt <= ftl_lba_map_num_lbks(band->dev));
 
+	if (pending) {
+		if (ftl_lba_map_add_pending_read(lba_map, cb, offset, lba_cnt)) {
+			return -1;
+		}
+	}
+
+	if (read_lba_cnt == 0) {
+		if (!pending) {
+			cb.fn(cb.ctx, 0);
+		}
+		return 0;
+	}
+
+	ftl_lba_map_range_set_state(lba_map, read_offset, read_lba_cnt, FTL_LBA_MAP_SEG_PENDING);
+
 	return ftl_band_read_md(band, lbk_cnt, ftl_band_lba_map_ppa(band, lbk_off),
+				(char *)band->lba_map.dma_buf + lbk_off * FTL_BLOCK_SIZE,
 				ftl_read_lba_map_cb, NULL, cb);
 }
 
@@ -913,6 +1066,7 @@ ftl_band_read_head_md(struct ftl_band *band, struct ftl_cb cb)
 	return ftl_band_read_md(band,
 				ftl_head_md_num_lbks(band->dev),
 				ftl_band_head_md_ppa(band),
+				band->lba_map.dma_buf,
 				ftl_read_md_cb,
 				ftl_unpack_head_md,
 				cb);
