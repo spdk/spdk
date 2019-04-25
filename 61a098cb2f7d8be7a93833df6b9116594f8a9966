@@ -70,6 +70,30 @@
       "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "103b0674_0452ad11",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-25T10:43:14Z",
+      "side": 1,
+      "message": "ftl_band_next_xfer_ppa() it used here for jumping across chunks and taking care of bad ones. I\u0027m not sure if we have easier way to calculate it.",
+      "parentUuid": "aa17c2c8_76b01004",
+      "range": {
+        "startLine": 838,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 1
+      },
+      "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
