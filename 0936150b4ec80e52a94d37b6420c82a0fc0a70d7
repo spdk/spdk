@@ -22,6 +22,30 @@
       "revId": "0936150b4ec80e52a94d37b6420c82a0fc0a70d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7682664_0ee63b31",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-04-25T10:47:29Z",
+      "side": 1,
+      "message": "Fixed, thanks.",
+      "parentUuid": "9ec1ccb4_2666115f",
+      "range": {
+        "startLine": 57,
+        "startChar": 42,
+        "endLine": 57,
+        "endChar": 80
+      },
+      "revId": "0936150b4ec80e52a94d37b6420c82a0fc0a70d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
