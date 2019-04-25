@@ -2,6 +2,11 @@
 
 ## v19.07: (Upcoming Release)
 
+### rpc
+
+New method `set_bdev_nvme_err_injection` and `remove_bdev_nvme_err_injection` were
+added to use NVMe error injection feature via RPC.
+
 ## v19.04:
 
 ### nvme
