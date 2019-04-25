@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ded0482_c59b576c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2823,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-25T23:53:11Z",
+      "side": 1,
+      "message": "Maybe we could change this one and the one on line 2842 to SPDK_DEBUGLOG as well? I\u0027m not sure if people want any async nvmf notifications on screen in their production environment.",
+      "range": {
+        "startLine": 2823,
+        "startChar": 2,
+        "endLine": 2823,
+        "endChar": 16
+      },
+      "revId": "2e6e603738029c6c8d658fc950ebe760ee10316b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
