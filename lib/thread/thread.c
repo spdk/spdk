@@ -339,6 +339,12 @@ spdk_thread_get_ctx(struct spdk_thread *thread)
 	return NULL;
 }
 
+struct spdk_cpuset *
+spdk_thread_get_cpumask(struct spdk_thread *thread)
+{
+	return thread->cpumask;
+}
+
 struct spdk_thread *
 spdk_thread_get_from_ctx(void *ctx)
 {
