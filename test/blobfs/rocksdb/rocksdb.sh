@@ -40,7 +40,9 @@ timing_enter rocksdb
 timing_enter db_bench_build
 
 pushd $DB_BENCH_DIR
-git clean -x -f -d
+if [ -z "$SKIP_GIT_CLEAN" ]; then
+	git clean -x -f -d
+fi
 $MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=$rootdir
 popd
 
@@ -50,9 +52,11 @@ $rootdir/scripts/gen_nvme.sh > $ROCKSDB_CONF
 
 trap 'run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
-timing_enter mkfs
-$rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
-timing_exit mkfs
+if [ -z "$SKIP_MKFS" ]; then
+	timing_enter mkfs
+	$rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
+	timing_exit mkfs
+fi
 
 mkdir -p $output_dir/rocksdb
 RESULTS_DIR=$output_dir/rocksdb
