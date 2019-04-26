@@ -22,6 +22,30 @@
       "revId": "8d385e953d64b345589a9d48332f6ca577cd8836",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6fb50ab_7691828a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3403,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-26T18:13:41Z",
+      "side": 1,
+      "message": "They should both work right since we are in a STAILQ_FOREACH_SAFE loop? My only goal with this is to make sure that by the time I finish iterating through the list, it is empty.\nIt might be more straightforward to use while(!STAILQ_EMPTY) {qpair \u003dSTAILQ_HEAD; STAILQ_REMOVE_HEAD} semantics.",
+      "parentUuid": "ba48df77_90d5b863",
+      "range": {
+        "startLine": 3403,
+        "startChar": 4,
+        "endLine": 3403,
+        "endChar": 22
+      },
+      "revId": "8d385e953d64b345589a9d48332f6ca577cd8836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
