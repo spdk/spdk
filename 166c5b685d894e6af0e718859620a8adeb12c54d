@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dde61a5f_3f12dd4b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 5066,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-26T20:49:35Z",
+      "side": 1,
+      "message": "This code is a bit messier than needed to handle the ctx \u003d\u003d NULL case.  In fact, when ctx \u003d\u003d NULL, this function is effectively a nop (except for the SPDK_ERRLOG).\n\nThis would be cleaner:\n\nif (bserrno !\u003d 0) {\n  SPDK_ERRLOG();\n}\n\nif (ctx \u003d\u003d NULL) {\n  return;\n}\n\nif (bserrno !\u003d 0) {\n  ctx-\u003ebserrno \u003d bserrno;\n}\n\nctx-\u003ecb_fn();\nfree(ctx);",
+      "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3df5d45_096358a9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 5080,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-26T20:49:35Z",
+      "side": 1,
+      "message": "I think in conjunction with some of the earlier naming changes, this function should be:\n\n_spdk_delete_snapshot_cleanup_snapshot()",
+      "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2ccbf7c_f14bba45",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 5265,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-26T20:49:35Z",
+      "side": 1,
+      "message": "assert(TAILQ_EMPTY(\u0026snapshot_entry-\u003eclones))?",
+      "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cd55ac0_527bd46e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 5289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-26T20:49:35Z",
+      "side": 1,
+      "message": "should we just do this right after we remove the clone entry at line 5265?\n\nI think this should always be done - not just when snapshot-\u003eparent_id \u003d\u003d SPDK_BLOBID_INVALID.",
+      "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
