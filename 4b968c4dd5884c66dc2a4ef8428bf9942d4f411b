@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d42392f_ba0d571a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-26T10:41:40Z",
+      "side": 1,
+      "message": "Why do you mention this here ? From my understanding the cache stops in the same callback chain as the last vbdev for that cache/core. If that is the case, cache_ctx essentially is freed when cache stops.",
+      "range": {
+        "startLine": 14,
+        "startChar": 6,
+        "endLine": 15,
+        "endChar": 8
+      },
+      "revId": "4b968c4dd5884c66dc2a4ef8428bf9942d4f411b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a443ca57_465d2b54",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-26T10:41:40Z",
+      "side": 1,
+      "message": "cache ctx put is missing here if you were to move it from patches later in the series. Although I don\u0027t see a reason to not have it in stop_vbdev_cmpl().",
+      "range": {
+        "startLine": 173,
+        "startChar": 0,
+        "endLine": 174,
+        "endChar": 35
+      },
+      "revId": "4b968c4dd5884c66dc2a4ef8428bf9942d4f411b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
