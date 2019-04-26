@@ -59,10 +59,10 @@ ftl_ppa2str(struct ftl_ppa ppa, char *buf, size_t size)
 }
 
 #if defined(FTL_META_DEBUG)
-bool ftl_band_validate_md(struct ftl_band *band, const uint64_t *lba_map);
+bool ftl_band_validate_md(struct ftl_band *band);
 void ftl_dev_dump_bands(struct spdk_ftl_dev *dev);
 #else
-#define ftl_band_validate_md(band, lba_map)
+#define ftl_band_validate_md(band)
 #define ftl_dev_dump_bands(dev)
 #endif
 

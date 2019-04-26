@@ -185,12 +185,11 @@ ftl_reloc_read_lba_map(struct ftl_band_reloc *breloc)
 	io->cb.ctx = io;
 	io->cb.fn = ftl_reloc_read_lba_map_cb;
 
-	if (ftl_band_alloc_md(band)) {
+	if (ftl_band_alloc_lba_map(band)) {
 		assert(false);
 	}
 
-	return ftl_band_read_lba_map(band, &band->md, 0,
-				     ftl_num_band_lbks(dev), io->cb);
+	return ftl_band_read_lba_map(band, 0, ftl_num_band_lbks(dev), io->cb);
 }
 
 static void
@@ -203,7 +202,7 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 	reloc->num_active++;
 
 	if (!band->high_prio) {
-		assert(band->md.lba_map == NULL);
+		assert(band->lba_map.map == NULL);
 		ftl_reloc_read_lba_map(breloc);
 		return;
 	}
@@ -406,7 +405,7 @@ ftl_reloc_io_reinit(struct ftl_io *io, struct ftl_band_reloc *breloc,
 			continue;
 		}
 
-		io->lbas[i] = breloc->band->md.lba_map[lbkoff];
+		io->lbas[i] = breloc->band->lba_map.map[lbkoff];
 	}
 
 	ftl_trace_lba_io_init(io->dev, io);
@@ -557,7 +556,7 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 
 	ftl_reloc_release_io(breloc);
 	ftl_reloc_iter_reset(breloc);
-	ftl_band_release_md(band);
+	ftl_band_release_lba_map(band);
 
 	breloc->active = 0;
 	reloc->num_active--;
@@ -801,6 +800,6 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 
 	if (prio) {
 		TAILQ_INSERT_TAIL(&reloc->prio_queue, breloc, entry);
-		ftl_band_acquire_md(breloc->band);
+		ftl_band_acquire_lba_map(breloc->band);
 	}
 }
