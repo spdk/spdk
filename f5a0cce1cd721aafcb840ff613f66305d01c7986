@@ -52,6 +52,24 @@
       "revId": "f5a0cce1cd721aafcb840ff613f66305d01c7986",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3003ebe5_904f6a04",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-26T18:13:53Z",
+      "side": 1,
+      "message": "Actually it is. I can just use the rpoller-\u003esrq to check.",
+      "parentUuid": "680d0128_b578fb0a",
+      "revId": "f5a0cce1cd721aafcb840ff613f66305d01c7986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
