@@ -320,11 +320,11 @@ ftl_restore_l2p(struct ftl_band *band)
 	size_t i;
 
 	for (i = 0; i < ftl_num_band_lbks(band->dev); ++i) {
-		if (!spdk_bit_array_get(band->md.vld_map, i)) {
+		if (!spdk_bit_array_get(band->md.lba_map.vld, i)) {
 			continue;
 		}
 
-		lba = band->md.lba_map[i];
+		lba = band->md.lba_map.map[i];
 		if (lba >= dev->num_lbas) {
 			return -1;
 		}
@@ -340,7 +340,7 @@ ftl_restore_l2p(struct ftl_band *band)
 		ftl_l2p_set(dev, lba, ppa);
 	}
 
-	band->md.lba_map = NULL;
+	band->md.lba_map.map = NULL;
 	return 0;
 }
 
@@ -397,7 +397,7 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 	};
 
 	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
-	band->md.lba_map = restore->lba_map;
+	band->md.lba_map.map = restore->lba_map;
 
 	if (ftl_band_read_tail_md(band, &band->md, restore->md_buf, band->tail_md_ppa, &cb)) {
 		SPDK_ERRLOG("Failed to send tail metadata read\n");

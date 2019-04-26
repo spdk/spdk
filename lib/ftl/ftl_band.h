@@ -84,13 +84,7 @@ enum ftl_md_status {
 	FTL_MD_INVALID_SIZE
 };
 
-struct ftl_md {
-	/* Sequence number */
-	uint64_t				seq;
-
-	/* Number of defrag cycles */
-	uint64_t				wr_cnt;
-
+struct ftl_lba_map {
 	/* LBA/vld map lock */
 	pthread_spinlock_t			lock;
 
@@ -101,10 +95,21 @@ struct ftl_md {
 	size_t					ref_cnt;
 
 	/* Bitmap of valid LBAs */
-	struct spdk_bit_array			*vld_map;
+	struct spdk_bit_array			*vld;
 
 	/* LBA map (only valid for open/relocating bands) */
-	uint64_t				*lba_map;
+	uint64_t				*map;
+};
+
+struct ftl_md {
+	/* Sequence number */
+	uint64_t				seq;
+
+	/* Number of defrag cycles */
+	uint64_t				wr_cnt;
+
+	/* LBA map */
+	struct ftl_lba_map			lba_map;
 
 	/* Metadata DMA buffer (only valid for open/relocating bands) */
 	void					*dma_buf;
@@ -201,7 +206,7 @@ struct ftl_chunk *ftl_band_next_operational_chunk(struct ftl_band *band,
 static inline int
 ftl_band_empty(const struct ftl_band *band)
 {
-	return band->md.num_vld == 0;
+	return band->md.lba_map.num_vld == 0;
 }
 
 static inline struct ftl_chunk *
@@ -227,15 +232,15 @@ ftl_band_state_changing(struct ftl_band *band)
 static inline int
 ftl_band_lbkoff_valid(struct ftl_band *band, size_t lbkoff)
 {
-	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &band->md.lba_map;
 
-	pthread_spin_lock(&md->lock);
-	if (spdk_bit_array_get(md->vld_map, lbkoff)) {
-		pthread_spin_unlock(&md->lock);
+	pthread_spin_lock(&lba_map->lock);
+	if (spdk_bit_array_get(lba_map->vld, lbkoff)) {
+		pthread_spin_unlock(&lba_map->lock);
 		return 1;
 	}
 
-	pthread_spin_unlock(&md->lock);
+	pthread_spin_unlock(&lba_map->lock);
 	return 0;
 }
 

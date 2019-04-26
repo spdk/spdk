@@ -103,14 +103,14 @@ ftl_admin_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 static int
 ftl_band_init_md(struct ftl_band *band)
 {
-	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &band->md.lba_map;
 
-	md->vld_map = spdk_bit_array_create(ftl_num_band_lbks(band->dev));
-	if (!md->vld_map) {
+	lba_map->vld = spdk_bit_array_create(ftl_num_band_lbks(band->dev));
+	if (!lba_map->vld) {
 		return -ENOMEM;
 	}
 
-	pthread_spin_init(&md->lock, PTHREAD_PROCESS_PRIVATE);
+	pthread_spin_init(&lba_map->lock, PTHREAD_PROCESS_PRIVATE);
 	ftl_band_md_clear(&band->md);
 	return 0;
 }
@@ -509,7 +509,7 @@ _ftl_init_bands_state(void *ctx)
 	dev->seq = ftl_dev_band_max_seq(dev);
 
 	LIST_FOREACH_SAFE(band, &dev->shut_bands, list_entry, temp_band) {
-		if (!band->md.num_vld) {
+		if (!band->md.lba_map.num_vld) {
 			ftl_band_set_state(band, FTL_BAND_STATE_FREE);
 		}
 	}
@@ -527,7 +527,7 @@ ftl_init_num_free_bands(struct spdk_ftl_dev *dev)
 	int cnt = 0;
 
 	LIST_FOREACH(band, &dev->shut_bands, list_entry) {
-		if (band->num_chunks && !band->md.num_vld) {
+		if (band->num_chunks && !band->md.lba_map.num_vld) {
 			cnt++;
 		}
 	}
@@ -959,7 +959,7 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	if (dev->bands) {
 		for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 			free(dev->bands[i].chunk_buf);
-			spdk_bit_array_free(&dev->bands[i].md.vld_map);
+			spdk_bit_array_free(&dev->bands[i].md.lba_map.vld);
 		}
 	}
 
