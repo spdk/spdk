@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "995e4a1d_02f433bb",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-26T18:57:57Z",
+      "side": 1,
+      "message": "I have a question. \n\nAfter we reach this point(L607), if we pad \u0027ftl_dev_num_punits(dev) * dev-\u003exfer_size - size\u0027 all the time (L613), do you think we can utilize all possible PUs in parallel?\n\nL613 : ftl_rwb_pad(dev, ftl_dev_num_punits(dev) * dev-\u003exfer_size - size);",
+      "revId": "d28515c51b2664b41c7f93c1c9c582ce12d0fd8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a34f018_de6a0c36",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-04-26T18:57:57Z",
+      "side": 1,
+      "message": "I was waiting for your patch to put this in ftl_check_conf().\n(451516, check config after geometry is retrieved).\n\nShould we update that on a separate patch?\nIf we check this configuration in ftl_check_conf() later, do you think we should remove this from ftl_rwb_init()?",
+      "revId": "d28515c51b2664b41c7f93c1c9c582ce12d0fd8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
