@@ -573,6 +573,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	struct spdk_conf	*config = NULL;
 	int			rc;
 	char			*tty;
+	struct spdk_cpuset	*tmp_cpumask;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -636,9 +637,19 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 		goto app_start_log_close_err;
 	}
 
+	tmp_cpumask = spdk_cpuset_alloc();
+	if (tmp_cpumask == NULL) {
+		SPDK_ERRLOG("spdk_cpuset_alloc() failed\n");
+		goto app_start_log_close_err;
+	}
+
+	spdk_cpuset_zero(tmp_cpumask);
+	spdk_cpuset_set_cpu(tmp_cpumask, spdk_env_get_current_core(), true);
+
 	/* Now that the reactors have been initialized, we can create an
 	 * initialization thread. */
-	g_app_thread = spdk_thread_create("app_thread", NULL);
+	g_app_thread = spdk_thread_create("app_thread", tmp_cpumask);
+	spdk_cpuset_free(tmp_cpumask);
 	if (!g_app_thread) {
 		SPDK_ERRLOG("Unable to create an spdk_thread for initialization\n");
 		goto app_start_log_close_err;
