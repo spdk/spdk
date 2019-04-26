@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3dcfce73_b1aa86fe",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-26T21:28:01Z",
+      "side": 1,
+      "message": "If you get here and ns is NULL, the channel still exists, and there\u0027s I/O on that channel, then we\u0027ve already done something wrong much earlier in the process of the hot remove.\n\nWe need to make sure all I/O is quiesced on a hot remove prior to removing the namespace.",
+      "revId": "90f5960d0a4e431390dc7c63c159a2af6fecef2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd21c9a6_a132e56c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-26T21:28:01Z",
+      "side": 1,
+      "message": "We\u0027re guaranteed to already be on this thread - you can just call spdk_nvmf_ns_destroy_channel directly.",
+      "revId": "90f5960d0a4e431390dc7c63c159a2af6fecef2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
