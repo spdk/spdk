@@ -1,0 +1,1562 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b97e2aec_0004d8e4",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_hwqp_alloc_fc_request ?",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 201,
+        "endChar": 21
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f05dfbe_460efdc0",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_hwqp_free_fc_request ?",
+      "range": {
+        "startLine": 218,
+        "startChar": 0,
+        "endLine": 218,
+        "endChar": 20
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59518851_676546d8",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_request_free_buffers ?",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 244,
+        "endChar": 23
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ef914d5_096b56aa",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_hwqp_init_poller_queues ?",
+      "range": {
+        "startLine": 260,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 31
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98349161_6a39d09c",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_hwqp_reinit_poller_queues?",
+      "range": {
+        "startLine": 266,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 33
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03235172_529111c9",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_port_init_hwqp?",
+      "range": {
+        "startLine": 288,
+        "startChar": 0,
+        "endLine": 288,
+        "endChar": 22
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f52a1865_512f9cd6",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "We will be able to embed the contents of this function into the callee.",
+      "range": {
+        "startLine": 307,
+        "startChar": 0,
+        "endLine": 307,
+        "endChar": 33
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b60ac5e_9fa6e009",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_hwqp_add_poller? and we will be able to refactor this function as I commented.",
+      "range": {
+        "startLine": 352,
+        "startChar": 0,
+        "endLine": 352,
+        "endChar": 31
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed685903_71fb087d",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_hwqp_remove_poller ?",
+      "range": {
+        "startLine": 380,
+        "startChar": 0,
+        "endLine": 380,
+        "endChar": 36
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c25908c_d9b53773",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "From the line 581 to 594, the following may be slightly easier to follow:\n\nskip_hwqp_cnt \u003d false;\nfor (i \u003d 0; i \u003c hwqp_cnt; i++) {\n  if (hwqps[i] \u003d\u003d conn-\u003ehwqp) {\n    skip_hwqp_cnt \u003d true;\n    break;\n  }\n}\nif (!skip_hwqp_cnt) {\n  hwqps[hwqp_cnt] \u003d conn-\u003ehwqp;\n  hwqp_cnt++;\n}\n\nBesides, we can use i here too. (declare i both for the line 581 and 624 up front.)",
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a63fdbb8_85a19eb3",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe -EALREADY ? (Same for the following)",
+      "range": {
+        "startLine": 686,
+        "startChar": 9,
+        "endLine": 686,
+        "endChar": 17
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51abb5a1_db68d4c9",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "spdk_nvmf_fc_port_add may be enough",
+      "range": {
+        "startLine": 726,
+        "startChar": 0,
+        "endLine": 726,
+        "endChar": 26
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09fb63e0_514873b9",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "spdk_nvmf_fc_port_find may be consistent with other parts.",
+      "range": {
+        "startLine": 732,
+        "startChar": 0,
+        "endLine": 732,
+        "endChar": 26
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee9559a0_7b936ca1",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 753,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe caching hwqp like\n\n hwqp \u003d \u0026fc_port-\u003eio_queues[i];\n if (hwqp-\u003efc_request_pool)\n\nwill clarify io_queue is hwqp.",
+      "range": {
+        "startLine": 753,
+        "startChar": 7,
+        "endLine": 753,
+        "endChar": 28
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f86c770b_6ab8d623",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 794,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe we can do the following.\n\nstatic struct spdk_nvmf_fc_nport *\nnvmf_fc_port_find_nport(struct spdk_nvmf_fc_port *fc_port, uitn16_t nport_hdl)\n{\n  struct spdk_nvmf_fc_nport *fc_nport;\n\n  TAILQ_FOREACH(fc_nport, \u0026fc_port-\u003enport_list, link) {\n    if (fc_nport-\u003enport_hdl \u003d\u003d nport_hdl) {\n      return fc_nport;\n    }\n  }\n  return NULL;\n}\n\nstruct spdk_nvmf_fc_nport *\nspdk_nvmf_fc_nport_find(uint8_t port_hdl, uint16_t nport_hdl)\n{\n  struct spdk_nvmf_fc_port *fc_port;\n\n  fc_port \u003d spdk_nvmf_fc_port_find(port_hdl);\n  if (fc_port) {\n    return nvmf_fc_port_find_nport(fc_port, nport_hdl);\n  } else {\n    return NULL;\n  }\n}",
+      "range": {
+        "startLine": 794,
+        "startChar": 0,
+        "endLine": 794,
+        "endChar": 22
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c48ced42_9116b42d",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_hwqp_find_nport_and_rport ?",
+      "range": {
+        "startLine": 811,
+        "startChar": 8,
+        "endLine": 811,
+        "endChar": 22
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffa4b977_5dfd8438",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 851,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_nport_has_no_rport ?",
+      "range": {
+        "startLine": 851,
+        "startChar": 0,
+        "endLine": 851,
+        "endChar": 33
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "352d05f7_753becb5",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_ctrlr_get_fc_assoc ?",
+      "range": {
+        "startLine": 923,
+        "startChar": 0,
+        "endLine": 923,
+        "endChar": 28
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3e3ceb6_67a8c68d",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_qpair_get_fc_conn ?",
+      "range": {
+        "startLine": 939,
+        "startChar": 0,
+        "endLine": 939,
+        "endChar": 19
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b52f115e_55a837a3",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe simply spdk_nvmf_ctrlr_is_on_nport ?",
+      "range": {
+        "startLine": 946,
+        "startChar": 0,
+        "endLine": 946,
+        "endChar": 35
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfd61a58_9f510267",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1052,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_request_abort ?",
+      "range": {
+        "startLine": 1052,
+        "startChar": 0,
+        "endLine": 1052,
+        "endChar": 22
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7561c5df_f72d39ba",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_request_alloc_buffers ?",
+      "range": {
+        "startLine": 1128,
+        "startChar": 0,
+        "endLine": 1128,
+        "endChar": 23
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17dd4b19_6a2c4c9c",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_hwqp_handle_request?",
+      "range": {
+        "startLine": 1236,
+        "startChar": 0,
+        "endLine": 1236,
+        "endChar": 22
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21e962b9_a534937c",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_request_free ?",
+      "range": {
+        "startLine": 1340,
+        "startChar": 0,
+        "endLine": 1340,
+        "endChar": 21
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0152664_105eeef5",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1362,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_request_set_state ?",
+      "range": {
+        "startLine": 1362,
+        "startChar": 0,
+        "endLine": 1362,
+        "endChar": 26
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26a4cd2d_2716ba31",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1385,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_hwqp_process_frame ?",
+      "range": {
+        "startLine": 1385,
+        "startChar": 0,
+        "endLine": 1385,
+        "endChar": 26
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2bdfc33_a5dfaaf7",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1491,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_hwqp_process_pending_reqs?",
+      "range": {
+        "startLine": 1491,
+        "startChar": 0,
+        "endLine": 1491,
+        "endChar": 32
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "144cdd48_0a4f8487",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1514,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_hwqp_process_pending_ls_rqsts ?",
+      "range": {
+        "startLine": 1514,
+        "startChar": 0,
+        "endLine": 1514,
+        "endChar": 36
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0b48d14_e64ebba2",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1564,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_request_handle_rsp ?",
+      "range": {
+        "startLine": 1564,
+        "startChar": 0,
+        "endLine": 1564,
+        "endChar": 23
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26d6ac7e_a55bf329",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1620,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_request_send_ersp_is_required ?",
+      "range": {
+        "startLine": 1620,
+        "startChar": 0,
+        "endLine": 1620,
+        "endChar": 31
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ab5543c_f24c2531",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_adm_hw_port_reinit_with_validate?",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 134,
+        "endChar": 35
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13b6ee6a_9241207a",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_adm_hw_port_init_data?",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 29
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e87b72fd_82847a15",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_adm_port_set_hwqp_offline_and_delete_pollers ?\n\nOr split into nvmf_fc_adm_port_set_hwqp_offline and nvmf_fc_adm_port_remove_pollers ?",
+      "range": {
+        "startLine": 242,
+        "startChar": 0,
+        "endLine": 242,
+        "endChar": 40
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f0c9805_2b158a60",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_adm_hw_port_set_nports_zombie ?",
+      "range": {
+        "startLine": 371,
+        "startChar": 0,
+        "endLine": 371,
+        "endChar": 40
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cf7577c_218dffd6",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_adm_hwqp_quiesce_cb ?",
+      "range": {
+        "startLine": 577,
+        "startChar": 0,
+        "endLine": 577,
+        "endChar": 28
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94b6a019_c58043a7",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_adm_hwqp_quiesce?",
+      "range": {
+        "startLine": 630,
+        "startChar": 0,
+        "endLine": 630,
+        "endChar": 28
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31666c21_dce16162",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_adm_nport_add_listner_to_subsystems?",
+      "range": {
+        "startLine": 951,
+        "startChar": 0,
+        "endLine": 951,
+        "endChar": 34
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7c1f86e_6c13dfa1",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1670,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "we can call free(ctx) without null check.",
+      "range": {
+        "startLine": 1670,
+        "startChar": 1,
+        "endLine": 1670,
+        "endChar": 11
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5973562_0e626797",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "This is not necessary. We can call spdk_nvmf_fc_xmt_ls_rsp directly.",
+      "range": {
+        "startLine": 188,
+        "startChar": 0,
+        "endLine": 190,
+        "endChar": 42
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "629477e1_c64c287c",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_assoc_free ?",
+      "range": {
+        "startLine": 233,
+        "startChar": 0,
+        "endLine": 233,
+        "endChar": 27
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e31511a_5055b8ab",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_assoc_assign_conns?",
+      "range": {
+        "startLine": 265,
+        "startChar": 0,
+        "endLine": 265,
+        "endChar": 35
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d4ef474_c52ac772",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_assoc_alloc ?",
+      "range": {
+        "startLine": 326,
+        "startChar": 0,
+        "endLine": 326,
+        "endChar": 26
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5329a40e_508993ba",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_assoc_append_del_cb_ctx ?",
+      "range": {
+        "startLine": 396,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 28
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36089c38_06339af0",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_assoc_alloc_fc_conn ?",
+      "range": {
+        "startLine": 413,
+        "startChar": 0,
+        "endLine": 413,
+        "endChar": 25
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1173afc7_21f3d19a",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_conn_free ?",
+      "range": {
+        "startLine": 446,
+        "startChar": 0,
+        "endLine": 446,
+        "endChar": 26
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cae5f1bf_fa51d583",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_op_ctx_alloc ?",
+      "range": {
+        "startLine": 454,
+        "startChar": 0,
+        "endLine": 454,
+        "endChar": 21
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52ee9c34_16d663df",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_op_ctx_free ?",
+      "range": {
+        "startLine": 461,
+        "startChar": 0,
+        "endLine": 461,
+        "endChar": 22
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3458e53c_e9bbf554",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_nport_find_fc_ls_assoc ?",
+      "range": {
+        "startLine": 471,
+        "startChar": 0,
+        "endLine": 471,
+        "endChar": 21
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a7b32e4_9e1bc42b",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_assoc_delete ?",
+      "range": {
+        "startLine": 486,
+        "startChar": 0,
+        "endLine": 486,
+        "endChar": 31
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8cd038eb_c2ad29b2",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "nvmf_fc_ls_rsp_fail_delete_conn_cb may be a little clearer.",
+      "range": {
+        "startLine": 495,
+        "startChar": 0,
+        "endLine": 495,
+        "endChar": 31
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b6b3785_86da28de",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_assoc_handle_xmt_ls_rsp_failure ?",
+      "range": {
+        "startLine": 521,
+        "startChar": 0,
+        "endLine": 521,
+        "endChar": 33
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6caa6d7_a45de2c3",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_ls_assoc_add_conn_to_poller ?",
+      "range": {
+        "startLine": 606,
+        "startChar": 0,
+        "endLine": 606,
+        "endChar": 29
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f22310da_4d94d096",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "When we come here, opd is always NULL ?",
+      "range": {
+        "startLine": 653,
+        "startChar": 13,
+        "endLine": 653,
+        "endChar": 16
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cdefd6e_14e9165b",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "This is not necessary? (same as the line 653.)",
+      "range": {
+        "startLine": 666,
+        "startChar": 0,
+        "endLine": 668,
+        "endChar": 2
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca8740a2_421af84f",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_nport_delete_fc_ls_assoc ?",
+      "range": {
+        "startLine": 796,
+        "startChar": 0,
+        "endLine": 796,
+        "endChar": 26
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f8f78e8_2c95dddf",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 938,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_nport_disconnect_fc_ls_assoc?",
+      "range": {
+        "startLine": 938,
+        "startChar": 0,
+        "endLine": 938,
+        "endChar": 27
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bfaf485_7f51aa7e",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Simply nvmf_host_copy may be easier to understand.",
+      "range": {
+        "startLine": 991,
+        "startChar": 0,
+        "endLine": 991,
+        "endChar": 19
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9010ef2_ba94f788",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_nport_process_ls_cass ?",
+      "range": {
+        "startLine": 1022,
+        "startChar": 0,
+        "endLine": 1022,
+        "endChar": 23
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd388332_ff80c87d",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1161,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_nport_process_ls_cioc?",
+      "range": {
+        "startLine": 1161,
+        "startChar": 0,
+        "endLine": 1161,
+        "endChar": 23
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c3cfe22_ded244fe",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe nvmf_fc_nport_process_ls_disc?",
+      "range": {
+        "startLine": 1285,
+        "startChar": 0,
+        "endLine": 1285,
+        "endChar": 23
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa5bcae7_5c19a9c1",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1369,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_port_init_ls ?",
+      "range": {
+        "startLine": 1369,
+        "startChar": 0,
+        "endLine": 1369,
+        "endChar": 20
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cc6f7b2_7b292b93",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_port_fini_ls ?",
+      "range": {
+        "startLine": 1374,
+        "startChar": 0,
+        "endLine": 1374,
+        "endChar": 20
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7925098b_84a4dc13",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "spdk_nvmf_fc_ls_rqst_handle ?",
+      "range": {
+        "startLine": 1379,
+        "startChar": 0,
+        "endLine": 1379,
+        "endChar": 27
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a24fbab6_1bd65aed",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1408,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Maybe spdk_nvmf_fc_nport_delete_fc_ls_assoc?",
+      "range": {
+        "startLine": 1408,
+        "startChar": 0,
+        "endLine": 1408,
+        "endChar": 31
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40704e1d_5aeb8b7c",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "spdk_nvmf_fc_msg_api_func may be appropriate ?\nAll functions are executed once per call.",
+      "range": {
+        "startLine": 343,
+        "startChar": 0,
+        "endLine": 343,
+        "endChar": 28
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8476d80_32d3e5ab",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 688,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "We can use \nfc_req \u003d SPDK_CONTAINEROF(req, struct spdk_nvmf_fc_request, req)\n\nEmbedding this directly may be better (You can see in rdma.c)\n\nAnd this helper function may not be necessary.",
+      "range": {
+        "startLine": 688,
+        "startChar": 0,
+        "endLine": 688,
+        "endChar": 23
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89202a28_da0a6a01",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "Mayebe spdk_nvmf_fc_request_is_transferring ?",
+      "range": {
+        "startLine": 706,
+        "startChar": 0,
+        "endLine": 706,
+        "endChar": 24
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bc1e55b_f2668920",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T06:51:54Z",
+      "side": 1,
+      "message": "We can use\n\nfc_conn \u003d SPDK_CONTAINEROF(qpair, struct spdk_nvmf_fc_conn, qpair);\n\nEmbedding this directly may be better. Then we will be able to delete this helper function.",
+      "range": {
+        "startLine": 827,
+        "startChar": 0,
+        "endLine": 827,
+        "endChar": 21
+      },
+      "revId": "e7a7aec06ba9e2805fe8df671d472c9ace371062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
