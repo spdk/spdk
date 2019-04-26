@@ -693,6 +693,7 @@ _reduce_destroy_cb(void *ctx, int reduce_errno)
 	}
 
 	comp_bdev->vol = NULL;
+	spdk_put_io_channel(comp_bdev->base_ch);
 	spdk_bdev_unregister(&comp_bdev->comp_bdev, comp_bdev->delete_cb_fn,
 			     comp_bdev->delete_cb_arg);
 }
@@ -703,11 +704,12 @@ delete_vol_unload_cb(void *cb_arg, int reduce_errno)
 {
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
 
-	/* Close the underlying bdev. */
-	spdk_bdev_close(comp_bdev->base_desc);
 	if (reduce_errno) {
 		SPDK_ERRLOG("number %d\n", reduce_errno);
 	} else {
+		/* reducelib needs a channel to comm with the backing device */
+		comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
+
 		/* Clean the device before we free our resources. */
 		spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _reduce_destroy_cb, comp_bdev);
 	}
@@ -1300,6 +1302,7 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	/* Done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
 	spdk_bdev_close(meta_ctx->base_desc);
+	meta_ctx->base_desc = NULL;
 
 	if (reduce_errno != 0) {
 		/* This error means it is not a compress disk. */
