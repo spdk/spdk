@@ -75,6 +75,7 @@ class UIBdevs(UINode):
         UIiSCSIBdev(self)
         UIVirtioBlkBdev(self)
         UIVirtioScsiBdev(self)
+        UIRaidBdev(self)
 
 
 class UILvolStores(UINode):
@@ -819,3 +820,43 @@ class UIVhostTargetObj(UINode):
 class UIVhostLunDevObj(UINode):
     def __init__(self, name, parent):
         UINode.__init__(self, name, parent)
+
+
+class UIRaidBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "raid_volume", parent)
+
+    def delete(self, name):
+        self.get_root().destroy_raid_bdev(name=name)
+
+    def ui_command_create(self, name, raid_level, base_bdevs, strip_size_kb):
+        """
+        Creates a raid bdev of the provided base_bdevs
+
+        Arguments:
+        name - raid bdev name
+        raid_level - raid level, supported values 0
+        base_bdevs - base bdevs name, whitespace separated list in quotes
+        strip_size_kb - strip size of raid bdev in KB, supported values like 8, 16, 32, 64, 128, 256, etc
+        """
+        base_bdevs_array = []
+        for u in base_bdevs.strip().split(" "):
+            base_bdevs_array.append(u)
+
+        raid_level = self.ui_eval_param(raid_level, "number", None)
+        strip_size_kb = self.ui_eval_param(strip_size_kb, "number", None)
+
+        ret_name = self.get_root().construct_raid_bdev(name=name,
+                                                       raid_level=raid_level,
+                                                       base_bdevs=base_bdevs_array,
+                                                       strip_size_kb=strip_size_kb)
+        self.shell.log.info(ret_name)
+
+    def ui_command_delete(self, name):
+        """
+        Deletes this raid bdev object
+
+        Arguments:
+        name - raid bdev name
+        """
+        self.delete(name)
