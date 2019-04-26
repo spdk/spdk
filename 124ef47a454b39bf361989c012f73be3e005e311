@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07e4dc39_8d649a5a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-26T10:35:59Z",
+      "side": 1,
+      "message": "This one is a utility function. Surely you can add it in a separate patch.",
+      "revId": "124ef47a454b39bf361989c012f73be3e005e311",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10a39d0b_1525ef2a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-26T10:35:59Z",
+      "side": 1,
+      "message": "This function looks almost exactly like stop_vbdev() from previous code. You can make the patch smaller just by not relocating it.",
+      "range": {
+        "startLine": 238,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 15
+      },
+      "revId": "124ef47a454b39bf361989c012f73be3e005e311",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
