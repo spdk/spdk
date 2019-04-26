@@ -69,6 +69,24 @@
       "revId": "9b6a43f4df1044f47366b76e495eeb45131a7fa3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c98c9f89_76394b01",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 5095,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T19:42:30Z",
+      "side": 1,
+      "message": "So I did the change, but now that I look into next patch in series I see that we don\u0027t get again the snapshot entry in this this function any more and that last change become useless. Do we still want to keep it, or should I revert last change?",
+      "parentUuid": "a0060b14_b843aa29",
+      "revId": "9b6a43f4df1044f47366b76e495eeb45131a7fa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
