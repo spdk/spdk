@@ -5055,6 +5055,35 @@ _spdk_bs_delete_persist_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_blob_close(blob, _spdk_bs_delete_close_cpl, seq);
 }
 
+static void
+_spdk_bs_delete_blob_finish(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	spdk_bs_sequence_t *seq = cb_arg;
+	struct spdk_blob_list *snapshot_entry = NULL;
+	uint32_t page_num;
+
+	if (bserrno) {
+		SPDK_ERRLOG("Failed to remove blob\n");
+		spdk_bs_sequence_finish(seq, bserrno);
+		return;
+	}
+
+	/* Remove snapshot from the list */
+	snapshot_entry = _spdk_bs_get_snapshot_entry(blob->bs, blob->id);
+	if (snapshot_entry != NULL) {
+		TAILQ_REMOVE(&blob->bs->snapshots, snapshot_entry, link);
+		free(snapshot_entry);
+	}
+
+	page_num = _spdk_bs_blobid_to_page(blob->id);
+	spdk_bit_array_clear(blob->bs->used_blobids, page_num);
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+	blob->active.num_pages = 0;
+	_spdk_blob_resize(blob, 0);
+
+	_spdk_blob_persist(seq, blob, _spdk_bs_delete_persist_cpl, blob);
+}
+
 static int
 _spdk_bs_is_blob_deletable(struct spdk_blob *blob)
 {
@@ -5082,8 +5111,6 @@ static void
 _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
 	spdk_bs_sequence_t *seq = cb_arg;
-	struct spdk_blob_list *snapshot = NULL;
-	uint32_t page_num;
 
 	if (bserrno != 0) {
 		spdk_bs_sequence_finish(seq, bserrno);
@@ -5114,20 +5141,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 */
 	TAILQ_REMOVE(&blob->bs->blobs, blob, link);
 
-	/* If blob is a snapshot then remove it from the list */
-	snapshot = _spdk_bs_get_snapshot_entry(blob->bs, blob->id);
-	if (snapshot != NULL) {
-		TAILQ_REMOVE(&blob->bs->snapshots, snapshot, link);
-		free(snapshot);
-	}
-
-	page_num = _spdk_bs_blobid_to_page(blob->id);
-	spdk_bit_array_clear(blob->bs->used_blobids, page_num);
-	blob->state = SPDK_BLOB_STATE_DIRTY;
-	blob->active.num_pages = 0;
-	_spdk_blob_resize(blob, 0);
-
-	_spdk_blob_persist(seq, blob, _spdk_bs_delete_persist_cpl, blob);
+	_spdk_bs_delete_blob_finish(seq, blob, 0);
 }
 
 void
