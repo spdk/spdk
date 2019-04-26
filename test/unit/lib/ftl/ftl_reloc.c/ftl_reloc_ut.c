@@ -61,31 +61,30 @@ DEFINE_STUB_V(ftl_band_set_state, (struct ftl_band *band, enum ftl_band_state st
 DEFINE_STUB_V(ftl_trace_lba_io_init, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
 
 int
-ftl_band_alloc_md(struct ftl_band *band)
+ftl_band_alloc_lba_map(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
-	struct ftl_md *md = &band->md;
 
-	ftl_band_acquire_md(band);
-	md->lba_map = spdk_mempool_get(dev->lba_pool);
+	ftl_band_acquire_lba_map(band);
+	band->lba_map.map = spdk_mempool_get(dev->lba_pool);
 
 	return 0;
 }
 
 void
-ftl_band_release_md(struct ftl_band *band)
+ftl_band_release_lba_map(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 
-	band->md.ref_cnt--;
-	spdk_mempool_put(dev->lba_pool, band->md.lba_map);
-	band->md.lba_map = NULL;
+	band->lba_map.ref_cnt--;
+	spdk_mempool_put(dev->lba_pool, band->lba_map.map);
+	band->lba_map.map = NULL;
 }
 
 void
-ftl_band_acquire_md(struct ftl_band *band)
+ftl_band_acquire_lba_map(struct ftl_band *band)
 {
-	band->md.ref_cnt++;
+	band->lba_map.ref_cnt++;
 }
 
 size_t
@@ -95,8 +94,8 @@ ftl_lba_map_num_lbks(const struct spdk_ftl_dev *dev)
 }
 
 int
-ftl_band_read_lba_map(struct ftl_band *band, struct ftl_md *md,
-		      size_t offset, size_t lbk_cnt, const struct ftl_cb *cb)
+ftl_band_read_lba_map(struct ftl_band *band, size_t offset,
+		      size_t lbk_cnt, const struct ftl_cb *cb)
 {
 	cb->fn(cb->ctx, 0);
 	return 0;
@@ -224,13 +223,13 @@ cleanup_reloc(struct spdk_ftl_dev *dev, struct ftl_reloc *reloc)
 static void
 set_band_valid_map(struct ftl_band *band, size_t offset, size_t num_lbks)
 {
-	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &band->lba_map;
 	size_t i;
 
-	SPDK_CU_ASSERT_FATAL(md != NULL);
+	SPDK_CU_ASSERT_FATAL(lba_map != NULL);
 	for (i = offset; i < offset + num_lbks; ++i) {
-		spdk_bit_array_set(md->vld_map, i);
-		md->num_vld++;
+		spdk_bit_array_set(lba_map->vld, i);
+		lba_map->num_vld++;
 	}
 }
 
