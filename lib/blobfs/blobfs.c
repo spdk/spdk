@@ -66,6 +66,8 @@ static pthread_spinlock_t g_caches_lock;
 #define TRACE_BLOBFS_XATTR_END		SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x1)
 #define TRACE_BLOBFS_OPEN		SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x2)
 #define TRACE_BLOBFS_CLOSE		SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x3)
+#define TRACE_BLOBFS_DELETE_START	SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x4)
+#define TRACE_BLOBFS_DELETE_DONE	SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x5)
 
 SPDK_TRACE_REGISTER_FN(blobfs_trace, "blobfs", TRACE_GROUP_BLOBFS)
 {
@@ -86,6 +88,16 @@ SPDK_TRACE_REGISTER_FN(blobfs_trace, "blobfs", TRACE_GROUP_BLOBFS)
 					"file:    ");
 	spdk_trace_register_description("BLOBFS_CLOSE",
 					TRACE_BLOBFS_CLOSE,
+					OWNER_NONE, OBJECT_NONE, 0,
+					SPDK_TRACE_ARG_TYPE_STR,
+					"file:    ");
+	spdk_trace_register_description("BLOBFS_DELETE_START",
+					TRACE_BLOBFS_DELETE_START,
+					OWNER_NONE, OBJECT_NONE, 0,
+					SPDK_TRACE_ARG_TYPE_STR,
+					"file:    ");
+	spdk_trace_register_description("BLOBFS_DELETE_DONE",
+					TRACE_BLOBFS_DELETE_DONE,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_STR,
 					"file:    ");
@@ -1424,12 +1436,14 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 
 	f = fs_find_file(fs, name);
 	if (f == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "Cannot find the file=%s to deleted\n", name);
 		cb_fn(cb_arg, -ENOENT);
 		return;
 	}
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "Cannot allocate the req for the file=%s to deleted\n", name);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -1465,6 +1479,7 @@ __fs_delete_file_done(void *arg, int fserrno)
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
+	spdk_trace_record(TRACE_BLOBFS_DELETE_DONE, 0, 0, 0, *((uint64_t *)args->op.delete.name));
 	__wake_caller(args, fserrno);
 }
 
@@ -1474,6 +1489,7 @@ __fs_delete_file(void *arg)
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
+	spdk_trace_record(TRACE_BLOBFS_DELETE_START, 0, 0, 0, *((uint64_t *)args->op.delete.name));
 	spdk_fs_delete_file_async(args->fs, args->op.delete.name, __fs_delete_file_done, req);
 }
 
@@ -1488,6 +1504,7 @@ spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 
 	req = alloc_fs_request(channel);
 	if (req == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "Cannot allocate req to delete file=%s\n", name);
 		return -ENOMEM;
 	}
 
