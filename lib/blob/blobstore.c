@@ -2121,11 +2121,10 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 		uint32_t lba_count;
 		uint64_t lba;
 
-		_spdk_blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
-
 		cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 		cpl.u.blob_basic.cb_fn = cb_fn;
 		cpl.u.blob_basic.cb_arg = cb_arg;
+
 		if (blob->frozen_refcnt) {
 			/* This blob I/O is frozen */
 			enum spdk_blob_op_type op_type;
@@ -2143,6 +2142,8 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 
 			return;
 		}
+
+		_spdk_blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
 
 		if (read) {
 			spdk_bs_sequence_t *seq;
