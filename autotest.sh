@@ -152,6 +152,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test suite test/bdev/blockdev.sh
 		run_test suite test/bdev/bdev_raid.sh
+		run_test suite test/spdkcli/raid.sh
 	fi
 
 	if [ $SPDK_TEST_JSON -eq 1 ]; then
