@@ -22,6 +22,30 @@
       "revId": "b0042feaf890aae1b191136e7e086c577aa50aac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf6e0764_ffb56c85",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-26T15:03:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "092ce5f1_ecf586eb",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 15
+      },
+      "revId": "b0042feaf890aae1b191136e7e086c577aa50aac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
