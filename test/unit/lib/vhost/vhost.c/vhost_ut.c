@@ -163,7 +163,7 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	rc = posix_memalign((void **)&vsession, 64, sizeof(*vsession));
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(vsession != NULL);
-	vsession->lcore = 0;
+	vsession->started = true;
 	vsession->vid = 0;
 	vsession->mem = mem;
 	TAILQ_INSERT_TAIL(&vdev->vsessions, vsession, tailq);

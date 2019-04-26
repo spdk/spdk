@@ -45,14 +45,15 @@
 
 struct vhost_poll_group {
 	struct spdk_thread *thread;
+	unsigned ref;
 	TAILQ_ENTRY(vhost_poll_group) tailq;
 };
 
 /* Round-Robin tracking of cores to poll group assignment */
-static struct vhost_poll_group *g_next_poll_group = NULL;
 static TAILQ_HEAD(, vhost_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
 
-static uint32_t *g_num_ctrlrs;
+/* Temporary cpuset for poll group assignment */
+static struct spdk_cpuset *g_tmp_cpuset;
 
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
@@ -64,7 +65,7 @@ struct spdk_vhost_session_fn_ctx {
 	/** ID of the session to send event to. */
 	uint32_t vsession_id;
 
-	/** User callback function to be executed on given lcore. */
+	/** User callback function to be executed on given thread. */
 	spdk_vhost_session_fn cb_fn;
 
 	/** Semaphore used to signal that event is done. */
@@ -72,6 +73,8 @@ struct spdk_vhost_session_fn_ctx {
 
 	/** Response to be written by enqueued event. */
 	int response;
+
+	void *ctx;
 };
 
 static int new_connection(int vid);
@@ -604,12 +607,6 @@ spdk_vhost_session_mem_unregister(struct spdk_vhost_session *vsession)
 
 }
 
-void
-spdk_vhost_free_reactor(uint32_t lcore)
-{
-	g_num_ctrlrs[lcore]--;
-}
-
 struct spdk_vhost_dev *
 spdk_vhost_dev_next(struct spdk_vhost_dev *vdev)
 {
@@ -857,28 +854,40 @@ spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
 	return vdev->cpumask;
 }
 
-uint32_t
-spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask)
+struct vhost_poll_group *
+spdk_vhost_get_poll_group(struct spdk_cpuset *cpumask)
 {
-	uint32_t i, selected_core;
+	struct vhost_poll_group *pg, *tpg, *selected_pg;
 	uint32_t min_ctrlrs;
 
 	min_ctrlrs = INT_MAX;
-	selected_core = spdk_env_get_first_core();
+	selected_pg = TAILQ_FIRST(&g_poll_groups);
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		if (!spdk_cpuset_get_cpu(cpumask, i)) {
+	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, tailq, tpg) {
+		/* assume there's just one cpu in the thread's cpumask */
+		spdk_cpuset_copy(g_tmp_cpuset, cpumask);
+		spdk_cpuset_and(g_tmp_cpuset, spdk_thread_get_cpumask(pg->thread));
+
+		if (!spdk_cpuset_equal(g_tmp_cpuset, spdk_thread_get_cpumask(pg->thread))) {
 			continue;
 		}
 
-		if (g_num_ctrlrs[i] < min_ctrlrs) {
-			selected_core = i;
-			min_ctrlrs = g_num_ctrlrs[i];
+		if (pg->ref < min_ctrlrs) {
+			selected_pg = pg;
+			min_ctrlrs = pg->ref;
 		}
 	}
 
-	g_num_ctrlrs[selected_core]++;
-	return selected_core;
+	assert(selected_pg->ref < UINT_MAX);
+	selected_pg->ref++;
+	return selected_pg;
+}
+
+void
+spdk_vhost_put_poll_group(struct vhost_poll_group *pg)
+{
+	assert(pg->ref > 0);
+	pg->ref--;
 }
 
 static void
@@ -894,7 +903,7 @@ void
 spdk_vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 {
 	if (response == 0) {
-		vsession->lcore = spdk_env_get_current_core();
+		vsession->started = true;
 		assert(vsession->vdev->active_session_num < UINT32_MAX);
 		vsession->vdev->active_session_num++;
 	}
@@ -905,7 +914,7 @@ void
 spdk_vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
 {
 	if (response == 0) {
-		vsession->lcore = -1;
+		vsession->started = false;
 		assert(vsession->vdev->active_session_num > 0);
 		vsession->vdev->active_session_num--;
 	}
@@ -913,16 +922,13 @@ spdk_vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
 }
 
 static void
-spdk_vhost_event_cb(void *arg1, void *arg2)
+spdk_vhost_event_cb(void *arg1)
 {
 	struct spdk_vhost_session_fn_ctx *ctx = arg1;
 	struct spdk_vhost_session *vsession;
-	struct spdk_event *ev;
 
 	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
-		ev = spdk_event_allocate(spdk_env_get_current_core(),
-					 spdk_vhost_event_cb, arg1, arg2);
-		spdk_event_call(ev);
+		spdk_thread_send_msg(spdk_get_thread(), spdk_vhost_event_cb, arg1);
 		return;
 	}
 
@@ -936,18 +942,16 @@ static void spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vd
 		spdk_vhost_session_fn fn, void *arg);
 
 static void
-spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
+spdk_vhost_event_async_foreach_fn(void *arg1)
 {
 	struct spdk_vhost_session_fn_ctx *ctx = arg1;
 	struct spdk_vhost_session *vsession = NULL;
 	struct spdk_vhost_dev *vdev = ctx->vdev;
-	struct spdk_event *ev;
 	int rc;
 
 	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
-		ev = spdk_event_allocate(spdk_env_get_current_core(),
-					 spdk_vhost_event_async_foreach_fn, arg1, arg2);
-		spdk_event_call(ev);
+		spdk_thread_send_msg(spdk_get_thread(),
+				     spdk_vhost_event_async_foreach_fn, arg1);
 		return;
 	}
 
@@ -959,40 +963,38 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 		goto out_unlock_continue;
 	}
 
-	if (vsession->lcore >= 0 &&
-	    (uint32_t)vsession->lcore != spdk_env_get_current_core()) {
+	if (vsession->poll_group != NULL && vsession->poll_group->thread != spdk_get_thread()) {
 		/* if session has been relocated to other core, it is no longer thread-safe
 		 * to access its contents here. Even though we're running under the global
 		 * vhost mutex, the session itself (and its pollers) are not. We need to chase
 		 * the session thread as many times as necessary.
 		 */
-		ev = spdk_event_allocate(vsession->lcore,
-					 spdk_vhost_event_async_foreach_fn, arg1, arg2);
-		spdk_event_call(ev);
+		spdk_thread_send_msg(vsession->poll_group->thread,
+				     spdk_vhost_event_async_foreach_fn, arg1);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
 
-	rc = ctx->cb_fn(vdev, vsession, arg2);
+	rc = ctx->cb_fn(vdev, vsession, ctx->ctx);
 	if (rc < 0) {
 		goto out_unlock;
 	}
 
 out_unlock_continue:
 	vsession = spdk_vhost_session_next(vdev, ctx->vsession_id);
-	spdk_vhost_external_event_foreach_continue(vdev, vsession, ctx->cb_fn, arg2);
+	spdk_vhost_external_event_foreach_continue(vdev, vsession, ctx->cb_fn, ctx->ctx);
 out_unlock:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	free(ctx);
 }
 
 int
-spdk_vhost_session_send_event(int32_t lcore, struct spdk_vhost_session *vsession,
+spdk_vhost_session_send_event(struct vhost_poll_group *pg,
+			      struct spdk_vhost_session *vsession,
 			      spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
 			      const char *errmsg)
 {
 	struct spdk_vhost_session_fn_ctx ev_ctx = {0};
-	struct spdk_event *ev;
 	struct timespec timeout;
 	int rc;
 
@@ -1006,10 +1008,9 @@ spdk_vhost_session_send_event(int32_t lcore, struct spdk_vhost_session *vsession
 	ev_ctx.vsession_id = vsession->id;
 	ev_ctx.cb_fn = cb_fn;
 
+	vsession->poll_group = pg;
 	vsession->event_ctx = &ev_ctx;
-	ev = spdk_event_allocate(lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
-	assert(ev);
-	spdk_event_call(ev);
+	spdk_thread_send_msg(pg->thread, spdk_vhost_event_cb, &ev_ctx);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 
 	clock_gettime(CLOCK_REALTIME, &timeout);
@@ -1033,7 +1034,6 @@ spdk_vhost_event_async_send_foreach_continue(struct spdk_vhost_session *vsession
 {
 	struct spdk_vhost_dev *vdev = vsession->vdev;
 	struct spdk_vhost_session_fn_ctx *ev_ctx;
-	struct spdk_event *ev;
 
 	ev_ctx = calloc(1, sizeof(*ev_ctx));
 	if (ev_ctx == NULL) {
@@ -1045,12 +1045,10 @@ spdk_vhost_event_async_send_foreach_continue(struct spdk_vhost_session *vsession
 	ev_ctx->vdev = vdev;
 	ev_ctx->vsession_id = vsession->id;
 	ev_ctx->cb_fn = cb_fn;
+	ev_ctx->ctx = arg;
 
-	ev = spdk_event_allocate(vsession->lcore,
-				 spdk_vhost_event_async_foreach_fn, ev_ctx, arg);
-	assert(ev);
-	spdk_event_call(ev);
-
+	spdk_thread_send_msg(vsession->poll_group->thread,
+			     spdk_vhost_event_async_foreach_fn, ev_ctx);
 	return 0;
 }
 
@@ -1094,7 +1092,7 @@ stop_device(int vid)
 		return;
 	}
 
-	if (vsession->lcore == -1) {
+	if (vsession->poll_group->thread == NULL) {
 		/* already stopped, nothing to do */
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
@@ -1121,7 +1119,7 @@ start_device(int vid)
 	}
 
 	vdev = vsession->vdev;
-	if (vsession->lcore != -1) {
+	if (vsession->poll_group->thread != NULL) {
 		/* already started, nothing to do */
 		rc = 0;
 		goto out;
@@ -1354,7 +1352,7 @@ new_connection(int vid)
 	vsession->vdev = vdev;
 	vsession->id = vdev->vsessions_num++;
 	vsession->vid = vid;
-	vsession->lcore = -1;
+	vsession->poll_group = NULL;
 	vsession->initialized = false;
 	vsession->next_stats_check_time = 0;
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
@@ -1379,7 +1377,7 @@ destroy_connection(int vid)
 		return;
 	}
 
-	if (vsession->lcore != -1) {
+	if (vsession->started) {
 		_stop_session(vsession);
 	}
 
@@ -1399,7 +1397,7 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 		goto out_finish_foreach;
 	}
 
-	while (vsession->lcore == -1) {
+	while (!vsession->started) {
 		if (vsession->initialized) {
 			rc = fn(vdev, vsession, arg);
 			if (rc < 0) {
@@ -1460,7 +1458,7 @@ vhost_create_poll_group_done(void *ctx)
 	spdk_vhost_init_cb init_cb = ctx;
 	int ret;
 
-	if (g_next_poll_group == NULL) {
+	if (TAILQ_EMPTY(&g_poll_groups)) {
 		/* No threads? Iteration failed? */
 		init_cb(-ECHILD);
 		return;
@@ -1504,16 +1502,11 @@ vhost_create_poll_group(void *ctx)
 
 	pg->thread = spdk_get_thread();
 	TAILQ_INSERT_TAIL(&g_poll_groups, pg, tailq);
-
-	if (g_next_poll_group == NULL) {
-		g_next_poll_group = pg;
-	}
 }
 
 void
 spdk_vhost_init(spdk_vhost_init_cb init_cb)
 {
-	uint32_t last_core;
 	size_t len;
 	int ret;
 
@@ -1531,11 +1524,8 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		}
 	}
 
-	last_core = spdk_env_get_last_core();
-	g_num_ctrlrs = calloc(last_core + 1, sizeof(uint32_t));
-	if (!g_num_ctrlrs) {
-		SPDK_ERRLOG("Could not allocate array size=%u for g_num_ctrlrs\n",
-			    last_core + 1);
+	g_tmp_cpuset = spdk_cpuset_alloc();
+	if (g_tmp_cpuset == NULL) {
 		ret = -1;
 		goto err_out;
 	}
@@ -1566,7 +1556,7 @@ _spdk_vhost_fini(void *arg1, void *arg2)
 	spdk_vhost_unlock();
 
 	/* All devices are removed now. */
-	free(g_num_ctrlrs);
+	spdk_cpuset_free(g_tmp_cpuset);
 
 	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, tailq, tpg) {
 		TAILQ_REMOVE(&g_poll_groups, pg, tailq);
