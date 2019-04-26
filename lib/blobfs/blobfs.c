@@ -1948,15 +1948,15 @@ static void __check_sync_reqs(struct spdk_file *file);
 static void
 __file_cache_finish_sync(void *ctx, int bserrno)
 {
-	struct spdk_file *file = ctx;
-	struct spdk_fs_request *sync_req;
+	struct spdk_file *file;
+	struct spdk_fs_request *sync_req = ctx;
 	struct spdk_fs_cb_args *sync_args;
 
-	pthread_spin_lock(&file->lock);
-	sync_req = TAILQ_FIRST(&file->sync_requests);
 	sync_args = &sync_req->args;
+	file = sync_args->file;
 	assert(sync_args->op.sync.offset <= file->length_flushed);
 	BLOBFS_TRACE(file, "sync done offset=%jx\n", sync_args->op.sync.offset);
+	pthread_spin_lock(&file->lock);
 	TAILQ_REMOVE(&file->sync_requests, sync_req, args.op.sync.tailq);
 	pthread_spin_unlock(&file->lock);
 
@@ -1988,7 +1988,7 @@ __check_sync_reqs(struct spdk_file *file)
 				    sizeof(file->length_flushed));
 
 		pthread_spin_unlock(&file->lock);
-		spdk_blob_sync_md(file->blob, __file_cache_finish_sync, file);
+		spdk_blob_sync_md(file->blob, __file_cache_finish_sync, sync_req);
 	} else {
 		pthread_spin_unlock(&file->lock);
 	}
