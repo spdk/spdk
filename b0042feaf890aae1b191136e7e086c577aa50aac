@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "092ce5f1_ecf586eb",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-26T11:51:32Z",
+      "side": 1,
+      "message": "I have no idea how vm_setup maps this name back to the socket path :) But this string is certainly not a path itself.\n\nCan we use \"VhostScsi0\" directly in the command below?",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 15
+      },
+      "revId": "b0042feaf890aae1b191136e7e086c577aa50aac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
