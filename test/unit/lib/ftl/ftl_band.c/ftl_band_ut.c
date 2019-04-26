@@ -67,7 +67,7 @@ setup_band(void)
 
 	g_dev = test_init_ftl_dev(&g_geo, &g_range);
 	g_band = test_init_ftl_band(g_dev, TEST_BAND_IDX);
-	rc = ftl_band_alloc_md(g_band);
+	rc = ftl_band_alloc_lba_map(g_band);
 	CU_ASSERT_EQUAL_FATAL(rc, 0);
 }
 
@@ -153,68 +153,68 @@ test_band_ppa_from_lbkoff(void)
 static void
 test_band_set_addr(void)
 {
-	struct ftl_md *md;
+	struct ftl_lba_map *lba_map;
 	struct ftl_ppa ppa;
 	uint64_t offset = 0;
 
 	setup_band();
-	md = &g_band->md;
+	lba_map = &g_band->lba_map;
 	ppa = ppa_from_punit(g_range.begin);
 	ppa.chk = TEST_BAND_IDX;
 
-	CU_ASSERT_EQUAL(md->num_vld, 0);
+	CU_ASSERT_EQUAL(lba_map->num_vld, 0);
 
 	offset = test_offset_from_ppa(ppa, g_band);
 
 	ftl_band_set_addr(g_band, TEST_LBA, ppa);
-	CU_ASSERT_EQUAL(md->num_vld, 1);
-	CU_ASSERT_EQUAL(md->lba_map[offset], TEST_LBA);
-	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset));
+	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
+	CU_ASSERT_EQUAL(lba_map->map[offset], TEST_LBA);
+	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset));
 
 	ppa.pu++;
 	offset = test_offset_from_ppa(ppa, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, ppa);
-	CU_ASSERT_EQUAL(md->num_vld, 2);
-	CU_ASSERT_EQUAL(md->lba_map[offset], TEST_LBA + 1);
-	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset));
+	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
+	CU_ASSERT_EQUAL(lba_map->map[offset], TEST_LBA + 1);
+	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset));
 	ppa.pu--;
 	offset = test_offset_from_ppa(ppa, g_band);
-	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset));
+	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset));
 	cleanup_band();
 }
 
 static void
 test_invalidate_addr(void)
 {
-	struct ftl_md *md;
+	struct ftl_lba_map *lba_map;
 	struct ftl_ppa ppa;
 	uint64_t offset[2];
 
 	setup_band();
-	md = &g_band->md;
+	lba_map = &g_band->lba_map;
 	ppa = ppa_from_punit(g_range.begin);
 	ppa.chk = TEST_BAND_IDX;
 	offset[0] = test_offset_from_ppa(ppa, g_band);
 
 	ftl_band_set_addr(g_band, TEST_LBA, ppa);
-	CU_ASSERT_EQUAL(md->num_vld, 1);
-	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset[0]));
+	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
+	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset[0]));
 	ftl_invalidate_addr(g_band->dev, ppa);
-	CU_ASSERT_EQUAL(md->num_vld, 0);
-	CU_ASSERT_FALSE(spdk_bit_array_get(md->vld_map, offset[0]));
+	CU_ASSERT_EQUAL(lba_map->num_vld, 0);
+	CU_ASSERT_FALSE(spdk_bit_array_get(lba_map->vld, offset[0]));
 
 	offset[0] = test_offset_from_ppa(ppa, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA, ppa);
 	ppa.pu++;
 	offset[1] = test_offset_from_ppa(ppa, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, ppa);
-	CU_ASSERT_EQUAL(md->num_vld, 2);
-	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset[0]));
-	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset[1]));
+	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
+	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset[0]));
+	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset[1]));
 	ftl_invalidate_addr(g_band->dev, ppa);
-	CU_ASSERT_EQUAL(md->num_vld, 1);
-	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset[0]));
-	CU_ASSERT_FALSE(spdk_bit_array_get(md->vld_map, offset[1]));
+	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
+	CU_ASSERT_TRUE(spdk_bit_array_get(lba_map->vld, offset[0]));
+	CU_ASSERT_FALSE(spdk_bit_array_get(lba_map->vld, offset[1]));
 	cleanup_band();
 }
 
