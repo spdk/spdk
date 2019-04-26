@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c0f5ccc_91751f20",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-26T07:18:57Z",
+      "side": 1,
+      "message": "please keep this around line #189 in the previous code",
+      "range": {
+        "startLine": 259,
+        "startChar": 6,
+        "endLine": 259,
+        "endChar": 25
+      },
+      "revId": "77acc369a6d4af76ee6bccb98badd725345e9e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5254fe0e_330b5a4a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-26T07:18:57Z",
+      "side": 1,
+      "message": "could you keep this function around line #673 in the previous code?",
+      "revId": "77acc369a6d4af76ee6bccb98badd725345e9e88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
