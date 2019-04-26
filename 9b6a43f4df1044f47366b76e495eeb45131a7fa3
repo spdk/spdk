@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "165d3888_14806966",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 5095,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-26T17:48:21Z",
+      "side": 1,
+      "message": "let\u0027s add a struct spdk_blob_list ** parameter here - then this function can pass the snapshot back as an output parameter\n\nhave _spdk_bs_is_blob_deletable() initialize it to NULL, then overwrite it if it\u0027s deletable and there\u0027s a snapshot\n\nthis avoids having to walk the list again later (i.e. the line you added at 5117)",
+      "revId": "9b6a43f4df1044f47366b76e495eeb45131a7fa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
