@@ -42,6 +42,8 @@ pending additional features and tests.
 Added new strip_size_kb rpc param on create to replace the more ambiguous
 strip_size. The strip_size rpc param is deprecated.
 
+Changed the raid bdev product_name from "Pooled Device" to "Raid Volume"
+
 ### thread
 
 Added spdk_thread_has_pollers() function to verify if there are any registered
