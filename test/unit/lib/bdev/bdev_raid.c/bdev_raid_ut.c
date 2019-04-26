@@ -1100,7 +1100,7 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 			}
 			CU_ASSERT((((min_blockcnt / (r->strip_size_kb * 1024 / g_block_len)) * (r->strip_size_kb * 1024 /
 					g_block_len)) * r->base_bdevs.num_base_bdevs) == pbdev->bdev.blockcnt);
-			CU_ASSERT(strcmp(pbdev->bdev.product_name, "Pooled Device") == 0);
+			CU_ASSERT(strcmp(pbdev->bdev.product_name, "Raid Volume") == 0);
 			CU_ASSERT(pbdev->bdev.write_cache == 0);
 			CU_ASSERT(pbdev->bdev.blocklen == g_block_len);
 			if (pbdev->num_base_bdevs > 1) {
