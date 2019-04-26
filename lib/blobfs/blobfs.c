@@ -2639,7 +2639,7 @@ spdk_file_close(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx)
 	args->file = file;
 	args->sem = &channel->sem;
 	args->fn.file_op = __wake_caller;
-	args->arg = req;
+	args->arg = args;
 	channel->send_request(__file_close, req);
 	sem_wait(&channel->sem);
 
