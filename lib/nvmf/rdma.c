@@ -868,7 +868,6 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 			STAILQ_FOREACH_SAFE(rdma_recv, &rqpair->resources->incoming_queue, link, recv_tmp) {
 				if (rqpair == rdma_recv->qpair) {
 					STAILQ_REMOVE_HEAD(&rqpair->resources->incoming_queue, link);
-					rdma_recv->qpair = NULL;
 					rc = ibv_post_srq_recv(rqpair->srq, &rdma_recv->wr, &bad_recv_wr);
 					if (rc) {
 						SPDK_ERRLOG("Unable to re-post rx descriptor\n");
@@ -1077,7 +1076,6 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	if (rqpair->srq == NULL) {
 		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
 	} else {
-		rdma_req->recv->qpair = NULL;
 		rc = ibv_post_srq_recv(rqpair->srq, &rdma_req->recv->wr, &bad_recv_wr);
 	}
 
@@ -3232,9 +3230,9 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			assert(rdma_req->num_outstanding_data_wr == 0);
 			break;
 		case RDMA_WR_TYPE_RECV:
-			/* rdma_recv->qpair will be NULL if using an SRQ.  In that case we have to get the qpair from the wc. */
+			/* rdma_recv->qpair will be invalid if using an SRQ.  In that case we have to get the qpair from the wc. */
 			rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
-			if (rdma_recv->qpair == NULL) {
+			if (rpoller->srq != NULL) {
 				rdma_recv->qpair = get_rdma_qpair_from_wc(rpoller, &wc[i]);
 			}
 			rqpair = rdma_recv->qpair;
