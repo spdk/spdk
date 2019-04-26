@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "bb17466a_601e5821",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1016428
+      },
+      "writtenOn": "2019-04-26T18:20:36Z",
+      "side": 1,
+      "message": "There\u0027s a little bit of magic that happens. the UIBdev.__init__ uses the \"pooled_device\" during it\u0027s refresh() call to pick out all the existing bdevs that have the product family \"Pooled Device\" which corresponds to all the bdevs that are raid bdevs at this point. This is how I can populate the children of \u0027pooled_device\u0027. This is pretty well baked into the UIBdev class. See below for how the \u0027pooled_device\u0027 name is used:\n\ndef get_bdevs(self, bdev_type):\n        if self.is_init:\n            self.current_bdevs \u003d rpc.bdev.get_bdevs(self.client)\n            # Following replace needs to be done in order for some of the bdev\n            # listings to work: logical volumes, split disk.\n            # For example logical volumes: listing in menu is \"Logical_Volume\"\n            # (cannot have space), but the product name in SPDK is \"Logical Volume\"\n            bdev_type \u003d bdev_type.replace(\"_\", \" \")\n            for bdev in [x for x in self.current_bdevs if bdev_type in x[\"product_name\"].lower()]:\n                test \u003d Bdev(bdev)\n                yield test\n\nGiven all this, I ended up switching the naming to Pooled to match but I\u0027m not positive if that\u0027s how this should be represented.\n\nThe RPC return for a raid bdev looks like below (and is where it picks out the product_name from):\n\n{\n  \"name\": \"test_raid2\",\n  \"aliases\": [],\n  \"product_name\": \"Pooled Device\",\n  \"block_size\": 512,\n  \"num_blocks\": 8192,\n  \"assigned_rate_limits\": {\n    \"rw_ios_per_sec\": 0,\n    \"rw_mbytes_per_sec\": 0,\n    \"r_mbytes_per_sec\": 0,\n    \"w_mbytes_per_sec\": 0\n  },\n  \"claimed\": false,\n  \"supported_io_types\": {\n    \"read\": true,\n    \"write\": true,\n    \"unmap\": true,\n    \"write_zeroes\": true,\n    \"flush\": true,\n    \"reset\": true,\n    \"nvme_admin\": false,\n    \"nvme_io\": false\n  },\n  \"driver_specific\": {\n    \"raid\": {\n      \"strip_size\": 8,\n      \"strip_size_kb\": 4,\n      \"state\": 0,\n      \"raid_level\": 0,\n      \"destruct_called\": 0,\n      \"num_base_bdevs\": 1,\n      \"num_base_bdevs_discovered\": 1,\n      \"base_bdevs_list\": [\n        \"Malloc0\"\n      ]\n    }\n  }\n}\n\nNot sure how you want to proceed from here.",
+      "parentUuid": "96c508be_67e5a2fe",
+      "revId": "f8ef494238c14b33433e577e594f777cf0a43f8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a0db81f_38bdd1f2",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 1
@@ -47,6 +65,24 @@
       "writtenOn": "2019-04-26T18:04:34Z",
       "side": 1,
       "message": "let\u0027s put your new functions up here, right after the other dev-related functions",
+      "revId": "f8ef494238c14b33433e577e594f777cf0a43f8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5fafa75b_a79f0cad",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1016428
+      },
+      "writtenOn": "2019-04-26T18:20:36Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "2a0db81f_38bdd1f2",
       "revId": "f8ef494238c14b33433e577e594f777cf0a43f8f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
