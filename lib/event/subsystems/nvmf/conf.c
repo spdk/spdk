@@ -484,6 +484,7 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 	enum spdk_nvme_transport_type trtype;
 	struct spdk_nvmf_transport *transport;
 	int val;
+	bool boolval;
 
 	type = spdk_conf_section_get_val(ctx->sp, "Type");
 	if (type == NULL) {
@@ -552,6 +553,18 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 			opts.max_srq_depth = val;
 		} else {
 			SPDK_ERRLOG("MaxSRQDepth is relevant only for RDMA transport '%s'\n", type);
+			ctx->cb_fn(-1);
+			free(ctx);
+			return;
+		}
+	}
+	boolval = spdk_conf_section_get_boolval(ctx->sp, "NoSRQ", true);
+	/* Want to double check to make sure people aren't setting this for TCP. */
+	if (spdk_conf_section_get_nval(ctx->sp, "NoSRQ", 0) != NULL) {
+		if (trtype == SPDK_NVME_TRANSPORT_RDMA) {
+			opts.no_srq = boolval;
+		} else {
+			SPDK_ERRLOG("NoSRQ is relevant only for RDMA transport '%s'\n", type);
 			ctx->cb_fn(-1);
 			free(ctx);
 			return;

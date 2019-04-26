@@ -61,6 +61,10 @@ added to get metadata and DIF settings.
 Support for per-device shared receive queues in the RDMA transport has been added.
 It is enabled by default for any device that supports it.
 
+Shared receive queue can be disabled even for NICs that support it using the configuration file
+parameter `NoSrq` and `nvmf_create_transport` RPC method parameter `no_srq`. The actual use
+of a shared receive queue is predicated on hardware support when this flag is not used.
+
 The size of a shared receive queue is defined by transport configuration file parameter
 `MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
 Default size is 4096.
