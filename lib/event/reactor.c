@@ -405,21 +405,37 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 {
 	uint32_t core;
 	struct spdk_lw_thread *lw_thread;
-	struct spdk_event *evt;
+	struct spdk_event *evt = NULL;
+	struct spdk_cpuset *cpumask;
+	uint32_t i;
+
+	cpumask = spdk_thread_get_cpumask(thread);
 
 	lw_thread = spdk_thread_get_ctx(thread);
 	assert(lw_thread != NULL);
 	memset(lw_thread, 0, sizeof(*lw_thread));
 
 	pthread_mutex_lock(&g_scheduler_mtx);
-	if (g_next_core > spdk_env_get_last_core()) {
-		g_next_core = spdk_env_get_first_core();
+	for (i = 0; i < spdk_env_get_core_count(); i++) {
+		if (g_next_core > spdk_env_get_last_core()) {
+			g_next_core = spdk_env_get_first_core();
+		}
+		core = g_next_core;
+		g_next_core = spdk_env_get_next_core(g_next_core);
+
+		if (spdk_cpuset_get_cpu(cpumask, core)) {
+			evt = spdk_event_allocate(core, _schedule_thread, lw_thread, NULL);
+			break;
+		}
 	}
-	core = g_next_core;
-	g_next_core = spdk_env_get_next_core(g_next_core);
 	pthread_mutex_unlock(&g_scheduler_mtx);
 
-	evt = spdk_event_allocate(core, _schedule_thread, lw_thread, NULL);
+	assert(evt != NULL);
+	if (evt == NULL) {
+		SPDK_ERRLOG("Unable to schedule thread on requested core mask.\n");
+		return -1;
+	}
+
 	spdk_event_call(evt);
 
 	return 0;
