@@ -67,7 +67,7 @@ ftl_band_alloc_md(struct ftl_band *band)
 	struct ftl_md *md = &band->md;
 
 	ftl_band_acquire_md(band);
-	md->lba_map = spdk_mempool_get(dev->lba_pool);
+	md->lba_map.map = spdk_mempool_get(dev->lba_pool);
 
 	return 0;
 }
@@ -77,15 +77,15 @@ ftl_band_release_md(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 
-	band->md.ref_cnt--;
-	spdk_mempool_put(dev->lba_pool, band->md.lba_map);
-	band->md.lba_map = NULL;
+	band->md.lba_map.ref_cnt--;
+	spdk_mempool_put(dev->lba_pool, band->md.lba_map.map);
+	band->md.lba_map.map = NULL;
 }
 
 void
 ftl_band_acquire_md(struct ftl_band *band)
 {
-	band->md.ref_cnt++;
+	band->md.lba_map.ref_cnt++;
 }
 
 size_t
@@ -224,13 +224,13 @@ cleanup_reloc(struct spdk_ftl_dev *dev, struct ftl_reloc *reloc)
 static void
 set_band_valid_map(struct ftl_band *band, size_t offset, size_t num_lbks)
 {
-	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &band->md.lba_map;
 	size_t i;
 
-	SPDK_CU_ASSERT_FATAL(md != NULL);
+	SPDK_CU_ASSERT_FATAL(lba_map != NULL);
 	for (i = offset; i < offset + num_lbks; ++i) {
-		spdk_bit_array_set(md->vld_map, i);
-		md->num_vld++;
+		spdk_bit_array_set(lba_map->vld, i);
+		lba_map->num_vld++;
 	}
 }
 

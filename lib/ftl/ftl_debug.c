@@ -50,24 +50,24 @@ static const char *ftl_band_state_str[] = {
 };
 
 bool
-ftl_band_validate_md(struct ftl_band *band, const uint64_t *lba_map)
+ftl_band_validate_md(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
-	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &band->md.lba_map;
 	struct ftl_ppa ppa_md, ppa_l2p;
 	size_t i, size;
 	bool valid = true;
 
 	size = ftl_num_band_lbks(dev);
 
-	pthread_spin_lock(&md->lock);
+	pthread_spin_lock(&lba_map->lock);
 	for (i = 0; i < size; ++i) {
-		if (!spdk_bit_array_get(md->vld_map, i)) {
+		if (!spdk_bit_array_get(lba_map->vld, i)) {
 			continue;
 		}
 
 		ppa_md = ftl_band_ppa_from_lbkoff(band, i);
-		ppa_l2p = ftl_l2p_get(dev, lba_map[i]);
+		ppa_l2p = ftl_l2p_get(dev, lba_map->map[i]);
 
 		if (ppa_l2p.cached) {
 			continue;
@@ -80,7 +80,7 @@ ftl_band_validate_md(struct ftl_band *band, const uint64_t *lba_map)
 
 	}
 
-	pthread_spin_unlock(&md->lock);
+	pthread_spin_unlock(&lba_map->lock);
 
 	return valid;
 }
@@ -106,10 +106,10 @@ ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
 			continue;
 		}
 
-		total += dev->bands[i].md.num_vld;
+		total += dev->bands[i].md.lba_map.num_vld;
 		ftl_debug(" Band %3zu: %8zu / %zu \tnum_chunks: %zu \twr_cnt: %"PRIu64"\tmerit:"
 			  "%10.3f\tstate: %s\n",
-			  i + 1, dev->bands[i].md.num_vld,
+			  i + 1, dev->bands[i].md.lba_map.num_vld,
 			  ftl_band_user_lbks(&dev->bands[i]),
 			  dev->bands[i].num_chunks,
 			  dev->bands[i].md.wr_cnt,
@@ -141,7 +141,7 @@ ftl_dev_dump_stats(const struct spdk_ftl_dev *dev)
 
 	/* Count the number of valid LBAs */
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
-		total += dev->bands[i].md.num_vld;
+		total += dev->bands[i].md.lba_map.num_vld;
 	}
 
 	waf = (double)dev->stats.write_total / (double)dev->stats.write_user;

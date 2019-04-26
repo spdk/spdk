@@ -203,7 +203,7 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 	reloc->num_active++;
 
 	if (!band->high_prio) {
-		assert(band->md.lba_map == NULL);
+		assert(band->md.lba_map.map == NULL);
 		ftl_reloc_read_lba_map(breloc);
 		return;
 	}
@@ -406,7 +406,7 @@ ftl_reloc_io_reinit(struct ftl_io *io, struct ftl_band_reloc *breloc,
 			continue;
 		}
 
-		io->lbas[i] = breloc->band->md.lba_map[lbkoff];
+		io->lbas[i] = breloc->band->md.lba_map.map[lbkoff];
 	}
 
 	ftl_trace_lba_io_init(io->dev, io);
