@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f157f920_0f0672e5",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T16:50:41Z",
+      "side": 1,
+      "message": "We should not relay on order in the queue. I can use spdk_lvol_deletable(), but then I will have to change the number of allowed clones inside this function and then not use it in _vbdev_lvs_remove_lvol_cb(). So it either removed here or there. I\u0027ve chosen here.",
+      "parentUuid": "fc4d414b_1b56331f",
+      "range": {
+        "startLine": 588,
+        "startChar": 0,
+        "endLine": 589,
+        "endChar": 17
+      },
+      "revId": "d40a1967e53c8c4da9cb145e84736601e58ecba2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50d5cd44_22380c28",
         "filename": "ocf",
         "patchSetId": 29
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-26T13:44:25Z",
       "side": 1,
       "message": "might want to remove this ;)",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 58
+      },
+      "revId": "d40a1967e53c8c4da9cb145e84736601e58ecba2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a130b429_987066f4",
+        "filename": "ocf",
+        "patchSetId": 29
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T16:50:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "50d5cd44_22380c28",
       "range": {
         "startLine": 1,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d8572278_91e05932",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 1304,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T16:50:41Z",
+      "side": 1,
+      "message": "I can just remove second destroy call so the test will still make sense.",
+      "parentUuid": "55cd0a1f_b46b4a06",
+      "range": {
+        "startLine": 1297,
+        "startChar": 0,
+        "endLine": 1304,
+        "endChar": 70
+      },
+      "revId": "d40a1967e53c8c4da9cb145e84736601e58ecba2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d72916f8_745044d6",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 29
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "22fd2ff9_0a8f115b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 5754,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T16:50:41Z",
+      "side": 1,
+      "message": "Actually this whole comment is messed up. I will fix it.",
+      "parentUuid": "d72916f8_745044d6",
+      "range": {
+        "startLine": 5754,
+        "startChar": 13,
+        "endLine": 5754,
+        "endChar": 22
+      },
+      "revId": "d40a1967e53c8c4da9cb145e84736601e58ecba2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "756800be_249381bd",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 29
@@ -105,6 +201,30 @@
       "writtenOn": "2019-04-26T13:44:25Z",
       "side": 1,
       "message": "snapshot1",
+      "range": {
+        "startLine": 5755,
+        "startChar": 18,
+        "endLine": 5755,
+        "endChar": 27
+      },
+      "revId": "d40a1967e53c8c4da9cb145e84736601e58ecba2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a16c259d_e8a18658",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 5755,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T16:50:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "756800be_249381bd",
       "range": {
         "startLine": 5755,
         "startChar": 18,

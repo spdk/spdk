@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f8bbec3e_2f90dbe2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 1242,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T16:50:41Z",
+      "side": 0,
+      "message": "Ack",
+      "parentUuid": "e22c6f74_f6c5b7df",
+      "range": {
+        "startLine": 1238,
+        "startChar": 0,
+        "endLine": 1242,
+        "endChar": 27
+      },
+      "revId": "80781c1fbfaa16da17b53a08e2c842812fff8fb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b72ffb7_72026122",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 29
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-26T13:44:25Z",
       "side": 0,
       "message": "This no longer checks what happens when spdk_lvol_deletable() returns false (since its not used). Please keep it if you intend to change implementation of spdk_lvol_deletable().\n\nOtherwise remove g_lvol_deletable from UT, since this is the only place it is used.",
+      "range": {
+        "startLine": 1037,
+        "startChar": 0,
+        "endLine": 1043,
+        "endChar": 25
+      },
+      "revId": "80781c1fbfaa16da17b53a08e2c842812fff8fb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c82e1d90_11304438",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1043,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T16:50:41Z",
+      "side": 0,
+      "message": "Good catch, ack.",
+      "parentUuid": "7b72ffb7_72026122",
       "range": {
         "startLine": 1037,
         "startChar": 0,
