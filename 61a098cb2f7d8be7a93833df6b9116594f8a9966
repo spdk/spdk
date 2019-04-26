@@ -94,6 +94,30 @@
       "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c794cd93_3b2a1635",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-26T06:45:22Z",
+      "side": 1,
+      "message": "Aren\u0027t we doing exactly that in ftl_band_next_xfer_ppa? We\u0027re not iterating through the band, just the remainder of num_lbks (so at most one full band is iterated through). Can\u0027t we do something similar: ftl_xfer_offset_from_ppa, that would return offset within a band in respecting write manner?",
+      "parentUuid": "103b0674_0452ad11",
+      "range": {
+        "startLine": 838,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 1
+      },
+      "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
