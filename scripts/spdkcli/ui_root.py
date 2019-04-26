@@ -474,6 +474,14 @@ class UIRoot(UINode):
                 return True
         return False
 
+    @verbose
+    def construct_raid_bdev(self, **kwargs):
+        rpc.bdev.construct_raid_bdev(self.client, **kwargs)
+
+    @verbose
+    def destroy_raid_bdev(self, **kwargs):
+        rpc.bdev.destroy_raid_bdev(self.client, **kwargs)
+
 
 class Bdev(object):
     def __init__(self, bdev_info):
