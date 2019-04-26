@@ -55,7 +55,7 @@ static struct spdk_ftl_punit_range g_range = {
 };
 
 #if defined(DEBUG)
-DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band, const uint64_t *lba_map), true);
+DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band), true);
 #endif
 DEFINE_STUB(ftl_io_dec_req, size_t, (struct ftl_io *io), 0);
 DEFINE_STUB(ftl_io_inc_req, size_t, (struct ftl_io *io), 0);

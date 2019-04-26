@@ -137,7 +137,7 @@ ftl_trace_defrag_band(struct spdk_ftl_dev *dev, const struct ftl_band *band)
 	struct ftl_trace *trace = &dev->stats.trace;
 
 	spdk_trace_record(FTL_TRACE_TYPE_BAND_DEFRAG, ftl_trace_next_id(trace), 0, band->id,
-			  band->md.num_vld);
+			  band->md.lba_map.num_vld);
 }
 
 void
