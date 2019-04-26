@@ -140,6 +140,30 @@
     },
     {
       "key": {
+        "uuid": "94bd0065_c8932c8b",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-26T21:45:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "371c0de9_a8588a4e",
+      "range": {
+        "startLine": 279,
+        "startChar": 4,
+        "endLine": 284,
+        "endChar": 5
+      },
+      "revId": "991495aa55e4ff0ec3333e13e32bf63e0c801949",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4a3cb7f4_b01774ed",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 2
@@ -151,6 +175,30 @@
       "writtenOn": "2019-04-22T07:58:17Z",
       "side": 1,
       "message": "we may be able to split this into two small functions.\nnvmf_fc_get_master_poll_group:\n  for_each(fc_poll_group) {\n    if (fc_poll_group-\u003epoll_group-\u003ethread \u003d\u003d g_master) {\n      return fc_poll_group;\n    }\n  }\n  return NULL;\n\nnvmf_fc_get_idlest_poll_group\n  max_count \u003d UINT32_MAX;\n  ret_fc_poll_group \u003d NULL;\n  for_each(fc_poll_group) {\n    if (master or reserved by lld) {    \n      continue;\n    }\n    if (fc_poll_group-\u003ehwqp_count \u003c max_count) {\n      ret_fc_poll_group \u003d fc_poll_group;\n      max_count \u003d fc_poll_group-\u003ehwqp_count;\n    }\n  }\n  return ret_fc_poll_group;",
+      "range": {
+        "startLine": 312,
+        "startChar": 0,
+        "endLine": 312,
+        "endChar": 33
+      },
+      "revId": "991495aa55e4ff0ec3333e13e32bf63e0c801949",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ea95a57_bca9f3f7",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-26T21:45:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4a3cb7f4_b01774ed",
       "range": {
         "startLine": 312,
         "startChar": 0,
@@ -186,6 +234,30 @@
     },
     {
       "key": {
+        "uuid": "984950a7_5dc2b6df",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-26T21:45:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f884a82_ea635272",
+      "range": {
+        "startLine": 370,
+        "startChar": 2,
+        "endLine": 370,
+        "endChar": 23
+      },
+      "revId": "991495aa55e4ff0ec3333e13e32bf63e0c801949",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca7a9727_9649c06e",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 2
@@ -197,6 +269,30 @@
       "writtenOn": "2019-04-22T07:58:17Z",
       "side": 1,
       "message": "it looks that ctx-\u003enport is always non-null, so we can change this to if (ctx-\u003enport !\u003d nport) ?",
+      "range": {
+        "startLine": 525,
+        "startChar": 5,
+        "endLine": 525,
+        "endChar": 36
+      },
+      "revId": "991495aa55e4ff0ec3333e13e32bf63e0c801949",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1446a436_530b5307",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-26T21:45:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ca7a9727_9649c06e",
       "range": {
         "startLine": 525,
         "startChar": 5,
@@ -713,6 +809,30 @@
     },
     {
       "key": {
+        "uuid": "41830648_333f012b",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-26T21:45:16Z",
+      "side": 1,
+      "message": "Would like to keep those functions as they are used extensively in elevated error recovery functionality such as Sequence Level Error Recovery (SLER). SLER will be pushed upstream soon.",
+      "parentUuid": "826019a7_26b424fc",
+      "range": {
+        "startLine": 1089,
+        "startChar": 0,
+        "endLine": 1093,
+        "endChar": 2
+      },
+      "revId": "991495aa55e4ff0ec3333e13e32bf63e0c801949",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e079294b_26abdcb5",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 2
@@ -724,6 +844,24 @@
       "writtenOn": "2019-04-22T07:58:17Z",
       "side": 1,
       "message": "For the if-else block, the following switch-case is more intutitive to me.\n\n\tswitch (fc_req-\u003estate) {\n\tcase SPDK_NVMF_FC_REQ_BDEV_ABORTED:\n\t\t/* Aborted by backend */\n\t\tgoto complete;\n\tcase SPDK_NVMF_FC_REQ_READ_BDEV:\n\tcase SPDK_NVMF_FC_REQ_WRITE_BDEV:\n\tcase SPDK_NVMF_FC_REQ_NONE_BDEV:\n\t\t/* Notify bdev */\n\t\tnvmf_fc_req_bdev_abort(fc_req, NULL);\n\t\tbreak;\n\tcase SPDK_NVMF_FC_REQ_READ_XFER:\n\tcase SPDK_NVMF_FC_REQ_READ_RSP:\n\tcase SPDK_NVMF_FC_REQ_WRITE_XFER:\n\tcase SPDK_NVMF_FC_REQ_WRITE_RSP:\n\tcase SPDK_NVMF_FC_REQ_NONE_RSP:\n\t\t/* Notify HBA to abort this exchange  */\n\t\tspdk_nvmf_fc_lld_ops.issue_abort(fc_req-\u003ehwqp, fc_req-\u003exchg, NULL, NULL);\n\t\tbreak;\n\tcase SPDK_NVMF_FC_REQ_WRITE_BUFFS:\n\t\t/* Will be completed by request_complete callback. */\n\t\tSPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, \"Abort req when getting buffers.\\n\");\n\t\tbreak;\n\tdefault:\n\t\tif (nvmf_fc_req_in_pending(fc_req)) {\n\t\t\t/* Remove from pending */\n\t\t\tTAILQ_REMOVE(\u0026fc_req-\u003efc_conn-\u003epending_queue, fc_req, pending_link);\n\t\t} else {\n\t\t\t/* Should never happen */\n\t\t\tSPDK_ERRLOG(\"%s: Request in invalid state\\n\", __func__);\n\t\t}\n\t\tgoto complete;\n\t}\n\n\treturn;\ncomplete:",
+      "revId": "991495aa55e4ff0ec3333e13e32bf63e0c801949",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "206aadbc_5a32d960",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1108,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-26T21:45:16Z",
+      "side": 1,
+      "message": "Would like to keep those functions as they are used extensively in elevated error recovery functionality such as Sequence Level Error Recovery (SLER). SLER will be pushed upstream soon.",
+      "parentUuid": "e079294b_26abdcb5",
       "revId": "991495aa55e4ff0ec3333e13e32bf63e0c801949",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -764,6 +902,30 @@
       "writtenOn": "2019-04-22T07:58:17Z",
       "side": 1,
       "message": "by setting fc_req-\u003edata_from_pool upfront, we can use nvmf_fc_release_io_buff (I suggested nvmf_fc_request_free_buffers instead) here directly?",
+      "range": {
+        "startLine": 1164,
+        "startChar": 0,
+        "endLine": 1164,
+        "endChar": 5
+      },
+      "revId": "991495aa55e4ff0ec3333e13e32bf63e0c801949",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fe2aa9f_1bd0335e",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-26T21:45:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a2d06073_d7446e35",
       "range": {
         "startLine": 1164,
         "startChar": 0,
@@ -881,6 +1043,30 @@
       "writtenOn": "2019-04-22T07:58:17Z",
       "side": 1,
       "message": "if we strip spdk_ prefix below, we can use spdk_nvmf_fc_request_free() as the name here.",
+      "range": {
+        "startLine": 1352,
+        "startChar": 0,
+        "endLine": 1352,
+        "endChar": 21
+      },
+      "revId": "991495aa55e4ff0ec3333e13e32bf63e0c801949",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e79b6f5_0506d9da",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-26T21:45:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "44f13854_15d7525d",
       "range": {
         "startLine": 1352,
         "startChar": 0,
