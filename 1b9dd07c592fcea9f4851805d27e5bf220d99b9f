@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fc3d58e6_36187b04",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 5298,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T21:10:48Z",
+      "side": 1,
+      "message": "Jim, no problem :) Actually this is how I did it the first time, but I wasn\u0027t sure if it makes sense, so I changed it :) I will do as you say.",
+      "parentUuid": "ec32ccbf_09a3c060",
+      "revId": "1b9dd07c592fcea9f4851805d27e5bf220d99b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9f70695d_d3aab4e0",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 33
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "23ffd62d_b54bf23c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 5329,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T21:10:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f70695d_d3aab4e0",
+      "revId": "1b9dd07c592fcea9f4851805d27e5bf220d99b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5511ae5d_0a356000",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 33
@@ -50,6 +86,24 @@
       "revId": "1b9dd07c592fcea9f4851805d27e5bf220d99b9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d7b1d92_8417dbe1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 5347,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T21:10:48Z",
+      "side": 1,
+      "message": "Oops, missed information that it is actually a pointer when writing that line.",
+      "parentUuid": "5511ae5d_0a356000",
+      "revId": "1b9dd07c592fcea9f4851805d27e5bf220d99b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

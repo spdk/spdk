@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "14e56b74_307fcad6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 5066,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T21:10:48Z",
+      "side": 1,
+      "message": "I agree, but with one small change:\nWe should keep old ctx-\u003ebserrno if it wasn\u0027t success, so that we return first (and I think more important) error to user:\n\n\tif (bserrno !\u003d 0 \u0026\u0026 ctx-\u003ebserrno \u003d\u003d 0) {\n\t\tctx-\u003ebserrno \u003d bserrno;\n\t}",
+      "parentUuid": "dde61a5f_3f12dd4b",
+      "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a3df5d45_096358a9",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 34
@@ -33,6 +51,24 @@
       "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "064f0596_4d655e1b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 5080,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T21:10:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a3df5d45_096358a9",
+      "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0a4ec736_fb34317c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 5265,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T21:10:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f2ccbf7c_f14bba45",
+      "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9cd55ac0_527bd46e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 34
@@ -67,6 +121,24 @@
       "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b317c6d_30a1aacd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 5289,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-26T21:10:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9cd55ac0_527bd46e",
+      "revId": "166c5b685d894e6af0e718859620a8adeb12c54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
