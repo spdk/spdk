@@ -69,6 +69,20 @@ _spdk_blob_verify_md_op(struct spdk_blob *blob)
 	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 }
 
+static struct spdk_blob_list *
+_spdk_bs_get_snapshot_entry(struct spdk_blob_store *bs, spdk_blob_id blobid)
+{
+	struct spdk_blob_list *snapshot_entry = NULL;
+
+	TAILQ_FOREACH(snapshot_entry, &bs->snapshots, link) {
+		if (snapshot_entry->id == blobid) {
+			break;
+		}
+	}
+
+	return snapshot_entry;
+}
+
 static void
 _spdk_bs_claim_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 {
@@ -2338,12 +2352,7 @@ _spdk_bs_blob_list_add(struct spdk_blob *blob)
 		return 0;
 	}
 
-	TAILQ_FOREACH(snapshot_entry, &blob->bs->snapshots, link) {
-		if (snapshot_entry->id == snapshot_id) {
-			break;
-		}
-	}
-
+	snapshot_entry = _spdk_bs_get_snapshot_entry(blob->bs, snapshot_id);
 	if (snapshot_entry == NULL) {
 		/* Snapshot not found */
 		snapshot_entry = calloc(1, sizeof(struct spdk_blob_list));
@@ -5071,11 +5080,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	}
 
 	/* Check if this is a snapshot with clones */
-	TAILQ_FOREACH(snapshot, &blob->bs->snapshots, link) {
-		if (snapshot->id == blob->id) {
-			break;
-		}
-	}
+	snapshot = _spdk_bs_get_snapshot_entry(blob->bs, blob->id);
 	if (snapshot != NULL) {
 		/* If snapshot have clones, we cannot remove it */
 		if (!TAILQ_EMPTY(&snapshot->clones)) {
@@ -5102,12 +5107,9 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	TAILQ_REMOVE(&blob->bs->blobs, blob, link);
 
 	/* If blob is a snapshot then remove it from the list */
-	TAILQ_FOREACH(snapshot, &blob->bs->snapshots, link) {
-		if (snapshot->id == blob->id) {
-			TAILQ_REMOVE(&blob->bs->snapshots, snapshot, link);
-			free(snapshot);
-			break;
-		}
+	if (snapshot != NULL) {
+		TAILQ_REMOVE(&blob->bs->snapshots, snapshot, link);
+		free(snapshot);
 	}
 
 	page_num = _spdk_bs_blobid_to_page(blob->id);
@@ -5764,12 +5766,7 @@ spdk_blob_is_snapshot(struct spdk_blob *blob)
 
 	assert(blob != NULL);
 
-	TAILQ_FOREACH(snapshot_entry, &blob->bs->snapshots, link) {
-		if (snapshot_entry->id == blob->id) {
-			break;
-		}
-	}
-
+	snapshot_entry = _spdk_bs_get_snapshot_entry(blob->bs, blob->id);
 	if (snapshot_entry == NULL) {
 		return false;
 	}
@@ -5821,11 +5818,7 @@ spdk_blob_get_clones(struct spdk_blob_store *bs, spdk_blob_id blobid, spdk_blob_
 	struct spdk_blob_list *snapshot_entry, *clone_entry;
 	size_t n;
 
-	TAILQ_FOREACH(snapshot_entry, &bs->snapshots, link) {
-		if (snapshot_entry->id == blobid) {
-			break;
-		}
-	}
+	snapshot_entry = _spdk_bs_get_snapshot_entry(bs, blobid);
 	if (snapshot_entry == NULL) {
 		*count = 0;
 		return 0;
