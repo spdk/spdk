@@ -227,6 +227,15 @@ void spdk_thread_exit(struct spdk_thread *thread);
 void *spdk_thread_get_ctx(struct spdk_thread *thread);
 
 /**
+ * Get the thread's cpumask.
+ *
+ * \param thread The thread to get the cpumask for.
+ *
+ * \return cpuset pointer
+ */
+struct spdk_cpuset *spdk_thread_get_cpumask(struct spdk_thread *thread);
+
+/**
  * Return the thread object associated with the context handle previously
  * obtained by calling spdk_thread_get_ctx().
  *
