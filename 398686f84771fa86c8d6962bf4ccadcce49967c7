@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be47c124_943c31bd",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1087,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-26T07:56:07Z",
+      "side": 1,
+      "message": "If cb is required, adding assert(cb !\u003d NULL) may clarify that, but this function is called only in a place and current patch is OK to me.",
+      "range": {
+        "startLine": 1087,
+        "startChar": 2,
+        "endLine": 1087,
+        "endChar": 23
+      },
+      "revId": "398686f84771fa86c8d6962bf4ccadcce49967c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
