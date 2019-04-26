@@ -19,6 +19,10 @@ run_step() {
 	# LSAN_OPTIONS.
 	export LSAN_OPTIONS="suppressions=$testdir/lsan_suppressions.txt"
 	/usr/bin/time taskset 0xFF $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
+	DB_BENCH_FILE=$(grep /dev/shm "$1"_db_bench.txt | cut -f 6 -d ' ')
+	gzip $DB_BENCH_FILE
+	mv $DB_BENCH_FILE.gz "$1"_trace.gz
+	chmod 644 "$1"_trace.gz
 	echo done.
 }
 
@@ -54,6 +58,9 @@ popd
 timing_exit db_bench_build
 
 $rootdir/scripts/gen_nvme.sh > $ROCKSDB_CONF
+# 0x80 is the bit mask for BlobFS tracepoints
+echo "[Global]" >> $ROCKSDB_CONF
+echo "TpointGroupMask 0x80" >> $ROCKSDB_CONF
 
 trap 'run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
