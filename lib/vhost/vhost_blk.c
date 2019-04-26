@@ -730,15 +730,15 @@ out:
 static int
 spdk_vhost_blk_start(struct spdk_vhost_session *vsession)
 {
-	int32_t lcore;
+	struct vhost_poll_group *pg;
 	int rc;
 
-	lcore = spdk_vhost_allocate_reactor(vsession->vdev->cpumask);
-	rc = spdk_vhost_session_send_event(lcore, vsession, spdk_vhost_blk_start_cb,
+	pg = spdk_vhost_get_poll_group(vsession->vdev->cpumask);
+	rc = spdk_vhost_session_send_event(pg, vsession, spdk_vhost_blk_start_cb,
 					   3, "start session");
 
 	if (rc != 0) {
-		spdk_vhost_free_reactor(lcore);
+		spdk_vhost_put_poll_group(pg);
 	}
 
 	return rc;
@@ -804,7 +804,7 @@ err:
 static int
 spdk_vhost_blk_stop(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession->lcore, vsession,
+	return spdk_vhost_session_send_event(vsession->poll_group, vsession,
 					     spdk_vhost_blk_stop_cb, 3, "stop session");
 }
 

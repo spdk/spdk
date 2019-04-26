@@ -94,6 +94,8 @@
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
 
+struct vhost_poll_group;
+
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
 	uint16_t last_avail_idx;
@@ -126,7 +128,7 @@ struct spdk_vhost_session {
 	/* Unique session ID. */
 	unsigned id;
 
-	int32_t lcore;
+	struct vhost_poll_group *poll_group;
 
 	bool initialized;
 	bool started;
@@ -330,7 +332,7 @@ void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  * will unlock for the time it's waiting. It's meant to be called only
  * from start/stop session callbacks.
  *
- * \param lcore target session's lcore
+ * \param pg designated session's poll group
  * \param vsession vhost session
  * \param cb_fn the function to call. The void *arg parameter in cb_fn
  * is always NULL.
@@ -339,7 +341,8 @@ void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  * \param errmsg error message to print once the timeout expires
  * \return return the code passed to spdk_vhost_session_event_done().
  */
-int spdk_vhost_session_send_event(int32_t lcore, struct spdk_vhost_session *vsession,
+int spdk_vhost_session_send_event(struct vhost_poll_group *pg,
+				  struct spdk_vhost_session *vsession,
 				  spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
 				  const char *errmsg);
 
@@ -376,8 +379,8 @@ struct spdk_vhost_session *spdk_vhost_session_find_by_vid(int vid);
 void spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession);
 void spdk_vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev);
 
-void spdk_vhost_free_reactor(uint32_t lcore);
-uint32_t spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask);
+struct vhost_poll_group *spdk_vhost_get_poll_group(struct spdk_cpuset *cpumask);
+void spdk_vhost_put_poll_group(struct vhost_poll_group *pg);
 
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
 
