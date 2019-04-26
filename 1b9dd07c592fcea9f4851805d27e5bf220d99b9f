@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec32ccbf_09a3c060",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 5298,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-26T20:30:23Z",
+      "side": 1,
+      "message": "Hey Maciek,\n\nI know this will sound picky - but mostly I just want you to see how this could be done even simpler.\n\nThe bserrno parameter can be added to the previous patch, as well as the bserrno check below (line 5304).  In the pervious patch, just call this function passing 0 for bserrno.\n\nIt\u0027s all good practice for you next big feature.  :-)\n\n-Jim",
+      "revId": "1b9dd07c592fcea9f4851805d27e5bf220d99b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f70695d_d3aab4e0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 5329,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-26T20:30:23Z",
+      "side": 1,
+      "message": "can we rename on this on previous patch?",
+      "revId": "1b9dd07c592fcea9f4851805d27e5bf220d99b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5511ae5d_0a356000",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 5347,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-26T20:30:23Z",
+      "side": 1,
+      "message": "Oh - you can\u0027t do !update_clone.  This is effectively update_clone \u003d\u003d NULL (update_clone is a pointer to a bool, not a bool).\n\nLet\u0027s simplify this.  Create a local bool called has_one_clone.  It defaults to false.  If you find a snapshot_entry and it has only one clone, change it to true.\n\nThen here you can do:\nif (blob-\u003eopen_ref \u003d\u003d 2 \u0026\u0026 has_one_clone) {\n  *update_clone \u003d true;\n  return 0;\n}\n\nif (blob-\u003eopen_ref \u003e 1) {\n  return -EBUSY;\n}\n\nassert(has_one_clone \u003d\u003d false);\n*update_clone \u003d false;\nreturn 0;\n\nThis has the side benefit of making the code match your comments which makes it clearer to read I think.",
+      "revId": "1b9dd07c592fcea9f4851805d27e5bf220d99b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
