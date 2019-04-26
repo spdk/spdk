@@ -261,7 +261,7 @@ ftl_wptr_open_band(struct ftl_wptr *wptr)
 	struct ftl_band *band = wptr->band;
 
 	assert(ftl_band_chunk_is_first(band, wptr->chunk));
-	assert(band->md.num_vld == 0);
+	assert(band->md.lba_map.num_vld == 0);
 
 	ftl_band_clear_md(band);
 
@@ -650,17 +650,17 @@ static int
 ftl_invalidate_addr_unlocked(struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 {
 	struct ftl_band *band = ftl_band_from_ppa(dev, ppa);
-	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &band->md.lba_map;
 	uint64_t offset;
 
 	offset = ftl_band_lbkoff_from_ppa(band, ppa);
 
 	/* The bit might be already cleared if two writes are scheduled to the */
 	/* same LBA at the same time */
-	if (spdk_bit_array_get(md->vld_map, offset)) {
-		assert(md->num_vld > 0);
-		spdk_bit_array_clear(md->vld_map, offset);
-		md->num_vld--;
+	if (spdk_bit_array_get(lba_map->vld, offset)) {
+		assert(lba_map->num_vld > 0);
+		spdk_bit_array_clear(lba_map->vld, offset);
+		lba_map->num_vld--;
 		return 1;
 	}
 
@@ -676,9 +676,9 @@ ftl_invalidate_addr(struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 	assert(!ftl_ppa_cached(ppa));
 	band = ftl_band_from_ppa(dev, ppa);
 
-	pthread_spin_lock(&band->md.lock);
+	pthread_spin_lock(&band->md.lba_map.lock);
 	rc = ftl_invalidate_addr_unlocked(dev, ppa);
-	pthread_spin_unlock(&band->md.lock);
+	pthread_spin_unlock(&band->md.lba_map.lock);
 
 	return rc;
 }
@@ -969,7 +969,7 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry,
 	/* the L2P as wall as metadata. The valid bits in metadata are used to */
 	/* check weak writes validity. */
 	band = ftl_band_from_ppa(dev, prev_ppa);
-	pthread_spin_lock(&band->md.lock);
+	pthread_spin_lock(&band->md.lba_map.lock);
 
 	valid = ftl_invalidate_addr_unlocked(dev, prev_ppa);
 
@@ -979,7 +979,7 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry,
 		ftl_l2p_set(dev, entry->lba, ppa);
 	}
 
-	pthread_spin_unlock(&band->md.lock);
+	pthread_spin_unlock(&band->md.lba_map.lock);
 }
 
 static struct ftl_io *
@@ -1325,7 +1325,7 @@ ftl_band_calc_merit(struct ftl_band *band, size_t *threshold_valid)
 		return 0.0;
 	}
 
-	valid =  threshold_valid ? (usable - *threshold_valid) : band->md.num_vld;
+	valid =  threshold_valid ? (usable - *threshold_valid) : band->md.lba_map.num_vld;
 	invalid = usable - valid;
 
 	/* Add one to avoid division by 0 */

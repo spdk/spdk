@@ -151,9 +151,11 @@ ftl_band_write_failed(struct ftl_band *band)
 void
 ftl_band_clear_md(struct ftl_band *band)
 {
-	spdk_bit_array_clear_mask(band->md.vld_map);
-	memset(band->md.lba_map, 0, ftl_num_band_lbks(band->dev) * sizeof(uint64_t));
-	band->md.num_vld = 0;
+	struct ftl_lba_map *lba_map = &band->md.lba_map;
+
+	spdk_bit_array_clear_mask(lba_map->vld);
+	memset(lba_map->map, 0, ftl_num_band_lbks(band->dev) * sizeof(uint64_t));
+	lba_map->num_vld = 0;
 }
 
 static void
@@ -161,21 +163,22 @@ ftl_band_free_md(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &md->lba_map;
 
 	assert(band->state == FTL_BAND_STATE_CLOSED ||
 	       band->state == FTL_BAND_STATE_FREE);
-	assert(md->ref_cnt == 0);
-	assert(md->lba_map != NULL);
+	assert(lba_map->ref_cnt == 0);
+	assert(lba_map->map != NULL);
 	assert(!band->high_prio);
 
 	/* Verify that band's metadata is consistent with l2p */
 	if (band->num_chunks) {
-		assert(ftl_band_validate_md(band, band->md.lba_map) == true);
+		assert(ftl_band_validate_md(band) == true);
 	}
 
-	spdk_mempool_put(dev->lba_pool, md->lba_map);
+	spdk_mempool_put(dev->lba_pool, lba_map->map);
 	spdk_dma_free(md->dma_buf);
-	md->lba_map = NULL;
+	lba_map->map = NULL;
 	md->dma_buf = NULL;
 }
 
@@ -311,6 +314,7 @@ ftl_pack_tail_md(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data)
 	struct ftl_tail_md *tail = data;
 	size_t map_size;
 	void *vld_offset, *map_offset;
+	struct ftl_lba_map *lba_map = &md->lba_map;
 
 	map_size = ftl_num_band_lbks(dev) * sizeof(uint64_t);
 	vld_offset = (char *)data + ftl_tail_md_hdr_num_lbks() * FTL_BLOCK_SIZE;
@@ -320,11 +324,11 @@ ftl_pack_tail_md(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data)
 	memset(data, 0, ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE);
 	tail->num_lbks = ftl_num_band_lbks(dev);
 
-	pthread_spin_lock(&md->lock);
-	spdk_bit_array_store_mask(md->vld_map, vld_offset);
-	pthread_spin_unlock(&md->lock);
+	pthread_spin_lock(&lba_map->lock);
+	spdk_bit_array_store_mask(lba_map->vld, vld_offset);
+	pthread_spin_unlock(&lba_map->lock);
 
-	memcpy(map_offset, md->lba_map, map_size);
+	memcpy(map_offset, lba_map->map, map_size);
 	ftl_set_md_hdr(dev, &tail->hdr, md, ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE);
 
 	return FTL_MD_SUCCESS;
@@ -354,6 +358,7 @@ ftl_unpack_tail_md(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data)
 	struct ftl_tail_md *tail = data;
 	size_t map_size;
 	void *vld_offset, *map_offset;
+	struct ftl_lba_map *lba_map = &md->lba_map;
 	int rc;
 
 	map_size = ftl_num_band_lbks(dev) * sizeof(uint64_t);
@@ -369,12 +374,12 @@ ftl_unpack_tail_md(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data)
 		return FTL_MD_INVALID_SIZE;
 	}
 
-	if (md->vld_map) {
-		spdk_bit_array_load_mask(md->vld_map, vld_offset);
+	if (lba_map->vld) {
+		spdk_bit_array_load_mask(lba_map->vld, vld_offset);
 	}
 
-	if (md->lba_map) {
-		memcpy(md->lba_map, map_offset, map_size);
+	if (lba_map->map) {
+		memcpy(lba_map->map, map_offset, map_size);
 	}
 
 	md->seq = tail->hdr.seq;
@@ -481,19 +486,19 @@ ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state)
 void
 ftl_band_set_addr(struct ftl_band *band, uint64_t lba, struct ftl_ppa ppa)
 {
-	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &band->md.lba_map;
 	uint64_t offset;
 
 	assert(lba != FTL_LBA_INVALID);
 
 	offset = ftl_band_lbkoff_from_ppa(band, ppa);
-	pthread_spin_lock(&band->md.lock);
+	pthread_spin_lock(&lba_map->lock);
 
-	md->num_vld++;
-	md->lba_map[offset] = lba;
-	spdk_bit_array_set(md->vld_map, offset);
+	lba_map->num_vld++;
+	lba_map->map[offset] = lba;
+	spdk_bit_array_set(lba_map->vld, offset);
 
-	pthread_spin_unlock(&band->md.lock);
+	pthread_spin_unlock(&lba_map->lock);
 }
 
 size_t
@@ -637,8 +642,8 @@ ftl_band_next_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t offset)
 void
 ftl_band_acquire_md(struct ftl_band *band)
 {
-	assert(band->md.lba_map != NULL);
-	band->md.ref_cnt++;
+	assert(band->md.lba_map.map != NULL);
+	band->md.lba_map.ref_cnt++;
 }
 
 int
@@ -646,19 +651,20 @@ ftl_band_alloc_md(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &md->lba_map;
 
-	assert(md->ref_cnt == 0);
-	assert(md->lba_map == NULL);
+	assert(lba_map->ref_cnt == 0);
+	assert(lba_map->map == NULL);
 
-	md->lba_map = spdk_mempool_get(dev->lba_pool);
-	if (!md->lba_map) {
+	lba_map->map = spdk_mempool_get(dev->lba_pool);
+	if (!lba_map->map) {
 		return -1;
 	}
 
 	md->dma_buf = spdk_dma_zmalloc(ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE,
 				       FTL_BLOCK_SIZE, NULL);
 	if (!md->dma_buf) {
-		spdk_mempool_put(dev->lba_pool, md->lba_map);
+		spdk_mempool_put(dev->lba_pool, lba_map->map);
 		return -1;
 	}
 
@@ -669,13 +675,13 @@ ftl_band_alloc_md(struct ftl_band *band)
 void
 ftl_band_release_md(struct ftl_band *band)
 {
-	struct ftl_md *md = &band->md;
+	struct ftl_lba_map *lba_map = &band->md.lba_map;
 
-	assert(band->md.lba_map != NULL);
-	assert(md->ref_cnt > 0);
-	md->ref_cnt--;
+	assert(lba_map->map != NULL);
+	assert(lba_map->ref_cnt > 0);
+	lba_map->ref_cnt--;
 
-	if (md->ref_cnt == 0) {
+	if (lba_map->ref_cnt == 0) {
 		ftl_band_free_md(band);
 	}
 }
@@ -780,9 +786,9 @@ void
 ftl_band_md_clear(struct ftl_md *md)
 {
 	md->seq = 0;
-	md->num_vld = 0;
 	md->wr_cnt = 0;
-	md->lba_map = NULL;
+	md->lba_map.num_vld = 0;
+	md->lba_map.map = NULL;
 }
 
 int

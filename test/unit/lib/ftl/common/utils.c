@@ -95,8 +95,8 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	LIST_INSERT_HEAD(&dev->shut_bands, band, list_entry);
 	CIRCLEQ_INIT(&band->chunks);
 
-	band->md.vld_map = spdk_bit_array_create(ftl_num_band_lbks(dev));
-	SPDK_CU_ASSERT_FATAL(band->md.vld_map != NULL);
+	band->md.lba_map.vld = spdk_bit_array_create(ftl_num_band_lbks(dev));
+	SPDK_CU_ASSERT_FATAL(band->md.lba_map.vld != NULL);
 
 	band->chunk_buf = calloc(ftl_dev_num_punits(dev), sizeof(*band->chunk_buf));
 	SPDK_CU_ASSERT_FATAL(band->chunk_buf != NULL);
@@ -112,7 +112,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 		band->num_chunks++;
 	}
 
-	pthread_spin_init(&band->md.lock, PTHREAD_PROCESS_PRIVATE);
+	pthread_spin_init(&band->md.lba_map.lock, PTHREAD_PROCESS_PRIVATE);
 	return band;
 }
 
@@ -130,9 +130,9 @@ void
 test_free_ftl_band(struct ftl_band *band)
 {
 	SPDK_CU_ASSERT_FATAL(band != NULL);
-	spdk_bit_array_free(&band->md.vld_map);
+	spdk_bit_array_free(&band->md.lba_map.vld);
 	free(band->chunk_buf);
-	free(band->md.lba_map);
+	free(band->md.lba_map.map);
 	spdk_dma_free(band->md.dma_buf);
 }
 
