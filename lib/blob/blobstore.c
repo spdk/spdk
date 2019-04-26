@@ -5055,6 +5055,29 @@ _spdk_bs_delete_persist_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_blob_close(blob, _spdk_bs_delete_close_cpl, seq);
 }
 
+static int
+_spdk_bs_is_blob_deletable(struct spdk_blob *blob)
+{
+	struct spdk_blob_list *snapshot = NULL;
+
+	if (blob->open_ref > 1) {
+		/* Someone has this blob open (besides this delete context). */
+		return -EBUSY;
+	}
+
+	/* Check if this is a snapshot with clones */
+	snapshot = _spdk_bs_get_snapshot_entry(blob->bs, blob->id);
+	if (snapshot != NULL) {
+		/* If snapshot have clones, we cannot remove it */
+		if (!TAILQ_EMPTY(&snapshot->clones)) {
+			SPDK_ERRLOG("Cannot remove snapshot with clones\n");
+			return -EBUSY;
+		}
+	}
+
+	return 0;
+}
+
 static void
 _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
@@ -5069,25 +5092,10 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 
 	_spdk_blob_verify_md_op(blob);
 
-	if (blob->open_ref > 1) {
-		/*
-		 * Someone has this blob open (besides this delete context).
-		 *  Decrement the ref count directly and return -EBUSY.
-		 */
-		blob->open_ref--;
-		spdk_bs_sequence_finish(seq, -EBUSY);
+	bserrno = _spdk_bs_is_blob_deletable(blob);
+	if (bserrno) {
+		spdk_blob_close(blob, _spdk_bs_delete_ebusy_close_cpl, seq);
 		return;
-	}
-
-	/* Check if this is a snapshot with clones */
-	snapshot = _spdk_bs_get_snapshot_entry(blob->bs, blob->id);
-	if (snapshot != NULL) {
-		/* If snapshot have clones, we cannot remove it */
-		if (!TAILQ_EMPTY(&snapshot->clones)) {
-			SPDK_ERRLOG("Cannot remove snapshot with clones\n");
-			spdk_blob_close(blob, _spdk_bs_delete_ebusy_close_cpl, seq);
-			return;
-		}
 	}
 
 	_spdk_bs_blob_list_remove(blob);
@@ -5107,6 +5115,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	TAILQ_REMOVE(&blob->bs->blobs, blob, link);
 
 	/* If blob is a snapshot then remove it from the list */
+	snapshot = _spdk_bs_get_snapshot_entry(blob->bs, blob->id);
 	if (snapshot != NULL) {
 		TAILQ_REMOVE(&blob->bs->snapshots, snapshot, link);
 		free(snapshot);
