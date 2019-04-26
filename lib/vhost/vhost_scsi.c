@@ -96,8 +96,8 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 
-	/* The CPU chosen to poll I/O of all active vhost sessions */
-	int32_t lcore;
+	/* The poll group for all active vhost sessions of this device */
+	struct vhost_poll_group *poll_group;
 };
 
 /** Context for a SCSI target in a vhost session */
@@ -1376,15 +1376,15 @@ spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 	svsession->svdev = svdev;
 
 	if (svdev->vdev.active_session_num == 0) {
-		svdev->lcore = spdk_vhost_allocate_reactor(svdev->vdev.cpumask);
+		svdev->poll_group = spdk_vhost_get_poll_group(svdev->vdev.cpumask);
 	}
 
-	rc = spdk_vhost_session_send_event(svdev->lcore, vsession, spdk_vhost_scsi_start_cb,
+	rc = spdk_vhost_session_send_event(svdev->poll_group, vsession, spdk_vhost_scsi_start_cb,
 					   3, "start session");
 	if (rc != 0) {
 		if (svdev->vdev.active_session_num == 0) {
-			spdk_vhost_free_reactor(svdev->lcore);
-			svdev->lcore = -1;
+			spdk_vhost_put_poll_group(svdev->poll_group);
+			svdev->poll_group = NULL;
 		}
 	}
 
@@ -1484,15 +1484,15 @@ spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 		SPDK_ERRLOG("Trying to stop non-scsi session as a scsi one.\n");
 		return -1;
 	}
-	rc = spdk_vhost_session_send_event(vsession->lcore, vsession,
+	rc = spdk_vhost_session_send_event(vsession->poll_group, vsession,
 					   spdk_vhost_scsi_stop_cb, 3, "stop session");
 	if (rc != 0) {
 		return rc;
 	}
 
 	if (vsession->vdev->active_session_num == 0) {
-		spdk_vhost_free_reactor(svsession->svdev->lcore);
-		svsession->svdev->lcore = -1;
+		spdk_vhost_put_poll_group(svsession->svdev->poll_group);
+		svsession->svdev->poll_group = NULL;
 	}
 	return 0;
 }
