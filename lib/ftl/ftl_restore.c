@@ -145,8 +145,8 @@ ftl_restore_complete(struct ftl_restore *restore, int status)
 static int
 ftl_band_cmp(const void *lband, const void *rband)
 {
-	uint64_t lseq = ((struct ftl_restore_band *)lband)->band->md.seq;
-	uint64_t rseq = ((struct ftl_restore_band *)rband)->band->md.seq;
+	uint64_t lseq = ((struct ftl_restore_band *)lband)->band->seq;
+	uint64_t rseq = ((struct ftl_restore_band *)rband)->band->seq;
 
 	if (lseq < rseq) {
 		return -1;
@@ -171,7 +171,7 @@ ftl_restore_check_seq(const struct ftl_restore *restore)
 		}
 
 		next_band = LIST_NEXT(rband->band, list_entry);
-		if (next_band && rband->band->md.seq == next_band->md.seq) {
+		if (next_band && rband->band->seq == next_band->seq) {
 			return -1;
 		}
 	}
@@ -256,19 +256,24 @@ ftl_restore_head_md(struct ftl_restore *restore)
 {
 	struct spdk_ftl_dev *dev = restore->dev;
 	struct ftl_restore_band *rband;
+	struct ftl_lba_map *lba_map;
 	struct ftl_cb cb;
-	char *head_buf = restore->md_buf;
 	unsigned int num_failed = 0, num_ios;
 	size_t i;
 
+	rband = &restore->bands[0];
+	rband->band->lba_map.dma_buf = restore->md_buf;
 	cb.fn = ftl_restore_head_cb;
 	restore->num_ios = ftl_dev_num_bands(dev);
 
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 		rband = &restore->bands[i];
+		lba_map = &rband->band->lba_map;
 		cb.ctx = rband;
 
-		if (ftl_band_read_head_md(rband->band, &rband->band->md, head_buf, cb)) {
+		lba_map->dma_buf = restore->md_buf + i * ftl_head_md_num_lbks(dev) * FTL_BLOCK_SIZE;
+
+		if (ftl_band_read_head_md(rband->band, cb)) {
 			if (spdk_likely(rband->band->num_chunks)) {
 				SPDK_ERRLOG("Failed to read metadata on band %zu\n", i);
 
@@ -283,8 +288,6 @@ ftl_restore_head_md(struct ftl_restore *restore)
 
 			num_failed++;
 		}
-
-		head_buf += ftl_head_md_num_lbks(dev) * FTL_BLOCK_SIZE;
 	}
 
 	if (spdk_unlikely(num_failed > 0)) {
@@ -320,11 +323,11 @@ ftl_restore_l2p(struct ftl_band *band)
 	size_t i;
 
 	for (i = 0; i < ftl_num_band_lbks(band->dev); ++i) {
-		if (!spdk_bit_array_get(band->md.vld_map, i)) {
+		if (!spdk_bit_array_get(band->lba_map.vld, i)) {
 			continue;
 		}
 
-		lba = band->md.lba_map[i];
+		lba = band->lba_map.map[i];
 		if (lba >= dev->num_lbas) {
 			return -1;
 		}
@@ -340,7 +343,7 @@ ftl_restore_l2p(struct ftl_band *band)
 		ftl_l2p_set(dev, lba, ppa);
 	}
 
-	band->md.lba_map = NULL;
+	band->lba_map.map = NULL;
 	return 0;
 }
 
@@ -397,9 +400,10 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 	};
 
 	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
-	band->md.lba_map = restore->lba_map;
+	band->lba_map.map = restore->lba_map;
+	band->lba_map.dma_buf = restore->md_buf;
 
-	if (ftl_band_read_tail_md(band, &band->md, restore->md_buf, band->tail_md_ppa, cb)) {
+	if (ftl_band_read_tail_md(band, band->tail_md_ppa, cb)) {
 		SPDK_ERRLOG("Failed to send tail metadata read\n");
 		ftl_restore_complete(restore, -EIO);
 		return -EIO;

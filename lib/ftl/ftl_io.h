@@ -45,9 +45,8 @@ struct spdk_ftl_dev;
 struct ftl_rwb_batch;
 struct ftl_band;
 struct ftl_io;
-struct ftl_md;
 
-typedef int (*ftl_md_pack_fn)(struct spdk_ftl_dev *, struct ftl_md *, void *);
+typedef int (*ftl_md_pack_fn)(struct ftl_band *);
 
 /* IO flags */
 enum ftl_io_flags {
@@ -222,12 +221,6 @@ struct ftl_io {
 struct ftl_md_io {
 	/* Parent IO structure */
 	struct ftl_io				io;
-
-	/* Destination metadata pointer */
-	struct ftl_md				*md;
-
-	/* Metadata's buffer */
-	void					*buf;
 
 	/* Serialization/deserialization callback */
 	ftl_md_pack_fn				pack_fn;
