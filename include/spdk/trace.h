@@ -199,12 +199,14 @@ void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 	 *  within the group, the remaining upper bits determine the tracepoint group.  Each
 	 *  tracepoint group has its own tracepoint mask.
 	 */
+	printf("%s:%d\n", __func__, __LINE__);
 	assert(tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);
 	if (g_trace_histories == NULL ||
 	    !((1ULL << (tpoint_id & 0x3F)) & g_trace_histories->flags.tpoint_mask[tpoint_id >> 6])) {
 		return;
 	}
 
+	printf("%s:%d\n", __func__, __LINE__);
 	_spdk_trace_record(0, tpoint_id, poller_id, size, object_id, arg1);
 }
 

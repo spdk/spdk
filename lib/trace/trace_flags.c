@@ -98,6 +98,7 @@ spdk_trace_set_tpoint_group_mask(uint64_t tpoint_group_mask)
 
 	for (i = 0; i < SPDK_TRACE_MAX_GROUP_ID; i++) {
 		if (tpoint_group_mask & (1ULL << i)) {
+			SPDK_ERRLOG("setting tpoints for group %d\n", i);
 			spdk_trace_set_tpoints(i, -1ULL);
 		}
 	}
