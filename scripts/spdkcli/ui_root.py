@@ -245,6 +245,14 @@ class UIRoot(UINode):
         return response
 
     @verbose
+    def construct_raid_bdev(self, **kwargs):
+        rpc.bdev.construct_raid_bdev(self.client, **kwargs)
+
+    @verbose
+    def destroy_raid_bdev(self, **kwargs):
+        rpc.bdev.destroy_raid_bdev(self.client, **kwargs)
+
+    @verbose
     @is_method_available
     def get_virtio_scsi_devs(self):
         if self.is_init:
