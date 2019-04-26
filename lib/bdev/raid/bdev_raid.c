@@ -344,7 +344,7 @@ raid_bdev_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
  * brief:
  * get_curr_base_bdev_index function calculates the base bdev index
  * params:
- * raid_bdev - pointer to pooled bdev
+ * raid_bdev - pointer to raid bdev
  * raid_io - pointer to parent io context
  * returns:
  * base bdev index
@@ -1561,7 +1561,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 		return -ENOMEM;
 	}
 
-	raid_bdev_gen->product_name = "Pooled Device";
+	raid_bdev_gen->product_name = "Raid Volume";
 	raid_bdev_gen->ctxt = raid_bdev;
 	raid_bdev_gen->fn_table = &g_raid_bdev_fn_table;
 	raid_bdev_gen->module = &g_raid_if;
@@ -1695,7 +1695,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 					raid_bdev->bdev.name);
 		rc = spdk_bdev_register(raid_bdev_gen);
 		if (rc != 0) {
-			SPDK_ERRLOG("Unable to register pooled bdev and stay at configuring state\n");
+			SPDK_ERRLOG("Unable to register raid bdev and stay at configuring state\n");
 			spdk_io_device_unregister(raid_bdev, NULL);
 			raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 			return rc;

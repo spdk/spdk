@@ -199,7 +199,7 @@ def get_raid_bdevs(client, category):
 
 
 def construct_raid_bdev(client, name, raid_level, base_bdevs, strip_size=None, strip_size_kb=None):
-    """Construct pooled device. Either strip size arg will work but one is required.
+    """Construct raid bdev. Either strip size arg will work but one is required.
 
     Args:
         name: user defined raid bdev name
@@ -223,7 +223,7 @@ def construct_raid_bdev(client, name, raid_level, base_bdevs, strip_size=None, s
 
 
 def destroy_raid_bdev(client, name):
-    """Destroy pooled device
+    """Destroy raid bdev
 
     Args:
         name: raid bdev name
