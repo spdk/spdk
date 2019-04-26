@@ -54,7 +54,7 @@ timing_enter mkfs
 $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
 timing_exit mkfs
 
-mkdir $output_dir/rocksdb
+mkdir -p $output_dir/rocksdb
 RESULTS_DIR=$output_dir/rocksdb
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	CACHE_SIZE=4096
