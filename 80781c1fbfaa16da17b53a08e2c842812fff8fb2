@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e22c6f74_f6c5b7df",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 1242,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-26T13:44:25Z",
+      "side": 0,
+      "message": "Shouldn\u0027t it be left as is ? There is lvol_bdev (clone) and clone_bdev (clone) based on snapshot_bdev (snapshot). So destroy on snapshot_bdev should fail since there are two clones based on it.\n\nActually this makes it the same as test_case763 added in https://review.gerrithub.io/#/c/spdk/spdk/+/450617/8/test/lvol/test_cases.py\nLets do it in just one place.",
+      "range": {
+        "startLine": 1238,
+        "startChar": 0,
+        "endLine": 1242,
+        "endChar": 27
+      },
+      "revId": "80781c1fbfaa16da17b53a08e2c842812fff8fb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b72ffb7_72026122",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1043,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-26T13:44:25Z",
+      "side": 0,
+      "message": "This no longer checks what happens when spdk_lvol_deletable() returns false (since its not used). Please keep it if you intend to change implementation of spdk_lvol_deletable().\n\nOtherwise remove g_lvol_deletable from UT, since this is the only place it is used.",
+      "range": {
+        "startLine": 1037,
+        "startChar": 0,
+        "endLine": 1043,
+        "endChar": 25
+      },
+      "revId": "80781c1fbfaa16da17b53a08e2c842812fff8fb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
