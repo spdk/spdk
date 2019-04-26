@@ -46,7 +46,7 @@ ftl_io_inc_req(struct ftl_io *io)
 	struct ftl_band *band = io->band;
 
 	if (io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
-		ftl_band_acquire_md(band);
+		ftl_band_acquire_lba_map(band);
 	}
 
 	__atomic_fetch_add(&io->dev->num_inflight, 1, __ATOMIC_SEQ_CST);
@@ -61,7 +61,7 @@ ftl_io_dec_req(struct ftl_io *io)
 	unsigned long num_inflight __attribute__((unused));
 
 	if (io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
-		ftl_band_release_md(band);
+		ftl_band_release_lba_map(band);
 	}
 
 	num_inflight = __atomic_fetch_sub(&io->dev->num_inflight, 1, __ATOMIC_SEQ_CST);
