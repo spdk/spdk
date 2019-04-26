@@ -1137,7 +1137,6 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	struct ibv_mr *mr;
 	uint32_t length;
 	uint64_t requested_size;
-	uint32_t remaining_payload;
 	void *virt_addr;
 	int rc, i;
 
@@ -1147,47 +1146,41 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	assert(req->payload.next_sge_fn != NULL);
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
-	remaining_payload = req->payload_size;
-	rdma_req->send_wr.num_sge = 1;
-
-	do {
-		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
-		if (rc) {
-			return -1;
-		}
-
-		if (length > remaining_payload) {
-			length = remaining_payload;
-		}
-
-		requested_size = length;
-		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
-				&requested_size);
-		if (mr == NULL || requested_size < length) {
-			for (i = 1; i < rdma_req->send_wr.num_sge; i++) {
-				rdma_req->send_sgl[i].addr = 0;
-				rdma_req->send_sgl[i].length = 0;
-				rdma_req->send_sgl[i].lkey = 0;
-			}
-
-			if (mr) {
-				SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
-			}
-			return -1;
-		}
-
-		rdma_req->send_sgl[rdma_req->send_wr.num_sge].addr = (uint64_t)virt_addr;
-		rdma_req->send_sgl[rdma_req->send_wr.num_sge].length = length;
-		rdma_req->send_sgl[rdma_req->send_wr.num_sge].lkey = mr->lkey;
-		rdma_req->send_wr.num_sge++;
-
-		remaining_payload -= length;
-	} while (remaining_payload && rdma_req->send_wr.num_sge < (int64_t)rqpair->max_send_sge);
-
-	if (remaining_payload) {
-		SPDK_ERRLOG("Unable to prepare request. Too many SGL elements\n");
+	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
+	if (rc) {
 		return -1;
 	}
+
+	if (length < req->payload_size) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Inline SGL request split so sending separately.\n");
+		return nvme_rdma_build_sgl_request(rqpair, rdma_req);
+	}
+
+	if (length > req->payload_size) {
+		length = req->payload_size;
+	}
+
+	requested_size = length;
+	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
+			&requested_size);
+	if (mr == NULL || requested_size < length) {
+		for (i = 1; i < rdma_req->send_wr.num_sge; i++) {
+			rdma_req->send_sgl[i].addr = 0;
+			rdma_req->send_sgl[i].length = 0;
+			rdma_req->send_sgl[i].lkey = 0;
+		}
+
+		if (mr) {
+			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+		}
+		return -1;
+	}
+
+	rdma_req->send_sgl[1].addr = (uint64_t)virt_addr;
+	rdma_req->send_sgl[1].length = length;
+	rdma_req->send_sgl[1].lkey = mr->lkey;
+
+	rdma_req->send_wr.num_sge = 2;
 
 	/* The first element of this SGL is pointing at an
 	 * spdk_nvmf_cmd object. For this particular command,
