@@ -131,7 +131,7 @@ struct raid_bdev {
 
 /*
  * raid_bdev_io is the context part of bdev_io. It contains the information
- * related to bdev_io for a pooled bdev
+ * related to bdev_io for a raid bdev
  */
 struct raid_bdev_io {
 	/* WaitQ entry, used only in waitq logic */
