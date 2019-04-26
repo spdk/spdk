@@ -22,6 +22,30 @@
       "revId": "2e6e603738029c6c8d658fc950ebe760ee10316b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2fe7025_c907234b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2823,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-26T15:01:29Z",
+      "side": 1,
+      "message": "I would like to keep these as noticelogs for now because we do hit them so infrequently that they could be useful to us if a user sees them in their environment (in an error path) and comes back to the community with a question about it.",
+      "parentUuid": "4ded0482_c59b576c",
+      "range": {
+        "startLine": 2823,
+        "startChar": 2,
+        "endLine": 2823,
+        "endChar": 16
+      },
+      "revId": "2e6e603738029c6c8d658fc950ebe760ee10316b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
