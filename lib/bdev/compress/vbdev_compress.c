@@ -60,8 +60,6 @@
 
 #define COMP_BDEV_NAME "compress"
 
-/* TODO: need to get this from RPC on create or reduce metadata on load */
-#define TEST_MD_PATH "/tmp"
 #define DEV_CHUNK_SZ (16 * 1024)
 #define DEV_LBA_SZ 512
 #define DEV_BACKING_IO_SZ (4 * 1024)
@@ -991,7 +989,7 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 
 /* Call reducelib to initialize a new volume */
 static void
-vbdev_init_reduce(struct spdk_bdev *bdev, const char *vbdev_name, const char *comp_pmd)
+vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, const char *comp_pmd)
 {
 	struct vbdev_compress *meta_ctx;
 	int rc;
@@ -1015,7 +1013,7 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *vbdev_name, const char *co
 	 * in load.
 	 */
 	spdk_reduce_vol_init(&meta_ctx->params, &meta_ctx->backing_dev,
-			     TEST_MD_PATH,
+			     pm_path,
 			     vbdev_reduce_init_cb,
 			     meta_ctx);
 }
@@ -1110,7 +1108,7 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 
 /* RPC entry point for compression vbdev creation. */
 int
-create_compress_bdev(const char *bdev_name, const char *vbdev_name, const char *comp_pmd)
+create_compress_bdev(const char *bdev_name, const char *pm_path, const char *comp_pmd)
 {
 	struct spdk_bdev *bdev;
 
@@ -1119,7 +1117,7 @@ create_compress_bdev(const char *bdev_name, const char *vbdev_name, const char *
 		return -ENODEV;
 	}
 
-	vbdev_init_reduce(bdev, vbdev_name, comp_pmd);
+	vbdev_init_reduce(bdev, pm_path, comp_pmd);
 	return 0;
 }
 
