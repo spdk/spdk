@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7774cf6f_e13ba1c7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 5117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-26T17:59:57Z",
+      "side": 0,
+      "message": "You can break out these lines into a separate _spdk_bs_delete_blob_finish() function in a separate patch before this one.",
+      "revId": "9b6a43f4df1044f47366b76e495eeb45131a7fa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
