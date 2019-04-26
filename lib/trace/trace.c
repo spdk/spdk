@@ -38,6 +38,7 @@
 #include "spdk/trace.h"
 #include "spdk/util.h"
 #include "spdk/barrier.h"
+#include "spdk/log.h"
 
 static int g_trace_fd = -1;
 static char g_shm_name[64];
@@ -128,6 +129,7 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries)
 	}
 #endif
 
+	SPDK_ERRLOG("success\n");
 	memset(g_trace_histories, 0, histories_size);
 
 	g_trace_flags = &g_trace_histories->flags;
@@ -190,6 +192,7 @@ spdk_trace_cleanup(void)
 	close(g_trace_fd);
 
 	if (unlink) {
+		SPDK_ERRLOG("unlinking shm file!\n");
 		shm_unlink(g_shm_name);
 	}
 }
