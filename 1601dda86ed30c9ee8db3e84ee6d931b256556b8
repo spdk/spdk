@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4916af56_51b446a6",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-04-27T20:03:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b800f2ea_d396ea8b",
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99ef1d12_93f07319",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "00ff09bd_b110b276",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-04-27T20:03:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99ef1d12_93f07319",
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f33ca4a3_e9f35d9a",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 2
@@ -47,6 +83,30 @@
       "writtenOn": "2019-03-04T01:37:32Z",
       "side": 1,
       "message": "you can call free(stat_entry-\u003ethread_name) directly without null check.",
+      "range": {
+        "startLine": 208,
+        "startChar": 2,
+        "endLine": 208,
+        "endChar": 32
+      },
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08afdde8_a4a793b3",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-04-27T20:03:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f33ca4a3_e9f35d9a",
       "range": {
         "startLine": 208,
         "startChar": 2,
@@ -82,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "ffbbcfd5_ff0f432c",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-04-27T20:03:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7241e37_772587bb",
+      "range": {
+        "startLine": 216,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 12
+      },
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bca78389_8d56f4f8",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 2
@@ -93,6 +177,24 @@
       "writtenOn": "2019-03-04T01:37:32Z",
       "side": 1,
       "message": "Should we continue resetting even when ctx-\u003estatus is false? Maybe just return here if ctx-\u003estatus is false?",
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0261545_dc1585f9",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-04-27T20:03:33Z",
+      "side": 1,
+      "message": "Not applicable anymore after applying comment from Jim. Reset method was removed.",
+      "parentUuid": "bca78389_8d56f4f8",
       "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -122,6 +224,30 @@
     },
     {
       "key": {
+        "uuid": "fe2ddd2b_7356a2dc",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-04-27T20:03:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3cc2191_c048a96a",
+      "range": {
+        "startLine": 224,
+        "startChar": 3,
+        "endLine": 224,
+        "endChar": 57
+      },
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4711a23f_52578c7c",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 2
@@ -139,6 +265,24 @@
     },
     {
       "key": {
+        "uuid": "46b55ee2_9ee40eab",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-04-27T20:03:33Z",
+      "side": 1,
+      "message": "Not applicable anymore after applying comment from Jim. Reset method was removed.",
+      "parentUuid": "4711a23f_52578c7c",
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9be0c633_fa6227a6",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
@@ -150,6 +294,30 @@
       "writtenOn": "2019-03-04T01:37:32Z",
       "side": 1,
       "message": "You can remove this.",
+      "range": {
+        "startLine": 1741,
+        "startChar": 80,
+        "endLine": 1741,
+        "endChar": 96
+      },
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7c57c1e_520cc3fa",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1741,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-04-27T20:03:33Z",
+      "side": 1,
+      "message": "Not applicable anymore after applying comment from Jim. Reset method was removed.",
+      "parentUuid": "9be0c633_fa6227a6",
       "range": {
         "startLine": 1741,
         "startChar": 80,
