@@ -580,7 +580,7 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_poller_unregister(&ch->poller);
 }
 
-struct spdk_bdev *
+int
 create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 {
 	struct file_disk *fdisk;
@@ -591,16 +591,18 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 	fdisk = calloc(1, sizeof(*fdisk));
 	if (!fdisk) {
 		SPDK_ERRLOG("Unable to allocate enough memory for aio backend\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	fdisk->filename = strdup(filename);
 	if (!fdisk->filename) {
+		rc = -ENOMEM;
 		goto error_return;
 	}
 
 	if (bdev_aio_open(fdisk)) {
 		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, fdisk->fd, errno);
+		rc = -errno;
 		goto error_return;
 	}
 
@@ -608,6 +610,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 
 	fdisk->disk.name = strdup(name);
 	if (!fdisk->disk.name) {
+		rc = -ENOMEM;
 		goto error_return;
 	}
 	fdisk->disk.product_name = "AIO disk";
@@ -620,6 +623,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 		/* User did not specify block size - use autodetected block size. */
 		if (detected_block_size == 0) {
 			SPDK_ERRLOG("Block size could not be auto-detected\n");
+			rc = -EINVAL;
 			goto error_return;
 		}
 		fdisk->block_size_override = false;
@@ -629,6 +633,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 			SPDK_ERRLOG("Specified block size %" PRIu32 " is smaller than "
 				    "auto-detected block size %" PRIu32 "\n",
 				    block_size, detected_block_size);
+			rc = -EINVAL;
 			goto error_return;
 		} else if (detected_block_size != 0 && block_size != detected_block_size) {
 			SPDK_WARNLOG("Specified block size %" PRIu32 " does not match "
@@ -640,11 +645,13 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 
 	if (block_size < 512) {
 		SPDK_ERRLOG("Invalid block size %" PRIu32 " (must be at least 512).\n", block_size);
+		rc = -EINVAL;
 		goto error_return;
 	}
 
 	if (!spdk_u32_is_pow2(block_size)) {
 		SPDK_ERRLOG("Invalid block size %" PRIu32 " (must be a power of 2.)\n", block_size);
+		rc = -EINVAL;
 		goto error_return;
 	}
 
@@ -654,6 +661,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 	if (disk_size % fdisk->disk.blocklen != 0) {
 		SPDK_ERRLOG("Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
 			    disk_size, fdisk->disk.blocklen);
+		rc = -EINVAL;
 		goto error_return;
 	}
 
@@ -672,12 +680,12 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 	}
 
 	TAILQ_INSERT_TAIL(&g_aio_disk_head, fdisk, link);
-	return &fdisk->disk;
+	return 0;
 
 error_return:
 	bdev_aio_close(fdisk);
 	aio_free_disk(fdisk);
-	return NULL;
+	return rc;
 }
 
 struct delete_aio_bdev_ctx {
@@ -721,6 +729,7 @@ bdev_aio_initialize(void)
 	size_t i;
 	struct spdk_conf_section *sp;
 	struct spdk_bdev *bdev;
+	int rc = 0;
 
 	TAILQ_INIT(&g_aio_disk_head);
 	spdk_io_device_register(&aio_if, bdev_aio_group_create_cb, bdev_aio_group_destroy_cb,
@@ -763,9 +772,9 @@ bdev_aio_initialize(void)
 			block_size = (uint32_t)tmp;
 		}
 
-		bdev = create_aio_bdev(name, file, block_size);
-		if (!bdev) {
-			SPDK_ERRLOG("Unable to create AIO bdev from file %s\n", file);
+		rc = create_aio_bdev(name, file, block_size);
+		if (rc) {
+			SPDK_ERRLOG("Unable to create AIO bdev from file %s, err is %s\n", file, spdk_strerror(-rc));
 			i++;
 			continue;
 		}
