@@ -62,37 +62,40 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_aio req = {};
 	struct spdk_json_write_ctx *w;
-	struct spdk_bdev *bdev;
+	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
 				    SPDK_COUNTOF(rpc_construct_aio_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
 		goto invalid;
 	}
 
 	if (req.filename == NULL) {
+		rc = -EINVAL;
 		goto invalid;
 	}
 
-	bdev = create_aio_bdev(req.name, req.filename, req.block_size);
-	if (bdev == NULL) {
+	rc = create_aio_bdev(req.name, req.filename, req.block_size);
+	if (rc) {
 		goto invalid;
 	}
 
-	free_rpc_construct_aio(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
-		return;
+		goto cleanup;
 	}
 
-	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+	spdk_json_write_string(w, req.name);
 	spdk_jsonrpc_end_result(request, w);
-	return;
+
+	goto cleanup;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+cleanup:
 	free_rpc_construct_aio(&req);
 }
 SPDK_RPC_REGISTER("construct_aio_bdev", spdk_rpc_construct_aio_bdev, SPDK_RPC_RUNTIME)

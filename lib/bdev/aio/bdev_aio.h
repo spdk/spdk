@@ -39,7 +39,7 @@
 
 typedef void (*delete_aio_bdev_complete)(void *cb_arg, int bdeverrno);
 
-struct spdk_bdev *create_aio_bdev(const char *name, const char *filename, uint32_t block_size);
+int create_aio_bdev(const char *name, const char *filename, uint32_t block_size);
 
 void delete_aio_bdev(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb_arg);
 
