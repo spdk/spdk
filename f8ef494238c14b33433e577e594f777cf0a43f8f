@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "68a269fd_0455e967",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-29T12:55:39Z",
+      "side": 1,
+      "message": "Mike you\u0027re right here - that\u0027s exactly what happens in \"get_bdevs\". I somehow had to distribute the bdevs to their corresponding in the CLI interface. That\u0027s the same case as for logical stores where I couldn\u0027t use a short name \"lvol\" because the product name is \"Logical Volume\".\n\n\nTBH I\u0027m not sure how to handle this nicely. If we want to use \"raid\" instead of \"polled device\" in CLI maybe we could add a dictionary in get_bdevs() to serve as a map for some of the bdev names? Something like:\n\nbdev_translate_map \u003d {\n    \"Pooled Device\": \"Raid\",\n    \"Logical Volume\": \"Lvol\"\n}\n\nAnd then change the \"if\" in get_bdevs accordingly",
+      "parentUuid": "bb17466a_601e5821",
+      "revId": "f8ef494238c14b33433e577e594f777cf0a43f8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a0db81f_38bdd1f2",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 1
