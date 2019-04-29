@@ -623,27 +623,27 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": [
-    {
-      "tick_rate": 2200000000
-    },
-    {
-      "name": "Nvme0n1",
-      "bytes_read": 36864,
-      "num_read_ops": 2,
-      "bytes_written": 0,
-      "num_write_ops": 0,
-      "bytes_unmapped": 0,
-      "num_unmap_ops": 0,
-      "read_latency_ticks": 178904,
-      "write_latency_ticks": 0,
-      "unmap_latency_ticks": 0,
-      "queue_depth_polling_period": 2,
-      "queue_depth": 0,
-      "io_time": 0,
-      "weighted_io_time": 0
-    }
-  ]
+  "result": {
+    "tick_rate": 2200000000,
+    "bdevs" : [
+      {
+        "name": "Nvme0n1",
+        "bytes_read": 36864,
+        "num_read_ops": 2,
+        "bytes_written": 0,
+        "num_write_ops": 0,
+        "bytes_unmapped": 0,
+        "num_unmap_ops": 0,
+        "read_latency_ticks": 178904,
+        "write_latency_ticks": 0,
+        "unmap_latency_ticks": 0,
+        "queue_depth_polling_period": 2,
+        "queue_depth": 0,
+        "io_time": 0,
+        "weighted_io_time": 0
+      }
+    ]
+  }
 }
 ~~~
 

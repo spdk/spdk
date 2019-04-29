@@ -14,6 +14,12 @@ The function `spdk_notify_get_types()` and `spdk_notify_get_events()` were
 renamed to `spdk_notify_foreach_type()` and `spdk_notify_foreach_event()`,
 respectively. And update type name of callback accordingly.
 
+### bdev
+
+The format of the data returned by the get_bdevs_iostat RPC has changed to
+make it easier to parse.  It now returns an object with a "ticks" object
+and "bdevs" array with the per-bdev statistics.
+
 ## v19.04:
 
 ### nvme
