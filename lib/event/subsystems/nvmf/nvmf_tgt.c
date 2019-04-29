@@ -106,18 +106,6 @@ spdk_nvmf_subsystem_fini(void)
 	_spdk_nvmf_shutdown_cb(NULL);
 }
 
-static void
-nvmf_tgt_poll_group_add(void *arg1, void *arg2)
-{
-	struct spdk_nvmf_qpair *qpair = arg1;
-	struct nvmf_tgt_poll_group *pg = arg2;
-
-	if (spdk_nvmf_poll_group_add(pg->group, qpair) != 0) {
-		SPDK_ERRLOG("Unable to add the qpair to a poll group.\n");
-		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-	}
-}
-
 /* Round robin selection of cores */
 static uint32_t
 spdk_nvmf_get_core_rr(void)
@@ -208,6 +196,18 @@ nvmf_tgt_get_qpair_core(struct spdk_nvmf_qpair *qpair)
 	}
 
 	return core;
+}
+
+static void
+nvmf_tgt_poll_group_add(void *arg1, void *arg2)
+{
+	struct spdk_nvmf_qpair *qpair = arg1;
+	struct nvmf_tgt_poll_group *pg = arg2;
+
+	if (spdk_nvmf_poll_group_add(pg->group, qpair) != 0) {
+		SPDK_ERRLOG("Unable to add the qpair to a poll group.\n");
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+	}
 }
 
 static void
