@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "211cdd4b_8c1ae084",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-29T09:14:24Z",
+      "side": 1,
+      "message": "How I can add it in separate patch? This functionality is used in two places, do you suggest to first make version where this code is inlined and then abstract it with one function in separate patch? Surely that doesn\u0027t make sense to me, because why make a bad version - it would only complicate review, it is better to have code abstracted from the beginning.",
+      "parentUuid": "07e4dc39_8d649a5a",
+      "revId": "124ef47a454b39bf361989c012f73be3e005e311",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "10a39d0b_1525ef2a",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 28
@@ -39,6 +57,30 @@
       "revId": "124ef47a454b39bf361989c012f73be3e005e311",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb655113_c8175121",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-29T09:14:24Z",
+      "side": 1,
+      "message": "Ack, I will relocate this function in separate patch as you suggested.",
+      "parentUuid": "10a39d0b_1525ef2a",
+      "range": {
+        "startLine": 238,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 15
+      },
+      "revId": "124ef47a454b39bf361989c012f73be3e005e311",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

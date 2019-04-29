@@ -22,6 +22,30 @@
       "revId": "55d009ed105cc44d12d114fd501ec5ca596d13e5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1cafd99_cede3503",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-29T09:14:24Z",
+      "side": 0,
+      "message": "It is if I understood you correctly. This patch moves the code that you highlighted to remove_core_poll() function. Am I missing something?",
+      "parentUuid": "837fda47_53660ba0",
+      "range": {
+        "startLine": 226,
+        "startChar": 3,
+        "endLine": 231,
+        "endChar": 50
+      },
+      "revId": "55d009ed105cc44d12d114fd501ec5ca596d13e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
