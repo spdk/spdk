@@ -107,9 +107,9 @@ spdk_nvmf_subsystem_fini(void)
 	_spdk_nvmf_shutdown_cb(NULL);
 }
 
-/* Round robin selection of cores */
-static uint32_t
-spdk_nvmf_get_core_rr(void)
+/* Round robin selection of poll groups */
+static struct nvmf_tgt_poll_group *
+spdk_nvmf_get_next_pg(void)
 {
 	uint32_t core;
 
@@ -119,7 +119,7 @@ spdk_nvmf_get_core_rr(void)
 		g_tgt_core = spdk_env_get_first_core();
 	}
 
-	return core;
+	return &g_poll_groups[core];
 }
 
 static void
@@ -157,6 +157,7 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvme_transport_id trid;
 	struct nvmf_tgt_host_trid *tmp_trid = NULL, *new_trid = NULL;
+	struct nvmf_tgt_poll_group *pg = NULL;
 	int ret;
 	uint32_t core = spdk_env_get_first_core();
 
@@ -165,6 +166,7 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 		ret = spdk_nvmf_qpair_get_peer_trid(qpair, &trid);
 		if (ret) {
 			SPDK_ERRLOG("Invalid host transport Id. Assigning to core %d\n", core);
+			pg = &g_poll_groups[core];
 			break;
 		}
 
@@ -173,6 +175,7 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 						 trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
 				tmp_trid->ref++;
 				core = tmp_trid->core;
+				pg = &g_poll_groups[core];
 				break;
 			}
 		}
@@ -180,11 +183,12 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 			new_trid = calloc(1, sizeof(*new_trid));
 			if (!new_trid) {
 				SPDK_ERRLOG("Insufficient memory. Assigning to core %d\n", core);
+				pg = &g_poll_groups[core];
 				break;
 			}
 			/* Get the next available core for the new host */
-			core = spdk_nvmf_get_core_rr();
-			new_trid->core = core;
+			pg = spdk_nvmf_get_next_pg();
+			new_trid->core = pg->core;
 			memcpy(new_trid->host_trid.traddr, trid.traddr,
 			       SPDK_NVMF_TRADDR_MAX_LEN + 1);
 			TAILQ_INSERT_TAIL(&g_nvmf_tgt_host_trids, new_trid, link);
@@ -192,11 +196,11 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 		break;
 	case CONNECT_SCHED_ROUND_ROBIN:
 	default:
-		core = spdk_nvmf_get_core_rr();
+		pg = spdk_nvmf_get_next_pg();
 		break;
 	}
 
-	return &g_poll_groups[core];
+	return pg;
 }
 
 static void
