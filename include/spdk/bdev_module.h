@@ -1044,6 +1044,15 @@ struct spdk_bdev *spdk_bdev_part_get_base_bdev(struct spdk_bdev_part *part);
  */
 uint64_t spdk_bdev_part_get_offset_blocks(struct spdk_bdev_part *part);
 
+/**
+ * Return the maximum number of IO vectors supported in bdev module.
+ */
+static inline uint32_t
+spdk_bdev_module_max_iovs_supported(void)
+{
+	return (uint32_t)BDEV_IO_NUM_CHILD_IOV;
+}
+
 /*
  *  Macro used to register module for later initialization.
  */
