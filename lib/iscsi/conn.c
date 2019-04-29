@@ -616,7 +616,7 @@ iscsi_conns_cleanup(void)
 }
 
 static void
-iscsi_conn_check_shutdown_cb(void *arg1, void *arg2)
+iscsi_conn_check_shutdown_cb(void *arg1)
 {
 	iscsi_conns_cleanup();
 	spdk_shutdown_iscsi_conns_done();
@@ -625,16 +625,13 @@ iscsi_conn_check_shutdown_cb(void *arg1, void *arg2)
 static int
 iscsi_conn_check_shutdown(void *arg)
 {
-	struct spdk_event *event;
-
 	if (spdk_iscsi_get_active_conns(NULL) != 0) {
 		return 1;
 	}
 
 	spdk_poller_unregister(&g_shutdown_timer);
-	event = spdk_event_allocate(spdk_env_get_current_core(),
-				    iscsi_conn_check_shutdown_cb, NULL, NULL);
-	spdk_event_call(event);
+
+	spdk_thread_send_msg(spdk_get_thread(), iscsi_conn_check_shutdown_cb, NULL);
 
 	return 1;
 }
