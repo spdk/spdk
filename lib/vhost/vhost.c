@@ -898,7 +898,6 @@ void
 spdk_vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 {
 	if (response == 0) {
-		vsession->lcore = spdk_env_get_current_core();
 		vsession->started = true;
 		assert(vsession->vdev->active_session_num < UINT32_MAX);
 		vsession->vdev->active_session_num++;
@@ -910,7 +909,6 @@ void
 spdk_vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
 {
 	if (response == 0) {
-		vsession->lcore = -1;
 		vsession->started = false;
 		assert(vsession->vdev->active_session_num > 0);
 		vsession->vdev->active_session_num--;
@@ -1012,6 +1010,7 @@ spdk_vhost_session_send_event(int32_t lcore, struct spdk_vhost_session *vsession
 	ev_ctx.vsession_id = vsession->id;
 	ev_ctx.cb_fn = cb_fn;
 
+	vsession->lcore = lcore;
 	vsession->event_ctx = &ev_ctx;
 	ev = spdk_event_allocate(lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
 	assert(ev);
