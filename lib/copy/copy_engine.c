@@ -46,7 +46,7 @@ static struct spdk_copy_engine *hw_copy_engine = NULL;
 /* Memcpy engine always exist */
 static struct spdk_copy_engine *mem_copy_engine = NULL;
 
-TAILQ_HEAD(, spdk_copy_module_if) spdk_copy_module_list =
+static TAILQ_HEAD(, spdk_copy_module_if) spdk_copy_module_list =
 	TAILQ_HEAD_INITIALIZER(spdk_copy_module_list);
 
 struct copy_io_channel {
@@ -54,9 +54,9 @@ struct copy_io_channel {
 	struct spdk_io_channel	*ch;
 };
 
-struct spdk_copy_module_if *g_copy_engine_module = NULL;
-spdk_copy_fini_cb g_fini_cb_fn = NULL;
-void *g_fini_cb_arg = NULL;
+static struct spdk_copy_module_if *g_copy_engine_module = NULL;
+static spdk_copy_fini_cb g_fini_cb_fn = NULL;
+static void *g_fini_cb_arg = NULL;
 
 void
 spdk_copy_engine_register(struct spdk_copy_engine *copy_engine)
