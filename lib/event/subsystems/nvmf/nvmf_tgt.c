@@ -56,7 +56,8 @@ enum nvmf_tgt_state {
 };
 
 struct nvmf_tgt_poll_group {
-	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_poll_group	*group;
+	uint32_t			core;
 };
 
 struct nvmf_tgt_host_trid {
@@ -151,8 +152,8 @@ nvmf_tgt_remove_host_trid(struct spdk_nvmf_qpair *qpair)
 	return;
 }
 
-static uint32_t
-nvmf_tgt_get_qpair_core(struct spdk_nvmf_qpair *qpair)
+static struct nvmf_tgt_poll_group *
+nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvme_transport_id trid;
 	struct nvmf_tgt_host_trid *tmp_trid = NULL, *new_trid = NULL;
@@ -195,7 +196,7 @@ nvmf_tgt_get_qpair_core(struct spdk_nvmf_qpair *qpair)
 		break;
 	}
 
-	return core;
+	return &g_poll_groups[core];
 }
 
 static void
@@ -215,7 +216,6 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_event *event;
 	struct nvmf_tgt_poll_group *pg;
-	uint32_t core;
 	uint32_t attempts;
 
 	if (g_tgt_state != NVMF_TGT_RUNNING) {
@@ -224,8 +224,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	}
 
 	for (attempts = 0; attempts < g_num_poll_groups; attempts++) {
-		core = nvmf_tgt_get_qpair_core(qpair);
-		pg = &g_poll_groups[core];
+		pg = nvmf_tgt_get_pg(qpair);
 		if (pg->group != NULL) {
 			break;
 		} else {
@@ -239,7 +238,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 		return;
 	}
 
-	event = spdk_event_allocate(core, nvmf_tgt_poll_group_add, qpair, pg);
+	event = spdk_event_allocate(pg->core, nvmf_tgt_poll_group_add, qpair, pg);
 	spdk_event_call(event);
 }
 
@@ -284,9 +283,13 @@ static void
 nvmf_tgt_create_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg;
+	uint32_t core;
 
-	pg = &g_poll_groups[spdk_env_get_current_core()];
+	core = spdk_env_get_current_core();
 
+	pg = &g_poll_groups[core];
+	assert(pg->core == SPDK_ENV_LCORE_ID_ANY);
+	pg->core = core;
 	pg->group = spdk_nvmf_poll_group_create(g_spdk_nvmf_tgt);
 }
 
@@ -359,6 +362,7 @@ nvmf_tgt_advance_state(void)
 {
 	enum nvmf_tgt_state prev_state;
 	int rc = -1;
+	uint32_t i;
 
 	do {
 		prev_state = g_tgt_state;
@@ -375,6 +379,9 @@ nvmf_tgt_advance_state(void)
 				g_tgt_state = NVMF_TGT_ERROR;
 				rc = -ENOMEM;
 				break;
+			}
+			SPDK_ENV_FOREACH_CORE(i) {
+				g_poll_groups[i].core = SPDK_ENV_LCORE_ID_ANY;
 			}
 
 			g_tgt_core = spdk_env_get_first_core();
