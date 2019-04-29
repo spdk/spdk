@@ -369,7 +369,6 @@ nvmf_tgt_advance_state(void)
 
 			/* Find the maximum core number */
 			g_num_poll_groups = spdk_env_get_last_core() + 1;
-			assert(g_num_poll_groups > 0);
 
 			g_poll_groups = calloc(g_num_poll_groups, sizeof(*g_poll_groups));
 			if (g_poll_groups == NULL) {
