@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4f8d5cc_3923a411",
+        "filename": "test/vhost/windows/windows_scsi_compliance.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2019-04-29T06:11:12Z",
+      "side": 1,
+      "message": "Shall we add more OS versions like windows7, 8, 10?",
+      "revId": "27328cd13f596de8540fd3d48fd2c127a1b73ae0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
