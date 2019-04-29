@@ -62,7 +62,7 @@ struct nvmf_tgt_poll_group {
 
 struct nvmf_tgt_host_trid {
 	struct spdk_nvme_transport_id       host_trid;
-	uint32_t                            core;
+	struct nvmf_tgt_poll_group          *pg;
 	uint32_t                            ref;
 	TAILQ_ENTRY(nvmf_tgt_host_trid)     link;
 };
@@ -174,8 +174,7 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 			if (tmp_trid && !strncmp(tmp_trid->host_trid.traddr,
 						 trid.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1)) {
 				tmp_trid->ref++;
-				core = tmp_trid->core;
-				pg = &g_poll_groups[core];
+				pg = tmp_trid->pg;
 				break;
 			}
 		}
@@ -188,7 +187,7 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 			}
 			/* Get the next available core for the new host */
 			pg = spdk_nvmf_get_next_pg();
-			new_trid->core = pg->core;
+			new_trid->pg = pg;
 			memcpy(new_trid->host_trid.traddr, trid.traddr,
 			       SPDK_NVMF_TRADDR_MAX_LEN + 1);
 			TAILQ_INSERT_TAIL(&g_nvmf_tgt_host_trids, new_trid, link);
