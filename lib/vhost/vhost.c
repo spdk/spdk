@@ -899,6 +899,7 @@ spdk_vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 {
 	if (response == 0) {
 		vsession->lcore = spdk_env_get_current_core();
+		vsession->started = true;
 		assert(vsession->vdev->active_session_num < UINT32_MAX);
 		vsession->vdev->active_session_num++;
 	}
@@ -910,6 +911,7 @@ spdk_vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
 {
 	if (response == 0) {
 		vsession->lcore = -1;
+		vsession->started = false;
 		assert(vsession->vdev->active_session_num > 0);
 		vsession->vdev->active_session_num--;
 	}
@@ -963,7 +965,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 		goto out_unlock_continue;
 	}
 
-	if (vsession->lcore >= 0 &&
+	if (vsession->started &&
 	    (uint32_t)vsession->lcore != spdk_env_get_current_core()) {
 		/* if session has been relocated to other core, it is no longer thread-safe
 		 * to access its contents here. Even though we're running under the global
@@ -1099,7 +1101,7 @@ stop_device(int vid)
 		return;
 	}
 
-	if (vsession->lcore == -1) {
+	if (!vsession->started) {
 		/* already stopped, nothing to do */
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
@@ -1126,7 +1128,7 @@ start_device(int vid)
 	}
 
 	vdev = vsession->vdev;
-	if (vsession->lcore != -1) {
+	if (vsession->started) {
 		/* already started, nothing to do */
 		rc = 0;
 		goto out;
@@ -1345,6 +1347,7 @@ new_connection(int vid)
 	vsession->id = vdev->vsessions_num++;
 	vsession->vid = vid;
 	vsession->lcore = -1;
+	vsession->started = false;
 	vsession->initialized = false;
 	vsession->next_stats_check_time = 0;
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
@@ -1369,7 +1372,7 @@ destroy_connection(int vid)
 		return;
 	}
 
-	if (vsession->lcore != -1) {
+	if (vsession->started) {
 		_stop_session(vsession);
 	}
 
@@ -1389,7 +1392,7 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 		goto out_finish_foreach;
 	}
 
-	while (vsession->lcore == -1) {
+	while (!vsession->started) {
 		if (vsession->initialized) {
 			rc = fn(vdev, vsession, arg);
 			if (rc < 0) {
