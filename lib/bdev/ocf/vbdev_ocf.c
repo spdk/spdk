@@ -155,61 +155,71 @@ get_other_cache_instance(struct vbdev_ocf *vbdev)
 	return NULL;
 }
 
-/* Release SPDK and OCF objects associated with base */
-static int
-remove_base(struct vbdev_ocf_base *base)
+/* Close and unclaim base bdev */
+static void
+remove_base_bdev(struct vbdev_ocf_base *base)
 {
-	ocf_core_t core;
-	int rc = 0;
-
-	if (base == NULL) {
-		return -EFAULT;
-	}
-
-	assert(base->attached);
-
-	if (base->is_cache && get_other_cache_base(base)) {
+	if (base->attached) {
+		spdk_bdev_module_release_bdev(base->bdev);
+		spdk_bdev_close(base->desc);
 		base->attached = false;
-		return 0;
 	}
-
-	/* Release OCF-part */
-	if (base->parent->ocf_cache && ocf_cache_is_running(base->parent->ocf_cache)) {
-		if (!base->is_cache) {
-			rc = ocf_core_get(base->parent->ocf_cache, base->id, &core);
-			if (rc) {
-				goto close_spdk_dev;
-			}
-			rc = ocf_mngt_cache_lock(base->parent->ocf_cache);
-			if (rc) {
-				goto close_spdk_dev;
-			}
-			rc = ocf_mngt_cache_remove_core(core);
-			ocf_mngt_cache_unlock(base->parent->ocf_cache);
-		}
-	}
-
-close_spdk_dev:
-	/* Release SPDK-part */
-	spdk_bdev_module_release_bdev(base->bdev);
-	spdk_bdev_close(base->desc);
-
-	base->attached = false;
-	return rc;
 }
 
 /* Finish unregister operation */
 static void
 unregister_finish(struct vbdev_ocf *vbdev)
 {
-	if (vbdev->core.attached) {
-		remove_base(&vbdev->core);
+	spdk_bdev_destruct_done(&vbdev->exp_bdev, vbdev->state.stop_status);
+	vbdev_ocf_mngt_continue(vbdev, 0);
+}
+
+static void
+close_core_bdev(struct vbdev_ocf *vbdev)
+{
+	remove_base_bdev(&vbdev->core);
+	vbdev_ocf_mngt_continue(vbdev, 0);
+}
+
+/* Detach core base */
+static void
+detach_core(struct vbdev_ocf *vbdev)
+{
+	int rc;
+
+	if (vbdev->ocf_cache && ocf_cache_is_running(vbdev->ocf_cache)) {
+		rc = ocf_mngt_cache_lock(vbdev->ocf_cache);
+		if (rc) {
+			vbdev_ocf_mngt_continue(vbdev, rc);
+			return;
+		}
+		rc = ocf_mngt_cache_remove_core(vbdev->ocf_core);
+		ocf_mngt_cache_unlock(vbdev->ocf_cache);
+		vbdev_ocf_mngt_continue(vbdev, rc);
+	} else {
+		vbdev_ocf_mngt_continue(vbdev, 0);
 	}
-	if (vbdev->cache.attached) {
-		remove_base(&vbdev->cache);
+}
+
+static void
+close_cache_bdev(struct vbdev_ocf *vbdev)
+{
+	remove_base_bdev(&vbdev->cache);
+	vbdev_ocf_mngt_continue(vbdev, 0);
+}
+
+/* Detach cache base */
+static void
+detach_cache(struct vbdev_ocf *vbdev)
+{
+	vbdev->state.stop_status = vbdev->mngt_ctx.status;
+
+	/* If some other vbdev references this cache bdev,
+	 * we detach this only by changing the flag, without actual close */
+	if (get_other_cache_base(&vbdev->cache)) {
+		vbdev->cache.attached = false;
 	}
 
-	spdk_bdev_destruct_done(&vbdev->exp_bdev, vbdev->mngt_ctx.status);
 	vbdev_ocf_mngt_continue(vbdev, 0);
 }
 
@@ -276,6 +286,10 @@ wait_for_requests(struct vbdev_ocf *vbdev)
 vbdev_ocf_mngt_fn unregister_path[] = {
 	wait_for_requests,
 	stop_vbdev,
+	detach_cache,
+	close_cache_bdev,
+	detach_core,
+	close_core_bdev,
 	unregister_finish,
 	NULL
 };
@@ -312,11 +326,13 @@ vbdev_ocf_destruct(void *opaque)
 		return 1;
 	}
 
-	if (vbdev->core.attached) {
-		remove_base(&vbdev->core);
-	}
 	if (vbdev->cache.attached) {
-		remove_base(&vbdev->cache);
+		detach_cache(vbdev);
+		close_cache_bdev(vbdev);
+	}
+	if (vbdev->core.attached) {
+		detach_core(vbdev);
+		close_core_bdev(vbdev);
 	}
 
 	return 0;
