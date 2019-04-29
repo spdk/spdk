@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a860dea_652dc60e",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-29T02:40:56Z",
+      "side": 1,
+      "message": "Not align with the following.",
+      "range": {
+        "startLine": 64,
+        "startChar": 27,
+        "endLine": 64,
+        "endChar": 30
+      },
+      "revId": "5416aa34742d04c73dcef18f2fec97154513ac49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
