@@ -66,7 +66,7 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 
 	switch (msg->request) {
 	case VHOST_USER_GET_VRING_BASE:
-		if (vsession->forced_polling && vsession->lcore != -1) {
+		if (vsession->forced_polling && vsession->started) {
 			/* Our queue is stopped for whatever reason, but we may still
 			 * need to poll it after it's initialized again.
 			 */
@@ -77,7 +77,7 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 	case VHOST_USER_SET_VRING_ADDR:
 	case VHOST_USER_SET_VRING_NUM:
 	case VHOST_USER_SET_VRING_KICK:
-		if (vsession->forced_polling && vsession->lcore != -1) {
+		if (vsession->forced_polling && vsession->started) {
 			/* Additional queues are being initialized, so we either processed
 			 * enough I/Os and are switching from SeaBIOS to the OS now, or
 			 * we were never in SeaBIOS in the first place. Either way, we
@@ -105,7 +105,7 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 		 * We will start the device again from the post-processing
 		 * message handler.
 		 */
-		if (vsession->lcore != -1) {
+		if (vsession->started) {
 			g_spdk_vhost_ops.destroy_device(vid);
 			vsession->needs_restart = true;
 		}
@@ -187,7 +187,7 @@ spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 		/* vhost-user spec tells us to start polling a queue after receiving
 		 * its SET_VRING_KICK message. Let's do it!
 		 */
-		if (vsession->forced_polling && vsession->lcore == -1) {
+		if (vsession->forced_polling && !vsession->started) {
 			g_spdk_vhost_ops.new_device(vid);
 		}
 		break;

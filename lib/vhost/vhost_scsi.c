@@ -947,7 +947,7 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
 	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
-	if (vsession->lcore == -1 || session_sdev->dev != NULL) {
+	if (!vsession->started || session_sdev->dev != NULL) {
 		/* Nothing to do. */
 		return 0;
 	}
@@ -1092,7 +1092,7 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
 	state = &svsession->scsi_dev_state[scsi_tgt_num];
 
-	if (vsession->lcore == -1 || state->dev == NULL) {
+	if (!vsession->started || state->dev == NULL) {
 		/* Nothing to do */
 		return 0;
 	}
