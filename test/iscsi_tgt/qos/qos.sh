@@ -16,17 +16,17 @@ function check_qos_works_well() {
 	fi
 
 	if [ $LIMIT_TYPE = IOPS ]; then
-		start_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].num_read_ops')
+		start_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.bdevs[0].num_read_ops')
 	else
-		start_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].bytes_read')
+		start_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.bdevs[0].bytes_read')
 	fi
 
 	$fio_py iscsi 1024 128 randread 5 1
 
 	if [ $LIMIT_TYPE = IOPS ]; then
-		end_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].num_read_ops')
+		end_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.bdevs[0].num_read_ops')
 	else
-		end_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].bytes_read')
+		end_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.bdevs[0].bytes_read')
 	fi
 
 	read_result=$(((end_io_count-start_io_count)/5))
