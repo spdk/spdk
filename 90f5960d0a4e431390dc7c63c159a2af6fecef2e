@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a637f1ec_48545260",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-04-29T03:21:20Z",
+      "side": 1,
+      "message": "Hi ben， I am confused about \"We need to make sure all I/O is quiesced on a hot remove prior to removing the namespace.\"\nI think you mean nvmf_tgt would not accept I/Os sent to the bdev when we hot remove it?",
+      "parentUuid": "3dcfce73_b1aa86fe",
+      "revId": "90f5960d0a4e431390dc7c63c159a2af6fecef2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fd21c9a6_a132e56c",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "90f5960d0a4e431390dc7c63c159a2af6fecef2e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f5c3609_ba440b9c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-04-29T03:21:20Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "fd21c9a6_a132e56c",
+      "revId": "90f5960d0a4e431390dc7c63c159a2af6fecef2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
