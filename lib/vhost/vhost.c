@@ -1273,23 +1273,6 @@ spdk_vhost_set_socket_path(const char *basename)
 	return 0;
 }
 
-static void _spdk_vhost_fini(void *arg1);
-
-static void *
-session_shutdown(void *arg)
-{
-	struct spdk_vhost_dev *vdev = NULL;
-
-	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		rte_vhost_driver_unregister(vdev->path);
-		vdev->registered = false;
-	}
-
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Exiting\n");
-	spdk_thread_send_msg(g_fini_thread, _spdk_vhost_fini, NULL);
-	return NULL;
-}
-
 void
 spdk_vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
@@ -1519,6 +1502,21 @@ _spdk_vhost_fini(void *arg1)
 	/* All devices are removed now. */
 	free(g_num_ctrlrs);
 	g_fini_cpl_cb();
+}
+
+static void *
+session_shutdown(void *arg)
+{
+	struct spdk_vhost_dev *vdev = NULL;
+
+	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
+		rte_vhost_driver_unregister(vdev->path);
+		vdev->registered = false;
+	}
+
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Exiting\n");
+	spdk_thread_send_msg(g_fini_thread, _spdk_vhost_fini, NULL);
+	return NULL;
 }
 
 void
