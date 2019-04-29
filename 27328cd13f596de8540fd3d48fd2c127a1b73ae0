@@ -16,6 +16,24 @@
       "revId": "27328cd13f596de8540fd3d48fd2c127a1b73ae0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f31d73b0_d10699a0",
+        "filename": "test/vhost/windows/windows_scsi_compliance.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-04-29T10:55:14Z",
+      "side": 1,
+      "message": "Hi Qun Wan.\nThis test was checked with Windows Server 2012 R2.\nI think that other window\u0027s versions are supported.\nWindows virtio drivers are dedicated to windows 7, 8, 8.1 and 10.\nWindows Server versions 2008, 2012, 2016 are also supported by windows virtio drivers.",
+      "parentUuid": "c4f8d5cc_3923a411",
+      "revId": "27328cd13f596de8540fd3d48fd2c127a1b73ae0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
