@@ -1470,7 +1470,7 @@ iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 }
 
 void
-spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
+spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 {
 	int				lcore;
 	struct spdk_event		*event;

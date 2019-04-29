@@ -86,7 +86,7 @@ DEFINE_STUB(spdk_iscsi_tgt_node_is_destructed, bool,
 
 DEFINE_STUB_V(spdk_iscsi_portal_grp_close_all, (void));
 
-DEFINE_STUB_V(spdk_iscsi_conn_migration, (struct spdk_iscsi_conn *conn));
+DEFINE_STUB_V(spdk_iscsi_conn_schedule, (struct spdk_iscsi_conn *conn));
 
 DEFINE_STUB_V(spdk_iscsi_conn_free_pdu,
 	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu));
