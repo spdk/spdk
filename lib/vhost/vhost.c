@@ -73,6 +73,9 @@ struct spdk_vhost_session_fn_ctx {
 
 	/** Response to be written by enqueued event. */
 	int response;
+
+	/** Custom user context */
+	void *user_ctx;
 };
 
 static int new_connection(int vid);
@@ -922,7 +925,7 @@ spdk_vhost_event_cb(void *arg1, void *arg2)
 
 	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
 		ev = spdk_event_allocate(spdk_env_get_current_core(),
-					 spdk_vhost_event_cb, arg1, arg2);
+					 spdk_vhost_event_cb, arg1, NULL);
 		spdk_event_call(ev);
 		return;
 	}
@@ -947,7 +950,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 
 	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
 		ev = spdk_event_allocate(spdk_env_get_current_core(),
-					 spdk_vhost_event_async_foreach_fn, arg1, arg2);
+					 spdk_vhost_event_async_foreach_fn, arg1, NULL);
 		spdk_event_call(ev);
 		return;
 	}
@@ -968,20 +971,20 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 		 * the session thread as many times as necessary.
 		 */
 		ev = spdk_event_allocate(vsession->lcore,
-					 spdk_vhost_event_async_foreach_fn, arg1, arg2);
+					 spdk_vhost_event_async_foreach_fn, arg1, NULL);
 		spdk_event_call(ev);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
 
-	rc = ctx->cb_fn(vdev, vsession, arg2);
+	rc = ctx->cb_fn(vdev, vsession, ctx->user_ctx);
 	if (rc < 0) {
 		goto out_unlock;
 	}
 
 out_unlock_continue:
 	vsession = spdk_vhost_session_next(vdev, ctx->vsession_id);
-	spdk_vhost_external_event_foreach_continue(vdev, vsession, ctx->cb_fn, arg2);
+	spdk_vhost_external_event_foreach_continue(vdev, vsession, ctx->cb_fn, ctx->user_ctx);
 out_unlock:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	free(ctx);
@@ -1046,9 +1049,10 @@ spdk_vhost_event_async_send_foreach_continue(struct spdk_vhost_session *vsession
 	ev_ctx->vdev = vdev;
 	ev_ctx->vsession_id = vsession->id;
 	ev_ctx->cb_fn = cb_fn;
+	ev_ctx->user_ctx = arg;
 
 	ev = spdk_event_allocate(vsession->lcore,
-				 spdk_vhost_event_async_foreach_fn, ev_ctx, arg);
+				 spdk_vhost_event_async_foreach_fn, ev_ctx, NULL);
 	assert(ev);
 	spdk_event_call(ev);
 
