@@ -2134,7 +2134,7 @@ iscsi_op_login_rsp_handle_t_bit(struct spdk_iscsi_conn *conn,
 		}
 
 		conn->full_feature = 1;
-		spdk_iscsi_conn_migration(conn);
+		spdk_iscsi_conn_schedule(conn);
 		break;
 
 	default:

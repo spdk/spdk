@@ -178,7 +178,7 @@ int spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target);
 int spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal, struct spdk_sock *sock);
 void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn);
-void spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn);
+void spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn);
 int spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn,
 			  const char *conn_match, int drop_all);
