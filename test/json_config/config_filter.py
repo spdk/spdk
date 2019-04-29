@@ -60,6 +60,7 @@ def check_empty():
     for s in data['subsystems']:
         if s['config']:
             print("Config not empty")
+            print(s['config'])
             sys.exit(1)
 
 
