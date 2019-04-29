@@ -48,6 +48,9 @@ static uint32_t *g_num_ctrlrs;
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
+static struct spdk_thread *g_fini_thread;
+static spdk_vhost_fini_cb g_fini_cpl_cb;
+
 struct spdk_vhost_session_fn_ctx {
 	/** Device pointer obtained before enqueuing the event */
 	struct spdk_vhost_dev *vdev;
@@ -1270,6 +1273,8 @@ spdk_vhost_set_socket_path(const char *basename)
 	return 0;
 }
 
+static void _spdk_vhost_fini(void *arg1);
+
 static void *
 session_shutdown(void *arg)
 {
@@ -1281,7 +1286,7 @@ session_shutdown(void *arg)
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Exiting\n");
-	spdk_event_call((struct spdk_event *)arg);
+	spdk_thread_send_msg(g_fini_thread, _spdk_vhost_fini, NULL);
 	return NULL;
 }
 
@@ -1497,9 +1502,8 @@ spdk_vhost_init(void)
 }
 
 static void
-_spdk_vhost_fini(void *arg1, void *arg2)
+_spdk_vhost_fini(void *arg1)
 {
-	spdk_vhost_fini_cb fini_cb = arg1;
 	struct spdk_vhost_dev *vdev, *tmp;
 
 	spdk_vhost_lock();
@@ -1514,7 +1518,7 @@ _spdk_vhost_fini(void *arg1, void *arg2)
 
 	/* All devices are removed now. */
 	free(g_num_ctrlrs);
-	fini_cb();
+	g_fini_cpl_cb();
 }
 
 void
@@ -1522,15 +1526,15 @@ spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 {
 	pthread_t tid;
 	int rc;
-	struct spdk_event *fini_ev;
 
-	fini_ev = spdk_event_allocate(spdk_env_get_current_core(), _spdk_vhost_fini, fini_cb, NULL);
+	g_fini_thread = spdk_get_thread();
+	g_fini_cpl_cb = fini_cb;
 
 	/* rte_vhost API for removing sockets is not asynchronous. Since it may call SPDK
 	 * ops for stopping a device or removing a connection, we need to call it from
 	 * a separate thread to avoid deadlock.
 	 */
-	rc = pthread_create(&tid, NULL, &session_shutdown, fini_ev);
+	rc = pthread_create(&tid, NULL, &session_shutdown, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", rc, spdk_strerror(rc));
 		abort();
