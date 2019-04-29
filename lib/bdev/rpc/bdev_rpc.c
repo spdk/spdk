@@ -102,6 +102,7 @@ done:
 	free(stat);
 	if (--ctx->bdev_count == 0) {
 		spdk_json_write_array_end(ctx->w);
+		spdk_json_write_object_end(w);
 		spdk_jsonrpc_end_result(ctx->request, ctx->w);
 		free(ctx);
 	}
@@ -171,11 +172,11 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->w = w;
 
-	spdk_json_write_array_begin(w);
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_uint64(w, "tick_rate", spdk_get_ticks_hz());
-	spdk_json_write_object_end(w);
+
+	spdk_json_write_named_array_begin(w, "bdevs");
 
 	if (bdev != NULL) {
 		stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
@@ -199,6 +200,7 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 
 	if (--ctx->bdev_count == 0) {
 		spdk_json_write_array_end(w);
+		spdk_json_write_object_end(w);
 		spdk_jsonrpc_end_result(request, w);
 		free(ctx);
 	}
