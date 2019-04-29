@@ -43,6 +43,13 @@
 
 #include "spdk_internal/memory.h"
 
+struct vhost_poll_group {
+	struct spdk_thread *thread;
+	TAILQ_ENTRY(vhost_poll_group) tailq;
+};
+
+static TAILQ_HEAD(, vhost_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
+
 static uint32_t *g_num_ctrlrs;
 
 /* Path to folder where character device will be created. Can be set by user. */
@@ -1433,6 +1440,58 @@ spdk_vhost_unlock(void)
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
+static void
+vhost_create_poll_group_done(void *ctx)
+{
+	spdk_vhost_init_cb init_cb = ctx;
+	int ret;
+
+	if (TAILQ_EMPTY(&g_poll_groups)) {
+		/* No threads? Iteration failed? */
+		init_cb(-ECHILD);
+		return;
+	}
+
+	ret = spdk_vhost_scsi_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost controllers\n");
+		goto out;
+	}
+
+	ret = spdk_vhost_blk_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
+		goto out;
+	}
+
+#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
+	ret = spdk_vhost_nvme_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost NVMe controllers\n");
+		goto out;
+	}
+#endif
+
+out:
+	init_cb(ret);
+}
+
+static void
+vhost_create_poll_group(void *ctx)
+{
+	struct vhost_poll_group *pg;
+
+	pg = calloc(1, sizeof(*pg));
+	if (!pg) {
+		SPDK_ERRLOG("Not enough memory to allocate poll groups\n");
+		spdk_app_stop(-ENOMEM);
+		return;
+	}
+
+	pg->thread = spdk_get_thread();
+	TAILQ_INSERT_TAIL(&g_poll_groups, pg, tailq);
+}
+
 void
 spdk_vhost_init(spdk_vhost_init_cb init_cb)
 {
@@ -1444,7 +1503,7 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		if (getcwd(dev_dirname, sizeof(dev_dirname) - 1) == NULL) {
 			SPDK_ERRLOG("getcwd failed (%d): %s\n", errno, spdk_strerror(errno));
 			ret = -1;
-			goto out;
+			goto err_out;
 		}
 
 		len = strlen(dev_dirname);
@@ -1460,34 +1519,14 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		SPDK_ERRLOG("Could not allocate array size=%u for g_num_ctrlrs\n",
 			    last_core + 1);
 		ret = -1;
-		goto out;
+		goto err_out;
 	}
 
-	ret = spdk_vhost_scsi_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost controllers\n");
-		ret = -1;
-		goto out;
-	}
-
-	ret = spdk_vhost_blk_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
-		ret = -1;
-		goto out;
-	}
-
-#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
-	ret = spdk_vhost_nvme_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost NVMe controllers\n");
-		ret = -1;
-		goto out;
-	}
-#endif
-
-	ret = 0;
-out:
+	spdk_for_each_thread(vhost_create_poll_group,
+			     init_cb,
+			     vhost_create_poll_group_done);
+	return;
+err_out:
 	init_cb(ret);
 }
 
@@ -1495,6 +1534,7 @@ static void
 _spdk_vhost_fini(void *arg1)
 {
 	struct spdk_vhost_dev *vdev, *tmp;
+	struct vhost_poll_group *pg, *tpg;
 
 	spdk_vhost_lock();
 	vdev = spdk_vhost_dev_next(NULL);
@@ -1508,6 +1548,10 @@ _spdk_vhost_fini(void *arg1)
 
 	/* All devices are removed now. */
 	free(g_num_ctrlrs);
+	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, tailq, tpg) {
+		TAILQ_REMOVE(&g_poll_groups, pg, tailq);
+		free(pg);
+	}
 	g_fini_cpl_cb();
 }
 
