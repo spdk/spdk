@@ -248,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "bb7475d7_c026ddeb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-29T07:00:05Z",
+      "side": 1,
+      "message": "A separate patch was submitted for this change. Please refer to https://review.gerrithub.io/c/spdk/spdk/+/452376",
+      "parentUuid": "c0203119_03954dda",
+      "range": {
+        "startLine": 568,
+        "startChar": 0,
+        "endLine": 582,
+        "endChar": 2
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3a75ee2_b2320dae",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 4
@@ -1404,6 +1428,30 @@
       "side": 1,
       "message": "this additional parameter poll_group is not used anywhere. why this change is necessary?",
       "parentUuid": "d0668bc0_4bbdcaff",
+      "range": {
+        "startLine": 178,
+        "startChar": 39,
+        "endLine": 178,
+        "endChar": 79
+      },
+      "revId": "5f933da70c07ae4567437e1a9d5be9d5ea508565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5e9c622_765b3586",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-04-29T07:00:05Z",
+      "side": 1,
+      "message": "Removed unused 2nd argument to this function.",
+      "parentUuid": "f6936ccc_26cafc41",
       "range": {
         "startLine": 178,
         "startChar": 39,
