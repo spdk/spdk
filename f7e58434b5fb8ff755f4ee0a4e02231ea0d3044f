@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "097f27c3_c9215497",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-29T22:14:02Z",
+      "side": 1,
+      "message": "We may be able to remove this comment too.",
+      "range": {
+        "startLine": 198,
+        "startChar": 2,
+        "endLine": 198,
+        "endChar": 64
+      },
+      "revId": "f7e58434b5fb8ff755f4ee0a4e02231ea0d3044f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
