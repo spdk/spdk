@@ -2,6 +2,12 @@
 
 ## v19.07: (Upcoming Release)
 
+### bdev
+
+The format of the data returned by the get_bdevs_iostat RPC has changed to
+make it easier to parse.  It now returns an object with a "ticks" object
+and "bdevs" array with the per-bdev statistics.
+
 ## v19.04:
 
 ### nvme
