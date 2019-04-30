@@ -42,11 +42,22 @@ strip_size. The strip_size rpc param is deprecated.
 
 ### thread
 
-Added spdk_thread_has_pollers() function to verify if there are
-any registered pollers to be run on the thread.
+Added spdk_thread_has_pollers() function to verify if there are any registered
+pollers to be run on the thread. Added spdk_thread_is_idle() function to check
+if there are any scheduled operations to be performed on the thread at given
+time.
 
-Added spdk_thread_is_idle() function to check if there are any scheduled operations
-to be performed on the thread at given time.
+spdk_thread_create() now takes an optional CPU affinity mask that is passed to
+the scheduler.
+
+spdk_thread_lib_init() now takes an optional context size. For each thread
+created, an additional region of memory of this size will be allocated. A
+pointer to this region of memory can be obtained by calling
+spdk_thread_get_ctx(). The inverse operation is also available via
+spdk_thread_get_from_ctx().
+
+spdk_thread_poll() now optionally accepts the current time, in ticks. This can
+be used to avoid some calls to spdk_get_ticks() internally.
 
 spdk_app_start() now only accepts a single context argument.
 
