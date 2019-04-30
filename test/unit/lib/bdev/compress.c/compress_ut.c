@@ -36,6 +36,7 @@
 #include "common/lib/test_env.c"
 #include "spdk_internal/mock.h"
 #include "unit/lib/json_mock.c"
+#include "spdk/reduce.h"
 
 #include <rte_compressdev.h>
 
@@ -51,6 +52,9 @@ static struct rte_mbuf *g_src_mbufs[2];
 static struct rte_mbuf *g_dst_mbufs[2];
 static struct rte_mbuf g_expected_src_mbufs[2];
 static struct rte_mbuf g_expected_dst_mbufs[2];
+struct comp_bdev_io *g_io_ctx;
+struct comp_io_channel *g_comp_ch;
+
 /* Those functions are defined as static inline in DPDK, so we can't
  * mock them straight away. We use defines to redirect them into
  * our custom functions.
@@ -191,6 +195,23 @@ rte_pktmbuf_pool_create(const char *name, unsigned n, unsigned cache_size,
 	return (struct rte_mempool *)tmp;
 }
 
+static int ut_spdk_reduce_vol_op_complete_err = 0;
+void
+spdk_reduce_vol_writev(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt,
+		       uint64_t offset, uint64_t length, spdk_reduce_vol_op_complete cb_fn,
+		       void *cb_arg)
+{
+	cb_fn(cb_arg, ut_spdk_reduce_vol_op_complete_err);
+}
+
+void
+spdk_reduce_vol_readv(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt,
+		      uint64_t offset, uint64_t length, spdk_reduce_vol_op_complete cb_fn,
+		      void *cb_arg)
+{
+	cb_fn(cb_arg, ut_spdk_reduce_vol_op_complete_err);
+}
+
 #include "bdev/compress/vbdev_compress.c"
 
 /* SPDK stubs */
@@ -214,12 +235,6 @@ DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_bdev_get_by_name, struct spdk_bdev *, (const char *bdev_name), NULL);
 DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
-DEFINE_STUB_V(spdk_reduce_vol_readv, (struct spdk_reduce_vol *vol,
-				      struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-				      spdk_reduce_vol_op_complete cb_fn, void *cb_arg));
-DEFINE_STUB_V(spdk_reduce_vol_writev, (struct spdk_reduce_vol *vol,
-				       struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-				       spdk_reduce_vol_op_complete cb_fn, void *cb_arg));
 DEFINE_STUB(spdk_bdev_io_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_io *bdev_io),
 	    0);
 DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_io_channel *ch,
@@ -249,7 +264,6 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 
 /* Mock these functions to call the callback and then return the value we require */
 int ut_spdk_bdev_readv_blocks = 0;
-bool ut_spdk_bdev_readv_blocks_mocked = false;
 int
 spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       struct iovec *iov, int iovcnt,
@@ -398,6 +412,17 @@ test_setup(void)
 	g_dst_mbufs[0] = calloc(1, sizeof(struct rte_mbuf));
 	g_dst_mbufs[1] = calloc(1, sizeof(struct rte_mbuf));
 
+	g_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct comp_bdev_io));
+	g_bdev_io->u.bdev.iovs = calloc(128, sizeof(struct iovec));
+	g_bdev_io->bdev = &g_comp_bdev.comp_bdev;
+	g_io_ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct comp_io_channel));
+	g_comp_ch = (struct comp_io_channel *)((uint8_t *)g_io_ch + sizeof(struct spdk_io_channel));
+	g_io_ctx = (struct comp_bdev_io *)g_bdev_io->driver_ctx;
+
+	g_io_ctx->comp_ch = g_comp_ch;
+	g_io_ctx->comp_bdev = &g_comp_bdev;
+	g_comp_bdev.device_qp = &g_device_qp;
+
 	return 0;
 }
 
@@ -410,6 +435,9 @@ test_cleanup(void)
 	free(g_src_mbufs[0]);
 	free(g_dst_mbufs[1]);
 	free(g_src_mbufs[1]);
+	free(g_bdev_io->u.bdev.iovs);
+	free(g_bdev_io);
+	free(g_io_ch);
 	return 0;
 }
 
@@ -498,7 +526,6 @@ test_compress_operation(void)
 	CU_ASSERT(rc == 0);
 }
 
-
 static void
 test_error_paths(void)
 {
@@ -506,18 +533,41 @@ test_error_paths(void)
 }
 
 static void
-test_simple_write(void)
+test_vbdev_compress_submit_request(void)
 {
-}
+	/* Single element block size write */
+	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	g_completion_called = false;
+	MOCK_SET(spdk_bdev_io_get_io_channel, g_io_ch);
+	vbdev_compress_submit_request(g_io_ch, g_bdev_io);
+	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_completion_called == true);
+	CU_ASSERT(g_io_ctx->orig_io == g_bdev_io);
+	CU_ASSERT(g_io_ctx->comp_bdev == &g_comp_bdev);
+	CU_ASSERT(g_io_ctx->comp_ch == g_comp_ch);
 
-static void
-test_simple_read(void)
-{
-}
+	/* same write but now fail it */
+	ut_spdk_reduce_vol_op_complete_err = 1;
+	g_completion_called = false;
+	vbdev_compress_submit_request(g_io_ch, g_bdev_io);
+	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_completion_called == true);
 
-static void
-test_large_rw(void)
-{
+	/* test a read success */
+	g_bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
+	ut_spdk_reduce_vol_op_complete_err = 0;
+	g_completion_called = false;
+	vbdev_compress_submit_request(g_io_ch, g_bdev_io);
+	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_completion_called == true);
+
+	/* test a read failure */
+	ut_spdk_reduce_vol_op_complete_err = 1;
+	g_completion_called = false;
+	vbdev_compress_submit_request(g_io_ch, g_bdev_io);
+	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_completion_called == true);
 }
 
 static void
@@ -567,12 +617,8 @@ main(int argc, char **argv)
 			test_error_paths) == NULL ||
 	    CU_add_test(suite, "test_compress_operation",
 			test_compress_operation) == NULL ||
-	    CU_add_test(suite, "test_simple_write",
-			test_simple_write) == NULL ||
-	    CU_add_test(suite, "test_simple_read",
-			test_simple_read) == NULL ||
-	    CU_add_test(suite, "test_large_rw",
-			test_large_rw) == NULL ||
+	    CU_add_test(suite, "vbdev_compress_submit_request",
+			test_vbdev_compress_submit_request) == NULL ||
 	    CU_add_test(suite, "test_passthru",
 			test_passthru) == NULL ||
 	    CU_add_test(suite, "test_initdrivers",
