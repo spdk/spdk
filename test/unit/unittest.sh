@@ -153,9 +153,7 @@ $valgrind $testdir/lib/util/dif.c/dif_ut
 
 if [ $(uname -s) = Linux ]; then
 $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
-fi
 
-if grep -q '#define SPDK_CONFIG_FTL 1' $rootdir/include/spdk/config.h; then
 $valgrind $testdir/lib/ftl/ftl_rwb.c/ftl_rwb_ut
 $valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
 $valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
