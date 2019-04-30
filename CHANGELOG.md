@@ -4,25 +4,36 @@
 
 ### nvme
 
-Added asynchronous probe support.  New APIs spdk_nvme_probe_async(),
-spdk_nvme_connect_async() and spdk_nvme_probe_poll_async() were added to
-enable this feature, spdk_nvme_probe_async() and spdk_nvme_connect_async()
-return a context associated with the specified controllers.  Users then call
+Added asynchronous probe support. New APIs spdk_nvme_probe_async(),
+spdk_nvme_connect_async() and spdk_nvme_probe_poll_async() were added to enable
+this feature. spdk_nvme_probe_async() and spdk_nvme_connect_async() return a
+context associated with the specified controllers. Users then call
 spdk_nvme_probe_poll_async() until it returns 0, indicating that the operation
-is completed with success.
+completed.
 
 A new qpair creation option, delay_pcie_doorbell, was added. This can be passed
-to spdk_nvme_alloc_io_qpair(). This makes the I/O submission functions,
-such as spdk_nvme_ns_writev(), skip ringing the submission queue doorbell.
-Instead the doorbell will be rung as necessary inside
-spdk_nvme_qpair_process_completions(). This can result in significantly fewer
-MMIO writes to the doorbell register under heavy load, greatly improving
-performance.
+to spdk_nvme_alloc_io_qpair(). This makes the I/O submission functions, such as
+spdk_nvme_ns_writev(), skip ringing the submission queue doorbell. Instead the
+doorbell will be rung as necessary inside spdk_nvme_qpair_process_completions().
+This can result in significantly fewer MMIO writes to the doorbell register
+under heavy load, greatly improving performance.
 
-New API spdk_nvme_ctrlr_get_flags() was added.
+spdk_nvme_ctrlr_get_regs_cmbsz() was added to report the size of the controller
+memory buffer, if available.
 
-NVMe hotplug poller is now able to detach devices hotremoved from the system
+spdk_nvme_ctrlr_get_flags() was added to return controller feature
+flags. Two flags are currently tracked:
+SPDK_NVME_CTRLR_SGL_SUPPORTED
+SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED
+
+The NVMe hotplug poller is now able to detach devices hot-removed from the system
 via `/sys/bus/pci/devices/<bdf>/remove` and `/sys/bus/pci/devices/<bdf>/driver/unbind`.
+
+Opal support was added for scan, take ownership, revert TPer, and dumping device
+info. The nvme_manage tool can be used to perform these operations. The public
+API functions are spdk_nvme_ctrlr_security_receive() and
+spdk_nvme_ctrlr_security_send(). This module should be considered experimental
+pending additional features and tests.
 
 ### raid
 
@@ -94,13 +105,6 @@ New `get_spdk_version` RPC method is introduced to get version info of the runni
 
 The `start_nbd_disk` RPC method now take nbd_device as an optional parameter. If nbd_device
 is specified, use that specified nbd device. If it's not specified, pick available one.
-
-### Opal
-
-Add Opal scan support for NVMe to check whether it supports SED Opal and dump
-device info. Add Opal take ownership command support, revert TPer command support.
-nvme_manage tool can be used to invoke this.
-This module should be considered experimental pending additional features and tests.
 
 ### iSCSI target
 
