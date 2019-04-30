@@ -509,7 +509,6 @@ def get_iscsi_options_json(config, section):
         ['ImmediateData', 'immediate_data', bool, True],
         ['ErrorRecoveryLevel', 'error_recovery_level', int, 0],
         ['NopInInterval', 'nop_in_interval', int, 30],
-        ['MinConnectionsPerCore', 'min_connections_per_core', int, 4],
         ['DefaultTime2Wait', 'default_time2wait', int, 2],
         ['QueueDepth', 'max_queue_depth', int, 64],
         ['', 'first_burst_length', int, 8192]
