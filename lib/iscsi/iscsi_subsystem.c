@@ -1211,7 +1211,7 @@ iscsi_poll_group_create(void *ctx)
 }
 
 static void
-iscsi_unregister_poll_group(void *ctx)
+iscsi_poll_group_destroy(void *ctx)
 {
 	struct spdk_iscsi_poll_group *pg;
 
@@ -1377,7 +1377,7 @@ void
 spdk_shutdown_iscsi_conns_done(void)
 {
 	if (g_spdk_iscsi.poll_group) {
-		spdk_for_each_thread(iscsi_unregister_poll_group, NULL, iscsi_fini_done);
+		spdk_for_each_thread(iscsi_poll_group_destroy, NULL, iscsi_fini_done);
 	} else {
 		iscsi_fini_done(NULL);
 	}
