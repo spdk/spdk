@@ -75,6 +75,9 @@ TARGET_MACHINE := $(firstword $(TARGET_TRIPLET_WORDS))
 
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
+# these prevent the compiler from optimizing out security checks, they do not need to bet for basic functionality.
+COMMON_CFLAGS += -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv
+
 ifneq ($(filter powerpc%,$(TARGET_MACHINE)),)
 COMMON_CFLAGS += -mcpu=native
 endif
