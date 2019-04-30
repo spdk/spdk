@@ -1,6 +1,6 @@
 # Changelog
 
-## v19.04: (Upcoming Release)
+## v19.04:
 
 ### nvme
 
