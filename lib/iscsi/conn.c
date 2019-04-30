@@ -204,20 +204,6 @@ iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
 }
 
-/**
- * \brief Create an iSCSI connection from the given parameters and schedule it
- *        on a reactor.
- *
- * \code
- *
- * # identify reactor where the new connections work item will be scheduled
- * reactor = spdk_iscsi_conn_allocate_reactor()
- * allocate spdk_iscsi_conn object
- * initialize spdk_iscsi_conn object
- * schedule iSCSI connection work item on reactor
- *
- * \endcode
- */
 int
 spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 			  struct spdk_sock *sock)
