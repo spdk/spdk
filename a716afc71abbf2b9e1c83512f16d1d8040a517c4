@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "117f7c61_532c4b14",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 1573,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-30T19:53:22Z",
+      "side": 1,
+      "message": "These docs look good. I would put something in the changelog as well.",
+      "revId": "a716afc71abbf2b9e1c83512f16d1d8040a517c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24e186bf_4664dd36",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-30T19:53:22Z",
+      "side": 1,
+      "message": "See my comment on the last patch about differentiating error responses. There may not be as much opportunity on this one though.",
+      "revId": "a716afc71abbf2b9e1c83512f16d1d8040a517c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
