@@ -73,24 +73,27 @@ static inline int mock_rte_pktmbuf_chain(struct rte_mbuf *head, struct rte_mbuf 
 	return 0;
 }
 
+uint16_t ut_max_nb_queue_pairs = 0;
 void __rte_experimental mock_rte_compressdev_info_get(uint8_t dev_id,
 		struct rte_compressdev_info *dev_info);
 #define rte_compressdev_info_get mock_rte_compressdev_info_get
 void __rte_experimental
 mock_rte_compressdev_info_get(uint8_t dev_id, struct rte_compressdev_info *dev_info)
 {
-	/* TODO return global struct */
+	dev_info->max_nb_queue_pairs = ut_max_nb_queue_pairs;
 }
 
+int ut_rte_compressdev_configure = 0;
 int __rte_experimental mock_rte_compressdev_configure(uint8_t dev_id,
 		struct rte_compressdev_config *config);
 #define rte_compressdev_configure mock_rte_compressdev_configure
 int __rte_experimental
 mock_rte_compressdev_configure(uint8_t dev_id, struct rte_compressdev_config *config)
 {
-	return 0;
+	return ut_rte_compressdev_configure;
 }
 
+int ut_rte_compressdev_queue_pair_setup = 0;
 int __rte_experimental mock_rte_compressdev_queue_pair_setup(uint8_t dev_id, uint16_t queue_pair_id,
 		uint32_t max_inflight_ops, int socket_id);
 #define rte_compressdev_queue_pair_setup mock_rte_compressdev_queue_pair_setup
@@ -98,17 +101,19 @@ int __rte_experimental
 mock_rte_compressdev_queue_pair_setup(uint8_t dev_id, uint16_t queue_pair_id,
 				      uint32_t max_inflight_ops, int socket_id)
 {
-	return 0;
+	return ut_rte_compressdev_queue_pair_setup;
 }
 
+int ut_rte_compressdev_start = 0;
 int __rte_experimental mock_rte_compressdev_start(uint8_t dev_id);
 #define rte_compressdev_start mock_rte_compressdev_start
 int __rte_experimental
 mock_rte_compressdev_start(uint8_t dev_id)
 {
-	return 0;
+	return ut_rte_compressdev_start;
 }
 
+int ut_rte_compressdev_private_xform_create = 0;
 int __rte_experimental mock_rte_compressdev_private_xform_create(uint8_t dev_id,
 		const struct rte_comp_xform *xform, void **private_xform);
 #define rte_compressdev_private_xform_create mock_rte_compressdev_private_xform_create
@@ -116,17 +121,19 @@ int __rte_experimental
 mock_rte_compressdev_private_xform_create(uint8_t dev_id,
 		const struct rte_comp_xform *xform, void **private_xform)
 {
-	return 0;
+	return ut_rte_compressdev_private_xform_create;
 }
 
+uint8_t ut_rte_compressdev_count = 0;
 uint8_t __rte_experimental mock_rte_compressdev_count(void);
 #define rte_compressdev_count mock_rte_compressdev_count
 uint8_t __rte_experimental
 mock_rte_compressdev_count(void)
 {
-	return 0;
+	return ut_rte_compressdev_count;
 }
 
+struct rte_mempool *ut_rte_comp_op_pool_create = NULL;
 struct rte_mempool *__rte_experimental mock_rte_comp_op_pool_create(const char *name,
 		unsigned int nb_elts, unsigned int cache_size, uint16_t user_size,
 		int socket_id);
@@ -135,7 +142,7 @@ struct rte_mempool *__rte_experimental
 mock_rte_comp_op_pool_create(const char *name, unsigned int nb_elts,
 			     unsigned int cache_size, uint16_t user_size, int socket_id)
 {
-	return NULL;
+	return ut_rte_comp_op_pool_create;
 }
 
 void mock_rte_pktmbuf_free(struct rte_mbuf *m);
@@ -225,6 +232,7 @@ struct rte_comp_xform g_comp_xform;
 struct rte_comp_xform g_decomp_xform;
 struct comp_bdev_io *g_io_ctx;
 struct comp_io_channel *g_comp_ch;
+struct rte_config *g_test_config;
 
 void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
@@ -393,6 +401,9 @@ test_setup(void)
 	g_io_ctx->comp_bdev = &g_comp_bdev;
 	g_comp_bdev.device_qp = &g_device_qp;
 
+	g_test_config = calloc(1, sizeof(struct rte_config));
+	g_test_config->lcore_count = 1;
+
 	return 0;
 }
 
@@ -404,6 +415,7 @@ test_cleanup(void)
 	free(g_bdev_io->u.bdev.iovs);
 	free(g_bdev_io);
 	free(g_io_ch);
+	free(g_test_config);
 	return 0;
 }
 
@@ -525,6 +537,100 @@ test_reset(void)
 static void
 test_initdrivers(void)
 {
+	int rc;
+	static struct spdk_mempool *orig_mbuf_mp;
+	struct comp_device_qp *dev_qp;
+	struct comp_device_qp *tmp_qp;
+
+	orig_mbuf_mp = g_mbuf_mp;
+	g_mbuf_mp = NULL;
+
+	/* test return values from rte_vdev_init() */
+	MOCK_SET(rte_eal_get_configuration, g_test_config);
+	MOCK_SET(rte_vdev_init, -EEXIST);
+	rc = vbdev_init_compress_drivers();
+	/* This is not an error condition, we already have one */
+	CU_ASSERT(rc == 0);
+
+	/* success */
+	MOCK_SET(rte_vdev_init, 0);
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == 0);
+
+	/* error */
+	MOCK_SET(rte_vdev_init, -2);
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(g_mbuf_mp == NULL);
+	CU_ASSERT(g_comp_op_mp == NULL);
+
+	/* compressdev count 0 */
+	ut_rte_compressdev_count = 0;
+	MOCK_SET(rte_vdev_init, 0);
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == 0);
+
+	/* bogus count */
+	ut_rte_compressdev_count = RTE_COMPRESS_MAX_DEVS + 1;
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == -EINVAL);
+
+	/* can't get mbuf pool */
+	ut_rte_compressdev_count = 1;
+	MOCK_SET(spdk_mempool_create, NULL);
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == -ENOMEM);
+	MOCK_CLEAR(spdk_mempool_create);
+
+	/* can't get comp op pool */
+	ut_rte_comp_op_pool_create = NULL;
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == -ENOMEM);
+
+	/* error on create_compress_dev() */
+	ut_rte_comp_op_pool_create = (struct rte_mempool *)&test_initdrivers;
+	ut_rte_compressdev_configure = -1;
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == -1);
+
+	/* error on create_compress_dev() but coverage for large num queues */
+	ut_max_nb_queue_pairs = 99;
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == -1);
+
+	/* qpair setup fails */
+	ut_rte_compressdev_configure = 0;
+	ut_max_nb_queue_pairs = 0;
+	ut_rte_compressdev_queue_pair_setup = -1;
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == -EINVAL);
+
+	/* rte_compressdev_start fails */
+	ut_rte_compressdev_queue_pair_setup = 0;
+	ut_rte_compressdev_start = -1;
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == -1);
+
+	/* rte_compressdev_private_xform_create() fails */
+	ut_rte_compressdev_start = 0;
+	ut_rte_compressdev_private_xform_create = -2;
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == -2);
+
+	/* rte_compressdev_private_xform_create()succeeds */
+	ut_rte_compressdev_start = 0;
+	ut_rte_compressdev_private_xform_create = 0;
+	rc = vbdev_init_compress_drivers();
+	CU_ASSERT(rc == 0);
+
+	TAILQ_FOREACH_SAFE(dev_qp, &g_comp_device_qp, link, tmp_qp) {
+		TAILQ_REMOVE(&g_comp_device_qp, dev_qp, link);
+		free(dev_qp->device);
+		free(dev_qp);
+	}
+
+	free(g_mbuf_mp);
+	g_mbuf_mp = orig_mbuf_mp;
 }
 
 static void
