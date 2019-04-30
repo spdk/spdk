@@ -181,6 +181,17 @@ Changed API of spdk_subsystem_config_json() to no longer be asynchronous.
 A bdev module that issues I/O to kernel block devices using the new io_uring Linux kernel
 API was added. This module requires liburing.
 
+### build
+
+Options to easily compile with profile guided optimization have been added to
+`configure`. To use profile guided optimization with SPDK, run
+`./configure --with-pgo-capture`, build SPDK, then run a workload of your
+choosing. Then, simply run `./configure --with-pgo-enable` and recompile to
+build using the generated profile data. Profile guided optimization can yield
+very large performance improvements, especially on GCC 8 and clang 7. This may
+be combined with link time optimization which has been available under the
+`--enable-lto` configure option for several releases.
+
 ## v19.01:
 
 ### ocf bdev
