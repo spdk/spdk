@@ -123,7 +123,6 @@
             "max_sessions": 128,
             "error_recovery_level": 0,
             "disable_chap": false,
-            "min_connections_per_core": 4,
             "default_time2wait": 2
           },
           "method": "set_iscsi_options"
