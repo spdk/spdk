@@ -79,6 +79,9 @@ added to get metadata and DIF settings.
 Bdevs claimed by the `examine_config` callback will be now further examined in the
 `examine_disk` callback.
 
+spdk_bdev_io_get_io_channel() was added as a convenient way to get an io_channel
+from a bdev_io.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
@@ -146,6 +149,32 @@ unoccupied target id will be used.
 
 AIO bdev module can now reap I/O completions directly from userspace, significantly improving
 the overall performance.
+
+### blobfs
+
+Synchronous IO operations no longer use spdk_io_channel, but instead use
+spdk_fs_thread_ctx. The behavior is otherwise identical.
+
+### OCF
+
+Added support for caching multiple bdevs using a single bdev as a cache.
+
+### notify
+
+Added the notify library that provides a high performance local event bus
+between libraries. Example usage was added to bdev module, which reports
+notifications for added and removed bdevs via RPC.
+
+### sock
+
+Added new API spdk_sock_readv() to the sock library for performing vectored
+reads.
+
+### event
+
+The function spdk_subsystem_init() no longer requires spdk_event as an argument.
+
+Changed API of spdk_subsystem_config_json() to no longer be asynchronous.
 
 ## v19.01:
 
