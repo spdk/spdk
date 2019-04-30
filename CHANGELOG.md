@@ -169,6 +169,12 @@ Function spdk_subsystem_init() no longer requires spdk_event as an argument.
 
 Changed API of spdk_subsystem_config_json() to no longer be asynchronous.
 
+### compression bdev/reduce library
+
+Added "reduce" block compression scheme based on using SSDs for storing compressed blocks
+of storage and presistent memory for metadata.
+Please see [compression](https://spdk.io/doc/bdev.html) for more details.
+
 ## v19.01:
 
 ### ocf bdev
