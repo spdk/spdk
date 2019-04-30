@@ -1589,17 +1589,13 @@ _spdk_blob_insert_cluster_cpl(void *cb_arg, int bserrno)
 	struct spdk_blob_copy_cluster_ctx *ctx = cb_arg;
 
 	if (bserrno) {
-		uint32_t cluster_number;
-
 		if (bserrno == -EEXIST) {
 			/* The metadata insert failed because another thread
 			 * allocated the cluster first. Free our cluster
 			 * but continue without error. */
 			bserrno = 0;
 		}
-
-		cluster_number = _spdk_bs_page_to_cluster(ctx->blob->bs, ctx->page);
-		_spdk_bs_release_cluster(ctx->blob->bs, cluster_number);
+		_spdk_bs_release_cluster(ctx->blob->bs, ctx->new_cluster);
 	}
 
 	spdk_bs_sequence_finish(ctx->seq, bserrno);
