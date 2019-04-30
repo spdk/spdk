@@ -87,72 +87,72 @@ SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
 
 	for (i = 0; i < FTL_TRACE_SOURCE_MAX; ++i) {
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "band_defrag");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_BAND_DEFRAG(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_BAND_DEFRAG(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "band: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "band_write");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_BAND_WRITE(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_BAND_WRITE(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "band: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "limits");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_LIMITS(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_LIMITS(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "limits: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "rwb_pop");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_RWB_POP(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_RWB_POP(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_read_sched");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_MD_READ_SCHEDULE(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_MD_READ_SCHEDULE(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_read_submit");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_MD_READ_SUBMISSION(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_MD_READ_SUBMISSION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_read_cmpl");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_MD_READ_COMPLETION(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_MD_READ_COMPLETION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_write_sched");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_MD_WRITE_SCHEDULE(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_MD_WRITE_SCHEDULE(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_write_submit");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_MD_WRITE_SUBMISSION(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_MD_WRITE_SUBMISSION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_write_cmpl");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_MD_WRITE_COMPLETION(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_MD_WRITE_COMPLETION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "read_sched");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_READ_SCHEDULE(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_READ_SCHEDULE(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "read_submit");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_READ_SUBMISSION(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_READ_SUBMISSION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "read_cmpl_invld");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_READ_COMPLETION_INVALID(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_READ_COMPLETION_INVALID(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "read_cmpl_cache");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_READ_COMPLETION_CACHE(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_READ_COMPLETION_CACHE(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "read_cmpl_ssd");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_READ_COMPLETION_DISK(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_READ_COMPLETION_DISK(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "write_sched");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_WRITE_SCHEDULE(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_SCHEDULE(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "rwb_fill");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_WRITE_RWB_FILL(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_RWB_FILL(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "write_submit");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_WRITE_SUBMISSION(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_SUBMISSION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "write_cmpl");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_WRITE_COMPLETION(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_COMPLETION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "erase_submit");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_ERASE_SUBMISSION(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_ERASE_SUBMISSION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "erase_cmpl");
-		spdk_trace_register_description(descbuf, "", FTL_TRACE_ERASE_COMPLETION(i),
+		spdk_trace_register_description(descbuf, FTL_TRACE_ERASE_COMPLETION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
 	}
 }
