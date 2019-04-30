@@ -1427,6 +1427,12 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_tgt_node	*target;
 	uint32_t 			i, lcore;
 
+	if (conn->sess->session_type != SESSION_TYPE_NORMAL) {
+		/* Leave all non-normal sessions on the acceptor
+		 * thread. */
+		return;
+	}
+
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
 		if (g_next_core > spdk_env_get_last_core()) {
 			g_next_core = spdk_env_get_first_core();
@@ -1447,28 +1453,26 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 		lcore = spdk_env_get_first_core();
 	}
 
-	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
-		target = conn->sess->target;
-		pthread_mutex_lock(&target->mutex);
-		target->num_active_conns++;
-		if (target->num_active_conns == 1) {
-			/**
-			 * This is the only active connection for this target node.
-			 *  Save the lcore in the target node so it can be used for
-			 *  any other connections to this target node.
-			 */
-			target->lcore = lcore;
-		} else {
-			/**
-			 * There are other active connections for this target node.
-			 *  Ignore the lcore specified by the allocator and use the
-			 *  the target node's lcore to ensure this connection runs on
-			 *  the same lcore as other connections for this target node.
-			 */
-			lcore = target->lcore;
-		}
-		pthread_mutex_unlock(&target->mutex);
+	target = conn->sess->target;
+	pthread_mutex_lock(&target->mutex);
+	target->num_active_conns++;
+	if (target->num_active_conns == 1) {
+		/**
+		 * This is the only active connection for this target node.
+		 *  Save the lcore in the target node so it can be used for
+		 *  any other connections to this target node.
+		 */
+		target->lcore = lcore;
+	} else {
+		/**
+		 * There are other active connections for this target node.
+		 *  Ignore the lcore specified by the allocator and use the
+		 *  the target node's lcore to ensure this connection runs on
+		 *  the same lcore as other connections for this target node.
+		 */
+		lcore = target->lcore;
 	}
+	pthread_mutex_unlock(&target->mutex);
 
 	iscsi_poll_group_remove_conn(conn);
 
