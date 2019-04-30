@@ -176,6 +176,11 @@ The function spdk_subsystem_init() no longer requires spdk_event as an argument.
 
 Changed API of spdk_subsystem_config_json() to no longer be asynchronous.
 
+### io_uring
+
+A bdev module that issues I/O to kernel block devices using the new io_uring Linux kernel
+API was added. This module requires liburing.
+
 ## v19.01:
 
 ### ocf bdev
