@@ -76,6 +76,9 @@ New APIs spdk_bdev_get_md_size(), spdk_bdev_is_md_interleaved(), spdk_bdev_get_d
 spdk_bdev_is_dif_head_of_md(), and spdk_bdev_is_dif_check_enabled() have been
 added to get metadata and DIF settings.
 
+Bdevs claimed by the `examine_config` callback will be now further examined in the
+`examine_disk` callback.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
@@ -111,6 +114,8 @@ Added spdk_iommu_is_enabled() to report if SPDK application is using IOMMU for D
 ### DPDK
 
 Dropped support for DPDK 17.07 and earlier, which SPDK won't even compile with right now.
+
+Updated DPDK submodule to DPDK 19.02.
 
 ### rpc
 
