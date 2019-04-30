@@ -2239,7 +2239,7 @@ blob_unmap(void)
 	spdk_blob_id blobid;
 	struct spdk_blob_opts opts;
 	uint8_t payload[4096];
-	int i;
+	uint8_t i;
 
 	dev = init_dev();
 
@@ -2285,7 +2285,7 @@ blob_unmap(void)
 	/* Confirm writes */
 	for (i = 0; i < 10; i++) {
 		payload[0] = 0;
-		spdk_blob_io_read(blob, channel, &payload, i * SPDK_BLOB_OPTS_CLUSTER_SZ / 4096, 1,
+		spdk_blob_io_read(blob, channel, &payload, i * SPDK_BLOB_OPTS_CLUSTER_SZ / 4096U, 1,
 				  blob_op_complete, NULL);
 		poll_threads();
 		CU_ASSERT(g_bserrno == 0);

@@ -123,7 +123,7 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_QUIRK_SHST_COMPLETE 0x200
 
-#define NVME_MAX_ASYNC_EVENTS	(8)
+#define NVME_MAX_ASYNC_EVENTS	(8U)
 
 #define NVME_MAX_ADMIN_TIMEOUT_IN_SECS	(30)
 
