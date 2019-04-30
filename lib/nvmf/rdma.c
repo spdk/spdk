@@ -166,13 +166,13 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 1, 1, "cmid:   ");
 	spdk_trace_register_description("RDMA_REQ_NEED_BUFFER", TRACE_RDMA_REQUEST_STATE_NEED_BUFFER,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
-	spdk_trace_register_description("RDMA_REQ_TX_PENDING_C_TO_H",
+	spdk_trace_register_description("RDMA_REQ_TX_PENDING_C2H",
 					TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
-	spdk_trace_register_description("RDMA_REQ_TX_PENDING_H_TO_C",
+	spdk_trace_register_description("RDMA_REQ_TX_PENDING_H2C",
 					TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
-	spdk_trace_register_description("RDMA_REQ_TX_H_TO_C",
+	spdk_trace_register_description("RDMA_REQ_TX_H2C",
 					TRACE_RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
 	spdk_trace_register_description("RDMA_REQ_RDY_TO_EXECUTE",
@@ -184,13 +184,13 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 	spdk_trace_register_description("RDMA_REQ_EXECUTED",
 					TRACE_RDMA_REQUEST_STATE_EXECUTED,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
-	spdk_trace_register_description("RDMA_REQ_RDY_TO_COMPLETE",
+	spdk_trace_register_description("RDMA_REQ_RDY_TO_COMPL",
 					TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
-	spdk_trace_register_description("RDMA_REQ_COMPLETING_CONTROLLER_TO_HOST",
+	spdk_trace_register_description("RDMA_REQ_COMPLETING_C2H",
 					TRACE_RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
-	spdk_trace_register_description("RDMA_REQ_COMPLETING_INCAPSULE",
+	spdk_trace_register_description("RDMA_REQ_COMPLETING",
 					TRACE_RDMA_REQUEST_STATE_COMPLETING,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
 	spdk_trace_register_description("RDMA_REQ_COMPLETED",
