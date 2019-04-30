@@ -4413,7 +4413,7 @@ blob_thin_prov_rw(void)
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
-	struct spdk_io_channel *channel;
+	struct spdk_io_channel *channel, *channel_thread1;
 	struct spdk_blob_opts opts;
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
@@ -4478,14 +4478,25 @@ blob_thin_prov_rw(void)
 	write_bytes = g_dev_write_bytes;
 	read_bytes = g_dev_read_bytes;
 
+	/* Perform write on thread 1. That will allocate cluster on thread 0 via send_msg */
+	set_thread(1);
+	channel_thread1 = spdk_bs_alloc_io_channel(bs);
+	CU_ASSERT(channel_thread1 != NULL);
+	memset(payload_write, 0xE5, sizeof(payload_write));
+	spdk_blob_io_write(blob, channel_thread1, payload_write, 4, 10, blob_op_complete, NULL);
+	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
+	/* Perform write on thread 0. That will try to allocate cluster,
+	 * but fail due to another thread issuing the cluster allocation first. */
+	set_thread(0);
 	memset(payload_write, 0xE5, sizeof(payload_write));
 	spdk_blob_io_write(blob, channel, payload_write, 4, 10, blob_op_complete, NULL);
+	CU_ASSERT(free_clusters - 2 == spdk_bs_free_cluster_count(bs));
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT(free_clusters != spdk_bs_free_cluster_count(bs));
-	/* For thin-provisioned blob we need to write 10 pages plus one page metadata and
+	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
+	/* For thin-provisioned blob we need to write 20 pages plus one page metadata and
 	 * read 0 bytes */
-	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11);
+	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 21);
 	CU_ASSERT(g_dev_read_bytes - read_bytes == 0);
 
 	spdk_blob_io_read(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
@@ -4502,6 +4513,7 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 
+	spdk_bs_free_io_channel(channel_thread1);
 	spdk_bs_free_io_channel(channel);
 	poll_threads();
 
@@ -6661,7 +6673,7 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	allocate_threads(1);
+	allocate_threads(2);
 	set_thread(0);
 
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
