@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99fbcd4c_8b651f09",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-30T22:07:23Z",
+      "side": 1,
+      "message": "Is there some documentation where I can read about why each of these are important for security?\n\n- no-strict-overflow seems like the opposite of what we want. Previously we did have strict overflow checking enabled.\n- no-delete-null-pointer-checks basically means that the compiler should not assume that 1) null is 0 and 2) should not attempt to remove redundant null checks. For some applications, like an operating system kernel or code running in an embedded environment, that\u0027s definitely possible. But in a user-space application on POSIX this option isn\u0027t doing anything except slowing us down. It may be that it\u0027s negligible, but I\u0027m interested to know where the security issue is.\n- wrapv is probably reasonable. We almost never use signed integers anyway.",
+      "revId": "8b652fba78374a6dfba6e5cf80e17b45d821b100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
