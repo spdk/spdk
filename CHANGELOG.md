@@ -192,6 +192,12 @@ very large performance improvements, especially on GCC 8 and clang 7. This may
 be combined with link time optimization which has been available under the
 `--enable-lto` configure option for several releases.
 
+### compression bdev/reduce library
+
+Added "reduce" block compression scheme based on using SSDs for storing
+compressed blocks of storage and presistent memory for metadata. Please see
+[compression](https://spdk.io/doc/bdev.html) for more details.
+
 ## v19.01:
 
 ### ocf bdev
