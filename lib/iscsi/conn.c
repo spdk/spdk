@@ -62,8 +62,6 @@
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
 		offsetof(struct spdk_iscsi_conn, portal));
 
-static uint32_t *g_num_connections;
-
 struct spdk_iscsi_conn *g_conns_array = MAP_FAILED;
 static int g_conns_array_fd = -1;
 static char g_shm_name[64];
@@ -121,7 +119,7 @@ find_iscsi_connection_by_id(int cid)
 int spdk_initialize_iscsi_conns(void)
 {
 	size_t conns_size = sizeof(struct spdk_iscsi_conn) * MAX_ISCSI_CONNECTIONS;
-	uint32_t i, last_core;
+	uint32_t i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init\n");
 
@@ -148,14 +146,6 @@ int spdk_initialize_iscsi_conns(void)
 
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
 		g_conns_array[i].id = i;
-	}
-
-	last_core = spdk_env_get_last_core();
-	g_num_connections = calloc(last_core + 1, sizeof(uint32_t));
-	if (!g_num_connections) {
-		SPDK_ERRLOG("Could not allocate array size=%u for g_num_connections\n",
-			    last_core + 1);
-		goto err;
 	}
 
 	return 0;
@@ -324,7 +314,6 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->pending_task_cnt = 0;
 
 	conn->lcore = spdk_env_get_current_core();
-	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 
 	iscsi_poll_group_add_conn(conn);
 	return 0;
@@ -582,7 +571,6 @@ spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target)
 static void
 iscsi_conns_cleanup(void)
 {
-	free(g_num_connections);
 	munmap(g_conns_array, sizeof(struct spdk_iscsi_conn) *
 	       MAX_ISCSI_CONNECTIONS);
 	g_conns_array = MAP_FAILED;
@@ -743,8 +731,6 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 	}
 
 	assert(conn->lcore == spdk_env_get_current_core());
-
-	__sync_fetch_and_sub(&g_num_connections[conn->lcore], 1);
 }
 
 void
@@ -1479,43 +1465,38 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 		pthread_mutex_unlock(&target->mutex);
 	}
 
-	__sync_fetch_and_sub(&g_num_connections[conn->lcore], 1);
 	iscsi_poll_group_remove_conn(conn);
 
-	__sync_fetch_and_add(&g_num_connections[lcore], 1);
 	conn->last_nopin = spdk_get_ticks();
 	event = spdk_event_allocate(lcore, iscsi_conn_full_feature_migrate,
 				    conn, NULL);
 	spdk_event_call(event);
 }
 
+static uint32_t g_next_core = SPDK_ENV_LCORE_ID_ANY;
+
 static uint32_t
 iscsi_conn_allocate_reactor(const struct spdk_cpuset *cpumask)
 {
-	uint32_t i, selected_core;
-	int32_t num_pollers, min_pollers;
+	uint32_t i, core;
 
-	min_pollers = INT_MAX;
-	selected_core = spdk_env_get_first_core();
+	for (i = 0; i < spdk_env_get_core_count(); i++) {
+		if (g_next_core > spdk_env_get_last_core()) {
+			g_next_core = spdk_env_get_first_core();
+		}
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		if (!spdk_cpuset_get_cpu(cpumask, i)) {
+		core = g_next_core;
+		g_next_core = spdk_env_get_next_core(g_next_core);
+
+		if (!spdk_cpuset_get_cpu(cpumask, core)) {
 			continue;
 		}
 
-		/* This core is running. Check how many pollers it already has. */
-		num_pollers = g_num_connections[i];
-
-		if (num_pollers < min_pollers) {
-			/* Track the core that has the minimum number of pollers
-			 * to be used if no cores meet our criteria
-			 */
-			selected_core = i;
-			min_pollers = num_pollers;
-		}
+		return core;
 	}
 
-	return selected_core;
+	SPDK_ERRLOG("Unable to schedule connection on allowed CPU core. Scheduling on first core instead.\n");
+	return spdk_env_get_first_core();
 }
 
 static int
