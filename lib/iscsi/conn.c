@@ -62,7 +62,6 @@
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
 		offsetof(struct spdk_iscsi_conn, portal));
 
-static int g_connections_per_lcore;
 static uint32_t *g_num_connections;
 
 struct spdk_iscsi_conn *g_conns_array = MAP_FAILED;
@@ -1490,18 +1489,6 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	spdk_event_call(event);
 }
 
-void
-spdk_iscsi_conn_set_min_per_core(int count)
-{
-	g_connections_per_lcore = count;
-}
-
-int
-spdk_iscsi_conn_get_min_per_core(void)
-{
-	return g_connections_per_lcore;
-}
-
 static uint32_t
 iscsi_conn_allocate_reactor(const struct spdk_cpuset *cpumask)
 {
@@ -1519,12 +1506,7 @@ iscsi_conn_allocate_reactor(const struct spdk_cpuset *cpumask)
 		/* This core is running. Check how many pollers it already has. */
 		num_pollers = g_num_connections[i];
 
-		if ((num_pollers > 0) && (num_pollers < g_connections_per_lcore)) {
-			/* Fewer than the maximum connections per core,
-			 * but at least 1. Use this core.
-			 */
-			return i;
-		} else if (num_pollers < min_pollers) {
+		if (num_pollers < min_pollers) {
 			/* Track the core that has the minimum number of pollers
 			 * to be used if no cores meet our criteria
 			 */

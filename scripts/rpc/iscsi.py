@@ -18,8 +18,7 @@ def set_iscsi_options(
         first_burst_length=None,
         immediate_data=None,
         error_recovery_level=None,
-        allow_duplicated_isid=None,
-        min_connections_per_core=None):
+        allow_duplicated_isid=None):
     """Set iSCSI target options.
 
     Args:
@@ -40,7 +39,6 @@ def set_iscsi_options(
         immediate_data: Negotiated parameter, ImmediateData
         error_recovery_level: Negotiated parameter, ErrorRecoveryLevel
         allow_duplicated_isid: Allow duplicated initiator session ID
-        min_connections_per_core: Allocation unit of connections per core
 
     Returns:
         True or False
@@ -81,8 +79,6 @@ def set_iscsi_options(
         params['error_recovery_level'] = error_recovery_level
     if allow_duplicated_isid:
         params['allow_duplicated_isid'] = allow_duplicated_isid
-    if min_connections_per_core:
-        params['min_connections_per_core'] = min_connections_per_core
 
     return client.call('set_iscsi_options', params)
 

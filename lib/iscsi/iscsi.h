@@ -75,7 +75,6 @@
 #define DEFAULT_TIMEOUT 60
 #define MAX_NOPININTERVAL 60
 #define DEFAULT_NOPININTERVAL 30
-#define DEFAULT_CONNECTIONS_PER_LCORE 4
 
 /*
  * SPDK iSCSI target currently only supports 64KB as the maximum data segment length
@@ -307,7 +306,7 @@ struct spdk_iscsi_opts {
 	bool ImmediateData;
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
-	uint32_t min_connections_per_core;
+	uint32_t min_connections_per_core; /* Deprecated */
 };
 
 struct spdk_iscsi_globals {
