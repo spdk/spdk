@@ -70,8 +70,6 @@ static pthread_mutex_t g_conns_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_poller *g_shutdown_timer = NULL;
 
-static uint32_t iscsi_conn_allocate_reactor(const struct spdk_cpuset *cpumask);
-
 static void iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
 static void iscsi_conn_stop(struct spdk_iscsi_conn *conn);
 static void iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group,
@@ -1420,14 +1418,35 @@ iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 	iscsi_poll_group_add_conn(conn);
 }
 
+static uint32_t g_next_core = SPDK_ENV_LCORE_ID_ANY;
+
 void
 spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 {
-	int				lcore;
 	struct spdk_event		*event;
-	struct spdk_iscsi_tgt_node *target;
+	struct spdk_iscsi_tgt_node	*target;
+	uint32_t 			i, lcore;
 
-	lcore = iscsi_conn_allocate_reactor(conn->portal->cpumask);
+	for (i = 0; i < spdk_env_get_core_count(); i++) {
+		if (g_next_core > spdk_env_get_last_core()) {
+			g_next_core = spdk_env_get_first_core();
+		}
+
+		lcore = g_next_core;
+		g_next_core = spdk_env_get_next_core(g_next_core);
+
+		if (!spdk_cpuset_get_cpu(conn->portal->cpumask, lcore)) {
+			continue;
+		}
+
+		break;
+	}
+
+	if (lcore >= spdk_env_get_core_count()) {
+		SPDK_ERRLOG("Unable to schedule connection on allowed CPU core. Scheduling on first core instead.\n");
+		lcore = spdk_env_get_first_core();
+	}
+
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		target = conn->sess->target;
 		pthread_mutex_lock(&target->mutex);
@@ -1457,32 +1476,6 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	event = spdk_event_allocate(lcore, iscsi_conn_full_feature_migrate,
 				    conn, NULL);
 	spdk_event_call(event);
-}
-
-static uint32_t g_next_core = SPDK_ENV_LCORE_ID_ANY;
-
-static uint32_t
-iscsi_conn_allocate_reactor(const struct spdk_cpuset *cpumask)
-{
-	uint32_t i, core;
-
-	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		if (g_next_core > spdk_env_get_last_core()) {
-			g_next_core = spdk_env_get_first_core();
-		}
-
-		core = g_next_core;
-		g_next_core = spdk_env_get_next_core(g_next_core);
-
-		if (!spdk_cpuset_get_cpu(cpumask, core)) {
-			continue;
-		}
-
-		return core;
-	}
-
-	SPDK_ERRLOG("Unable to schedule connection on allowed CPU core. Scheduling on first core instead.\n");
-	return spdk_env_get_first_core();
 }
 
 static int
