@@ -54,6 +54,7 @@ SYS_LIBS += -libverbs -lrdmacm
 endif
 
 ifeq ($(OS),Linux)
+BLOCKDEV_MODULES_LIST += ftl
 BLOCKDEV_MODULES_LIST += bdev_aio
 SYS_LIBS += -laio
 ifeq ($(CONFIG_VIRTIO),y)
@@ -83,10 +84,6 @@ endif
 ifeq ($(CONFIG_PMDK),y)
 BLOCKDEV_MODULES_LIST += bdev_pmem
 SYS_LIBS += -lpmemblk
-endif
-
-ifeq ($(CONFIG_FTL),y)
-BLOCKDEV_MODULES_LIST += ftl
 endif
 
 SOCK_MODULES_LIST = sock_posix
