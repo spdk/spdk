@@ -78,7 +78,6 @@ struct spdk_trace_object {
 
 struct spdk_trace_tpoint {
 	char		name[44];
-	char		short_name[4];
 	uint16_t	tpoint_id;
 	uint8_t		owner_type;
 	uint8_t		object_type;
@@ -326,7 +325,6 @@ void spdk_trace_register_object(uint8_t type, char id_prefix);
  * Register the description for the tpoint.
  *
  * \param name Name for the tpoint.
- * \param short_name Short name for the tpoint.
  * \param tpoint_id Id for the tpoint.
  * \param owner_type Owner type for the tpoint.
  * \param object_type Object type for the tpoint.
@@ -334,8 +332,7 @@ void spdk_trace_register_object(uint8_t type, char id_prefix);
  * \param arg1_is_ptr This argument indicates whether argument1 is a pointer.
  * \param arg1_name Name of argument.
  */
-void spdk_trace_register_description(const char *name, const char *short_name,
-				     uint16_t tpoint_id, uint8_t owner_type,
+void spdk_trace_register_description(const char *name, uint16_t tpoint_id, uint8_t owner_type,
 				     uint8_t object_type, uint8_t new_object,
 				     uint8_t arg1_is_ptr, const char *arg1_name);
 
