@@ -133,6 +133,30 @@ unoccupied target id will be used.
 AIO bdev module can now reap I/O completions directly from userspace, significantly improving
 the overall performance.
 
+### OCF
+
+multiple bdevs backed by a single cache bdev
+
+### notify
+
+new library
+
+### nvme
+
+sq batching
+
+### i/oat
+
+new APIs for sq&cq batching
+
+### build
+
+PGO
+
+### io_uring
+
+new experimental bdev module
+
 ## v19.01:
 
 ### ocf bdev
