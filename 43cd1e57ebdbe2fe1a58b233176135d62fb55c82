@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de1bc046_4bf7f351",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-30T03:15:00Z",
+      "side": 1,
+      "message": "If you change the file unders include/spdk, you need to update the CHANGELOG.md file for the API change.",
+      "range": {
+        "startLine": 557,
+        "startChar": 1,
+        "endLine": 560,
+        "endChar": 35
+      },
+      "revId": "43cd1e57ebdbe2fe1a58b233176135d62fb55c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
