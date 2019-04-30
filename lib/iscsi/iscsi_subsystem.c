@@ -1193,7 +1193,7 @@ iscsi_poll_group_handle_nop(void *ctx)
 }
 
 static void
-iscsi_create_poll_group(void *ctx)
+iscsi_poll_group_create(void *ctx)
 {
 	struct spdk_iscsi_poll_group *pg;
 
@@ -1238,7 +1238,7 @@ initialize_iscsi_poll_group(spdk_msg_fn cpl)
 	}
 
 	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(iscsi_create_poll_group, NULL, cpl);
+	spdk_for_each_thread(iscsi_poll_group_create, NULL, cpl);
 }
 
 static void
