@@ -55,7 +55,7 @@ struct spdk_trace_histories *g_trace_histories;
 DEFINE_STUB_V(spdk_trace_add_register_fn, (struct spdk_trace_register_fn *reg_fn));
 DEFINE_STUB_V(spdk_trace_register_owner, (uint8_t type, char id_prefix));
 DEFINE_STUB_V(spdk_trace_register_object, (uint8_t type, char id_prefix));
-DEFINE_STUB_V(spdk_trace_register_description, (const char *name, const char *short_name,
+DEFINE_STUB_V(spdk_trace_register_description, (const char *name,
 		uint16_t tpoint_id, uint8_t owner_type,
 		uint8_t object_type, uint8_t new_object,
 		uint8_t arg1_type, const char *arg1_name));

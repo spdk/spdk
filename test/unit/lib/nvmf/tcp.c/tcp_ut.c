@@ -180,7 +180,7 @@ spdk_trace_register_object(uint8_t type, char id_prefix)
 }
 
 void
-spdk_trace_register_description(const char *name, const char *short_name,
+spdk_trace_register_description(const char *name,
 				uint16_t tpoint_id, uint8_t owner_type,
 				uint8_t object_type, uint8_t new_object,
 				uint8_t arg1_type, const char *arg1_name)
