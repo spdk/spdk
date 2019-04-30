@@ -2,10 +2,6 @@
 
 ## v19.04: (Upcoming Release)
 
-### thread
-
-spdk_app_start() now only accepts a single context argument.
-
 ### nvme
 
 Added asynchronous probe support.  New APIs spdk_nvme_probe_async(),
@@ -40,6 +36,8 @@ any registered pollers to be run on the thread.
 
 Added spdk_thread_is_idle() function to check if there are any scheduled operations
 to be performed on the thread at given time.
+
+spdk_app_start() now only accepts a single context argument.
 
 ### bdev
 
