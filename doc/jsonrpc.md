@@ -2379,7 +2379,6 @@ first_burst_length          | Optional | number  | Session specific parameter, F
 immediate_data              | Optional | boolean | Session specific parameter, ImmediateData (default: `true`)
 error_recovery_level        | Optional | number  | Session specific parameter, ErrorRecoveryLevel (default: 0)
 allow_duplicated_isid       | Optional | boolean | Allow duplicated initiator session ID (default: `false`)
-min_connections_per_core    | Optional | number  | Allocation unit of connections per core (default: 4)
 
 To load CHAP shared secret file, its path is required to specify explicitly in the parameter `auth_file`.
 
@@ -2462,7 +2461,6 @@ Example response:
     "max_sessions": 128,
     "error_recovery_level": 0,
     "auth_file": "/usr/local/etc/spdk/auth.conf",
-    "min_connections_per_core": 4,
     "disable_chap": true,
     "default_time2wait": 2,
     "require_chap": false
