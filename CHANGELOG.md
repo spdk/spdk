@@ -57,6 +57,9 @@ added to get metadata and DIF settings.
 Bdevs claimed by the `examine_config` callback will be now further examined in the
 `examine_disk` callback.
 
+New API spdk_bdev_io_get_io_channel() to get io_channel coniveniently from bdev_io
+was added.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
@@ -83,6 +86,11 @@ that device has a pending external hotremove request.
 
 Added spdk_realloc(). For env_dpdk it's a copy of spdk_dma_realloc() matching the new
 spdk_malloc() naming convention.
+
+Added spdk_iommu_is_enabled() to report if SPDK application is using IOMMU for DMA.
+
+Added spdk_env_fini() that releases any resources of the environment library that
+were alllocated during spdk_env_init().
 
 ### DPDK
 
@@ -132,6 +140,34 @@ unoccupied target id will be used.
 
 AIO bdev module can now reap I/O completions directly from userspace, significantly improving
 the overall performance.
+
+### blobfs
+
+Synchronous IO operations no longer use spdk_io_channel, but instead spdk_fs_thread_ctx has
+to be used instead.
+
+### OCF
+
+Added support for caching multiple bdevs using single bdev as a cache.
+
+### notify
+
+Added notify library that provides ability to exchange notifications between libraries.
+Example usage was added to bdev module, notifying about added/removed bdevs via RPC.
+
+### ftl
+
+Added means to configure libftl to use (optionally) another bdev as persistent write buffer cache.
+
+### sock
+
+Added new API spdk_sock_readv() to the sock library.
+
+### event
+
+Function spdk_subsystem_init() no longer requires spdk_event as an argument.
+
+Changed API of spdk_subsystem_config_json() to no longer be asynchronous.
 
 ## v19.01:
 
