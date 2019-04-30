@@ -77,7 +77,7 @@ struct spdk_trace_object {
 #define SPDK_TPOINT_ID(group, tpoint)	((group * 64) + tpoint)
 
 struct spdk_trace_tpoint {
-	char		name[44];
+	char		name[24];
 	uint16_t	tpoint_id;
 	uint8_t		owner_type;
 	uint8_t		object_type;
