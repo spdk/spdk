@@ -107,6 +107,19 @@ This module should be considered experimental pending additional features and te
 DIF strip and insert is now supported. DIF settings are not exposed to the iSCSI initiator.
 DIF is attached into data for write I/O and stripped from data for read I/O.
 
+### vhost
+
+Added experimental support for running with the external, upstream rte_vhost library.
+This can be enabled by configuring SPDK with an `--without-internal-vhost-lib` flag.
+The minimum supported rte_vhost version (DPDK version) is 19.05-rc1.
+
+As a result of fuzz testing, a lot of data races in vhost-scsi LUN hotplug path were identified and
+fixed. Those data races could have potentially resulted in SPDK crashes, RPC hangs, or memory leaks
+if Vhost-SCSI LUN hotplug RPCs were executed while connected VMs were in the middle of restarting.
+
+The SCSI target id in `add_vhost_scsi_lun` RPC is now optional. If `-1` is passed, the first
+unoccupied target id will be used.
+
 ## v19.01:
 
 ### ocf bdev
