@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86891c23_e1ecf84f",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1855,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-30T06:54:04Z",
+      "side": 1,
+      "message": "maybe EALREADY is better?",
+      "range": {
+        "startLine": 1855,
+        "startChar": 18,
+        "endLine": 1855,
+        "endChar": 23
+      },
+      "revId": "f44d959d065f1fdf7358b137b8600a020061b0b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
