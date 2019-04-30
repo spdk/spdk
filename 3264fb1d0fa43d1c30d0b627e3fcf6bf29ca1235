@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4efe8aa_21525ee0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 2259,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-30T19:35:08Z",
+      "side": 1,
+      "message": "Newline here for consistency",
+      "revId": "3264fb1d0fa43d1c30d0b627e3fcf6bf29ca1235",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1fcd340_30347bbc",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2841,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-30T19:35:08Z",
+      "side": 1,
+      "message": "really small thing. This function might fit better towards the top of the file where the other qpair related functions are.",
+      "revId": "3264fb1d0fa43d1c30d0b627e3fcf6bf29ca1235",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
