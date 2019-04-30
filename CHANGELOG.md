@@ -120,6 +120,11 @@ if Vhost-SCSI LUN hotplug RPCs were executed while connected VMs were in the mid
 The SCSI target id in `add_vhost_scsi_lun` RPC is now optional. If `-1` is passed, the first
 unoccupied target id will be used.
 
+### AIO
+
+AIO bdev module can now reap I/O completions directly from userspace, significantly improving
+the overall performance.
+
 ## v19.01:
 
 ### ocf bdev
