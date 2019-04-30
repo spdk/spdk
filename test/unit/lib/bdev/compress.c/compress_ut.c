@@ -469,12 +469,6 @@ test_compress_operation(void)
 }
 
 static void
-test_error_paths(void)
-{
-
-}
-
-static void
 test_vbdev_compress_submit_request(void)
 {
 	/* Single element block size write */
@@ -555,9 +549,7 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	if (CU_add_test(suite, "test_error_paths",
-			test_error_paths) == NULL ||
-	    CU_add_test(suite, "test_compress_operation",
+	if (CU_add_test(suite, "test_compress_operation",
 			test_compress_operation) == NULL ||
 	    CU_add_test(suite, "vbdev_compress_submit_request",
 			test_vbdev_compress_submit_request) == NULL ||
