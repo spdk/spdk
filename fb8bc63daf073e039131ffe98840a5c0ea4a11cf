@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b937a5d_e7349b27",
+        "filename": "scripts/rpc/radamsa.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-30T07:40:24Z",
+      "side": 1,
+      "message": "unnecessary empty line.",
+      "revId": "fb8bc63daf073e039131ffe98840a5c0ea4a11cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
