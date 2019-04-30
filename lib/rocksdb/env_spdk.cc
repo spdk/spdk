@@ -59,8 +59,7 @@ std::string g_bdev_name;
 volatile bool g_spdk_ready = false;
 volatile bool g_spdk_start_failure = false;
 
-void SpdkInitializeThread(void);
-void SpdkFinalizeThread(void);
+static void SpdkInitializeThread(void);
 
 class SpdkThreadCtx
 {
@@ -74,7 +73,10 @@ public:
 
 	~SpdkThreadCtx(void)
 	{
-		SpdkFinalizeThread();
+		if (channel) {
+			spdk_fs_free_thread_ctx(channel);
+			channel = NULL;
+		}
 	}
 
 private:
@@ -598,22 +600,20 @@ public:
 	}
 };
 
-void SpdkInitializeThread(void)
+/* The thread local constructor doesn't work for the main thread, since
+ * the filesystem hasn't been loaded yet.  So we break out this
+ * SpdkInitializeThread function, so that the main thread can explicitly
+ * call it after the filesystem has been loaded.
+ */
+static void SpdkInitializeThread(void)
 {
 	struct spdk_thread *thread;
 
-	if (g_fs != NULL && g_sync_args.channel == NULL) {
+	assert(g_sync_args.channel == NULL);
+	if (g_fs != NULL) {
 		thread = spdk_thread_create("spdk_rocksdb", NULL);
 		spdk_set_thread(thread);
 		g_sync_args.channel = spdk_fs_alloc_thread_ctx(g_fs);
-	}
-}
-
-void SpdkFinalizeThread(void)
-{
-	if (g_sync_args.channel) {
-		spdk_fs_free_thread_ctx(g_sync_args.channel);
-		g_sync_args.channel = NULL;
 	}
 }
 
