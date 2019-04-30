@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3a4f76e_d9266684",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-30T01:02:48Z",
+      "side": 1,
+      "message": "Sorry, I was wrong, and your original spdk_nvmf_fc_init_hwqp is fine.",
+      "range": {
+        "startLine": 288,
+        "startChar": 0,
+        "endLine": 288,
+        "endChar": 27
+      },
+      "revId": "62336d9948b1627560e99e23dec431be4cbfc99a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
