@@ -246,6 +246,10 @@ spdk_trace_register_description(const char *name, uint16_t tpoint_id, uint8_t ow
 	assert(tpoint_id != 0);
 	assert(tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);
 
+	if (strnlen(name, sizeof(tpoint->name)) == sizeof(tpoint->name)) {
+		SPDK_ERRLOG("name (%s) too long\n", name);
+	}
+
 	tpoint = &g_trace_flags->tpoint[tpoint_id];
 	assert(tpoint->tpoint_id == 0);
 
