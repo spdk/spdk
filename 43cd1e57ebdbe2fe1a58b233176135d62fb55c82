@@ -45,6 +45,29 @@
       "revId": "43cd1e57ebdbe2fe1a58b233176135d62fb55c82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d727d61_172b0d63",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-30T07:23:57Z",
+      "side": 1,
+      "message": "If you use the thread messaging passing, then this should not be set to NULL here? It may need to set in spdk_nvmf_ns_destroy_channel only if there is no active I/O.",
+      "range": {
+        "startLine": 941,
+        "startChar": 3,
+        "endLine": 941,
+        "endChar": 37
+      },
+      "revId": "43cd1e57ebdbe2fe1a58b233176135d62fb55c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
