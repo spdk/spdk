@@ -46,6 +46,7 @@ fi
 touch $testdir/bdevperf.conf
 echo "[Nvme]" > $testdir/bdevperf.conf
 
+timing_enter create_subsystems
 # Create subsystems
 for i in `seq 1 $num_subsystems`
 do
@@ -58,9 +59,11 @@ do
 
 	echo "  TransportID \"trtype:RDMA adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT hostaddr:$NVMF_FIRST_TARGET_IP\" Nvme$i" >> $testdir/bdevperf.conf
 done
+timing_exit create_subsystems
 
 # Test 1: Kill the initiator unexpectedly with no I/O outstanding
 
+timing_enter test1
 # Run bdev_svc, which connects but does not issue I/O
 $rootdir/test/app/bdev_svc/bdev_svc -i 1 -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf &
 perfpid=$!
@@ -77,9 +80,11 @@ kill -0 $pid
 
 # Connect with bdevperf and confirm it works
 $rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 1
+timing_exit test1
 
 # Test 2: Kill initiator unexpectedly with I/O outstanding
 
+timing_enter test2
 # Run bdevperf
 $rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
 perfpid=$!
@@ -95,9 +100,11 @@ killprocess $perfpid
 # Verify the target stays up
 sleep 1
 kill -0 $pid
+timing_exit test2
 
 # Test 3: Kill the target unexpectedly with I/O outstanding
 
+timing_enter test3
 # Run bdevperf
 $rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
 perfpid=$!
@@ -118,11 +125,16 @@ sleep 1
 # TODO: Right now the NVMe-oF initiator will not correctly detect broken connections
 # and so it will never shut down. Just kill it.
 kill -9 $perfpid
+timing_exit test3
 
 rm -f ./local-job0-0-verify.state
 rm -rf $testdir/bdevperf.conf
 trap - SIGINT SIGTERM EXIT
 
+timing_enter cleanup
 nvmfcleanup
+timing_exit cleanup
+timing_enter testfini
 nvmftestfini $1
+timing_exit testfini
 timing_exit shutdown
