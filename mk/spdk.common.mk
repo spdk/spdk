@@ -75,6 +75,10 @@ TARGET_MACHINE := $(firstword $(TARGET_TRIPLET_WORDS))
 
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
+#ifneq ($(OS),FreeBSD)
+COMMON_CFLAGS += -fno-delete-null-pointer-checks -Wstrict-overflow=5
+#endif
+
 ifneq ($(filter powerpc%,$(TARGET_MACHINE)),)
 COMMON_CFLAGS += -mcpu=native
 endif
