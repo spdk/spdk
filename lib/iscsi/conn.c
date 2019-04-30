@@ -177,59 +177,39 @@ err:
 }
 
 static void
-iscsi_poll_group_add_conn_sock(struct spdk_iscsi_conn *conn)
+iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_poll_group *poll_group;
 	int rc;
 
 	assert(conn->lcore == spdk_env_get_current_core());
-
 	poll_group = &g_spdk_iscsi.poll_group[conn->lcore];
 
 	rc = spdk_sock_group_add_sock(poll_group->sock_group, conn->sock, iscsi_conn_sock_cb, conn);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to add sock=%p of conn=%p\n", conn->sock, conn);
+		return;
 	}
-}
-
-static void
-iscsi_poll_group_remove_conn_sock(struct spdk_iscsi_conn *conn)
-{
-	struct spdk_iscsi_poll_group *poll_group;
-	int rc;
-
-	assert(conn->lcore == spdk_env_get_current_core());
-
-	poll_group = &g_spdk_iscsi.poll_group[conn->lcore];
-
-	rc = spdk_sock_group_remove_sock(poll_group->sock_group, conn->sock);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to remove sock=%p of conn=%p\n", conn->sock, conn);
-	}
-}
-
-static void
-iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
-{
-	struct spdk_iscsi_poll_group *poll_group;
-
-	assert(conn->lcore == spdk_env_get_current_core());
-
-	poll_group = &g_spdk_iscsi.poll_group[conn->lcore];
 
 	conn->is_stopped = false;
 	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
-	iscsi_poll_group_add_conn_sock(conn);
 }
 
 static void
 iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_poll_group *poll_group;
+	int rc;
 
 	assert(conn->lcore == spdk_env_get_current_core());
-
 	poll_group = &g_spdk_iscsi.poll_group[conn->lcore];
+
+	rc = spdk_sock_group_remove_sock(poll_group->sock_group, conn->sock);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to remove sock=%p of conn=%p\n", conn->sock, conn);
+	}
+
+	spdk_poller_unregister(&conn->flush_poller);
 
 	conn->is_stopped = true;
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
@@ -527,10 +507,9 @@ _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	int rc;
 
 	spdk_clear_all_transfer_task(conn, NULL, NULL);
-	iscsi_poll_group_remove_conn_sock(conn);
+	iscsi_poll_group_remove_conn(conn);
 	spdk_sock_close(&conn->sock);
 	spdk_poller_unregister(&conn->logout_timer);
-	spdk_poller_unregister(&conn->flush_poller);
 
 	rc = iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
@@ -765,7 +744,9 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 	assert(conn->lcore == spdk_env_get_current_core());
 
 	__sync_fetch_and_sub(&g_num_connections[conn->lcore], 1);
-	iscsi_poll_group_remove_conn(conn);
+	if (conn->sock) {
+		iscsi_poll_group_remove_conn(conn);
+	}
 }
 
 void
@@ -1500,8 +1481,6 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 		pthread_mutex_unlock(&target->mutex);
 	}
 
-	iscsi_poll_group_remove_conn_sock(conn);
-	spdk_poller_unregister(&conn->flush_poller);
 	iscsi_conn_stop(conn);
 
 	__sync_fetch_and_add(&g_num_connections[lcore], 1);
