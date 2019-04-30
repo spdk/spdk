@@ -181,16 +181,10 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 		print_object_id(d->object_type, stats->index[e->object_id]);
 	} else if (d->object_type != OBJECT_NONE) {
 		if (stats->start.find(e->object_id) != stats->start.end()) {
-			struct spdk_trace_tpoint *start_description;
-
 			us = get_us_from_tsc(e->tsc - stats->start[e->object_id],
 					     tsc_rate);
 			print_object_id(d->object_type, stats->index[e->object_id]);
 			print_float("time:", us);
-			start_description = &g_histories->flags.tpoint[stats->tpoint_id[e->object_id]];
-			if (start_description->short_name[0] != 0) {
-				printf(" (%.4s)", start_description->short_name);
-			}
 		} else {
 			printf("id:    N/A");
 		}
