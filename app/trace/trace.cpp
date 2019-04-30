@@ -41,6 +41,7 @@ extern "C" {
 }
 
 static struct spdk_trace_histories *g_histories;
+static bool g_print_tsc = false;
 
 static void usage(void);
 
@@ -166,7 +167,10 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 
 	us = get_us_from_tsc(e->tsc - tsc_offset, tsc_rate);
 
-	printf("%2d: %10.3f (%9ju) ", lcore, us, e->tsc - tsc_offset);
+	printf("%2d: %10.3f ", lcore, us);
+	if (g_print_tsc) {
+		printf("(%9ju) ", e->tsc - tsc_offset);
+	}
 	if (g_histories->flags.owner[d->owner_type].id_prefix) {
 		printf("%c%02d ", g_histories->flags.owner[d->owner_type].id_prefix, e->poller_id);
 	} else {
@@ -265,6 +269,7 @@ static void usage(void)
 	fprintf(stderr, "   %s <option> <lcore#>\n", g_exe_name);
 	fprintf(stderr, "        option = '-q' to disable verbose mode\n");
 	fprintf(stderr, "                 '-c' to display single lcore history\n");
+	fprintf(stderr, "                 '-t' to display TSC offset for each event\n");
 	fprintf(stderr, "                 '-s' to specify spdk_trace shm name for a\n");
 	fprintf(stderr, "                      currently running process\n");
 	fprintf(stderr, "                 '-i' to specify the shared memory ID\n");
@@ -291,7 +296,7 @@ int main(int argc, char **argv)
 	struct stat		_stat;
 
 	g_exe_name = argv[0];
-	while ((op = getopt(argc, argv, "c:f:i:p:qs:")) != -1) {
+	while ((op = getopt(argc, argv, "c:f:i:p:qs:t")) != -1) {
 		switch (op) {
 		case 'c':
 			lcore = atoi(optarg);
@@ -316,6 +321,9 @@ int main(int argc, char **argv)
 			break;
 		case 'f':
 			file_name = optarg;
+			break;
+		case 't':
+			g_print_tsc = true;
 			break;
 		default:
 			usage();
