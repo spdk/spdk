@@ -151,19 +151,19 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 	spdk_trace_register_description("TCP_REQ_RDY_TO_COMPLETE",
 					TRACE_TCP_REQUEST_STATE_READY_TO_COMPLETE,
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0, 1, "");
-	spdk_trace_register_description("TCP_REQ_COMPLETING_INCAPSULE",
+	spdk_trace_register_description("TCP_REQ_TRANSFER_C2H",
 					TRACE_TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST,
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0, 1, "");
 	spdk_trace_register_description("TCP_REQ_COMPLETED",
 					TRACE_TCP_REQUEST_STATE_COMPLETED,
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0, 1, "");
-	spdk_trace_register_description("TCP_FLUSH_WRITEBUF_START",
+	spdk_trace_register_description("TCP_WRITE_START",
 					TRACE_TCP_FLUSH_WRITEBUF_START,
 					OWNER_NONE, OBJECT_NONE, 0, 0, "");
-	spdk_trace_register_description("TCP_FLUSH_WRITEBUF_DONE",
+	spdk_trace_register_description("TCP_WRITE_DONE",
 					TRACE_TCP_FLUSH_WRITEBUF_DONE,
 					OWNER_NONE, OBJECT_NONE, 0, 0, "");
-	spdk_trace_register_description("TCP_READ_FROM_SOCKET_DONE",
+	spdk_trace_register_description("TCP_READ_DONE",
 					TRACE_TCP_READ_FROM_SOCKET_DONE,
 					OWNER_NONE, OBJECT_NONE, 0, 0, "");
 }
