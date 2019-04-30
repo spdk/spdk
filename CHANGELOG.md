@@ -54,6 +54,9 @@ New APIs spdk_bdev_get_md_size(), spdk_bdev_is_md_interleaved(), spdk_bdev_get_d
 spdk_bdev_is_dif_head_of_md(), and spdk_bdev_is_dif_check_enabled() have been
 added to get metadata and DIF settings.
 
+Bdevs claimed by the `examine_config` callback will be now further examined in the
+`examine_disk` callback.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
@@ -78,9 +81,14 @@ For retrieving physical addresses, spdk_vtophys() should be used instead.
 spdk_pci_device_is_removed() has been added to let the upper-layer SPDK drivers know
 that device has a pending external hotremove request.
 
+Added spdk_realloc(). For env_dpdk it's a copy of spdk_dma_realloc() matching the new
+spdk_malloc() naming convention.
+
 ### DPDK
 
 Dropped support for DPDK 17.07 and earlier, which SPDK won't even compile with right now.
+
+Updated DPDK submodule to DPDK 19.02.
 
 ### env
 
