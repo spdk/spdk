@@ -16,6 +16,24 @@
       "revId": "0b14486a9dc59c11ea555e4ae124ebe219c30bd9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2de3030b_732a1126",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-01T17:36:35Z",
+      "side": 1,
+      "message": "this fixes case where user selects a master core that\u0027s different than the first core in the app core mask",
+      "parentUuid": "ca1e116c_3392e305",
+      "revId": "0b14486a9dc59c11ea555e4ae124ebe219c30bd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
