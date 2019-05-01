@@ -16,6 +16,24 @@
       "revId": "eca69ea3f330b196a23977f885daf4819f62e64d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25a3d270_edba0b75",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1487,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-01T19:05:16Z",
+      "side": 1,
+      "message": "This is the wrap around condition, so it needs to stay in the loop. I\u0027m iterating over each core once, but I\u0027m not starting at the first core every time.",
+      "parentUuid": "7f67a87e_3c443308",
+      "revId": "eca69ea3f330b196a23977f885daf4819f62e64d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
