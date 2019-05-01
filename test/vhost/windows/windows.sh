@@ -45,29 +45,6 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
-# For some reason there is a problem between using SSH key authentication
-# and Windows UAC. Some of the powershell commands fail due to lack of
-# permissons, despite script running in elevated mode.
-# There are some clues about this setup that suggest this might not work properly:
-# https://superuser.com/questions/181581/how-can-i-run-something-as-administrator-via-cygwins-ssh
-# https://cygwin.com/ml/cygwin/2004-09/msg00087.html
-# But they apply to rather old Windows distributions.
-# Potentially using Windows Server 2016 and newer may solve the issue
-# due to OpenSSH being available directly from Windows Store.
-function vm_sshpass()
-{
-	vm_num_is_valid $1 || return 1
-
-	local ssh_cmd="sshpass -p $2 ssh \
-		-o UserKnownHostsFile=/dev/null \
-		-o StrictHostKeyChecking=no \
-		-o User=root \
-		-p $(vm_ssh_socket $1) $VM_SSH_OPTIONS 127.0.0.1"
-
-	shift 2
-	$ssh_cmd "$@"
-}
-
 if [[ -z "$ssh_pass" ]]; then
 	error "Please specify --vm-ssh-pass parameter"
 fi
