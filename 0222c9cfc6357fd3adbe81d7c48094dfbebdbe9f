@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52b253e8_fb0b5a14",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1510,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-01T23:03:21Z",
+      "side": 0,
+      "message": "I can\u0027t find any call of free(g_num_ctrlrs) after this patch.",
+      "range": {
+        "startLine": 1510,
+        "startChar": 1,
+        "endLine": 1510,
+        "endChar": 20
+      },
+      "revId": "0222c9cfc6357fd3adbe81d7c48094dfbebdbe9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
