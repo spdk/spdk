@@ -61,6 +61,7 @@ static int g_aer_done = 0;
 static int g_temperature_done = 0;
 static int g_failed = 0;
 static struct spdk_nvme_transport_id g_trid;
+static char *g_touch_file;
 
 /* Enable AER temperature test */
 static int g_enable_temp_test = 0;
@@ -284,6 +285,7 @@ usage(const char *program_name)
 	printf("options:\n");
 	printf(" -T         enable temperature tests\n");
 	printf(" -n         expected Namespace attribute notice ID\n");
+	printf(" -t <file>  touch specified file when ready to receive AER\n");
 	printf(" -r trid    remote NVMe over Fabrics target address\n");
 	printf("    Format: 'key:value [key:value] ...'\n");
 	printf("    Keys:\n");
@@ -309,7 +311,7 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "n:r:HL:T")) != -1) {
+	while ((op = getopt(argc, argv, "n:r:t:HL:T")) != -1) {
 		switch (op) {
 		case 'n':
 			val = spdk_strtol(optarg, 10);
@@ -324,6 +326,9 @@ parse_args(int argc, char **argv)
 				fprintf(stderr, "Error parsing transport address\n");
 				return 1;
 			}
+			break;
+		case 't':
+			g_touch_file = optarg;
 			break;
 		case 'L':
 			rc = spdk_log_set_flag(optarg);
@@ -549,6 +554,18 @@ int main(int argc, char **argv)
 	printf("Registering asynchronous event callbacks...\n");
 	foreach_dev(dev) {
 		spdk_nvme_ctrlr_register_aer_callback(dev->ctrlr, aer_cb, dev);
+	}
+
+	if (g_touch_file) {
+		int fd;
+
+		fd = open(g_touch_file, O_CREAT | O_EXCL | O_RDWR, S_IFREG);
+		if (fd == -1) {
+			fprintf(stderr, "Could not touch %s (%s).\n", g_touch_file, strerror(errno));
+			g_failed = true;
+			goto done;
+		}
+		close(fd);
 	}
 
 	/* AER temperature test */
