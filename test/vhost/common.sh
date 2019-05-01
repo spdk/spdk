@@ -13,6 +13,22 @@ SPDK_BUILD_DIR=$BASE_DIR/../../
 
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
 
+function vhosttestinit()
+{
+	if [ "$1" == "iso" ]; then
+		$rootdir/scripts/setup.sh
+		# TODO: Test for VM image in correct spot?
+		# TODO: Boot whole VM?
+	fi
+}
+
+function vhosttestfini()
+{
+	if [ "$1" == "iso" ]; then
+		$rootdir/scripts/setup.sh reset
+	fi
+}
+
 function message()
 {
 	if ! $SPDK_VHOST_VERBOSE; then
