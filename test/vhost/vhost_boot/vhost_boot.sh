@@ -3,7 +3,7 @@ set -xe
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
-. $testdir/../common/common.sh
+. $testdir/../common.sh
 . $rootdir/test/bdev/nbd_common.sh
 
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"

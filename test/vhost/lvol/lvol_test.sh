@@ -8,7 +8,7 @@ LVOL_TEST_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $LVOL_TEST_DIR/../../../../ && pwd)"
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $LVOL_TEST_DIR/../common && pwd)"
 
-. $COMMON_DIR/common.sh
+. $COMMON_DIR/../common.sh
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 vm_count=1

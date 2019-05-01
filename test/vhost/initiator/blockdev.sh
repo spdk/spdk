@@ -39,7 +39,7 @@ while getopts 'h-:' optchar; do
 	esac
 done
 
-source $COMMON_DIR/common.sh
+source $COMMON_DIR/../common.sh
 source $INITIATOR_DIR/autotest.config
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"

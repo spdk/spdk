@@ -71,7 +71,7 @@ if [[ ! -r "$fio_job" ]]; then
 	fail "no fio job file specified"
 fi
 
-. $COMMON_DIR/common.sh
+. $COMMON_DIR/../common.sh
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
