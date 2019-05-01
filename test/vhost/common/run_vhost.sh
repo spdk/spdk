@@ -45,7 +45,7 @@ fi
 notice "$0"
 notice ""
 
-. $COMMON_DIR/common.sh
+. $COMMON_DIR/../common.sh
 
 # Starting vhost with valid options
 spdk_vhost_run $vhost_num --conf-path=$CONF_DIR

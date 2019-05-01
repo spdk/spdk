@@ -36,7 +36,7 @@ while getopts "$optspec" optchar; do
 	esac
 done
 
-. $COMMON_DIR/common.sh
+. $COMMON_DIR/../common.sh
 
 if $do_kill && [[ $EUID -ne 0 ]]; then
 	echo "Go away user come back as root"

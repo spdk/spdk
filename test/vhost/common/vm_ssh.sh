@@ -33,7 +33,7 @@ while getopts 'xwh-:' optchar; do
 	esac
 done
 
-. $COMMON_DIR/common.sh
+. $COMMON_DIR/../common.sh
 
 shift $((OPTIND-1))
 vm_num="$1"

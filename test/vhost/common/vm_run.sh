@@ -33,7 +33,7 @@ while getopts 'xah-:' optchar; do
 	esac
 done
 
-. $COMMON_DIR/common.sh
+. $COMMON_DIR/../common.sh
 
 if [[ $EUID -ne 0 ]]; then
 	fail "Go away user come back as root"
