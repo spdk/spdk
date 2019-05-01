@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d898dc4b_b7ad8763",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-01T16:33:37Z",
+      "side": 1,
+      "message": "let\u0027s only run this when OS \u003d\u003d Linux\n\njust guard it with:\n\n# We don\u0027t run spdkcli tests on FreeBSD\nif [ $(name -s) \u003d Linux ]; then\n  run_test suite test/spdkcli/raid.sh\nfi",
+      "revId": "fef3067510b97decf8fe309672ef8466714c912f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
