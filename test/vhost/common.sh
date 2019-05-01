@@ -31,6 +31,21 @@ mkdir -p $TEST_DIR
 #
 source $BASE_DIR/common/autotest.config
 
+function vhosttestinit()
+{
+	if [ "$1" == "iso" ]; then
+		$rootdir/scripts/setup.sh
+		# TODO: Test for VM image in correct spot
+	fi
+}
+
+function vhosttestfini()
+{
+	if [ "$1" == "iso" ]; then
+		$rootdir/scripts/setup.sh reset
+	fi
+}
+
 function message()
 {
 	if ! $SPDK_VHOST_VERBOSE; then
