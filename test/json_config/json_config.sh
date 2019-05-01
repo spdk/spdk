@@ -157,6 +157,7 @@ function create_bdev_subsystem_config() {
 
 		tgt_rpc construct_split_vbdev $lvol_store_base_bdev 2
 		tgt_rpc construct_split_vbdev Malloc0 3
+		tgt_rpc construct_malloc_bdev 8 4096 --name Malloc3
 		tgt_rpc construct_passthru_bdev -b Malloc3 -p PTBdevFromMalloc3
 
 		tgt_rpc construct_null_bdev Null0 32 512
@@ -168,6 +169,8 @@ function create_bdev_subsystem_config() {
 			bdev_register:${lvol_store_base_bdev}
 			bdev_register:${lvol_store_base_bdev}p0
 			bdev_register:${lvol_store_base_bdev}p1
+			bdev_register:Malloc3
+			bdev_register:PTBdevFromMalloc3
 			bdev_register:Null0
 			bdev_register:Malloc0p0
 			bdev_register:Malloc0p1
