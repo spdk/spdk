@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+set -e
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+
+MALLOC_BDEV_SIZE=128
+MALLOC_BLOCK_SIZE=512
+
+vhosttestinit
+
+#TODO: Both scsi and blk?
+
+timing_enter vhost_fio
+
+trap "at_app_exit; process_shm --id 0; exit 1" SIGINT SIGTERM EXIT
+
+vhost_run vhost0 "-m 0x1"
+
+# Construct vhost scsi controller
+vhost_rpc vhost0 construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
+vhost_rpc vhost0 construct_vhost_scsi_controller naa.VhostScsi0.0
+vhost_rpc vhost0 add_vhost_scsi_lun naa.VhostScsi0.0 0 "Malloc0"
+
+# Start qemu based VM.
+vm_setup --os="$VM_IMAGE" --disk-type=spdk_vhost_scsi --disks="VhostScsi0" --vhost-name=vhost0 --force=0
+vm_run 0
+vm_wait_for_boot 300 0
+sleep 5
+
+# Run the fio workload on the VM
+vm_scp 0 $testdir/vhost_fio.job 127.0.0.1:/root/vhost_fio.job
+vm_exec 0 "fio /root/vhost_fio.job"
+
+# Shut the VM down
+vm_shutdown_all
+
+# Shut vhost down
+vhost_kill vhost0
+
+trap - SIGINT SIGTERM EXIT
+
+vhosttestfini
+timing_exit vhost_fio
