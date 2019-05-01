@@ -4,7 +4,7 @@ set -e
 READONLY_BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $READONLY_BASE_DIR/../../../../ && pwd)"
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $READONLY_BASE_DIR/../common && pwd)"
-source $COMMON_DIR/common.sh
+source $COMMON_DIR/../common.sh
 
 rpc_py="$READONLY_BASE_DIR/../../../scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 

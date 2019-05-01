@@ -59,7 +59,7 @@ shift $(( OPTIND - 1 ))
 fio_job=$HOTPLUG_DIR/fio_jobs/default_integrity.job
 tmp_attach_job=$HOTPLUG_DIR/fio_jobs/fio_attach.job.tmp
 tmp_detach_job=$HOTPLUG_DIR/fio_jobs/fio_detach.job.tmp
-. $HOTPLUG_DIR/../common/common.sh
+. $HOTPLUG_DIR/../common.sh
 
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 

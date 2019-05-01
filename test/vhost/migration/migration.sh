@@ -55,7 +55,7 @@ for param in "$@"; do
 	esac
 done
 
-. $(readlink -e "$(dirname $0)/../common/common.sh") || exit 1
+. $(readlink -e "$(dirname $0)/../common.sh") || exit 1
 MIGRATION_DIR=$(readlink -f $(dirname $0))
 
 [[ ! -z "$test_cases" ]] || fail "Need '--test-cases=' parameter"

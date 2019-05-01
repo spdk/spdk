@@ -136,7 +136,7 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
-. $(readlink -e "$(dirname $0)/../common/common.sh") || exit 1
+. $(readlink -e "$(dirname $0)/../common.sh") || exit 1
 . $(readlink -e "$(dirname $0)/../../../scripts/common.sh") || exit 1
 BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 COMMON_DIR="$(cd $(readlink -f $(dirname $0))/../common && pwd)"

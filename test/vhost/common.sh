@@ -6,10 +6,10 @@ set -e
 BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 
 # Default running dir -> spdk/..
-[[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../../
+[[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../
 
 TEST_DIR="$(mkdir -p $TEST_DIR && cd $TEST_DIR && echo $PWD)"
-SPDK_BUILD_DIR=$BASE_DIR/../../../
+SPDK_BUILD_DIR=$BASE_DIR/../../
 
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
 
@@ -72,7 +72,7 @@ mkdir -p $TEST_DIR
 #
 # Source config describing QEMU and VHOST cores and NUMA
 #
-source $(readlink -f $(dirname ${BASH_SOURCE[0]}))/autotest.config
+source $BASE_DIR/common/autotest.config
 
 # Trace flag is optional, if it wasn't set earlier - disable it after sourcing
 # autotest_common.sh
