@@ -52,17 +52,20 @@ $rpc_py get_nvmf_subsystems
 #        trsvcid:$NVMF_PORT \
 #        subnqn:nqn.2014-08.org.nvmexpress.discovery"
 
+AER_TOUCH_FILE=/tmp/aer_touch_file
+rm -f $AER_TOUCH_FILE
+
 # Namespace Attribute Notice Tests
 $rootdir/test/nvme/aer/aer -r "\
         trtype:RDMA \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2016-06.io.spdk:cnode1" -n 2 &
+        subnqn:nqn.2016-06.io.spdk:cnode1" -n 2 -t $AER_TOUCH_FILE &
 aerpid=$!
 
 # Waiting for aer start to work
-sleep 5
+waitforfile $AER_TOUCH_FILE
 
 # Add a new namespace
 $rpc_py construct_malloc_bdev 64 4096 --name Malloc1
