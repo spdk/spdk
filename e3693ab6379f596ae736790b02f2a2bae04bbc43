@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81f5b222_5ff30c79",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-01T16:11:20Z",
+      "side": 1,
+      "message": "threads?",
+      "range": {
+        "startLine": 79,
+        "startChar": 36,
+        "endLine": 79,
+        "endChar": 41
+      },
+      "revId": "e3693ab6379f596ae736790b02f2a2bae04bbc43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1263de1c_0dbd197a",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-01T16:11:20Z",
+      "side": 1,
+      "message": "next available poll group.",
+      "revId": "e3693ab6379f596ae736790b02f2a2bae04bbc43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
