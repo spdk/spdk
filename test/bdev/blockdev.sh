@@ -79,11 +79,13 @@ if hash pmempool; then
 	echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $testdir/bdev.conf
 fi
 
-timing_enter hello_bdev
-if grep -q Nvme0 $testdir/bdev.conf; then
-	$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	timing_enter hello_bdev
+	if grep -q Nvme0 $testdir/bdev.conf; then
+		$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1
+	fi
+	timing_exit hello_bdev
 fi
-timing_exit hello_bdev
 
 timing_enter bounds
 if [ $(uname -s) = Linux ]; then
