@@ -53,14 +53,15 @@ static void usage(void)
 		" (required)\n");
 }
 
+/* Group by poll group */
 static bool
 conns_compare(struct spdk_iscsi_conn *first, struct spdk_iscsi_conn *second)
 {
-	if (first->lcore < second->lcore) {
+	if ((uintptr_t)first->pg < (uintptr_t)second->pg) {
 		return true;
 	}
 
-	if (first->lcore > second->lcore) {
+	if ((uintptr_t)first->pg > (uintptr_t)second->pg) {
 		return false;
 	}
 
@@ -110,8 +111,8 @@ print_connections(void)
 	stable_sort(v.begin(), v.end(), conns_compare);
 	for (iter = v.begin(); iter != v.end(); iter++) {
 		conn = *iter;
-		printf("lcore %2d conn %3d T:%-8s I:%s (%s)\n",
-		       conn->lcore, conn->id,
+		printf("pg %p conn %3d T:%-8s I:%s (%s)\n",
+		       conn->pg, conn->id,
 		       conn->target_short_name, conn->initiator_name,
 		       conn->initiator_addr);
 	}
