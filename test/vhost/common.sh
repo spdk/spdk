@@ -1,5 +1,21 @@
 set -e
 
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+
+# Source config describing QEMU and VHOST cores and NUMA
+source $rootdir/test/common/autotest.config
+
+# Trace flag is optional, if it wasn't set earlier - disable it after sourcing
+# autotest_common.sh
+if [[ $- =~ x ]]; then
+	source $rootdir/test/common/autotest_common.sh
+else
+	source $rootdir/test/common/autotest_common.sh
+	set +x
+fi
+
 VHOST_SOCK="/tmp/vhost_rpc.sock"
 
 : ${VHOST_APP_SHM_ID="0"}; export VHOST_APP_SHM_ID
@@ -9,15 +25,14 @@ VHOST_SOCK="/tmp/vhost_rpc.sock"
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 
-BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 
-# Default running dir -> spdk/..
-[[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../
-
-TEST_DIR="$(mkdir -p $TEST_DIR && cd $TEST_DIR && echo $PWD)"
-SPDK_BUILD_DIR=$BASE_DIR/../../
-
-SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
+# SSH key file
+: ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
+if [[ ! -r "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
+	error "Could not find SSH key file $SPDK_VHOST_SSH_KEY_FILE"
+	exit 1
+fi
+echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 
 function vhosttestinit()
 {
@@ -77,34 +92,6 @@ function notice()
 	message "INFO" "$@"
 }
 
-
-# SSH key file
-: ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
-if [[ ! -r "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
-	error "Could not find SSH key file $SPDK_VHOST_SSH_KEY_FILE"
-	exit 1
-fi
-echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
-
-VM_BASE_DIR="$TEST_DIR/vms"
-
-
-mkdir -p $TEST_DIR
-
-#
-# Source config describing QEMU and VHOST cores and NUMA
-#
-source $BASE_DIR/common/autotest.config
-
-# Trace flag is optional, if it wasn't set earlier - disable it after sourcing
-# autotest_common.sh
-if [[ $- =~ x ]]; then
-	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
-else
-	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
-	set +x
-fi
-
 function get_vhost_dir()
 {
 	if [[ ! -z "$1" ]]; then
@@ -114,13 +101,13 @@ function get_vhost_dir()
 		local vhost_num=0
 	fi
 
-	echo "$SPDK_VHOST_SCSI_TEST_DIR${vhost_num}"
+	echo "$rootdir/vhost${vhost_num}"
 }
 
 function spdk_vhost_list_all()
 {
 	shopt -s nullglob
-	local vhost_list="$(echo $SPDK_VHOST_SCSI_TEST_DIR[0-9]*)"
+	local vhost_list="$(echo $rootdir/vhost[0-9]*)"
 	shopt -u nullglob
 
 	if [[ ! -z "$vhost_list" ]]; then
@@ -154,7 +141,7 @@ function spdk_vhost_run()
 	done
 
 	local vhost_dir="$(get_vhost_dir $vhost_num)"
-	local vhost_app="$SPDK_BUILD_DIR/app/vhost/vhost"
+	local vhost_app="$rootdir/app/vhost/vhost"
 	local vhost_log_file="$vhost_dir/vhost.log"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 	local vhost_socket="$vhost_dir/usvhost"
@@ -184,7 +171,7 @@ function spdk_vhost_run()
 	local cmd="$vhost_app -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock $no_pci"
 	if [[ -n "$vhost_conf_path" ]]; then
 		cp $vhost_conf_template $vhost_conf_file
-		$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
+		$rootdir/scripts/gen_nvme.sh >> $vhost_conf_file
 		cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock $no_pci"
 	fi
 
@@ -201,12 +188,12 @@ function spdk_vhost_run()
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
 	#do not generate nvmes if pci access is disabled
 	if [[ -z "$vhost_conf_path" ]] && [[ -z "$no_pci" ]]; then
-		$SPDK_BUILD_DIR/scripts/gen_nvme.sh "--json" | $SPDK_BUILD_DIR/scripts/rpc.py\
+		$rootdir/scripts/gen_nvme.sh "--json" | $rootdir/scripts/rpc.py\
 		 -s $vhost_dir/rpc.sock load_subsystem_config
 	fi
 
 	if [[ -n "$vhost_json_path" ]]; then
-		$SPDK_BUILD_DIR/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_path/conf.json"
+		$rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_path/conf.json"
 	fi
 
 	notice "vhost started - pid=$vhost_pid"
@@ -300,7 +287,7 @@ function vm_num_is_valid()
 function vm_ssh_socket()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$rootdir/vms/$1"
 
 	cat $vm_dir/ssh_socket
 }
@@ -308,14 +295,14 @@ function vm_ssh_socket()
 function vm_fio_socket()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$rootdir/vms/$1"
 
 	cat $vm_dir/fio_socket
 }
 
 function vm_create_ssh_config()
 {
-	local ssh_config="$VM_BASE_DIR/ssh_config"
+	local ssh_config="$rootdir/vms/ssh_config"
 	if [[ ! -f $ssh_config ]]; then
 		(
 		echo "Host *"
@@ -342,7 +329,7 @@ function vm_ssh()
 {
 	vm_num_is_valid $1 || return 1
 	vm_create_ssh_config
-	local ssh_config="$VM_BASE_DIR/ssh_config"
+	local ssh_config="$rootdir/vms/ssh_config"
 
 	local ssh_cmd="ssh -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
 		-p $(vm_ssh_socket $1) $VM_SSH_OPTIONS 127.0.0.1"
@@ -358,7 +345,7 @@ function vm_scp()
 {
 	vm_num_is_valid $1 || return 1
 	vm_create_ssh_config
-	local ssh_config="$VM_BASE_DIR/ssh_config"
+	local ssh_config="$rootdir/vms/ssh_config"
 
 	local scp_cmd="scp -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
 		-P $(vm_ssh_socket $1) "
@@ -373,7 +360,7 @@ function vm_scp()
 function vm_is_running()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$rootdir/vms/$1"
 
 	if [[ ! -r $vm_dir/qemu.pid ]]; then
 		return 1
@@ -400,7 +387,7 @@ function vm_is_running()
 function vm_os_booted()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$rootdir/vms/$1"
 
 	if [[ ! -r $vm_dir/qemu.pid ]]; then
 		error "VM $1 is not running"
@@ -423,7 +410,7 @@ function vm_os_booted()
 function vm_shutdown()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$rootdir/vms/$1"
 	if [[ ! -d "$vm_dir" ]]; then
 		error "VM$1 ($vm_dir) not exist - setup it first"
 		return 1
@@ -449,7 +436,7 @@ function vm_shutdown()
 function vm_kill()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$rootdir/vms/$1"
 
 	if [[ ! -r $vm_dir/qemu.pid ]]; then
 		return 0
@@ -468,17 +455,17 @@ function vm_kill()
 	fi
 }
 
-# List all VM numbers in VM_BASE_DIR
+# List all VM numbers in rootdir/vms
 #
 function vm_list_all()
 {
-	local vms="$(shopt -s nullglob; echo $VM_BASE_DIR/[0-9]*)"
+	local vms="$(shopt -s nullglob; echo $rootdir/vms/[0-9]*)"
 	if [[ ! -z "$vms" ]]; then
 		basename --multiple $vms
 	fi
 }
 
-# Kills all VM in $VM_BASE_DIR
+# Kills all VM in $rootdir/vms
 #
 function vm_kill_all()
 {
@@ -488,7 +475,7 @@ function vm_kill_all()
 	done
 }
 
-# Shutdown all VM in $VM_BASE_DIR
+# Shutdown all VM in $rootdir/vms
 #
 function vm_shutdown_all()
 {
@@ -582,14 +569,14 @@ function vm_setup()
 		vm_num=$force_vm
 
 		vm_num_is_valid $vm_num || return 1
-		local vm_dir="$VM_BASE_DIR/$vm_num"
+		local vm_dir="$rootdir/vms/$vm_num"
 		[[ -d $vm_dir ]] && warning "removing existing VM in '$vm_dir'"
 	else
 		local vm_dir=""
 
 		set +x
 		for (( i=0; i<=256; i++)); do
-			local vm_dir="$VM_BASE_DIR/$i"
+			local vm_dir="$rootdir/vms/$i"
 			[[ ! -d $vm_dir ]] && break
 		done
 		$shell_restore_x
@@ -612,7 +599,7 @@ function vm_setup()
 		fi
 
 		os_mode="original"
-		os="$VM_BASE_DIR/$vm_incoming/os.qcow2"
+		os="$rootdir/vms/$vm_incoming/os.qcow2"
 	elif [[ ! -z "$vm_migrate_to" ]]; then
 		[[ "$os_mode" != "backing" ]] && warning "Using 'backing' mode for OS since '--migrate-to' is used"
 		os_mode=backing
@@ -837,8 +824,8 @@ function vm_setup()
 	echo $gdbserver_socket > $vm_dir/gdbserver_socket
 	echo $vnc_socket >> $vm_dir/vnc_socket
 
-	[[ -z $vm_incoming ]] || ln -fs $VM_BASE_DIR/$vm_incoming $vm_dir/vm_incoming
-	[[ -z $vm_migrate_to ]] || ln -fs $VM_BASE_DIR/$vm_migrate_to $vm_dir/vm_migrate_to
+	[[ -z $vm_incoming ]] || ln -fs $rootdir/vms/$vm_incoming $vm_dir/vm_incoming
+	[[ -z $vm_migrate_to ]] || ln -fs $rootdir/vms/$vm_migrate_to $vm_dir/vm_migrate_to
 }
 
 function vm_run()
@@ -863,7 +850,7 @@ function vm_run()
 		shift $((OPTIND-1))
 		for vm in $@; do
 			vm_num_is_valid $1 || return 1
-			if [[ ! -x $VM_BASE_DIR/$vm/run.sh ]]; then
+			if [[ ! -x $rootdir/vms/$vm/run.sh ]]; then
 				error "VM$vm not defined - setup it first"
 				return 1
 			fi
@@ -873,12 +860,12 @@ function vm_run()
 
 	for vm in $vms_to_run; do
 		if vm_is_running $vm; then
-			warning "VM$vm ($VM_BASE_DIR/$vm) already running"
+			warning "VM$vm ($rootdir/vms/$vm) already running"
 			continue
 		fi
 
-		notice "running $VM_BASE_DIR/$vm/run.sh"
-		if ! $VM_BASE_DIR/$vm/run.sh; then
+		notice "running $rootdir/vms/$vm/run.sh"
+		if ! $rootdir/vms/$vm/run.sh; then
 			error "FAILED to run vm $vm"
 			return 1
 		fi
@@ -890,22 +877,22 @@ function vm_print_logs()
 	vm_num=$1
 	warning "================"
 	warning "QEMU LOG:"
-	if [[ -r $VM_BASE_DIR/$vm_num/qemu.log ]]; then
-		cat $VM_BASE_DIR/$vm_num/qemu.log
+	if [[ -r $rootdir/vms/$vm_num/qemu.log ]]; then
+		cat $rootdir/vms/$vm_num/qemu.log
 	else
 		warning "LOG qemu.log not found"
 	fi
 
 	warning "VM LOG:"
-	if [[ -r $VM_BASE_DIR/$vm_num/serial.log ]]; then
-		cat $VM_BASE_DIR/$vm_num/serial.log
+	if [[ -r $rootdir/vms/$vm_num/serial.log ]]; then
+		cat $rootdir/vms/$vm_num/serial.log
 	else
 		warning "LOG serial.log not found"
 	fi
 
 	warning "SEABIOS LOG:"
-	if [[ -r $VM_BASE_DIR/$vm_num/seabios.log ]]; then
-		cat $VM_BASE_DIR/$vm_num/seabios.log
+	if [[ -r $rootdir/vms/$vm_num/seabios.log ]]; then
+		cat $rootdir/vms/$vm_num/seabios.log
 	else
 		warning "LOG seabios.log not found"
 	fi
@@ -929,11 +916,11 @@ function vm_wait_for_boot()
 	notice "Waiting for VMs to boot"
 	shift
 	if [[ "$@" == "" ]]; then
-		local vms_to_check="$VM_BASE_DIR/[0-9]*"
+		local vms_to_check="$rootdir/vms/[0-9]*"
 	else
 		local vms_to_check=""
 		for vm in $@; do
-			vms_to_check+=" $VM_BASE_DIR/$vm"
+			vms_to_check+=" $rootdir/vms/$vm"
 		done
 	fi
 
@@ -1113,7 +1100,7 @@ function run_fio()
 		return 0
 	fi
 
-	$SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
+	$rootdir/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
 		$([[ ! -z "$fio_bin" ]] && echo "--fio-bin=$fio_bin") \
 		--out=$out $json ${fio_disks%,}
 }
