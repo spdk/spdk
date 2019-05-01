@@ -21,6 +21,7 @@ VHOST_SOCK="/tmp/vhost_rpc.sock"
 : ${VHOST_APP_SHM_ID="0"}; export VHOST_APP_SHM_ID
 : ${VHOST_APP="./app/vhost/vhost -p 0 -r $VHOST_SOCK -u -i $VHOST_APP_SHM_ID -e 0xFFFF"}; export VHOST_APP
 : ${VHOST_VM_IMAGE="/home/sys_sgsw/vhost_vm_image.qcow2"}; export VHOST_VM_IMAGE
+: ${VHOST_VM_PASS="root"}; export VHOST_VM_PASS
 : ${VHOST_RPC="./scripts/rpc.py -s $VHOST_SOCK"}; export VHOST_RPC
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
@@ -335,6 +336,29 @@ function vm_ssh()
 		-p $(vm_ssh_socket $1) $VM_SSH_OPTIONS 127.0.0.1"
 
 	shift
+	$ssh_cmd "$@"
+}
+
+# For some reason there is a problem between using SSH key authentication
+# and Windows UAC. Some of the powershell commands fail due to lack of
+# permissons, despite script running in elevated mode.
+# There are some clues about this setup that suggest this might not work properly:
+# https://superuser.com/questions/181581/how-can-i-run-something-as-administrator-via-cygwins-ssh
+# https://cygwin.com/ml/cygwin/2004-09/msg00087.html
+# But they apply to rather old Windows distributions.
+# Potentially using Windows Server 2016 and newer may solve the issue
+# due to OpenSSH being available directly from Windows Store.
+function vm_sshpass()
+{
+	vm_num_is_valid $1 || return 1
+
+	local ssh_cmd="sshpass -p $2 ssh \
+		-o UserKnownHostsFile=/dev/null \
+		-o StrictHostKeyChecking=no \
+		-o User=root \
+		-p $(vm_ssh_socket $1) $VM_SSH_OPTIONS 127.0.0.1"
+
+	shift 2
 	$ssh_cmd "$@"
 }
 
