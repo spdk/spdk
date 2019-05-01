@@ -47,6 +47,9 @@
 #include <rte_cryptodev.h>
 #include <rte_cryptodev_pmd.h>
 
+/* Disable noisy output from DPDK cryptodev */
+#undef CDEV_LOG_INFO
+
 /* To add support for new device types, follow the examples of the following...
  * Note that the string names are defined by the DPDK PMD in question so be
  * sure to use the exact names.
