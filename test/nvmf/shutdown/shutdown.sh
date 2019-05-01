@@ -72,15 +72,17 @@ echo "[Nvme]" > $testdir/bdevperf.conf
 
 timing_enter create_subsystems
 # Create subsystems
+rm -rf $testdir/rpcs.txt
 for i in `seq 1 $num_subsystems`
 do
-	$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i
-	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	echo construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i >> $testdir/rpcs.txt
+	echo nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i >> $testdir/rpcs.txt
+	echo nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i >> $testdir/rpcs.txt
+	echo nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT >> $testdir/rpcs.txt
 
 	echo "  TransportID \"trtype:RDMA adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT hostaddr:$NVMF_FIRST_TARGET_IP\" Nvme$i" >> $testdir/bdevperf.conf
 done
+$rpc_py < $testdir/rpcs.txt
 timing_exit create_subsystems
 
 # Test 1: Kill the initiator unexpectedly with no I/O outstanding
@@ -149,6 +151,7 @@ timing_exit test3
 
 rm -f ./local-job0-0-verify.state
 rm -rf $testdir/bdevperf.conf
+rm -rf $testdir/rpcs.txt
 trap - SIGINT SIGTERM EXIT
 
 timing_enter cleanup
