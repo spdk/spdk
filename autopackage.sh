@@ -10,8 +10,7 @@ out=$PWD
 MAKEFLAGS=${MAKEFLAGS:--j16}
 cd $rootdir
 
-timing_enter autopackage
-
+timing_enter porcelain_check
 $MAKE clean
 
 if [ `git status --porcelain --ignore-submodules | wc -l` -ne 0 ]; then
@@ -19,6 +18,14 @@ if [ `git status --porcelain --ignore-submodules | wc -l` -ne 0 ]; then
 	git status --porcelain --ignore-submodules
 	exit 1
 fi
+timing_exit porcelain_check
+
+if [ $RUN_NIGHTLY -eq 0 ]; then
+	timing_finish
+	exit 0
+fi
+
+timing_enter autopackage
 
 spdk_pv=spdk-$(date +%Y_%m_%d)
 spdk_tarball=${spdk_pv}.tar
