@@ -675,6 +675,22 @@ function waitforblk_disconnect()
 	return 0
 }
 
+function waitforfile()
+{
+	local i=0
+	while [ ! -f $1 ]; do
+		[ $i -lt 200 ] || break
+		i=$[$i+1]
+		sleep 0.1
+	done
+
+	if [ ! -f $1 ]; then
+		return 1
+	fi
+
+	return 0
+}
+
 function fio_config_gen()
 {
 	local config_file=$1
