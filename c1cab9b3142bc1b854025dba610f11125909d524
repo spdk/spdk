@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d5ee680_3ffab3a0",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-01T18:24:55Z",
+      "side": 1,
+      "message": "NVMF_APP is already defined in test/nvmf/common.sh, which you\u0027ve sourced above. Any reason to change it?",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a416ea0_e760aad7",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-01T18:24:55Z",
+      "side": 1,
+      "message": "Can you put a comment here that says that this is the path to where fio is installed on the VM image?\n\nAlso, why can\u0027t we just put fio in /usr/bin or wherever it normally gets installed on the VM? That\u0027s a question for a future patch though.",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a8e5fac_3e148814",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-01T18:24:55Z",
+      "side": 1,
+      "message": "Indent",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b29f0008_a650b08a",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-01T18:24:55Z",
+      "side": 1,
+      "message": "Not part of this patch, but I notice that we repeat this in all of the NVMe-oF tests. Can we just stick this in nvmftestinit?",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a197ef1_71565844",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-01T18:24:55Z",
+      "side": 1,
+      "message": "nvmf_vhost",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff04d098_6a126031",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-01T18:24:55Z",
+      "side": 1,
+      "message": "Since you\u0027re explicitly naming this Nvme0n1, you can just hard code that name instead of running this in a subshell.",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
