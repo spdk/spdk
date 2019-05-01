@@ -1792,13 +1792,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-n', '--max', help="""Maximum number of notifications to return in response""", type=int)
     p.set_defaults(func=get_notifications)
 
-    args = parser.parse_args()
-
-    with rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper())) as client:
+    def call_rpc_func(args):
         try:
-            args.client = client
             args.func(args)
         except JSONRPCException as ex:
             print("Exception:")
             print(ex.message)
             exit(1)
+
+    args = parser.parse_args()
+    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+    call_rpc_func(args)
