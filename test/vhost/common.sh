@@ -1,5 +1,11 @@
 set -e
 
+VHOST_SOCK="/tmp/vhost_rpc.sock"
+
+: ${VHOST_APP_SHM_ID="0"}; export VHOST_APP_SHM_ID
+: ${VHOST_APP="./app/vhost/vhost -p 0 -r $VHOST_SOCK -u -i $VHOST_APP_SHM_ID -e 0xFFFF"}; export VHOST_APP
+: ${VHOST_VM_IMAGE="/home/sys_sgsw/vhost_vm_image.qcow2"}; export VHOST_VM_IMAGE
+: ${VHOST_RPC="./scripts/rpc.py -s $VHOST_SOCK"}; export VHOST_RPC
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 
