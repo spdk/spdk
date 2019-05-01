@@ -50,11 +50,21 @@ $rpc_py nvmf_subsystem_add_listener  nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF
 
 echo "[Nvme]" > $testdir/bdevperf.conf
 echo "  TransportID \"trtype:RDMA adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode1 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420\" Nvme0" >> $testdir/bdevperf.conf
-$rootdir/test/bdev/bdevperf/bdevperf -m 0x10 -c $testdir/bdevperf.conf -q 128 -o 4096 -w write -t 1
-$rootdir/test/bdev/bdevperf/bdevperf -m 0x20 -c $testdir/bdevperf.conf -q 128 -o 4096 -w read -t 1
-$rootdir/test/bdev/bdevperf/bdevperf -m 0x40 -c $testdir/bdevperf.conf -q 128 -o 4096 -w flush -t 1
-$rootdir/test/bdev/bdevperf/bdevperf -m 0x80 -c $testdir/bdevperf.conf -q 128 -o 4096 -w unmap -t 1
+$rootdir/test/bdev/bdevperf/bdevperf -m 0x10 -i 1 -c $testdir/bdevperf.conf -q 128 -o 4096 -w write -t 1 &
+WRITE_PID=$!
+$rootdir/test/bdev/bdevperf/bdevperf -m 0x20 -i 2 -c $testdir/bdevperf.conf -q 128 -o 4096 -w read -t 1 &
+READ_PID=$!
+$rootdir/test/bdev/bdevperf/bdevperf -m 0x40 -i 3 -c $testdir/bdevperf.conf -q 128 -o 4096 -w flush -t 1  &
+FLUSH_PID=$!
+$rootdir/test/bdev/bdevperf/bdevperf -m 0x80 -i 4 -c $testdir/bdevperf.conf -q 128 -o 4096 -w unmap -t 1 &
+UNMAP_PID=$!
 sync
+
+wait $WRITE_PID
+wait $READ_PID
+wait $FLUSH_PID
+wait $UNMAP_PID
+
 rm -rf $testdir/bdevperf.conf
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
