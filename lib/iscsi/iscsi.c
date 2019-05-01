@@ -73,6 +73,7 @@ struct spdk_iscsi_globals g_spdk_iscsi = {
 	.ig_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.ig_head),
 	.target_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.target_head),
 	.auth_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.auth_group_head),
+	.poll_group_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.poll_group_head),
 };
 
 /* random value generation */
