@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "44fecead_b81ddee3",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 837,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-01T16:49:54Z",
+      "side": 1,
+      "message": "totally agree w/Seth\u0027s suggestions.  Lets not add more poor RPC reporting moving forward :). Below is straight from the RPC spec, not a great deal of choices. I think we can update spdk_json_decode_object() separately to help distinguish between a parse error and invalid parms but for now I\u0027d at least go with what Seth suggests here\n\ncode \tmessage \tmeaning\n-32700 \tParse error \tInvalid JSON was received by the server.\nAn error occurred on the server while parsing the JSON text.\n-32600 \tInvalid Request \tThe JSON sent is not a valid Request object.\n-32601 \tMethod not found \tThe method does not exist / is not available.\n-32602 \tInvalid params \tInvalid method parameter(s).\n-32603 \tInternal error \tInternal JSON-RPC error.\n-32000 to -32099 \tServer error \tReserved for implementation-defined server-errors.",
+      "parentUuid": "499f30e3_2bc46327",
+      "revId": "58785cce24890e66179fef40a79d9564ad73c1a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "118ea472_18b014e3",
         "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 1
