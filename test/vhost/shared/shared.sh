@@ -4,7 +4,7 @@ set -e
 SHARED_DIR=$(readlink -f $(dirname $0))
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $SHARED_DIR/../common && pwd)"
 ROOT_DIR=$(readlink -f $SHARED_DIR/../../..)
-source $COMMON_DIR/common.sh
+source $COMMON_DIR/../common.sh
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 FIO_PATH="/usr/src/fio"
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"

@@ -34,7 +34,7 @@ while getopts 'xh-:' optchar; do
 done
 
 
-. $COMMON_DIR/common.sh
+. $COMMON_DIR/../common.sh
 
 trap error_exit ERR
 

@@ -71,7 +71,7 @@ for param in "$@"; do
 	setup_params+=( "$param" )
 done
 
-. $COMMON_DIR/common.sh
+. $COMMON_DIR/../common.sh
 
 vm_setup ${setup_params[@]}
 
