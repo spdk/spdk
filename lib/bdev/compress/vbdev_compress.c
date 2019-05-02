@@ -1214,6 +1214,7 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 
 	comp_bdev->comp_bdev.blocklen = comp_bdev->base_bdev->blocklen;
 	comp_bdev->comp_bdev.blockcnt = comp_bdev->params.vol_size / comp_bdev->comp_bdev.blocklen;
+	assert(comp_bdev->comp_bdev.blockcnt > 0);
 
 	/* This is the context that is passed to us when the bdev
 	 * layer calls in so we'll save our comp_bdev node here.
@@ -1313,6 +1314,7 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	}
 
 	meta_ctx->vol = vol;
+	spdk_reduce_get_vol_params(vol, &meta_ctx->params);
 	vbdev_compress_claim(meta_ctx);
 	spdk_bdev_module_examine_done(&compress_if);
 }
