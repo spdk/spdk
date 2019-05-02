@@ -69,22 +69,22 @@ static pthread_spinlock_t g_caches_lock;
 
 SPDK_TRACE_REGISTER_FN(blobfs_trace, "blobfs", TRACE_GROUP_BLOBFS)
 {
-	spdk_trace_register_description("BLOBFS_XATTR_START", "",
+	spdk_trace_register_description("BLOBFS_XATTR_START",
 					TRACE_BLOBFS_XATTR_START,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_STR,
 					"file:    ");
-	spdk_trace_register_description("BLOBFS_XATTR_END", "",
+	spdk_trace_register_description("BLOBFS_XATTR_END",
 					TRACE_BLOBFS_XATTR_END,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_STR,
 					"file:    ");
-	spdk_trace_register_description("BLOBFS_OPEN", "",
+	spdk_trace_register_description("BLOBFS_OPEN",
 					TRACE_BLOBFS_OPEN,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_STR,
 					"file:    ");
-	spdk_trace_register_description("BLOBFS_CLOSE", "",
+	spdk_trace_register_description("BLOBFS_CLOSE",
 					TRACE_BLOBFS_CLOSE,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_STR,
