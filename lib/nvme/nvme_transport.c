@@ -185,6 +185,12 @@ nvme_transport_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_reinit_io_qpair, (ctrlr, qpair));
 }
 
+volatile struct spdk_nvme_registers *
+nvme_transport_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
+{
+	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_get_registers, (ctrlr));
+}
+
 int
 nvme_transport_qpair_enable(struct spdk_nvme_qpair *qpair)
 {

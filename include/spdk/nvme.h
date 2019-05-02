@@ -1505,6 +1505,18 @@ int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload
 				    struct spdk_nvme_status *completion_status);
 
 /**
+ * Return virtual address of PCIe NVM I/O registers
+ *
+ * This function returns a pointer to the PCIe I/O registers for a controller
+ * or NULL if unsupported for this transport.
+ *
+ * \param ctrlr Controller whose registers are to be accessed.
+ *
+ * \return Pointer to virtual address of register bank, or NULL.
+ */
+volatile struct spdk_nvme_registers *spdk_nvme_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Allocate an I/O buffer from the controller memory buffer (Experimental).
  *
  * This function allocates registered memory which belongs to the Controller
