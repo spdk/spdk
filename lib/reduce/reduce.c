@@ -1389,4 +1389,10 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	}
 }
 
+const struct spdk_reduce_vol_params *
+spdk_reduce_vol_get_params(struct spdk_reduce_vol *vol)
+{
+	return &vol->params;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("reduce", SPDK_LOG_REDUCE)

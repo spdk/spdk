@@ -230,4 +230,13 @@ void spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 			    spdk_reduce_vol_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Get the params structure for a libreduce compressed volume.
+ *
+ * This function will populate the given params structure for a given volume.
+ *
+ * \param vol Previously loaded or initialized compressed volume.
+ * \return params structure for the compressed volume.
+ */
+const struct spdk_reduce_vol_params *spdk_reduce_vol_get_params(struct spdk_reduce_vol *vol);
 #endif /* SPDK_REDUCE_H_ */
