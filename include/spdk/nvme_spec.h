@@ -1808,6 +1808,9 @@ enum spdk_nvme_log_page {
 	/** Reservation notification (optional) */
 	SPDK_NVME_LOG_RESERVATION_NOTIFICATION	= 0x80,
 
+	/** Sanitize status (optional) */
+	SPDK_NVME_LOG_SANITIZE_STATUS = 0x81,
+
 	/* 0x81-0xBF - I/O command set specific */
 
 	/* 0xC0-0xFF - vendor specific */
@@ -1947,6 +1950,46 @@ struct spdk_nvme_telemetry_log_page_hdr {
 	uint8_t    telemetry_datablock[0];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_telemetry_log_page_hdr) == 512, "Incorrect size");
+
+/**
+ * Sanitize Status Type
+ */
+enum spdk_nvme_sanitize_status_type {
+	SPDK_NVME_NEVER_BEEN_SANITIZED		= 0x0,
+	SPDK_NVME_RECENT_SANITIZE_SUCCESSFUL	= 0x1,
+	SPDK_NVME_SANITIZE_IN_PROGRESS		= 0x2,
+	SPDK_NVME_SANITIZE_FAILED		= 0x3,
+};
+
+/**
+ * Sanitize status sstat field
+ */
+struct spdk_nvme_sanitize_status_sstat {
+	uint16_t status			: 3;
+	uint16_t complete_pass		: 5;
+	uint16_t global_data_erase	: 1;
+	uint16_t reserved		: 7;
+};
+
+/**
+ * Sanitize log page
+ */
+struct spdk_nvme_sanitize_status_log_page {
+	/* Sanitize progress */
+	uint16_t				sprog;
+	/* Sanitize status */
+	struct spdk_nvme_sanitize_status_sstat	sstat;
+	/* CDW10 of sanitize command */
+	uint32_t				scdw10;
+	/* Estimated overwrite time in seconds */
+	uint32_t				et_overwrite;
+	/* Estimated block erase time in seconds */
+	uint32_t				et_block_erase;
+	/* Estimated crypto erase time in seconds */
+	uint32_t				et_crypto_erase;
+	uint8_t					reserved[492];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_sanitize_status_log_page) == 512, "Incorrect size");
 
 /**
  * Asynchronous Event Type
@@ -2454,6 +2497,36 @@ struct spdk_nvme_protection_info {
 	uint32_t	ref_tag;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_protection_info) == 8, "Incorrect size");
+
+/* Data structures for sanitize command */
+/* Sanitize - Command Dword 10 */
+struct spdk_nvme_sanitize {
+	/* Sanitize Action (SANACT) */
+	uint32_t sanact	: 3;
+	/* Allow Unrestricted Sanitize Exit (AUSE) */
+	uint32_t ause	: 1;
+	/* Overwrite Pass Count (OWPASS) */
+	uint32_t owpass	: 4;
+	/* Overwrite Invert Pattern Between Passes */
+	uint32_t oipbp	: 1;
+	/* No Deallocate after sanitize (NDAS) */
+	uint32_t ndas	: 1;
+	/* reserved */
+	uint32_t reserved	: 22;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_format) == 4, "Incorrect size");
+
+/* Sanitize Action */
+enum spdk_sanitize_action {
+	/* Exit Failure Mode */
+	SPDK_NVME_SANITIZE_EXIT_FAILURE_MODE	= 0x1,
+	/* Start a Block Erase sanitize operation */
+	SPDK_NVME_SANITIZE_BLOCK_ERASE		= 0x2,
+	/* Start an Overwrite sanitize operation */
+	SPDK_NVME_SANITIZE_OVERWRITE		= 0x3,
+	/* Start a Crypto Erase sanitize operation */
+	SPDK_NVME_SANITIZE_CRYPTO_ERASE		= 0x4,
+};
 
 /** Parameters for SPDK_NVME_OPC_FIRMWARE_COMMIT cdw10: commit action */
 enum spdk_nvme_fw_commit_action {
