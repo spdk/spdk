@@ -111,7 +111,7 @@ free_conn(struct spdk_iscsi_conn *conn)
 static struct spdk_iscsi_conn *
 spdk_find_iscsi_connection_by_id(int cid)
 {
-	if (g_conns_array[cid].is_valid == 1) {
+	if (g_conns_array != MAP_FAILED && g_conns_array[cid].is_valid == 1) {
 		return &g_conns_array[cid];
 	} else {
 		return NULL;

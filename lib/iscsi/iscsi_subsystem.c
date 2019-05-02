@@ -264,7 +264,7 @@ spdk_iscsi_initialize_all_pools(void)
 static void
 spdk_iscsi_check_pool(struct spdk_mempool *pool, size_t count)
 {
-	if (spdk_mempool_count(pool) != count) {
+	if (pool && spdk_mempool_count(pool) != count) {
 		SPDK_ERRLOG("spdk_mempool_count(%s) == %zu, should be %zu\n",
 			    spdk_mempool_get_name(pool), spdk_mempool_count(pool), count);
 	}
