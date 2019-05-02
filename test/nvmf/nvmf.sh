@@ -33,6 +33,7 @@ fi
 run_test suite test/nvmf/target/nmic.sh
 run_test suite test/nvmf/target/rpc.sh
 run_test suite test/nvmf/target/fio.sh
+run_test suite test/nvmf/target/bdevio.sh
 
 timing_enter host
 
