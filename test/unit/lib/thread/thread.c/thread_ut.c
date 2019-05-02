@@ -344,6 +344,8 @@ thread_name(void)
 	struct spdk_thread *thread;
 	const char *name;
 
+	spdk_thread_lib_init(NULL, 0);
+
 	/* Create thread with no name, which automatically generates one */
 	thread = spdk_thread_create(NULL, NULL);
 	spdk_set_thread(thread);
@@ -362,6 +364,8 @@ thread_name(void)
 	SPDK_CU_ASSERT_FATAL(name != NULL);
 	CU_ASSERT(strcmp(name, "test_thread") == 0);
 	spdk_thread_exit(thread);
+
+	spdk_thread_lib_fini();
 }
 
 static uint64_t device1;
