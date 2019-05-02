@@ -594,6 +594,14 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64
 	return 0;
 }
 
+volatile struct spdk_nvme_registers *
+nvme_pcie_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
+	return pctrlr->regs;
+}
+
 void *
 nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
