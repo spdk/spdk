@@ -146,6 +146,8 @@ DEFINE_STUB_V(spdk_reduce_vol_unload, (struct spdk_reduce_vol *vol,
 				       spdk_reduce_vol_op_complete cb_fn, void *cb_arg));
 DEFINE_STUB_V(spdk_reduce_vol_load, (struct spdk_reduce_backing_dev *backing_dev,
 				     spdk_reduce_vol_op_with_handle_complete cb_fn, void *cb_arg));
+DEFINE_STUB_V(spdk_reduce_get_vol_params, (struct spdk_reduce_vol *vol,
+		struct spdk_reduce_vol_params *params));
 
 /* DPDK stubs */
 DEFINE_STUB(rte_socket_id, unsigned, (void), 0);
