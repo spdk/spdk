@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db21857b_682dbabe",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-02T16:35:53Z",
+      "side": 1,
+      "message": "the typical usage of calloc here would be:\n\ncalloc(128, sizeof(struct iovec))\n\nThe first parameter is how many you want, the second parameter is what size of each of those items",
+      "revId": "83ee5d28b5329db89e325c2df405b8faa659c03d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
