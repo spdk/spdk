@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "473b6097_62d42237",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-02T16:30:16Z",
+      "side": 1,
+      "message": "kind of unrelated to this patch - but why do we always pass 0 here?  Shouldn\u0027t you be getting the qp id from the comp_bdev-\u003edevice_qp object?",
+      "revId": "02ed4f0db8edf1cf6ba877af9c4a11a870bcb84f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
