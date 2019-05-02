@@ -237,7 +237,7 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 				     spdk_bdev_part_complete_io, bdev_io);
 		break;
 	default:
-		SPDK_ERRLOG("split: unknown I/O type %d\n", bdev_io->type);
+		SPDK_ERRLOG("unknown I/O type %d\n", bdev_io->type);
 		return SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
