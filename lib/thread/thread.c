@@ -178,7 +178,11 @@ spdk_thread_lib_fini(void)
 
 	if (g_spdk_msg_mempool) {
 		spdk_mempool_free(g_spdk_msg_mempool);
+		g_spdk_msg_mempool = NULL;
 	}
+
+	g_new_thread_fn = NULL;
+	g_ctx_sz = 0;
 }
 
 struct spdk_thread *
@@ -248,7 +252,19 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (g_new_thread_fn) {
-		g_new_thread_fn(thread);
+		rc = g_new_thread_fn(thread);
+		if (rc != 0) {
+			spdk_cpuset_free(thread->cpumask);
+			spdk_ring_free(thread->messages);
+			spdk_mempool_put_bulk(g_spdk_msg_mempool, (void **)msgs, SPDK_MSG_MEMPOOL_CACHE_SIZE);
+			free(thread->name);
+			pthread_mutex_lock(&g_devlist_mutex);
+			TAILQ_REMOVE(&g_threads, thread, tailq);
+			g_thread_count--;
+			pthread_mutex_unlock(&g_devlist_mutex);
+			free(thread);
+			return NULL;
+		}
 	}
 
 	return thread;

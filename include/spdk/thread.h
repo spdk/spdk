@@ -58,7 +58,7 @@ struct spdk_poller;
  *
  * \param thread The new spdk_thread.
  */
-typedef void (*spdk_new_thread_fn)(struct spdk_thread *thread);
+typedef int (*spdk_new_thread_fn)(struct spdk_thread *thread);
 
 /**
  * A function that will be called on the target thread.

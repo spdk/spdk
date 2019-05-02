@@ -400,7 +400,7 @@ _schedule_thread(void *arg1, void *arg2)
 	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
 }
 
-static void
+static int
 spdk_reactor_schedule_thread(struct spdk_thread *thread)
 {
 	uint32_t core;
@@ -421,6 +421,8 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 
 	evt = spdk_event_allocate(core, _schedule_thread, lw_thread, NULL);
 	spdk_event_call(evt);
+
+	return 0;
 }
 
 int
