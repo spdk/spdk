@@ -717,3 +717,31 @@ nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 
 	return rc;
 }
+
+int
+nvme_ctrlr_cmd_sanitize(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			struct spdk_nvme_sanitize *sanitize, uint32_t cdw11,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+	int rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	req = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
+	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_SANITIZE;
+	cmd->nsid = nsid;
+	cmd->cdw11 = cdw11;
+	memcpy(&cmd->cdw10, sanitize, sizeof(cmd->cdw10));
+
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+}
