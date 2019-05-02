@@ -89,7 +89,7 @@ fi
 
 if [ `uname` = Linux ]; then
 	start_stub "-s 4096 -i 0 -m 0xF"
-	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
+	trap "kill_stub -9; exit 1" SIGINT SIGTERM EXIT
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
