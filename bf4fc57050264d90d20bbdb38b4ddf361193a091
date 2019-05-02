@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67003003_32f312ac",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-02T01:01:31Z",
+      "side": 1,
+      "message": "if (!conn-\u003eis_stopped) may be easier to follow.\n\nCan we move this part to the front of this function (before the line 733)?\n\nOr as Jim suggests, can we restore this part into iscsi_conn_schedule?\n\nAnyway this change makes _iscsi_conn_destruct a little harder to follow.",
+      "range": {
+        "startLine": 747,
+        "startChar": 0,
+        "endLine": 749,
+        "endChar": 2
+      },
+      "revId": "bf4fc57050264d90d20bbdb38b4ddf361193a091",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
