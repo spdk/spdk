@@ -506,7 +506,7 @@ function start_stub() {
 }
 
 function kill_stub() {
-	kill $stubpid
+	kill $1 $stubpid
 	wait $stubpid
 	rm -f /var/run/spdk_stub0
 	# Re-enable ASLR now that we are done with multi-process testing
