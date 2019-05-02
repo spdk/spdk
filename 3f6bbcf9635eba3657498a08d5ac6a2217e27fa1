@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "204d6727_898fb027",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-02T17:56:19Z",
+      "side": 1,
+      "message": "Can we check the cpumask in spdk_thread_create() to find this problem sooner?\n\nI\u0027m just not sure scheduling it on the first core is the best thing to do.  I think we should just fail/crash/something really bad.",
+      "revId": "3f6bbcf9635eba3657498a08d5ac6a2217e27fa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
