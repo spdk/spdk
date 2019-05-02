@@ -91,6 +91,8 @@ struct spdk_iscsi_tgt_node {
 
 	bool destructed;
 	struct spdk_poller *destruct_poller;
+	iscsi_tgt_node_destruct_cb destruct_cb_fn;
+	void *destruct_cb_arg;
 };
 
 int spdk_iscsi_parse_tgt_nodes(void);
