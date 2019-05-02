@@ -1761,6 +1761,12 @@ nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return spdk_min(ctrlr->cdata.nvmf_specific.msdbd, NVME_RDMA_MAX_SGL_DESCRIPTORS);
 }
 
+volatile struct spdk_nvme_registers *
+nvme_rdma_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return NULL;
+}
+
 void *
 nvme_rdma_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {

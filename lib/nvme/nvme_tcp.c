@@ -1852,6 +1852,12 @@ nvme_tcp_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return 1;
 }
 
+volatile struct spdk_nvme_registers *
+nvme_tcp_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return NULL;
+}
+
 void *
 nvme_tcp_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
