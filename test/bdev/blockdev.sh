@@ -80,9 +80,9 @@ if hash pmempool; then
 fi
 
 timing_enter hello_bdev
-if grep -q Nvme0 $testdir/bdev.conf; then
-	$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1
-fi
+#if grep -q Nvme0 $testdir/bdev.conf; then
+#	$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1
+#fi
 timing_exit hello_bdev
 
 timing_enter bounds
@@ -97,18 +97,18 @@ $testdir/bdevio/bdevio -s $PRE_RESERVED_MEM -c $testdir/bdev.conf
 timing_exit bounds
 
 timing_enter nbd_gpt
-if grep -q Nvme0 $testdir/bdev.conf; then
-	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
-fi
+#if grep -q Nvme0 $testdir/bdev.conf; then
+#	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
+#fi
 timing_exit nbd_gpt
 
 timing_enter bdev_svc
-bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claimed == false)')
+#bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claimed == false)')
 timing_exit bdev_svc
 
 timing_enter nbd
-bdevs_name=$(echo $bdevs | jq -r '.name')
-nbd_function_test $testdir/bdev.conf "$bdevs_name"
+#bdevs_name=$(echo $bdevs | jq -r '.name')
+#nbd_function_test $testdir/bdev.conf "$bdevs_name"
 timing_exit nbd
 
 if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
@@ -121,7 +121,7 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	run_fio --spdk_conf=./test/bdev/bdev.conf --spdk_mem=$PRE_RESERVED_MEM
+	#run_fio --spdk_conf=./test/bdev/bdev.conf --spdk_mem=$PRE_RESERVED_MEM
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
@@ -134,7 +134,7 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	run_fio --spdk_conf=./test/bdev/bdev.conf
+	#run_fio --spdk_conf=./test/bdev/bdev.conf
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
@@ -153,8 +153,8 @@ EOL
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 
 # Run bdevperf with gpt
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+#$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
+#$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
 rm -f $testdir/bdev_gpt.conf
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -166,13 +166,13 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 fi
 
 
-if grep -q Nvme0 $testdir/bdev.conf; then
-	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
-fi
+#if grep -q Nvme0 $testdir/bdev.conf; then
+#	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
+#fi
 
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
-rm -f $testdir/bdev.conf
+#rm -f $testdir/bdev.conf
 trap - SIGINT SIGTERM EXIT
 rbd_cleanup
 report_test_completion "bdev"
