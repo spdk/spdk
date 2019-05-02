@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8aa55019_d9105d29",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-02T16:13:43Z",
+      "side": 1,
+      "message": "this comment needs to be reworded",
+      "revId": "90b53435976999127e9011db02654da26fba177b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
