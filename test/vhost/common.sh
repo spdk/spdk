@@ -1,7 +1,7 @@
 set -e
 
 
-testdir=$(readlink -f $(dirname $0))
+testdir=$(readlink -f $(dirname $0)/..)
 rootdir=$(readlink -f $testdir/../..)
 
 # Source config describing QEMU and VHOST cores and NUMA
@@ -25,15 +25,6 @@ VHOST_SOCK="/tmp/vhost_rpc.sock"
 : ${VHOST_RPC="./scripts/rpc.py -s $VHOST_SOCK"}; export VHOST_RPC
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
-
-
-# SSH key file
-: ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
-if [[ ! -r "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
-	error "Could not find SSH key file $SPDK_VHOST_SSH_KEY_FILE"
-	exit 1
-fi
-echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 
 function vhosttestinit()
 {
@@ -329,13 +320,14 @@ function vm_create_ssh_config()
 function vm_ssh()
 {
 	vm_num_is_valid $1 || return 1
-	vm_create_ssh_config
-	local ssh_config="$rootdir/vms/ssh_config"
 
-	local ssh_cmd="ssh -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
+	local ssh_cmd="sshpass -p $2 ssh \
+		-o UserKnownHostsFile=/dev/null \
+		-o StrictHostKeyChecking=no \
+		-o User=root \
 		-p $(vm_ssh_socket $1) $VM_SSH_OPTIONS 127.0.0.1"
 
-	shift
+	shift 2
 	$ssh_cmd "$@"
 }
 
@@ -368,13 +360,11 @@ function vm_sshpass()
 function vm_scp()
 {
 	vm_num_is_valid $1 || return 1
-	vm_create_ssh_config
-	local ssh_config="$rootdir/vms/ssh_config"
 
-	local scp_cmd="scp -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
-		-P $(vm_ssh_socket $1) "
+	local scp_cmd="sshpass -p $2 \
+		scp -P $(vm_ssh_socket $1)"
 
-	shift
+	shift 2
 	$scp_cmd "$@"
 }
 
