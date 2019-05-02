@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcdf27ee_93e3d9c7",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-02T17:05:36Z",
+      "side": 1,
+      "message": "Could you clarify why this patch and the one before it are needed?   The BDEV_IO_NUM_CHILD_IOV limits the number of iovs in a child bdev_io when the parent has to be split.  But if we limit the VM to SPDK_BDEV_LARGE_BUF_MAX_SIZE, then it shouldn\u0027t matter how many IOVs it sends us.  If it\u0027s not aligned, we will allocate one large buffer, and copy all of the data from the iovs into it.",
+      "revId": "28d795aab6250a802659d6c0a3cb7116d1926e8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
