@@ -830,6 +830,95 @@ blockdev_test_reset(void)
 	}
 }
 
+struct bdevio_passthrough_request {
+	struct spdk_nvme_cmd cmd;
+	void *buf;
+	uint32_t len;
+	struct io_target *target;
+	int sct;
+	int sc;
+};
+
+static void
+nvme_pt_test_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct bdevio_passthrough_request *pt_req = arg;
+
+	spdk_bdev_io_get_nvme_status(bdev_io, &pt_req->sct, &pt_req->sc);
+	spdk_bdev_free_io(bdev_io);
+	wake_ut_thread();
+}
+
+static void
+__blockdev_nvme_passthru(void *arg1, void *arg2)
+{
+	struct bdevio_passthrough_request *pt_req = arg1;
+	struct io_target *target = pt_req->target;
+	int rc;
+
+	rc = spdk_bdev_nvme_io_passthru(target->bdev_desc, target->ch,
+					&pt_req->cmd, pt_req->buf, pt_req->len,
+					nvme_pt_test_complete, pt_req);
+	if (rc) {
+		wake_ut_thread();
+	}
+}
+
+static void
+blockdev_nvme_passthru_rw(struct io_target *target)
+{
+	struct bdevio_passthrough_request pt_req;
+	void *write_buf, *read_buf;
+
+	if (!spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_NVME_IO)) {
+		return;
+	}
+
+	memset(&pt_req, 0, sizeof(pt_req));
+	pt_req.target = target;
+	pt_req.cmd.opc = SPDK_NVME_OPC_WRITE;
+	pt_req.cmd.nsid = 1;
+	*(uint64_t *)&pt_req.cmd.cdw10 = 4;
+	pt_req.cmd.cdw12 = 0;
+
+	pt_req.len = spdk_bdev_get_block_size(target->bdev);
+	write_buf = spdk_dma_malloc(pt_req.len, 0, NULL);
+	memset(write_buf, 0xA5, pt_req.len);
+	pt_req.buf = write_buf;
+
+	pt_req.sct = SPDK_NVME_SCT_VENDOR_SPECIFIC;
+	pt_req.sc = SPDK_NVME_SC_INVALID_FIELD;
+	execute_spdk_function(__blockdev_nvme_passthru, &pt_req, NULL);
+	CU_ASSERT(pt_req.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(pt_req.sc == SPDK_NVME_SC_SUCCESS);
+
+	pt_req.cmd.opc = SPDK_NVME_OPC_READ;
+	read_buf = spdk_dma_zmalloc(pt_req.len, 0, NULL);
+	pt_req.buf = read_buf;
+
+	pt_req.sct = SPDK_NVME_SCT_VENDOR_SPECIFIC;
+	pt_req.sc = SPDK_NVME_SC_INVALID_FIELD;
+	execute_spdk_function(__blockdev_nvme_passthru, &pt_req, NULL);
+	CU_ASSERT(pt_req.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(pt_req.sc == SPDK_NVME_SC_SUCCESS);
+
+	CU_ASSERT(!memcmp(read_buf, write_buf, pt_req.len));
+	spdk_dma_free(read_buf);
+	spdk_dma_free(write_buf);
+}
+
+static void
+blockdev_test_nvme_passthru_rw(void)
+{
+	struct io_target	*target;
+
+	target = g_io_targets;
+	while (target != NULL) {
+		blockdev_nvme_passthru_rw(target);
+		target = target->next;
+	}
+}
+
 static void
 __stop_init_thread(void *arg1, void *arg2)
 {
@@ -896,6 +985,8 @@ __run_ut_thread(void *arg1, void *arg2)
 			       blockdev_writev_readv_size_gt_128k) == NULL
 		|| CU_add_test(suite, "blockdev writev readv size > 128k in two iovs",
 			       blockdev_writev_readv_size_gt_128k_two_iov) == NULL
+		|| CU_add_test(suite, "blockdev nvme passthru rw",
+			       blockdev_test_nvme_passthru_rw) == NULL
 		|| CU_add_test(suite, "blockdev reset",
 			       blockdev_test_reset) == NULL
 	) {
