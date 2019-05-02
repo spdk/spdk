@@ -30,6 +30,10 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test suite test/nvmf/multiconnection/multiconnection.sh
 fi
 
+run_test suite test/nvmf/nmic/nmic.sh
+run_test suite test/nvmf/rpc/rpc.sh
+run_test suite test/nvmf/fio/fio.sh
+
 timing_enter host
 
 run_test suite test/nvmf/host/bdevperf.sh
@@ -41,13 +45,10 @@ run_test suite test/nvmf/host/aer.sh
 if [ $SPDK_RUN_ASAN -eq 0 ]; then
     run_test suite test/nvmf/host/fio.sh
 fi
-run_test suite test/nvmf/nmic/nmic.sh
 
 timing_exit host
-trap - SIGINT SIGTERM EXIT
 
-run_test suite test/nvmf/rpc/rpc.sh
-run_test suite test/nvmf/fio/fio.sh
+trap - SIGINT SIGTERM EXIT
 revert_soft_roce
 
 report_test_completion "nvmf"
