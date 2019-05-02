@@ -22,6 +22,30 @@
       "revId": "8369e9fb5bcec613268e5086817cc9683db000d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90784f28_14d1a62b",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1016428
+      },
+      "writtenOn": "2019-05-02T15:54:00Z",
+      "side": 1,
+      "message": "Originally, I had put it under blockdev but that led to testing issues on specific OS\u0027s. \n\nThese issues were as follows:\n- CentOS: missing python library \u0027pexpect\u0027\n- Ubuntu16: missing python library \u0027pexpect\u0027\n- FreeBSD: Not enough memory when trying to start a tgt\n\nSee https://dqtibwqq6s6ux.cloudfront.net/public_build/autotest-per-patch_29731.html as a specific example\n\nAfter chatting with jimharris, he advised me to throw it under iscsi (iscsi already runs another spdkcli test so the dependencies \u0026 memory shouldn\u0027t be an issue) to get this going until the other issues are resolved.",
+      "parentUuid": "211ed7e8_1e3df7ff",
+      "range": {
+        "startLine": 188,
+        "startChar": 0,
+        "endLine": 188,
+        "endChar": 37
+      },
+      "revId": "8369e9fb5bcec613268e5086817cc9683db000d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
