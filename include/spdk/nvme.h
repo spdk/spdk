@@ -723,6 +723,116 @@ union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *
 union spdk_nvme_cmbsz_register spdk_nvme_ctrlr_get_regs_cmbsz(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get the NVMe controller CC (Configuration) register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller CC (Configuration) register.
+ */
+union spdk_nvme_cc_register spdk_nvme_ctrlr_get_regs_cc(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Get the NVMe controller NSSR register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller NSSR register.
+ */
+uint32_t spdk_nvme_ctrlr_get_regs_nssr(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Set the NVMe controller NSSR register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param nvm_reset_value nssr value 0x4E564D65("NVMe").
+ *
+ * \return the NVMe controller NSSR register.
+ */
+uint32_t spdk_nvme_ctrlr_set_regs_nssr(struct spdk_nvme_ctrlr *ctrlr, uint32_t nvm_reset_value);
+
+/**
+ * Get the NVMe controller AQA(Admin Queue Attributes) register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller AQA register.
+ */
+union spdk_nvme_aqa_register spdk_nvme_ctrlr_get_regs_aqa(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Get the NVMe controller ASQ(Admin Submission Queue Base
+ * Address) register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller ASQ register.
+ */
+uint64_t spdk_nvme_ctrlr_get_regs_asq(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Get the NVMe controller ACQ(Admin Completion Queue Base
+ * Address) register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller ACQ register.
+ */
+uint64_t spdk_nvme_ctrlr_get_regs_acq(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Get the NVMe controller CMBLOC(Controller Memory Buffer
+ *  Location) register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller ASQ register.
+ */
+union spdk_nvme_cmbloc_register spdk_nvme_ctrlr_get_regs_cmbloc(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Get the NVMe controller BPINFO(Boot Partition Information)
+ * register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller ASQ register.
+ */
+union spdk_nvme_bpinfo_register spdk_nvme_ctrlr_get_regs_bpinfo(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Get the NVMe controller BPRESL(Boot Partition Read Select)
+ * register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller ASQ register.
+ */
+union spdk_nvme_bprsel_register spdk_nvme_ctrlr_get_regs_bpresl(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Get the NVMe controller BPMBL(Boot Partition Memory Buffer
+ * Location) register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller ASQ register.
+ */
+
+uint64_t spdk_nvme_ctrlr_get_regs_bpmbl(struct spdk_nvme_ctrlr *ctrlr);
+/**
+ * Ring the the completion head doorbell and completion
+ * queue tail doorbell for the uninitiallized IO queue pair.
+ *
+ * \param ctrlr Opaque handle to NVMe controller,
+ *        controller register structure,
+ *		  doorbell offset
+ * \return the NVMe controller register.
+ */
+struct spdk_nvme_registers *spdk_nvme_set_regs_doorbell(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_registers *reg, uint32_t doorbell);
+
+
+/**
  * Get the number of namespaces for the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the

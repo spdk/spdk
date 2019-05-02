@@ -72,6 +72,68 @@ nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register *vs
 }
 
 static int
+nvme_ctrlr_get_nssr(struct spdk_nvme_ctrlr *ctrlr, uint32_t *nssr)
+{
+	return nvme_transport_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, nssr),
+					      nssr);
+}
+
+static int
+nvme_ctrlr_get_aqa(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_aqa_register *aqa)
+{
+	return nvme_transport_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, aqa.raw),
+					      &aqa->raw);
+}
+
+static int
+nvme_ctrlr_get_asq(struct spdk_nvme_ctrlr *ctrlr, uint64_t *asq)
+{
+	return nvme_transport_ctrlr_get_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, asq),
+					      asq);
+}
+
+static int
+nvme_ctrlr_get_acq(struct spdk_nvme_ctrlr *ctrlr, uint64_t *acq)
+{
+	return nvme_transport_ctrlr_get_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, acq),
+					      acq);
+}
+
+static int
+nvme_ctrlr_get_cmbloc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbloc_register *cmbloc)
+{
+	return nvme_transport_ctrlr_get_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, cmbloc),
+					      (uint64_t *)cmbloc);
+}
+
+static int
+nvme_ctrlr_get_bpinfo(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_bpinfo_register *bpinfo)
+{
+	return nvme_transport_ctrlr_get_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, bpinfo),
+					      (uint64_t *)bpinfo);
+}
+
+static int
+nvme_ctrlr_get_bpresl(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_bprsel_register *bprsel)
+{
+	return nvme_transport_ctrlr_get_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, bprsel),
+					      (uint64_t *)bprsel);
+}
+
+static int
+nvme_ctrlr_get_bpmbl(struct spdk_nvme_ctrlr *ctrlr, uint64_t *bpmbl)
+{
+	return nvme_transport_ctrlr_get_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, bpmbl),
+					      (uint64_t *)bpmbl);
+}
+
+static int
+nvme_ctrlr_set_nssr(struct spdk_nvme_ctrlr *ctrlr, uint32_t nssr, uint32_t nssr_offset)
+{
+	return nvme_transport_ctrlr_set_reg_4(ctrlr, nssr_offset, nssr);
+}
+
+static int
 nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_register *cc)
 {
 	return nvme_transport_ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
@@ -2385,15 +2447,116 @@ union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *
 	return ctrlr->vs;
 }
 
+union spdk_nvme_cc_register spdk_nvme_ctrlr_get_regs_cc(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_cc_register cc;
+
+	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
+		cc.raw = 0xFFFFFFFFu;
+	}
+	return cc;
+}
+
+uint32_t spdk_nvme_ctrlr_get_regs_nssr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t nssr;
+
+	if (nvme_ctrlr_get_nssr(ctrlr, &nssr)) {
+		nssr = 0xFFFFFFFFu;
+	}
+	return nssr;
+}
+
+uint32_t spdk_nvme_ctrlr_set_regs_nssr(struct spdk_nvme_ctrlr *ctrlr, uint32_t nvm_reset_value)
+{
+	uint32_t nssr = nvm_reset_value;
+	uint32_t nssr_offset = 0x20;
+
+	if (nvme_ctrlr_set_nssr(ctrlr, nssr, nssr_offset)) {
+		nssr = 0xFFFFFFFFu;
+	}
+	return nssr;
+}
+
+uint64_t spdk_nvme_ctrlr_get_regs_asq(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint64_t asq;
+
+	if (nvme_ctrlr_get_asq(ctrlr, &asq)) {
+		asq = 0xFFFFFFFFFFFFFFFFu;
+	}
+	return asq;
+}
+
+uint64_t spdk_nvme_ctrlr_get_regs_acq(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint64_t acq;
+
+	if (nvme_ctrlr_get_acq(ctrlr, &acq)) {
+		acq = 0xFFFFFFFFFFFFFFFFu;
+	}
+	return acq;
+}
+
+union spdk_nvme_aqa_register spdk_nvme_ctrlr_get_regs_aqa(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_aqa_register aqa;
+
+	if (nvme_ctrlr_get_aqa(ctrlr, &aqa)) {
+		aqa.raw = 0xFFFFFFFFu;
+	}
+	return aqa;
+}
+
+union spdk_nvme_cmbloc_register spdk_nvme_ctrlr_get_regs_cmbloc(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_cmbloc_register cmbloc;
+
+	if (nvme_ctrlr_get_cmbloc(ctrlr, &cmbloc)) {
+		cmbloc.raw = 0xFFFFFFFFu;
+	}
+	return cmbloc;
+}
+
 union spdk_nvme_cmbsz_register spdk_nvme_ctrlr_get_regs_cmbsz(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cmbsz_register cmbsz;
 
 	if (nvme_ctrlr_get_cmbsz(ctrlr, &cmbsz)) {
-		cmbsz.raw = 0;
+		cmbsz.raw = 0xFFFFFFFFu;
 	}
 
 	return cmbsz;
+}
+
+union spdk_nvme_bpinfo_register spdk_nvme_ctrlr_get_regs_bpinfo(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_bpinfo_register bpinfo;
+
+	if (nvme_ctrlr_get_bpinfo(ctrlr, &bpinfo)) {
+		bpinfo.raw = 0xFFFFFFFFu;
+	}
+	return bpinfo;
+}
+
+union spdk_nvme_bprsel_register spdk_nvme_ctrlr_get_regs_bpresl(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_bprsel_register bpresl;
+
+	if (nvme_ctrlr_get_bpresl(ctrlr, &bpresl)) {
+		bpresl.raw = 0xFFFFFFFFu;
+	}
+	return bpresl;
+}
+
+uint64_t spdk_nvme_ctrlr_get_regs_bpmbl(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint64_t bpmbl;
+
+	if (nvme_ctrlr_get_bpmbl(ctrlr, &bpmbl)) {
+		bpmbl = 0xFFFFFFFFFFFFFFFFu;
+	}
+	return bpmbl;
 }
 
 uint32_t
