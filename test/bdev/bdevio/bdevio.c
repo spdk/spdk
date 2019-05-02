@@ -920,6 +920,39 @@ blockdev_test_nvme_passthru_rw(void)
 }
 
 static void
+blockdev_nvme_passthru_vendor_specific(struct io_target *target)
+{
+	struct bdevio_passthrough_request pt_req;
+
+	if (!spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_NVME_IO)) {
+		return;
+	}
+
+	memset(&pt_req, 0, sizeof(pt_req));
+	pt_req.target = target;
+	pt_req.cmd.opc = 0x7F; /* choose known invalid opcode */
+	pt_req.cmd.nsid = 1;
+
+	pt_req.sct = SPDK_NVME_SCT_VENDOR_SPECIFIC;
+	pt_req.sc = SPDK_NVME_SC_SUCCESS;
+	execute_spdk_function(__blockdev_nvme_passthru, &pt_req, NULL);
+	CU_ASSERT(pt_req.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(pt_req.sc == SPDK_NVME_SC_INVALID_OPCODE);
+}
+
+static void
+blockdev_test_nvme_passthru_vendor_specific(void)
+{
+	struct io_target	*target;
+
+	target = g_io_targets;
+	while (target != NULL) {
+		blockdev_nvme_passthru_vendor_specific(target);
+		target = target->next;
+	}
+}
+
+static void
 __stop_init_thread(void *arg1, void *arg2)
 {
 	unsigned num_failures = (unsigned)(uintptr_t)arg1;
@@ -987,6 +1020,8 @@ __run_ut_thread(void *arg1, void *arg2)
 			       blockdev_writev_readv_size_gt_128k_two_iov) == NULL
 		|| CU_add_test(suite, "blockdev nvme passthru rw",
 			       blockdev_test_nvme_passthru_rw) == NULL
+		|| CU_add_test(suite, "blockdev nvme passthru vendor specific",
+			       blockdev_test_nvme_passthru_vendor_specific) == NULL
 		|| CU_add_test(suite, "blockdev reset",
 			       blockdev_test_reset) == NULL
 	) {
