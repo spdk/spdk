@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a605e7f5_fc60f45c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 899,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-02T17:10:05Z",
+      "side": 1,
+      "message": "it would be slightly cleaner to put the check here:\n\nif (spdk_bdev_get_buf_align(bdev) \u003e 1) {\n  blkcfg.opt_io_size \u003d SPDK_BDEV_LARGE_BUF_MAX_SIZE / blk_size;\n} else {\n  blkcfg.opt_io_size \u003d 131072 / blk_size;\n}\n\nIt would require moving the blkcfg memset before line 883 though.",
+      "revId": "6d3e2b04901a716d9c05212550aefe276e8e866c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
