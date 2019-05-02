@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "210d94d3_442be40a",
+        "filename": "autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-02T18:21:58Z",
+      "side": 1,
+      "message": "SPDK test configuration not specified\n\nI think \"specified\" is better - it indicates the user has to pass the name of the configuration file.\n\nLet\u0027s also do the following:\n\n1) put the check before we source autotest_common.sh\n2) add a comment explaining why this check is here - it\u0027s not obvious since $1 isn\u0027t used anywhere in this script (you have to know that autotest_common.sh sources it",
+      "revId": "c060f79e6683f62ea67d272f1a981dae7e6dc029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
