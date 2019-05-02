@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "211ed7e8_1e3df7ff",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-02T09:06:53Z",
+      "side": 1,
+      "message": "why do we run this under iscsi tests? shouldn\u0027t it be under SPDK_TEST_BLOCKDEV? I can\u0027t see iscsi dependencies in the test itself",
+      "range": {
+        "startLine": 188,
+        "startChar": 0,
+        "endLine": 188,
+        "endChar": 37
+      },
+      "revId": "8369e9fb5bcec613268e5086817cc9683db000d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
