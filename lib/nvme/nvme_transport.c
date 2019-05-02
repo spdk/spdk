@@ -185,6 +185,12 @@ nvme_transport_ctrlr_reconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_reconnect_qpair, (ctrlr, qpair));
 }
 
+volatile struct spdk_nvme_registers *
+nvme_transport_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
+{
+	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_get_registers, (ctrlr));
+}
+
 void
 nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
