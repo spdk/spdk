@@ -40,14 +40,41 @@
 #include "thread/thread.c"
 #include "common/lib/ut_multithread.c"
 
+static int g_sched_rc = 0;
+
+static int
+_thread_schedule(struct spdk_thread *thread)
+{
+	return g_sched_rc;
+}
+
 static void
 thread_alloc(void)
 {
-	CU_ASSERT(TAILQ_EMPTY(&g_threads));
-	allocate_threads(1);
-	CU_ASSERT(!TAILQ_EMPTY(&g_threads));
-	free_threads();
-	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+	struct spdk_thread *thread;
+
+	/* No schedule callback */
+	spdk_thread_lib_init(NULL, 0);
+	thread = spdk_thread_create(NULL, NULL);
+	CU_ASSERT(thread != NULL);
+	spdk_thread_exit(thread);
+	spdk_thread_lib_fini();
+
+	/* Schedule callback exists */
+	spdk_thread_lib_init(_thread_schedule, 0);
+
+	/* Scheduling succeeds */
+	g_sched_rc = 0;
+	thread = spdk_thread_create(NULL, NULL);
+	CU_ASSERT(thread != NULL);
+	spdk_thread_exit(thread);
+
+	/* Scheduling fails */
+	g_sched_rc = -1;
+	thread = spdk_thread_create(NULL, NULL);
+	CU_ASSERT(thread == NULL);
+
+	spdk_thread_lib_fini();
 }
 
 static void
