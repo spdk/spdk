@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cfdb581a_61dcd315",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-02T20:21:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a980ec4_065b7b90",
+      "revId": "21642427f591d322d09746c57d08c04a648be817",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "434876fd_b556d717",
         "filename": "lib/event/subsystems/nvmf/conf.c",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "21642427f591d322d09746c57d08c04a648be817",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61cdd1f1_46f3f97d",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-02T20:21:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "434876fd_b556d717",
+      "revId": "21642427f591d322d09746c57d08c04a648be817",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
