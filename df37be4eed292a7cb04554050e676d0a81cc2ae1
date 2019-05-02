@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b320ec8_9a2e2de7",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-02T22:20:02Z",
+      "side": 1,
+      "message": "Maybe if (pg-\u003ecore !\u003d SPDK_ENV_LCORE_ID_ANY) is better to check.",
+      "revId": "df37be4eed292a7cb04554050e676d0a81cc2ae1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
