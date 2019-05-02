@@ -16,6 +16,24 @@
       "revId": "3f6bbcf9635eba3657498a08d5ac6a2217e27fa1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af6fd2e4_dd736d5d",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-02T19:22:58Z",
+      "side": 1,
+      "message": "I can make this callback function have a return code that can be used when a thread cannot ever be scheduled due to a misconfiguration.",
+      "parentUuid": "204d6727_898fb027",
+      "revId": "3f6bbcf9635eba3657498a08d5ac6a2217e27fa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
