@@ -230,4 +230,14 @@ void spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 			    spdk_reduce_vol_op_complete cb_fn, void *cb_arg);
 
+
+/**
+ * Get the params structure for a given volume.
+ *
+ * This function will populate the given params structure for a given volume.
+ *
+ * \param vol Volume to get params structure from.
+ * \param params The params structure to populate.
+ */
+void spdk_reduce_get_vol_params(struct spdk_reduce_vol *vol, struct spdk_reduce_vol_params *params);
 #endif /* SPDK_REDUCE_H_ */
