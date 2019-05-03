@@ -51,13 +51,13 @@ if __name__ == "__main__":
     p = subparsers.add_parser('wait_subsystem_init', help='Block until subsystems have been initialized')
     p.set_defaults(func=wait_subsystem_init)
 
-    def get_rpc_methods(args):
-        print_dict(rpc.get_rpc_methods(args.client,
+    def rpc_get_methods(args):
+        print_dict(rpc.rpc_get_methods(args.client,
                                        current=args.current))
 
-    p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
+    p = subparsers.add_parser('rpc_get_methods', help='Get list of supported RPC methods', aliases=['get_rpc_methods'])
     p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
-    p.set_defaults(func=get_rpc_methods)
+    p.set_defaults(func=rpc_get_methods)
 
     def get_spdk_version(args):
         print(rpc.get_spdk_version(args.client))

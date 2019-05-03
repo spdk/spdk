@@ -86,7 +86,7 @@ will enter the `RUNTIME` state and the list of available commands becomes much
 larger.
 
 To see which RPC methods are available in the current state, issue the
-`get_rpc_methods` with the parameter `current` set to `true`.
+`rpc_get_methods` with the parameter `current` set to `true`.
 
 For more details see @ref jsonrpc documentation.
 
