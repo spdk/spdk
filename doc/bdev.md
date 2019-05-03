@@ -31,7 +31,7 @@ chapters is done by using JSON-RPC commands. SPDK provides a python-based
 command line tool for sending RPC commands located at `scripts/rpc.py`. User
 can list available commands by running this script with `-h` or `--help` flag.
 Additionally user can retrieve currently supported set of RPC commands
-directly from SPDK application by running `scripts/rpc.py get_rpc_methods`.
+directly from SPDK application by running `scripts/rpc.py rpc_get_methods`.
 Detailed help for each command can be displayed by adding `-h` flag as a
 command parameter.
 
