@@ -82,6 +82,14 @@ void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
 			      uint32_t state_mask);
 
 /**
+ * Register a deprecated alias for an RPC method.
+ *
+ * \param method Name for the registered method.
+ * \param alias Alias for the registered method.
+ */
+void spdk_rpc_register_alias_deprecated(const char *method, const char *alias);
+
+/**
  * Check if \c method is allowed for \c state_mask
  *
  * \param method Method name
@@ -99,6 +107,12 @@ int spdk_rpc_is_method_allowed(const char *method, uint32_t state_mask);
 static void __attribute__((constructor)) rpc_register_##func(void) \
 { \
 	spdk_rpc_register_method(method, func, state_mask); \
+}
+
+#define SPDK_RPC_REGISTER_ALIAS_DEPRECATED(method, alias) \
+static void __attribute__((constructor)) rpc_register_##alias(void) \
+{ \
+	spdk_rpc_register_alias_deprecated(#method, #alias); \
 }
 
 /**
