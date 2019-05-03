@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46955486_a4435afe",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1820,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-03T03:25:38Z",
+      "side": 1,
+      "message": "add SPDK_NVME_LOG_SANITIZE_STATUS \u003d 0x81?",
+      "revId": "fd86bc05f8add85fafe76d296bde8de9f3d6e4ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "162f5d9c_ca9da626",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1960,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-03T03:25:38Z",
+      "side": 1,
+      "message": "I\u0027d move the enum down here, right before it\u0027s first used",
+      "revId": "fd86bc05f8add85fafe76d296bde8de9f3d6e4ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a01a735_9868084d",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1975,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-03T03:25:38Z",
+      "side": 1,
+      "message": "we usually try to add comments for all of the members of these structures, unless the name makes it 100% obvious",
+      "revId": "fd86bc05f8add85fafe76d296bde8de9f3d6e4ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
