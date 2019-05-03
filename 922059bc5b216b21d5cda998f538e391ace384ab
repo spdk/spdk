@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d45cf1e7_53b5e78f",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1513,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-03T03:30:30Z",
+      "side": 1,
+      "message": "copy/paste error",
+      "revId": "922059bc5b216b21d5cda998f538e391ace384ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83a6048a_5b74a62a",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-03T03:30:30Z",
+      "side": 1,
+      "message": "I hadn\u0027t thought about the volatile here, and having to cast it away.\n\nMaybe we should have the function return a volatile struct pointer instead?",
+      "revId": "922059bc5b216b21d5cda998f538e391ace384ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
