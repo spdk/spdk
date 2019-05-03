@@ -54,7 +54,7 @@ else
 DPDK_LIB_EXT = .so
 endif
 
-DPDK_LIB_LIST = rte_eal rte_mempool rte_ring
+DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf
 
 # librte_mempool_ring was new added from DPDK 17.05. Link this library used for
 #   ring based mempool management API.
@@ -102,7 +102,7 @@ endif
 
 ifneq ($(CONFIG_VHOST_INTERNAL_LIB),y)
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_vhost.*))
-DPDK_LIB_LIST += rte_vhost rte_net rte_hash rte_mbuf
+DPDK_LIB_LIST += rte_vhost rte_net rte_hash
 ifneq ($(DPDK_FRAMEWORK),y)
 DPDK_LIB_LIST += rte_cryptodev
 endif
