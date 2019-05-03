@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from rpc.client import print_dict, JSONRPCException
+from rpc.helpers import deprecated_aliases
 
 import logging
 import argparse
@@ -1804,16 +1805,26 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             print(ex.message)
             exit(1)
 
+    def check_called_name(name):
+        if name in deprecated_aliases:
+            print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
+
     def execute_script(parser, client, fd):
         for rpc_call in map(str.rstrip, fd):
-            args = parser.parse_args(rpc_call.split())
+            argv = rpc_call.split()
+            args = parser.parse_args(argv)
             args.client = client
             call_rpc_func(args)
+            check_called_name(argv[0])
 
     args = parser.parse_args()
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
         call_rpc_func(args)
+        prog_only_parser = create_prog_parser()
+        prog_only_parser.add_argument('rpc_args', nargs=argparse.REMAINDER)
+        prog_only_args = prog_only_parser.parse_args()
+        check_called_name(prog_only_args.rpc_args[0])
     elif sys.stdin.isatty():
         # No arguments and no data piped through stdin
         parser.print_help()
