@@ -57,6 +57,9 @@ struct spdk_rpc_method {
 	spdk_rpc_method_handler func;
 	SLIST_ENTRY(spdk_rpc_method) slist;
 	uint32_t state_mask;
+	bool is_deprecated;
+	struct spdk_rpc_method *is_alias_of;
+	bool deprecation_warning_printed;
 };
 
 static SLIST_HEAD(, spdk_rpc_method) g_rpc_methods = SLIST_HEAD_INITIALIZER(g_rpc_methods);
@@ -111,6 +114,14 @@ spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 	m = _get_rpc_method(method);
 	if (m == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_METHOD_NOT_FOUND, "Method not found");
+	}
+
+	if (m->is_alias_of != NULL) {
+		if (m->is_deprecated && !m->deprecation_warning_printed) {
+			SPDK_WARNLOG("RPC method %s is deprecated.  Use %s instead.\n", m->name, m->is_alias_of->name);
+			m->deprecation_warning_printed = true;
+		}
+		m = m->is_alias_of;
 	}
 
 	if ((m->state_mask & g_rpc_state) == g_rpc_state) {
@@ -249,6 +260,36 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func, uint3
 
 	m->func = func;
 	m->state_mask = state_mask;
+
+	/* TODO: use a hash table or sorted list */
+	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);
+}
+
+void
+spdk_rpc_register_alias_deprecated(const char *method, const char *alias)
+{
+	struct spdk_rpc_method *m, *base;
+
+	base = _get_rpc_method_raw(method);
+	if (base == NULL) {
+		SPDK_ERRLOG("cannot create alias %s - method %s does not exist\n",
+			    alias, method);
+		return;
+	}
+
+	if (base->is_alias_of != NULL) {
+		SPDK_ERRLOG("cannot create alias %s of alias %s\n", alias, method);
+		return;
+	}
+
+	m = calloc(1, sizeof(struct spdk_rpc_method));
+	assert(m != NULL);
+
+	m->name = strdup(alias);
+	assert(m->name != NULL);
+
+	m->is_alias_of = base;
+	m->is_deprecated = true;
 
 	/* TODO: use a hash table or sorted list */
 	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);
