@@ -158,7 +158,7 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvme_transport_id trid;
 	struct nvmf_tgt_host_trid *tmp_trid = NULL, *new_trid = NULL;
 	int ret;
-	uint32_t core = 0;
+	uint32_t core = spdk_env_get_first_core();
 
 	switch (g_spdk_nvmf_tgt_conf->conn_sched) {
 	case CONNECT_SCHED_HOST_IP:
