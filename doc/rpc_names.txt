@@ -1,0 +1,174 @@
+bdev_aio_create			construct_aio_bdev
+bdev_aio_delete			delete_aio_bdev
+
+bdev_compress_create		construct_compress_bdev
+bdev_compress_delete		delete_compress_bdev
+
+bdev_crypto_create		construct_crypto_bdev
+bdev_crypto_delete		delete_crypto_bdev
+
+bdev_error_create		construct_error_bdev
+bdev_error_delete		delete_error_bdev
+bdev_error_inject_error		bdev_inject_error
+
+bdev_iscsi_create		construct_iscsi_bdev
+bdev_iscsi_delete		delete_iscsi_bdev
+
+bdev_lvol_construct_lvstore	construct_lvol_store
+bdev_lvol_rename_lvstore	rename_lvol_store
+bdev_lvol_destroy_lvstore	destroy_lvol_store
+bdev_lvol_create		construct_lvol_bdev
+bdev_lvol_snapshot		snapshot_lvol_bdev
+bdev_lvol_clone			clone_lvol_bdev
+bdev_lvol_rename		rename_lvol_bdev
+bdev_lvol_inflate		inflate_lvol_bdev
+bdev_lvol_decouple_parent	decouple_parent_lvol_bdev
+bdev_lvol_resize		resize_lvol_bdev
+bdev_lvol_set_read_only		set_read_only_lvol_bdev
+bdev_lvol_delete		destroy_lvol_bdev
+bdev_lvol_get_lvstores		get_lvol_stores
+
+bdev_malloc_create		construct_malloc_bdev
+bdev_malloc_delete		delete_malloc_bdev
+
+bdev_null_create		construct_null_bdev
+bdev_null_delete		delete_null_bdev
+
+bdev_ftl_create			construct_ftl_bdev
+bdev_ftl_delete			delete_ftl_bdev
+
+bdev_nvme_set_options		set_bdev_nvme_options
+bdev_nvme_set_hotplug		set_bdev_nvme_hotplug
+bdev_nvme_attach_controller	construct_nvme_bdev
+bdev_nvme_get_controllers	get_nvme_controllers
+bdev_nvme_detach_controller	delete_nvme_controller
+bdev_nvme_apply_firmware	apply_nvme_firmware
+bdev_nvme_send_cmd		send_nvme_cmd
+
+bdev_ocf_create			construct_ocf_bdev
+bdev_ocf_delete			delete_ocf_bdev
+bdev_ocf_get_stats		get_ocf_stats
+bdev_ocf_get_bdevs		get_ocf_bdevs
+
+bdev_passthru_create		construct_passthru_bdev
+bdev_passthru_delete		delete_passthru_bdev
+
+construct_pmem_bdev
+delete_pmem_bdev
+create_pmem_pool
+pmem_pool_info
+delete_pmem_pool
+
+get_raid_bdevs
+construct_raid_bdev
+destroy_raid_bdev
+
+construct_rbd_bdev
+delete_rbd_bdev
+
+get_bdevs_iostat
+get_bdevs
+set_bdev_qd_sampling_period
+set_bdev_qos_limit
+enable_bdev_histogram
+get_bdev_histogram
+
+construct_split_vbdev
+destruct_split_vbdev
+
+remove_virtio_bdev
+get_virtio_scsi_devs
+construct_virtio_dev
+
+scan_ioat_copy_engine
+
+start_subsystem_init
+wait_subsystem_init
+
+kill_instance
+context_switch_monitor
+
+get_notification_types
+get_notifications
+
+get_subsystems
+get_subsystem_config
+
+set_bdev_options
+set_iscsi_options
+
+get_nvmf_subsystems
+nvmf_subsystem_create
+delete_nvmf_subsystem
+nvmf_subsystem_add_listener
+nvmf_subsystem_remove_listener
+nvmf_subsystem_add_ns
+nvmf_subsystem_remove_ns
+nvmf_subsystem_add_host
+nvmf_subsystem_remove_host
+nvmf_subsystem_allow_any_host
+set_nvmf_target_max_subsystems
+set_nvmf_target_config
+nvmf_create_transport
+get_nvmf_transports
+
+get_initiator_groups
+add_initiator_group
+add_initiators_to_initiator_group
+delete_initiators_from_initiator_group
+delete_initiator_group
+get_target_nodes
+construct_target_node
+add_pg_ig_maps
+delete_pg_ig_maps
+delete_target_node
+get_portal_groups
+add_portal_group
+delete_portal_group
+get_iscsi_connections
+target_node_add_lun
+set_iscsi_target_node_auth
+get_iscsi_global_params
+set_iscsi_discovery_auth
+add_iscsi_auth_group
+delete_iscsi_auth_group
+add_secret_to_iscsi_auth_group
+delete_secret_from_iscsi_auth_group
+get_iscsi_auth_groups
+
+set_log_print_level
+get_log_print_level
+set_log_level
+get_log_level
+set_log_flag
+set_trace_flag
+clear_log_flag
+clear_trace_flag
+get_log_flags
+get_trace_flags
+
+start_nbd_disk
+stop_nbd_disk
+get_nbd_disks
+
+add_ip_address
+delete_ip_address
+get_interfaces
+
+rpc_get_methods
+get_spdk_version
+get_scsi_devices
+
+enable_tpoint_group
+disable_tpoint_group
+get_tpoint_group_mask
+
+construct_vhost_scsi_controller
+add_vhost_scsi_lun
+remove_vhost_scsi_target
+construct_vhost_blk_controller
+remove_vhost_controller
+get_vhost_controllers
+set_vhost_controller_coalescing
+construct_vhost_nvme_controller
+add_vhost_nvme_ns
