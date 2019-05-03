@@ -29,7 +29,18 @@ def wait_subsystem_init(client):
     return client.call('wait_subsystem_init')
 
 
-def get_rpc_methods(client, current=None):
+def deprecated_alias(old_name):
+    def wrap(f):
+        def old_f(*args, **kwargs):
+            print("%s is deprecated, use %s instead." % (old_name, f.__name__))
+            f(*args, **kwargs)
+        globals()[old_name] = old_f
+        return f
+    return wrap
+
+
+@deprecated_alias("get_rpc_methods")
+def rpc_get_methods(client, current=None):
     """Get list of supported RPC methods.
     Args:
         current: Get list of RPC methods only callable in the current state.
@@ -39,7 +50,7 @@ def get_rpc_methods(client, current=None):
     if current:
         params['current'] = current
 
-    return client.call('get_rpc_methods', params)
+    return client.call('rpc_get_methods', params)
 
 
 def get_spdk_version(client):
@@ -91,7 +102,7 @@ def load_config(client, fd):
             subsystems.remove(subsystem)
 
     # check if methods in the config file are known
-    allowed_methods = client.call('get_rpc_methods')
+    allowed_methods = client.call('rpc_get_methods')
     if not subsystems and 'start_subsystem_init' in allowed_methods:
         start_subsystem_init(client)
         return
@@ -103,7 +114,7 @@ def load_config(client, fd):
                 raise rpc_client.JSONRPCException("Unknown method was included in the config file")
 
     while subsystems:
-        allowed_methods = client.call('get_rpc_methods', {'current': True})
+        allowed_methods = client.call('rpc_get_methods', {'current': True})
         allowed_found = False
 
         for subsystem in list(subsystems):
@@ -155,13 +166,13 @@ def load_subsystem_config(client, fd):
     if not subsystem['config']:
         return
 
-    allowed_methods = client.call('get_rpc_methods')
+    allowed_methods = client.call('rpc_get_methods')
     config = subsystem['config']
     for elem in list(config):
         if 'method' not in elem or elem['method'] not in allowed_methods:
             raise rpc_client.JSONRPCException("Unknown method was included in the config file")
 
-    allowed_methods = client.call('get_rpc_methods', {'current': True})
+    allowed_methods = client.call('rpc_get_methods', {'current': True})
     for elem in list(config):
         if 'method' not in elem or elem['method'] not in allowed_methods:
             continue
