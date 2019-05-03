@@ -109,6 +109,19 @@ mock_rte_comp_op_pool_create(const char *name, unsigned int nb_elts,
 	return NULL;
 }
 
+void mock_rte_pktmbuf_free(struct rte_mbuf *m);
+#define rte_pktmbuf_free mock_rte_pktmbuf_free
+void mock_rte_pktmbuf_free(struct rte_mbuf *m)
+{
+}
+
+static struct rte_mbuf * mock_rte_pktmbuf_alloc(struct rte_mempool *mp);
+#define rte_pktmbuf_alloc mock_rte_pktmbuf_alloc
+static struct rte_mbuf * mock_rte_pktmbuf_alloc(struct rte_mempool *mp)
+{
+	return NULL;
+}
+
 #include "bdev/compress/vbdev_compress.c"
 
 /* SPDK stubs */
@@ -160,6 +173,8 @@ DEFINE_STUB(rte_compressdev_enqueue_burst, uint16_t,
 	    (uint8_t dev_id, uint16_t qp_id, struct rte_comp_op **ops, uint16_t nb_ops), 0);
 DEFINE_STUB_V(rte_comp_op_free, (struct rte_comp_op *op));
 DEFINE_STUB(rte_comp_op_alloc, struct rte_comp_op *, (struct rte_mempool *mempool), NULL);
+DEFINE_STUB(rte_pktmbuf_pool_create, struct rte_mempool *, (const char *name, unsigned n, unsigned cache_size, uint16_t priv_size,
+		uint16_t data_room_size, int socket_id), NULL);
 
 struct spdk_bdev_io *g_bdev_io;
 struct spdk_io_channel *g_io_ch;
