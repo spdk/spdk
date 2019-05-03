@@ -87,6 +87,18 @@ _get_rpc_method(const struct spdk_json_val *method)
 	return NULL;
 }
 
+static struct spdk_rpc_method *
+_get_rpc_method_raw(const char *method)
+{
+	struct spdk_json_val method_val;
+
+	method_val.type = SPDK_JSON_VAL_STRING;
+	method_val.len = strlen(method);
+	method_val.start = (char *)method;
+
+	return _get_rpc_method(&method_val);
+}
+
 static void
 spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *method,
@@ -222,6 +234,12 @@ void
 spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func, uint32_t state_mask)
 {
 	struct spdk_rpc_method *m;
+
+	m = _get_rpc_method_raw(method);
+	if (m != NULL) {
+		SPDK_ERRLOG("duplicate RPC %s registered - ignoring...\n", method);
+		return;
+	}
 
 	m = calloc(1, sizeof(struct spdk_rpc_method));
 	assert(m != NULL);
