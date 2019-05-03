@@ -205,7 +205,7 @@ Example response:
 }
 ~~~
 
-## get_rpc_methods {#rpc_get_rpc_methods}
+## rpc_get_methods {#rpc_rpc_get_methods}
 
 Get an array of supported RPC methods.
 
@@ -227,7 +227,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "get_rpc_methods"
+  "method": "rpc_get_methods"
 }
 ~~~
 

@@ -89,7 +89,7 @@ spdk_jsonrpc_client_check_rpc_method(struct spdk_jsonrpc_client *client, char *m
 		return -ENOMEM;
 	}
 
-	w = spdk_jsonrpc_begin_request(request, 1, "get_rpc_methods");
+	w = spdk_jsonrpc_begin_request(request, 1, "rpc_get_methods");
 	spdk_jsonrpc_end_request(request, w);
 	spdk_jsonrpc_client_send_request(client, request);
 
@@ -301,7 +301,7 @@ static void *
 rpc_client_th(void *arg)
 {
 	struct spdk_jsonrpc_client *client = NULL;
-	char *method_name = "get_rpc_methods";
+	char *method_name = "rpc_get_methods";
 	int rc;
 
 
