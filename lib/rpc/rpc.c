@@ -73,6 +73,20 @@ spdk_rpc_get_state(void)
 	return g_rpc_state;
 }
 
+static struct spdk_rpc_method *
+_get_rpc_method(const struct spdk_json_val *method)
+{
+	struct spdk_rpc_method *m;
+
+	SLIST_FOREACH(m, &g_rpc_methods, slist) {
+		if (spdk_json_strequal(method, m->name)) {
+			return m;
+		}
+	}
+
+	return NULL;
+}
+
 static void
 spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *method,
@@ -82,21 +96,20 @@ spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 
 	assert(method != NULL);
 
-	SLIST_FOREACH(m, &g_rpc_methods, slist) {
-		if (spdk_json_strequal(method, m->name)) {
-			if ((m->state_mask & g_rpc_state) == g_rpc_state) {
-				m->func(request, params);
-			} else {
-				spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
-								     "Method is allowed in any state in the mask (%"PRIx32"),"
-								     " but current state is (%"PRIx32")",
-								     m->state_mask, g_rpc_state);
-			}
-			return;
-		}
+	m = _get_rpc_method(method);
+	if (m == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_METHOD_NOT_FOUND, "Method not found");
+		return;
 	}
 
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_METHOD_NOT_FOUND, "Method not found");
+	if ((m->state_mask & g_rpc_state) == g_rpc_state) {
+		m->func(request, params);
+	} else {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
+						     "Method is allowed in any state in the mask (%"PRIx32"),"
+						     " but current state is (%"PRIx32")",
+						     m->state_mask, g_rpc_state);
+	}
 }
 
 int
