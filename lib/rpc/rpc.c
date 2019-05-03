@@ -380,7 +380,8 @@ spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_rpc_methods", spdk_rpc_get_rpc_methods, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("rpc_get_methods", spdk_rpc_get_rpc_methods, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(rpc_get_methods, get_rpc_methods)
 
 static void
 spdk_rpc_get_version(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
