@@ -28,8 +28,14 @@ def wait_subsystem_init(client):
     """Block until subsystems have been initialized"""
     return client.call('wait_subsystem_init')
 
+def deprecated_alias(alias, method, args, kwargs):
+    print("%s is deprecated. Use %s instead." % (alias, method.__name__))
+    return method(*args, **kwargs)
 
-def get_rpc_methods(client, current=None):
+def get_rpc_methods(*args, **kwargs):
+    return deprecated_alias(__name__, rpc_get_methods, args, kwargs)
+
+def rpc_get_methods(client, current=None):
     """Get list of supported RPC methods.
     Args:
         current: Get list of RPC methods only callable in the current state.
@@ -39,7 +45,7 @@ def get_rpc_methods(client, current=None):
     if current:
         params['current'] = current
 
-    return client.call('get_rpc_methods', params)
+    return client.call('rpc_get_methods', params)
 
 
 def get_spdk_version(client):
