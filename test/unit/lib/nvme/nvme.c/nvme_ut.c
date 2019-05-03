@@ -725,6 +725,8 @@ test_nvme_ctrlr_probe(void)
 	void *cb_ctx = NULL;
 	struct spdk_nvme_ctrlr *dummy = NULL;
 
+	nvme_driver_init();
+
 	/* test when probe_cb returns false */
 
 	MOCK_SET(dummy_probe_cb, false);
@@ -740,8 +742,6 @@ test_nvme_ctrlr_probe(void)
 	CU_ASSERT(rc == -1);
 
 	/* happy path */
-	g_spdk_nvme_driver = malloc(sizeof(struct nvme_driver));
-	SPDK_CU_ASSERT_FATAL(g_spdk_nvme_driver != NULL);
 	MOCK_SET(dummy_probe_cb, true);
 	MOCK_SET(nvme_transport_ctrlr_construct, &ctrlr);
 	spdk_nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
