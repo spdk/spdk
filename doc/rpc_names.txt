@@ -1,0 +1,173 @@
+bdev_aio_create			construct_aio_bdev
+bdev_aio_delete			delete_aio_bdev
+
+bdev_compress_create		construct_compress_bdev
+bdev_compress_delete		delete_compress_bdev
+
+bdev_crypto_create		construct_crypto_bdev
+bdev_crypto_delete		delete_crypto_bdev
+
+bdev_error_create		construct_error_bdev
+bdev_error_delete		delete_error_bdev
+bdev_error_inject_error		bdev_inject_error
+
+bdev_iscsi_create		construct_iscsi_bdev
+bdev_iscsi_delete		delete_iscsi_bdev
+
+bdev_lvol_create_lvstore	construct_lvol_store
+bdev_lvol_rename_lvstore	rename_lvol_store
+bdev_lvol_delete_lvstore	destroy_lvol_store
+bdev_lvol_create		construct_lvol_bdev
+bdev_lvol_delete		destroy_lvol_bdev
+bdev_lvol_snapshot		snapshot_lvol_bdev
+bdev_lvol_clone			clone_lvol_bdev
+bdev_lvol_rename		rename_lvol_bdev
+bdev_lvol_inflate		inflate_lvol_bdev
+bdev_lvol_decouple_parent	decouple_parent_lvol_bdev
+bdev_lvol_resize		resize_lvol_bdev
+bdev_lvol_set_read_only		set_read_only_lvol_bdev
+bdev_lvol_get_lvstores		get_lvol_stores
+
+bdev_malloc_create		construct_malloc_bdev
+bdev_malloc_delete		delete_malloc_bdev
+
+bdev_null_create		construct_null_bdev
+bdev_null_delete		delete_null_bdev
+
+bdev_ftl_create			construct_ftl_bdev
+bdev_ftl_delete			delete_ftl_bdev
+
+bdev_nvme_set_options		set_bdev_nvme_options
+bdev_nvme_set_hotplug		set_bdev_nvme_hotplug
+bdev_nvme_attach_controller	construct_nvme_bdev
+bdev_nvme_detach_controller	delete_nvme_controller
+bdev_nvme_get_controllers	get_nvme_controllers
+bdev_nvme_apply_firmware	apply_nvme_firmware
+bdev_nvme_send_cmd		send_nvme_cmd
+
+bdev_ocf_create			construct_ocf_bdev
+bdev_ocf_delete			delete_ocf_bdev
+bdev_ocf_get_stats		get_ocf_stats
+bdev_ocf_get_bdevs		get_ocf_bdevs
+
+bdev_passthru_create		construct_passthru_bdev
+bdev_passthru_delete		delete_passthru_bdev
+
+bdev_pmem_create		construct_pmem_bdev
+bdev_pmem_delete		delete_pmem_bdev
+bdev_pmem_create_pool		create_pmem_pool
+bdev_pmem_get_pool_info		pmem_pool_info
+bdev_pmem_delete_pool		delete_pmem_pool
+
+bdev_raid_get_bdevs		get_raid_bdevs
+bdev_raid_create		construct_raid_bdev
+bdev_raid_delete		destroy_raid_bdev
+
+bdev_rbd_create			construct_rbd_bdev
+bdev_rbd_delete			delete_rbd_bdev
+
+bdev_get_iostat			get_bdevs_iostat
+bdev_get_bdevs			get_bdevs
+bdev_set_qd_sampling_period	set_bdev_qd_sampling_period
+bdev_set_qos_limit		set_bdev_qos_limit
+bdev_enable_histogram		enable_bdev_histogram
+bdev_get_histogram		get_bdev_histogram
+
+bdev_split_create		construct_split_vbdev
+bdev_split_delete		destruct_split_vbdev
+
+bdev_virtio_delete		remove_virtio_bdev
+bdev_virtio_get_scsi_devs	get_virtio_scsi_devs
+bdev_virtio_create		construct_virtio_dev
+
+ioat_scan_copy_engine		scan_ioat_copy_engine
+
+subsystem_start_init		start_subsystem_init
+subsystem_wait_init		wait_subsystem_init
+
+kill_instance			kill_instance
+context_switch_monitor		context_switch_monitor
+
+notify_get_types		get_notification_types
+notify_get_notifications	get_notifications
+
+subsystem_get_subsystems	get_subsystems
+subsystem_get_config		get_subsystem_config
+
+bdev_set_options		set_bdev_options
+iscsi_set_options		set_iscsi_options
+
+nvmf_get_subsystems		get_nvmf_subsystems
+nvmf_create_subsystem		nvmf_subsystem_create
+nvmf_delete_subsystem		delete_nvmf_subsystem
+nvmf_subsystem_add_listener	nvmf_subsystem_add_listener
+nvmf_subsystem_remove_listener	nvmf_subsystem_remove_listener
+nvmf_subsystem_add_ns		nvmf_subsystem_add_ns
+nvmf_subsystem_remove_ns	nvmf_subsystem_remove_ns
+nvmf_subsystem_add_host		nvmf_subsystem_add_host
+nvmf_subsystem_remove_host	nvmf_subsystem_remove_host
+nvmf_subsystem_allow_any_host	nvmf_subsystem_allow_any_host
+nvmf_set_max_subsystems		set_nvmf_target_max_subsystems
+nvmf_set_config			set_nvmf_target_config
+nvmf_create_transport		nvmf_create_transport
+nvmf_get_transports		get_nvmf_transports
+
+iscsi_get_initiator_groups		get_initiator_groups
+iscsi_create_initiator_group		add_initiator_group
+iscsi_initiator_group_add_initiators	add_initiators_to_initiator_group
+iscsi_initiator_group_remove_initiators	delete_initiators_from_initiator_group
+iscsi_delete_initiator_group		delete_initiator_group
+iscsi_get_target_nodes			get_target_nodes
+iscsi_create_target_node		construct_target_node
+iscsi_target_node_add_pg_ig_maps	add_pg_ig_maps
+iscsi_target_node_remove_pg_ig_maps	delete_pg_ig_maps
+iscsi_delete_target_node		delete_target_node
+iscsi_get_portal_groups			get_portal_groups
+iscsi_create_portal_group		add_portal_group
+iscsi_delete_portal_group		delete_portal_group
+iscsi_get_connections			get_iscsi_connections
+iscsi_target_node_add_lun		target_node_add_lun
+iscsi_target_node_set_auth		set_iscsi_target_node_auth
+iscsi_get_global_params			get_iscsi_global_params
+iscsi_set_discovery_auth		set_iscsi_discovery_auth
+iscsi_create_auth_group			add_iscsi_auth_group
+iscsi_delete_auth_group			delete_iscsi_auth_group
+iscsi_auth_group_add_secret		add_secret_to_iscsi_auth_group
+iscsi_auth_group_remove_secret		delete_secret_from_iscsi_auth_group
+iscsi_get_auth_groups			get_iscsi_auth_groups
+
+log_set_print_level			set_log_print_level
+log_get_print_level			get_log_print_level
+log_set_level				set_log_level
+log_get_level				get_log_level
+log_set_flag				set_log_flag
+log_clear_flag				clear_log_flag
+log_get_flags				get_log_flags
+
+nbd_start_disk				start_nbd_disk
+nbd_stop_disk				stop_nbd_disk
+nbd_get_disks				get_nbd_disks
+
+net_interface_add_ip_address		add_ip_address
+net_interface_delete_ip_address		delete_ip_address
+net_get_interfaces			get_interfaces
+
+rpc_get_methods				get_rpc_methods
+
+spdk_get_version			get_spdk_version
+
+scsi_get_devices			get_scsi_devices
+
+trace_enable_tpoint_group		tenable_tpoint_group
+trace_disable_tpoint_group		disable_tpoint_group
+trace_get_tpoint_group_mask		get_tpoint_group_mask
+
+vhost_create_scsi_controller		construct_vhost_scsi_controller
+vhost_scsi_controller_add_target	add_vhost_scsi_lun
+vhost_scsi_controller_remove_target	remove_vhost_scsi_target
+vhost_create_blk_controller		construct_vhost_blk_controller
+vhost_delete_controller			remove_vhost_controller
+vhost_get_controllers			get_vhost_controllers
+vhost_controller_set_coalescing		set_vhost_controller_coalescing
+vhost_create_nvme_controller		construct_vhost_nvme_controller
+vhost_nvme_controller_add_ns		add_vhost_nvme_ns
