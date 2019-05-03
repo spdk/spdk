@@ -1802,13 +1802,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def execute_script(parser, client, fd):
         for rpc_call in map(str.rstrip, fd):
+            argv = rpc_call.split()
             args = parser.parse_args(rpc_call.split())
+            if argv[0] != args.func.__name__:
+                print("%s is deprecated.  Use %s instead." % (argv[0], args.func.__name__))
             args.client = client
             call_rpc_func(args)
 
     args = parser.parse_args()
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
+        if sys.argv[1] != args.func.__name__:
+            print("%s is deprecated.  Use %s instead." % (sys.argv[1], args.func.__name__))
         call_rpc_func(args)
     else:
         execute_script(parser, args.client, sys.stdin)
