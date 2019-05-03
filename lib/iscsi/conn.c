@@ -751,7 +751,9 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_tgt_node *target;
 
-	if (conn->state == ISCSI_CONN_STATE_EXITED && conn->sess != NULL &&
+	assert(conn->state == ISCSI_CONN_STATE_EXITED);
+
+	if (conn->sess != NULL &&
 	    conn->sess->session_type == SESSION_TYPE_NORMAL &&
 	    conn->full_feature) {
 		target = conn->sess->target;
@@ -1502,7 +1504,8 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 
 	iscsi_poll_group_remove_conn_sock(conn);
 	spdk_poller_unregister(&conn->flush_poller);
-	iscsi_conn_stop(conn);
+	__sync_fetch_and_sub(&g_num_connections[conn->lcore], 1);
+	iscsi_poll_group_remove_conn(conn);
 
 	__sync_fetch_and_add(&g_num_connections[lcore], 1);
 	conn->last_nopin = spdk_get_ticks();
