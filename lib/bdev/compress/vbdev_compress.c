@@ -362,48 +362,6 @@ error_create_mbuf:
 	return rc;
 }
 
-/* Poller for the DPDK compression driver. */
-static int
-comp_dev_poller(void *args)
-{
-	struct vbdev_compress *comp_bdev = args;
-	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
-	struct rte_comp_op *deq_ops;
-	uint16_t num_deq;
-	struct spdk_reduce_vol_cb_args *reduce_args;
-
-	num_deq = rte_compressdev_dequeue_burst(cdev_id, 0, &deq_ops, 1);
-
-	if (num_deq > 0) {
-		reduce_args = (struct spdk_reduce_vol_cb_args *)deq_ops->m_src->userdata;
-
-		if (deq_ops->status != RTE_COMP_OP_STATUS_SUCCESS) {
-			SPDK_ERRLOG("deque status %u\n", deq_ops->status);
-
-			/* TODO update produced with translated -errno */
-			/*
-			 * RTE_COMP_OP_STATUS_SUCCESS = 0,
-			 * RTE_COMP_OP_STATUS_NOT_PROCESSED,
-			 * RTE_COMP_OP_STATUS_INVALID_ARGS,
-			 * RTE_COMP_OP_STATUS_ERROR,
-			 * RTE_COMP_OP_STATUS_INVALID_STATE,
-			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_TERMINATED,
-			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_RECOVERABLE,
-			 */
-		}
-		reduce_args->cb_fn(reduce_args->cb_arg, deq_ops->produced);
-
-		/* Now free both mbufs and the compress operation. The rte_pktmbuf_free()
-		 * call takes care of freeing all of the mbufs in the chain back to their
-		 * original pool.
-		 */
-		rte_pktmbuf_free(deq_ops->m_src);
-		rte_pktmbuf_free(deq_ops->m_dst);
-		rte_comp_op_free(deq_ops);
-	}
-	return 0;
-}
-
 /* Completion callback for r/w that were issued via reducelib. */
 static void
 spdk_reduce_rw_blocks_cb(void *arg, int reduce_errno)
@@ -528,6 +486,48 @@ error_get_dst:
 error_get_src:
 	rte_comp_op_free(comp_op);
 	return rc;
+}
+
+/* Poller for the DPDK compression driver. */
+static int
+comp_dev_poller(void *args)
+{
+	struct vbdev_compress *comp_bdev = args;
+	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
+	struct rte_comp_op *deq_ops;
+	uint16_t num_deq;
+	struct spdk_reduce_vol_cb_args *reduce_args;
+
+	num_deq = rte_compressdev_dequeue_burst(cdev_id, 0, &deq_ops, 1);
+
+	if (num_deq > 0) {
+		reduce_args = (struct spdk_reduce_vol_cb_args *)deq_ops->m_src->userdata;
+
+		if (deq_ops->status != RTE_COMP_OP_STATUS_SUCCESS) {
+			SPDK_ERRLOG("deque status %u\n", deq_ops->status);
+
+			/* TODO update produced with translated -errno */
+			/*
+			 * RTE_COMP_OP_STATUS_SUCCESS = 0,
+			 * RTE_COMP_OP_STATUS_NOT_PROCESSED,
+			 * RTE_COMP_OP_STATUS_INVALID_ARGS,
+			 * RTE_COMP_OP_STATUS_ERROR,
+			 * RTE_COMP_OP_STATUS_INVALID_STATE,
+			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_TERMINATED,
+			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_RECOVERABLE,
+			 */
+		}
+		reduce_args->cb_fn(reduce_args->cb_arg, deq_ops->produced);
+
+		/* Now free both mbufs and the compress operation. The rte_pktmbuf_free()
+		 * call takes care of freeing all of the mbufs in the chain back to their
+		 * original pool.
+		 */
+		rte_pktmbuf_free(deq_ops->m_src);
+		rte_pktmbuf_free(deq_ops->m_dst);
+		rte_comp_op_free(deq_ops);
+	}
+	return 0;
 }
 
 /* Entry point for reduce lib to issue a compress operation. */
