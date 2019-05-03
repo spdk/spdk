@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5904a44_ad78a2c0",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-03T01:14:52Z",
+      "side": 1,
+      "message": "Why we need to remove this test? And why not just remove, instead of comment? Same question for other changed places.",
+      "revId": "f358a76f937b1ce4210e50b9d6f009582f4fc3fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
