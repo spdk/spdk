@@ -340,25 +340,24 @@ spdk_rpc_close(void)
 	}
 }
 
-struct rpc_get_rpc_methods {
+struct rpc_get_methods {
 	bool current;
 };
 
-static const struct spdk_json_object_decoder rpc_get_rpc_methods_decoders[] = {
-	{"current", offsetof(struct rpc_get_rpc_methods, current), spdk_json_decode_bool, true},
+static const struct spdk_json_object_decoder rpc_get_methods_decoders[] = {
+	{"current", offsetof(struct rpc_get_methods, current), spdk_json_decode_bool, true},
 };
 
 static void
-spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+spdk_rpc_get_methods(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	struct rpc_get_rpc_methods req = {};
+	struct rpc_get_methods req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_rpc_method *m;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_get_rpc_methods_decoders,
-					    SPDK_COUNTOF(rpc_get_rpc_methods_decoders), &req)) {
+		if (spdk_json_decode_object(params, rpc_get_methods_decoders,
+					    SPDK_COUNTOF(rpc_get_methods_decoders), &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Invalid parameters");
@@ -381,7 +380,8 @@ spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_rpc_methods", spdk_rpc_get_rpc_methods, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("rpc_get_methods", spdk_rpc_get_methods, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(rpc_get_methods, get_rpc_methods)
 
 static void
 spdk_rpc_get_spdk_version(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
