@@ -16,6 +16,18 @@ except ImportError:
 def print_array(a):
     print(" ".join((quote(v) for v in a)))
 
+# Used to find the function name specified by the user so that we can
+#  print a deprecation notice if necessary
+def get_func_name_used(argv):
+    i = 0
+    while True:
+        arg = argv[i]
+        if arg == '-s' or arg == '-p' or arg == '-t' or arg == '--verbose':
+            i += 2
+        elif arg == '-v':
+            i += 1
+        else:
+            return arg
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -1802,13 +1814,19 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def execute_script(parser, client, fd):
         for rpc_call in map(str.rstrip, fd):
-            args = parser.parse_args(rpc_call.split())
+            argv = rpc_call.split()
+            args = parser.parse_args(argv)
+            if argv[0] != args.func.__name__:
+                print("%s is deprecated.  Use %s instead." % (argv[0], args.func.__name__))
             args.client = client
             call_rpc_func(args)
 
     args = parser.parse_args()
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
+        func_name_used = get_func_name_used(sys.argv[1:])
+        if func_name_used != args.func.__name__:
+            print("%s is deprecated.  Use %s instead." % (func_name_used, args.func.__name__))
         call_rpc_func(args)
     elif sys.stdin.isatty():
         # No arguments and no data piped through stdin
