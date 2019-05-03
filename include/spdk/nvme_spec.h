@@ -1597,16 +1597,6 @@ enum spdk_nvme_dealloc_logical_block_read_value {
 };
 
 /**
- * Sanitize Status Type
- */
-enum spdk_nvme_sanitize_status_type {
-	SPDK_NVME_NEVER_BEEN_SANITIZED		= 0x0,
-	SPDK_NVME_RECENT_SANITIZE_SUCCESSFUL	= 0x1,
-	SPDK_NVME_SANITIZE_IN_PROGRESS		= 0x2,
-	SPDK_NVME_SANITIZE_FAILED		= 0x3,
-};
-
-/**
  * Reservation Type Encoding
  */
 enum spdk_nvme_reservation_type {
@@ -1818,6 +1808,9 @@ enum spdk_nvme_log_page {
 	/** Reservation notification (optional) */
 	SPDK_NVME_LOG_RESERVATION_NOTIFICATION	= 0x80,
 
+	/** Sanitize status (optional) */
+	SPDK_NVME_LOG_SANITIZE_STATUS = 0x81,
+
 	/* 0x81-0xBF - I/O command set specific */
 
 	/* 0xC0-0xFF - vendor specific */
@@ -1959,6 +1952,16 @@ struct spdk_nvme_telemetry_log_page_hdr {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_telemetry_log_page_hdr) == 512, "Incorrect size");
 
 /**
+ * Sanitize Status Type
+ */
+enum spdk_nvme_sanitize_status_type {
+	SPDK_NVME_NEVER_BEEN_SANITIZED		= 0x0,
+	SPDK_NVME_RECENT_SANITIZE_SUCCESSFUL	= 0x1,
+	SPDK_NVME_SANITIZE_IN_PROGRESS		= 0x2,
+	SPDK_NVME_SANITIZE_FAILED		= 0x3,
+};
+
+/**
  * Sanitize status sstat field
  */
 struct spdk_nvme_sanitize_status_sstat {
@@ -1972,12 +1975,12 @@ struct spdk_nvme_sanitize_status_sstat {
  * Sanitize log page
  */
 struct spdk_nvme_sanitize_status_log_page {
-	uint16_t				sprog;
-	struct spdk_nvme_sanitize_status_sstat	sstat;
-	uint32_t				scdw10;
-	uint32_t				et_overwrite;
-	uint32_t				et_block_erase;
-	uint32_t				et_crypto_erase;
+	uint16_t				sprog;			/* Sanitize progress */
+	struct spdk_nvme_sanitize_status_sstat	sstat;			/* Sanitize status */
+	uint32_t				scdw10;			/* CDW10 of sanitize command */
+	uint32_t				et_overwrite;		/* Estimated overwrite time in seconds */
+	uint32_t				et_block_erase;		/* Estimated block erase time in seconds */
+	uint32_t				et_crypto_erase;	/* Estimated crypto erase time in seconds */
 	uint8_t					reserved[492];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_sanitize_status_log_page) == 512, "Incorrect size");
