@@ -8,3 +8,4 @@
 - @subpage ftl
 - @subpage gdb_macros
 - @subpage reduce
+- @subpage notify

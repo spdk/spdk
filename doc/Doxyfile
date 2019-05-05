@@ -821,6 +821,7 @@ INPUT                  += \
                          jsonrpc_proxy.md \
                          lvol.md \
                          memory.md \
+                         notify.md \
                          nvme.md \
                          nvme-cli.md \
                          nvmf.md \
