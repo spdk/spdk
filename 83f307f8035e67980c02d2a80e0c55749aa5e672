@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8891ccc9_7c01b4ad",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-05T05:13:56Z",
+      "side": 1,
+      "message": "As suggested, to set the IOPS limit as half of the measured IOPS without QoS.",
+      "range": {
+        "startLine": 80,
+        "startChar": 3,
+        "endLine": 80,
+        "endChar": 58
+      },
+      "revId": "83f307f8035e67980c02d2a80e0c55749aa5e672",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
