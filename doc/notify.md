@@ -23,7 +23,7 @@ about notification.
 
 # Get new events {#notify_listen}
 
-A consumer can get events by calling function `spdk_notify_get_events`.
+A consumer can get events by calling function `spdk_notify_foreach_event`.
 The caller should specify last received event and the maximum number of invocations.
 There might be multiple consumers of each event. The event bus is implemented as a
 circular buffer, so older events may be overwritten by newer ones.

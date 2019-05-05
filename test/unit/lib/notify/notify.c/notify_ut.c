@@ -68,14 +68,14 @@ notify(void)
 	spdk_notify_send("two", "two_context");
 
 	event = NULL;
-	cnt = spdk_notify_get_events(0, 1, event_cb, &event);
+	cnt = spdk_notify_foreach_event(0, 1, event_cb, &event);
 	SPDK_CU_ASSERT_FATAL(cnt == 1);
 	SPDK_CU_ASSERT_FATAL(event != NULL);
 	CU_ASSERT(strcmp(event->type, "one") == 0);
 	CU_ASSERT(strcmp(event->ctx, "one_context") == 0);
 
 	event = NULL;
-	cnt = spdk_notify_get_events(1, 1, event_cb, &event);
+	cnt = spdk_notify_foreach_event(1, 1, event_cb, &event);
 	SPDK_CU_ASSERT_FATAL(cnt == 1);
 	SPDK_CU_ASSERT_FATAL(event != NULL);
 	CU_ASSERT(strcmp(event->type, "two") == 0);
@@ -83,7 +83,7 @@ notify(void)
 
 	/* This event should not exist yet */
 	event = NULL;
-	cnt = spdk_notify_get_events(2, 1, event_cb, &event);
+	cnt = spdk_notify_foreach_event(2, 1, event_cb, &event);
 	CU_ASSERT(cnt == 0);
 	CU_ASSERT(event == NULL);
 
