@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c61269cd_24c130c3",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-05T23:00:48Z",
+      "side": 1,
+      "message": "rte_pktmbuf_alloc_bulk is not available in this case?",
+      "range": {
+        "startLine": 451,
+        "startChar": 17,
+        "endLine": 451,
+        "endChar": 34
+      },
+      "revId": "b61ea74acb99b1cbf4c169ca4ba8893941bd09c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
