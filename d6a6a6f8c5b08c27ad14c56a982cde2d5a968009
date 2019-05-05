@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0671c797_e856f478",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-05T23:09:53Z",
+      "side": 1,
+      "message": "Comment for \\return should be added here?",
+      "revId": "d6a6a6f8c5b08c27ad14c56a982cde2d5a968009",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
