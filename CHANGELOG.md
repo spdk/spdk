@@ -10,8 +10,9 @@ receive queue is predicated on hardware support when this flag is not used.
 
 ### notify
 
-The function `spdk_notify_get_types()` was renamed to `spdk_notify_foreach_type()`.
-And update type name of callback accordingly.
+The function `spdk_notify_get_types()` and `spdk_notify_get_events()` were
+renamed to `spdk_notify_foreach_type()` and `spdk_notify_foreach_event()`,
+respectively. And update type name of callback accordingly.
 
 ## v19.04:
 

@@ -121,7 +121,7 @@ spdk_rpc_get_notifications(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_json_write_array_begin(req.w);
-	spdk_notify_get_events(req.id, req.max, get_notifications_cb, &req);
+	spdk_notify_foreach_event(req.id, req.max, get_notifications_cb, &req);
 	spdk_json_write_array_end(req.w);
 
 	spdk_jsonrpc_end_result(request, req.w);
