@@ -71,8 +71,6 @@ typedef int (*spdk_notify_get_event_cb)(uint64_t idx, const struct spdk_notify_e
 /**
  * Register \c type as new notification type.
  *
- * The \c type must be valid through whole program lifetime (chance being a global variable).
- *
  * \note This function is thread safe.
  *
  * \param type New notification type to register.
