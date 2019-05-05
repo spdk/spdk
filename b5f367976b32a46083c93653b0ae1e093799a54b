@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e72c1f19_6821a3fd",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 3362,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-05T22:06:39Z",
+      "side": 1,
+      "message": "Can we factor out factor out the line 3363 to 3421 into nvmf_rdma_qpair_process_queued_send_wrs() or the line 3362 to 3422 into nvmf_rdma_poller_process_queued_send_wrs(), or similar one?\n\nThis may be helpful for others to follow and understand the change correctly.",
+      "revId": "b5f367976b32a46083c93653b0ae1e093799a54b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
