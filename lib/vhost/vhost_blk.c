@@ -878,6 +878,8 @@ spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 		return -1;
 	}
 
+	memset(&blkcfg, 0, sizeof(blkcfg));
+
 	bdev = bvdev->bdev;
 	if (bdev == NULL) {
 		/* We can't just return -1 here as this GET_CONFIG message might
@@ -896,15 +898,18 @@ spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	} else {
 		blk_size = spdk_bdev_get_block_size(bdev);
 		blkcnt = spdk_bdev_get_num_blocks(bdev);
+		if (spdk_bdev_get_buf_align(bdev) > 1) {
+			blkcfg.opt_io_size = SPDK_BDEV_LARGE_BUF_MAX_SIZE / blk_size;
+		} else {
+			blkcfg.opt_io_size = 131072 / blk_size;
+		}
 	}
 
-	memset(&blkcfg, 0, sizeof(blkcfg));
 	blkcfg.blk_size = blk_size;
 	/* minimum I/O size in blocks */
 	blkcfg.min_io_size = 1;
 	/* expressed in 512 Bytes sectors */
 	blkcfg.capacity = (blkcnt * blk_size) / 512;
-	blkcfg.size_max = 131072;
 	/*  -2 for REQ and RESP and -1 for region boundary splitting */
 	blkcfg.seg_max = SPDK_VHOST_IOVS_MAX - 2 - 1;
 	/* QEMU can overwrite this value when started */
