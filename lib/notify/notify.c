@@ -62,9 +62,8 @@ spdk_notify_type_register(const char *type)
 	if (!type) {
 		SPDK_ERRLOG("Invalid notification type %p\n", type);
 		return NULL;
-	} else if (!type || strlen(type) >= SPDK_NOTIFY_MAX_NAME_SIZE) {
-		SPDK_ERRLOG("Invalid notification type (add: %p, name: %s)\n", type,
-			    type ? type : "(null)");
+	} else if (!type[0] || strlen(type) >= SPDK_NOTIFY_MAX_NAME_SIZE) {
+		SPDK_ERRLOG("Notification type '%s' too short or too long\n", type);
 		return NULL;
 	}
 
