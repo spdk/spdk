@@ -1670,7 +1670,7 @@ _spdk_bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *
 			       bool success)
 {
 	if (!success) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 		return;
 	}
 
