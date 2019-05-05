@@ -47,7 +47,7 @@ extern "C" {
  */
 struct spdk_notify_type;
 
-typedef int (*spdk_notify_get_type_cb)(const struct spdk_notify_type *type, void *ctx);
+typedef int (*spdk_notify_foreach_type_cb)(const struct spdk_notify_type *type, void *ctx);
 
 #define SPDK_NOTIFY_MAX_NAME_SIZE 128
 #define SPDK_NOTIFY_MAX_CTX_SIZE 128
@@ -93,7 +93,7 @@ const char *spdk_notify_type_get_name(const struct spdk_notify_type *type);
  * \param cb_fn
  * \param ctx
  */
-void spdk_notify_get_types(spdk_notify_get_type_cb cb_fn, void *ctx);
+void spdk_notify_foreach_type(spdk_notify_foreach_type_cb cb_fn, void *ctx);
 
 /**
  * Send given notification.

@@ -8,6 +8,11 @@ Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.
 
+### notify
+
+The function `spdk_notify_get_types()` was renamed to `spdk_notify_foreach_type()`.
+And update type name of callback accordingly.
+
 ## v19.04:
 
 ### nvme
