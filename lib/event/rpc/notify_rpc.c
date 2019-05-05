@@ -65,7 +65,7 @@ spdk_rpc_get_notification_types(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_json_write_array_begin(w);
-	spdk_notify_get_types(get_notification_types_cb, w);
+	spdk_notify_foreach_type(get_notification_types_cb, w);
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(request, w);
