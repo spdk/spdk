@@ -17,7 +17,7 @@ notification type.
 # Get info about events {#notify_get_info}
 
 A consumer can get information about the available event types during runtime using
-`spdk_notify_get_types`, which iterates over registered notification types and
+`spdk_notify_foreach_type`, which iterates over registered notification types and
 calls a callback on each of them, so that user can produce detailed information
 about notification.
 

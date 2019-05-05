@@ -96,7 +96,7 @@ spdk_notify_type_get_name(const struct spdk_notify_type *type)
 
 
 void
-spdk_notify_get_types(spdk_notify_get_type_cb cb, void *ctx)
+spdk_notify_foreach_type(spdk_notify_foreach_type_cb cb, void *ctx)
 {
 	struct spdk_notify_type *it;
 
