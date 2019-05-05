@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "f8fa1a78_6b79e707",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2292,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-05-05T02:23:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d8ac4a06_672b67fb",
+      "range": {
+        "startLine": 2292,
+        "startChar": 1,
+        "endLine": 2292,
+        "endChar": 39
+      },
+      "revId": "43cd1e57ebdbe2fe1a58b233176135d62fb55c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d727d61_172b0d63",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 2
@@ -83,6 +107,30 @@
       "writtenOn": "2019-04-30T07:23:57Z",
       "side": 1,
       "message": "If you use the thread messaging passing, then this should not be set to NULL here? It may need to set in spdk_nvmf_ns_destroy_channel only if there is no active I/O.",
+      "range": {
+        "startLine": 941,
+        "startChar": 3,
+        "endLine": 941,
+        "endChar": 37
+      },
+      "revId": "43cd1e57ebdbe2fe1a58b233176135d62fb55c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e88f510d_e52df268",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-05-05T02:23:52Z",
+      "side": 1,
+      "message": "spdk_put_io_channel() also use the thread messaging passing, so I think it\u0027s ok.",
+      "parentUuid": "4d727d61_172b0d63",
       "range": {
         "startLine": 941,
         "startChar": 3,
