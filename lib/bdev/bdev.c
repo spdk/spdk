@@ -537,9 +537,15 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	    SPDK_BDEV_POOL_ALIGNMENT) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &ch->need_buf_small;
-	} else {
+	} else if (buf_len + alignment < SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
+		   SPDK_BDEV_POOL_ALIGNMENT) {
 		pool = g_bdev_mgr.buf_large_pool;
 		stailq = &ch->need_buf_large;
+	} else {
+		spdk_free(buf);
+		bdev_io->internal.buf = NULL;
+		bdev_io->internal.buf_len = 0;
+		return;
 	}
 
 	if (STAILQ_EMPTY(stailq)) {
@@ -605,14 +611,6 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 		return;
 	}
 
-	if (len + alignment > SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
-	    SPDK_BDEV_POOL_ALIGNMENT) {
-		SPDK_ERRLOG("Length + alignment %" PRIu64 " is larger than allowed\n",
-			    len + alignment);
-		cb(bdev_io->internal.ch->channel, bdev_io, false);
-		return;
-	}
-
 	mgmt_ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
 
 	bdev_io->internal.buf_len = len;
@@ -622,12 +620,21 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	    SPDK_BDEV_POOL_ALIGNMENT) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &mgmt_ch->need_buf_small;
-	} else {
+		buf = spdk_mempool_get(pool);
+	} else if (len + alignment < SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
+		   SPDK_BDEV_POOL_ALIGNMENT) {
 		pool = g_bdev_mgr.buf_large_pool;
 		stailq = &mgmt_ch->need_buf_large;
+		buf = spdk_mempool_get(pool);
+	} else {
+		/* huge buffer */
+		buf = spdk_zmalloc(len, alignment, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+		if (!buf) {
+			SPDK_ERRLOG("Length %" PRIu64 " is larger than allowed\n", len);
+			cb(bdev_io->internal.ch->channel, bdev_io, false);
+			return;
+		}
 	}
-
-	buf = spdk_mempool_get(pool);
 
 	if (!buf) {
 		STAILQ_INSERT_TAIL(stailq, bdev_io, internal.buf_link);
