@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a3dee30f_a687ce01",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-06T08:50:38Z",
+      "side": 1,
+      "message": "I think the problem with your proposal lies in the fact that ftl_dev_num_punits(dev) * dev-\u003exfer_size - size can be greater than the number of remaining blocks left in the band. If we knew that number (should be retrievable from wptr), we could do something like this:\n\nnum_pad_lbks \u003d num_band_remaining \u003c ftl_rwb_size(dev-\u003erwb) - size ? num_band_remaining  : ftl_rwb_size(dev-\u003erwb) - size;\nftl_rwb_pad(dev, num_pad_lbks);\n\nThat way it\u0027ll either fill the whole rwb or fill it just enough to close the band.",
+      "parentUuid": "995e4a1d_02f433bb",
+      "revId": "d28515c51b2664b41c7f93c1c9c582ce12d0fd8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6a34f018_de6a0c36",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 11
@@ -30,6 +48,24 @@
       "writtenOn": "2019-04-26T18:57:57Z",
       "side": 1,
       "message": "I was waiting for your patch to put this in ftl_check_conf().\n(451516, check config after geometry is retrieved).\n\nShould we update that on a separate patch?\nIf we check this configuration in ftl_check_conf() later, do you think we should remove this from ftl_rwb_init()?",
+      "revId": "d28515c51b2664b41c7f93c1c9c582ce12d0fd8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "deffe389_9587f688",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-06T08:50:38Z",
+      "side": 1,
+      "message": "Perhaps you could rebase this patch one on top of mine (451516)?\n\nCorrect, if the check is added in ftl_check_conf, it can be omitted here.",
+      "parentUuid": "6a34f018_de6a0c36",
       "revId": "d28515c51b2664b41c7f93c1c9c582ce12d0fd8e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
