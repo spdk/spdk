@@ -5,12 +5,14 @@ if $SPDK_AUTOTEST_X; then
 fi
 
 function xtrace_disable() {
-	SHELL_RESTORE_X="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	PREV_BASH_OPTS="$-"
 	set +x
 }
 
 function xtrace_restore() {
-	$SHELL_RESTORE_X
+	if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then
+		set -x
+	fi
 }
 
 set -e
