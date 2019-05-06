@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8200a9e_65ecf022",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-06T18:12:07Z",
+      "side": 1,
+      "message": "This is OK.  Technically we try to only use spdk_ prefix on public API - but there are *lots* of places in SPDK that violate this rule today.  We have been trying to remove them - for example, Shuhei fixed most of iSCSI recently.  Making these consistent is probably best for now.",
+      "revId": "820cdfbf2ac3944a5db315a65049d296fcb9c115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
