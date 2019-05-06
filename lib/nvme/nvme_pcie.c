@@ -165,7 +165,6 @@ struct nvme_pcie_qpair {
 
 	struct {
 		uint8_t phase			: 1;
-		uint8_t is_enabled		: 1;
 		uint8_t delay_pcie_doorbell	: 1;
 		uint8_t has_shadow_doorbell	: 1;
 	} flags;
@@ -1433,9 +1432,7 @@ nvme_pcie_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 int
 nvme_pcie_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
-
-	pqpair->flags.is_enabled = true;
+	qpair->is_enabled = true;
 	if (nvme_qpair_is_io_queue(qpair)) {
 		nvme_pcie_io_qpair_enable(qpair);
 	} else {
@@ -1458,9 +1455,7 @@ nvme_pcie_io_qpair_disable(struct spdk_nvme_qpair *qpair)
 int
 nvme_pcie_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
-
-	pqpair->flags.is_enabled = false;
+	qpair->is_enabled = false;
 	if (nvme_qpair_is_io_queue(qpair)) {
 		nvme_pcie_io_qpair_disable(qpair);
 	} else {
@@ -1982,13 +1977,11 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 static inline bool
 nvme_pcie_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
-
-	if (!pqpair->flags.is_enabled &&
+	if (!qpair->is_enabled &&
 	    !qpair->ctrlr->is_resetting) {
 		nvme_qpair_enable(qpair);
 	}
-	return pqpair->flags.is_enabled;
+	return qpair->is_enabled;
 }
 
 int
@@ -2008,7 +2001,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 
 	tr = TAILQ_FIRST(&pqpair->free_tr);
 
-	if (tr == NULL || !pqpair->flags.is_enabled) {
+	if (tr == NULL || !qpair->is_enabled) {
 		/*
 		 * No tracker is available, or the qpair is disabled due to
 		 *  an in-progress controller-level reset.
