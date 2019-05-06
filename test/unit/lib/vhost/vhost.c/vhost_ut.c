@@ -348,6 +348,65 @@ remove_controller_test(void)
 	cleanup_vdev(vdev);
 }
 
+static void
+vq_avail_ring_get_test(void)
+{
+	struct spdk_vhost_virtqueue vq;
+	uint16_t avail_mem[34];
+	uint16_t reqs[32];
+	uint16_t reqs_len, ret, i;
+
+	/* Basic example reap all requests */
+	vq.vring.avail = (struct vring_avail *)avail_mem;
+	vq.vring.size = 32;
+	vq.last_avail_idx = 24;
+	vq.vring.avail->idx = 29;
+	reqs_len = 6;
+
+	for (i = 0; i < 32; i++) {
+		vq.vring.avail->ring[i] = i;
+	}
+
+	ret = spdk_vhost_vq_avail_ring_get(&vq, reqs, reqs_len);
+	CU_ASSERT(ret == 5);
+	CU_ASSERT(vq.last_avail_idx == 29);
+	for (i = 0; i < ret; i++) {
+		CU_ASSERT(reqs[i] == vq.vring.avail->ring[i + 24]);
+	}
+
+	/* Basic example reap only some requests */
+	vq.last_avail_idx = 20;
+	vq.vring.avail->idx = 29;
+	reqs_len = 6;
+
+	ret = spdk_vhost_vq_avail_ring_get(&vq, reqs, reqs_len);
+	CU_ASSERT(ret == reqs_len);
+	CU_ASSERT(vq.last_avail_idx == 26);
+	for (i = 0; i < ret; i++) {
+		CU_ASSERT(reqs[i] == vq.vring.avail->ring[i + 20]);
+	}
+
+	/* Test invalid example */
+	vq.last_avail_idx = 20;
+	vq.vring.avail->idx = 156;
+	reqs_len = 6;
+
+	ret = spdk_vhost_vq_avail_ring_get(&vq, reqs, reqs_len);
+	CU_ASSERT(ret == 0);
+
+	/* Test overflow in the avail->idx variable. */
+	vq.last_avail_idx = 65535;
+	vq.vring.avail->idx = 4;
+	reqs_len = 6;
+	ret = spdk_vhost_vq_avail_ring_get(&vq, reqs, reqs_len);
+	CU_ASSERT(ret == 5);
+	CU_ASSERT(vq.last_avail_idx == 4);
+	CU_ASSERT(reqs[0] == vq.vring.avail->ring[31])
+	for (i = 1; i < ret; i++) {
+		CU_ASSERT(reqs[i] == vq.vring.avail->ring[i - 1]);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -368,7 +427,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "desc_to_iov", desc_to_iov_test) == NULL ||
 		CU_add_test(suite, "create_controller", create_controller_test) == NULL ||
 		CU_add_test(suite, "session_find_by_vid", session_find_by_vid_test) == NULL ||
-		CU_add_test(suite, "remove_controller", remove_controller_test) == NULL
+		CU_add_test(suite, "remove_controller", remove_controller_test) == NULL ||
+		CU_add_test(suite, "vq_avail_ring_get", vq_avail_ring_get_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
