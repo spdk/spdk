@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8f4d6cfc_989b013b",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-06T18:06:36Z",
+      "side": 1,
+      "message": "I was just redefining it to specify the socket path. But I don\u0027t really need to be doing that. I can just move that part outside of the variable.",
+      "parentUuid": "4d5ee680_3ffab3a0",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a416ea0_e760aad7",
         "filename": "test/nvmf/vhost/nvmf_vhost.sh",
         "patchSetId": 8
@@ -33,6 +51,24 @@
       "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a172ac7b_11653e6c",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-06T18:06:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a416ea0_e760aad7",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "8998e920_88f9cf1d",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-06T18:06:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a8e5fac_3e148814",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b29f0008_a650b08a",
         "filename": "test/nvmf/vhost/nvmf_vhost.sh",
         "patchSetId": 8
@@ -67,6 +121,24 @@
       "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b79585f3_b0c2b92d",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-06T18:06:36Z",
+      "side": 1,
+      "message": "Good idea.",
+      "parentUuid": "b29f0008_a650b08a",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "072850d5_5731f8d7",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-06T18:06:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a197ef1_71565844",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff04d098_6a126031",
         "filename": "test/nvmf/vhost/nvmf_vhost.sh",
         "patchSetId": 8
@@ -101,6 +191,24 @@
       "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80927e0a_230ea9d4",
+        "filename": "test/nvmf/vhost/nvmf_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-06T18:06:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff04d098_6a126031",
+      "revId": "c1cab9b3142bc1b854025dba610f11125909d524",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
