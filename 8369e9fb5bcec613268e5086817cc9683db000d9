@@ -46,6 +46,69 @@
       "revId": "8369e9fb5bcec613268e5086817cc9683db000d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e259c82f_530dbe01",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 845,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-06T11:19:21Z",
+      "side": 1,
+      "message": "Please add checking parameters are numbers:\nraid_level \u003d self.ui_eval_param(raid_level, \"number\", None)\nstrip_size_kb \u003d self.ui_eval_param(strip_size_kb, \"number\", None)",
+      "revId": "8369e9fb5bcec613268e5086817cc9683db000d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03acedb4_762a74b4",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 847,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-06T11:19:21Z",
+      "side": 1,
+      "message": "Remove conversion to int",
+      "range": {
+        "startLine": 847,
+        "startChar": 66,
+        "endLine": 847,
+        "endChar": 70
+      },
+      "revId": "8369e9fb5bcec613268e5086817cc9683db000d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6f092b6_80c46e55",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-06T11:19:21Z",
+      "side": 1,
+      "message": "Remove conversion to int",
+      "range": {
+        "startLine": 849,
+        "startChar": 69,
+        "endLine": 849,
+        "endChar": 73
+      },
+      "revId": "8369e9fb5bcec613268e5086817cc9683db000d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
