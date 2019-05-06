@@ -1599,13 +1599,6 @@ nvme_rdma_ctrlr_reconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 }
 
 int
-nvme_rdma_qpair_disable(struct spdk_nvme_qpair *qpair)
-{
-	/* Currently, doing nothing here */
-	return 0;
-}
-
-int
 nvme_rdma_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	/* Currently, doing nothing here */
