@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b238945_f30a3f5f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 795,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-06T12:08:53Z",
+      "side": 1,
+      "message": "There should be a way to time out this poll, otherwise there is no condition under which it will exit if trylock cannot be acquired.\nSince vbdev_ocf_mngt_start() blocks starting multiple operations per vbdev, then poll will never exit and no other operation cannot be performed.\n\nWhat do you think about adding timeout argument to vbdev_ocf_mngt_poll() function ?",
+      "range": {
+        "startLine": 793,
+        "startChar": 0,
+        "endLine": 795,
+        "endChar": 2
+      },
+      "revId": "dde4e246ce9a7882440b9f9127275de834f5da05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59668769_a42c3f2c",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-06T12:08:53Z",
+      "side": 1,
+      "message": "Lets try to limit the exits with error to a minimum in vbdev_ocf_mngt_start(). I suppose this could be an assert, because there should be no way to have vbdev-\u003estate.started \u003d\u003d false and vbdev-\u003eocf_cache !\u003d NULL.",
+      "range": {
+        "startLine": 835,
+        "startChar": 0,
+        "endLine": 838,
+        "endChar": 2
+      },
+      "revId": "dde4e246ce9a7882440b9f9127275de834f5da05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1ea5671_e48d51dc",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-06T12:08:53Z",
+      "side": 1,
+      "message": "There are error paths that we should consider. Here a return with error should be fine, but we shouldn\u0027t proceed to rest of the calls in register_path.\n\nWe might want to consider adding vbdev_ocf_mngt_stop() or do not proceed to further calls in path when error is passed.",
+      "range": {
+        "startLine": 852,
+        "startChar": 2,
+        "endLine": 852,
+        "endChar": 25
+      },
+      "revId": "dde4e246ce9a7882440b9f9127275de834f5da05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47fac3e5_5af433c8",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-06T12:08:53Z",
+      "side": 1,
+      "message": "This comment is not true, cb is called in every path including errors (as it should).",
+      "range": {
+        "startLine": 870,
+        "startChar": 0,
+        "endLine": 870,
+        "endChar": 59
+      },
+      "revId": "dde4e246ce9a7882440b9f9127275de834f5da05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
