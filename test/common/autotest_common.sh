@@ -25,11 +25,11 @@ if [[ ! -z $1 ]]; then
 fi
 
 # If certain utilities are not installed, preemptively disable the tests
-if ! hash ceph; then
+if ! hash ceph &>/dev/null; then
 	SPDK_TEST_RBD=0
 fi
 
-if ! hash pmempool; then
+if ! hash pmempool &>/dev/null; then
 	SPDK_TEST_PMDK=0
 fi
 
@@ -281,7 +281,7 @@ function process_core() {
 		fi
 		echo "exe for $core is $exe"
 		if [[ ! -z "$exe" ]]; then
-			if hash gdb; then
+			if hash gdb &>/dev/null; then
 				gdb -batch -ex "thread apply all bt full" $exe $core
 			fi
 			cp $exe $output_dir
@@ -325,13 +325,13 @@ function waitforlisten() {
 
 	local rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
 
-	if hash ip; then
+	if hash ip &>/dev/null; then
 		local have_ip_cmd=true
 	else
 		local have_ip_cmd=false
 	fi
 
-	if hash ss; then
+	if hash ss &>/dev/null; then
 		local have_ss_cmd=true
 	else
 		local have_ss_cmd=false
