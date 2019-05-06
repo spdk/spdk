@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e59e7770_f7160d8f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 795,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-06T12:13:39Z",
+      "side": 1,
+      "message": "Yes, I think it would be nice to have an optional timeout property",
+      "parentUuid": "1b238945_f30a3f5f",
+      "range": {
+        "startLine": 793,
+        "startChar": 0,
+        "endLine": 795,
+        "endChar": 2
+      },
+      "revId": "dde4e246ce9a7882440b9f9127275de834f5da05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59668769_a42c3f2c",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 30
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-06T12:08:53Z",
       "side": 1,
       "message": "Lets try to limit the exits with error to a minimum in vbdev_ocf_mngt_start(). I suppose this could be an assert, because there should be no way to have vbdev-\u003estate.started \u003d\u003d false and vbdev-\u003eocf_cache !\u003d NULL.",
+      "range": {
+        "startLine": 835,
+        "startChar": 0,
+        "endLine": 838,
+        "endChar": 2
+      },
+      "revId": "dde4e246ce9a7882440b9f9127275de834f5da05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10aef01a_ea9a7757",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-06T12:13:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "59668769_a42c3f2c",
       "range": {
         "startLine": 835,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b268d16d_b18ea33e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-06T12:13:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b1ea5671_e48d51dc",
+      "range": {
+        "startLine": 852,
+        "startChar": 2,
+        "endLine": 852,
+        "endChar": 25
+      },
+      "revId": "dde4e246ce9a7882440b9f9127275de834f5da05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47fac3e5_5af433c8",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 30
@@ -82,6 +154,30 @@
       "writtenOn": "2019-05-06T12:08:53Z",
       "side": 1,
       "message": "This comment is not true, cb is called in every path including errors (as it should).",
+      "range": {
+        "startLine": 870,
+        "startChar": 0,
+        "endLine": 870,
+        "endChar": 59
+      },
+      "revId": "dde4e246ce9a7882440b9f9127275de834f5da05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3272170e_b8928555",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-06T12:13:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "47fac3e5_5af433c8",
       "range": {
         "startLine": 870,
         "startChar": 0,
