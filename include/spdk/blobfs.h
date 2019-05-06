@@ -406,6 +406,42 @@ int spdk_file_sync(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx);
  */
 int spdk_file_get_id(struct spdk_file *file, void *id, size_t size);
 
+/**
+ * Read data to user buffer from the given file.
+ *
+ * \param file File to read.
+ * \param channel I/O channel for asynchronous operations.
+ * \param iovs A scatter gather list of buffers to be read into.
+ * \param iovcnt The number of elements in iov.
+ * \param offset The beginning position to read.
+ * \param length The size in bytes of data to read.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * \return None.
+ */
+void spdk_file_readv_async(struct spdk_file *file, struct spdk_io_channel *channel,
+			   struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
+			   spdk_file_op_complete cb_fn, void *cb_arg);
+
+/**
+ * Write data to the given file.
+ *
+ * \param file File to write.
+ * \param channel I/O channel for asynchronous operations.
+ * \param iovs A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iov.
+ * \param offset The beginning position to write.
+ * \param length The size in bytes of data to write.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * \return None.
+ */
+void spdk_file_writev_async(struct spdk_file *file, struct spdk_io_channel *channel,
+			    struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
+			    spdk_file_op_complete cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif
