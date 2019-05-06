@@ -842,6 +842,8 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->outstanding_aborts--;
 	}
 
+	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
+
 	/* Disable all queues before disabling the controller hardware. */
 	nvme_qpair_disable(ctrlr->adminq);
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
@@ -2283,6 +2285,9 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_qpair *qpair, *tmp;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Prepare to destruct SSD: %s\n", ctrlr->trid.traddr);
+
+	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
+
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
