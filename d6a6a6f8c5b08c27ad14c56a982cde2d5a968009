@@ -16,6 +16,40 @@
       "revId": "d6a6a6f8c5b08c27ad14c56a982cde2d5a968009",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c70bc1f_8ac74e3d",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-06T17:31:58Z",
+      "side": 1,
+      "message": "a lot of this duplicates stuff in spdk_thread_exit() - could any of that be made into a common function?",
+      "revId": "d6a6a6f8c5b08c27ad14c56a982cde2d5a968009",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad034315_d8c66604",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-06T17:31:58Z",
+      "side": 1,
+      "message": "spdk_thread_exit() checks if thread-\u003emessages \u003d\u003d NULL - I think what you have here is more correct but maybe clean that up in a new common function",
+      "revId": "d6a6a6f8c5b08c27ad14c56a982cde2d5a968009",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
