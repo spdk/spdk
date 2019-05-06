@@ -1,4 +1,4 @@
-# Memory Management for User Space Drivers {#memory}
+# Direct Memory Access (DMA) From User Space {#memory}
 
 The following is an attempt to explain why all data buffers passed to SPDK must
 be allocated using spdk_dma_malloc() or its siblings, and why SPDK relies on
