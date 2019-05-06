@@ -1,4 +1,4 @@
-# Vhost processing {#vhost_processing}
+# Virtualized I/O with Vhost-user {#vhost_processing}
 
 # Table of Contents {#vhost_processing_toc}
 
@@ -10,10 +10,10 @@
 
 # Introduction {#vhost_processing_intro}
 
-This document is intended to provide an overall high level insight into how
-Vhost works behind the scenes.
-Code snippets used in this document might have been simplified for the sake
-of readability and should not be used as an API or implementation reference.
+This document is intended to provide an overview of how Vhost works behind the
+scenes. Code snippets used in this document might have been simplified for the
+sake of readability and should not be used as an API or implementation
+reference.
 
 Reading from the
 [Virtio specification](http://docs.oasis-open.org/virtio/virtio/v1.0/virtio-v1.0.html):
