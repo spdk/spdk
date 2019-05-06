@@ -2,32 +2,47 @@
 
 # Overview {#dir_overview}
 
-SPDK is primarily a collection of C libraries intended to be consumed directly by
-applications, but the repository also contains many examples and full-fledged applications.
-This will provide a general overview of what is where in the repository.
+SPDK is composed of a set of C libraries residing in `lib` with public interface
+header files in `include/spdk`, plus a set of applications built out of those
+libraries in `app`. Users can use the C libraries in their software or deploy
+the full SPDK applications.
+
+SPDK is designed around message passing instead of locking, and most of the SPDK
+libraries make several assumptions about the underlying threading model of the
+application they are embedded into. However, SPDK goes to great lengths to remain
+agnostic to the specific message passing, event, co-routine, or light-weight
+threading framework actually in use. To accomplish this, all SPDK libraries
+interact with an abstraction library in `lib/thread` (public interface at
+`include/spdk/thread.h`). Any framework can initialize the threading abstraction
+and provide callbacks to implement the functionality that the SPDK libraries
+need. For more information on this abstraction, see @ref concurrency.
+
+SPDK is built on top of POSIX for most operations. To make porting to non-POSIX
+environments easier, all POSIX headers are isolated into
+`include/spdk/stdinc.h`. However, SPDK requires a number of operations that
+POSIX does not provide, such as enumerating the PCI devices on the system or
+allocating memory that is safe for DMA. These additional operations are all
+abstracted in a library called `env` whose public header is at
+`include/spdk/env.h`. By default, SPDK implements the `env` interface using a
+library based on DPDK. However, that implementation can be swapped out. See @ref
+porting for additional information.
 
 ## Applications {#dir_app}
 
-The `app` top-level directory contains four applications:
- - `app/iscsi_tgt`: An iSCSI target
- - `app/nvmf_tgt`: An NVMe-oF target
- - `app/iscsi_top`: Informational tool (like `top`) that tracks activity in the
-    iSCSI target.
- - `app/trace`: A tool for processing trace points output from the iSCSI and
-    NVMe-oF targets.
- - `app/vhost`:  A vhost application that presents virtio controllers to
-    QEMU-based VMs and process I/O submitted to those controllers.
+The `app` top-level directory contains full-fledged applications, built out of the SPDK
+components. For a full overview, see @ref app_overview.
 
-The application binaries will be in their respective directories after compiling and all
-can be run with no arguments to print out their command line arguments. For the iSCSI
-and NVMe-oF targets, they both need a configuration file (-c option). Fully commented
-examples of the configuration files live in the `etc/spdk` directory.
+SPDK applications can typically be started with a small number of configuration
+options. Full configuration of the applications is then performed using
+JSON-RPC. See @ref jsonrpc for additional information.
 
-## Build Collateral {#dir_build}
+## Libraries {#dir_lib}
 
-The `build` directory contains all of the static libraries constructed during
-the build process. The `lib` directory combined with the `include/spdk`
-directory are the official outputs of an SPDK release, if it were to be packaged.
+The `lib` directory contains the real heart of SPDK. Each component is a C library with
+its own directory under `lib`. Some of the key libraries are:
+
+- @ref bdev
+- @ref nvme
 
 ## Documentation {#dir_doc}
 
@@ -59,8 +74,8 @@ directory and include the headers by prefixing `spdk/` like this:
 #include "spdk/nvme.h"
 ~~~
 
-Most of the headers here correspond with a library in the `lib` directory and will be
-covered in that section. There are a few headers that stand alone, however. They are:
+Most of the headers here correspond with a library in the `lib` directory. There
+are a few headers that stand alone, however. They are:
 
  - `assert.h`
  - `barrier.h`
@@ -73,41 +88,6 @@ covered in that section. There are a few headers that stand alone, however. They
 There is also an `spdk_internal` directory that contains header files widely included
 by libraries within SPDK, but that are not part of the public API and would not be
 installed on a user's system.
-
-## Libraries {#dir_lib}
-
-The `lib` directory contains the real heart of SPDK. Each component is a C library with
-its own directory under `lib`.
-
-### Block Device Abstraction Layer {#dir_bdev}
-
-The `bdev` directory contains a block device abstraction layer that is currently used
-within the iSCSI and NVMe-oF targets. The public interface is `include/spdk/bdev.h`.
-This library lacks clearly defined responsibilities as of this writing and instead does a
-number of
-things:
- - Translates from a common `block` protocol to specific protocols like NVMe or to system
-  calls like libaio. There are currently three block device backend modules that can be
-  plugged in - libaio, SPDK NVMe, CephRBD, and a RAM-based backend called malloc.
- - Provides a mechanism for composing virtual block devices from physical devices (to do
-  RAID and the like).
- - Handles some memory allocation for data buffers.
-
-This layer also could be made to do I/O queueing or splitting in a general way. We're open
-to design ideas and discussion here.
-
-### Configuration File Parser {#dir_conf}
-
-The `conf` directory contains configuration file parser. The public header
-is `include/spdk/conf.h`. The configuration file format is kind of like INI,
-except that the directives are are "Name Value" instead of "Name = Value". This is
-the configuration format for both the iSCSI and NVMe-oF targets.
-
-... Lots more libraries that need to be described ...
-
-## Makefile Fragments {#dir_mk}
-
-The `mk` directory contains a number of shared Makefile fragments used in the build system.
 
 ## Scripts {#dir_scripts}
 
