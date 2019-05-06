@@ -70,6 +70,30 @@
       "revId": "0222c9cfc6357fd3adbe81d7c48094dfbebdbe9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a00ba1e6_1f8604d7",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1510,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-06T06:32:44Z",
+      "side": 0,
+      "message": "That\u0027s a great point - it\u0027s also a bigger problem which I don\u0027t want to tackle now. SPDK doesn\u0027t handle subsystem initiation failures very well today.\nA few weeks ago I created a github issue: \"SPDK subsystems don\u0027t handle initialization failures very well #739\" https://github.com/spdk/spdk/issues/739\n\nAs of now, subsystem fini will be called even for a subsystem which failed to initialize. This is probably wrong and should be redesigned. I believe Xiaodong is working on it as a part of https://trello.com/c/bvl3Yrn7/54-app-framework",
+      "parentUuid": "c98a2ded_b0e72b58",
+      "range": {
+        "startLine": 1510,
+        "startChar": 1,
+        "endLine": 1510,
+        "endChar": 20
+      },
+      "revId": "0222c9cfc6357fd3adbe81d7c48094dfbebdbe9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
