@@ -4,6 +4,15 @@ if $SPDK_AUTOTEST_X; then
 	set -x
 fi
 
+function xtrace_disable() {
+	SHELL_RESTORE_X="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	set +x
+}
+
+function xtrace_restore() {
+	$SHELL_RESTORE_X
+}
+
 set -e
 
 # Export flag to skip the known bug that exists in librados
@@ -239,17 +248,15 @@ function timing() {
 }
 
 function timing_enter() {
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
+	xtrace_disable
 	timing "enter" "$1"
-	$shell_restore_x
+	xtrace_restore
 }
 
 function timing_exit() {
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
+	xtrace_disable
 	timing "exit" "$1"
-	$shell_restore_x
+	xtrace_restore
 }
 
 function timing_finish() {
@@ -339,8 +346,7 @@ function waitforlisten() {
 
 	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
+	xtrace_disable
 	local ret=0
 	local i
 	for (( i = 40; i != 0; i-- )); do
@@ -380,7 +386,7 @@ function waitforlisten() {
 		sleep 0.5
 	done
 
-	$shell_restore_x
+	xtrace_restore
 	if (( i == 0 )); then
 		echo "ERROR: timeout while waiting for process (pid: $1) to start listening on '$rpc_addr'"
 		ret=1
@@ -516,28 +522,26 @@ function kill_stub() {
 }
 
 function run_test() {
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
+	xtrace_disable
 	local test_type="$(echo $1 | tr 'a-z' 'A-Z')"
 	shift
 	echo "************************************"
 	echo "START TEST $test_type $@"
 	echo "************************************"
-	$shell_restore_x
+	xtrace_restore
 	time "$@"
-	set +x
+	xtrace_disable
 	echo "************************************"
 	echo "END TEST $test_type $@"
 	echo "************************************"
-	$shell_restore_x
+	xtrace_restore
 }
 
 function print_backtrace() {
 	# if errexit is not enabled, don't print a backtrace
 	[[ "$-" =~ e ]] || return 0
 
-	local shell_options="$-"
-	set +x
+	xtrace_disable
 	echo "========== Backtrace start: =========="
 	echo ""
 	for i in $(seq 1 $((${#FUNCNAME[@]} - 1))); do
@@ -552,7 +556,7 @@ function print_backtrace() {
 	done
 	echo ""
 	echo "========== Backtrace end =========="
-	[[ "$shell_options" =~ x ]] && set -x
+	xtrace_restore
 	return 0
 }
 
