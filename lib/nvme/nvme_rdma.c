@@ -326,13 +326,17 @@ nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, uint16_t rsp_idx)
 }
 
 static void
-nvme_rdma_free_rsps(struct nvme_rdma_qpair *rqpair)
+nvme_rdma_unregister_rsps(struct nvme_rdma_qpair *rqpair)
 {
 	if (rqpair->rsp_mr && rdma_dereg_mr(rqpair->rsp_mr)) {
 		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
 	}
 	rqpair->rsp_mr = NULL;
+}
 
+static void
+nvme_rdma_free_rsps(struct nvme_rdma_qpair *rqpair)
+{
 	free(rqpair->rsps);
 	rqpair->rsps = NULL;
 	free(rqpair->rsp_sgls);
@@ -344,9 +348,6 @@ nvme_rdma_free_rsps(struct nvme_rdma_qpair *rqpair)
 static int
 nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 {
-	uint16_t i;
-
-	rqpair->rsp_mr = NULL;
 	rqpair->rsps = NULL;
 	rqpair->rsp_recv_wrs = NULL;
 
@@ -368,6 +369,17 @@ nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 		SPDK_ERRLOG("can not allocate rdma rsps\n");
 		goto fail;
 	}
+
+	return 0;
+fail:
+	nvme_rdma_free_rsps(rqpair);
+	return -ENOMEM;
+}
+
+static int
+nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
+{
+	int i;
 
 	rqpair->rsp_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->rsps,
 				       rqpair->num_entries * sizeof(*rqpair->rsps));
@@ -397,8 +409,17 @@ nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 	return 0;
 
 fail:
-	nvme_rdma_free_rsps(rqpair);
+	nvme_rdma_unregister_rsps(rqpair);
 	return -ENOMEM;
+}
+
+static void
+nvme_rdma_unregister_reqs(struct nvme_rdma_qpair *rqpair)
+{
+	if (rqpair->cmd_mr && rdma_dereg_mr(rqpair->cmd_mr)) {
+		SPDK_ERRLOG("Unable to de-register cmd_mr\n");
+	}
+	rqpair->cmd_mr = NULL;
 }
 
 static void
@@ -407,11 +428,6 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 	if (!rqpair->rdma_reqs) {
 		return;
 	}
-
-	if (rqpair->cmd_mr && rdma_dereg_mr(rqpair->cmd_mr)) {
-		SPDK_ERRLOG("Unable to de-register cmd_mr\n");
-	}
-	rqpair->cmd_mr = NULL;
 
 	free(rqpair->cmds);
 	rqpair->cmds = NULL;
@@ -423,8 +439,6 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 static int
 nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 {
-	int i;
-
 	rqpair->rdma_reqs = calloc(rqpair->num_entries, sizeof(struct spdk_nvme_rdma_req));
 	if (rqpair->rdma_reqs == NULL) {
 		SPDK_ERRLOG("Failed to allocate rdma_reqs\n");
@@ -436,6 +450,17 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 		SPDK_ERRLOG("Failed to allocate RDMA cmds\n");
 		goto fail;
 	}
+
+	return 0;
+fail:
+	nvme_rdma_free_reqs(rqpair);
+	return -ENOMEM;
+}
+
+static int
+nvme_rdma_register_reqs(struct nvme_rdma_qpair *rqpair)
+{
+	int i;
 
 	rqpair->cmd_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->cmds,
 				       rqpair->num_entries * sizeof(*rqpair->cmds));
@@ -475,7 +500,7 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 	return 0;
 
 fail:
-	nvme_rdma_free_reqs(rqpair);
+	nvme_rdma_unregister_reqs(rqpair);
 	return -ENOMEM;
 }
 
@@ -849,10 +874,18 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	rc = nvme_rdma_alloc_reqs(rqpair);
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
 	if (rc) {
-		SPDK_ERRLOG("Unable to allocate rqpair  RDMA requests\n");
+		SPDK_ERRLOG("Unable to allocate rqpair RDMA requests\n");
 		return -1;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA requests allocated\n");
+
+	rc = nvme_rdma_register_reqs(rqpair);
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
+	if (rc) {
+		SPDK_ERRLOG("Unable to register rqpair RDMA requests\n");
+		return -1;
+	}
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA requests registered\n");
 
 	rc = nvme_rdma_alloc_rsps(rqpair);
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
@@ -861,6 +894,14 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses allocated\n");
+
+	rc = nvme_rdma_register_rsps(rqpair);
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to register rqpair RDMA responses\n");
+		return -1;
+	}
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses registered\n");
 
 	rc = nvme_rdma_register_mem(rqpair);
 	if (rc < 0) {
@@ -1299,7 +1340,9 @@ nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	rqpair = nvme_rdma_qpair(qpair);
 
 	nvme_rdma_unregister_mem(rqpair);
+	nvme_rdma_unregister_reqs(rqpair);
 	nvme_rdma_free_reqs(rqpair);
+	nvme_rdma_unregister_rsps(rqpair);
 	nvme_rdma_free_rsps(rqpair);
 
 	if (rqpair->cm_id) {
