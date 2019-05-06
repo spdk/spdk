@@ -56,12 +56,6 @@ nvme_request_remove_child(struct nvme_request *parent,
 	TAILQ_REMOVE(&parent->children, child, child_tailq);
 }
 
-int
-nvme_transport_qpair_disable(struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
 void
 nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
