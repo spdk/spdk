@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d05f1f4_5665ec51",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-06T11:34:11Z",
+      "side": 0,
+      "message": "Vitaliy, I see some functional changes here despite the patch being named just \"reorder management functions\". Those should be done in separate patches, with separate explanations.\n\nI can see 3 different changes here:\n * stop_vbdev is now called outside of remove_base() \u003c- this looks like a good cleanup, remove_base() finally does what its name suggests and nothing else\n * stop_vbdev is now a separate asynchronous step in the unregister path \u003c- why?? Will it ever become asynchronous? Can\u0027t we just call it synchronously from unregister_finish()? This deserves a separate patch and a separate explanation.\n * some functions are reordered \u003c- that\u0027s fine, but not together with the above two changes. I\u0027m not able to diff changes inside stop_vbdev().",
+      "revId": "146f3c265e07eaec247d2c633c8f2ea02a3aceac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
