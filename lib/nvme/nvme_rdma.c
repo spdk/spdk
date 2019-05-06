@@ -871,14 +871,6 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
-	rc = nvme_rdma_alloc_reqs(rqpair);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
-	if (rc) {
-		SPDK_ERRLOG("Unable to allocate rqpair RDMA requests\n");
-		return -1;
-	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA requests allocated\n");
-
 	rc = nvme_rdma_register_reqs(rqpair);
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
 	if (rc) {
@@ -886,14 +878,6 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA requests registered\n");
-
-	rc = nvme_rdma_alloc_rsps(rqpair);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
-	if (rc < 0) {
-		SPDK_ERRLOG("Unable to allocate rqpair RDMA responses\n");
-		return -1;
-	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses allocated\n");
 
 	rc = nvme_rdma_register_rsps(rqpair);
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
@@ -1316,6 +1300,22 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	if (rc != 0) {
 		return NULL;
 	}
+
+	rc = nvme_rdma_alloc_reqs(rqpair);
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
+	if (rc) {
+		SPDK_ERRLOG("Unable to allocate rqpair RDMA requests\n");
+		return NULL;
+	}
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA requests allocated\n");
+
+	rc = nvme_rdma_alloc_rsps(rqpair);
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to allocate rqpair RDMA responses\n");
+		return NULL;
+	}
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "RDMA responses allocated\n");
 
 	rc = nvme_rdma_qpair_connect(rqpair);
 	if (rc < 0) {
