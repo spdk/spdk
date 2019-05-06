@@ -1410,35 +1410,10 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
-static void
-nvme_pcie_admin_qpair_enable(struct spdk_nvme_qpair *qpair)
+void
+nvme_pcie_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
-	/*
-	 * Manually abort each outstanding admin command.  Do not retry
-	 *  admin commands found here, since they will be left over from
-	 *  a controller reset and its likely the context in which the
-	 *  command was issued no longer applies.
-	 */
-	nvme_pcie_qpair_abort_trackers(qpair, 1 /* do not retry */);
-}
-
-static void
-nvme_pcie_io_qpair_enable(struct spdk_nvme_qpair *qpair)
-{
-	/* Manually abort each outstanding I/O. */
-	nvme_pcie_qpair_abort_trackers(qpair, 0);
-}
-
-int
-nvme_pcie_qpair_enable(struct spdk_nvme_qpair *qpair)
-{
-	if (nvme_qpair_is_io_queue(qpair)) {
-		nvme_pcie_io_qpair_enable(qpair);
-	} else {
-		nvme_pcie_admin_qpair_enable(qpair);
-	}
-
-	return 0;
+	nvme_pcie_qpair_abort_trackers(qpair, dnr);
 }
 
 static void
@@ -1459,15 +1434,6 @@ nvme_pcie_qpair_disable(struct spdk_nvme_qpair *qpair)
 	} else {
 		nvme_pcie_admin_qpair_disable(qpair);
 	}
-
-	return 0;
-}
-
-
-int
-nvme_pcie_qpair_fail(struct spdk_nvme_qpair *qpair)
-{
-	nvme_pcie_qpair_abort_trackers(qpair, 1 /* do not retry */);
 
 	return 0;
 }
