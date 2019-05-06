@@ -1730,14 +1730,6 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 	}
 
 	tqpair->max_r2t = NVME_TCP_MAX_R2T_DEFAULT;
-	rc = nvme_tcp_alloc_reqs(tqpair);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
-	if (rc) {
-		SPDK_ERRLOG("Unable to allocate tqpair tcp requests\n");
-		return -1;
-	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "TCP requests allocated\n");
-
 	rc = nvme_tcp_qpair_icreq_send(tqpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to connect the tqpair\n");
@@ -1775,6 +1767,12 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests);
 	if (rc != 0) {
 		free(tqpair);
+		return NULL;
+	}
+
+	rc = nvme_tcp_alloc_reqs(tqpair);
+	if (rc) {
+		nvme_tcp_qpair_destroy(qpair);
 		return NULL;
 	}
 
