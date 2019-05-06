@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4b87554_2cc6bbae",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-06T23:39:09Z",
+      "side": 1,
+      "message": "def deprecated_alias(old_name):\n  def wrap(f):\n    def old_f(*args, **kwargs):\n      print(\"Deprecated\")\n      f(*args, **kwargs)\n    globals()[old_name] \u003d old_f\n    return f\n  return wrap\n\n@deprecated_alias(\"get_rpc_methods\")\ndef rpc_get_methods(args):\n   new implementation...",
+      "revId": "33d483784acba6effca88bc7ab9f9056b4ee6cc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
