@@ -1416,28 +1416,6 @@ nvme_pcie_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	nvme_pcie_qpair_abort_trackers(qpair, dnr);
 }
 
-static void
-nvme_pcie_admin_qpair_disable(struct spdk_nvme_qpair *qpair)
-{
-}
-
-static void
-nvme_pcie_io_qpair_disable(struct spdk_nvme_qpair *qpair)
-{
-}
-
-int
-nvme_pcie_qpair_disable(struct spdk_nvme_qpair *qpair)
-{
-	if (nvme_qpair_is_io_queue(qpair)) {
-		nvme_pcie_io_qpair_disable(qpair);
-	} else {
-		nvme_pcie_admin_qpair_disable(qpair);
-	}
-
-	return 0;
-}
-
 static int
 nvme_pcie_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 				 struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,

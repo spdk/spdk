@@ -193,12 +193,6 @@ nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 }
 
 int
-nvme_transport_qpair_disable(struct spdk_nvme_qpair *qpair)
-{
-	NVME_TRANSPORT_CALL(qpair->trtype, qpair_disable, (qpair));
-}
-
-int
 nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	NVME_TRANSPORT_CALL(qpair->trtype, qpair_reset, (qpair));

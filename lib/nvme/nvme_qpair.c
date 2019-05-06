@@ -618,7 +618,6 @@ void
 nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
 	qpair->is_enabled = false;
-	nvme_transport_qpair_disable(qpair);
 }
 
 static void
