@@ -1,0 +1,129 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e5dd638_4a1e2150",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:59:07Z",
+      "side": 1,
+      "message": "Part of this changelog should be put into previous patch of this series.",
+      "revId": "86a57547535c2d90c89d200a5cfaf0e0ab58021d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53bd9e6e_b2add7e8",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1573,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:59:07Z",
+      "side": 1,
+      "message": "This part of doc should be put into previous patch of this series.",
+      "revId": "86a57547535c2d90c89d200a5cfaf0e0ab58021d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e87ca09f_9d785509",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 899,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:59:07Z",
+      "side": 1,
+      "message": "It seems that you have misread meaning of struct spdk_json_object_decoder::optional, just like previous patch in this series.",
+      "revId": "86a57547535c2d90c89d200a5cfaf0e0ab58021d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5d9b71c_21e08c97",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 909,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:59:07Z",
+      "side": 1,
+      "message": "Initialize req to all-zero.",
+      "revId": "86a57547535c2d90c89d200a5cfaf0e0ab58021d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bab60a75_13d4ba0c",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:59:07Z",
+      "side": 1,
+      "message": "Free req.name before return.",
+      "revId": "86a57547535c2d90c89d200a5cfaf0e0ab58021d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9851ca9_33b7aa95",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:59:07Z",
+      "side": 1,
+      "message": "Choose another name, since it is same as variable error.",
+      "range": {
+        "startLine": 955,
+        "startChar": 0,
+        "endLine": 955,
+        "endChar": 5
+      },
+      "revId": "86a57547535c2d90c89d200a5cfaf0e0ab58021d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98d1e6e4_b7454030",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:59:07Z",
+      "side": 1,
+      "message": "Add required\u003dTrue for --opc",
+      "revId": "86a57547535c2d90c89d200a5cfaf0e0ab58021d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
