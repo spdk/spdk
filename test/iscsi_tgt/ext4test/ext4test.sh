@@ -5,10 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-if [ ! -z $1 ]; then
-	DPDK_DIR=$(readlink -f $1)
-fi
-
 timing_enter ext4test
 
 rpc_py="$rootdir/scripts/rpc.py"
