@@ -406,6 +406,14 @@ int spdk_file_sync(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx);
  */
 int spdk_file_get_id(struct spdk_file *file, void *id, size_t size);
 
+void spdk_file_readv_async(struct spdk_file *file, struct spdk_io_channel *channel,
+			   struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
+			   spdk_file_op_complete cb_fn, void *cb_arg);
+
+void spdk_file_writev_async(struct spdk_file *file, struct spdk_io_channel *channel,
+			    struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
+			    spdk_file_op_complete cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif
