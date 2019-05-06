@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ace7f43_768a9ddb",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:43:07Z",
+      "side": 1,
+      "message": "false, see line 842",
+      "range": {
+        "startLine": 812,
+        "startChar": 86,
+        "endLine": 812,
+        "endChar": 90
+      },
+      "revId": "22e31d95e6f7b468bae42ea1a739cb0056c786cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa19e772_fdb19e33",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 826,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:43:07Z",
+      "side": 1,
+      "message": "Initialize req to all-zero.",
+      "revId": "22e31d95e6f7b468bae42ea1a739cb0056c786cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17fe27a8_0a4c0444",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 876,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:43:07Z",
+      "side": 1,
+      "message": "Free req.name before return.",
+      "revId": "22e31d95e6f7b468bae42ea1a739cb0056c786cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8290072_072e9c61",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:43:07Z",
+      "side": 1,
+      "message": "We\u0027d better choose another name, since it is same as variable error. Or use rc to replace variable error.",
+      "range": {
+        "startLine": 886,
+        "startChar": 0,
+        "endLine": 886,
+        "endChar": 5
+      },
+      "revId": "22e31d95e6f7b468bae42ea1a739cb0056c786cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3983fd5e_b83feec2",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-06T11:43:07Z",
+      "side": 1,
+      "message": "Does all parameters are optional? It seems not according to the rpc_nvme_set_err_injection_decoders.",
+      "revId": "22e31d95e6f7b468bae42ea1a739cb0056c786cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
