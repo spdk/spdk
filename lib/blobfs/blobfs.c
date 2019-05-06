@@ -1711,21 +1711,49 @@ __rw_done(void *ctx, int bserrno)
 }
 
 static void
+_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs, int iovcnt)
+{
+	int i;
+	size_t len;
+
+	for (i = 0; i < iovcnt; i++) {
+		len = spdk_min(iovs[i].iov_len, buf_len);
+		memcpy(buf, iovs[i].iov_base, len);
+		buf += len;
+		assert(buf_len >= len);
+		buf_len -= len;
+	}
+}
+
+static void
+_copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf, size_t buf_len)
+{
+	int i;
+	size_t len;
+
+	for (i = 0; i < iovcnt; i++) {
+		len = spdk_min(iovs[i].iov_len, buf_len);
+		memcpy(iovs[i].iov_base, buf, len);
+		buf += len;
+		assert(buf_len >= len);
+		buf_len -= len;
+	}
+}
+
+static void
 __read_done(void *ctx, int bserrno)
 {
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
+	void *buf;
 
 	assert(req != NULL);
+	buf = (void *)((uintptr_t)args->op.rw.pin_buf + (args->op.rw.offset & (args->op.rw.blocklen - 1)));
 	if (args->op.rw.is_read) {
-		memcpy(args->iovs[0].iov_base,
-		       args->op.rw.pin_buf + (args->op.rw.offset & (args->op.rw.blocklen - 1)),
-		       args->iovs[0].iov_len);
+		_copy_buf_to_iovs(args->iovs, args->iovcnt, buf, args->op.rw.length);
 		__rw_done(req, 0);
 	} else {
-		memcpy(args->op.rw.pin_buf + (args->op.rw.offset & (args->op.rw.blocklen - 1)),
-		       args->iovs[0].iov_base,
-		       args->iovs[0].iov_len);
+		_copy_iovs_to_buf(buf, args->op.rw.length, args->iovs, args->iovcnt);
 		spdk_blob_io_write(args->file->blob, args->op.rw.channel,
 				   args->op.rw.pin_buf,
 				   args->op.rw.start_lba, args->op.rw.num_lba,
@@ -1762,9 +1790,20 @@ __get_page_parameters(struct spdk_file *file, uint64_t offset, uint64_t length,
 }
 
 static void
-__readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
-	    void *payload, uint64_t offset, uint64_t length,
-	    spdk_file_op_complete cb_fn, void *cb_arg, int is_read)
+_fs_request_setup_iovs(struct spdk_fs_request *req, struct iovec *iovs, uint32_t iovcnt)
+{
+	uint32_t i;
+
+	for (i = 0; i < iovcnt; i++) {
+		req->args.iovs[i].iov_base = iovs[i].iov_base;
+		req->args.iovs[i].iov_len = iovs[i].iov_len;
+	}
+}
+
+static void
+__readvwritev(struct spdk_file *file, struct spdk_io_channel *_channel,
+	      struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
+	      spdk_file_op_complete cb_fn, void *cb_arg, int is_read)
 {
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
@@ -1777,7 +1816,7 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 		return;
 	}
 
-	req = alloc_fs_request_with_iov(channel, 1);
+	req = alloc_fs_request_with_iov(channel, iovcnt);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -1790,13 +1829,13 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 	args->arg = cb_arg;
 	args->file = file;
 	args->op.rw.channel = channel->bs_channel;
-	args->iovs[0].iov_base = payload;
-	args->iovs[0].iov_len = (size_t)length;
+	_fs_request_setup_iovs(req, iovs, iovcnt);
 	args->op.rw.is_read = is_read;
 	args->op.rw.offset = offset;
 	args->op.rw.blocklen = lba_size;
 
 	pin_buf_length = num_lba * lba_size;
+	args->op.rw.length = pin_buf_length;
 	args->op.rw.pin_buf = spdk_malloc(pin_buf_length, lba_size, NULL,
 					  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (args->op.rw.pin_buf == NULL) {
@@ -1817,12 +1856,36 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 	}
 }
 
+static void
+__readwrite(struct spdk_file *file, struct spdk_io_channel *channel,
+	    void *payload, uint64_t offset, uint64_t length,
+	    spdk_file_op_complete cb_fn, void *cb_arg, int is_read)
+{
+	struct iovec iov;
+
+	iov.iov_base = payload;
+	iov.iov_len = (size_t)length;
+
+	__readvwritev(file, channel, &iov, 1, offset, length, cb_fn, cb_arg, is_read);
+}
+
 void
 spdk_file_write_async(struct spdk_file *file, struct spdk_io_channel *channel,
 		      void *payload, uint64_t offset, uint64_t length,
 		      spdk_file_op_complete cb_fn, void *cb_arg)
 {
 	__readwrite(file, channel, payload, offset, length, cb_fn, cb_arg, 0);
+}
+
+void
+spdk_file_writev_async(struct spdk_file *file, struct spdk_io_channel *channel,
+		       struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
+		       spdk_file_op_complete cb_fn, void *cb_arg)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s offset=%jx length=%jx\n",
+		      file->name, offset, length);
+
+	__readvwritev(file, channel, iovs, iovcnt, offset, length, cb_fn, cb_arg, 0);
 }
 
 void
@@ -1833,6 +1896,17 @@ spdk_file_read_async(struct spdk_file *file, struct spdk_io_channel *channel,
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s offset=%jx length=%jx\n",
 		      file->name, offset, length);
 	__readwrite(file, channel, payload, offset, length, cb_fn, cb_arg, 1);
+}
+
+void
+spdk_file_readv_async(struct spdk_file *file, struct spdk_io_channel *channel,
+		      struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
+		      spdk_file_op_complete cb_fn, void *cb_arg)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s offset=%jx length=%jx\n",
+		      file->name, offset, length);
+
+	__readvwritev(file, channel, iovs, iovcnt, offset, length, cb_fn, cb_arg, 1);
 }
 
 struct spdk_io_channel *
