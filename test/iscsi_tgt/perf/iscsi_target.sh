@@ -73,7 +73,7 @@ function ssh_initiator(){
 }
 
 NETMASK=$INITIATOR_IP/32
-rpc_py="python $rootdir/scripts/rpc.py -s $testdir/rpc_iscsi.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $testdir/rpc_iscsi.sock"
 iscsi_fio_results="$testdir/perf_output/iscsi_fio.json"
 rm -rf $iscsi_fio_results
 mkdir -p $testdir/perf_output
