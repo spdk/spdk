@@ -9,10 +9,21 @@ function xtrace_disable() {
 	set +x
 }
 
+# Dummy function to be called after restoring xtrace just so that it appears in the
+# xtrace log. This way we can consistently track when xtrace is enabled/disabled.
+function xtrace_enable() {
+	# We have to do something inside a function in bash, and calling any command
+	# (even `:`) will produce an xtrace entry, so we just define another function.
+	function xtrace_dummy() { :; }
+}
+
 function xtrace_restore() {
-	if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then
-		set -x
+	if [[ "$PREV_BASH_OPTS" != *"x"* ]]; then
+		return
 	fi
+
+	set -x
+	xtrace_enable
 }
 
 set -e
