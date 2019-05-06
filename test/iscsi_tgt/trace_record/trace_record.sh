@@ -5,6 +5,10 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
+# $1 = "iso" - triggers isolation mode (setting up required environment).
+# $2 = test type posix or vpp. defaults to posix.
+iscsitestinit $1 $2
+
 TRACE_TMP_FOLDER=./tmp-trace
 TRACE_RECORD_OUTPUT=${TRACE_TMP_FOLDER}/record.trace
 TRACE_RECORD_NOTICE_LOG=${TRACE_TMP_FOLDER}/record.notice
@@ -40,7 +44,7 @@ $ISCSI_APP -m 0xf --num-trace-entries $NUM_TRACE_ENTRIES --tpoint-group-mask 0xf
 iscsi_pid=$!
 echo "Process pid: $iscsi_pid"
 
-trap "killprocess $iscsi_pid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $iscsi_pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $iscsi_pid
 
@@ -68,7 +72,7 @@ mkdir -p ${TRACE_TMP_FOLDER}
 record_pid=$!
 echo "Trace record pid: $record_pid"
 
-trap "iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
+trap "iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
 
 echo "Running FIO"
 $fio_py iscsi 131072 32 randrw 1 1
@@ -80,7 +84,7 @@ for i in $(seq 0 $CONNECTION_NUMBER); do
 	$rpc_py delete_malloc_bdev Malloc${i}
 done
 
-trap "delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
+trap "delete_tmp_files; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
 
 killprocess $iscsi_pid
 killprocess $record_pid
@@ -124,4 +128,5 @@ fi
 done
 
 trap - SIGINT SIGTERM EXIT
+iscsitestfini $1 $2
 timing_exit trace_record
