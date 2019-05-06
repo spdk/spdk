@@ -965,8 +965,8 @@ invalid:
 }
 
 static void
-spdk_rpc_set_ro_lvol_bdev(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+spdk_rpc_set_read_only_lvol_bdev(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
 {
 	struct rpc_set_ro_lvol_bdev req = {};
 	struct spdk_bdev *bdev;
@@ -1013,7 +1013,7 @@ invalid:
 	free_rpc_set_ro_lvol_bdev(&req);
 }
 
-SPDK_RPC_REGISTER("set_read_only_lvol_bdev", spdk_rpc_set_ro_lvol_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("set_read_only_lvol_bdev", spdk_rpc_set_read_only_lvol_bdev, SPDK_RPC_RUNTIME)
 
 struct rpc_destroy_lvol_bdev {
 	char *name;

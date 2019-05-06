@@ -187,8 +187,8 @@ spdk_rpc_create_virtio_dev_cb(void *ctx, int result, struct spdk_bdev **bdevs, s
 }
 
 static void
-spdk_rpc_create_virtio_dev(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+spdk_rpc_construct_virtio_dev(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
 {
 	struct rpc_construct_virtio_dev *req;
 	struct spdk_bdev *bdev;
@@ -271,4 +271,4 @@ spdk_rpc_create_virtio_dev(struct spdk_jsonrpc_request *request,
 invalid:
 	free_rpc_construct_virtio_dev(req);
 }
-SPDK_RPC_REGISTER("construct_virtio_dev", spdk_rpc_create_virtio_dev, SPDK_RPC_RUNTIME);
+SPDK_RPC_REGISTER("construct_virtio_dev", spdk_rpc_construct_virtio_dev, SPDK_RPC_RUNTIME);
