@@ -1,4 +1,4 @@
-# SPDK Directory Structure {#directory_structure}
+# An Overview of SPDK's Components {#overview}
 
 # Overview {#dir_overview}
 
