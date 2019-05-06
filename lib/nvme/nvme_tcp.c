@@ -1878,3 +1878,26 @@ nvme_tcp_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size
 {
 	return 0;
 }
+
+void
+nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tcp_req *tcp_req, *tmp;
+	struct nvme_request *req;
+	struct spdk_nvme_cpl cpl;
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
+		if (tcp_req->req->cmd.opc != SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+			continue;
+		}
+		assert(tcp_req->req != NULL);
+		req = tcp_req->req;
+
+		nvme_tcp_req_complete(req, &cpl);
+		nvme_tcp_req_put(tqpair, tcp_req);
+	}
+}

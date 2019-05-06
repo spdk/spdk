@@ -1360,7 +1360,7 @@ nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	}
 }
 
-static void
+void
 nvme_pcie_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
@@ -1448,7 +1448,6 @@ nvme_pcie_qpair_enable(struct spdk_nvme_qpair *qpair)
 static void
 nvme_pcie_admin_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
-	nvme_pcie_admin_qpair_abort_aers(qpair);
 }
 
 static void

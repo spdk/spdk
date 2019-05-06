@@ -220,3 +220,9 @@ nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t
 {
 	NVME_TRANSPORT_CALL(qpair->trtype, qpair_process_completions, (qpair, max_completions));
 }
+
+void
+nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
+{
+	NVME_TRANSPORT_CALL(qpair->trtype, admin_qpair_abort_aers, (qpair));
+}
