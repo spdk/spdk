@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e4f26ad_739246d1",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-06T17:39:42Z",
+      "side": 1,
+      "message": "Can you put a note in CHANGELOG.md? This is a public API.",
+      "revId": "85247100dab9891e7a01d90bbb95769e90cf426b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
