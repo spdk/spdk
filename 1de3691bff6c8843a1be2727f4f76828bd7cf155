@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9dba52bc_7a3c8fc3",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-06T17:51:22Z",
+      "side": 1,
+      "message": "spdk_reduce_vol_get_params would be more correct (similar to spdk_reduce_vol_get_uuid)\n\nsince spdk_reduce_vol_get_uuid returns a const struct spdk_uuid * - could we have this function do the same (return const struct spdk_reduce_vol_params *) - then this function can literally just return a reference to its internal data structure",
+      "revId": "1de3691bff6c8843a1be2727f4f76828bd7cf155",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
