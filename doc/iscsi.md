@@ -87,7 +87,7 @@ In addition to the configuration file, the iSCSI target may also be configured v
  - get_portal_groups -- Show information about all available portal groups.
 
 ~~~
-python /path/to/spdk/scripts/rpc.py add_portal_group 1 10.0.0.1:3260
+/path/to/spdk/scripts/rpc.py add_portal_group 1 10.0.0.1:3260
 ~~~
 
 ### Initiator groups
@@ -98,7 +98,7 @@ python /path/to/spdk/scripts/rpc.py add_portal_group 1 10.0.0.1:3260
  - get_initiator_groups -- Show information about all available initiator groups.
 
 ~~~
-python /path/to/spdk/scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
+/path/to/spdk/scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
 ~~~
 
 ### Target nodes
@@ -109,7 +109,7 @@ python /path/to/spdk/scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
  - get_target_nodes -- Show information about all available iSCSI target nodes.
 
 ~~~
-python /path/to/spdk/scripts/rpc.py construct_target_node Target3 Target3_alias MyBdev:0 1:2 64 -d
+/path/to/spdk/scripts/rpc.py construct_target_node Target3 Target3_alias MyBdev:0 1:2 64 -d
 ~~~
 
 ## Configuring iSCSI Initiator {#iscsi_initiator}
@@ -233,27 +233,27 @@ $ ./app/iscsi_tgt/iscsi_tgt
 Construct two 64MB Malloc block devices with 512B sector size "Malloc0" and "Malloc1":
 
 ```
-$ python ./scripts/rpc.py construct_malloc_bdev -b Malloc0 64 512
-$ python ./scripts/rpc.py construct_malloc_bdev -b Malloc1 64 512
+$ ./scripts/rpc.py construct_malloc_bdev -b Malloc0 64 512
+$ ./scripts/rpc.py construct_malloc_bdev -b Malloc1 64 512
 ```
 
 Create new portal group with id 1, and address 10.0.0.1:3260:
 
 ```
-$ python ./scripts/rpc.py add_portal_group 1 10.0.0.1:3260
+$ ./scripts/rpc.py add_portal_group 1 10.0.0.1:3260
 ```
 
 Create one initiator group with id 2 to accept any connection from 10.0.0.2/32:
 
 ```
-$ python ./scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
+$ ./scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
 ```
 
 Finally construct one target using previously created bdevs as LUN0 (Malloc0) and LUN1 (Malloc1)
 with a name "disk1" and alias "Data Disk1" using portal group 1 and initiator group 2.
 
 ```
-$ python ./scripts/rpc.py construct_target_node disk1 "Data Disk1" "Malloc0:0 Malloc1:1" 1:2 64 -d
+$ ./scripts/rpc.py construct_target_node disk1 "Data Disk1" "Malloc0:0 Malloc1:1" 1:2 64 -d
 ```
 
 #### Configure initiator
