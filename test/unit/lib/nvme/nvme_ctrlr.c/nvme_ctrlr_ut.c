@@ -180,6 +180,11 @@ nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
+void
+nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
+{
+}
+
 int
 nvme_driver_init(void)
 {

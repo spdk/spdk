@@ -1791,6 +1791,29 @@ nvme_rdma_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, siz
 }
 
 void
+nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_rdma_req *rdma_req, *tmp;
+	struct nvme_request *req;
+	struct spdk_nvme_cpl cpl;
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
+
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->outstanding_reqs, link, tmp) {
+		if (rdma_req->req->cmd.opc != SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+			continue;
+		}
+		assert(rdma_req->req != NULL);
+		req = rdma_req->req;
+
+		nvme_rdma_req_complete(req, &cpl);
+		nvme_rdma_req_put(rqpair, rdma_req);
+	}
+}
+
+void
 spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 {
 	g_nvme_hooks = *hooks;

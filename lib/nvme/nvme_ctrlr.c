@@ -842,6 +842,8 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->outstanding_aborts--;
 	}
 
+	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
+
 	/* Disable all queues before disabling the controller hardware. */
 	nvme_qpair_disable(ctrlr->adminq);
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
