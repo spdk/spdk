@@ -180,9 +180,9 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 }
 
 int
-nvme_transport_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+nvme_transport_ctrlr_reconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_reinit_io_qpair, (ctrlr, qpair));
+	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_reconnect_qpair, (ctrlr, qpair));
 }
 
 int
