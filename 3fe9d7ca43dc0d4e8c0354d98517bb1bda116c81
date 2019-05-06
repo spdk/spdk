@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43bb9a0f_eb49cedd",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-06T12:20:28Z",
+      "side": 1,
+      "message": "In the virtio 1.0 spec in 5.2.4 \"Device configuration layout\" this is described as \"optimal (suggested maximum) I/O size in blocks\". Then size_max is described as \"Maximum size of any single segment is in size_max\" (from 5.2.3 \"Feature bits\")\n\nopt_io_size is only a suggestion, size_max is the absolute limit, so please don\u0027t remove size_max in this patch.",
+      "range": {
+        "startLine": 902,
+        "startChar": 10,
+        "endLine": 902,
+        "endChar": 22
+      },
+      "revId": "3fe9d7ca43dc0d4e8c0354d98517bb1bda116c81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
