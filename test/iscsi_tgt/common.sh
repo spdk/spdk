@@ -9,6 +9,7 @@ TARGET_IP=10.0.0.1
 INITIATOR_IP=10.0.0.2
 ISCSI_PORT=3260
 NETMASK=$INITIATOR_IP/32
+MTU=1500
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 PORTAL_TAG=1
@@ -25,7 +26,9 @@ function create_veth_interfaces() {
 	# Create veth (Virtual ethernet) interface pair
 	ip link add $INITIATOR_INTERFACE type veth peer name $TARGET_INTERFACE
 	ip addr add $INITIATOR_IP/24 dev $INITIATOR_INTERFACE
+	ip link set dev $INITIATOR_INTERFACE mtu $MTU
 	ip link set $INITIATOR_INTERFACE up
+	ip addr show $INITIATOR_INTERFACE
 
 	# Create and add interface for target to network namespace
 	ip netns add $TARGET_NAMESPACE
@@ -34,15 +37,17 @@ function create_veth_interfaces() {
 	# Accept connections from veth interface
 	iptables -I INPUT 1 -i $INITIATOR_INTERFACE -p tcp --dport $ISCSI_PORT -j ACCEPT
 
+	$TARGET_NS_CMD ip link set dev $TARGET_INTERFACE mtu $MTU
 	$TARGET_NS_CMD ip link set $TARGET_INTERFACE up
+	$TARGET_NS_CMD ip addr show $TARGET_INTERFACE
 
 	if [ "$1" == "posix" ]; then
 		$TARGET_NS_CMD ip link set lo up
 		$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
 
 		# Verify connectivity
-		ping -c 1 $TARGET_IP
-		ip netns exec $TARGET_NAMESPACE ping -c 1 $INITIATOR_IP
+		ping -c 1 $TARGET_IP -s $(( $MTU - 28 ))
+		ip netns exec $TARGET_NAMESPACE ping -c 1 $INITIATOR_IP -s $(( $MTU - 28 ))
 	else
 		start_vpp
 	fi
@@ -106,6 +111,10 @@ function start_vpp() {
 	VPP_TGT_INT="host-$TARGET_INTERFACE"
 	vppctl set interface state $VPP_TGT_INT up
 	vppctl set interface ip address $VPP_TGT_INT $TARGET_IP/24
+	vppctl set interface mtu $MTU $VPP_TGT_INT
+	vppctl set interface reassembly $VPP_TGT_INT on
+
+	vppctl show interface
 
 	# Disable session layer
 	# NOTE: VPP net framework should enable it itself.
@@ -116,8 +125,8 @@ function start_vpp() {
 	ip addr show $INITIATOR_INTERFACE
 	ip netns exec $TARGET_NAMESPACE ip addr show $TARGET_INTERFACE
 	sleep 3
-	ping -c 1 $TARGET_IP
-	vppctl ping $INITIATOR_IP repeat 1
+	ping -c 1 $TARGET_IP -s $(( $MTU - 28 )) -M do
+	vppctl ping $INITIATOR_IP repeat 1 size $(( $MTU - (28 + 8) )) verbose
 }
 
 function kill_vpp() {

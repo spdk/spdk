@@ -26,8 +26,6 @@ trap "cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
 
 run_test suite ./test/iscsi_tgt/sock/sock.sh
 if [ "$TEST_TYPE" == "posix" ]; then
-	# FIXIT: Temporaly turned off for VPP
-	run_test suite ./test/iscsi_tgt/rpc_config/rpc_config.sh $TEST_TYPE
 	run_test suite ./test/iscsi_tgt/calsoft/calsoft.sh
 fi
 run_test suite ./test/iscsi_tgt/filesystem/filesystem.sh
