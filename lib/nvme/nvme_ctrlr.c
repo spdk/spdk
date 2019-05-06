@@ -866,7 +866,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	if (!ctrlr->is_failed) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
-			if (nvme_transport_ctrlr_reinit_io_qpair(ctrlr, qpair) != 0) {
+			if (nvme_transport_ctrlr_reconnect_qpair(ctrlr, qpair) != 0) {
 				nvme_ctrlr_fail(ctrlr, false);
 				rc = -1;
 			}
