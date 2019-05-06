@@ -386,6 +386,16 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 	nvme_free_request(req);
 }
 
+static bool
+nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
+{
+	if (!qpair->is_enabled && !qpair->ctrlr->is_resetting) {
+		nvme_qpair_enable(qpair);
+	}
+
+	return qpair->is_enabled;
+}
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
@@ -394,6 +404,14 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 	if (qpair->ctrlr->is_failed) {
 		nvme_qpair_fail(qpair);
+		return 0;
+	}
+
+	if (spdk_unlikely(!nvme_qpair_check_enabled(qpair))) {
+		/*
+		 * qpair is not enabled, likely because a controller reset is
+		 *  in progress.
+		 */
 		return 0;
 	}
 
@@ -501,6 +519,8 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		return -ENXIO;
 	}
 
+	nvme_qpair_check_enabled(qpair);
+
 	if (req->num_children) {
 		/*
 		 * This is a split (parent) request. Submit all of the children but not the parent
@@ -576,6 +596,7 @@ nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 		_nvme_io_qpair_enable(qpair);
 	}
 
+	qpair->is_enabled = true;
 	nvme_transport_qpair_enable(qpair);
 }
 
@@ -596,6 +617,7 @@ nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair)
 void
 nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
+	qpair->is_enabled = false;
 	nvme_transport_qpair_disable(qpair);
 }
 
