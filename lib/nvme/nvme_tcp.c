@@ -704,9 +704,11 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	assert(req != NULL);
 
 	tcp_req = nvme_tcp_req_get(tqpair);
-	if (!tcp_req) {
+	if (!tcp_req || !qpair->is_enabled) {
 		/*
-		 * No tcp_req is available.  Queue the request to be processed later.
+		 * No tcp_req is available, or the qpair is currently disabled
+		 *  due to an in-progress reset.  Queue the request to be
+		 *  processed later.
 		 */
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
 		return 0;

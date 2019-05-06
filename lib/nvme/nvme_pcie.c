@@ -1432,7 +1432,6 @@ nvme_pcie_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 int
 nvme_pcie_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
-	qpair->is_enabled = true;
 	if (nvme_qpair_is_io_queue(qpair)) {
 		nvme_pcie_io_qpair_enable(qpair);
 	} else {
@@ -1455,7 +1454,6 @@ nvme_pcie_io_qpair_disable(struct spdk_nvme_qpair *qpair)
 int
 nvme_pcie_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
-	qpair->is_enabled = false;
 	if (nvme_qpair_is_io_queue(qpair)) {
 		nvme_pcie_io_qpair_disable(qpair);
 	} else {
@@ -1974,16 +1972,6 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 	return 0;
 }
 
-static inline bool
-nvme_pcie_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
-{
-	if (!qpair->is_enabled &&
-	    !qpair->ctrlr->is_resetting) {
-		nvme_qpair_enable(qpair);
-	}
-	return qpair->is_enabled;
-}
-
 int
 nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
@@ -1992,8 +1980,6 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	void			*md_payload;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
-
-	nvme_pcie_qpair_check_enabled(qpair);
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -2110,16 +2096,6 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	struct spdk_nvme_cpl	*cpl;
 	uint32_t		 num_completions = 0;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
-
-	if (spdk_unlikely(!nvme_pcie_qpair_check_enabled(qpair))) {
-		/*
-		 * qpair is not enabled, likely because a controller reset is
-		 *  is in progress.  Ignore the interrupt - any I/O that was
-		 *  associated with this interrupt will get retried when the
-		 *  reset is complete.
-		 */
-		return 0;
-	}
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
