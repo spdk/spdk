@@ -1,4 +1,4 @@
-# SSD Internals {#ssd_internals}
+# NAND Flash SSD Internals {#ssd_internals}
 
 Solid State Devices (SSD) are complex devices and their performance depends on
 how they're used. The following description is intended to help software

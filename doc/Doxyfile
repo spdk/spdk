@@ -810,7 +810,6 @@ INPUT                  += \
                          changelog.md \
                          compression.md \
                          concurrency.md \
-                         directory_structure.md \
                          event.md \
                          ftl.md \
                          gdb_macros.md \
@@ -827,6 +826,7 @@ INPUT                  += \
                          nvmf.md \
                          nvmf_tgt_pg.md \
                          nvmf_tracing.md \
+                         overview.md \
                          peer_2_peer.md \
                          porting.md \
                          spdkcli.md \
