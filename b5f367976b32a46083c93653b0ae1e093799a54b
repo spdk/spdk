@@ -16,6 +16,24 @@
       "revId": "b5f367976b32a46083c93653b0ae1e093799a54b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d33d0b3f_a287a759",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 3362,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-06T21:33:44Z",
+      "side": 1,
+      "message": "For at least the error handling portion below, I think this is the same code as in spdk_nvmf_rdma_poller_poll(), so I definitely agree with refactoring to unify those two.",
+      "parentUuid": "e72c1f19_6821a3fd",
+      "revId": "b5f367976b32a46083c93653b0ae1e093799a54b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
