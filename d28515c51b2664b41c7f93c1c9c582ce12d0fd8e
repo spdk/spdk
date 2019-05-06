@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "7346886b_14e7032d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1016114
+      },
+      "writtenOn": "2019-05-06T20:02:15Z",
+      "side": 1,
+      "message": "I got it. Thank you for the explanation. I think it would go to another patch then.\nIt doesn\u0027t have priority yet for me, but I\u0027ll keep in mind.",
+      "parentUuid": "a3dee30f_a687ce01",
+      "revId": "d28515c51b2664b41c7f93c1c9c582ce12d0fd8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a34f018_de6a0c36",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 11
