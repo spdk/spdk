@@ -573,7 +573,7 @@ test_hw_sgl_req(void)
 	nvme_free_request(req);
 }
 
-static void test_nvme_qpair_fail(void)
+static void test_nvme_qpair_abort_reqs(void)
 {
 	struct spdk_nvme_qpair		qpair = {};
 	struct nvme_request		*req = NULL;
@@ -590,14 +590,14 @@ static void test_nvme_qpair_fail(void)
 	tr_temp->req->cmd.cid = tr_temp->cid;
 
 	TAILQ_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, tq_list);
-	nvme_qpair_fail(&qpair);
+	nvme_qpair_abort_reqs(&qpair, true);
 	CU_ASSERT_TRUE(TAILQ_EMPTY(&qpair.outstanding_tr));
 
 	req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	STAILQ_INSERT_HEAD(&qpair.queued_req, req, stailq);
-	nvme_qpair_fail(&qpair);
+	nvme_qpair_abort_reqs(&qpair, true);
 	CU_ASSERT_TRUE(STAILQ_EMPTY(&qpair.queued_req));
 
 	cleanup_submit_request_test(&qpair);

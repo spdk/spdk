@@ -57,21 +57,14 @@ nvme_request_remove_child(struct nvme_request *parent,
 }
 
 int
-nvme_transport_qpair_enable(struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
-int
 nvme_transport_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
 }
 
-int
-nvme_transport_qpair_fail(struct spdk_nvme_qpair *qpair)
+void
+nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
-	return 0;
 }
 
 int
