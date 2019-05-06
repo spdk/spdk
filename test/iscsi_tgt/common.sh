@@ -51,3 +51,27 @@ function cleanup_veth_interfaces() {
 	ip link delete $INITIATOR_INTERFACE
 	ip netns del $TARGET_NAMESPACE
 }
+
+function iscsitestinit() {
+	if [ "$1" == "iso" ]; then
+		$rootdir/scripts/setup.sh
+		if [ ! -z "$2" ]; then
+			create_veth_interfaces $2
+		else
+			# default to posix
+			create_veth_interfaces "posix"
+		fi
+	fi
+}
+
+function iscsitestfini() {
+	if [ "$1" == "iso" ]; then
+		if [ ! -z "$2" ]; then
+			cleanup_veth_interfaces $2
+		else
+			# default to posix
+			cleanup_veth_interfaces "posix"
+		fi
+		$rootdir/scripts/setup.sh reset
+	fi
+}

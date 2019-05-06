@@ -5,6 +5,10 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
+# $1 = "iso" - triggers isolation mode (setting up required environment).
+# $2 = test type posix or vpp. defaults to posix.
+iscsitestinit $1 $2
+
 timing_enter bdev_io_wait
 
 MALLOC_BDEV_SIZE=64
@@ -17,7 +21,7 @@ timing_enter start_iscsi_tgt
 $ISCSI_APP -m 0x2 -p 1 -s 512 --wait-for-rpc &
 pid=$!
 echo "iSCSI target launched. pid: $pid"
-trap "killprocess $pid;exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 4
 # Minimal number of bdev io pool (5) and cache (1)
@@ -36,7 +40,7 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "-d" ==> disable CHAP authentication
 $rpc_py construct_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 256 -d
 sleep 1
-trap "killprocess $pid; rm -f $testdir/bdev.conf; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; rm -f $testdir/bdev.conf; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
 
 # Prepare config file for iSCSI initiator
 echo "[iSCSI_Initiator]" > $testdir/bdev.conf
@@ -51,5 +55,6 @@ trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
 
+iscsitestfini $1 $2
 report_test_completion "bdev_io_wait"
 timing_exit bdev_io_wait
