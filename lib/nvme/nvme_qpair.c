@@ -34,7 +34,7 @@
 #include "nvme_internal.h"
 #include "spdk/nvme_ocssd.h"
 
-static void nvme_qpair_fail(struct spdk_nvme_qpair *qpair);
+static void nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 
 struct nvme_string {
 	uint16_t	value;
@@ -403,7 +403,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	struct nvme_request *req, *tmp;
 
 	if (qpair->ctrlr->is_failed) {
-		nvme_qpair_fail(qpair);
+		nvme_qpair_abort_reqs(qpair, 1 /* do not retry */);
 		return 0;
 	}
 
@@ -597,7 +597,7 @@ nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 	}
 
 	qpair->is_enabled = true;
-	nvme_transport_qpair_enable(qpair);
+	nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
 }
 
 void
@@ -622,7 +622,7 @@ nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 }
 
 static void
-nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
+nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct nvme_request		*req;
 
@@ -631,10 +631,10 @@ nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
 		SPDK_ERRLOG("failing queued i/o\n");
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
-						   SPDK_NVME_SC_ABORTED_BY_REQUEST, true);
+						   SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr);
 	}
 
-	nvme_transport_qpair_fail(qpair);
+	nvme_transport_qpair_abort_reqs(qpair, dnr);
 }
 
 int

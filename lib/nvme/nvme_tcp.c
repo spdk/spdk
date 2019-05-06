@@ -236,7 +236,7 @@ nvme_tcp_qpair_destroy(struct spdk_nvme_qpair *qpair)
 		return -1;
 	}
 
-	nvme_tcp_qpair_fail(qpair);
+	nvme_tcp_qpair_abort_reqs(qpair, 1);
 	nvme_qpair_deinit(qpair);
 
 	tqpair = nvme_tcp_qpair(qpair);
@@ -736,12 +736,6 @@ nvme_tcp_ctrlr_reconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 }
 
 int
-nvme_tcp_qpair_enable(struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
-int
 nvme_tcp_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
@@ -761,13 +755,9 @@ nvme_tcp_req_complete(struct nvme_request *req,
 	nvme_free_request(req);
 }
 
-int
-nvme_tcp_qpair_fail(struct spdk_nvme_qpair *qpair)
+void
+nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
-	/*
-	 * If the qpair is really failed, the connection is broken
-	 * and we need to flush back all I/O
-	 */
 	struct nvme_tcp_req *tcp_req, *tmp;
 	struct nvme_request *req;
 	struct spdk_nvme_cpl cpl;
@@ -775,6 +765,7 @@ nvme_tcp_qpair_fail(struct spdk_nvme_qpair *qpair)
 
 	cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
 	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	cpl.status.dnr = dnr;
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
 		assert(tcp_req->req != NULL);
@@ -783,8 +774,6 @@ nvme_tcp_qpair_fail(struct spdk_nvme_qpair *qpair)
 		nvme_tcp_req_complete(req, &cpl);
 		nvme_tcp_req_put(tqpair, tcp_req);
 	}
-
-	return 0;
 }
 
 static void
