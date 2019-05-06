@@ -330,6 +330,8 @@ struct spdk_nvme_qpair {
 
 	uint8_t				qprio;
 
+	uint8_t				is_enabled : 1;
+
 	/*
 	 * Members for handling IO qpair deletion inside of a completion context.
 	 * These are specifically defined as single bits, so that they do not
