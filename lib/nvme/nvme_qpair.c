@@ -580,7 +580,7 @@ nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 }
 
 void
-nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
+nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_request		*req;
 
@@ -591,7 +591,11 @@ nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 						   req->cpl.status.sct,
 						   req->cpl.status.sc, true);
 	}
+}
 
+void
+nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
+{
 	nvme_transport_qpair_disable(qpair);
 }
 
