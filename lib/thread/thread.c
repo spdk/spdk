@@ -185,6 +185,65 @@ spdk_thread_lib_fini(void)
 	g_ctx_sz = 0;
 }
 
+static void
+_free_thread(struct spdk_thread *thread)
+{
+	struct spdk_io_channel *ch;
+	struct spdk_msg *msg;
+	struct spdk_poller *poller, *ptmp;
+
+	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+		SPDK_ERRLOG("thread %s still has channel for io_device %s\n",
+			    thread->name, ch->dev->name);
+	}
+
+	TAILQ_FOREACH_SAFE(poller, &thread->active_pollers, tailq, ptmp) {
+		if (poller->state == SPDK_POLLER_STATE_WAITING) {
+			SPDK_WARNLOG("poller %p still registered at thread exit\n",
+				     poller);
+		}
+
+		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+		free(poller);
+	}
+
+
+	TAILQ_FOREACH_SAFE(poller, &thread->timer_pollers, tailq, ptmp) {
+		if (poller->state == SPDK_POLLER_STATE_WAITING) {
+			SPDK_WARNLOG("poller %p still registered at thread exit\n",
+				     poller);
+		}
+
+		TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+		free(poller);
+	}
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	assert(g_thread_count > 0);
+	g_thread_count--;
+	TAILQ_REMOVE(&g_threads, thread, tailq);
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	spdk_cpuset_free(thread->cpumask);
+	free(thread->name);
+
+	msg = SLIST_FIRST(&thread->msg_cache);
+	while (msg != NULL) {
+		SLIST_REMOVE_HEAD(&thread->msg_cache, link);
+
+		assert(thread->msg_cache_count > 0);
+		thread->msg_cache_count--;
+		spdk_mempool_put(g_spdk_msg_mempool, msg);
+
+		msg = SLIST_FIRST(&thread->msg_cache);
+	}
+
+	assert(thread->msg_cache_count == 0);
+
+	spdk_ring_free(thread->messages);
+	free(thread);
+}
+
 struct spdk_thread *
 spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 {
@@ -254,15 +313,7 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 	if (g_new_thread_fn) {
 		rc = g_new_thread_fn(thread);
 		if (rc != 0) {
-			spdk_cpuset_free(thread->cpumask);
-			spdk_ring_free(thread->messages);
-			spdk_mempool_put_bulk(g_spdk_msg_mempool, (void **)msgs, SPDK_MSG_MEMPOOL_CACHE_SIZE);
-			free(thread->name);
-			pthread_mutex_lock(&g_devlist_mutex);
-			TAILQ_REMOVE(&g_threads, thread, tailq);
-			g_thread_count--;
-			pthread_mutex_unlock(&g_devlist_mutex);
-			free(thread);
+			_free_thread(thread);
 			return NULL;
 		}
 	}
@@ -279,70 +330,13 @@ spdk_set_thread(struct spdk_thread *thread)
 void
 spdk_thread_exit(struct spdk_thread *thread)
 {
-	struct spdk_io_channel *ch;
-	struct spdk_msg *msg;
-	struct spdk_poller *poller, *ptmp;
-
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Freeing thread %s\n", thread->name);
 
 	if (tls_thread == thread) {
 		tls_thread = NULL;
 	}
 
-	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-		SPDK_ERRLOG("thread %s still has channel for io_device %s\n",
-			    thread->name, ch->dev->name);
-	}
-
-	TAILQ_FOREACH_SAFE(poller, &thread->active_pollers, tailq, ptmp) {
-		if (poller->state == SPDK_POLLER_STATE_WAITING) {
-			SPDK_WARNLOG("poller %p still registered at thread exit\n",
-				     poller);
-		}
-
-		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
-		free(poller);
-	}
-
-
-	TAILQ_FOREACH_SAFE(poller, &thread->timer_pollers, tailq, ptmp) {
-		if (poller->state == SPDK_POLLER_STATE_WAITING) {
-			SPDK_WARNLOG("poller %p still registered at thread exit\n",
-				     poller);
-		}
-
-		TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
-		free(poller);
-	}
-
-	spdk_cpuset_free(thread->cpumask);
-
-	pthread_mutex_lock(&g_devlist_mutex);
-	assert(g_thread_count > 0);
-	g_thread_count--;
-	TAILQ_REMOVE(&g_threads, thread, tailq);
-	pthread_mutex_unlock(&g_devlist_mutex);
-
-	free(thread->name);
-
-	msg = SLIST_FIRST(&thread->msg_cache);
-	while (msg != NULL) {
-		SLIST_REMOVE_HEAD(&thread->msg_cache, link);
-
-		assert(thread->msg_cache_count > 0);
-		thread->msg_cache_count--;
-		spdk_mempool_put(g_spdk_msg_mempool, msg);
-
-		msg = SLIST_FIRST(&thread->msg_cache);
-	}
-
-	assert(thread->msg_cache_count == 0);
-
-	if (thread->messages) {
-		spdk_ring_free(thread->messages);
-	}
-
-	free(thread);
+	_free_thread(thread);
 }
 
 void *
