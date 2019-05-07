@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "946d62c4_b45a7e90",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-07T02:09:40Z",
+      "side": 1,
+      "message": "If treat this feature as an independent module, we should put here, for further , need add it to vagrant related items.\nif not , need to move it to other nvme test scripts, that will not care about the systems.\nwhat\u0027s your opinion?",
+      "revId": "b57ff0d84d32b6489e366cd1db2ac08e830a844c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cfd6cf45_b962f486",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 3
