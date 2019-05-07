@@ -2,6 +2,10 @@
 
 ## v19.07: (Upcoming Release)
 
+### util
+
+A new file API `spdk_read_file` was added to read file content into a data buffer.
+
 ### NVMe-oF Target
 
 Shared receive queue can now be disabled even for NICs that support it using the
