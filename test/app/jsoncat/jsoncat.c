@@ -36,6 +36,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/json.h"
+#include "spdk/file.h"
 
 static void
 usage(const char *prog)
@@ -75,44 +76,6 @@ json_write_cb(void *cb_ctx, const void *data, size_t size)
 	return rc == size ? 0 : -1;
 }
 
-static void *
-read_file(FILE *f, size_t *psize)
-{
-	void *buf, *newbuf;
-	size_t cur_size, buf_size, rc;
-
-	buf = NULL;
-	cur_size = 0;
-	buf_size = 128 * 1024;
-
-	while (buf_size <= 1024 * 1024 * 1024) {
-		newbuf = realloc(buf, buf_size);
-		if (newbuf == NULL) {
-			free(buf);
-			return NULL;
-		}
-		buf = newbuf;
-
-		rc = fread(buf + cur_size, 1, buf_size - cur_size, f);
-		cur_size += rc;
-
-		if (feof(f)) {
-			*psize = cur_size;
-			return buf;
-		}
-
-		if (ferror(f)) {
-			free(buf);
-			return NULL;
-		}
-
-		buf_size *= 2;
-	}
-
-	free(buf);
-	return NULL;
-}
-
 static int
 process_file(const char *filename, FILE *f, uint32_t parse_flags, uint32_t write_flags)
 {
@@ -123,7 +86,7 @@ process_file(const char *filename, FILE *f, uint32_t parse_flags, uint32_t write
 	size_t num_values;
 	struct spdk_json_write_ctx *w;
 
-	buf = read_file(f, &size);
+	buf = spdk_posix_file_load(f, &size);
 	if (buf == NULL) {
 		fprintf(stderr, "%s: file read error\n", filename);
 		return 1;
