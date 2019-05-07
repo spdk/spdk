@@ -46,6 +46,30 @@
       "revId": "ca0e978ce01ead9a342a5d632f21f2f88aba3011",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c7e9460_a5f3713b",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-07T14:29:24Z",
+      "side": 1,
+      "message": "Oh, okay. I guess it\u0027s fine then. We can always change it later if there\u0027s a need.",
+      "parentUuid": "49eebc97_ba9aca68",
+      "range": {
+        "startLine": 55,
+        "startChar": 9,
+        "endLine": 55,
+        "endChar": 22
+      },
+      "revId": "ca0e978ce01ead9a342a5d632f21f2f88aba3011",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
