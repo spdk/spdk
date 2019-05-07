@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15cc9bd0_7e7c4f6f",
+        "filename": "doc/nvme_spec.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-07T18:41:55Z",
+      "side": 1,
+      "message": "I think somewhere up front you might want to clarify that this is focused on NVMe PCIe transport.  It\u0027s kind of implicitly written in this way, but it might be good to just call out something like \"this is how PCIe transport works, Fabrics works similarly but is outside of scope for this article\".",
+      "revId": "f6afe3922c7f9b57b47c9d53e1bcf6878d57da99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d49febe_219cf72f",
+        "filename": "doc/nvme_spec.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-07T18:41:55Z",
+      "side": 1,
+      "message": "The PRP/payload gets built separately from the command.  The PRP doesn\u0027t get built until after the pcie layer knows it has a tracker to submit the request to hardware.",
+      "revId": "f6afe3922c7f9b57b47c9d53e1bcf6878d57da99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0aa2e40a_07cb96ad",
+        "filename": "doc/nvme_spec.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-07T18:41:55Z",
+      "side": 1,
+      "message": "Some of this seems to be written with PCIe in mind.  Things like PRP don\u0027t apply to Fabrics.",
+      "revId": "f6afe3922c7f9b57b47c9d53e1bcf6878d57da99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e530f171_364bfac8",
+        "filename": "doc/nvme_spec.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-07T18:41:55Z",
+      "side": 1,
+      "message": "even if the buffer is physically contiguous, it still is guaranteed to spill out of the command if its more than 8KB - each PRP can only represent 4KB\n\nI think the key part is that for a 4KB I/O (the sweet spot), it\u0027s guaranteed to fit into the command structure - even if it spans a 4KB boundary, the request can hold 2 PRPs",
+      "revId": "f6afe3922c7f9b57b47c9d53e1bcf6878d57da99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
