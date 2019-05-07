@@ -471,7 +471,8 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 fi
 
 if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
-	if [ ! -f /usr/include/libpmem.h ]; then
+	if ! echo -e "#include <libpmem.h>\nint main(int argc, char *argv[]) {return 0;}\n" | \
+		gcc -o /dev/null -lpmem -x c - 2>/dev/null; then
 		echo --with-reduce requires libpmem.
 		echo Please install then re-run this script.
 		exit 1
