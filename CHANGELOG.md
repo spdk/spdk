@@ -98,6 +98,11 @@ Bdevs claimed by the `examine_config` callback will be now further examined in t
 spdk_bdev_io_get_io_channel() was added as a convenient way to get an io_channel
 from a bdev_io.
 
+A new bdev module `delay` has been added which simulates a drive latency when placed
+on top of a Null bdev. This module is intended only for testing and can be created using
+the new RPC `construct_delay_bdev`. That RPC takes the name of the underlying bdev as well
+as an average latency and p99 latency as arguments.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.

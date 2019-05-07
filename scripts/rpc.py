@@ -406,6 +406,29 @@ if __name__ == "__main__":
     p.add_argument('name', help='rbd bdev name')
     p.set_defaults(func=delete_rbd_bdev)
 
+    def construct_delay_bdev(args):
+        print(rpc.bdev.construct_delay_bdev(args.client,
+                                            base_bdev_name=args.base_bdev_name,
+                                            name=args.name,
+                                            avg_latency=args.avg_latency,
+                                            p99_latency=args.nine_nine_latency))
+
+    p = subparsers.add_parser('construct_delay_bdev',
+                              help='Add a delay bdev on existing bdev')
+    p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
+    p.add_argument('-d', '--name', help="Name of the delay bdev", required=True)
+    p.add_argument('-l', '--avg-latency', help="Average latency to apply before completing I/O", required=True, type=int)
+    p.add_argument('-n', '--nine-nine-latency', help="latency to apply to 1 in 100 I/O", required=True, type=int)
+    p.set_defaults(func=construct_delay_bdev)
+
+    def delete_delay_bdev(args):
+        rpc.bdev.delete_delay_bdev(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('delete_delay_bdev', help='Delete a delay bdev')
+    p.add_argument('name', help='delay bdev name')
+    p.set_defaults(func=delete_delay_bdev)
+
     def construct_error_bdev(args):
         print(rpc.bdev.construct_error_bdev(args.client,
                                             base_name=args.base_name))
