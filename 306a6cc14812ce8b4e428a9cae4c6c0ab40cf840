@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50bccb10_5bf8d3fc",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-07T17:12:35Z",
+      "side": 1,
+      "message": "How do you know that this controller has the default number of I/O queues?",
+      "revId": "306a6cc14812ce8b4e428a9cae4c6c0ab40cf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2fb2d3f_9106e2dc",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-07T17:12:35Z",
+      "side": 1,
+      "message": "If the user creates several queue pairs and then destroys a few, there are gaps in the qid space and this won\u0027t work.",
+      "revId": "306a6cc14812ce8b4e428a9cae4c6c0ab40cf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "949d4542_686cb000",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-07T17:12:35Z",
+      "side": 1,
+      "message": "You are on the RPC thread here, but in order to take action on this qpair you need to be on the same thread where the qpair is being used.",
+      "revId": "306a6cc14812ce8b4e428a9cae4c6c0ab40cf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
