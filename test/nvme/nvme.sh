@@ -103,6 +103,38 @@ for bdf in $(iter_pci_class_code 01 08 02); do
 done
 timing_exit identify
 
+timing_enter opal_nvme_manage
+for bdf in $(iter_pci_class_code 01 08 02); do
+	# NVMe Management Options: [8: opal][9: quit]
+	# Opal General Usage:
+	#	[1: scan device]
+	#	[2: init - take ownership and activate locking]
+	#	[3: setup locking range]
+	#	[4: list locking ranges]
+	#	[5: enable user]
+	#	[6: set new password]
+	#	[7: add user to locking range]
+	#	[8: lock/unlock range]
+	#	[9: revert tper]
+	#	[0: quit]
+	# admin password: test
+	# enable user: user1
+	# user1 password: tester1 -> tester (password is changed during tests)
+	# locking range: 1
+	# start: 0 length 1024
+	printf '8\n%s\n1\n\n
+	2\ntest\n\n
+	3\ntest\n1\n1024\n0\n\n
+	4\ntest\n\n
+	5\ntest\n1\ntester1\n\n
+	7\ntest\n1\n1\n\n
+	8\n1\ntester1\n1\n1\n\n
+	6\n1\ntester1\ntester\n\n
+	9\ntest\n\n
+	0\n\n9\n' ${bdf} | examples/nvme/nvme_manage/nvme_manage -i 0
+done
+timing_exit opal_nvme_manage
+
 timing_enter perf
 $rootdir/examples/nvme/perf/perf -q 128 -w read -o 12288 -t 1 -LL -i 0
 timing_exit perf
