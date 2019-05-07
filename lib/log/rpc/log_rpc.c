@@ -278,16 +278,7 @@ invalid:
 	free_rpc_log_flag(&req);
 }
 SPDK_RPC_REGISTER("set_log_flag", spdk_rpc_set_log_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static void
-spdk_rpc_set_trace_flag(struct spdk_jsonrpc_request *request,
-			const struct spdk_json_val *params)
-{
-	SPDK_ERRLOG("set_log_flag is deprecated\n");
-	spdk_rpc_set_log_flag(request, params);
-}
-
-SPDK_RPC_REGISTER("set_trace_flag", spdk_rpc_set_trace_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(set_log_flag, set_trace_flag)
 
 static void
 spdk_rpc_clear_log_flag(struct spdk_jsonrpc_request *request,
@@ -325,17 +316,7 @@ invalid:
 }
 SPDK_RPC_REGISTER("clear_log_flag", spdk_rpc_clear_log_flag,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static void
-spdk_rpc_clear_trace_flag(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
-{
-	SPDK_ERRLOG("clear_log_flag RPC is deprecated\n");
-	spdk_rpc_clear_log_flag(request, params);
-}
-
-SPDK_RPC_REGISTER("clear_trace_flag", spdk_rpc_clear_trace_flag,
-		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(clear_log_flag, clear_trace_flag)
 
 static void
 spdk_rpc_get_log_flags(struct spdk_jsonrpc_request *request,
@@ -366,13 +347,4 @@ spdk_rpc_get_log_flags(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_log_flags", spdk_rpc_get_log_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static void
-spdk_rpc_get_trace_flags(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
-{
-	SPDK_ERRLOG("get_trace_flags RPC is deprecated\n");
-	spdk_rpc_get_log_flags(request, params);
-}
-
-SPDK_RPC_REGISTER("get_trace_flags", spdk_rpc_get_trace_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(get_log_flags, get_trace_flags)
