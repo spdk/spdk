@@ -506,6 +506,7 @@ spdk_posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct 
 #if defined(__linux__)
 	struct epoll_event event;
 
+	memset(&event, 0, sizeof(event));
 	event.events = EPOLLIN;
 	event.data.ptr = sock;
 

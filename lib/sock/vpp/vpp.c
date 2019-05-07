@@ -557,6 +557,7 @@ spdk_vpp_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct sp
 	assert(group != NULL);
 	assert(g_vpp_initialized);
 
+	memset(&event, 0, sizeof(event));
 	event.events = EPOLLIN;
 	event.data.ptr = sock;
 
