@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd26ba95_2cdb2848",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-07T16:41:11Z",
+      "side": 1,
+      "message": "please keep the newline after the variable declaration\n\nplease also make similar change in spdk_vpp_sock_group_impl_add_sock",
+      "revId": "7e2cc41c8cfa08707c691e5b19bd0947c4be24db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
