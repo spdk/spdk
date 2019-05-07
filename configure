@@ -505,6 +505,21 @@ if [[ "${CONFIG[RBD]}" = "y" ]]; then
 	fi
 fi
 
+if [[ "${CONFIG[ISCSI_INITIATOR]}" = "y" ]]; then
+	# Fedora installs libiscsi to /usr/lib64/iscsi for some reason.
+	if ! echo -e '#include <iscsi/iscsi.h>\n#include <iscsi/scsi-lowlevel.h>\n' \
+		'#if LIBISCSI_API_VERSION < 20150621\n' \
+		'#error\n' \
+		'#endif\n' \
+		'int main(void) { return 0; }\n' \
+		| $BUILD_CMD -L/usr/lib64/iscsi -liscsi - 2>/dev/null; then
+		echo --with-iscsi-initiator requires libiscsi with
+		echo 'LIBISCSI_API_VERSION >= 20150621.'
+		echo Please install then re-run this script.
+		exit 1
+	fi
+fi
+
 if [[ "${CONFIG[OCF]}" = "y" ]]; then
 	# If OCF_PATH is a file, assume it is a library and use it to compile with
 	if [ -f ${CONFIG[OCF_PATH]} ]; then
