@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e47f9811_0a44fb21",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-07T09:53:34Z",
+      "side": 1,
+      "message": "Hi Mike,\nWhy logging was removed here?",
+      "revId": "1aae5064308231e71f952dcd58a4239945b0d752",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
