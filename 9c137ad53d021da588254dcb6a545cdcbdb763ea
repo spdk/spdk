@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd164cd7_68a47d65",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-07T18:50:45Z",
+      "side": 1,
+      "message": "Don\u0027t you need to look at the return value here? I think this call can fail potentially (if nvme_transport_qpair_enable sets the qpair back to disabled).",
+      "revId": "9c137ad53d021da588254dcb6a545cdcbdb763ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
