@@ -120,6 +120,15 @@ if [ -b /dev/ram0 ]; then
 fi
 timing_exit perf
 
+timing_enter opal
+for bdf in $(iter_pci_class_code 01 08 02); do
+	#NVMe Management Options: [8: opal][9: quit]
+	#Opal General Usage: [1: scan device][2: take ownership][3: revert tper][0: quit]
+	#password: test
+	printf '8\n%s\n1\n\n2\ntest\n\n\n3\ntest\n\n\n0\n\n9\n' ${bdf} | $rootdir/examples/nvme/nvme_manage/nvme_manage -i 0
+done
+timing_exit opal
+
 timing_enter reserve
 $rootdir/examples/nvme/reserve/reserve
 timing_exit reserve
