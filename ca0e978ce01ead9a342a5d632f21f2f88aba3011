@@ -70,6 +70,23 @@
       "revId": "ca0e978ce01ead9a342a5d632f21f2f88aba3011",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37ea31a1_e229ef18",
+        "filename": "test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-07T16:50:14Z",
+      "side": 1,
+      "message": "this is a bit of a nit, but I think we should fini in the reverse order of init - i.e. iscsitestfini first, then nvmftestfini\n\nsame for rest of this file",
+      "revId": "ca0e978ce01ead9a342a5d632f21f2f88aba3011",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
