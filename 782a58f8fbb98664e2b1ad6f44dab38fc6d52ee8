@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "955024ba_ade3e46a",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-07T18:02:10Z",
+      "side": 1,
+      "message": "you\u0027ll only ever have this message once for a qpair - could you just put the nvmf_tgt_poll_group directly in the qpair, and use the qpair as the context to nvmf_tgt_poll_group_add?  then you avoid an extra calloc/free",
+      "revId": "782a58f8fbb98664e2b1ad6f44dab38fc6d52ee8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
