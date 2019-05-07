@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ba3653a5_a6b14506",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-07T00:59:05Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "51556831_5ecdd502",
+      "range": {
+        "startLine": 366,
+        "startChar": 14,
+        "endLine": 366,
+        "endChar": 30
+      },
+      "revId": "a2c51a500392895611b6c7d1a19bfa25332129a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "842d498f_6b45527c",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
@@ -36,6 +60,24 @@
       "writtenOn": "2019-05-06T11:37:56Z",
       "side": 1,
       "message": "Lock ctrlr-\u003ectrlr_lock before foreach?",
+      "revId": "a2c51a500392895611b6c7d1a19bfa25332129a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3fb3417_9bbee9de",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-07T00:59:05Z",
+      "side": 1,
+      "message": "Nice to have a lock here.",
+      "parentUuid": "842d498f_6b45527c",
       "revId": "a2c51a500392895611b6c7d1a19bfa25332129a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
