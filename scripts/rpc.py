@@ -1022,49 +1022,24 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def set_log_flag(args):
         rpc.log.set_log_flag(args.client, flag=args.flag)
 
-    p = subparsers.add_parser('set_log_flag', help='set log flag')
+    p = subparsers.add_parser('set_log_flag', help='set log flag', aliases=['set_trace_flag'])
     p.add_argument(
         'flag', help='log flag we want to set. (for example "nvme").')
     p.set_defaults(func=set_log_flag)
 
-    def set_trace_flag(args):
-        print("set_trace_flag is deprecated - use set_log_flag instead")
-        rpc.log.set_trace_flag(args.client, flag=args.flag)
-
-    p = subparsers.add_parser('set_trace_flag', help='set trace flag')
-    p.add_argument(
-        'flag', help='trace mask we want to set. (for example "nvme").')
-    p.set_defaults(func=set_trace_flag)
-
     def clear_log_flag(args):
         rpc.log.clear_log_flag(args.client, flag=args.flag)
 
-    p = subparsers.add_parser('clear_log_flag', help='clear log flag')
+    p = subparsers.add_parser('clear_log_flag', help='clear log flag', aliases=['clear_trace_flag'])
     p.add_argument(
         'flag', help='log flag we want to clear. (for example "nvme").')
     p.set_defaults(func=clear_log_flag)
 
-    def clear_trace_flag(args):
-        print("clear_trace_flag is deprecated - use clear_log_flag instead")
-        rpc.log.clear_trace_flag(args.client, flag=args.flag)
-
-    p = subparsers.add_parser('clear_trace_flag', help='clear trace flag')
-    p.add_argument(
-        'flag', help='trace mask we want to clear. (for example "nvme").')
-    p.set_defaults(func=clear_trace_flag)
-
     def get_log_flags(args):
         print_dict(rpc.log.get_log_flags(args.client))
 
-    p = subparsers.add_parser('get_log_flags', help='get log flags')
+    p = subparsers.add_parser('get_log_flags', help='get log flags', aliases=['get_trace_flags'])
     p.set_defaults(func=get_log_flags)
-
-    def get_trace_flags(args):
-        print("get_trace_flags is deprecated - use get_log_flags instead")
-        print_dict(rpc.log.get_trace_flags(args.client))
-
-    p = subparsers.add_parser('get_trace_flags', help='get trace flags')
-    p.set_defaults(func=get_trace_flags)
 
     def set_log_level(args):
         rpc.log.set_log_level(args.client, level=args.level)
