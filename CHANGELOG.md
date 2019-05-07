@@ -2,6 +2,13 @@
 
 ## v19.07: (Upcoming Release)
 
+### bdev
+
+A new bdev module `delay` has been added which simulates a drive latency when placed
+on top of a Null bdev. This module is intended only for testing and can be created using
+the new RPC `construct_delay_bdev`. That RPC takes the name of the underlying bdev as well
+as average and p99 latency arguments for both read and write operations.
+
 ### NVMe-oF Target
 
 Shared receive queue can now be disabled even for NICs that support it using the
