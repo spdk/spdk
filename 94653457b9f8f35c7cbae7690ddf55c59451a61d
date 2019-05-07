@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4f8f801_6fdb90d6",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-07T03:28:03Z",
+      "side": 1,
+      "message": "already had trap before , need to remove this line.",
+      "revId": "94653457b9f8f35c7cbae7690ddf55c59451a61d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
