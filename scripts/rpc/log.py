@@ -1,3 +1,6 @@
+from . import helpers
+
+@helpers.deprecated_alias('set_trace_flag')
 def set_log_flag(client, flag):
     """Set log flag.
 
@@ -8,10 +11,7 @@ def set_log_flag(client, flag):
     return client.call('set_log_flag', params)
 
 
-def set_trace_flag(client, flag):
-    return set_log_flag(client, flag)
-
-
+@helpers.deprecated_alias('clear_trace_flag')
 def clear_log_flag(client, flag):
     """Clear log flag.
 
@@ -22,10 +22,7 @@ def clear_log_flag(client, flag):
     return client.call('clear_log_flag', params)
 
 
-def clear_trace_flag(client, flag):
-    return clear_log_flag(client, flag)
-
-
+@helpers.deprecated_alias('get_trace_flags')
 def get_log_flags(client):
     """Get log flags
 
@@ -33,10 +30,6 @@ def get_log_flags(client):
         List of log flags
     """
     return client.call('get_log_flags')
-
-
-def get_trace_flags(client):
-    return get_log_flags(client)
 
 
 def set_log_level(client, level):
