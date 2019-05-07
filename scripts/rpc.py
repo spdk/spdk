@@ -408,6 +408,33 @@ if __name__ == "__main__":
     p.add_argument('name', help='rbd bdev name')
     p.set_defaults(func=delete_rbd_bdev)
 
+    def bdev_delay_create(args):
+        print(rpc.bdev.bdev_delay_create(args.client,
+                                         base_bdev_name=args.base_bdev_name,
+                                         name=args.name,
+                                         avg_read_latency=args.avg_read_latency,
+                                         p99_read_latency=args.nine_nine_read_latency,
+                                         avg_write_latency=args.avg_write_latency,
+                                         p99_write_latency=args.nine_nine_write_latency))
+
+    p = subparsers.add_parser('bdev_delay_create',
+                              help='Add a delay bdev on existing bdev')
+    p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
+    p.add_argument('-d', '--name', help="Name of the delay bdev", required=True)
+    p.add_argument('-r', '--avg-read-latency', help="Average latency to apply before completing read ops", required=True, type=int)
+    p.add_argument('-t', '--nine-nine-read-latency', help="latency to apply to 1 in 100 read ops", required=True, type=int)
+    p.add_argument('-w', '--avg-write-latency', help="Average latency to apply before completing write ops", required=True, type=int)
+    p.add_argument('-n', '--nine-nine-write-latency', help="latency to apply to 1 in 100 write ops", required=True, type=int)
+    p.set_defaults(func=bdev_delay_create)
+
+    def bdev_delay_delete(args):
+        rpc.bdev.bdev_delay_delete(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('bdev_delay_delete', help='Delete a delay bdev')
+    p.add_argument('name', help='delay bdev name')
+    p.set_defaults(func=bdev_delay_delete)
+
     def construct_error_bdev(args):
         print(rpc.bdev.construct_error_bdev(args.client,
                                             base_name=args.base_name))

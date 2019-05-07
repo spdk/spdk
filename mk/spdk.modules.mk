@@ -32,7 +32,7 @@
 #
 
 BLOCKDEV_MODULES_LIST = bdev_lvol blobfs blob blob_bdev lvol
-BLOCKDEV_MODULES_LIST += bdev_malloc bdev_null bdev_nvme nvme bdev_passthru bdev_error bdev_gpt bdev_split
+BLOCKDEV_MODULES_LIST += bdev_malloc bdev_null bdev_nvme nvme bdev_passthru bdev_error bdev_gpt bdev_split bdev_delay
 BLOCKDEV_MODULES_LIST += bdev_raid
 
 ifeq ($(CONFIG_CRYPTO),y)
