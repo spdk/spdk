@@ -56,7 +56,7 @@ thread_alloc(void)
 	/* No schedule callback */
 	spdk_thread_lib_init(NULL, 0);
 	thread = spdk_thread_create(NULL, NULL);
-	CU_ASSERT(thread != NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_thread_exit(thread);
 	spdk_thread_lib_fini();
 
@@ -66,13 +66,13 @@ thread_alloc(void)
 	/* Scheduling succeeds */
 	g_sched_rc = 0;
 	thread = spdk_thread_create(NULL, NULL);
-	CU_ASSERT(thread != NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_thread_exit(thread);
 
 	/* Scheduling fails */
 	g_sched_rc = -1;
 	thread = spdk_thread_create(NULL, NULL);
-	CU_ASSERT(thread == NULL);
+	SPDK_CU_ASSERT_FATAL(thread == NULL);
 
 	spdk_thread_lib_fini();
 }
