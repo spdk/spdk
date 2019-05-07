@@ -22,6 +22,30 @@
       "revId": "ca0e978ce01ead9a342a5d632f21f2f88aba3011",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49eebc97_ba9aca68",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-07T14:25:01Z",
+      "side": 1,
+      "message": "I was planning on it. It was supposed to be the same form as nvmftestinit and nvmftestfini. See also https://review.gerrithub.io/c/spdk/spdk/+/453441.\nIf it\u0027s a big deal, I can change the form to nvmf_test_init and iscsi_test_init. Just let me know.",
+      "parentUuid": "1dd0e0da_5ea6023f",
+      "range": {
+        "startLine": 55,
+        "startChar": 9,
+        "endLine": 55,
+        "endChar": 22
+      },
+      "revId": "ca0e978ce01ead9a342a5d632f21f2f88aba3011",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
