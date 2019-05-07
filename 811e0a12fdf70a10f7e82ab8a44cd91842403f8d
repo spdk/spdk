@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd7c445f_1bbc2b2f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1730,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-07T22:02:46Z",
+      "side": 1,
+      "message": "For a write, the user already provided the buffer. I don\u0027t think we need to get another one.",
+      "revId": "811e0a12fdf70a10f7e82ab8a44cd91842403f8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
