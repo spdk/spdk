@@ -24,6 +24,16 @@ The format of the data returned by the get_bdevs_iostat RPC has changed to
 make it easier to parse.  It now returns an object with a "ticks" object
 and "bdevs" array with the per-bdev statistics.
 
+A new bdev module `delay` has been added which simulates a drive latency when placed
+on top of a Null bdev. This module is intended only for testing and can be created using
+the new RPC `bdev_delay_create`. That RPC takes the name of the underlying bdev as well
+as average and p99 latency arguments for both read and write operations. Average latency is
+defined as a value close to what you would expect a perf tool such as FIO to report back as
+the mean latency of all I/O submitted to the drive. p99 latency is defined as the value one
+would expect the drive to see the slowest 1% of I/O report. For underlying drives with already
+significant latency, the latency values provided to the drive will be additive. This should be
+taken into account if trying to achieve an artificial latency on top of an nvme drive or aio device.
+
 ### nvme
 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
