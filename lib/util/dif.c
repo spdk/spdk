@@ -95,6 +95,46 @@ _iov_iter_fast_forward(struct _iov_iter *i, uint32_t offset)
 	}
 }
 
+/* Context to setup a iovec array */
+struct _iov_ctx {
+	/* Current iovec */
+	struct iovec	*iov;
+
+	/* Number of iovecs */
+	int		num_iovs;
+
+	/* Number of the used iovecs */
+	int		iovcnt;
+
+	/* Mapped length by the used iovecs */
+	uint32_t	mapped_len;
+};
+
+static inline void
+_iov_ctx_init(struct _iov_ctx *ctx, struct iovec *iovs, int num_iovs)
+{
+	ctx->iov = iovs;
+	ctx->num_iovs = num_iovs;
+	ctx->iovcnt = 0;
+	ctx->mapped_len = 0;
+}
+
+static inline bool
+_iov_ctx_set_iov(struct _iov_ctx *ctx, uint8_t *data, uint32_t data_len)
+{
+	ctx->iov->iov_base = data;
+	ctx->iov->iov_len = data_len;
+	ctx->mapped_len += data_len;
+	ctx->iov++;
+	ctx->iovcnt++;
+
+	if (ctx->iovcnt < ctx->num_iovs) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 static bool
 _are_iovs_bytes_multiple(struct iovec *iovs, int iovcnt, uint32_t bytes)
 {
@@ -1303,18 +1343,17 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
 				uint8_t *buf, uint32_t buf_len,
 				uint32_t data_offset, uint32_t data_len,
 				uint32_t *_mapped_len,
-				const struct spdk_dif_ctx *ctx)
+				const struct spdk_dif_ctx *dif_ctx)
 {
-	uint32_t data_block_size, head_unalign, mapped_len = 0;
+	uint32_t data_block_size, head_unalign;
 	uint32_t num_blocks, offset_blocks;
-	struct iovec *iov = iovs;
-	int iovcnt = 0;
+	struct _iov_ctx iov_ctx;
 
 	if (iovs == NULL || num_iovs == 0) {
 		return -EINVAL;
 	}
 
-	data_block_size = ctx->block_size - ctx->md_size;
+	data_block_size = dif_ctx->block_size - dif_ctx->md_size;
 
 	if ((data_len % data_block_size) != 0) {
 		SPDK_ERRLOG("Data length must be a multiple of data block size\n");
@@ -1328,47 +1367,43 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
 
 	num_blocks = data_len / data_block_size;
 
-	if (buf_len < num_blocks * ctx->block_size) {
+	if (buf_len < num_blocks * dif_ctx->block_size) {
 		SPDK_ERRLOG("Buffer overflow will occur. Buffer size is %" PRIu32 " but"
 			    " necessary size is %" PRIu32 "\n",
-			    buf_len, num_blocks * ctx->block_size);
+			    buf_len, num_blocks * dif_ctx->block_size);
 		return -ERANGE;
 	}
 
 	offset_blocks = data_offset / data_block_size;
 	head_unalign = data_offset % data_block_size;
 
-	buf += offset_blocks * ctx->block_size;
+	_iov_ctx_init(&iov_ctx, iovs, num_iovs);
+	buf += offset_blocks * dif_ctx->block_size;
 
 	if (head_unalign != 0) {
 		buf += head_unalign;
 
-		iov->iov_base = buf;
-		iov->iov_len = data_block_size - head_unalign;
-		mapped_len += data_block_size - head_unalign;
-		iov++;
-		iovcnt++;
-
-		buf += ctx->block_size - head_unalign;
+		if (!_iov_ctx_set_iov(&iov_ctx, buf, data_block_size - head_unalign)) {
+			goto end;
+		}
+		buf += dif_ctx->block_size - head_unalign;
 		offset_blocks++;
 	}
 
-	while (offset_blocks < num_blocks && iovcnt < num_iovs) {
-		iov->iov_base = buf;
-		iov->iov_len = data_block_size;
-		mapped_len += data_block_size;
-		iov++;
-		iovcnt++;
-
-		buf += ctx->block_size;
+	while (offset_blocks < num_blocks) {
+		if (!_iov_ctx_set_iov(&iov_ctx, buf, data_block_size)) {
+			goto end;
+		}
+		buf += dif_ctx->block_size;
 		offset_blocks++;
 	}
 
+end:
 	if (_mapped_len != NULL) {
-		*_mapped_len = mapped_len;
+		*_mapped_len = iov_ctx.mapped_len;
 	}
 
-	return iovcnt;
+	return iov_ctx.iovcnt;
 }
 
 int
