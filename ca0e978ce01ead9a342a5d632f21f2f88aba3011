@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dd0e0da_5ea6023f",
+        "filename": "test/iscsi_tgt/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-07T05:59:31Z",
+      "side": 1,
+      "message": "Is this function going to be named like this? It looks a bit out of place without any underscores.\n\nMaybe something like \"setup_test_env\" could do?",
+      "range": {
+        "startLine": 55,
+        "startChar": 9,
+        "endLine": 55,
+        "endChar": 22
+      },
+      "revId": "ca0e978ce01ead9a342a5d632f21f2f88aba3011",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
