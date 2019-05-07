@@ -104,6 +104,12 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_exit reset
 fi
 
+timing_enter opal
+for bdf in $(iter_pci_class_code 01 08 02); do
+        printf '8\n%s\n1\n\n2\ntest\n\n\n3\ntest\n\n\n0\n\n9\n' ${bdf} | $rootdir/examples/nvme/nvme_manage/nvme_manage
+done
+timing_exit opal
+
 timing_enter identify
 $rootdir/examples/nvme/identify/identify -i 0
 for bdf in $(iter_pci_class_code 01 08 02); do
@@ -119,6 +125,12 @@ if [ -b /dev/ram0 ]; then
 	report_test_completion "nvme_perf"
 fi
 timing_exit perf
+
+timing_enter opal
+for bdf in $(iter_pci_class_code 01 08 02); do
+	printf '8\n%s\n1\n\n2\ntest\n\n\n3\ntest\n\n\n0\n\n9\n' ${bdf} | $rootdir/examples/nvme/nvme_manage/nvme_manage
+done
+timing_exit opal
 
 timing_enter reserve
 $rootdir/examples/nvme/reserve/reserve
