@@ -36,6 +36,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/util.h"
+#include "spdk/file.h"
 #include "spdk/log.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
@@ -477,39 +478,18 @@ spdk_app_json_config_load_subsystem(void *_ctx)
 	spdk_app_json_config_load_subsystem_config_entry(ctx);
 }
 
-
 static void *
 read_file(const char *filename, size_t *size)
 {
 	FILE *file = fopen(filename, "r");
-	void *data = NULL;
-	long int rc = 0;
+	void *data;
 
 	if (file == NULL) {
 		/* errno is set by fopen */
 		return NULL;
 	}
 
-	rc = fseek(file, 0, SEEK_END);
-	if (rc == 0) {
-		rc = ftell(file);
-		rewind(file);
-	}
-
-	if (rc != -1) {
-		*size = rc;
-		data = malloc(*size);
-	}
-
-	if (data != NULL) {
-		rc = fread(data, 1, *size, file);
-		if (rc != (long int)*size) {
-			free(data);
-			data = NULL;
-			errno = EIO;
-		}
-	}
-
+	data = spdk_posix_file_load(file, size);
 	fclose(file);
 	return data;
 }
