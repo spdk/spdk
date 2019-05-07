@@ -477,6 +477,15 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	fi
 fi
 
+if [[ "${CONFIG[PMDK]}" = "y" ]]; then
+	if ! echo -e '#include <libpmemblk.h>\nint main(void) { return 0; }\n' \
+		| $BUILD_CMD -lpmemblk - 2>/dev/null; then
+		echo --with-pmdk requires libpmemblk.
+		echo Please install then re-run this script.
+		exit 1
+	fi
+fi
+
 if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 	if ! echo -e '#include <libpmem.h>\nint main(void) { return 0; }\n' \
 		| $BUILD_CMD -lpmem - 2>/dev/null; then
