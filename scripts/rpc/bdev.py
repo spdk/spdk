@@ -424,6 +424,41 @@ def construct_error_bdev(client, base_name):
     return client.call('construct_error_bdev', params)
 
 
+def construct_delay_bdev(client, base_bdev_name, name, avg_read_latency, p99_read_latency, avg_write_latency, p99_write_latency):
+    """Construct a delay block device.
+
+    Args:
+        base_bdev_name: name of the existing bdev
+        name: name of block device
+        avg_read_latency: complete 99% of read ops with this delay
+        p99_read_latency: complete 1% of read ops with this delay
+        avg_write_latency: complete 99% of write ops with this delay
+        p99_write_latency: complete 1% of write ops with this delay
+
+    Returns:
+        Name of created block device.
+    """
+    params = {
+        'base_bdev_name': base_bdev_name,
+        'name': name,
+        'avg_read_latency': avg_read_latency,
+        'p99_read_latency': p99_read_latency,
+        'avg_write_latency': avg_write_latency,
+        'p99_write_latency': p99_write_latency,
+    }
+    return client.call('construct_delay_bdev', params)
+
+
+def delete_delay_bdev(client, name):
+    """Remove delay bdev from the system.
+
+    Args:
+        name: name of delay bdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_delay_bdev', params)
+
+
 def delete_error_bdev(client, name):
     """Remove error bdev from the system.
 

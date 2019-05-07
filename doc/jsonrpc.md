@@ -1672,6 +1672,92 @@ Example response:
 }
 ~~~
 
+## construct_delay_bdev {#rpc_construct_delay_bdev}
+
+Create delay bdev. This bdev type redirects all IO to it's base bdev and inserts a delay on the completion
+path to create an artificial drive latency.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+base_bdev_name          | Required | string      | Base bdev name
+avg_read_latency        | Required | number      | average read latency (us)
+p99_read_latency        | Required | number      | p99 read latency (us)
+avg_write_latency       | Required | number      | average write latency (us)
+p99_write_latency       | Required | number      | p99 write latency (us)
+
+### Result
+
+Name of newly created bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "base_bdev_name": "Null0",
+    "name": "Delay0",
+    "avg_read_latency": "15",
+    "p99_read_latency": "50",
+    "avg_write_latency": "40",
+    "p99_write_latency": "110",
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_delay_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "Delay0"
+}
+~~~
+
+## delete_delay_bdev {#rpc_delete_delay_bdev}
+
+Delete delay bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "Delay0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_delay_bdev",
+  "id": 1
+}
+
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## construct_error_bdev {#rpc_construct_error_bdev}
 
 Construct error bdev.
