@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65bc519b_c7926f65",
+        "filename": "scripts/rpc/helpers.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-07T16:53:13Z",
+      "side": 1,
+      "message": "I think the modern way to do string formatting is this:\n\n\"{} is deprecated, use {} instead.\".format(old_name, f.__name__)",
+      "revId": "c077ba9699074a634975b52ad3329c2d50746257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
