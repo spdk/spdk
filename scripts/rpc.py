@@ -32,7 +32,9 @@ if __name__ == "__main__":
                         help='Set verbose mode to INFO', default="ERROR")
     parser.add_argument('--verbose', dest='verbose', choices=['DEBUG', 'INFO', 'ERROR'],
                         help="""Set verbose level. """)
-    subparsers = parser.add_subparsers(help='RPC methods')
+    parser.add_argument('rpc_args', nargs=argparse.REMAINDER)
+    rpc_parser = argparse.ArgumentParser(description='SPDK RPC methods')
+    subparsers = rpc_parser.add_subparsers(help='RPC methods')
 
     def start_subsystem_init(args):
         rpc.start_subsystem_init(args.client)
@@ -1807,12 +1809,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             call_rpc_func(args)
 
     args = parser.parse_args()
-    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
-    if hasattr(args, 'func'):
-        call_rpc_func(args)
+    client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+    if len(args.rpc_args) > 0:
+        rpc_args = rpc_parser.parse_args(args.rpc_args)
+        rpc_args.client = client
+        call_rpc_func(rpc_args)
     elif sys.stdin.isatty():
         # No arguments and no data piped through stdin
         parser.print_help()
         exit(1)
     else:
-        execute_script(parser, args.client, sys.stdin)
+        execute_script(parser, client, sys.stdin)
