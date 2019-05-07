@@ -169,19 +169,15 @@ if [ `uname` = Linux ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi
-PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 
-if [ -d /usr/src/fio ]; then
+if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
+	# Only test when ASAN is not enabled. If ASAN is enabled, we cannot test.
 	timing_enter fio_plugin
+	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 	for bdf in $(iter_pci_class_code 01 08 02); do
-		# Only test when ASAN is not enabled. If ASAN is enabled, we cannot test.
-		if [ $SPDK_RUN_ASAN -eq 0 ]; then
-			LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
-			report_test_completion "bdev_fio"
-		fi
-		break
+		LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
+		report_test_completion "bdev_fio"
 	done
-
 	timing_exit fio_plugin
 fi
 
