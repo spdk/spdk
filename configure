@@ -407,14 +407,13 @@ if [[ "$OSTYPE" == "freebsd"* ]]; then
 fi
 
 if [ "${CONFIG[RDMA]}" = "y" ]; then
-	if [ "$OSTYPE" != "FreeBSD"* ]; then
-		if echo -e '#include <infiniband/verbs.h>\n \
-			int main(void){ return !!IBV_WR_SEND_WITH_INV; }\n' \
-			| ${CC:-cc} ${CFLAGS} -x c -c -o /dev/null - 2>/dev/null; then
-			CONFIG[RDMA_SEND_WITH_INVAL]="y"
-		else
-			CONFIG[RDMA_SEND_WITH_INVAL]="n"
-			echo "
+	if echo -e '#include <infiniband/verbs.h>\n \
+		int main(void){ return !!IBV_WR_SEND_WITH_INV; }\n' \
+		| ${CC:-cc} ${CFLAGS} -x c -c -o /dev/null - 2>/dev/null; then
+		CONFIG[RDMA_SEND_WITH_INVAL]="y"
+	else
+		CONFIG[RDMA_SEND_WITH_INVAL]="n"
+		echo "
 *******************************************************************************
 WARNING: The Infiniband Verbs opcode Send With Invalidate is either not
 supported or is not functional with the current version of libibverbs installed
@@ -428,7 +427,6 @@ be unable to leverage that operation using the currently installed version
 of libibverbs, so Linux kernel NVMe-oF initiators based on kernels greater
 than or equal to 4.14 will see significantly reduced performance.
 *******************************************************************************"
-		fi
 	fi
 fi
 
