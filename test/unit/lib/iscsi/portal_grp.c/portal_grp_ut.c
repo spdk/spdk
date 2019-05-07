@@ -415,6 +415,57 @@ portal_grp_add_delete_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
 }
 
+static void
+portal_grp_add_delete_twice_case(void)
+{
+	struct spdk_iscsi_portal_grp *pg1, *pg2;
+	struct spdk_iscsi_portal *p;
+	int rc;
+
+	const char *host = "192.168.2.0";
+	const char *port1 = "3260", *port2 = "3261";
+	const char *cpumask = "1";
+
+	/* internal of add_portal_group related */
+	pg1 = spdk_iscsi_portal_grp_create(1);
+	CU_ASSERT(pg1 != NULL);
+
+	p = spdk_iscsi_portal_create(host, port1, cpumask);
+	CU_ASSERT(p != NULL);
+
+	spdk_iscsi_portal_grp_add_portal(pg1, p);
+
+	rc = spdk_iscsi_portal_grp_open(pg1);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_portal_grp_register(pg1);
+	CU_ASSERT(rc == 0);
+
+	/* internal of add_portal_group related */
+	pg2 = spdk_iscsi_portal_grp_create(2);
+	CU_ASSERT(pg2 != NULL);
+
+	p = spdk_iscsi_portal_create(host, port2, cpumask);
+	CU_ASSERT(p != NULL);
+
+	spdk_iscsi_portal_grp_add_portal(pg2, p);
+
+	rc = spdk_iscsi_portal_grp_open(pg2);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_portal_grp_register(pg2);
+	CU_ASSERT(rc == 0);
+
+	/* internal of destroy_portal_group related */
+	iscsi_portal_grp_close(pg1);
+	iscsi_portal_grp_close(pg2);
+
+	spdk_iscsi_portal_grps_destroy();
+
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -464,6 +515,8 @@ main(int argc, char **argv)
 			       portal_grp_register_twice_case) == NULL
 		|| CU_add_test(suite, "portal group add/delete case",
 			       portal_grp_add_delete_case) == NULL
+		|| CU_add_test(suite, "portal group add/delete twice case",
+			       portal_grp_add_delete_twice_case) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
