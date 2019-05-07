@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfd6cf45_b962f486",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-07T01:52:02Z",
+      "side": 1,
+      "message": "A coming patch  that all these items will be set 0 as defaults.\nhttps://review.gerrithub.io/c/spdk/spdk/+/443762",
+      "revId": "b57ff0d84d32b6489e366cd1db2ac08e830a844c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5f75a94_19ac88c1",
+        "filename": "test/nvme/opal.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-07T01:52:02Z",
+      "side": 1,
+      "message": "Is there  any needed error trap at here?\nwhat if nvme_manage executes failed or hung up ?\nalso need to judge what system now we support now. \nneed refer to other scripts.",
+      "revId": "b57ff0d84d32b6489e366cd1db2ac08e830a844c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
