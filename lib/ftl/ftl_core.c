@@ -1279,6 +1279,7 @@ ftl_rwb_fill(struct ftl_io *io)
 
 		ppa.offset = entry->pos;
 
+		ftl_trace_rwb_fill(dev, io);
 		ftl_io_advance(io, 1);
 		ftl_update_l2p(dev, entry, ppa);
 
@@ -1286,7 +1287,6 @@ ftl_rwb_fill(struct ftl_io *io)
 		/* write completion callback when it's processed faster than */
 		/* L2P is set in update_l2p(). */
 		ftl_rwb_push(entry);
-		ftl_trace_rwb_fill(dev, io);
 	}
 
 	ftl_io_complete(io);
