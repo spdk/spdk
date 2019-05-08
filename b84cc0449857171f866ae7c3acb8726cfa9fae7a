@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4987b606_ba15b90e",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-08T10:48:32Z",
+      "side": 1,
+      "message": "still prefer to have the margin here for the performance variance considering the test could be run on other VM or server. The actual performance without QoS could be different, if adding somewhat margin here, it could make sure the QoS case can run in a smooth way.",
+      "range": {
+        "startLine": 43,
+        "startChar": 3,
+        "endLine": 43,
+        "endChar": 35
+      },
+      "revId": "b84cc0449857171f866ae7c3acb8726cfa9fae7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
