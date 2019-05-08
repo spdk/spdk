@@ -384,7 +384,7 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 		if (rc > 0) {
 			rc = spdk_iscsi_conn_readv_data(conn, iovs, rc);
 			if (rc > 0) {
-				_rc = spdk_dif_generate_stream(pdu->data_buf, pdu->data_buf_len,
+				_rc = spdk_dif_generate_stream(&buf_iov, 1,
 							       pdu->data_valid_bytes, rc,
 							       &dif_ctx);
 				if (_rc != 0) {
