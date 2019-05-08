@@ -90,7 +90,7 @@ struct ftl_flush {
 	LIST_ENTRY(ftl_flush)		list_entry;
 };
 
-typedef int (*ftl_next_ppa_fn)(struct ftl_io *, struct ftl_ppa *, size_t, void *);
+typedef int (*ftl_next_ppa_fn)(struct ftl_io *, struct ftl_ppa *, size_t);
 static void _ftl_read(void *);
 static void _ftl_write(void *);
 
@@ -214,8 +214,7 @@ ftl_md_write_cb(void *arg, int status)
 }
 
 static int
-ftl_ppa_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
-		      size_t lbk, void *ctx)
+ftl_ppa_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa, size_t lbk)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	size_t lbk_cnt, max_lbks;
@@ -692,7 +691,7 @@ ftl_read_retry(int rc)
 static int
 ftl_read_canceled(int rc)
 {
-	return rc == 0;
+	return rc == -EFAULT || rc == 0;
 }
 
 static void
@@ -714,7 +713,7 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 
 	while (io->pos < io->lbk_cnt) {
 		/* We might hit the cache here, if so, skip the read */
-		lbk_cnt = rc = next_ppa(io, &ppa, io->pos, ctx);
+		lbk_cnt = rc = next_ppa(io, &ppa, io->pos);
 
 		/* We might need to retry the read from scratch (e.g. */
 		/* because write was under way and completed before */
@@ -726,6 +725,8 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 		/* We don't have to schedule the read, as it was read from cache */
 		if (ftl_read_canceled(rc)) {
 			ftl_io_advance(io, 1);
+			ftl_trace_completion(io->dev, io, rc ? FTL_TRACE_COMPLETION_CACHE :
+					     FTL_TRACE_COMPLETION_INVALID);
 			continue;
 		}
 
@@ -782,8 +783,7 @@ out:
 }
 
 static int
-ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
-		      size_t lbk, void *ctx)
+ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa, size_t lbk)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_ppa next_ppa;
@@ -795,13 +795,11 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
 
 	/* If the PPA is invalid, skip it (the buffer should already be zero'ed) */
 	if (ftl_ppa_invalid(*ppa)) {
-		ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_INVALID);
-		return 0;
+		return -EFAULT;
 	}
 
 	if (ftl_ppa_cached(*ppa)) {
 		if (!ftl_ppa_cache_read(io, io->lba.single + lbk, *ppa, ftl_io_iovec_addr(io))) {
-			ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_CACHE);
 			return 0;
 		}
 
