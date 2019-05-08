@@ -956,6 +956,23 @@ test_spdk_nvme_transport_id_parse_trtype(void)
 	spdk_nvme_transport_id_parse_trtype(trtype, str);
 	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_RDMA);
 
+	/* test trtype value when use function "strcasecmp" to compare str and "FC"，not case-sensitive */
+	str = "FC";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_FC);
+
+	str = "fc";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_FC);
+
+	/* test trtype value when use function "strcasecmp" to compare str and "TCP"，not case-sensitive */
+	str = "TCP";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_TCP);
+
+	str = "tcp";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_TCP);
 }
 
 static void
