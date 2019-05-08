@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ae07631_2d2ebdc7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-08T10:32:53Z",
+      "side": 1,
+      "message": "If this patch is going to be merged, I think we need help function for rpc methods. After this change help do not display list of rpcs.",
+      "range": {
+        "startLine": 36,
+        "startChar": 4,
+        "endLine": 36,
+        "endChar": 72
+      },
+      "revId": "9f1725a6b9fd255ecd9b7f1404bbe490fb4b1a7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
