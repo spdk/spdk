@@ -576,7 +576,24 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		req->submit_tick = 0;
 	}
 
-	return nvme_transport_qpair_submit_request(qpair, req);
+	if (spdk_likely(qpair->is_enabled)) {
+		rc = nvme_transport_qpair_submit_request(qpair, req);
+		if (spdk_unlikely(rc == -ENOMEM)) {
+			/* Put the request on the queue to be processed later
+			 * when a transport-specific buffer from a previously
+			 * submitted request is available.
+			 */
+			STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+			rc = 0;
+		}
+	} else {
+		/* The controller is being reset - so queue this request and submit
+		 * it later when the reset is completed.
+		 */
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		rc = 0;
+	}
+	return rc;
 }
 
 static void

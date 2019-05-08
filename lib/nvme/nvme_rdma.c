@@ -1558,14 +1558,8 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	assert(req != NULL);
 
 	rdma_req = nvme_rdma_req_get(rqpair);
-	if (!rdma_req || !qpair->is_enabled) {
-		/*
-		 * No rdma_req is available, or the qpair is disabled due to
-		 *  an in-progress reset.  Queue the request to be processed
-		 *  later.
-		 */
-		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
-		return 0;
+	if (!rdma_req) {
+		return -ENOMEM;
 	}
 
 	if (nvme_rdma_req_init(rqpair, req, rdma_req)) {
