@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "df0f6a9a_e6a02c39",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T14:11:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "efce2b9f_c2b51275",
+      "range": {
+        "startLine": 185,
+        "startChar": 2,
+        "endLine": 185,
+        "endChar": 13
+      },
+      "revId": "3ee45db9e21c78b16942f6a2850e76c71c179358",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32b0f939_18c2b087",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 5
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "0c37f7f3_a0f59639",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T14:11:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32b0f939_18c2b087",
+      "range": {
+        "startLine": 190,
+        "startChar": 2,
+        "endLine": 191,
+        "endChar": 14
+      },
+      "revId": "3ee45db9e21c78b16942f6a2850e76c71c179358",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eeb1f5bc_6df8f99f",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 5
@@ -59,6 +107,24 @@
       "writtenOn": "2019-05-08T09:13:50Z",
       "side": 1,
       "message": "can you just set num_batches after allocating rwb-\u003ebatches? Then you don\u0027t need the additional `if (rwb-\u003ebatches)` check in line #253 and the whole block can be left unchanged.",
+      "revId": "3ee45db9e21c78b16942f6a2850e76c71c179358",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7cfc1a6_79c84c94",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T14:11:39Z",
+      "side": 1,
+      "message": "Correct, I could do that, however I feel like explicit check is more readable (it\u0027s easy to mess up the order of the allocations / assignments).",
+      "parentUuid": "eeb1f5bc_6df8f99f",
       "revId": "3ee45db9e21c78b16942f6a2850e76c71c179358",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
