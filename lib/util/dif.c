@@ -1382,6 +1382,64 @@ dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 	return iov_ctx.iovpos;
 }
 
+static int
+dif_set_md_interleave_iovs_split(struct iovec *iovs, int iovcnt,
+				 struct iovec *buf_iovs, int buf_iovcnt,
+				 uint32_t data_offset, uint32_t data_len,
+				 uint32_t *_mapped_len,
+				 const struct spdk_dif_ctx *dif_ctx)
+{
+	uint32_t data_block_size, head_unalign;
+	uint32_t num_blocks, offset_blocks;
+	struct _iov_ctx iov_ctx;
+	struct _iov_iter iov_iter;
+	uint8_t *buf;
+	uint32_t buf_len, remaining;
+
+	data_block_size = dif_ctx->block_size - dif_ctx->md_size;
+	num_blocks = data_len / data_block_size;
+
+	if (!_are_iovs_valid(buf_iovs, buf_iovcnt,
+			     num_blocks * dif_ctx->block_size)) {
+		SPDK_ERRLOG("Buffer overflow will occur.\n");
+		return -ERANGE;
+	}
+
+	offset_blocks = data_offset / data_block_size;
+	head_unalign = data_offset % data_block_size;
+
+	_iov_ctx_init(&iov_ctx, iovs, iovcnt);
+	_iov_iter_init(&iov_iter, buf_iovs, buf_iovcnt);
+	_iov_iter_fast_forward(&iov_iter, offset_blocks * dif_ctx->block_size);
+
+	while (offset_blocks < num_blocks) {
+		_iov_iter_fast_forward(&iov_iter, head_unalign);
+
+		remaining = data_block_size - head_unalign;
+		while (remaining != 0) {
+			_iov_iter_get_buf(&iov_iter, (void *)&buf, &buf_len);
+			buf_len = spdk_min(buf_len, remaining);
+
+			if (!_iov_ctx_set_iov(&iov_ctx, buf, buf_len)) {
+				goto end;
+			}
+			_iov_iter_advance(&iov_iter, buf_len);
+			remaining -= buf_len;
+		}
+		_iov_iter_fast_forward(&iov_iter, dif_ctx->md_size);
+		offset_blocks++;
+
+		head_unalign = 0;
+	}
+
+end:
+	if (_mapped_len != NULL) {
+		*_mapped_len = iov_ctx.mapped_len;
+	}
+
+	return iov_ctx.iovpos;
+}
+
 int
 spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 				struct iovec *buf_iovs, int buf_iovcnt,
@@ -1412,7 +1470,8 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 						  buf_iovs[0].iov_base, buf_iovs[0].iov_len,
 						  data_offset, data_len, _mapped_len, dif_ctx);
 	} else {
-		return -EINVAL;
+		return dif_set_md_interleave_iovs_split(iovs, iovcnt, buf_iovs, buf_iovcnt,
+							data_offset, data_len, _mapped_len, dif_ctx);
 	}
 }
 
