@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe8c03c2_a9775409",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-08T06:54:26Z",
+      "side": 1,
+      "message": "Looks like need to write as below\n\nread_result\u003d$((read_result*3/4))\n\nor use the \"bc\" command to get the calculated result.\n\nFrom below, not sure whether it is got calculated as the actual value here is 21955.\n\nOn the other hand, could we either increase the queue depth from 128 to 256 to have a higher IOPS or use a RAID0 device instead of Malloc0 to have higher IOPS in order to make sure in the most cases, the QoS testing is run and in some rare cases the QoS can not run due to a lower measured performance without enabled QoS.\n\n 08:14:39\t# \u0027[\u0027 IOPS \u003d IOPS \u0027]\u0027\n  08:14:39\t# /var/jenkins/workspace/iSCSI_tests/iscsi_autotest/spdk/scripts/rpc.py get_bdevs_iostat -b Malloc0\n  08:14:39\t# jq -r \u0027.[1].num_read_ops\u0027\n 08:14:39\t# end_io_count\u003d109826\n 08:14:39\t# read_result\u003d21955\n 08:14:39\t# \u0027[\u0027 false \u003d true \u0027]\u0027\n 08:14:39\t# \u0027[\u0027 true \u003d true \u0027]\u0027\n 08:14:39\t# read_result\u003d\u00270.75*21955\u0027\n  08:14:39\t# echo \u00270.75*21955 \u003e 20000\u0027\n  08:14:39\t# bc\n 08:14:39\t# retval\u003d0\n 08:14:39\t# \u0027[\u0027 0 -eq 0 \u0027]\u0027\n 08:14:39\t# echo \u00270.75*21955 less than 20000 - exit QoS testing\u0027\n0.75*21955 less than 20000 - exit QoS testing\n 08:14:39\t# ENABLE_QOS\u003dfalse\n 08:14:39\t# \u0027[\u0027 false \u003d true \u0027]\u0027",
+      "range": {
+        "startLine": 43,
+        "startChar": 3,
+        "endLine": 43,
+        "endChar": 32
+      },
+      "revId": "f2ee13c94d86b1d7f40514fffdfcb7545cc50414",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
