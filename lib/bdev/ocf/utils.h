@@ -49,8 +49,13 @@ int vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
 			 vbdev_ocf_mngt_callback cb, void *cb_arg);
 
 /* Continue execution with polling operation (fn)
- * fn must invoke vbdev_ocf_mngt_continue() to stop polling */
+ * fn must invoke vbdev_ocf_mngt_continue() to stop polling
+ * Poller has default timeout of 5 seconds */
 void vbdev_ocf_mngt_poll(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn fn);
+
+/* Set timeout for current polling operation. It resets after poll finishes
+ * 0 millisec means no timeout */
+void vbdev_ocf_mngt_poll_set_timeout(struct vbdev_ocf *vbdev, uint64_t millisec);
 
 /* Continue execution with next function that is on path
  * If next function is NULL, finish management operation and invoke callback */
