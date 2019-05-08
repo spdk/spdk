@@ -142,6 +142,30 @@
       "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "067c48cc_11983235",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T09:47:21Z",
+      "side": 1,
+      "message": "The ftl_band is a pretty big structure, so dividing it makes sense. By adding additional structure you\u0027re not doing anything to reduce these chains. The idea behind ftl_md is to group together stuff that\u0027ll be stored on the persistent media. I think the distinction makes sense and would like to leave it as it is. Perhaps we should change some of the code to be passed ftl_md instead of ftl_band or just add some local variables to reduce the length of those chains.",
+      "parentUuid": "9ff5908a_7ef0d103",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 18
+      },
+      "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
