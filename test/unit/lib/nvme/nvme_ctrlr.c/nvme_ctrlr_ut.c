@@ -185,6 +185,11 @@ nvme_transport_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
 }
 
+void
+nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
+{
+}
+
 int
 nvme_driver_init(void)
 {
