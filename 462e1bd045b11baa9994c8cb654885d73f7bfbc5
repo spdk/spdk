@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bdfbe58e_193d6638",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1004271
+      },
+      "writtenOn": "2019-05-08T19:47:42Z",
+      "side": 1,
+      "message": "Great to have Avg and P99 latency defined, but would also be nice to differentiate read/write latency as well to be more like a real drive.  So, 4 different latencies, something like: avg_read, p99_read, avg_write, p99_write.",
+      "revId": "462e1bd045b11baa9994c8cb654885d73f7bfbc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "527e385a_0cedf00a",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1004271
+      },
+      "writtenOn": "2019-05-08T19:47:42Z",
+      "side": 1,
+      "message": "Marking every 100th IO as P99 is okay, but it might be better to be more random about it.  It would be more realistic to use some sort of rand() % 100 \u003d\u003d 99 to mimic a real drive.  Or some variation?",
+      "revId": "462e1bd045b11baa9994c8cb654885d73f7bfbc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
