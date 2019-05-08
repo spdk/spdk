@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ca3cdb3_43c98603",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-08T22:11:47Z",
+      "side": 1,
+      "message": "This is a nit, but other functions that call spdk_nvme_get_ctrlr_by_trid_unsafe have a comment before the function saying that it can only be called while holding the driver-\u003elock.  We should put that on this function too I think.",
+      "revId": "1bfcc202077b542a85726e2e6a732512d5fa91f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54909027_dbf74345",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-08T22:11:47Z",
+      "side": 1,
+      "message": "I don\u0027t follow this unlock.  Are you sure this is correct?  We\u0027re not locking it in this function, so I don\u0027t think we should be unlocking it.\n\nOr did you intend to re-lock after calling the attach_cb?",
+      "revId": "1bfcc202077b542a85726e2e6a732512d5fa91f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
