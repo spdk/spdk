@@ -16,6 +16,24 @@
       "revId": "782a58f8fbb98664e2b1ad6f44dab38fc6d52ee8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "280aa320_c7cb825c",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-08T22:23:41Z",
+      "side": 1,
+      "message": "Right now the qpair is an opaque data structure that I can\u0027t dereference here. When more of this code moves into lib/nvmf I can do that.",
+      "parentUuid": "955024ba_ade3e46a",
+      "revId": "782a58f8fbb98664e2b1ad6f44dab38fc6d52ee8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
