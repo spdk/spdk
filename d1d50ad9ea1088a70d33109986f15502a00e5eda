@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "18f294fc_b6750a27",
+        "filename": "doc/rpc_names.txt",
+        "patchSetId": 16
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-08T16:37:21Z",
+      "side": 1,
+      "message": "chatted with Ben on IRC - he agreed that attach/detach_controller is better, since a controller may have many namespaces (and hence many bdevs)",
+      "parentUuid": "e00317f9_9ee02cdb",
+      "revId": "d1d50ad9ea1088a70d33109986f15502a00e5eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "81545808_f426bbe5",
         "filename": "doc/rpc_names.txt",
         "patchSetId": 16
