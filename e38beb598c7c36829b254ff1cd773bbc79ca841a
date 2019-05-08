@@ -190,6 +190,30 @@
       "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe032fde_1f92f881",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T13:24:57Z",
+      "side": 1,
+      "message": "Perhaps some of the stuff from ftl_md could be moved to ftl_band. Let\u0027s clean this up properly and get rid of ftl_md altogether (possibly we could leave the name, as it still makes sense).",
+      "parentUuid": "204ea731_8dbee789",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 18
+      },
+      "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
