@@ -55,28 +55,34 @@ function on_error_exit() {
 		killprocess $raid_pid
 	fi
 
-	rm -f $testdir/bdev.conf
 	rm -f $tmp_file
 	print_backtrace
 	exit 1
 }
 
+function configure_raid_bdev() {
+	rm -rf $testdir/rpcs.txt
+
+	echo construct_malloc_bdev 32 512 -b Base_1 >> $testdir/rpcs.txt
+	echo construct_malloc_bdev 32 512 -b Base_2 >> $testdir/rpcs.txt
+	echo construct_raid_bdev -z 64 -r 0 -b \"Base_1 Base_2\" -n raid0 >> $testdir/rpcs.txt
+	$rpc_py < $testdir/rpcs.txt
+
+	rm -rf $testdir/rpcs.txt
+}
+
 function raid_function_test() {
 	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
-		local conf=$1
 		local nbd=/dev/nbd0
 		local raid_bdev
 
-		if [ ! -e $conf ]; then
-			return 1
-		fi
-
 		modprobe nbd
-		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} -L bdev_raid &
+		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -L bdev_raid &
 		raid_pid=$!
 		echo "Process raid pid: $raid_pid"
 		waitforlisten $raid_pid $rpc_server
 
+		configure_raid_bdev
 		raid_bdev=$($rpc_py get_raid_bdevs online | cut -d ' ' -f 1)
 		if [ $raid_bdev = "" ]; then
 			echo "No raid0 device in SPDK app"
@@ -106,10 +112,8 @@ function raid_function_test() {
 timing_enter bdev_raid
 trap 'on_error_exit;' ERR
 
-cp $testdir/bdev.conf.in $testdir/bdev.conf
-raid_function_test $testdir/bdev.conf
+raid_function_test
 
-rm -f $testdir/bdev.conf
 rm -f $tmp_file
 report_test_completion "bdev_raid"
 timing_exit bdev_raid
