@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8d7324e_f9015db4",
+        "filename": "test/bdev/bdev_raid.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-08T14:49:20Z",
+      "side": 1,
+      "message": "Why do we need two pipes here?\nIt\u0027d be simpler to just do one of the following:\nlsblk -o  LOG-SEC $nbd | grep -Po \"\\d+\"\nlsblk -o  LOG-SEC $nbd | egrep -o \"[0-9]{1,}\"\n\nor if we want to keep grep -v then we can get rid of the sed regular expression\nlsblk -o  LOG-SEC $nbd | grep -v LOG-SEC | tr -d \" \"",
+      "range": {
+        "startLine": 18,
+        "startChar": 2,
+        "endLine": 18,
+        "endChar": 88
+      },
+      "revId": "1accff6c4d9f01d91f8742a95709a6a07eb0440f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
