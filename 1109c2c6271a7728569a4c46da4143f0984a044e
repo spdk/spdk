@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f32707f3_ccd725f3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1253,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T14:12:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b4ece76_3d33f0ce",
+      "range": {
+        "startLine": 1253,
+        "startChar": 40,
+        "endLine": 1253,
+        "endChar": 48
+      },
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80600a70_42db5044",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 11
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "a81bb84d_46c68797",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T14:12:54Z",
+      "side": 1,
+      "message": "Sure, it can be moved to a separate one.",
+      "parentUuid": "80600a70_42db5044",
+      "range": {
+        "startLine": 1283,
+        "startChar": 2,
+        "endLine": 1283,
+        "endChar": 20
+      },
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "744b8d7d_7fc67e5c",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 11
@@ -62,6 +110,24 @@
       "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47c5ac25_ea6068e6",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T14:12:54Z",
+      "side": 1,
+      "message": "I was just changing things around here, so figured I\u0027ll add this too. It can be moved to a separate patch, no problem.",
+      "parentUuid": "744b8d7d_7fc67e5c",
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "12ef28d0_8cab45bc",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T14:12:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c65fe9ad_1ee48cbf",
+      "range": {
+        "startLine": 147,
+        "startChar": 14,
+        "endLine": 147,
+        "endChar": 20
+      },
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3983c3b0_6f5a0913",
         "filename": "lib/ftl/ftl_trace.c",
         "patchSetId": 11
@@ -99,6 +189,24 @@
       "writtenOn": "2019-05-08T09:30:42Z",
       "side": 1,
       "message": "spdk_min? This doesn\u0027t belong in this patch as well.",
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28ba05bb_b4c53977",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T14:12:54Z",
+      "side": 1,
+      "message": "It does. Without this ftl_io_get_lba() cannot be used (it\u0027ll hit an assert when io-\u003epos \u003d\u003d io-\u003elbk_cnt, which is a valid state).",
+      "parentUuid": "3983c3b0_6f5a0913",
       "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
