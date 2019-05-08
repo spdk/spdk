@@ -1408,7 +1408,7 @@ set_md_interleave_iovs_test(void)
 	SPDK_CU_ASSERT_FATAL(buf1 != NULL);
 	_iov_set_buf(&iov1, buf1, (4096 + 128) * 4);
 
-	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, buf1, (4096 + 128) * 4,
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
 					     0, 4096 * 4, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 4096 * 4);
@@ -1423,7 +1423,7 @@ set_md_interleave_iovs_test(void)
 	rc = spdk_dif_generate_stream(buf1, (4096 + 128) * 4, 0, 1024, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, buf1, (4096 + 128) * 4,
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
 					     read_base, 4096 * 4, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 3072 + 4096 * 3);
@@ -1438,7 +1438,7 @@ set_md_interleave_iovs_test(void)
 	rc = spdk_dif_generate_stream(buf1, (4096 + 128) * 4, 1024, 3071, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, buf1, (4096 + 128) * 4,
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
 					     read_base, 4096 * 4, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 1 + 4096 * 3);
@@ -1453,7 +1453,7 @@ set_md_interleave_iovs_test(void)
 	rc = spdk_dif_generate_stream(buf1, (4096 + 128) * 4, 4095, 1 + 4096 * 2 + 512, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, buf1, (4096 + 128) * 4,
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
 					     read_base, 4096 * 4, &mapped_len, &ctx);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(mapped_len == 3584);
