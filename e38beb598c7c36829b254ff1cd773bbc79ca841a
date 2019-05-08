@@ -94,6 +94,30 @@
       "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fb91e6a_e3f9e0db",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T09:14:37Z",
+      "side": 1,
+      "message": "I disagree. This just increases the number of structs, while not really helping with the readability - you have to to stuff like band-\u003emd.lba_map.map. Moreover, after the division ftl_md is left with just a couple of fields + ftl_lba_map (and you\u0027ll have to cross reference them both in a lot of cases, as you\u0027ll need ftl_md.dma_buf when operating on the lba_map).",
+      "parentUuid": "527b1a82_dc5e1232",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 18
+      },
+      "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
