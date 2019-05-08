@@ -191,6 +191,7 @@ ftl_io_init(struct ftl_io *io, struct spdk_ftl_dev *dev,
 	io->type = type;
 	io->dev = dev;
 	io->lba.single = FTL_LBA_INVALID;
+	io->ppa.ppa = FTL_PPA_INVALID;
 	io->cb.fn = fn;
 	io->cb.ctx = ctx;
 	io->trace = ftl_trace_alloc_id(dev);
