@@ -1337,33 +1337,18 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	return 0;
 }
 
-int
-spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
-				uint8_t *buf, uint32_t buf_len,
-				uint32_t data_offset, uint32_t data_len,
-				uint32_t *_mapped_len,
-				const struct spdk_dif_ctx *dif_ctx)
+static int
+dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
+			   uint8_t *buf, uint32_t buf_len,
+			   uint32_t data_offset, uint32_t data_len,
+			   uint32_t *_mapped_len,
+			   const struct spdk_dif_ctx *dif_ctx)
 {
 	uint32_t data_block_size, head_unalign;
 	uint32_t num_blocks, offset_blocks;
 	struct _iov_ctx iov_ctx;
 
-	if (iovs == NULL || iovcnt == 0) {
-		return -EINVAL;
-	}
-
 	data_block_size = dif_ctx->block_size - dif_ctx->md_size;
-
-	if ((data_len % data_block_size) != 0) {
-		SPDK_ERRLOG("Data length must be a multiple of data block size\n");
-		return -EINVAL;
-	}
-
-	if (data_offset >= data_len) {
-		SPDK_ERRLOG("Data offset must be smaller than data length\n");
-		return -ERANGE;
-	}
-
 	num_blocks = data_len / data_block_size;
 
 	if (buf_len < num_blocks * dif_ctx->block_size) {
@@ -1396,6 +1381,40 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 	}
 
 	return iov_ctx.iovpos;
+}
+
+int
+spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
+				struct iovec *buf_iovs, int buf_iovcnt,
+				uint32_t data_offset, uint32_t data_len,
+				uint32_t *_mapped_len,
+				const struct spdk_dif_ctx *dif_ctx)
+{
+	uint32_t data_block_size;
+
+	if (iovs == NULL || iovcnt == 0 || buf_iovs == NULL || buf_iovcnt == 0) {
+		return -EINVAL;
+	}
+
+	data_block_size = dif_ctx->block_size - dif_ctx->md_size;
+
+	if ((data_len % data_block_size) != 0) {
+		SPDK_ERRLOG("Data length must be a multiple of data block size\n");
+		return -EINVAL;
+	}
+
+	if (data_offset >= data_len) {
+		SPDK_ERRLOG("Data offset must be smaller than data length\n");
+		return -ERANGE;
+	}
+
+	if (buf_iovcnt == 1) {
+		return dif_set_md_interleave_iovs(iovs, iovcnt,
+						  buf_iovs[0].iov_base, buf_iovs[0].iov_len,
+						  data_offset, data_len, _mapped_len, dif_ctx);
+	} else {
+		return -EINVAL;
+	}
 }
 
 int
