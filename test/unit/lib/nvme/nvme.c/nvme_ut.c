@@ -956,6 +956,23 @@ test_spdk_nvme_transport_id_parse_trtype(void)
 	spdk_nvme_transport_id_parse_trtype(trtype, str);
 	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_RDMA);
 
+	/* test trtype value when use function "strcasecmp" to compare str and "FC"，not case-sensitive */
+	str = "FC";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_FC);
+
+	str = "fc";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_FC);
+
+	/* test trtype value when use function "strcasecmp" to compare str and "TCP"，not case-sensitive */
+	str = "TCP";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_TCP);
+
+	str = "tcp";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_TCP);
 }
 
 static void
@@ -1035,6 +1052,14 @@ test_trid_trtype_str(void)
 	s = spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_RDMA);
 	SPDK_CU_ASSERT_FATAL(s != NULL);
 	CU_ASSERT(strcmp(s, "RDMA") == 0);
+
+	s = spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_FC);
+	SPDK_CU_ASSERT_FATAL(s != NULL);
+	CU_ASSERT(strcmp(s, "FC") == 0);
+
+	s = spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_TCP);
+	SPDK_CU_ASSERT_FATAL(s != NULL);
+	CU_ASSERT(strcmp(s, "TCP") == 0);
 }
 
 static void
