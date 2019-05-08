@@ -46,6 +46,30 @@
       "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94c39c72_fb1eb358",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T08:41:13Z",
+      "side": 1,
+      "message": "I still don\u0027t like the idea behind this division. I think it\u0027d make more sense to group together the map\u0027s state (so the state of the chunks, pending request list, etc.) instead.",
+      "parentUuid": "9e0fde80_f09d87c5",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 18
+      },
+      "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
