@@ -1494,6 +1494,96 @@ set_md_interleave_iovs_test(void)
 }
 
 static void
+set_md_interleave_iovs_split_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct iovec iovs1[7], dif_iovs[8];
+	uint32_t dif_check_flags, mapped_len = 0, read_base = 0;
+	int rc, i;
+
+	dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+			  SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
+			       dif_check_flags, 22, 0xFFFF, 0x22, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	/* The first SGL data buffer:
+	 * - Create iovec array to leave a space for metadata for each block
+	 * - Split vectored read and so creating iovec array is done before every vectored read.
+	 */
+	_iov_alloc_buf(&iovs1[0], 512 + 8 + 128);
+	_iov_alloc_buf(&iovs1[1], 128);
+	_iov_alloc_buf(&iovs1[2], 256 + 8);
+	_iov_alloc_buf(&iovs1[3], 100);
+	_iov_alloc_buf(&iovs1[4], 412 + 5);
+	_iov_alloc_buf(&iovs1[5], 3 + 300);
+	_iov_alloc_buf(&iovs1[6], 212 + 8);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
+					     0, 512 * 4, &mapped_len, &ctx);
+	CU_ASSERT(rc == 8);
+	CU_ASSERT(mapped_len == 512 * 4);
+	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base, 512) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], iovs1[0].iov_base + 512 + 8, 128) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], iovs1[1].iov_base, 128) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[3], iovs1[2].iov_base, 256) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[4], iovs1[3].iov_base, 100) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[5], iovs1[4].iov_base, 412) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[6], iovs1[5].iov_base + 3, 300) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[7], iovs1[6].iov_base, 212) == true);
+
+	read_base = ut_readv(0, 128, dif_iovs, 8);
+	CU_ASSERT(read_base == 128);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
+					     read_base, 512 * 4, &mapped_len, &ctx);
+	CU_ASSERT(rc == 8);
+	CU_ASSERT(mapped_len == 384 + 512 * 3);
+	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base + 128, 384) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], iovs1[0].iov_base + 512 + 8, 128) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], iovs1[1].iov_base, 128) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[3], iovs1[2].iov_base, 256) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[4], iovs1[3].iov_base, 100) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[5], iovs1[4].iov_base, 412) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[6], iovs1[5].iov_base + 3, 300) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[7], iovs1[6].iov_base, 212) == true);
+
+	read_base += ut_readv(read_base, 383, dif_iovs, 8);
+	CU_ASSERT(read_base == 511);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
+					     read_base, 512 * 4, &mapped_len, &ctx);
+	CU_ASSERT(rc == 8);
+	CU_ASSERT(mapped_len == 1 + 512 * 3);
+	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base + 511, 1) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], iovs1[0].iov_base + 512 + 8, 128) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], iovs1[1].iov_base, 128) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[3], iovs1[2].iov_base, 256) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[4], iovs1[3].iov_base, 100) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[5], iovs1[4].iov_base, 412) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[6], iovs1[5].iov_base + 3, 300) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[7], iovs1[6].iov_base, 212) == true);
+
+	read_base += ut_readv(read_base, 1 + 512 * 2 + 128, dif_iovs, 8);
+	CU_ASSERT(read_base == 512 * 3 + 128);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
+					     read_base, 512 * 4, &mapped_len, &ctx);
+	CU_ASSERT(rc == 2);
+	CU_ASSERT(mapped_len == 384);
+	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[5].iov_base + 3 + 128, 172) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], iovs1[6].iov_base, 212) == true);
+
+	read_base += ut_readv(read_base, 384, dif_iovs, 8);
+	CU_ASSERT(read_base == 512 * 4);
+
+	for (i = 0; i < 7; i++) {
+		_iov_free_buf(&iovs1[i]);
+	}
+}
+
+static void
 dif_generate_stream_test(void)
 {
 	struct iovec iov;
@@ -1629,6 +1719,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test",
 			    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test) == NULL ||
 		CU_add_test(suite, "set_md_interleave_iovs_test", set_md_interleave_iovs_test) == NULL ||
+		CU_add_test(suite, "set_md_interleave_iovs_split_test",
+			    set_md_interleave_iovs_split_test) == NULL ||
 		CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test) == NULL
 	) {
 		CU_cleanup_registry();
