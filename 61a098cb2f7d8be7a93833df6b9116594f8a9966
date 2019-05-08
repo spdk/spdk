@@ -118,6 +118,30 @@
       "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cdcfdf1_1e2e2c38",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-08T13:55:05Z",
+      "side": 1,
+      "message": "I’m calculating block offset from lba_map beginning here based on ppa address of such block - not sure if we need yet another (specialized) function that is doing same thing like ftl_band_next_xfer_ppa",
+      "parentUuid": "c794cd93_3b2a1635",
+      "range": {
+        "startLine": 838,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 1
+      },
+      "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
