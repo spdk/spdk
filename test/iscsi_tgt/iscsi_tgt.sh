@@ -31,8 +31,7 @@ run_test suite ./test/iscsi_tgt/reset/reset.sh
 run_test suite ./test/iscsi_tgt/rpc_config/rpc_config.sh $TEST_TYPE
 run_test suite ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test suite ./test/iscsi_tgt/fio/fio.sh
-# Disabled due to intermittent failures
-# run_test suite ./test/iscsi_tgt/qos/qos.sh
+run_test suite ./test/iscsi_tgt/qos/qos.sh
 run_test suite ./test/iscsi_tgt/ip_migration/ip_migration.sh
 run_test suite ./test/iscsi_tgt/trace_record/trace_record.sh
 
