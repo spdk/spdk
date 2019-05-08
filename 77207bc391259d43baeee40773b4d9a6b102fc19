@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f11f9812_3560688e",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1978,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-08T22:42:43Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nSorry to be pedantic, but most of this file puts the comment on the line above the member.  See the enum just below (and most others in this file).\n\nI notice that the telemetry log page above doesn\u0027t follow this convention - we missed that when reviewing it earlier.  Could you submit a separate patch to fix those comments too?\n\nThanks,\n\n-Jim",
+      "revId": "77207bc391259d43baeee40773b4d9a6b102fc19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
