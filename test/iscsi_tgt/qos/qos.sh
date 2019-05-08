@@ -21,7 +21,7 @@ function check_qos_works_well() {
 		start_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].bytes_read')
 	fi
 
-	$fio_py iscsi 1024 128 randread 5 1
+	$fio_py iscsi 1024 256 randread 5 1
 
 	if [ $LIMIT_TYPE = IOPS ]; then
 		end_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].num_read_ops')
@@ -39,15 +39,12 @@ function check_qos_works_well() {
 			exit 1
 		fi
 	else
-		retval=$(echo "$read_result > $qos_limit" | bc)
-		if [ $retval -eq 0 ]; then
-			if [ $check_qos = true ]; then
+		if [ $check_qos = true ]; then
+			#read_result=$((read_result*3/4))
+			retval=$(echo "$read_result > $qos_limit" | bc)
+			if [ $retval -eq 0 ]; then
 				echo "$read_result less than $qos_limit - exit QoS testing"
 				ENABLE_QOS=false
-				exit 0
-			else
-				echo "$read_result less than $qos_limit - expected greater than"
-				exit 1
 			fi
 		fi
 	fi
