@@ -144,11 +144,11 @@ struct ftl_io {
 
 	union {
 		/* LBA table */
-		uint64_t			*lbas;
+		uint64_t			*vector;
 
 		/* First LBA */
-		uint64_t			lba;
-	};
+		uint64_t			single;
+	} lba;
 
 	/* First PPA */
 	struct ftl_ppa				ppa;
@@ -161,11 +161,11 @@ struct ftl_io {
 
 	union {
 		/* IO vector table */
-		struct iovec			*iovs;
+		struct iovec			*vector;
 
 		/* Single iovec */
-		struct iovec			iov;
-	};
+		struct iovec			single;
+	} iov;
 
 	/* Metadata */
 	void					*md;

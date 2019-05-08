@@ -213,8 +213,8 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 static void
 ftl_reloc_free_io(struct ftl_band_reloc *breloc, struct ftl_io *io)
 {
-	spdk_dma_free(io->iov.iov_base);
-	free(io->lbas);
+	spdk_dma_free(io->iov.single.iov_base);
+	free(io->lba.vector);
 	spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1);
 }
 
@@ -394,18 +394,18 @@ ftl_reloc_io_reinit(struct ftl_io *io, struct ftl_band_reloc *breloc,
 
 	io->ppa = ppa;
 	io->band = breloc->band;
-	io->lbas = calloc(io->lbk_cnt, sizeof(uint64_t));
+	io->lba.vector = calloc(io->lbk_cnt, sizeof(uint64_t));
 
 	for (i = 0; i < io->lbk_cnt; ++i) {
 		ppa.lbk = io->ppa.lbk + i;
 		lbkoff = ftl_band_lbkoff_from_ppa(breloc->band, ppa);
 
 		if (!ftl_band_lbkoff_valid(breloc->band, lbkoff)) {
-			io->lbas[i] = FTL_LBA_INVALID;
+			io->lba.vector[i] = FTL_LBA_INVALID;
 			continue;
 		}
 
-		io->lbas[i] = breloc->band->md.lba_map[lbkoff];
+		io->lba.vector[i] = breloc->band->md.lba_map[lbkoff];
 	}
 
 	ftl_trace_lba_io_init(io->dev, io);

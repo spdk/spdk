@@ -789,9 +789,9 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
 	struct ftl_ppa next_ppa;
 	size_t i;
 
-	*ppa = ftl_l2p_get(dev, io->lba + lbk);
+	*ppa = ftl_l2p_get(dev, io->lba.single + lbk);
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Read ppa:%lx, lba:%lu\n", ppa->ppa, io->lba);
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Read ppa:%lx, lba:%lu\n", ppa->ppa, io->lba.single);
 
 	/* If the PPA is invalid, skip it (the buffer should already be zero'ed) */
 	if (ftl_ppa_invalid(*ppa)) {
@@ -800,7 +800,7 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
 	}
 
 	if (ftl_ppa_cached(*ppa)) {
-		if (!ftl_ppa_cache_read(io, io->lba + lbk, *ppa, ftl_io_iovec_addr(io))) {
+		if (!ftl_ppa_cache_read(io, io->lba.single + lbk, *ppa, ftl_io_iovec_addr(io))) {
 			ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_CACHE);
 			return 0;
 		}
@@ -810,7 +810,7 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
 	}
 
 	for (i = 1; i < ftl_io_iovec_len_left(io); ++i) {
-		next_ppa = ftl_l2p_get(dev, io->lba + lbk + i);
+		next_ppa = ftl_l2p_get(dev, io->lba.single + lbk + i);
 
 		if (ftl_ppa_invalid(next_ppa) || ftl_ppa_cached(next_ppa)) {
 			break;
@@ -1040,7 +1040,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 	}
 
 	rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
-					    child->iov.iov_base, child->md,
+					    ftl_io_iovec_addr(child), child->md,
 					    ftl_ppa_addr_pack(dev, wptr->ppa),
 					    lbk_cnt, ftl_io_cmpl_cb, child, 0, 0, 0);
 	if (rc) {
@@ -1249,7 +1249,7 @@ ftl_rwb_entry_fill(struct ftl_rwb_entry *entry, struct ftl_io *io)
 	entry->trace = io->trace;
 
 	if (entry->md) {
-		memcpy(entry->md, &entry->lba, sizeof(io->lba));
+		memcpy(entry->md, &entry->lba, sizeof(entry->lba));
 	}
 }
 
