@@ -1684,11 +1684,9 @@ _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	}
 
 	/*
-	 * Parent I/O finishes when all blocks are consumed or there is any failure of
-	 * child I/O and no outstanding child I/O.
+	 * Parent I/O finishes when all blocks are consumed.
 	 */
-	if (parent_io->u.bdev.split_remaining_num_blocks == 0 ||
-	    parent_io->internal.status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
 		parent_io->internal.cb(parent_io, parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
 				       parent_io->internal.caller_ctx);
 		return;
