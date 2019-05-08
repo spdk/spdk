@@ -15,7 +15,7 @@ function raid_unmap_data_verify() {
 	if hash blkdiscard; then
 		local nbd=$1
 		local rpc_server=$2
-		local blksize=$(lsblk -o  LOG-SEC $nbd | grep -v LOG-SEC | cut -d ' ' -f 5)
+		local blksize=$(lsblk -o  LOG-SEC $nbd | grep -v LOG-SEC | sed -e 's/^[[:space:]]*//')
 		local rw_blk_num=4096
 		local rw_len=$((blksize * rw_blk_num))
 		local unmap_blk_offs=(0   1028 321)
