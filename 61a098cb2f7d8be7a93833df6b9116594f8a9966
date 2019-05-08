@@ -142,6 +142,30 @@
       "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e873db5_31381ec4",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-08T14:10:06Z",
+      "side": 1,
+      "message": "Having a function doing a reverse translation of another function is much better then having a function that only make sense for one use case. Also iterating through all of the addresses and comparing them to the one you\u0027re looking for is just unnecessarily inefficient.",
+      "parentUuid": "9cdcfdf1_1e2e2c38",
+      "range": {
+        "startLine": 838,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 1
+      },
+      "revId": "61a098cb2f7d8be7a93833df6b9116594f8a9966",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
