@@ -22,6 +22,30 @@
       "revId": "f2ee13c94d86b1d7f40514fffdfcb7545cc50414",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92056256_d06ee134",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-08T07:29:20Z",
+      "side": 1,
+      "message": "ok, thanks.\nnow I will use Malloc first to check this results. then to consider about enlarge queue depth or RADID0 array.\n I tried it use physical machine.\n\n\n 15:06:38       # \u0027[\u0027 IOPS \u003d IOPS \u0027]\u0027\n  15:06:38      # /home/yique/spdk/scripts/rpc.py get_bdevs_iostat -b Malloc0\n  15:06:38      # jq -r \u0027.[1].num_read_ops\u0027\n 15:06:38       # end_io_count\u003d526837\n 15:06:38       # read_result\u003d105357\n 15:06:38       # \u0027[\u0027 false \u003d true \u0027]\u0027\n 15:06:38       # \u0027[\u0027 true \u003d true \u0027]\u0027\n 15:06:38       # read_result\u003d79017\n  15:06:38      # echo \u002779017 \u003e 20000\u0027\n  15:06:38      # bc\n 15:06:38       # retval\u003d1\n 15:06:38       # \u0027[\u0027 1 -eq 0 \u0027]\u0027\n 15:06:38       # \u0027[\u0027 true \u003d true \u0027]\u0027\n 15:06:38       # /home/yique/spdk/scripts/rpc.py set_bdev_qos_limit Malloc0 --rw_ios_per_sec 20000\n 15:06:38       # check_qos_works_well true 20000 Malloc0 false\n 15:06:38       # local enable_limit\u003dtrue\n 15:06:38       # local qos_limit\u003d20000\n 15:06:38       # local check_qos\u003dfalse\n 15:06:38       # local retval\u003d0\n 15:06:38       # \u0027[\u0027 IOPS \u003d BANDWIDTH \u0027]\u0027\n 15:06:38       # \u0027[\u0027 IOPS \u003d IOPS \u0027]\u0027\n  15:06:38      # /home/yique/spdk/scripts/rpc.py get_bdevs_iostat -b Malloc0\n  15:06:38      # jq -r \u0027.[1].num_read_ops\u0027\n 15:06:39       # start_io_count\u003d526837\n 15:06:39       # /home/yique/spdk/scripts/fio.py iscsi 1024 128 randread 5 1\nDevice paths:\n[\u0027/dev/sdb\u0027]\njob0: (g\u003d0): rw\u003drandread, bs\u003d1K-1K/1K-1K/1K-1K, ioengine\u003dlibaio, iodepth\u003d128\nfio-2.12",
+      "parentUuid": "fe8c03c2_a9775409",
+      "range": {
+        "startLine": 43,
+        "startChar": 3,
+        "endLine": 43,
+        "endChar": 32
+      },
+      "revId": "f2ee13c94d86b1d7f40514fffdfcb7545cc50414",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
