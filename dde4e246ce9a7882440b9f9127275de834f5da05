@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "f5eb615e_1786e38f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-08T10:13:11Z",
+      "side": 1,
+      "message": "I have added the stop() here, but I think more advanced error handling should be added separately",
+      "parentUuid": "b268d16d_b18ea33e",
+      "range": {
+        "startLine": 852,
+        "startChar": 2,
+        "endLine": 852,
+        "endChar": 25
+      },
+      "revId": "dde4e246ce9a7882440b9f9127275de834f5da05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47fac3e5_5af433c8",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 30
