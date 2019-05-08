@@ -1497,17 +1497,13 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
 	}
 }
 
-int
-spdk_dif_generate_stream(uint8_t *buf, uint32_t buf_len,
-			 uint32_t offset, uint32_t read_len,
-			 const struct spdk_dif_ctx *ctx)
+static int
+dif_generate_stream(uint8_t *buf, uint32_t buf_len,
+		    uint32_t offset, uint32_t read_len,
+		    const struct spdk_dif_ctx *ctx)
 {
 	uint32_t data_block_size, offset_blocks, num_blocks, i;
 	uint16_t guard = 0;
-
-	if (buf == NULL) {
-		return -EINVAL;
-	}
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
@@ -1534,4 +1530,21 @@ spdk_dif_generate_stream(uint8_t *buf, uint32_t buf_len,
 	}
 
 	return 0;
+}
+
+int
+spdk_dif_generate_stream(struct iovec *iovs, int num_iovs,
+			 uint32_t offset, uint32_t read_len,
+			 const struct spdk_dif_ctx *ctx)
+{
+	if (iovs == NULL || num_iovs == 0) {
+		return -EINVAL;
+	}
+
+	if (num_iovs == 1) {
+		return dif_generate_stream(iovs[0].iov_base, iovs[0].iov_len,
+					   offset, read_len, ctx);
+	} else {
+		return -EINVAL;
+	}
 }
