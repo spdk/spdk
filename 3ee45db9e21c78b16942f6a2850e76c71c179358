@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efce2b9f_c2b51275",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T09:13:50Z",
+      "side": 1,
+      "message": "this calls ftl_rwb_free(rwb) which returns immediately due to rwb\u003d\u003dNULL",
+      "range": {
+        "startLine": 185,
+        "startChar": 2,
+        "endLine": 185,
+        "endChar": 13
+      },
+      "revId": "3ee45db9e21c78b16942f6a2850e76c71c179358",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32b0f939_18c2b087",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T09:13:50Z",
+      "side": 1,
+      "message": "and this returns immediately. Please be consistent",
+      "range": {
+        "startLine": 190,
+        "startChar": 2,
+        "endLine": 191,
+        "endChar": 14
+      },
+      "revId": "3ee45db9e21c78b16942f6a2850e76c71c179358",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eeb1f5bc_6df8f99f",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T09:13:50Z",
+      "side": 1,
+      "message": "can you just set num_batches after allocating rwb-\u003ebatches? Then you don\u0027t need the additional `if (rwb-\u003ebatches)` check in line #253 and the whole block can be left unchanged.",
+      "revId": "3ee45db9e21c78b16942f6a2850e76c71c179358",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
