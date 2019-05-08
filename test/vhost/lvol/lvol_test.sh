@@ -126,6 +126,11 @@ notice "..."
 
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 
+notice "Trying to create scsi controller with incorrect cpumask"
+if $rpc_py construct_vhost_scsi_controller TestScsi --cpumask XXX; then
+    error "Creating scsi controller with incorrect cpumask succeeded, but it shouldn't"
+fi
+
 lvol_stores=()
 lvol_bdevs=()
 nest_lvol_stores=()
