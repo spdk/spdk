@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -e
+echo "<<<HERE>>>"
+set -ex
 INITIATOR_DIR=$(readlink -f $(dirname $0))
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $INITIATOR_DIR/../common && pwd)"
 ROOT_DIR=$(readlink -f $INITIATOR_DIR/../../..)
