@@ -1,0 +1,285 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76ea7fc0_9229d720",
+        "filename": "Makefile",
+        "patchSetId": 28
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "why not $(DIRS-y)?",
+      "range": {
+        "startLine": 87,
+        "startChar": 11,
+        "endLine": 87,
+        "endChar": 46
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "593a6d32_6d9129c7",
+        "filename": "app/Makefile",
+        "patchSetId": 28
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "what about other apps, vhost and nvmf?\n\nWe don\u0027t have the install rule in this file, so do we really need uninstall here? We should put it in spdk.subdirs.mk instead.",
+      "range": {
+        "startLine": 54,
+        "startChar": 11,
+        "endLine": 54,
+        "endChar": 19
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73c6f660_4f6f9401",
+        "filename": "examples/Makefile",
+        "patchSetId": 28
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "same as in the comment above - why just nvme? what about bdev, blob, ioat, nvme, and sock from line #37?\n\nThis rule should be in spdk.subdirs.mk and should depend on $(DIRS-y)",
+      "range": {
+        "startLine": 46,
+        "startChar": 11,
+        "endLine": 46,
+        "endChar": 15
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac05180d_f46afcc8",
+        "filename": "examples/nvme/Makefile",
+        "patchSetId": 28
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 49,
+        "startChar": 11,
+        "endLine": 49,
+        "endChar": 24
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83eab5f8_89dbf35c",
+        "filename": "examples/nvme/perf/Makefile",
+        "patchSetId": 28
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "for consistency you might want to place it right after install target, before the include",
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5d396f4_b92e8bff",
+        "filename": "include/Makefile",
+        "patchSetId": 28
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "do we need this change?",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 21
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed8e2b20_34625ce4",
+        "filename": "mk/spdk.app.mk",
+        "patchSetId": 28
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "do we need to define this rule at all?",
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91235d90_706c40bd",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 28
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "this should be wrapped in quotes in case the user provided DESTDIR contains a space. That\u0027s just silly, but let\u0027s not risk it. Same for the rm -rf below.",
+      "range": {
+        "startLine": 296,
+        "startChar": 7,
+        "endLine": 296,
+        "endChar": 44
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de433d37_41c32277",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 28
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 325,
+        "startChar": 99,
+        "endLine": 325,
+        "endChar": 119
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35520253_df810593",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 28
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 338,
+        "startChar": 99,
+        "endLine": 338,
+        "endChar": 119
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f741f7d_2340ea52",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 28
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 349,
+        "startChar": 99,
+        "endLine": 349,
+        "endChar": 119
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "536a835e_eb3cbbd9",
+        "filename": "mk/spdk.lib.mk",
+        "patchSetId": 28
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "fatal newline",
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75e69e22_4f73bdb9",
+        "filename": "test/Makefile",
+        "patchSetId": 28
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T07:52:26Z",
+      "side": 1,
+      "message": "there\u0027s no install rule in this file, why do we need uninstall?",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 9
+      },
+      "revId": "c6a4aaa9ecd54b1d862e9af28bb068e520b3192d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
