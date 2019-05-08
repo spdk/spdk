@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8335e174_4909fb30",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-08T04:25:08Z",
+      "side": 1,
+      "message": "Looking at the build result https://dqtibwqq6s6ux.cloudfront.net/results/autotest-per-patch/builds/30415/archive/iscsi_autotest/build.log\n\n05:03:30\t# echo \u002729819 \u003e 20000\u0027 \u003c\u003c\u003c\u003c\n\nThe actual result is 29819 without QoS. Maybe we could compare Limit with actual * 0.75. Or we could increase the queue depth of the FIO or create a RAID0 bdev to increase the actual IOPS.\n\nThe purpose is to avoid that each time limit \u003e actual * 0.5 and not QoS testing run at all.\n\nThanks, Gang",
+      "parentUuid": "0123a0c8_fc2f0bfa",
+      "range": {
+        "startLine": 42,
+        "startChar": 2,
+        "endLine": 42,
+        "endChar": 49
+      },
+      "revId": "64411769e0c74f5cc17f1209a8f5bc55a9d67e1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "178552bc_242ffa8e",
         "filename": "test/iscsi_tgt/qos/qos.sh",
         "patchSetId": 2
