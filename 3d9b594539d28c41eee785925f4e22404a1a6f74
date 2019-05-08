@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a709bee_57018c62",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T13:05:01Z",
+      "side": 1,
+      "message": "wait a second.\n\nif vbdev \u003d\u003d NULL then _continue(vbdev, ...) ? This will crash. You can probably remove this check entirely.",
+      "revId": "3d9b594539d28c41eee785925f4e22404a1a6f74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
