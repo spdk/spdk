@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9f1ad01_9d35f870",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-08T22:16:01Z",
+      "side": 1,
+      "message": "This should be \"spdk_file_read\" (noun then verb).",
+      "revId": "1091e93ecbdb40ccda774608fba78be9ab152f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "062b0592_339a7fc3",
+        "filename": "lib/util/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-08T22:16:01Z",
+      "side": 1,
+      "message": "filenames should stay alphabetized (so should go after fd.c)",
+      "revId": "1091e93ecbdb40ccda774608fba78be9ab152f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
