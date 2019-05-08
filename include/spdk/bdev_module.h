@@ -413,7 +413,7 @@ struct spdk_bdev {
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 					bool success);
 
-#define BDEV_IO_NUM_CHILD_IOV 32
+#define BDEV_IO_NUM_CHILD_IOV (SPDK_BDEV_LARGE_BUF_MAX_SIZE / 512)
 
 struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
