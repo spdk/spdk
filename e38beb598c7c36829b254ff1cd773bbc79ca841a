@@ -118,6 +118,30 @@
       "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ff5908a_7ef0d103",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-08T09:38:31Z",
+      "side": 1,
+      "message": "Plan is to get rid of dma_buf and reduce chains like band-\u003emd.lba_map_state.pending_reads etc. ftl_md will have only sqe number, wr_cnt and a lot of stuff related with lba_map when we leave it as it is. We coulad also move lba_map directly to band and get rid of this ftl_md - we have dedicated structures describing layout of metadata on disk.",
+      "parentUuid": "2fb91e6a_e3f9e0db",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 18
+      },
+      "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
