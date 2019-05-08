@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3011cc1b_149ec03a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 3432,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-08T21:39:27Z",
+      "side": 1,
+      "message": "how can first \u003d\u003d NULL here?  I would think if it\u0027s on the qpairs_pending_send STAILQ, that it must have something to post - maybe this should be an assert now instead?  or something like:\nif (rqpair-\u003esend_to_post.first \u003d\u003d NULL) {\n   SPDK_ERRLOG();\n   assert(false);\n   continue;\n}",
+      "revId": "bbb7b18dec541cf13c0c90ada3085d294c52a530",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
