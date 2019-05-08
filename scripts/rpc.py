@@ -17,7 +17,7 @@ def print_array(a):
     print(" ".join((quote(v) for v in a)))
 
 
-if __name__ == "__main__":
+def create_prog_parser():
     parser = argparse.ArgumentParser(
         description='SPDK RPC command line interface')
     parser.add_argument('-s', dest='server_addr',
@@ -32,6 +32,10 @@ if __name__ == "__main__":
                         help='Set verbose mode to INFO', default="ERROR")
     parser.add_argument('--verbose', dest='verbose', choices=['DEBUG', 'INFO', 'ERROR'],
                         help="""Set verbose level. """)
+    return parser
+
+if __name__ == "__main__":
+    parser = create_prog_parser()
     subparsers = parser.add_subparsers(help='RPC methods')
 
     def start_subsystem_init(args):
