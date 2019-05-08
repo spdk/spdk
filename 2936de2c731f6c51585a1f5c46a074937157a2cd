@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3dc4791_44688efc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-08T21:46:17Z",
+      "side": 1,
+      "message": "newline after variable declarations",
+      "revId": "2936de2c731f6c51585a1f5c46a074937157a2cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6da106c_b54b464e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 3489,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-08T21:46:17Z",
+      "side": 1,
+      "message": "if (!rqpair-\u003eresources-\u003erecv_to_post.first) {\n   continue;\n}\n\nthen the rest of the code doesn\u0027t have to be indented, and looks even closer to the associated code for srq just above",
+      "revId": "2936de2c731f6c51585a1f5c46a074937157a2cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
