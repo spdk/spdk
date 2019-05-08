@@ -108,6 +108,7 @@ struct bdev_ut_channel {
 static bool g_io_done;
 static struct spdk_bdev_io *g_bdev_io;
 static enum spdk_bdev_io_status g_io_status;
+static enum spdk_bdev_io_status g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 static uint32_t g_bdev_ut_io_device;
 static struct bdev_ut_channel *g_bdev_ut_channel;
 
@@ -203,6 +204,7 @@ stub_complete_io(uint32_t num_to_complete)
 {
 	struct bdev_ut_channel *ch = g_bdev_ut_channel;
 	struct spdk_bdev_io *bdev_io;
+	static enum spdk_bdev_io_status io_status;
 	uint32_t num_completed = 0;
 
 	while (num_completed < num_to_complete) {
@@ -212,7 +214,9 @@ stub_complete_io(uint32_t num_to_complete)
 		bdev_io = TAILQ_FIRST(&ch->outstanding_io);
 		TAILQ_REMOVE(&ch->outstanding_io, bdev_io, module_link);
 		ch->outstanding_io_count--;
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		io_status = g_io_exp_status == SPDK_BDEV_IO_STATUS_SUCCESS ? SPDK_BDEV_IO_STATUS_SUCCESS :
+			    g_io_exp_status;
+		spdk_bdev_io_complete(bdev_io, io_status);
 		num_completed++;
 	}
 
@@ -1548,6 +1552,21 @@ bdev_io_alignment_with_boundary(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 6);
 	stub_complete_io(6);
+
+	/* Children requests return error status */
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_FAILED;
+	g_io_done = false;
+	g_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iovs, iovcnt, 1, 160, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 6);
+	stub_complete_io(5);
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
 
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
