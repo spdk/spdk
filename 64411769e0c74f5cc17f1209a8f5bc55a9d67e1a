@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0123a0c8_fc2f0bfa",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-08T04:13:46Z",
+      "side": 1,
+      "message": "If I understand the intermediate issue here correctly, the problem is that the performance is variant so that the QoS goal could not achieve.\n\nWe may add below before this line. If it is to \"check_qos\", make the limit compare with half of the measured performance without QoS.\n\n               if [ $check_qos \u003d true ]; then\n                       # to avoid the performance variation, compare the limit with half of the\n                       # measured actual performacne without QoS.\n                       read_result\u003d$((read_result/2))\n               fi\n\nWhat\u0027s Darek\u0027s comment, especially for the noticed issue and why we comment out this QoS testing before.\n\nThanks, Gang",
+      "range": {
+        "startLine": 42,
+        "startChar": 2,
+        "endLine": 42,
+        "endChar": 49
+      },
+      "revId": "64411769e0c74f5cc17f1209a8f5bc55a9d67e1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "178552bc_242ffa8e",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-08T04:13:46Z",
+      "side": 1,
+      "message": "This looks like not a correct change to return successful even limit is not achieved.",
+      "range": {
+        "startLine": 49,
+        "startChar": 4,
+        "endLine": 51,
+        "endChar": 9
+      },
+      "revId": "64411769e0c74f5cc17f1209a8f5bc55a9d67e1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
