@@ -1562,6 +1562,143 @@ bdev_io_alignment(void)
 }
 
 static void
+bdev_io_alignment_with_boundary(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 20,
+		.bdev_io_cache_size = 2,
+	};
+	int rc;
+	void *buf;
+	struct iovec iovs[2];
+	int iovcnt;
+	uint64_t alignment;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	fn_table.submit_request = stub_submit_request_aligned_buffer;
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	/* Create aligned buffer */
+	rc = posix_memalign(&buf, 4096, 131072);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	/* 512 * 3 with 2 IO boundary, allocate small data buffer from bdev layer */
+	alignment = 512;
+	bdev->required_alignment = spdk_u32log2(alignment);
+	bdev->optimal_io_boundary = 2;
+	bdev->split_on_optimal_io_boundary = true;
+
+	iovcnt = 1;
+	iovs[0].iov_base = NULL;
+	iovs[0].iov_len = 512 * 3;
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iovs, iovcnt, 1, 3, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+
+	/* 8KiB with 16 IO boundary, allocate large data buffer from bdev layer */
+	alignment = 512;
+	bdev->required_alignment = spdk_u32log2(alignment);
+	bdev->optimal_io_boundary = 16;
+	bdev->split_on_optimal_io_boundary = true;
+
+	iovcnt = 1;
+	iovs[0].iov_base = NULL;
+	iovs[0].iov_len = 512 * 16;
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iovs, iovcnt, 1, 16, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+
+	/* 512 * 160 with 128 IO boundary, 63.5KiB + 16.5KiB for the two children requests */
+	alignment = 512;
+	bdev->required_alignment = spdk_u32log2(alignment);
+	bdev->optimal_io_boundary = 128;
+	bdev->split_on_optimal_io_boundary = true;
+
+	iovcnt = 1;
+	iovs[0].iov_base = buf + 16;
+	iovs[0].iov_len = 512 * 160;
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iovs, iovcnt, 1, 160, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+
+	/* 512 * 3 with 2 IO boundary */
+	alignment = 512;
+	bdev->required_alignment = spdk_u32log2(alignment);
+	bdev->optimal_io_boundary = 2;
+	bdev->split_on_optimal_io_boundary = true;
+
+	iovcnt = 2;
+	iovs[0].iov_base = buf + 16;
+	iovs[0].iov_len = 512;
+	iovs[1].iov_base = buf + 16 + 512 + 32;
+	iovs[1].iov_len = 1024;
+
+	rc = spdk_bdev_writev_blocks(desc, io_ch, iovs, iovcnt, 1, 3, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iovs, iovcnt, 1, 3, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+
+	/* 512 * 64 with 32 IO boundary */
+	bdev->optimal_io_boundary = 32;
+	iovcnt = 2;
+	iovs[0].iov_base = buf + 16;
+	iovs[0].iov_len = 16384;
+	iovs[1].iov_base = buf + 16 + 16384 + 32;
+	iovs[1].iov_len = 16384;
+
+	rc = spdk_bdev_writev_blocks(desc, io_ch, iovs, iovcnt, 1, 64, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 3);
+	stub_complete_io(3);
+
+	rc = spdk_bdev_readv_blocks(desc, io_ch, iovs, iovcnt, 1, 64, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 3);
+	stub_complete_io(3);
+
+	/* 512 * 160 with 32 IO boundary */
+	iovcnt = 1;
+	iovs[0].iov_base = buf + 16;
+	iovs[0].iov_len = 16384 + 65536;
+
+	rc = spdk_bdev_writev_blocks(desc, io_ch, iovs, iovcnt, 1, 160, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 6);
+	stub_complete_io(6);
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+
+	free(buf);
+}
+
+static void
 histogram_status_cb(void *cb_arg, int status)
 {
 	g_status = status;
@@ -1697,6 +1834,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test) == NULL ||
 		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
 		CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait) == NULL ||
+		CU_add_test(suite, "bdev_io_alignment_with_boundary", bdev_io_alignment_with_boundary) == NULL ||
 		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL ||
 		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL
 	) {
