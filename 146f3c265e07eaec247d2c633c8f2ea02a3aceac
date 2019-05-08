@@ -16,6 +16,24 @@
       "revId": "146f3c265e07eaec247d2c633c8f2ea02a3aceac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e11bfb1a_87db50ac",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-08T07:01:18Z",
+      "side": 0,
+      "message": "Ack\nWhy these changes landed here? - reordering stop_vbdev() made it not visible for remove_base() and unregister_finish() so the \"improvement\" was made in this patch",
+      "parentUuid": "5d05f1f4_5665ec51",
+      "revId": "146f3c265e07eaec247d2c633c8f2ea02a3aceac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
