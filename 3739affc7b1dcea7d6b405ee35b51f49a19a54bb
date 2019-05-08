@@ -46,6 +46,30 @@
       "revId": "3739affc7b1dcea7d6b405ee35b51f49a19a54bb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3fcd0f8_35393984",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-08T13:57:53Z",
+      "side": 1,
+      "message": "I think you only need CFLAGS but otherwise you\u0027re right. See infiniband check above.",
+      "parentUuid": "e7a7f8ce_a8201509",
+      "range": {
+        "startLine": 475,
+        "startChar": 2,
+        "endLine": 475,
+        "endChar": 6
+      },
+      "revId": "3739affc7b1dcea7d6b405ee35b51f49a19a54bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
