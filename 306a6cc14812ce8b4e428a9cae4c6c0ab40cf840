@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "87177839_0ebc3c87",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-08T06:07:21Z",
+      "side": 1,
+      "message": "By default, the value is 1024, and the bdev_module also used it, so it\u0027s OK here.",
+      "parentUuid": "50bccb10_5bf8d3fc",
+      "revId": "306a6cc14812ce8b4e428a9cae4c6c0ab40cf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b2fb2d3f_9106e2dc",
         "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "6affea14_cf9df5c0",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-08T06:07:21Z",
+      "side": 1,
+      "message": "Right, I can change the line 863 to \u0027continue\u0027.",
+      "parentUuid": "b2fb2d3f_9106e2dc",
+      "revId": "306a6cc14812ce8b4e428a9cae4c6c0ab40cf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "949d4542_686cb000",
         "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 4
@@ -47,6 +83,24 @@
       "writtenOn": "2019-05-07T17:12:35Z",
       "side": 1,
       "message": "You are on the RPC thread here, but in order to take action on this qpair you need to be on the same thread where the qpair is being used.",
+      "revId": "306a6cc14812ce8b4e428a9cae4c6c0ab40cf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28d8960c_5a15cf3c",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-08T06:07:21Z",
+      "side": 1,
+      "message": "But how do we know which thread this queue pair belongs to?",
+      "parentUuid": "949d4542_686cb000",
       "revId": "306a6cc14812ce8b4e428a9cae4c6c0ab40cf840",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
