@@ -83,7 +83,7 @@ _iov_iter_get_buf(struct _iov_iter *i, void **_buf, uint32_t *_buf_len)
 static void
 _iov_iter_fast_forward(struct _iov_iter *i, uint32_t offset)
 {
-	i->iov_offset = offset;
+	i->iov_offset += offset;
 	while (i->iovcnt != 0) {
 		if (i->iov_offset < i->iov->iov_len) {
 			break;
