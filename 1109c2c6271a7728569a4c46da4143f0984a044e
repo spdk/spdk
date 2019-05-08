@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b4ece76_3d33f0ce",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1253,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T09:30:42Z",
+      "side": 1,
+      "message": "sizeof(entry-\u003elba)?",
+      "range": {
+        "startLine": 1253,
+        "startChar": 40,
+        "endLine": 1253,
+        "endChar": 48
+      },
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80600a70_42db5044",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T09:30:42Z",
+      "side": 1,
+      "message": "This looks like a nice fix, but does it really belong in this patch? Can you put it in a separate one?",
+      "range": {
+        "startLine": 1283,
+        "startChar": 2,
+        "endLine": 1283,
+        "endChar": 20
+      },
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "744b8d7d_7fc67e5c",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T09:30:42Z",
+      "side": 1,
+      "message": "That\u0027s probably fine, but why is it changed now, in this patch?",
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c65fe9ad_1ee48cbf",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T09:30:42Z",
+      "side": 1,
+      "message": "Please put this refactor in a separate patch.",
+      "range": {
+        "startLine": 147,
+        "startChar": 14,
+        "endLine": 147,
+        "endChar": 20
+      },
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3983c3b0_6f5a0913",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T09:30:42Z",
+      "side": 1,
+      "message": "spdk_min? This doesn\u0027t belong in this patch as well.",
+      "revId": "1109c2c6271a7728569a4c46da4143f0984a044e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
