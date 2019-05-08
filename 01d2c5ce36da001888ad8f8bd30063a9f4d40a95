@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aceac8f_a988f6e0",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-08T08:36:12Z",
+      "side": 1,
+      "message": "Shouldn\u0027t the same logic apply here ?\ngoto err_out",
+      "range": {
+        "startLine": 752,
+        "startChar": 3,
+        "endLine": 752,
+        "endChar": 12
+      },
+      "revId": "01d2c5ce36da001888ad8f8bd30063a9f4d40a95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e950a07a_67f5a301",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-08T08:36:12Z",
+      "side": 1,
+      "message": "Shouldn\u0027t the same logic apply here ?\ngoto err_out",
+      "range": {
+        "startLine": 761,
+        "startChar": 4,
+        "endLine": 761,
+        "endChar": 13
+      },
+      "revId": "01d2c5ce36da001888ad8f8bd30063a9f4d40a95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
