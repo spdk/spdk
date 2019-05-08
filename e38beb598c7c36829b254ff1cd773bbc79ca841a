@@ -166,6 +166,30 @@
       "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "204ea731_8dbee789",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-08T10:02:08Z",
+      "side": 1,
+      "message": "I disagree. Band\u0027s not need to be aware what of its parts need to be stored on persistent media. This is serialize function responsibility. I don\u0027t like this ftl_md struct. I think it will be cleaner when we will be operating directly on band in lot of functions or direclty on lba_map. Most of ftl_md struct usage refers to some lba_map manipulation and is not related with storing md to persistent media but l2p updates and relocation stuff.",
+      "parentUuid": "067c48cc_11983235",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 18
+      },
+      "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
