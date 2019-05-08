@@ -24,15 +24,6 @@ if [[ ! -z $1 ]]; then
 	fi
 fi
 
-# If certain utilities are not installed, preemptively disable the tests
-if ! hash ceph &>/dev/null; then
-	SPDK_TEST_RBD=0
-fi
-
-if ! hash pmempool &>/dev/null; then
-	SPDK_TEST_PMDK=0
-fi
-
 # Set defaults for missing test config options
 : ${SPDK_BUILD_DOC=0}; export SPDK_BUILD_DOC
 : ${SPDK_BUILD_SHARED_OBJECT=0}; export SPDK_BUILD_SHARED_OBJECT
@@ -116,8 +107,6 @@ case `uname` in
 		fi
 		MAKE=gmake
 		MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
-		SPDK_RUN_ASAN=0
-		SPDK_RUN_UBSAN=0
 		;;
 	Linux)
 		DPDK_LINUX_DIR=/usr/share/dpdk/x86_64-default-linuxapp-gcc
@@ -131,11 +120,7 @@ case `uname` in
 			config_params+=' --enable-ubsan'
 		fi
 		if [ $SPDK_RUN_ASAN -eq 1 ]; then
-			if ldconfig -p | grep -q asan; then
-				config_params+=' --enable-asan'
-			else
-				SPDK_RUN_ASAN=0
-			fi
+			config_params+=' --enable-asan'
 		fi
 		;;
 	*)
@@ -157,17 +142,10 @@ fi
 
 if [ -f /usr/include/libpmemblk.h ]; then
 	config_params+=' --with-pmdk'
-else
-	# PMDK not installed so disable PMDK tests explicitly here
-	SPDK_TEST_PMDK=0; export SPDK_TEST_PMDK
 fi
 
 if [ -f /usr/include/libpmem.h ]; then
 	config_params+=' --with-reduce'
-else
-	# PMDK not installed so disable any reduce tests explicitly here
-	#  since reduce depends on libpmem
-	SPDK_TEST_REDUCE=0; export SPDK_TEST_REDUCE
 fi
 
 if [ -d /usr/src/fio ]; then
@@ -186,15 +164,7 @@ if [ -d /usr/include/iscsi ]; then
 	libiscsi_version=`grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}'`
 	if [ $libiscsi_version -ge 20150621 ]; then
 		config_params+=' --with-iscsi-initiator'
-	else
-		export SPDK_TEST_ISCSI_INITIATOR=0
 	fi
-else
-	export SPDK_TEST_ISCSI_INITIATOR=0
-fi
-
-if [ ! -d "${DEPENDENCY_DIR}/nvme-cli" ]; then
-	export SPDK_TEST_NVME_CLI=0
 fi
 
 if [ $SPDK_TEST_ISAL -eq 0 ]; then
