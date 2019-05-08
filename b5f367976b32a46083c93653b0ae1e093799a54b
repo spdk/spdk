@@ -34,6 +34,24 @@
       "revId": "b5f367976b32a46083c93653b0ae1e093799a54b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56df214a_714dece4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 3362,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-08T17:11:42Z",
+      "side": 1,
+      "message": "Thanks Shuhei, you are absolutely right. The error handling got away from me a bit. I have refactored out all of the error handling to individual functions that really shorten up tspdk_nvmf_rdma_poll_group_poll.\nBen - The error handling borrows a couple of lines from poller_poll error paths for finding the right data structures, but I don\u0027t think there\u0027s enough common there to create a general purpose function.",
+      "parentUuid": "d33d0b3f_a287a759",
+      "revId": "b5f367976b32a46083c93653b0ae1e093799a54b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
