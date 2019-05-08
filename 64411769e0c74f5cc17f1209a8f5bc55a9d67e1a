@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "602f3821_9ee80dff",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-08T04:37:51Z",
+      "side": 1,
+      "message": "hi Gang,\nwhat about here?  this line lists a range , is there any case leads to exit 1?",
+      "revId": "64411769e0c74f5cc17f1209a8f5bc55a9d67e1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0123a0c8_fc2f0bfa",
         "filename": "test/iscsi_tgt/qos/qos.sh",
         "patchSetId": 2
@@ -60,6 +77,30 @@
       "writtenOn": "2019-05-08T04:13:46Z",
       "side": 1,
       "message": "This looks like not a correct change to return successful even limit is not achieved.",
+      "range": {
+        "startLine": 49,
+        "startChar": 4,
+        "endLine": 51,
+        "endChar": 9
+      },
+      "revId": "64411769e0c74f5cc17f1209a8f5bc55a9d67e1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcdbb23f_bbcca557",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-08T04:37:51Z",
+      "side": 1,
+      "message": "I use VM to run this case, sometimes echo \"$read_result less than $qos_limit - expected greater than\".",
+      "parentUuid": "178552bc_242ffa8e",
       "range": {
         "startLine": 49,
         "startChar": 4,
