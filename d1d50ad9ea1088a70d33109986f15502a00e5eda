@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e00317f9_9ee02cdb",
+        "filename": "doc/rpc_names.txt",
+        "patchSetId": 16
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-08T16:30:15Z",
+      "side": 1,
+      "message": "bdev_nvme_create and delete?",
+      "revId": "d1d50ad9ea1088a70d33109986f15502a00e5eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81545808_f426bbe5",
+        "filename": "doc/rpc_names.txt",
+        "patchSetId": 16
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-08T16:30:15Z",
+      "side": 1,
+      "message": "This subsystem refers to the one in SPDK\u0027s event framework. It\u0027s unfortunate that NVMe later added a \"subsystem\" to the spec after we chose this. Maybe we should prefix all of the RPCs for the event framework with \"event\"?",
+      "revId": "d1d50ad9ea1088a70d33109986f15502a00e5eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a47b051a_d4234940",
+        "filename": "doc/rpc_names.txt",
+        "patchSetId": 16
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-08T16:30:15Z",
+      "side": 1,
+      "message": "context_switch_monitor probably needs \"event\", but not kill_instance.",
+      "revId": "d1d50ad9ea1088a70d33109986f15502a00e5eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6cd07ce_541d4c87",
+        "filename": "doc/rpc_names.txt",
+        "patchSetId": 16
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-08T16:30:15Z",
+      "side": 1,
+      "message": "These can be prefixed with \"event\" too",
+      "revId": "d1d50ad9ea1088a70d33109986f15502a00e5eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
