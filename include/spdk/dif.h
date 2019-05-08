@@ -289,15 +289,15 @@ int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 /**
  * Generate and insert DIF into metadata space for newly read data block.
  *
- * \param buf Buffer to create extended LBA payload.
- * \param buf_len Length of the buffer to create extended LBA payload.
- * \param offset Offset to the newly read data.
- * \param read_len Length of the newly read data.
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param offset Offset to the newly read data in the extended LBA payload.
+ * \param read_len Length of the newly read data in the extended LBA payload.
  * \param ctx DIF context.
  *
  * \return 0 on success and negated errno otherwise.
  */
-int spdk_dif_generate_stream(uint8_t *buf, uint32_t buf_len,
+int spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			     uint32_t offset, uint32_t read_len,
 			     const struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
