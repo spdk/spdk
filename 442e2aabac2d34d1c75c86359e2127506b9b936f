@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8c0e5dc6_3518b8d3",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-05-08T14:21:19Z",
+      "side": 1,
+      "message": "To make sure that spdk repo is free from any untracked files and directories before autorun.sh is run. Any untracked file would trigger an error when git status --porcelain is checked.\nThis is not necessary when simple \"hello_world\" is run.",
+      "parentUuid": "7d6422e0_6b71820c",
+      "range": {
+        "startLine": 84,
+        "startChar": 50,
+        "endLine": 84,
+        "endChar": 63
+      },
+      "revId": "442e2aabac2d34d1c75c86359e2127506b9b936f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aa80bf55_5670c9d7",
         "filename": "test/vagrant/vagrant.sh",
         "patchSetId": 27
@@ -36,6 +60,24 @@
       "writtenOn": "2019-05-06T17:02:11Z",
       "side": 1,
       "message": "do we need that? We don\u0027t do it for RUN_AUTOTEST\u003d\u003dfalse",
+      "revId": "442e2aabac2d34d1c75c86359e2127506b9b936f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c14862ae_ab19d84e",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-05-08T14:21:19Z",
+      "side": 1,
+      "message": "I had some issues with this, actually I think that git submodule update --init --recursive would be better solution.",
+      "parentUuid": "aa80bf55_5670c9d7",
       "revId": "442e2aabac2d34d1c75c86359e2127506b9b936f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -56,6 +98,24 @@
       "revId": "442e2aabac2d34d1c75c86359e2127506b9b936f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f664dd79_48cf91d6",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-05-08T14:21:19Z",
+      "side": 1,
+      "message": "autorun.sh already runs autotest.sh with sudo",
+      "parentUuid": "e31d4ffe_ea1c3cf9",
+      "revId": "442e2aabac2d34d1c75c86359e2127506b9b936f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
