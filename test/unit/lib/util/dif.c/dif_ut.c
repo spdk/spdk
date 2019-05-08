@@ -1420,7 +1420,7 @@ set_md_interleave_iovs_test(void)
 	read_base = ut_readv(0, 1024, dif_iovs, 4);
 	CU_ASSERT(read_base == 1024);
 
-	rc = spdk_dif_generate_stream(buf1, (4096 + 128) * 4, 0, 1024, &ctx);
+	rc = spdk_dif_generate_stream(&iov1, 1, 0, 1024, &ctx);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
@@ -1435,7 +1435,7 @@ set_md_interleave_iovs_test(void)
 	read_base += ut_readv(read_base, 3071, dif_iovs, 4);
 	CU_ASSERT(read_base == 4095);
 
-	rc = spdk_dif_generate_stream(buf1, (4096 + 128) * 4, 1024, 3071, &ctx);
+	rc = spdk_dif_generate_stream(&iov1, 1, 1024, 3071, &ctx);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
@@ -1450,7 +1450,7 @@ set_md_interleave_iovs_test(void)
 	read_base += ut_readv(read_base, 1 + 4096 * 2 + 512, dif_iovs, 4);
 	CU_ASSERT(read_base == 4096 * 3 + 512);
 
-	rc = spdk_dif_generate_stream(buf1, (4096 + 128) * 4, 4095, 1 + 4096 * 2 + 512, &ctx);
+	rc = spdk_dif_generate_stream(&iov1, 1, 4095, 1 + 4096 * 2 + 512, &ctx);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
@@ -1462,7 +1462,7 @@ set_md_interleave_iovs_test(void)
 	read_base += ut_readv(read_base, 3584, dif_iovs, 1);
 	CU_ASSERT(read_base == 4096 * 4);
 
-	rc = spdk_dif_generate_stream(buf1, (4096 + 128) * 4, 4096 * 3 + 512, 3584, &ctx);
+	rc = spdk_dif_generate_stream(&iov1, 1, 4096 * 3 + 512, 3584, &ctx);
 	CU_ASSERT(rc == 0);
 
 	/* The second data buffer:
@@ -1602,25 +1602,25 @@ dif_generate_stream_test(void)
 			       22, 0xFFFF, 0x22, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_generate_stream(iov.iov_base, (512 + 8) * 5, 0, 511, &ctx);
+	rc = spdk_dif_generate_stream(&iov, 1, 0, 511, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_generate_stream(iov.iov_base, (512 + 8) * 5, 511, 1, &ctx);
+	rc = spdk_dif_generate_stream(&iov, 1, 511, 1, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_generate_stream(iov.iov_base, (512 + 8) * 5, 512, 256, &ctx);
+	rc = spdk_dif_generate_stream(&iov, 1, 512, 256, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_generate_stream(iov.iov_base, (512 + 8) * 5, 768, 512, &ctx);
+	rc = spdk_dif_generate_stream(&iov, 1, 768, 512, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_generate_stream(iov.iov_base, (512 + 8) * 5, 1280, 1024, &ctx);
+	rc = spdk_dif_generate_stream(&iov, 1, 1280, 1024, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_generate_stream(iov.iov_base, (512 + 8) * 5, 2304, 256, &ctx);
+	rc = spdk_dif_generate_stream(&iov, 1, 2304, 256, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_generate_stream(iov.iov_base, (512 + 8) * 5, 2560, 512, &ctx);
+	rc = spdk_dif_generate_stream(&iov, 1, 2560, 512, &ctx);
 	CU_ASSERT(rc == -ERANGE);
 
 	rc = spdk_dif_verify(&iov, 1, 5, &ctx, &err_blk);
