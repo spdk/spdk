@@ -390,8 +390,12 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 static bool
 nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
+	assert(nvme_qpair_is_io_queue(qpair));
+
 	if (!qpair->is_enabled && !qpair->ctrlr->is_resetting) {
+		nvme_qpair_abort_queued_reqs(qpair, 0 /* retry */);
 		nvme_qpair_enable(qpair);
+		nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
 	}
 
 	return qpair->is_enabled;
@@ -592,12 +596,7 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
-	if (nvme_qpair_is_io_queue(qpair)) {
-		nvme_qpair_abort_queued_reqs(qpair, 0);
-	}
-
 	qpair->is_enabled = true;
-	nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
 }
 
 void

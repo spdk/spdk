@@ -1923,6 +1923,7 @@ nvme_ctrlr_enable_admin_queue(struct spdk_nvme_ctrlr *ctrlr)
 {
 	nvme_transport_qpair_reset(ctrlr->adminq);
 	nvme_qpair_enable(ctrlr->adminq);
+	nvme_transport_qpair_abort_reqs(qpair, 0 /* retry */);
 }
 
 /**
