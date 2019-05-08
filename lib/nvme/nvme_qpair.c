@@ -364,7 +364,7 @@ nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 static void
 nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 				   struct nvme_request *req, uint32_t sct, uint32_t sc,
-				   bool print_on_error)
+				   uint32_t dnr, bool print_on_error)
 {
 	struct spdk_nvme_cpl	cpl;
 	bool			error;
@@ -373,6 +373,7 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 	cpl.sqid = qpair->id;
 	cpl.status.sct = sct;
 	cpl.status.sc = sc;
+	cpl.status.dnr = dnr;
 
 	error = spdk_nvme_cpl_is_error(&cpl);
 
@@ -422,7 +423,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 				STAILQ_REMOVE(&qpair->err_req_head, req, nvme_request, stailq);
 				nvme_qpair_manual_complete_request(qpair, req,
 								   req->cpl.status.sct,
-								   req->cpl.status.sc, true);
+								   req->cpl.status.sc, 0, true);
 			}
 		}
 	}
@@ -494,7 +495,7 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 		STAILQ_REMOVE_HEAD(&qpair->err_req_head, stailq);
 		nvme_qpair_manual_complete_request(qpair, req,
 						   req->cpl.status.sct,
-						   req->cpl.status.sc, true);
+						   req->cpl.status.sc, 0, true);
 	}
 
 	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
@@ -585,7 +586,7 @@ _nvme_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
 		SPDK_ERRLOG("aborting queued i/o\n");
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
-						   SPDK_NVME_SC_ABORTED_BY_REQUEST, true);
+						   SPDK_NVME_SC_ABORTED_BY_REQUEST, 0, true);
 	}
 }
 
@@ -610,7 +611,7 @@ nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair)
 		STAILQ_REMOVE_HEAD(&qpair->err_req_head, stailq);
 		nvme_qpair_manual_complete_request(qpair, req,
 						   req->cpl.status.sct,
-						   req->cpl.status.sc, true);
+						   req->cpl.status.sc, 0, true);
 	}
 }
 
@@ -630,7 +631,7 @@ nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
 		SPDK_ERRLOG("failing queued i/o\n");
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
-						   SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr);
+						   SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
 	}
 
 	nvme_transport_qpair_abort_reqs(qpair, dnr);
