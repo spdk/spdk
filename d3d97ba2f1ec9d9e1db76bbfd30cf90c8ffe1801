@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57863302_ac766891",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1004271
+      },
+      "writtenOn": "2019-05-08T22:30:04Z",
+      "side": 1,
+      "message": "Not sure you want to seed the random number generator on every submit_request call?  You should only seed it once at init time.",
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
