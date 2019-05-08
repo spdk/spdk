@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cb5f61b_531d9728",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1035,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-08T12:33:58Z",
+      "side": 1,
+      "message": "It\u0027s hacky but I guess it\u0027s fine",
+      "revId": "a000f653ce71907473d99795919b8c9c02ba4027",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
