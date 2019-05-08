@@ -70,6 +70,30 @@
       "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "527b1a82_dc5e1232",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-08T08:53:56Z",
+      "side": 1,
+      "message": "I think that is more logical to group all related lba_map fields in one struct - then we can start changing our interface to operate directly on lba_map struct - this md struct is not needed in many places.",
+      "parentUuid": "94c39c72_fb1eb358",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 18
+      },
+      "revId": "e38beb598c7c36829b254ff1cd773bbc79ca841a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
