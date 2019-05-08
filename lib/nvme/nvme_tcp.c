@@ -729,12 +729,6 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 }
 
 int
-nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
-{
-	return -1;
-}
-
-int
 nvme_tcp_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
@@ -1727,6 +1721,12 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 	}
 
 	return 0;
+}
+
+int
+nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	return nvme_tcp_qpair_connect(nvme_tcp_qpair(qpair));
 }
 
 static struct spdk_nvme_qpair *
