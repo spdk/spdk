@@ -340,8 +340,7 @@ for i in "$@"; do
 done
 
 # Detect architecture and force no isal if non x86 archtecture
-arch=$(uname -m)
-if [[ $arch != x86_64* ]]; then
+if [[ $RTE_TARGET != x86_64* ]]; then
 	echo "Notice: ISAL auto-disabled due to CPU incompatiblity."
 	CONFIG[ISAL]=n
 fi
@@ -439,7 +438,7 @@ than or equal to 4.14 will see significantly reduced performance.
 	fi
 fi
 
-if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+if [[ $RTE_TARGET == x86_64* ]] && { [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; }; then
 	if [[ $(nasm -v | awk '{print $3}' | sed 's/[^0-9]*//g') -lt "21202" ]]; then
 		echo "Notice: ISA-L, compression & crypto auto-disabled due to nasm dependency."
 		echo "These features require NASM version 2.12.02 or newer.  Please install"
