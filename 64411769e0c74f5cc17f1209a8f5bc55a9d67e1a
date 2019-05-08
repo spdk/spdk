@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "014006aa_bc4c28e7",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-08T04:55:59Z",
+      "side": 1,
+      "message": "Got it. So that for the below else \"enable_limit \u003d false\", it shall always return (exit 0) successfully, either to ENBALE_QOS or not.\n\nIn this case, what if just removed lines 47-50 for the \"check_qos \u003d false\" case.\n\nOn the other hand, to get less impact from the performance variation, may check limit with 0.75 actual result as mentioned in other comments. and the overall change after line 41 could be:\n\nelse\n    if [ check_qos \u003d true ]; then\n        read_result \u003d 0.75 * read_result\n        retval\u003dread_result \u003e qos_limit...\n        if [ retval -eq \u003d 0 ]; then\n                echo\n                ENABL_QOS\u003dfalse\n        fi\n    fi\nfi",
+      "parentUuid": "602f3821_9ee80dff",
+      "revId": "64411769e0c74f5cc17f1209a8f5bc55a9d67e1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0123a0c8_fc2f0bfa",
         "filename": "test/iscsi_tgt/qos/qos.sh",
         "patchSetId": 2
