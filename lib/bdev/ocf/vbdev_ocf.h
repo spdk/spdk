@@ -99,6 +99,8 @@ struct vbdev_ocf_mngt_ctx {
 	struct spdk_poller                 *poller;
 	/* Function that gets invoked by poller on each iteration */
 	vbdev_ocf_mngt_fn                   poller_fn;
+	/* Poller timeout time stamp - when the poller should stop with error */
+	uint64_t                            timeout_ts;
 
 	/* Status of management operation */
 	int                                 status;
