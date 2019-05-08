@@ -449,6 +449,20 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	qpair->in_completion_context = 1;
 	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
 	qpair->in_completion_context = 0;
+
+	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) && ret > 0) {
+		int i;
+
+		/* There are some queued requests, and some completions just occurred.  So resubmit a
+		 *  number of the queued requests, up to the number of completions that just occurred.
+		 */
+		for (i = 0; i < ret && !STAILQ_EMPTY(&qpair->queued_req); i++) {
+			req = STAILQ_FIRST(&qpair->queued_req);
+			STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+			nvme_qpair_submit_request(qpair, req);
+		}
+	}
+
 	if (qpair->delete_after_completion_context) {
 		/*
 		 * A request to delete this qpair was made in the context of this completion
