@@ -1090,6 +1090,71 @@ test_trid_adrfam_str(void)
 	CU_ASSERT(strcmp(s, "FC") == 0);
 }
 
+/* stub callback used by the test_nvme_request_check_timeout */
+static bool ut_timeout_cb_call = false;
+static void
+dummy_timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
+		 struct spdk_nvme_qpair *qpair, uint16_t cid)
+{
+	ut_timeout_cb_call = true;
+}
+
+static void
+test_nvme_request_check_timeout(void)
+{
+	int rc;
+	struct spdk_nvme_qpair qpair;
+	struct nvme_request req;
+	struct spdk_nvme_ctrlr_process active_proc;
+	uint16_t cid = 0;
+	uint64_t now_tick = 0;
+
+	memset(&qpair, 0x0, sizeof(qpair));
+	memset(&req, 0x0, sizeof(req));
+	memset(&active_proc, 0x0, sizeof(active_proc));
+	req.qpair = &qpair;
+	active_proc.timeout_cb_fn = dummy_timeout_cb;
+
+	/* if have called timeout_cb_fn then return directly */
+	req.timed_out = true;
+	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ut_timeout_cb_call == false);
+
+	/* if timeout isn't enabled then return directly */
+	req.timed_out = false;
+	req.submit_tick = 0;
+	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ut_timeout_cb_call == false);
+
+	/* req->pid isn't right then return directly */
+	req.submit_tick = 1;
+	req.pid = g_spdk_nvme_pid + 1;
+	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ut_timeout_cb_call == false);
+
+	/* AER command has no timeout */
+	req.pid = g_spdk_nvme_pid;
+	req.cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
+	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ut_timeout_cb_call == false);
+
+	/* time isn't out */
+	qpair.id = 1;
+	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(ut_timeout_cb_call == false);
+
+	now_tick = 2;
+	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);
+	CU_ASSERT(req.timed_out == true);
+	CU_ASSERT(ut_timeout_cb_call == true);
+	CU_ASSERT(rc == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1143,7 +1208,9 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_nvme_allocate_request_user_copy",
 			    test_nvme_allocate_request_user_copy) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
-			    test_nvme_robust_mutex_init_shared) == NULL
+			    test_nvme_robust_mutex_init_shared) == NULL ||
+		CU_add_test(suite, "test_nvme_request_check_timeout",
+			    test_nvme_request_check_timeout) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
