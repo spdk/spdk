@@ -5089,6 +5089,11 @@ _spdk_delete_snapshot_cleanup_snapshot(void *cb_arg, int bserrno)
 		SPDK_ERRLOG("Clone cleanup error %d\n", bserrno);
 	}
 
+	/* Clone has opened this snapshot, so we have to add it back to the blobs list */
+	if (ctx->snapshot->open_ref == 2) {
+		TAILQ_INSERT_HEAD(&ctx->snapshot->bs->blobs, ctx->snapshot, link);
+	}
+
 	ctx->snapshot->locked_operation_in_progress = false;
 
 	spdk_blob_close(ctx->snapshot, _spdk_delete_snapshot_cleanup_finish, ctx);
