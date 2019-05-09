@@ -1495,7 +1495,8 @@ static void
 set_md_interleave_iovs_split_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
-	struct iovec iovs1[7], dif_iovs[8];
+	struct spdk_dif_error err_blk = {};
+	struct iovec iovs1[7], iovs2[7], dif_iovs[8];
 	uint32_t dif_check_flags, mapped_len = 0, read_base = 0;
 	int rc, i;
 
@@ -1534,6 +1535,9 @@ set_md_interleave_iovs_split_test(void)
 	read_base = ut_readv(0, 128, dif_iovs, 8);
 	CU_ASSERT(read_base == 128);
 
+	rc = spdk_dif_generate_stream(iovs1, 7, 0, 128, &ctx);
+	CU_ASSERT(rc == 0);
+
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
 					     read_base, 512 * 4, &mapped_len, &ctx);
 	CU_ASSERT(rc == 8);
@@ -1549,6 +1553,9 @@ set_md_interleave_iovs_split_test(void)
 
 	read_base += ut_readv(read_base, 383, dif_iovs, 8);
 	CU_ASSERT(read_base == 511);
+
+	rc = spdk_dif_generate_stream(iovs1, 7, 128, 383, &ctx);
+	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
 					     read_base, 512 * 4, &mapped_len, &ctx);
@@ -1566,6 +1573,9 @@ set_md_interleave_iovs_split_test(void)
 	read_base += ut_readv(read_base, 1 + 512 * 2 + 128, dif_iovs, 8);
 	CU_ASSERT(read_base == 512 * 3 + 128);
 
+	rc = spdk_dif_generate_stream(iovs1, 7, 383, 1 + 512 * 2 + 128, &ctx);
+	CU_ASSERT(rc == 0);
+
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
 					     read_base, 512 * 4, &mapped_len, &ctx);
 	CU_ASSERT(rc == 2);
@@ -1576,8 +1586,41 @@ set_md_interleave_iovs_split_test(void)
 	read_base += ut_readv(read_base, 384, dif_iovs, 8);
 	CU_ASSERT(read_base == 512 * 4);
 
+	rc = spdk_dif_generate_stream(iovs1, 7, 512 * 3 + 128, 384, &ctx);
+	CU_ASSERT(rc == 0);
+
+	/* The second SGL data buffer:
+	 * - Set data pattern with a space for metadata for each block.
+	 */
+	_iov_alloc_buf(&iovs2[0], 512 + 8 + 128);
+	_iov_alloc_buf(&iovs2[1], 128);
+	_iov_alloc_buf(&iovs2[2], 256 + 8);
+	_iov_alloc_buf(&iovs2[3], 100);
+	_iov_alloc_buf(&iovs2[4], 412 + 5);
+	_iov_alloc_buf(&iovs2[5], 3 + 300);
+	_iov_alloc_buf(&iovs2[6], 212 + 8);
+
+	rc = ut_data_pattern_generate(iovs2, 7, 512 + 8, 8, 4);
+	CU_ASSERT(rc == 0);
+	rc = spdk_dif_generate(iovs2, 7, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(iovs1, 7, 4, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(iovs2, 7, 4, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	/* Compare the first and the second SGL data buffer by byte. */
+	for (i = 0; i < 7; i++) {
+		rc = memcmp(iovs1[i].iov_base, iovs2[i].iov_base,
+			    iovs1[i].iov_len);
+		CU_ASSERT(rc == 0);
+	}
+
 	for (i = 0; i < 7; i++) {
 		_iov_free_buf(&iovs1[i]);
+		_iov_free_buf(&iovs2[i]);
 	}
 }
 
