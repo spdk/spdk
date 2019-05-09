@@ -92,17 +92,9 @@ if [ `uname` = Linux ]; then
 	trap "kill_stub -9; exit 1" SIGINT SIGTERM EXIT
 fi
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	# TODO: temporarily disabled - temperature AER doesn't fire on emulated controllers
-	#timing_enter aer
-	#$testdir/aer/aer
-	#timing_exit aer
-
-	timing_enter reset
-	$testdir/reset/reset -q 64 -w write -s 4096 -t 2
-	report_test_completion "nightly_nvme_reset"
-	timing_exit reset
-fi
+timing_enter reset
+$testdir/reset/reset -q 64 -w write -s 4096 -t 2
+timing_exit reset
 
 timing_enter identify
 $rootdir/examples/nvme/identify/identify -i 0
