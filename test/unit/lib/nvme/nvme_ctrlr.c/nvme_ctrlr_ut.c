@@ -174,6 +174,11 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 	return 0;
 }
 
+void
+nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+}
+
 int
 nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
