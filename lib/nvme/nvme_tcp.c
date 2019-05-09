@@ -227,6 +227,14 @@ fail:
 	return -ENOMEM;
 }
 
+static void
+nvme_tcp_qpair_disconnect(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+
+	spdk_sock_close(&tqpair->sock);
+}
+
 static int
 nvme_tcp_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
@@ -236,14 +244,11 @@ nvme_tcp_qpair_destroy(struct spdk_nvme_qpair *qpair)
 		return -1;
 	}
 
+	nvme_tcp_qpair_disconnect(qpair);
 	nvme_tcp_qpair_abort_reqs(qpair, 1);
 	nvme_qpair_deinit(qpair);
-
 	tqpair = nvme_tcp_qpair(qpair);
-
 	nvme_tcp_free_reqs(tqpair);
-
-	spdk_sock_close(&tqpair->sock);
 	free(tqpair);
 
 	return 0;
