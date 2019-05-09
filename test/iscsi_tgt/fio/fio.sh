@@ -83,11 +83,12 @@ $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 $rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$malloc_bdevs"
+$rpc_py construct_null_bdev null1 1024 512
 # "raid0:0" ==> use raid0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
-$rpc_py construct_target_node Target3 Target3_alias 'raid0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+$rpc_py construct_target_node Target3 Target3_alias 'raid0:0 null1:1' $PORTAL_TAG:$INITIATOR_TAG 64 -d
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
@@ -99,6 +100,9 @@ sleep 1
 $fio_py iscsi 4096 1 randrw 1 1 verify
 $fio_py iscsi 131072 32 randrw 1 1 verify
 $fio_py iscsi 524288 128 randrw 1 1 verify
+
+# To reproduce the issue
+$fio_py iscsi 1048576 32 read 60 1
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	$fio_py iscsi 4096 1 write 300 1 verify
@@ -117,6 +121,7 @@ fio_pid=$!
 sleep 3
 set +e
 # Delete raid0, Malloc0, Malloc1 blockdevs
+$rpc_py destroy_null_bdev 'null1'
 $rpc_py destroy_raid_bdev 'raid0'
 $rpc_py delete_malloc_bdev 'Malloc0'
 $rpc_py delete_malloc_bdev 'Malloc1'
