@@ -45,6 +45,8 @@
 #include "blob/zeroes.c"
 #include "blob/blob_bs_dev.c"
 
+extern bool g_delete_snapshot_enabled;
+
 struct spdk_blob_store *g_bs;
 spdk_blob_id g_blobid;
 struct spdk_blob *g_blob;
@@ -5435,7 +5437,13 @@ _blob_inflate_rw(bool decouple_parent)
 	/* Try to delete base snapshot */
 	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
 	poll_threads();
-	CU_ASSERT(g_bserrno == 0);
+
+	if (g_delete_snapshot_enabled) {
+		CU_ASSERT(g_bserrno == 0);
+	} else {
+		CU_ASSERT(decouple_parent || g_bserrno == 0);
+		CU_ASSERT(!decouple_parent || g_bserrno != 0);
+	}
 
 	/* Reopen blob after snapshot deletion */
 	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
@@ -5853,6 +5861,10 @@ blob_relations2(void)
 	int rc;
 	size_t count;
 	spdk_blob_id ids[10] = {};
+
+	if (!g_delete_snapshot_enabled) {
+		return;
+	}
 
 	dev = init_dev();
 	spdk_bs_opts_init(&bs_opts);
