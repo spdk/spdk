@@ -1224,6 +1224,12 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 			}
 
 			pdu = TAILQ_FIRST(&conn->write_pdu_list);
+			/*if (pdu == NULL) {
+				if (bytes > 0) {
+					SPDK_ERRLOG("all_write_completed_with_left %d bytes\n", bytes);
+				}
+				return 0;
+			}*/
 		} else {
 			pdu->writev_offset += bytes;
 			bytes = 0;
