@@ -30,9 +30,21 @@ function xtrace_restore() {
 set -e
 
 if [ "$(uname -s)" = "Linux" ]; then
+	MAKE=make
+	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
+	DPDK_LINUX_DIR=/usr/share/dpdk/x86_64-default-linuxapp-gcc
+	if [ -d $DPDK_LINUX_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
+		WITH_DPDK_DIR=$DPDK_LINUX_DIR
+	fi
 	# Override the default HUGEMEM in scripts/setup.sh to allocate 8GB in hugepages.
 	export HUGEMEM=8192
 elif [ "$(uname -s)" = "FreeBSD" ]; then
+	MAKE=gmake
+	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
+	DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
+	if [ -d $DPDK_FREEBSD_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
+		WITH_DPDK_DIR=$DPDK_FREEBSD_DIR
+	fi
 	# FreeBSD runs a much more limited set of tests, so keep the default 2GB.
 	export HUGEMEM=2048
 else
@@ -127,25 +139,9 @@ if [ $SPDK_RUN_ASAN -eq 1 ]; then
 	config_params+=' --enable-asan'
 fi
 
-case `uname` in
-	FreeBSD)
-		DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
-		if [ -d $DPDK_FREEBSD_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
-			WITH_DPDK_DIR=$DPDK_FREEBSD_DIR
-		fi
-		MAKE=gmake
-		MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
-		;;
-	Linux)
-		DPDK_LINUX_DIR=/usr/share/dpdk/x86_64-default-linuxapp-gcc
-		if [ -d $DPDK_LINUX_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
-			WITH_DPDK_DIR=$DPDK_LINUX_DIR
-		fi
-		MAKE=make
-		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
-		config_params+=' --enable-coverage'
-		;;
-esac
+if [ "$(uname -s)" = "Linux" ]; then
+	config_params+=' --enable-coverage'
+fi
 
 # By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.
 # If a DPDK installation is found in a well-known location though, WITH_DPDK_DIR will be
