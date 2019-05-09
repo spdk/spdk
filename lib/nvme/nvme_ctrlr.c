@@ -248,6 +248,30 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 		opts->delay_pcie_doorbell = false;
 	}
 
+	if (FIELD_OK(sq.vaddr)) {
+		opts->sq.vaddr = NULL;
+	}
+
+	if (FIELD_OK(sq.paddr)) {
+		opts->sq.paddr = 0;
+	}
+
+	if (FIELD_OK(sq.buffer_size)) {
+		opts->sq.buffer_size = 0;
+	}
+
+	if (FIELD_OK(cq.vaddr)) {
+		opts->cq.vaddr = NULL;
+	}
+
+	if (FIELD_OK(cq.paddr)) {
+		opts->cq.paddr = 0;
+	}
+
+	if (FIELD_OK(cq.buffer_size)) {
+		opts->cq.buffer_size = 0;
+	}
+
 #undef FIELD_OK
 }
 
@@ -275,6 +299,22 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	if (user_opts) {
 		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
+
+		/* If user passes buffers, make sure they're big enough for the requested queue size */
+		if (opts.sq.vaddr) {
+			if (opts.sq.buffer_size < (opts.io_queue_size * sizeof(struct spdk_nvme_cmd))) {
+				SPDK_ERRLOG("sq buffer size %lx is too small for sq size %lx\n",
+					    opts.sq.buffer_size, (opts.io_queue_size * sizeof(struct spdk_nvme_cmd)));
+				return NULL;
+			}
+		}
+		if (opts.cq.vaddr) {
+			if (opts.cq.buffer_size < (opts.io_queue_size * sizeof(struct spdk_nvme_cpl))) {
+				SPDK_ERRLOG("cq buffer size %lx is too small for cq size %lx\n",
+					    opts.cq.buffer_size, (opts.io_queue_size * sizeof(struct spdk_nvme_cpl)));
+				return NULL;
+			}
+		}
 	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);

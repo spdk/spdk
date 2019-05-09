@@ -198,11 +198,15 @@ struct nvme_pcie_qpair {
 
 	uint64_t cmd_bus_addr;
 	uint64_t cpl_bus_addr;
+
+	struct spdk_nvme_cmd *sq_vaddr;
+	struct spdk_nvme_cpl *cq_vaddr;
 };
 
 static int nvme_pcie_ctrlr_attach(struct spdk_nvme_probe_ctx *probe_ctx,
 				  struct spdk_pci_addr *pci_addr);
-static int nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair);
+static int nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
+				     const struct spdk_nvme_io_qpair_opts *opts);
 static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
@@ -710,7 +714,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	return nvme_pcie_qpair_construct(ctrlr->adminq);
+	return nvme_pcie_qpair_construct(ctrlr->adminq, NULL);
 }
 
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
@@ -983,7 +987,8 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 }
 
 static int
-nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
+nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
+			  const struct spdk_nvme_io_qpair_opts *opts)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(ctrlr);
@@ -995,6 +1000,15 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	uint16_t		num_trackers;
 	size_t			page_align = VALUE_2MB;
 	uint32_t                flags = SPDK_MALLOC_DMA;
+	uint64_t		sq_paddr = 0;
+	uint64_t		cq_paddr = 0;
+
+	if (opts) {
+		pqpair->sq_vaddr = opts->sq.vaddr;
+		pqpair->cq_vaddr = opts->cq.vaddr;
+		sq_paddr = opts->sq.paddr;
+		cq_paddr = opts->cq.paddr;
+	}
 
 	/*
 	 * Limit the maximum number of completions to return per call to prevent wraparound,
@@ -1027,37 +1041,53 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		}
 	}
 
-	/* To ensure physical address contiguity we make each ring occupy
-	 * a single hugepage only. See MAX_IO_QUEUE_ENTRIES.
-	 */
 	if (pqpair->sq_in_cmb == false) {
-		pqpair->cmd = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
+		if (pqpair->sq_vaddr) {
+			pqpair->cmd = pqpair->sq_vaddr;
+		} else {
+			/* To ensure physical address contiguity we make each ring occupy
+			 * a single hugepage only. See MAX_IO_QUEUE_ENTRIES.
+			 */
+			pqpair->cmd = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
+						   page_align, NULL,
+						   SPDK_ENV_SOCKET_ID_ANY, flags);
+			if (pqpair->cmd == NULL) {
+				SPDK_ERRLOG("alloc qpair_cmd failed\n");
+				return -ENOMEM;
+			}
+		}
+		if (sq_paddr) {
+			assert(pqpair->sq_vaddr != NULL);
+			pqpair->cmd_bus_addr = sq_paddr;
+		} else {
+			pqpair->cmd_bus_addr = spdk_vtophys(pqpair->cmd, NULL);
+			if (pqpair->cmd_bus_addr == SPDK_VTOPHYS_ERROR) {
+				SPDK_ERRLOG("spdk_vtophys(pqpair->cmd) failed\n");
+				return -EFAULT;
+			}
+		}
+	}
+
+	if (pqpair->cq_vaddr) {
+		pqpair->cpl = pqpair->cq_vaddr;
+	} else {
+		pqpair->cpl = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
 					   page_align, NULL,
 					   SPDK_ENV_SOCKET_ID_ANY, flags);
-		if (pqpair->cmd == NULL) {
-			SPDK_ERRLOG("alloc qpair_cmd failed\n");
+		if (pqpair->cpl == NULL) {
+			SPDK_ERRLOG("alloc qpair_cpl failed\n");
 			return -ENOMEM;
 		}
-
-		pqpair->cmd_bus_addr = spdk_vtophys(pqpair->cmd, NULL);
-		if (pqpair->cmd_bus_addr == SPDK_VTOPHYS_ERROR) {
-			SPDK_ERRLOG("spdk_vtophys(pqpair->cmd) failed\n");
+	}
+	if (cq_paddr) {
+		assert(pqpair->cq_vaddr != NULL);
+		pqpair->cpl_bus_addr = cq_paddr;
+	} else {
+		pqpair->cpl_bus_addr = spdk_vtophys(pqpair->cpl, NULL);
+		if (pqpair->cpl_bus_addr == SPDK_VTOPHYS_ERROR) {
+			SPDK_ERRLOG("spdk_vtophys(pqpair->cpl) failed\n");
 			return -EFAULT;
 		}
-	}
-
-	pqpair->cpl = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
-				   page_align, NULL,
-				   SPDK_ENV_SOCKET_ID_ANY, flags);
-	if (pqpair->cpl == NULL) {
-		SPDK_ERRLOG("alloc qpair_cpl failed\n");
-		return -ENOMEM;
-	}
-
-	pqpair->cpl_bus_addr = spdk_vtophys(pqpair->cpl, NULL);
-	if (pqpair->cpl_bus_addr == SPDK_VTOPHYS_ERROR) {
-		SPDK_ERRLOG("spdk_vtophys(pqpair->cpl) failed\n");
-		return -EFAULT;
 	}
 
 	doorbell_base = &pctrlr->regs->doorbell[0].sq_tdbl;
@@ -1392,10 +1422,16 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_pcie_admin_qpair_destroy(qpair);
 	}
-	if (pqpair->cmd && !pqpair->sq_in_cmb) {
+	/*
+	 * We check sq_vaddr and cq_vaddr to see if the user specified the memory
+	 * buffers when creating the I/O queue.
+	 * If the user specified them, we cannot free that memory.
+	 * Nor do we free it if it's in the CMB.
+	 */
+	if (!pqpair->sq_vaddr && pqpair->cmd && !pqpair->sq_in_cmb) {
 		spdk_free(pqpair->cmd);
 	}
-	if (pqpair->cpl) {
+	if (!pqpair->cq_vaddr && pqpair->cpl) {
 		spdk_free(pqpair->cpl);
 	}
 	if (pqpair->tr) {
@@ -1593,7 +1629,8 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 		return NULL;
 	}
 
-	rc = nvme_pcie_qpair_construct(qpair);
+	rc = nvme_pcie_qpair_construct(qpair, opts);
+
 	if (rc != 0) {
 		nvme_pcie_qpair_destroy(qpair);
 		return NULL;
