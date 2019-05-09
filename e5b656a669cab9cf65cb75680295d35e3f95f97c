@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c09de1d9_fbffdd3c",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-09T12:31:42Z",
+      "side": 1,
+      "message": "$limit_type and IOPS are both strings and should probably be quoted.",
+      "range": {
+        "startLine": 59,
+        "startChar": 4,
+        "endLine": 59,
+        "endChar": 26
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33c3a303_f5d2bdbe",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-09T12:31:42Z",
+      "side": 1,
+      "message": "Can use jq instead\n\njq -r \u0027.[1].num_read_ops\u0027",
+      "range": {
+        "startLine": 60,
+        "startChar": 76,
+        "endLine": 60,
+        "endChar": 114
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9531b02_6124a0c0",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-09T12:31:42Z",
+      "side": 1,
+      "message": "No need to call get_bdevs_iostat the second time. This can be called once before \"if\" and saved to variable.",
+      "range": {
+        "startLine": 62,
+        "startChar": 21,
+        "endLine": 62,
+        "endChar": 73
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fdf2ee7_d9a2d851",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-09T12:31:42Z",
+      "side": 1,
+      "message": "$limit_type and IOPS are both strings and should probably be quoted.",
+      "range": {
+        "startLine": 65,
+        "startChar": 4,
+        "endLine": 65,
+        "endChar": 26
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5bf116a5_025948a4",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-09T12:31:42Z",
+      "side": 1,
+      "message": "What is 5? Can we name it somehow?",
+      "range": {
+        "startLine": 67,
+        "startChar": 49,
+        "endLine": 67,
+        "endChar": 51
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35a3bc1b_221d946c",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-09T12:31:42Z",
+      "side": 1,
+      "message": "I feel like it\u0027s not a good place to put this logic here.\nThis section decides whether we will run QOS test or not.\nThis seems confusing to me because we do it in the same function which, according to its name, should verify if QoS works correctly.\n\nSecond thing - the part after \"else\" allows tests to be silently skipped. I\u0027d discourage that. We should do QOS testing on all devices regardless of their capabilities.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 4
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0de947f_97c1ac82",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-09T12:31:42Z",
+      "side": 1,
+      "message": "This can be simplified using bc:\nbc \u003c\u003c\u003c $qos_limit*0.9",
+      "range": {
+        "startLine": 85,
+        "startChar": 15,
+        "endLine": 85,
+        "endChar": 65
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
