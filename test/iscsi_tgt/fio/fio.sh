@@ -100,6 +100,9 @@ $fio_py iscsi 4096 1 randrw 1 1 verify
 $fio_py iscsi 131072 32 randrw 1 1 verify
 $fio_py iscsi 524288 128 randrw 1 1 verify
 
+# To reproduce the issue
+$fio_py iscsi 1048576 32 read 60 1
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	$fio_py iscsi 4096 1 write 300 1 verify
 
