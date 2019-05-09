@@ -1934,16 +1934,23 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cmds_and_effect_log_page) == 4096, "I
  * Get Log Page – Telemetry Host/Controller Initiated Log (Log Identifiers 07h/08h)
  */
 struct spdk_nvme_telemetry_log_page_hdr {
-	uint8_t    lpi;			/* Log page identifier */
+	/* Log page identifier */
+	uint8_t    lpi;
 	uint8_t    rsvd[4];
 	uint8_t    ieee_oui[3];
-	uint16_t   dalb1;		/* Data area 1 last block */
-	uint16_t   dalb2;		/* Data area 2 last block */
-	uint16_t   dalb3;		/* Data area 3 last block */
+	/* Data area 1 last block */
+	uint16_t   dalb1;
+	/* Data area 2 last block */
+	uint16_t   dalb2;
+	/* Data area 3 last block */
+	uint16_t   dalb3;
 	uint8_t    rsvd1[368];
-	uint8_t    ctrlr_avail;		/* Controller initiated data avail */
-	uint8_t    ctrlr_gen;		/* Controller initiated telemetry data generation */
-	uint8_t    rsnident[128];	/* Reason identifier */
+	/* Controller initiated data avail */
+	uint8_t    ctrlr_avail;
+	/* Controller initiated telemetry data generation */
+	uint8_t    ctrlr_gen;
+	/* Reason identifier */
+	uint8_t    rsnident[128];
 	uint8_t    telemetry_datablock[0];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_telemetry_log_page_hdr) == 512, "Incorrect size");
