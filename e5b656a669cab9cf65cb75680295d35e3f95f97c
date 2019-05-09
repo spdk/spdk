@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c3f59dd9_240c6c7b",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-09T13:50:46Z",
+      "side": 1,
+      "message": "Form the testing log, it is running as expected for the comparison so that may just leave as it is now.",
+      "parentUuid": "c09de1d9_fbffdd3c",
+      "range": {
+        "startLine": 59,
+        "startChar": 4,
+        "endLine": 59,
+        "endChar": 26
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33c3a303_f5d2bdbe",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 22
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-09T12:31:42Z",
       "side": 1,
       "message": "Can use jq instead\n\njq -r \u0027.[1].num_read_ops\u0027",
+      "range": {
+        "startLine": 60,
+        "startChar": 76,
+        "endLine": 60,
+        "endChar": 114
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cae90e18_f69810e9",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-09T13:50:46Z",
+      "side": 1,
+      "message": "Thanks for this comment, will have a change here.",
+      "parentUuid": "33c3a303_f5d2bdbe",
       "range": {
         "startLine": 60,
         "startChar": 76,
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "f827f8e1_14508cc7",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-09T13:50:46Z",
+      "side": 1,
+      "message": "Yes. Could have a meaningful name here for this value. Thanks.",
+      "parentUuid": "5bf116a5_025948a4",
+      "range": {
+        "startLine": 67,
+        "startChar": 49,
+        "endLine": 67,
+        "endChar": 51
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "35a3bc1b_221d946c",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 22
@@ -140,6 +212,30 @@
     },
     {
       "key": {
+        "uuid": "e612e894_7f6cd6e3",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-09T13:50:46Z",
+      "side": 1,
+      "message": "Thanks for the comments, maybe it is worth to have a new function here. For the \"else\" part, yes, it is trying to avoid the QoS testing in some cases like on the VM, the IOPS itself is pretty low without QoS and it is not possible to set a minimal QoS goal so as to \"skip\" the QoS testing.",
+      "parentUuid": "35a3bc1b_221d946c",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 4
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0de947f_97c1ac82",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 22
@@ -151,6 +247,30 @@
       "writtenOn": "2019-05-09T12:31:42Z",
       "side": 1,
       "message": "This can be simplified using bc:\nbc \u003c\u003c\u003c $qos_limit*0.9",
+      "range": {
+        "startLine": 85,
+        "startChar": 15,
+        "endLine": 85,
+        "endChar": 65
+      },
+      "revId": "e5b656a669cab9cf65cb75680295d35e3f95f97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a26a202_0da576ab",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-09T13:50:46Z",
+      "side": 1,
+      "message": "The \"bc\" command is not available on every server where it was tested in the earlier changes so that using the printf here instead.",
+      "parentUuid": "e0de947f_97c1ac82",
       "range": {
         "startLine": 85,
         "startChar": 15,
