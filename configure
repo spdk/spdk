@@ -605,13 +605,15 @@ for key in ${!CONFIG[@]}; do
 done
 # On FreeBSD sed -i 'SUFFIX' - SUFFIX is mandatory. So no way but to delete the backed file.
 rm -f mk/config.mk.bak
+echo "done."
 
 # Environment variables
+echo -n "Creating mk/cc.flags.mk..."
+rm -f mk/cc.flags.mk
 [ -n "$CFLAGS" ] && echo "CFLAGS?=$CFLAGS" > mk/cc.flags.mk
 [ -n "$CXXFLAGS" ] && echo "CXXFLAGS?=$CXXFLAGS" >> mk/cc.flags.mk
 [ -n "$LDFLAGS" ] && echo "LDFLAGS?=$LDFLAGS" >> mk/cc.flags.mk
 [ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> mk/cc.flags.mk
-
 echo "done."
 
 if [[ "$OSTYPE" == "freebsd"* ]]; then
