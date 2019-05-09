@@ -57,7 +57,7 @@ function usage()
 	echo " reduce                    Required to build vbdev compression module."
 	echo "                           No path required."
 	echo " vpp                       Required to build VPP net module."
-	echo "                           example: /vpp_repo/build-root/install-vpp-native/vpp"
+	echo "                           example: /vpp_repo/build-root/rpmbuild/vpp-18.01.1.0/build-root/install-vpp-native/vpp"
 	echo " rbd                       [disabled]"
 	echo "                           No path required."
 	echo " rdma                      [disabled]"

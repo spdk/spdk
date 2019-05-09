@@ -120,7 +120,7 @@ configure --with-vpp
 Alternatively, directory with built libraries can be pointed at
 and will be used for compilation instead of installed packages.
 ~~~
-configure --with-vpp=/path/to/vpp/repo/build-root/vpp
+configure --with-vpp=/path/to/vpp/repo/build-root/rpmbuild/vpp-18.01.1.0/build-root/install-vpp-native/vpp
 ~~~
 
 # 5. Running SPDK with VPP {#vpp_running_with_spdk}
