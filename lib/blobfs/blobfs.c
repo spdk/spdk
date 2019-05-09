@@ -2421,6 +2421,7 @@ __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t len
 	if (buf == NULL) {
 		pthread_spin_unlock(&file->lock);
 		rc = __send_rw_from_file(file, payload, offset, length, true, channel);
+		sem_wait(&channel->sem);
 		pthread_spin_lock(&file->lock);
 		return rc;
 	}
