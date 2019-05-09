@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50656d7c_ecf50cc8",
+        "filename": "autobuild.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-09T19:05:05Z",
+      "side": 1,
+      "message": "What\u0027s the reason for this file being created? SPDK was just installed above so there\u0027s real libraries and such to uninstall. Are you confirming that it doesn\u0027t delete anything that it didn\u0027t explicitly install? If so, write a comment to that affect.",
+      "revId": "646c060b6903f6a133b12efa050c9fa7e6dc807c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e23a2671_56802eaa",
+        "filename": "autobuild.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-09T19:05:05Z",
+      "side": 1,
+      "message": "Did you mean to leave this \u0027ls\u0027 here? You may only want to do that if the check fails",
+      "revId": "646c060b6903f6a133b12efa050c9fa7e6dc807c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
