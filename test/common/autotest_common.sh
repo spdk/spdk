@@ -1,10 +1,3 @@
-PS4=' \t	\$ '
-
-: ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
-if $SPDK_AUTOTEST_X; then
-	set -x
-fi
-
 function xtrace_disable() {
 	PREV_BASH_OPTS="$-"
 	set +x
@@ -27,6 +20,7 @@ function xtrace_restore() {
 	xtrace_enable
 }
 
+xtrace_disable
 set -e
 
 if [ "$(uname -s)" = "Linux" ]; then
@@ -104,6 +98,7 @@ fi
 : ${SPDK_TEST_BDEV_FTL=0}; export SPDK_TEST_BDEV_FTL
 : ${SPDK_TEST_OCF=0}; export SPDK_TEST_OCF
 : ${SPDK_TEST_FTL_EXTENDED=0}; export SPDK_TEST_FTL_EXTENDED
+: ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
 
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
@@ -778,3 +773,12 @@ function freebsd_update_contigmem_mod()
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+
+PS4=' \t	\$ '
+if $SPDK_AUTOTEST_X; then
+	# explicitly enable xtraces
+	set -x
+	xtrace_enable
+else
+	xtrace_restore
+fi
