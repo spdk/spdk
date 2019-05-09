@@ -598,6 +598,11 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 
 	if (spdk_likely(qpair->is_enabled)) {
 		return nvme_transport_qpair_submit_request(qpair, req);
+	} else if (nvme_qpair_is_admin_queue(qpair) && req->cmd.opc == SPDK_NVME_OPC_FABRIC) {
+		/* Always allow fabrics commands through on the admin qpair - these get
+		 *  the controller out of reset state.
+		 */
+		return nvme_transport_qpair_submit_request(qpair, req);
 	} else {
 		/* The controller is being reset - queue this request and
 		 *  submit it later when the reset is completed.
