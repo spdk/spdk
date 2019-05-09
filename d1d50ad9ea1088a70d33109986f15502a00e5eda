@@ -85,6 +85,29 @@
       "revId": "d1d50ad9ea1088a70d33109986f15502a00e5eda",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1a35d8a_73536714",
+        "filename": "doc/rpc_names.txt",
+        "patchSetId": 16
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-09T06:26:06Z",
+      "side": 1,
+      "message": "contents of iscsi_get_global_params is as same as params of iscsi_set_options. So iscsi_get_options may be reasonable?",
+      "range": {
+        "startLine": 131,
+        "startChar": 0,
+        "endLine": 131,
+        "endChar": 23
+      },
+      "revId": "d1d50ad9ea1088a70d33109986f15502a00e5eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
