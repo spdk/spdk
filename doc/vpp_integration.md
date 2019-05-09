@@ -31,7 +31,7 @@ make pkg-rpm
 
 Alternatively, build and create .deb packages
 ~~~
-make pkg-deb
+make bootstrap && make pkg-deb
 ~~~
 
 Packages can be found in `vpp/build-root/` directory.
@@ -120,7 +120,12 @@ configure --with-vpp
 Alternatively, directory with built libraries can be pointed at
 and will be used for compilation instead of installed packages.
 ~~~
-configure --with-vpp=/path/to/vpp/repo/build-root/vpp
+configure --with-vpp=/path/to/vpp/repo/build-root/rpmbuild/vpp-18.01.1.0/build-root/install-vpp-native/vpp
+~~~
+
+Alternatively, in Debian/Ubuntu system, the vpp path is different.
+~~~
+configure --with-vpp=/path/to/vpp/repo/build-root/install-vpp-native/vpp
 ~~~
 
 # 5. Running SPDK with VPP {#vpp_running_with_spdk}
