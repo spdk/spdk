@@ -588,7 +588,15 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		req->submit_tick = 0;
 	}
 
-	return nvme_transport_qpair_submit_request(qpair, req);
+	if (spdk_likely(qpair->is_enabled)) {
+		return nvme_transport_qpair_submit_request(qpair, req);
+	} else {
+		/* The controller is being reset - queue this request and
+		 *  submit it later when the reset is completed.
+		 */
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		return 0;
+	}
 }
 
 void

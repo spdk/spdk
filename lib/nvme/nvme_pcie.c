@@ -1939,15 +1939,11 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 
 	tr = TAILQ_FIRST(&pqpair->free_tr);
 
-	if (tr == NULL || !qpair->is_enabled) {
+	if (tr == NULL) {
 		/*
-		 * No tracker is available, or the qpair is disabled due to
-		 *  an in-progress controller-level reset.
-		 *
 		 * Put the request on the qpair's request queue to be
 		 *  processed when a tracker frees up via a command
-		 *  completion or when the controller reset is
-		 *  completed.
+		 *  completion.
 		 */
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
 		goto exit;
