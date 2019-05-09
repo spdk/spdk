@@ -517,16 +517,9 @@ nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair)
 void
 nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_request *req;
 	struct nvme_error_cmd *cmd, *entry;
 
-	while (!STAILQ_EMPTY(&qpair->err_req_head)) {
-		req = STAILQ_FIRST(&qpair->err_req_head);
-		STAILQ_REMOVE_HEAD(&qpair->err_req_head, stailq);
-		nvme_qpair_manual_complete_request(qpair, req,
-						   req->cpl.status.sct,
-						   req->cpl.status.sc, 0, true);
-	}
+	nvme_qpair_complete_error_reqs(qpair);
 
 	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
 		TAILQ_REMOVE(&qpair->err_cmd_head, cmd, link);
