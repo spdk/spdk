@@ -192,6 +192,12 @@ nvme_transport_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
+nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_disconnect_qpair, (ctrlr, qpair));
+}
+
+void
 nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	assert(dnr <= 1);
