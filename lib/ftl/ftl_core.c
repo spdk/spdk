@@ -907,9 +907,8 @@ ftl_alloc_io_nv_cache(struct ftl_io *parent, size_t num_lbks)
 	struct ftl_io_init_opts opts = {
 		.dev		= parent->dev,
 		.parent		= parent,
-		.iov_cnt	= 1,
 		.data		= ftl_io_iovec_addr(parent),
-		.req_size	= num_lbks,
+		.lbk_cnt	= num_lbks,
 		.flags		= FTL_IO_CACHE,
 	};
 
@@ -993,7 +992,7 @@ _ftl_write_nv_cache(void *ctx)
 
 		/* Shrink the IO if there isn't enough room in the cache to fill the whole iovec */
 		if (spdk_unlikely(num_lbks != ftl_io_iovec_len_left(io))) {
-			ftl_io_shrink_iovec(child, ftl_io_iovec_addr(child), 1, num_lbks);
+			ftl_io_shrink_iovec(child, num_lbks);
 		}
 
 		ftl_submit_nv_cache(child);
@@ -1155,8 +1154,7 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
 		.size		= sizeof(struct ftl_io),
 		.flags		= 0,
 		.type		= FTL_IO_WRITE,
-		.iov_cnt	= 1,
-		.req_size	= dev->xfer_size,
+		.lbk_cnt	= dev->xfer_size,
 		.fn		= cb,
 		.data		= data,
 		.md		= md,
@@ -1187,11 +1185,10 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
 	struct ftl_io		*child;
-	struct iovec		*iov = ftl_io_iovec(io);
 	int			rc;
 
 	/* Split IO to child requests and release chunk immediately after child is completed */
-	child = ftl_io_init_child_write(io, wptr->ppa, iov[io->iov_pos].iov_base,
+	child = ftl_io_init_child_write(io, wptr->ppa, ftl_io_iovec_addr(io),
 					ftl_io_get_md(io), ftl_io_child_write_cb);
 	if (!child) {
 		return -EAGAIN;
@@ -1222,12 +1219,11 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	struct spdk_ftl_dev	*dev = io->dev;
 	struct iovec		*iov = ftl_io_iovec(io);
 	int			rc = 0;
-	size_t			lbk_cnt;
+
+	assert(io->lbk_cnt % dev->xfer_size == 0);
 
 	while (io->iov_pos < io->iov_cnt) {
-		lbk_cnt = iov[io->iov_pos].iov_len / PAGE_SIZE;
 		assert(iov[io->iov_pos].iov_len > 0);
-		assert(lbk_cnt == dev->xfer_size);
 
 		/* There are no guarantees of the order of completion of NVMe IO submission queue */
 		/* so wait until chunk is not busy before submitting another write */
@@ -1237,7 +1233,7 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 			break;
 		}
 
-		rc = ftl_submit_child_write(wptr, io, lbk_cnt);
+		rc = ftl_submit_child_write(wptr, io, dev->xfer_size);
 
 		if (rc == -EAGAIN) {
 			wptr->current_io = io;
@@ -1247,8 +1243,8 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 			break;
 		}
 
-		ftl_trace_submission(dev, io, wptr->ppa, lbk_cnt);
-		ftl_wptr_advance(wptr, lbk_cnt);
+		ftl_trace_submission(dev, io, wptr->ppa, dev->xfer_size);
+		ftl_wptr_advance(wptr, dev->xfer_size);
 	}
 
 	if (ftl_io_done(io)) {
