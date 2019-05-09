@@ -110,6 +110,14 @@ if [ $SPDK_TEST_OCF -eq 1 ]; then
 	config_params+=" --with-ocf"
 fi
 
+if [ $SPDK_RUN_UBSAN -eq 1 ]; then
+	config_params+=' --enable-ubsan'
+fi
+
+if [ $SPDK_RUN_ASAN -eq 1 ]; then
+	config_params+=' --enable-asan'
+fi
+
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
 # On Linux systems, override the default HUGEMEM in scripts/setup.sh to
@@ -138,12 +146,6 @@ case `uname` in
 		MAKE=make
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 		config_params+=' --enable-coverage'
-		if [ $SPDK_RUN_UBSAN -eq 1 ]; then
-			config_params+=' --enable-ubsan'
-		fi
-		if [ $SPDK_RUN_ASAN -eq 1 ]; then
-			config_params+=' --enable-asan'
-		fi
 		;;
 	*)
 		echo "Unknown OS in $0"
