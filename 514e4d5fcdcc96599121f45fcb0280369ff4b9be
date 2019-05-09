@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bde4cb98_66b470f9",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-09T18:55:38Z",
+      "side": 1,
+      "message": "Put this in a separate patch?",
+      "revId": "514e4d5fcdcc96599121f45fcb0280369ff4b9be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67992d5f_95e78001",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-09T18:55:38Z",
+      "side": 1,
+      "message": "Separate patch",
+      "revId": "514e4d5fcdcc96599121f45fcb0280369ff4b9be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
