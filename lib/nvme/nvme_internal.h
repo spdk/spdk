@@ -990,6 +990,7 @@ struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	uint32_t nvme_ ## name ## _ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr); \
 	uint16_t nvme_ ## name ## _ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr); \
 	struct spdk_nvme_qpair *nvme_ ## name ## _ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts); \
+	struct spdk_nvme_qpair *nvme_ ## name ## _ctrlr_create_io_qpair_raw(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts, struct spdk_nvme_cmd *sq_vaddr, uint64_t sq_paddr, struct spdk_nvme_cpl *cq_vaddr, uint64_t cq_paddr); \
 	void *nvme_ ## name ## _ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size); \
 	int nvme_ ## name ## _ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size); \
 	volatile struct spdk_nvme_registers *nvme_ ## name ## _ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr); \

@@ -242,9 +242,13 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 struct spdk_nvme_qpair *
-spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
-			       const struct spdk_nvme_io_qpair_opts *user_opts,
-			       size_t opts_size)
+spdk_nvme_ctrlr_alloc_io_qpair_raw(struct spdk_nvme_ctrlr *ctrlr,
+				   const struct spdk_nvme_io_qpair_opts *user_opts,
+				   size_t opts_size,
+				   struct spdk_nvme_cmd *sq_vaddr,
+				   uint64_t sq_paddr,
+				   struct spdk_nvme_cpl *cq_vaddr,
+				   uint64_t cq_paddr)
 {
 	uint32_t				qid;
 	struct spdk_nvme_qpair			*qpair;
@@ -300,7 +304,8 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	qpair = nvme_transport_ctrlr_create_io_qpair(ctrlr, qid, &opts);
+	qpair = nvme_transport_ctrlr_create_io_qpair_raw(ctrlr, qid, &opts,
+			sq_vaddr, sq_paddr, cq_vaddr, cq_paddr);
 	if (qpair == NULL) {
 		SPDK_ERRLOG("nvme_transport_ctrlr_create_io_qpair() failed\n");
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -318,6 +323,16 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	return qpair;
+}
+
+struct spdk_nvme_qpair *
+spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
+			       const struct spdk_nvme_io_qpair_opts *user_opts,
+			       size_t opts_size)
+{
+
+	return spdk_nvme_ctrlr_alloc_io_qpair_raw(ctrlr, user_opts, opts_size,
+			NULL, 0, NULL, 0);
 }
 
 int
