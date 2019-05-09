@@ -49,6 +49,12 @@
 
 #define BLOB_CRC32C_INITIAL    0xffffffffUL
 
+#ifdef SPDK_ENABLE_SNAPSHOT_DELETION
+bool g_delete_snapshot_enabled = true;
+#else
+bool g_delete_snapshot_enabled = false;
+#endif
+
 static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
@@ -5507,6 +5513,11 @@ _spdk_bs_is_blob_deletable(struct spdk_blob *blob, bool *update_clone)
 	/* Check if this is a snapshot with clones */
 	snapshot_entry = _spdk_bs_get_snapshot_entry(blob->bs, blob->id);
 	if (snapshot_entry != NULL) {
+		if (snapshot_entry->clone_count > 0 && !g_delete_snapshot_enabled) {
+			SPDK_ERRLOG("Cannot remove snapshot with clones\n");
+			return -EBUSY;
+		}
+
 		if (snapshot_entry->clone_count > 1) {
 			SPDK_ERRLOG("Cannot remove snapshot with more than one clone\n");
 			return -EBUSY;
