@@ -98,17 +98,14 @@ struct ftl_io_init_opts {
 	/* IO type */
 	enum ftl_io_type			type;
 
-	/* Number of split requests */
-	size_t                                  iov_cnt;
-
 	/* RWB entry */
 	struct ftl_rwb_batch			*rwb_batch;
 
 	/* Band to which the IO is directed */
 	struct ftl_band				*band;
 
-	/* Request size */
-	size_t                                  req_size;
+	/* Number of logical blocks */
+	size_t                                  lbk_cnt;
 
 	/* Data */
 	void                                    *data;
@@ -285,7 +282,7 @@ void ftl_io_user_init(struct spdk_ftl_dev *dev, struct ftl_io *io, uint64_t lba,
 		      spdk_ftl_fn fn, void *cb_arg, int type);
 void *ftl_io_get_md(const struct ftl_io *io);
 void ftl_io_complete(struct ftl_io *io);
-void ftl_io_shrink_iovec(struct ftl_io *io, char *buf, size_t iov_cnt, size_t req_size);
+void ftl_io_shrink_iovec(struct ftl_io *io, size_t lbk_cnt);
 void ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status);
 void ftl_io_reset(struct ftl_io *io);
 

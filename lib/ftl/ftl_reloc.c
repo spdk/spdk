@@ -443,8 +443,7 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_io *io,
 		.size		= sizeof(*io),
 		.flags		= FTL_IO_KEEP_ALIVE | FTL_IO_INTERNAL | FTL_IO_PPA_MODE,
 		.type		= FTL_IO_READ,
-		.iov_cnt	= 1,
-		.req_size	= num_lbks,
+		.lbk_cnt	= num_lbks,
 		.fn		= ftl_reloc_read_cb,
 	};
 

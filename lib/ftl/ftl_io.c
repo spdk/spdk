@@ -160,49 +160,24 @@ ftl_io_iovec_len_left(struct ftl_io *io)
 }
 
 static void
-_ftl_io_init_iovec(struct ftl_io *io, void *buf, size_t iov_cnt, size_t req_size)
+ftl_io_init_iovec(struct ftl_io *io, void *buf, size_t lbk_cnt)
 {
-	struct iovec *iov;
-	size_t i;
-
 	io->iov_pos = 0;
-	io->iov_cnt = iov_cnt;
-	io->lbk_cnt = iov_cnt * req_size;
+	io->lbk_cnt = lbk_cnt;
+	io->iov_cnt = 1;
 
-	iov = ftl_io_iovec(io);
-	for (i = 0; i < iov_cnt; ++i) {
-		iov[i].iov_base = (char *)buf + i * req_size * PAGE_SIZE;
-		iov[i].iov_len = req_size * PAGE_SIZE;
-	}
-}
-
-static int
-ftl_io_init_iovec(struct ftl_io *io, void *buf, size_t iov_cnt, size_t req_size)
-{
-	if (iov_cnt > 1) {
-		io->iov.vector = calloc(iov_cnt, sizeof(struct iovec));
-		if (!io->iov.vector) {
-			return -ENOMEM;
-		}
-	}
-
-	_ftl_io_init_iovec(io, buf, iov_cnt, req_size);
-
-	return 0;
+	io->iov.single.iov_base = buf;
+	io->iov.single.iov_len = lbk_cnt * PAGE_SIZE;
 }
 
 void
-ftl_io_shrink_iovec(struct ftl_io *io, char *buf, size_t iov_cnt, size_t req_size)
+ftl_io_shrink_iovec(struct ftl_io *io, size_t lbk_cnt)
 {
-	assert(io->iov_cnt >= iov_cnt);
-	assert(io->lbk_cnt >= iov_cnt * req_size);
+	assert(io->iov_cnt == 1);
+	assert(io->lbk_cnt >= lbk_cnt);
 	assert(io->pos == 0 && io->iov_pos == 0 && io->iov_off == 0);
 
-	if (iov_cnt == 1 && io->iov_cnt > 1) {
-		free(io->iov.vector);
-	}
-
-	_ftl_io_init_iovec(io, buf, iov_cnt, req_size);
+	ftl_io_init_iovec(io, ftl_io_iovec_addr(io), lbk_cnt);
 }
 
 static void
@@ -244,12 +219,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->band = opts->band;
 	io->md = opts->md;
 
-	if (ftl_io_init_iovec(io, opts->data, opts->iov_cnt, opts->req_size)) {
-		if (!opts->io) {
-			ftl_io_free(io);
-		}
-		return NULL;
-	}
+	ftl_io_init_iovec(io, opts->data, opts->lbk_cnt);
 
 	return io;
 }
@@ -266,8 +236,7 @@ ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.size		= sizeof(struct ftl_io),
 		.flags		= 0,
 		.type		= FTL_IO_WRITE,
-		.iov_cnt	= 1,
-		.req_size	= dev->xfer_size,
+		.lbk_cnt	= dev->xfer_size,
 		.fn		= cb,
 		.data		= ftl_rwb_batch_get_data(batch),
 		.md		= ftl_rwb_batch_get_md(batch),
@@ -288,8 +257,7 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
 		.size		= sizeof(struct ftl_io),
 		.flags		= FTL_IO_PPA_MODE,
 		.type		= FTL_IO_ERASE,
-		.iov_cnt	= 0,
-		.req_size	= 1,
+		.lbk_cnt	= 1,
 		.fn		= cb,
 		.data		= NULL,
 		.md		= NULL,
@@ -335,10 +303,6 @@ _ftl_io_free(struct ftl_io *io)
 	struct ftl_io_channel *ioch;
 
 	assert(LIST_EMPTY(&io->children));
-
-	if ((io->flags & FTL_IO_INTERNAL) && io->iov_cnt > 1) {
-		free(io->iov.vector);
-	}
 
 	if (pthread_spin_destroy(&io->lock)) {
 		SPDK_ERRLOG("pthread_spin_destroy failed\n");
