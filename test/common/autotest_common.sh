@@ -45,6 +45,8 @@ fi
 export ASAN_OPTIONS=new_delete_type_mismatch=0
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
+export DEFAULT_RPC_ADDR="/var/tmp/spdk.sock"
+
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
 
@@ -124,8 +126,6 @@ fi
 if [ $SPDK_RUN_ASAN -eq 1 ]; then
 	config_params+=' --enable-asan'
 fi
-
-DEFAULT_RPC_ADDR=/var/tmp/spdk.sock
 
 case `uname` in
 	FreeBSD)
