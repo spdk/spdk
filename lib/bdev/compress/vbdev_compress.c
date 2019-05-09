@@ -485,7 +485,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		comp_op->private_xform = comp_bdev->device_qp->device->decomp_xform;
 	}
 
-	rc = rte_compressdev_enqueue_burst(cdev_id, 0, &comp_op, 1);
+	rc = rte_compressdev_enqueue_burst(cdev_id, comp_bdev->device_qp->qp, &comp_op, 1);
 	assert(rc <= 1);
 
 	/* We always expect 1 got queued, if 0 then we need to queue it up. */
