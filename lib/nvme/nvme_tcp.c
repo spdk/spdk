@@ -1778,6 +1778,17 @@ nvme_tcp_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 					   opts->io_queue_requests);
 }
 
+struct spdk_nvme_qpair *
+nvme_tcp_ctrlr_create_io_qpair_raw(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
+				   const struct spdk_nvme_io_qpair_opts *opts,
+				   struct spdk_nvme_cmd *sq_vaddr,
+				   uint64_t sq_paddr,
+				   struct spdk_nvme_cpl *cq_vaddr,
+				   uint64_t cq_paddr)
+{
+	return NULL;
+}
+
 struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)

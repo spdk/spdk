@@ -979,6 +979,42 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
 		size_t opts_size);
 
 /**
+ * Allocate an I/O queue pair using passed storage addresses (submission and completion queue).
+ *
+ * This function can only be used with PCIe controllers.  Other transports return NULL.
+ *
+ * Each queue pair should only be used from a single thread at a time (mutual
+ * exclusion must be enforced by the user).
+ *
+ * This function is primarily intended for device testing.
+ *
+ * \param ctrlr NVMe controller for which to allocate the I/O queue pair.
+ * \param opts I/O qpair creation options, or NULL to use the defaults as returned
+ * by spdk_nvme_ctrlr_alloc_io_qpair().
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_io_qpair_opts), or 0
+ * if opts is NULL.
+ * \param sq_vaddr Virtual address of the start of the submission queue.
+ * If NULL, SPDK allocates the submission queue.
+ * \param sq_paddr Physical address of the start of the submission queue.
+ * If zero, SPDK will attempt to translate the passed virtual address to a physical
+ * address (in this case the virtual memory must have already been registered with SPDK).
+ * \param cq_vaddr Virtual address of the start of the completion queue.
+ * If NULL, SPDK allocates the completion queue.
+ * \param cq_paddr Physical address of the start of the completion queue.
+ * If zero, SPDK will attempt to translate the passed virtual address to a physical
+ * address (in this case the virtual memory must have already been registered with SPDK).
+ *
+ * \return a pointer to the allocated I/O queue pair.
+ */
+struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair_raw(struct spdk_nvme_ctrlr *ctrlr,
+		const struct spdk_nvme_io_qpair_opts *opts,
+		size_t opts_size,
+		struct spdk_nvme_cmd *sq_vaddr,
+		uint64_t sq_paddr,
+		struct spdk_nvme_cpl *cq_vaddr,
+		uint64_t cq_paddr);
+
+/**
  * Free an I/O queue pair that was allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  *
  * \param qpair I/O queue pair to free.
