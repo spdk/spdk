@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae5093f9_a00dfde2",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1951,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-09T18:30:56Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nThere\u0027s some trailing whitespace here.  scripts/check_format.sh will complain about it when it runs through the test pool.\n\n-Jim",
+      "revId": "12e9dd162912e9a3f2f9eb49ab7ce2aa28f4847b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65d86064_b292b478",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1953,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-09T18:30:56Z",
+      "side": 1,
+      "message": "this comment should go above rsnident",
+      "revId": "12e9dd162912e9a3f2f9eb49ab7ce2aa28f4847b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
