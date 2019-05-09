@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b66f0af_4becb03f",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1953,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-09T18:47:03Z",
+      "side": 1,
+      "message": "this comment should go above rsnident\n\n(I think you missed this comment on rev 1)",
+      "revId": "10cf9fc14e4ba47c1a58f5ec9460b04436e8fa74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
