@@ -4,11 +4,12 @@ rootdir=$(readlink -f $(dirname $0))
 
 # In autotest_common.sh all tests are disabled by default.
 # If the configuration of tests is not provided, no tests will be carried out.
-if [[ -z $1 ]]; then
-	echo "SPDK test configuration not specified"
+if [[ ! -f $1 ]]; then
+	echo "ERROR: SPDK test configuration not specified"
 	exit 1
 fi
 
+source "$1"
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
 

@@ -59,12 +59,6 @@ export RUN_NIGHTLY
 : ${RUN_NIGHTLY_FAILING:=0}
 export RUN_NIGHTLY_FAILING
 
-if [[ ! -z $1 ]]; then
-	if [ -f $1 ]; then
-		source $1
-	fi
-fi
-
 # Set defaults for missing test config options
 : ${SPDK_BUILD_DOC=0}; export SPDK_BUILD_DOC
 : ${SPDK_BUILD_SHARED_OBJECT=0}; export SPDK_BUILD_SHARED_OBJECT

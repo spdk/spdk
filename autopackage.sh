@@ -2,6 +2,14 @@
 
 set -xe
 
+# If the configuration of tests is not provided, no tests will be carried out.
+if [[ ! -f $1 ]]; then
+	echo "ERROR: SPDK test configuration not specified"
+	exit 1
+fi
+
+source "$1"
+
 rootdir=$(readlink -f $(dirname $0))
 source "$rootdir/test/common/autotest_common.sh"
 
