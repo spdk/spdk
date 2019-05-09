@@ -470,8 +470,6 @@ function start_stub() {
 	while ! [ -e /var/run/spdk_stub0 ]; do
 		sleep 1s
 	done
-	# dump process memory map contents to help debug random ASLR failures
-	pmap -pX $stubpid || pmap -x $stubpid || true
 	echo done.
 }
 
