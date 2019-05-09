@@ -1,5 +1,6 @@
-: ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
+PS4=' \t	\$ '
 
+: ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
 if $SPDK_AUTOTEST_X; then
 	set -x
 fi
@@ -28,11 +29,21 @@ function xtrace_restore() {
 
 set -e
 
+if [ "$(uname -s)" = "Linux" ]; then
+	# Override the default HUGEMEM in scripts/setup.sh to allocate 8GB in hugepages.
+	export HUGEMEM=8192
+elif [ "$(uname -s)" = "FreeBSD" ]; then
+	# FreeBSD runs a much more limited set of tests, so keep the default 2GB.
+	export HUGEMEM=2048
+else
+	echo "Unknown OS \"$(uname -s)\""
+	exit 1
+fi
+
 # Export flag to skip the known bug that exists in librados
 # Bug is reported on ceph bug tracker with number 24078
 export ASAN_OPTIONS=new_delete_type_mismatch=0
-
-PS4=' \t	\$ '
+export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
@@ -86,10 +97,6 @@ else
 	export DEPENDENCY_DIR
 fi
 
-if [ ! -z "$HUGEMEM" ]; then
-	export HUGEMEM
-fi
-
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''
@@ -118,15 +125,6 @@ if [ $SPDK_RUN_ASAN -eq 1 ]; then
 	config_params+=' --enable-asan'
 fi
 
-export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
-
-# On Linux systems, override the default HUGEMEM in scripts/setup.sh to
-#  allocate 8GB in hugepages.
-# FreeBSD runs a much more limited set of tests, so keep the default 2GB.
-if [ `uname -s` = "Linux" ]; then
-	export HUGEMEM=8192
-fi
-
 DEFAULT_RPC_ADDR=/var/tmp/spdk.sock
 
 case `uname` in
@@ -146,10 +144,6 @@ case `uname` in
 		MAKE=make
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 		config_params+=' --enable-coverage'
-		;;
-	*)
-		echo "Unknown OS in $0"
-		exit 1
 		;;
 esac
 
