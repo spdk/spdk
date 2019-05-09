@@ -155,7 +155,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->flags = opts->flags;
 	io->cb.fn = opts->fn;
 	io->cb.ctx = io;
-	io->lbk_cnt = opts->req_size;
+	io->lbk_cnt = opts->lbk_cnt;
 	io->iov.single.iov_base = opts->data;
 	return io;
 }
