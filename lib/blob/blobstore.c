@@ -2547,6 +2547,8 @@ struct spdk_bs_load_ctx {
 	spdk_bs_sequence_t			*seq;
 	spdk_blob_op_with_handle_complete	iter_cb_fn;
 	void					*iter_cb_arg;
+	struct spdk_blob			*blob;
+	spdk_blob_id				blobid;
 };
 
 static void
@@ -2696,11 +2698,147 @@ _spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence
 }
 
 static void
-_spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
+_spdk_blob_set_thin_provision(struct spdk_blob *blob)
 {
-	struct spdk_bs_load_ctx *ctx = arg;
+	_spdk_blob_verify_md_op(blob);
+	blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+}
 
-	if (bserrno == 0) {
+static void _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno);
+
+static void
+_spdk_bs_delete_corrupted_blob_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	spdk_blob_id id;
+	int64_t page_num;
+
+	/* Iterate to next blob (we can't use spdk_bs_iter_next function as our
+	 * last blob has been removed */
+	page_num = _spdk_bs_blobid_to_page(ctx->blobid);
+	page_num++;
+	page_num = spdk_bit_array_find_first_set(ctx->bs->used_blobids, page_num);
+	if (page_num >= spdk_bit_array_capacity(ctx->bs->used_blobids)) {
+		_spdk_bs_load_iter(ctx, NULL, -ENOENT);
+		return;
+	}
+
+	id = _spdk_bs_page_to_blobid(page_num);
+
+	spdk_bs_open_blob(ctx->bs, id, _spdk_bs_load_iter, ctx);
+}
+
+static void
+_spdk_bs_delete_corrupted_close_cb(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Failed to close corrupted blob\n");
+		spdk_bs_iter_next(ctx->bs, ctx->blob, _spdk_bs_load_iter, ctx);
+		return;
+	}
+
+	spdk_bs_delete_blob(ctx->bs, ctx->blobid, _spdk_bs_delete_corrupted_blob_cpl, ctx);
+}
+
+static void
+_spdk_bs_delete_corrupted_sync_cb(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Failed to sync corrupted blob\n");
+		spdk_bs_iter_next(ctx->bs, ctx->blob, _spdk_bs_load_iter, ctx);
+		return;
+	}
+
+	ctx->blobid = ctx->blob->id;
+
+	spdk_blob_close(ctx->blob, _spdk_bs_delete_corrupted_close_cb, ctx);
+}
+
+static void
+_spdk_bs_delete_corrupted_blob(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint64_t i;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Failed to close clone of a corrupted blob\n");
+		spdk_bs_iter_next(ctx->bs, ctx->blob, _spdk_bs_load_iter, ctx);
+		return;
+	}
+
+	/* Snapshot and clone have the same copy of cluster map at this point.
+	 * Let's clear cluster map for snpashot now so that it won't be cleared
+	 * for clone later when we remove snapshot. Also set thin provision to
+	 * pass data corruption check */
+	for (i = 0; i < ctx->blob->active.num_clusters; i++) {
+		ctx->blob->active.clusters[i] = 0;
+	}
+
+	ctx->blob->md_ro = false;
+
+	_spdk_blob_set_thin_provision(ctx->blob);
+
+	spdk_blob_sync_md(ctx->blob, _spdk_bs_delete_corrupted_sync_cb, ctx);
+}
+
+static void
+_spdk_bs_update_corrupted_blob(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Failed to close clone of a corrupted blob\n");
+		spdk_bs_iter_next(ctx->bs, ctx->blob, _spdk_bs_load_iter, ctx);
+		return;
+	}
+
+	ctx->blob->md_ro = false;
+	_spdk_blob_remove_xattr(ctx->blob, SNAPSHOT_PENDING_REMOVAL, true);
+	spdk_blob_set_read_only(ctx->blob);
+
+	if (ctx->iter_cb_fn) {
+		ctx->iter_cb_fn(ctx->iter_cb_arg, ctx->blob, 0);
+	}
+	_spdk_bs_blob_list_add(ctx->blob);
+
+	spdk_bs_iter_next(ctx->bs, ctx->blob, _spdk_bs_load_iter, ctx);
+}
+
+static void
+_spdk_bs_examin_clone(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Failed to open clone of a corrupted blob\n");
+		spdk_bs_iter_next(ctx->bs, ctx->blob, _spdk_bs_load_iter, ctx);
+		return;
+	}
+
+	if (blob->parent_id == ctx->blob->id) {
+		/* Power failure occured before updating clone - keep snapshot */
+		spdk_blob_close(blob, _spdk_bs_update_corrupted_blob, ctx);
+	} else {
+		/* Power failure occured after updating clone - remove snapshot */
+		spdk_blob_close(blob, _spdk_bs_delete_corrupted_blob, ctx);
+	}
+}
+
+static void
+_spdk_bs_examin_blob(struct spdk_blob *blob, struct spdk_bs_load_ctx *ctx)
+{
+	const void *value;
+	size_t len;
+	int rc = 0;
+
+	rc = _spdk_blob_get_xattr_value(blob, SNAPSHOT_PENDING_REMOVAL, &value, &len, true);
+	if (rc != 0) {
+		/* Not corrupted - process it and continue with iterating through blobs */
 		if (ctx->iter_cb_fn) {
 			ctx->iter_cb_fn(ctx->iter_cb_arg, blob, 0);
 		}
@@ -2709,7 +2847,26 @@ _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
-	if (bserrno == -ENOENT) {
+	assert(len == sizeof(spdk_blob_id));
+
+	ctx->blob = blob;
+
+	/* Open clone to check if we are able to fix this blob or should we remove it */
+	spdk_bs_open_blob(ctx->bs, *(spdk_blob_id *)value, _spdk_bs_examin_clone, ctx);
+}
+
+static void
+_spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = arg;
+
+	if (bserrno == 0) {
+		/* Examin blob if it is corrupted after power failure. Fix
+		 * the ones that can be fixed and remove any other corrupted
+		 * ones. If it is not corrupted just process it */
+		_spdk_bs_examin_blob(blob, ctx);
+		return;
+	} else if (bserrno == -ENOENT) {
 		bserrno = 0;
 	} else {
 		/*
@@ -4124,14 +4281,6 @@ _spdk_blob_set_xattrs(struct spdk_blob *blob, const struct spdk_blob_xattr_opts 
 		}
 	}
 	return 0;
-}
-
-static void
-_spdk_blob_set_thin_provision(struct spdk_blob *blob)
-{
-	_spdk_blob_verify_md_op(blob);
-	blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
-	blob->state = SPDK_BLOB_STATE_DIRTY;
 }
 
 static void
