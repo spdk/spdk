@@ -1013,7 +1013,6 @@ _ftl_write_nv_cache(void *ctx)
 		}
 
 		ftl_submit_nv_cache(child);
-		ftl_io_advance(io, num_lbks);
 	}
 
 	if (ftl_io_done(io)) {
@@ -1265,10 +1264,6 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 		}
 
 		ftl_trace_submission(dev, io, wptr->ppa, lbk_cnt);
-
-		/* Update parent iovec */
-		ftl_io_advance(io, lbk_cnt);
-
 		ftl_wptr_advance(wptr, lbk_cnt);
 	}
 

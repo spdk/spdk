@@ -104,27 +104,29 @@ void
 ftl_io_advance(struct ftl_io *io, size_t lbk_cnt)
 {
 	struct iovec *iov = ftl_io_iovec(io);
-	size_t iov_lbks;
+	size_t iov_lbks, lbk_left = lbk_cnt;
 
 	io->pos += lbk_cnt;
 
-	if (io->iov_cnt == 0) {
-		return;
+	if (io->iov_cnt != 0) {
+		while (lbk_left > 0) {
+			assert(io->iov_pos < io->iov_cnt);
+			iov_lbks = iov[io->iov_pos].iov_len / PAGE_SIZE;
+
+			if (io->iov_off + lbk_left < iov_lbks) {
+				io->iov_off += lbk_left;
+				break;
+			}
+
+			assert(iov_lbks > io->iov_off);
+			lbk_left -= (iov_lbks - io->iov_off);
+			io->iov_off = 0;
+			io->iov_pos++;
+		}
 	}
 
-	while (lbk_cnt > 0) {
-		assert(io->iov_pos < io->iov_cnt);
-		iov_lbks = iov[io->iov_pos].iov_len / PAGE_SIZE;
-
-		if (io->iov_off + lbk_cnt < iov_lbks) {
-			io->iov_off += lbk_cnt;
-			break;
-		}
-
-		assert(iov_lbks > io->iov_off);
-		lbk_cnt -= (iov_lbks - io->iov_off);
-		io->iov_off = 0;
-		io->iov_pos++;
+	if (io->parent) {
+		ftl_io_advance(io->parent, lbk_cnt);
 	}
 }
 
