@@ -2547,6 +2547,9 @@ struct spdk_bs_load_ctx {
 	spdk_bs_sequence_t			*seq;
 	spdk_blob_op_with_handle_complete	iter_cb_fn;
 	void					*iter_cb_arg;
+	struct spdk_blob_list			*clone_entry;
+	struct spdk_blob_list			*corrupted_blob;
+	TAILQ_HEAD(, spdk_blob_list)		corrupted_blobs;
 };
 
 static void
@@ -2696,11 +2699,176 @@ _spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence
 }
 
 static void
+_spdk_bs_remove_corrupted_blob_entry(struct spdk_bs_load_ctx *ctx)
+{
+	TAILQ_REMOVE(&ctx->corrupted_blob->clones, ctx->clone_entry, link);
+	free(ctx->clone_entry);
+	TAILQ_REMOVE(&ctx->corrupted_blobs, ctx->corrupted_blob, link);
+	free(ctx->corrupted_blob);
+}
+
+static void _spdk_bs_remove_corrupted_blobs(void *cb_arg, int bserrno);
+
+static void
+_spdk_bs_delete_corrupted_blob_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	_spdk_bs_remove_corrupted_blob_entry(ctx);
+	_spdk_bs_remove_corrupted_blobs(ctx, bserrno);
+}
+
+static void
+_spdk_bs_delete_corrupted_blob(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		_spdk_bs_remove_corrupted_blobs(ctx, bserrno);
+		return;
+	}
+
+	spdk_bs_delete_blob(ctx->bs, ctx->corrupted_blob->id, _spdk_bs_delete_corrupted_blob_cpl, ctx);
+}
+
+static void
+_spdk_bs_remove_pending_removal_xattr(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	bool md_ro;
+
+	if (bserrno != 0) {
+		_spdk_bs_remove_corrupted_blobs(ctx, bserrno);
+		return;
+	}
+
+	md_ro = blob->md_ro;
+	blob->md_ro = false;
+	_spdk_blob_remove_xattr(blob, SNAPSHOT_PENDING_REMOVAL, true);
+	blob->md_ro = md_ro;
+
+	_spdk_bs_remove_corrupted_blob_entry(ctx);
+
+	spdk_blob_close(blob, _spdk_bs_remove_corrupted_blobs, cb_arg);
+}
+
+static void
+_spdk_bs_update_corrupted_blob(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		_spdk_bs_remove_corrupted_blobs(ctx, bserrno);
+		return;
+	}
+
+	spdk_bs_open_blob(ctx->bs, ctx->corrupted_blob->id, _spdk_bs_remove_pending_removal_xattr, ctx);
+}
+
+static void
+_spdk_bs_find_clone(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	assert(bserrno != -ENOENT);
+
+	if (bserrno != 0) {
+		_spdk_bs_remove_corrupted_blobs(ctx, bserrno);
+		return;
+	}
+
+	if (blob->id != ctx->clone_entry->id) {
+		spdk_bs_iter_next(ctx->bs, blob, _spdk_bs_find_clone, ctx);
+		return;
+	}
+
+	if (blob->parent_id == ctx->corrupted_blob->id) {
+		/* Power failure occured before updating clone - keep snapshot */
+		spdk_blob_close(blob, _spdk_bs_update_corrupted_blob, ctx);
+	} else {
+		/* Power failure occured after updating clone - remove snapshot */
+		spdk_blob_close(blob, _spdk_bs_delete_corrupted_blob, ctx);
+	}
+}
+
+static void
+_spdk_bs_remove_corrupted_blobs(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	struct spdk_blob_list *corrupted_blob = NULL;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Error while removing corupted blobs\n");
+	} else {
+		corrupted_blob = TAILQ_FIRST(&ctx->corrupted_blobs);
+		if (corrupted_blob != NULL) {
+			ctx->corrupted_blob = corrupted_blob;
+			ctx->clone_entry = TAILQ_FIRST(&corrupted_blob->clones);
+			spdk_bs_iter_first(ctx->bs, _spdk_bs_find_clone, ctx);
+			return;
+		}
+	}
+
+	ctx->iter_cb_fn = NULL;
+
+	spdk_free(ctx->super);
+	spdk_free(ctx->mask);
+	spdk_bs_sequence_finish(ctx->seq, bserrno);
+	free(ctx);
+}
+
+static int
+_spdk_bs_find_corrupted_blob(struct spdk_blob *blob, struct spdk_bs_load_ctx *ctx)
+{
+	struct spdk_blob_list *corrupted_blob = NULL;
+	struct spdk_blob_list *clone_entry = NULL;
+	const void *value;
+	size_t len;
+	int rc = 0;
+
+	rc = _spdk_blob_get_xattr_value(blob, SNAPSHOT_PENDING_REMOVAL, &value, &len, true);
+	if (rc != 0) {
+		return 0;
+	}
+
+	assert(len == sizeof(spdk_blob_id));
+
+	corrupted_blob = calloc(1, sizeof(struct spdk_blob_list));
+	if (corrupted_blob == NULL) {
+		SPDK_ERRLOG("Could not allocate memory\n");
+		return -ENOMEM;
+	}
+
+	corrupted_blob->id = blob->id;
+	TAILQ_INIT(&corrupted_blob->clones);
+	TAILQ_INSERT_TAIL(&ctx->corrupted_blobs, corrupted_blob, link);
+
+	clone_entry = calloc(1, sizeof(struct spdk_blob_list));
+	if (clone_entry == NULL) {
+		SPDK_ERRLOG("Could not allocate memory\n");
+		return -ENOMEM;
+	}
+
+	clone_entry->id = *(spdk_blob_id *)value;
+	TAILQ_INSERT_TAIL(&corrupted_blob->clones, clone_entry, link);
+
+	return 0;
+}
+
+static void
 _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = arg;
 
 	if (bserrno == 0) {
+		/* Build list of blobs that might be corrupted after power
+		 * failure and should be removed. Remove them later when we
+		 * have full list of clones required for checking blob status */
+		bserrno = _spdk_bs_find_corrupted_blob(blob, ctx);
+		if (bserrno != 0) {
+			return;
+		}
+
 		if (ctx->iter_cb_fn) {
 			ctx->iter_cb_fn(ctx->iter_cb_arg, blob, 0);
 		}
@@ -2721,12 +2889,9 @@ _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 		SPDK_ERRLOG("Error in iterating blobs\n");
 	}
 
-	ctx->iter_cb_fn = NULL;
-
-	spdk_free(ctx->super);
-	spdk_free(ctx->mask);
-	spdk_bs_sequence_finish(ctx->seq, bserrno);
-	free(ctx);
+	/* Check which blobs are really currupted and should be
+	 * removed and remove them */
+	_spdk_bs_remove_corrupted_blobs(ctx, bserrno);
 }
 
 static void
@@ -3215,6 +3380,7 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->bs = bs;
 	ctx->iter_cb_fn = opts.iter_cb_fn;
 	ctx->iter_cb_arg = opts.iter_cb_arg;
+	TAILQ_INIT(&ctx->corrupted_blobs);
 
 	/* Allocate memory for the super block */
 	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL,
