@@ -953,6 +953,25 @@ struct spdk_nvme_io_qpair_opts {
 	 *
 	 * This only applies to local PCIe devices. */
 	bool delay_pcie_doorbell;
+
+	/**
+	 * The following four fields allow one to specify the starting address
+	 * of the submission and completion queue respectively.
+	 * If a vaddr value is NULL, SPDK allocates the memory used.
+	 * If a paddr value is specified, SPDK uses the vaddr and paddr passed
+	 * but does NOT assume said memory is registered.  These can be used
+	 * for device testing, or to satisfy potential performance issues.
+	 * SPDK assumes the memory passed is both virtually and physically
+	 * contiguous.
+	 * If these fields are used, SPDK will NOT impose any restriction
+	 * on the number of elements in the queues.
+	 * These fields are only used by PCIe attached NVMe devices.  They
+	 * are presently ignored for other transports.
+	 */
+	struct spdk_nvme_cmd *sq_vaddr;
+	uint64_t sq_paddr;
+	struct spdk_nvme_cpl *cq_vaddr;
+	uint64_t cq_paddr;
 };
 
 /**
