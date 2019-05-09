@@ -1604,6 +1604,12 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 	return nvme_rdma_qpair_connect(nvme_rdma_qpair(qpair));
 }
 
+void
+nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	nvme_rdma_qpair_disconnect(qpair);
+}
+
 int
 nvme_rdma_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
