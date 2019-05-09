@@ -33,6 +33,24 @@
       "revId": "1bfcc202077b542a85726e2e6a732512d5fa91f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d869b651_a82395bf",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-09T16:28:10Z",
+      "side": 1,
+      "message": "I need to re-acquire the lock after the attach_cb.",
+      "parentUuid": "54909027_dbf74345",
+      "revId": "1bfcc202077b542a85726e2e6a732512d5fa91f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
