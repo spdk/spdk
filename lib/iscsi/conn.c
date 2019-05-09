@@ -1193,6 +1193,7 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 			return -1;
 		}
 	}
+	SPDK_ERRLOG("spdk_sock_writev() successful with %d bytes\n", bytes);
 
 	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_DONE, conn->id, bytes, 0, 0);
 
@@ -1224,6 +1225,10 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 			}
 
 			pdu = TAILQ_FIRST(&conn->write_pdu_list);
+			if (pdu == NULL) {
+				SPDK_ERRLOG("all write completed with left %d bytes\n", bytes);
+				return 0;
+			}
 		} else {
 			pdu->writev_offset += bytes;
 			bytes = 0;
