@@ -2735,6 +2735,144 @@ bs_load(void)
 }
 
 static void
+bs_load_pending_removal(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob_opts opts;
+	struct spdk_blob *blob, *snapshot;
+	spdk_blob_id blobid, snapshotid;
+	const void *value;
+	size_t value_len;
+	int rc;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create blob */
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	/* Create snapshot */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid = g_blobid;
+
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+
+	/* Set SNAPSHOT_PENDING_REMOVAL xattr */
+	snapshot->md_ro = false;
+	rc = _spdk_blob_set_xattr(snapshot, SNAPSHOT_PENDING_REMOVAL, &blobid, sizeof(spdk_blob_id), true);
+	CU_ASSERT(rc == 0);
+	snapshot->md_ro = true;
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Reload blobstore */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	dev = init_dev();
+	spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Snapshot should not be removed as blob is still pointing to it */
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+
+	/* SNAPSHOT_PENDING_REMOVAL xattr should be removed during load */
+	rc = spdk_blob_get_xattr_value(snapshot, SNAPSHOT_PENDING_REMOVAL, &value, &value_len);
+	CU_ASSERT(rc != 0);
+
+	/* Set SNAPSHOT_PENDING_REMOVAL xattr again */
+	snapshot->md_ro = false;
+	rc = _spdk_blob_set_xattr(snapshot, SNAPSHOT_PENDING_REMOVAL, &blobid, sizeof(spdk_blob_id), true);
+	CU_ASSERT(rc == 0);
+	snapshot->md_ro = true;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	/* Remove parent_id from blob by removing BLOB_SNAPSHOT xattr */
+	_spdk_blob_remove_xattr(blob, BLOB_SNAPSHOT, true);
+
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Reload blobstore */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	dev = init_dev();
+	spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Snapshot should be removed as blob is not pointing to it anymore */
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno != 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
 bs_load_custom_cluster_size(void)
 {
 	struct spdk_bs_dev *dev;
@@ -6638,6 +6776,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_iter", blob_iter) == NULL ||
 		CU_add_test(suite, "blob_xattr", blob_xattr) == NULL ||
 		CU_add_test(suite, "bs_load", bs_load) == NULL ||
+		CU_add_test(suite, "bs_load_pending_removal", bs_load_pending_removal) == NULL ||
 		CU_add_test(suite, "bs_load_custom_cluster_size", bs_load_custom_cluster_size) == NULL ||
 		CU_add_test(suite, "bs_unload", bs_unload) == NULL ||
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
