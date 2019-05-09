@@ -33,7 +33,9 @@ fi
 run_test suite test/nvmf/target/nmic.sh
 run_test suite test/nvmf/target/rpc.sh
 run_test suite test/nvmf/target/fio.sh
-run_test suite test/nvmf/target/bdevio.sh
+# Disable this test for now unitl resets for NVMe fabrics
+#  controllers is better supported.
+#run_test suite test/nvmf/target/bdevio.sh
 
 timing_enter host
 
