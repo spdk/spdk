@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "eba5206b_3c53e9ce",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-09T01:00:48Z",
+      "side": 1,
+      "message": "I changed the name to \"spdk_file_load\" as the name \"spdk_file_read\" was defined in blobfs.h.",
+      "parentUuid": "b9f1ad01_9d35f870",
+      "revId": "1091e93ecbdb40ccda774608fba78be9ab152f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "062b0592_339a7fc3",
         "filename": "lib/util/Makefile",
         "patchSetId": 3
