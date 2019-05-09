@@ -2501,6 +2501,8 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		if (length > (final_offset - offset)) {
 			length = final_offset - offset;
 		}
+
+		sub_reads++;
 		rc = __file_read(file, payload, offset, length, channel);
 		if (rc == 0) {
 			final_length += length;
@@ -2509,7 +2511,6 @@ spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		}
 		payload += length;
 		offset += length;
-		sub_reads++;
 	}
 	pthread_spin_unlock(&file->lock);
 	while (sub_reads-- > 0) {
