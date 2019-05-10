@@ -83,11 +83,20 @@ $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 $rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$malloc_bdevs"
+
 # "raid0:0" ==> use raid0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
 $rpc_py construct_target_node Target3 Target3_alias 'raid0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+
+if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
+	malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+	# Create a Crypto bdev from one malloc bdev
+	$rpc_py construct_crypt_bdev -b malloc2 -c crypto0 -d "crypto_aesni_mb" -k "1234"
+	$rpc_py construct_target_node Target4 Target4_alias 'crypto0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+fi
+
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
@@ -116,6 +125,11 @@ fio_pid=$!
 
 sleep 3
 set +e
+
+if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
+	$rpc_py destroy_raid_bdev 'crypto0'
+	$rpc_py delete_malloc_bdev 'Malloc2'
+fi
 # Delete raid0, Malloc0, Malloc1 blockdevs
 $rpc_py destroy_raid_bdev 'raid0'
 $rpc_py delete_malloc_bdev 'Malloc0'
