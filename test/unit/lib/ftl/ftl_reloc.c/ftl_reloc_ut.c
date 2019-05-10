@@ -128,6 +128,7 @@ int
 ftl_io_read(struct ftl_io *io)
 {
 	io->cb.fn(io->cb.ctx, 0);
+	free(io);
 	return 0;
 }
 
@@ -135,6 +136,8 @@ int
 ftl_io_write(struct ftl_io *io)
 {
 	io->cb.fn(io->cb.ctx, 0);
+	free(io->lba.vector);
+	free(io);
 	return 0;
 }
 
@@ -156,6 +159,12 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->cb.ctx = io;
 	io->lbk_cnt = opts->req_size;
 	io->iov.single.iov_base = opts->data;
+
+	if (opts->flags & FTL_IO_VECTOR_LBA) {
+		io->lba.vector = calloc(io->lbk_cnt, sizeof(uint64_t));
+		SPDK_CU_ASSERT_FATAL(io->lba.vector != NULL);
+	}
+
 	return io;
 }
 
@@ -213,7 +222,12 @@ cleanup_reloc(struct spdk_ftl_dev *dev, struct ftl_reloc *reloc)
 {
 	size_t i;
 
+	for (i = 0; i < ftl_dev_num_bands(reloc->dev); ++i) {
+		SPDK_CU_ASSERT_FATAL(reloc->brelocs[i].active == false);
+	}
+
 	ftl_reloc_free(reloc);
+
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 		test_free_ftl_band(&dev->bands[i]);
 	}
@@ -459,6 +473,7 @@ test_reloc_empty_band(void)
 	ftl_reloc(reloc);
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, 0);
+	SPDK_CU_ASSERT_FATAL(breloc->moves != NULL);
 
 	cleanup_reloc(dev, reloc);
 }
