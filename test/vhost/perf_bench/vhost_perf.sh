@@ -141,7 +141,7 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
-rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 if [[ -n $custom_cpu_cfg ]]; then
 	source $custom_cpu_cfg
@@ -191,14 +191,14 @@ notice "Nvme split list: ${splits[@]}"
 if [[ $run_precondition == true ]]; then
 	# Using the same precondition routine possible for lvols thanks
 	# to --clear-method option. Lvols should not UNMAP on creation.
-    $SPDK_BUILD_DIR/scripts/gen_nvme.sh > $SPDK_BUILD_DIR/nvme.cfg
-    nvmes=$(cat $SPDK_BUILD_DIR/nvme.cfg | grep -oP "Nvme\d+")
+    $rootdir/scripts/gen_nvme.sh > $rootdir/nvme.cfg
+    nvmes=$(cat $rootdir/nvme.cfg | grep -oP "Nvme\d+")
     nvmes=($nvmes)
     fio_filename=$(printf ":%sn1" "${nvmes[@]}")
     fio_filename=${fio_filename:1}
     $precond_fio_bin --name="precondition" \
-    --ioengine="${SPDK_BUILD_DIR}/examples/bdev/fio_plugin/fio_plugin" \
-    --rw="write" --spdk_conf="${SPDK_BUILD_DIR}/nvme.cfg" --thread="1" \
+    --ioengine="${rootdir}/examples/bdev/fio_plugin/fio_plugin" \
+    --rw="write" --spdk_conf="${rootdir}/nvme.cfg" --thread="1" \
     --group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
     --iodepth=32 --filename="${fio_filename}" || true
 fi
