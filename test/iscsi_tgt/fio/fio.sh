@@ -88,6 +88,16 @@ $rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$malloc_bdevs"
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
 $rpc_py construct_target_node Target3 Target3_alias 'raid0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
+		malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+		# Create a Crypto bdev from one malloc bdev
+		$rpc_py construct_crypto_bdev -b Malloc2 -c crypto0 -d "crypto_aesni_mb" -k "1234567812345678"
+		$rpc_py construct_target_node Target4 Target4_alias 'crypto0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+	fi
+fi
+
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
@@ -115,6 +125,12 @@ fio_pid=$!
 
 sleep 3
 
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
+		$rpc_py delete_crypto_bdev 'crypto0'
+		$rpc_py delete_malloc_bdev 'Malloc2'
+	fi
+fi
 # Delete raid0, Malloc0, Malloc1 blockdevs
 $rpc_py destroy_raid_bdev 'raid0'
 $rpc_py delete_malloc_bdev 'Malloc0'
