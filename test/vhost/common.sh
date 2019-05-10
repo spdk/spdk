@@ -13,6 +13,33 @@ SPDK_BUILD_DIR=$BASE_DIR/../../
 
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
 
+# SSH key file
+: ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
+if [[ ! -r "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
+	error "Could not find SSH key file $SPDK_VHOST_SSH_KEY_FILE"
+	exit 1
+fi
+echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
+
+VM_BASE_DIR="$TEST_DIR/vms"
+
+
+mkdir -p $TEST_DIR
+
+#
+# Source config describing QEMU and VHOST cores and NUMA
+#
+source $BASE_DIR/common/autotest.config
+
+# Trace flag is optional, if it wasn't set earlier - disable it after sourcing
+# autotest_common.sh
+if [[ $- =~ x ]]; then
+	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
+else
+	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
+	set +x
+fi
+
 function message()
 {
 	if ! $SPDK_VHOST_VERBOSE; then
@@ -54,34 +81,6 @@ function notice()
 {
 	message "INFO" "$@"
 }
-
-
-# SSH key file
-: ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
-if [[ ! -r "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
-	error "Could not find SSH key file $SPDK_VHOST_SSH_KEY_FILE"
-	exit 1
-fi
-echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
-
-VM_BASE_DIR="$TEST_DIR/vms"
-
-
-mkdir -p $TEST_DIR
-
-#
-# Source config describing QEMU and VHOST cores and NUMA
-#
-source $BASE_DIR/common/autotest.config
-
-# Trace flag is optional, if it wasn't set earlier - disable it after sourcing
-# autotest_common.sh
-if [[ $- =~ x ]]; then
-	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
-else
-	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
-	set +x
-fi
 
 function get_vhost_dir()
 {
