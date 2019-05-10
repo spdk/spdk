@@ -34,6 +34,24 @@
       "revId": "6ec2a205ee90310b2e62e1d11b2706a4bd9f554a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa450538_a68bab6c",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2002,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-10T23:32:54Z",
+      "side": 1,
+      "message": "sync_reqs are placed in the list in order of file size when the sync was requested\n\nso when sync operation completes, it should always be the first one on the list - we only process one at a time and it\u0027s always the first one in the list",
+      "parentUuid": "0504b5be_e45b2ae1",
+      "revId": "6ec2a205ee90310b2e62e1d11b2706a4bd9f554a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
