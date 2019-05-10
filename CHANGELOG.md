@@ -30,6 +30,8 @@ Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
 previously attached controller.
 
 Nvme Opal library spdk_opal_cmd deprecated. Adding seperate command APIs.
+NVMe Opal library add support for activating locking SP.
+
 
 ## v19.04:
 
