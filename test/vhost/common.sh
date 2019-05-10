@@ -3,10 +3,9 @@ set -e
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 
-TEST_DIR=$rootdir/test
 SPDK_BUILD_DIR=$rootdir
-SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
-VM_BASE_DIR="$TEST_DIR/vms"
+SPDK_VHOST_SCSI_TEST_DIR=$rootdir/test/vhost
+VM_BASE_DIR="$rootdir/test/vms"
 
 # SSH key file
 : ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}

@@ -212,7 +212,7 @@ if $dry_run; then
 	exit 0
 fi
 
-run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" $fio_disks
+run_fio $fio_bin --job-file="$fio_job" --out="$rootdir/test/fio_results" $fio_disks
 
 if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 	for vm_num in $used_vms; do

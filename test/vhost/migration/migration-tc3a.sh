@@ -5,8 +5,8 @@ incoming_vm=1
 target_vm=2
 incoming_vm_ctrlr=naa.VhostScsi0.$incoming_vm
 target_vm_ctrlr=naa.VhostScsi0.$target_vm
-share_dir=$TEST_DIR/share
-spdk_repo_share_dir=$TEST_DIR/share_spdk
+share_dir=$rootdir/test/share
+spdk_repo_share_dir=$rootdir/test/share_spdk
 job_file=$MIGRATION_DIR/migration-tc3.job
 
 if [ -z "$MGMT_TARGET_IP" ]; then
@@ -93,7 +93,7 @@ function host1_cleanup_vhost()
 
 function host1_start_nvmf()
 {
-	nvmf_dir="$TEST_DIR/nvmf_tgt"
+	nvmf_dir="$rootdir/test/nvmf_tgt"
 	rpc_nvmf="$SPDK_BUILD_DIR/scripts/rpc.py -s $nvmf_dir/nvmf_rpc.sock"
 
 	notice "Starting nvmf_tgt instance on local server"
@@ -215,7 +215,7 @@ function migration_tc3()
 	sleep 1
 
 	# Verify migration on remote host and clean up vhost
-	ssh_remote $MGMT_INITIATOR_IP "pkill -CONT -F $TEST_DIR/tc3b.pid"
+	ssh_remote $MGMT_INITIATOR_IP "pkill -CONT -F $rootdir/test/tc3b.pid"
 	notice "Waiting for remote to finish FIO on VM and clean up..."
 	wait_for_remote
 

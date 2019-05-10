@@ -247,7 +247,7 @@ else
     job_file="default_integrity.job"
 fi
 # Run FIO traffic
-run_fio $fio_bin --job-file=$rootdir/test/vhost/common/fio_jobs/$job_file --out="$TEST_DIR/fio_results" $fio_disks
+run_fio $fio_bin --job-file=$rootdir/test/vhost/common/fio_jobs/$job_file --out="$rootdir/test/fio_results" $fio_disks
 
 notice "Shutting down virtual machines..."
 vm_shutdown_all
