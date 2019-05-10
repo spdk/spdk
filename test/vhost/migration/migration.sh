@@ -21,7 +21,6 @@ function usage()
 	echo "Shortcut script for doing automated test of live migration."
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo
-	echo "    --work-dir=WORK_DIR   Where to find build file. Must exist. [default: $TEST_DIR]"
 	echo "    --os ARGS             VM configuration. This parameter might be used more than once:"
 	echo "    --fio-bin=FIO         Use specific fio binary (will be uploaded to VM)"
 	echo "    --test-cases=TESTS    Coma-separated list of tests to run. Implemented test cases are: 1"
@@ -39,7 +38,6 @@ for param in "$@"; do
 			usage $0
 			exit 0
 			;;
-		--work-dir=*) TEST_DIR="${param#*=}" ;;
 		--os=*) os_image="${param#*=}" ;;
 		--fio-bin=*) fio_bin="${param}" ;;
 		--test-cases=*) test_cases="${param#*=}" ;;

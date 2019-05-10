@@ -32,7 +32,6 @@ function usage()
 	echo "    --fio-job=            Fio config to use for test."
 	echo "                          All VMs will run the same fio job when FIO executes."
 	echo "                          (no unique jobs for specific VMs)"
-	echo "    --work-dir=WORK_DIR   Where to find build file. Must exist. [default: $TEST_DIR]"
 	echo "    --dry-run             Don't perform any tests, run only and wait for enter to terminate"
 	echo "    --no-shutdown         Don't shutdown at the end but leave envirionment working"
 	echo "    --vm=NUM[,OS][,DISKS] VM configuration. This parameter might be used more than once:"
@@ -49,7 +48,6 @@ while getopts 'xh-:' optchar; do
 		-)
 		case "$OPTARG" in
 			help) usage $0 ;;
-			work-dir=*) TEST_DIR="${OPTARG#*=}" ;;
 			fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
 			fio-job=*) fio_job="${OPTARG#*=}" ;;
 			dry-run) dry_run=true ;;

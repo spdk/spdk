@@ -178,7 +178,7 @@ function host_2_create_share()
 function host_2_start_vhost()
 {
 	ssh_remote $MGMT_INITIATOR_IP "nohup $spdk_repo_share_dir/spdk/test/vhost/migration/migration.sh\
-	 --test-cases=3b --work-dir=$TEST_DIR --os=$share_dir/migration.qcow2\
+	 --test-cases=3b --os=$share_dir/migration.qcow2\
 	 --rdma-tgt-ip=$RDMA_TARGET_IP &>$share_dir/output.log &"
 	notice "Waiting for remote to be done with vhost & VM setup..."
 	wait_for_remote
