@@ -31,15 +31,6 @@ mkdir -p $TEST_DIR
 #
 source $BASE_DIR/common/autotest.config
 
-# Trace flag is optional, if it wasn't set earlier - disable it after sourcing
-# autotest_common.sh
-if [[ $- =~ x ]]; then
-	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
-else
-	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
-	set +x
-fi
-
 function message()
 {
 	if ! $SPDK_VHOST_VERBOSE; then
