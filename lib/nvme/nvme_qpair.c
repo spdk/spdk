@@ -533,16 +533,62 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 	spdk_dma_free(qpair->req_buf);
 }
 
-int
-nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+static int
+_nvme_qpair_submit_child_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	int			rc = 0;
 	struct nvme_request	*child_req, *tmp;
+	bool			child_req_failed = false;
+	/*
+	 * This is a split (parent) request. Submit all of the children but not the parent
+	 * request itself, since the parent is the original unsplit request.
+	 */
+	TAILQ_FOREACH_SAFE(child_req, &req->children, child_tailq, tmp) {
+		if (!child_req_failed) {
+			rc = nvme_qpair_submit_request(qpair, child_req);
+			if (rc != 0) {
+				child_req_failed = true;
+
+				/*
+				 * If the request is failed to submit with error code -ENXIO,
+				 * and it has no any children, free it.
+				 */
+				if (rc != -ENXIO && child_req->num_children == 0) {
+					nvme_request_remove_child(req, child_req);
+					nvme_free_request(child_req);
+				}
+			}
+		} else { /* free remaining child_reqs since one child_req fails */
+			nvme_request_remove_child(req, child_req);
+			nvme_request_free_children(child_req);
+			nvme_free_request(child_req);
+		}
+	}
+
+	/* Free the request if all of the children are freed */
+	if (child_req_failed && req->num_children == 0) {
+		if (req->parent != NULL) {
+			nvme_request_remove_child(req->parent, req);
+		}
+		nvme_free_request(req);
+		return -ENXIO;
+	}
+
+	/*
+	 * If all children or a part of children have been submitted, return 0.
+	 * Bdev_io will be freed when the error code is returned.
+	 */
+	return 0;
+}
+
+int
+nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
 	struct nvme_error_cmd	*cmd;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
-	bool			child_req_failed = false;
 
 	if (ctrlr->is_failed) {
+		nvme_request_free_children(req);
 		nvme_free_request(req);
 		return -ENXIO;
 	}
@@ -550,23 +596,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	nvme_qpair_check_enabled(qpair);
 
 	if (req->num_children) {
-		/*
-		 * This is a split (parent) request. Submit all of the children but not the parent
-		 * request itself, since the parent is the original unsplit request.
-		 */
-		TAILQ_FOREACH_SAFE(child_req, &req->children, child_tailq, tmp) {
-			if (!child_req_failed) {
-				rc = nvme_qpair_submit_request(qpair, child_req);
-				if (rc != 0) {
-					child_req_failed = true;
-				}
-			} else { /* free remaining child_reqs since one child_req fails */
-				nvme_request_remove_child(req, child_req);
-				nvme_free_request(child_req);
-			}
-		}
-
-		return rc;
+		return _nvme_qpair_submit_child_request(qpair, req);
 	}
 
 	/* queue those requests which matches with opcode in err_cmd list */
