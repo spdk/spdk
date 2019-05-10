@@ -2,6 +2,7 @@
 
 set -e
 
+testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $(dirname $0)/../..)
 SPDK_AUTOTEST_X=false
 source "$rootdir/test/common/autotest_common.sh"
@@ -142,6 +143,7 @@ function create_bdev_subsystem_config() {
 
 	local expected_notifications=()
 
+	RPCS=""
 	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
 		local lvol_store_base_bdev=Nvme0n1
 		if ! tgt_rpc get_bdevs --name ${lvol_store_base_bdev} >/dev/null; then
@@ -155,15 +157,13 @@ function create_bdev_subsystem_config() {
 			fi
 		fi
 
-		tgt_rpc construct_split_vbdev $lvol_store_base_bdev 2
-		tgt_rpc construct_split_vbdev Malloc0 3
-		tgt_rpc construct_malloc_bdev 8 4096 --name Malloc3
-		tgt_rpc construct_passthru_bdev -b Malloc3 -p PTBdevFromMalloc3
-
-		tgt_rpc construct_null_bdev Null0 32 512
-
-		tgt_rpc construct_malloc_bdev 32 512 --name Malloc0
-		tgt_rpc construct_malloc_bdev 16 4096 --name Malloc1
+		RPCS+="construct_split_vbdev $lvol_store_base_bdev 2\n
+		construct_split_vbdev Malloc0 3\n
+		construct_malloc_bdev 8 4096 --name Malloc3\n
+		construct_passthru_bdev -b Malloc3 -p PTBdevFromMalloc3\n
+		construct_null_bdev Null0 32 512\n
+		construct_malloc_bdev 32 512 --name Malloc0\n
+		construct_malloc_bdev 16 4096 --name Malloc1\n"
 
 		expected_notifications+=(
 			bdev_register:${lvol_store_base_bdev}
@@ -182,18 +182,18 @@ function create_bdev_subsystem_config() {
 		if [[ $(uname -s) = Linux ]]; then
 			# This AIO bdev must be large enough to be used as LVOL store
 			dd if=/dev/zero of=/tmp/sample_aio bs=1024 count=102400
-			tgt_rpc construct_aio_bdev /tmp/sample_aio aio_disk 1024
+			echo "construct_aio_bdev /tmp/sample_aio aio_disk 1024" >> $testdir/rpcs.txt
 			expected_notifications+=( bdev_register:aio_disk )
 		fi
 
 		# For LVOLs use split to check for proper order of initialization.
 		# If LVOLs cofniguration will be reordered (eg moved before splits or AIO/NVMe)
 		# it should fail loading JSON config from file.
-		tgt_rpc construct_lvol_store -c 1048576 ${lvol_store_base_bdev}p0 lvs_test
-		tgt_rpc construct_lvol_bdev -l lvs_test lvol0 32
-		tgt_rpc construct_lvol_bdev -l lvs_test -t lvol1 32
-		tgt_rpc snapshot_lvol_bdev     lvs_test/lvol0 snapshot0
-		tgt_rpc clone_lvol_bdev        lvs_test/snapshot0 clone0
+		RPCS+="construct_lvol_store -c 1048576 ${lvol_store_base_bdev}p0 lvs_test\n
+		construct_lvol_bdev -l lvs_test lvol0 32\n
+		construct_lvol_bdev -l lvs_test -t lvol1 32\n
+		snapshot_lvol_bdev     lvs_test/lvol0 snapshot0\n
+		clone_lvol_bdev        lvs_test/snapshot0 clone0\n"
 
 		expected_notifications+=(
 			"bdev_register:$RE_UUID"
@@ -204,14 +204,14 @@ function create_bdev_subsystem_config() {
 	fi
 
 	if [[ $SPDK_TEST_CRYPTO -eq 1 ]]; then
-		tgt_rpc construct_malloc_bdev 8 1024 --name MallocForCryptoBdev
+		RPCS+="construct_malloc_bdev 8 1024 --name MallocForCryptoBdev\n"
 		if [[ $(lspci -d:37c8 | wc -l) -eq 0 ]]; then
 			local crypto_dirver=crypto_aesni_mb
 		else
 			local crypto_dirver=crypto_qat
 		fi
 
-		tgt_rpc construct_crypto_bdev -b MallocForCryptoBdev -c CryptoMallocBdev -d $crypto_dirver -k 0123456789123456
+		RPCS+="construct_crypto_bdev -b MallocForCryptoBdev -c CryptoMallocBdev -d $crypto_dirver -k 0123456789123456\n"
 		expected_notifications+=(
 			bdev_register:MallocForCryptoBdev
 			bdev_register:CryptoMallocBdev
@@ -221,17 +221,20 @@ function create_bdev_subsystem_config() {
 	if [[ $SPDK_TEST_PMDK -eq 1 ]]; then
 		pmem_pool_file=$(mktemp /tmp/pool_file1.XXXXX)
 		rm -f $pmem_pool_file
-		tgt_rpc create_pmem_pool $pmem_pool_file 128 4096
-		tgt_rpc construct_pmem_bdev -n pmem1 $pmem_pool_file
+		RPCS+="create_pmem_pool $pmem_pool_file 128 4096\n
+		construct_pmem_bdev -n pmem1 $pmem_pool_file\n"
 		expected_notifications+=( bdev_register:pmem1 )
 	fi
 
 	if [[ $SPDK_TEST_RBD -eq 1 ]]; then
 		rbd_setup 127.0.0.1
-		tgt_rpc construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+		RPCS+="construct_rbd_bdev $RBD_POOL $RBD_NAME 4096\n"
 		expected_notifications+=( bdev_register:Ceph0 )
 	fi
-
+	# Remove trailing new line
+	RPCS=${RPCS%'\n'}
+	# Run all rpcs
+	echo -e $RPCS | tgt_rpc
 	tgt_check_notifications "${expected_notifications[@]}"
 
 	timing_exit $FUNCNAME
@@ -267,28 +270,28 @@ function cleanup_bdev_subsystem_config() {
 function create_vhost_subsystem_config() {
 	timing_enter $FUNCNAME
 
-	tgt_rpc construct_malloc_bdev 64 1024 --name MallocForVhost0
-	tgt_rpc construct_split_vbdev MallocForVhost0 8
+	RPCS="construct_malloc_bdev 64 1024 --name MallocForVhost0\n
+	construct_split_vbdev MallocForVhost0 8\n
+	construct_vhost_scsi_controller   VhostScsiCtrlr0\n
+	add_vhost_scsi_lun                VhostScsiCtrlr0 0 MallocForVhost0p3\n
+	add_vhost_scsi_lun                VhostScsiCtrlr0 -1 MallocForVhost0p4\n
+	set_vhost_controller_coalescing   VhostScsiCtrlr0 1 100\n
+	construct_vhost_blk_controller    VhostBlkCtrlr0 MallocForVhost0p5\n
+	construct_vhost_nvme_controller   VhostNvmeCtrlr0 16\n
+	add_vhost_nvme_ns                 VhostNvmeCtrlr0 MallocForVhost0p6"
 
-	tgt_rpc construct_vhost_scsi_controller   VhostScsiCtrlr0
-	tgt_rpc add_vhost_scsi_lun                VhostScsiCtrlr0 0 MallocForVhost0p3
-	tgt_rpc add_vhost_scsi_lun                VhostScsiCtrlr0 -1 MallocForVhost0p4
-	tgt_rpc set_vhost_controller_coalescing   VhostScsiCtrlr0 1 100
-
-	tgt_rpc construct_vhost_blk_controller    VhostBlkCtrlr0 MallocForVhost0p5
-
-	tgt_rpc construct_vhost_nvme_controller   VhostNvmeCtrlr0 16
-	tgt_rpc add_vhost_nvme_ns                 VhostNvmeCtrlr0 MallocForVhost0p6
+	echo -e $RPCS | tgt_rpc
 
 	timing_exit $FUNCNAME
 }
 
 function create_iscsi_subsystem_config() {
 	timing_enter $FUNCNAME
-	tgt_rpc construct_malloc_bdev 64 1024 --name MallocForIscsi0
-	tgt_rpc add_portal_group $PORTAL_TAG 127.0.0.1:$ISCSI_PORT
-	tgt_rpc add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-	tgt_rpc construct_target_node Target3 Target3_alias 'MallocForIscsi0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+	RPCS="construct_malloc_bdev 64 1024 --name MallocForIscsi0\n
+	add_portal_group $PORTAL_TAG 127.0.0.1:$ISCSI_PORT\n
+	add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK\n
+	construct_target_node Target3 Target3_alias 'MallocForIscsi0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d"
+	echo -e $RPCS | tgt_rpc
 	timing_exit $FUNCNAME
 }
 
@@ -302,14 +305,14 @@ function create_nvmf_subsystem_config() {
 		return 1
 	fi
 
-	tgt_rpc construct_malloc_bdev 8 512 --name MallocForNvmf0
-	tgt_rpc construct_malloc_bdev 4 1024 --name MallocForNvmf1
-
-	tgt_rpc nvmf_create_transport -t RDMA -u 8192 -p 4 -c 0
-	tgt_rpc nvmf_subsystem_create       nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
-	tgt_rpc nvmf_subsystem_add_ns       nqn.2016-06.io.spdk:cnode1 MallocForNvmf0
-	tgt_rpc nvmf_subsystem_add_ns       nqn.2016-06.io.spdk:cnode1 MallocForNvmf1
-	tgt_rpc nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+	RPCS="construct_malloc_bdev 8 512 --name MallocForNvmf0\n
+	construct_malloc_bdev 4 1024 --name MallocForNvmf1\n
+	nvmf_create_transport -t RDMA -u 8192 -p 4 -c 0\n
+	nvmf_subsystem_create       nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001\n
+	nvmf_subsystem_add_ns       nqn.2016-06.io.spdk:cnode1 MallocForNvmf0\n
+	nvmf_subsystem_add_ns       nqn.2016-06.io.spdk:cnode1 MallocForNvmf1\n
+	nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT"
+	echo -e $RPCS | tgt_rpc
 
 	timing_exit $FUNCNAME
 }
@@ -411,6 +414,7 @@ function json_config_clear() {
 on_error_exit() {
 	set -x
 	set +e
+	rm -f $testdir/rpcs.txt
 	print_backtrace
 	trap - ERR
 	echo "Error on $1 - $2"
@@ -420,9 +424,11 @@ on_error_exit() {
 
 trap 'on_error_exit "${FUNCNAME}" "${LINENO}"' ERR
 echo "INFO: JSON configuration test init"
+rm -f $testdir/rpcs.txt
 json_config_test_init
 
 tgt_rpc save_config > ${configs_path[target]}
+
 
 echo "INFO: shutting down applications..."
 if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
@@ -458,5 +464,5 @@ else
 fi
 
 json_config_test_fini
-
+rm -f $testdir/rpcs.txt
 echo "INFO: Success"
