@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c2e5634_9f9f0c92",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 3511,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-10T02:17:39Z",
+      "side": 1,
+      "message": "How do you think about the ordering?\n\nbatched receiving and then batched sending is better than batched sending and then batched receiving?\n\nEither is fine?",
+      "revId": "d2d0ee4fb773da1bc372ac7f4663e8ff3a310c76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
