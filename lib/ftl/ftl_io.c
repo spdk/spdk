@@ -310,6 +310,10 @@ _ftl_io_free(struct ftl_io *io)
 		free(io->iov.vector);
 	}
 
+	if (io->flags & FTL_IO_VECTOR_LBA) {
+		free(io->lba.vector);
+	}
+
 	if (pthread_spin_destroy(&io->lock)) {
 		SPDK_ERRLOG("pthread_spin_destroy failed\n");
 	}
