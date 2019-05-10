@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-INTEGRITY_BASE_DIR=$(readlink -f $(dirname $0))
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+
 ctrl_type="spdk_vhost_scsi"
 vm_fs="ext4"
 
@@ -82,7 +86,7 @@ vm_run 0
 vm_wait_for_boot 300 0
 
 # Run tests on VM
-vm_scp 0 $INTEGRITY_BASE_DIR/integrity_vm.sh root@127.0.0.1:/root/integrity_vm.sh
+vm_scp 0 $testdir/integrity_vm.sh root@127.0.0.1:/root/integrity_vm.sh
 vm_ssh 0 "~/integrity_vm.sh $ctrl_type \"$vm_fs\""
 
 notice "Shutting down virtual machine..."

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 set -e
-READONLY_BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $READONLY_BASE_DIR/../../../../ && pwd)"
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $READONLY_BASE_DIR/../common && pwd)"
-source $COMMON_DIR/../common.sh
 
-rpc_py="$READONLY_BASE_DIR/../../../scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+
+rpc_py="$testdir/../../../scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 vm_img=""
 disk="Nvme0n1"
@@ -90,7 +91,7 @@ function blk_ro_tc1()
 	vm_run $vm_no
 	vm_wait_for_boot 300 $vm_no
 	notice "Preparing partition and file on guest VM"
-	vm_ssh $vm_no "bash -s" < $READONLY_BASE_DIR/disabled_readonly_vm.sh
+	vm_ssh $vm_no "bash -s" < $testdir/disabled_readonly_vm.sh
 	sleep 1
 
 	vm_shutdown_all
@@ -102,7 +103,7 @@ function blk_ro_tc1()
 	vm_run $vm_no
 	vm_wait_for_boot 300 $vm_no
 	notice "Testing readonly feature on guest VM"
-	vm_ssh $vm_no "bash -s" < $READONLY_BASE_DIR/enabled_readonly_vm.sh
+	vm_ssh $vm_no "bash -s" < $testdir/enabled_readonly_vm.sh
 	sleep 3
 
 	vm_shutdown_all
@@ -114,7 +115,7 @@ function blk_ro_tc1()
 	vm_run $vm_no
 	vm_wait_for_boot 300 $vm_no
 	notice "Removing partition and file from test disk on guest VM"
-	vm_ssh $vm_no "bash -s" < $READONLY_BASE_DIR/delete_partition_vm.sh
+	vm_ssh $vm_no "bash -s" < $testdir/delete_partition_vm.sh
 	sleep 1
 
 	vm_shutdown_all

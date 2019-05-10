@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-NEGATIVE_BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $NEGATIVE_BASE_DIR/../common && pwd)"
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $NEGATIVE_BASE_DIR/../../../../ && pwd)"
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
 
 function usage()
 {
@@ -31,16 +32,13 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
-
-. $COMMON_DIR/../common.sh
-
 trap error_exit ERR
 
 VHOST_APP="$SPDK_BUILD_DIR/app/vhost/vhost"
 
 notice "Testing vhost command line arguments"
 # Printing help will force vhost to exit without error
-$VHOST_APP -c /path/to/non_existing_file/conf -S $NEGATIVE_BASE_DIR -e 0x0 -s 1024 -d -h --silence-noticelog
+$VHOST_APP -c /path/to/non_existing_file/conf -S $testdir -e 0x0 -s 1024 -d -h --silence-noticelog
 
 # Testing vhost create pid file option. Vhost will exit with error as invalid config path is given
 if $VHOST_APP -c /path/to/non_existing_file/conf -f $SPDK_VHOST_SCSI_TEST_DIR/vhost.pid; then
@@ -48,7 +46,7 @@ if $VHOST_APP -c /path/to/non_existing_file/conf -f $SPDK_VHOST_SCSI_TEST_DIR/vh
 fi
 
 # Testing vhost start with invalid config. Vhost will exit with error as bdev module init failed
-if $VHOST_APP -c $NEGATIVE_BASE_DIR/invalid.config; then
+if $VHOST_APP -c $testdir/invalid.config; then
 	fail "vhost started when specifying invalid config file"
 fi
 
@@ -68,7 +66,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	spdk_vhost_run --json-path=$NEGATIVE_BASE_DIR
+	spdk_vhost_run --json-path=$testdir
 	notice ""
 
 	rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"

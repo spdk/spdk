@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -e
-HOTPLUG_DIR=$(readlink -f $(dirname $0))
 
-. $HOTPLUG_DIR/common.sh
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+source $rootdir/test/vhost/hotplug/common.sh
 
 function prepare_fio_cmd_tc1() {
     print_test_fio_header

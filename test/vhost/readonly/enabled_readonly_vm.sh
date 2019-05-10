@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
 set -x
-BASE_DIR=$(readlink -f $(dirname $0))
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
 
 disk_name="vda"
 test_folder_name="readonly_test"
@@ -13,7 +17,7 @@ function error()
 	echo -e "ERROR: $@"
 	echo "==========="
 	umount "$test_folder_name"
-	rm -rf "$BASE_DIR/$test_folder_name"
+	rm -rf "$testdir/$test_folder_name"
 	exit 1
 }
 
@@ -30,13 +34,13 @@ if [[ ! -b "/dev/$disk_name"1"" ]]; then
 	error "Partition not found!"
 fi
 
-mkdir $BASE_DIR/$test_folder_name
+mkdir $testdir/$test_folder_name
 if [[ $? != 0 ]]; then
 	error "Failed to create test folder $test_folder_name"
 fi
 
 echo "INFO: Mounting partition"
-mount /dev/$disk_name"1" $BASE_DIR/$test_folder_name
+mount /dev/$disk_name"1" $testdir/$test_folder_name
 if [[ $? != 0 ]]; then
 	error "Failed to mount partition $disk_name""1"
 fi
@@ -58,13 +62,13 @@ else
 fi
 
 echo "INFO: Copying file from readonly disk"
-cp $test_folder_name/$test_file_name $BASE_DIR
-if ! rm $BASE_DIR/$test_file_name; then
+cp $test_folder_name/$test_file_name $testdir
+if ! rm $testdir/$test_file_name; then
 	error "Copied file from a readonly disk was not found!"
 fi
 
 umount "$test_folder_name"
-rm -rf "$BASE_DIR/$test_folder_name"
+rm -rf "$testdir/$test_folder_name"
 echo "INFO: Trying to create file system on a readonly disk"
 if mkfs.ext4 -F /dev/$disk_name"1"; then
 	error "Created file system on a readonly disk!"
