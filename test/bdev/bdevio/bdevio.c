@@ -1000,6 +1000,8 @@ __run_ut_thread(void *arg1, void *arg2)
 		|| CU_add_test(suite, "blockdev write zeroes read 1m", blockdev_write_zeroes_read_1m) == NULL
 		|| CU_add_test(suite, "blockdev write zeroes read 3m", blockdev_write_zeroes_read_3m) == NULL
 		|| CU_add_test(suite, "blockdev write zeroes read 3.5m", blockdev_write_zeroes_read_3m_500k) == NULL
+		|| CU_add_test(suite, "blockdev reset",
+			       blockdev_test_reset) == NULL
 		|| CU_add_test(suite, "blockdev write read 512 bytes",
 			       blockdev_write_read_512Bytes) == NULL
 		|| CU_add_test(suite, "blockdev write read size > 128k",
@@ -1027,8 +1029,6 @@ __run_ut_thread(void *arg1, void *arg2)
 			       blockdev_test_nvme_passthru_rw) == NULL
 		|| CU_add_test(suite, "blockdev nvme passthru vendor specific",
 			       blockdev_test_nvme_passthru_vendor_specific) == NULL
-		|| CU_add_test(suite, "blockdev reset",
-			       blockdev_test_reset) == NULL
 	) {
 		CU_cleanup_registry();
 		stop_init_thread(CU_get_error());
