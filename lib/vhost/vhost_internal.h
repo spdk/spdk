@@ -113,6 +113,9 @@ struct spdk_vhost_virtqueue {
 	/* Next time when we need to send event */
 	uint64_t next_event_time;
 
+	/* Associated vhost_virtqueue in the virtio device's virtqueue list */
+	uint32_t vring_idx;
+
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_session {
