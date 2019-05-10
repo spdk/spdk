@@ -3,7 +3,6 @@ set -e
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 
-SPDK_BUILD_DIR=$rootdir
 SPDK_VHOST_SCSI_TEST_DIR=$rootdir/test/vhost
 VM_BASE_DIR="$rootdir/test/vms"
 
@@ -111,7 +110,7 @@ function spdk_vhost_run()
 	done
 
 	local vhost_dir="$(get_vhost_dir $vhost_num)"
-	local vhost_app="$SPDK_BUILD_DIR/app/vhost/vhost"
+	local vhost_app="$rootdir/app/vhost/vhost"
 	local vhost_log_file="$vhost_dir/vhost.log"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 	local vhost_socket="$vhost_dir/usvhost"
@@ -141,7 +140,7 @@ function spdk_vhost_run()
 	local cmd="$vhost_app -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock $no_pci"
 	if [[ -n "$vhost_conf_path" ]]; then
 		cp $vhost_conf_template $vhost_conf_file
-		$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
+		$rootdir/scripts/gen_nvme.sh >> $vhost_conf_file
 		cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock $no_pci"
 	fi
 
@@ -158,12 +157,12 @@ function spdk_vhost_run()
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
 	#do not generate nvmes if pci access is disabled
 	if [[ -z "$vhost_conf_path" ]] && [[ -z "$no_pci" ]]; then
-		$SPDK_BUILD_DIR/scripts/gen_nvme.sh "--json" | $SPDK_BUILD_DIR/scripts/rpc.py\
+		$rootdir/scripts/gen_nvme.sh "--json" | $rootdir/scripts/rpc.py\
 		 -s $vhost_dir/rpc.sock load_subsystem_config
 	fi
 
 	if [[ -n "$vhost_json_path" ]]; then
-		$SPDK_BUILD_DIR/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_path/conf.json"
+		$rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_path/conf.json"
 	fi
 
 	notice "vhost started - pid=$vhost_pid"
@@ -1070,7 +1069,7 @@ function run_fio()
 		return 0
 	fi
 
-	$SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
+	$rootdir/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
 		$([[ ! -z "$fio_bin" ]] && echo "--fio-bin=$fio_bin") \
 		--out=$out $json ${fio_disks%,}
 }

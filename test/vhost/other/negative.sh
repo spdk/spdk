@@ -34,7 +34,7 @@ done
 
 trap error_exit ERR
 
-VHOST_APP="$SPDK_BUILD_DIR/app/vhost/vhost"
+VHOST_APP="$rootdir/app/vhost/vhost"
 
 notice "Testing vhost command line arguments"
 # Printing help will force vhost to exit without error
@@ -69,7 +69,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	spdk_vhost_run --json-path=$testdir
 	notice ""
 
-	rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+	rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 	# General commands
 	notice "Trying to remove nonexistent controller"

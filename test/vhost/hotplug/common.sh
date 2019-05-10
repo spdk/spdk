@@ -66,7 +66,7 @@ fio_job=$testdir/fio_jobs/default_integrity.job
 tmp_attach_job=$testdir/fio_jobs/fio_attach.job.tmp
 tmp_detach_job=$testdir/fio_jobs/fio_detach.job.tmp
 
-rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 function print_test_fio_header() {
     notice "==============="
@@ -202,7 +202,7 @@ function check_disks() {
 
 function get_traddr() {
     local nvme_name=$1
-    local nvme="$( $SPDK_BUILD_DIR/scripts/gen_nvme.sh )"
+    local nvme="$( $rootdir/scripts/gen_nvme.sh )"
     while read -r line; do
         if [[ $line == *"TransportID"* ]] && [[ $line == *$nvme_name* ]]; then
             local word_array=($line)

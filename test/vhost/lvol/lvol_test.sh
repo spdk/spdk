@@ -7,7 +7,7 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 source $rootdir/scripts/common.sh
 
-rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 vm_count=1
 max_disks=""
