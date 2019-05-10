@@ -220,6 +220,9 @@ test_spdk_nvme_connect(void)
 	ret_ctrlr = spdk_nvme_connect(&trid, &opts, sizeof(opts));
 	CU_ASSERT(ret_ctrlr == &ctrlr);
 	CU_ASSERT_EQUAL(ret_ctrlr->opts.num_io_queues, 1);
+	/* opts_size must be sizeof(*opts) if opts != NULL */
+	ret_ctrlr = spdk_nvme_connect(&trid, &opts, sizeof(opts) + 1);
+	CU_ASSERT(ret_ctrlr == NULL);
 	/* remove the attached ctrlr on the attached_list */
 	CU_ASSERT(spdk_nvme_detach(&ctrlr) == 0);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->shared_attached_ctrlrs));
