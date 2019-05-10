@@ -627,6 +627,27 @@ opal_next(struct spdk_opal_dev *dev)
 	return error;
 }
 
+static spdk_opal_key
+opal_construct_key(const char *passwd)
+{
+	struct spdk_opal_key *opal_key;
+
+	if (passwd == NULL || passwd == "\0") {
+		SPDK_ERRLOG("Password is empty. Construct key failed\n");
+		return NULL;
+	}
+
+	opal_key = calloc(1, sizeof(struct spdk_opal_key));
+	if (!opal_key) {
+		SPDK_ERRLOG("Memory allocation failed for spdk_opal_key\n");
+		return NULL;
+	}
+
+	opal_key->key_len = strlen(passwd);
+	memcpy(opal_key->key, passwd, opal_key->key_len);
+	return opal_key;
+}
+
 static void
 opal_check_tper(struct spdk_opal_dev *dev, const void *data)
 {
@@ -1129,14 +1150,7 @@ opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, void *data)
 	const char *new_passwd = data;
 	struct spdk_opal_key *opal_key;
 
-	opal_key = calloc(1, sizeof(struct spdk_opal_key));
-	if (!opal_key) {
-		SPDK_ERRLOG("Memory allocation failed for spdk_opal_key\n");
-		return -ENOMEM;
-	}
-
-	opal_key->key_len = strlen(new_passwd);
-	memcpy(opal_key->key, new_passwd, opal_key->key_len);
+	opal_key = opal_construct_key(new_passwd);
 	dev->dev_key = opal_key;
 
 	memcpy(cpin_uid, spdk_opal_uid[UID_C_PIN_SID], OPAL_UID_LENGTH);
@@ -1253,13 +1267,7 @@ spdk_opal_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 	int ret;
 	struct spdk_opal_key *opal_key;
 
-	opal_key = calloc(1, sizeof(struct spdk_opal_key));
-	if (!opal_key) {
-		SPDK_ERRLOG("Memory allocation failed for spdk_opal_key\n");
-		return -ENOMEM;
-	}
-	opal_key->key_len = strlen(passwd);
-	memcpy(opal_key->key, passwd, opal_key->key_len);
+	opal_key = opal_construct_key(passwd);
 	dev->dev_key = opal_key;
 
 	pthread_mutex_lock(&dev->mutex_lock);
