@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d28214c_120c8345",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-10T05:30:35Z",
+      "side": 0,
+      "message": "Hi Jim,\n\nActually I have the question for this code (Sorry for put the comments on the nvme_qpair_disable function. Yesterday, I just used the mobile device to review the code.). For the reconnection, should we let each thread or I/O channel to reconnect it by themselves. \n\nAccording to our current model, those qpairs can be created by different threads on different CPU cores. If we let the current thread (who starts the reset operation) to reconnect those connections, it may not be exact right. And for those qpairs, it may still have unfinished queued I/Os. So for here, I think that qpair reconnection should not be done by the reset thread here. \n\nIn our current code, even the connection is resumed, those unfinished I/Os will be aborted. And the I/O finished, we will check whether it is finished by its created thread. So the code to reconnection here has issues.// Previously I get some early test on this, and triggered the coredump.",
+      "range": {
+        "startLine": 868,
+        "startChar": 2,
+        "endLine": 874,
+        "endChar": 3
+      },
+      "revId": "d27ed1073f46986d78d56518938f755dee525e2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
