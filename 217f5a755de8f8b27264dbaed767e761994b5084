@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b7fc2a0_a79c19fb",
+        "filename": "test/vhost/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-10T12:39:57Z",
+      "side": 1,
+      "message": "Let\u0027s not skip tests.\nIf it can\u0027t be run - fail.\n\nBTW. common.sh has warning() and notice() to replace simple echo(). Personally I find it easier to read the logs when running logs when running tests locally, because these functions use keywords which are coloured by shell.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 2
+      },
+      "revId": "217f5a755de8f8b27264dbaed767e761994b5084",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8d09869_512f3a4b",
+        "filename": "test/vhost/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-10T12:39:57Z",
+      "side": 1,
+      "message": "common.sh/spdk_vhost_run() does all these steps for you",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 23
+      },
+      "revId": "217f5a755de8f8b27264dbaed767e761994b5084",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f196eeb_e254802f",
+        "filename": "test/vhost/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-10T12:39:57Z",
+      "side": 1,
+      "message": "Why \"3\"?\nThis could probably be in some var, as 3 is used in multiple places.",
+      "range": {
+        "startLine": 36,
+        "startChar": 82,
+        "endLine": 36,
+        "endChar": 105
+      },
+      "revId": "217f5a755de8f8b27264dbaed767e761994b5084",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6570249_8d8a102b",
+        "filename": "test/vhost/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-10T12:39:57Z",
+      "side": 1,
+      "message": "I know that 300sec is used in most of the tests now, but I\u0027d scale it down even more.\n120sec? I think this should be more than enough for a simple qemu VM to boot.",
+      "range": {
+        "startLine": 38,
+        "startChar": 17,
+        "endLine": 38,
+        "endChar": 20
+      },
+      "revId": "217f5a755de8f8b27264dbaed767e761994b5084",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "430d0620_556e7857",
+        "filename": "test/vhost/fio/vhost_fio.job",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-10T12:39:57Z",
+      "side": 1,
+      "message": "how does this compare with current default_integrity.job, which writes just 4G of data?",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 10
+      },
+      "revId": "217f5a755de8f8b27264dbaed767e761994b5084",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
