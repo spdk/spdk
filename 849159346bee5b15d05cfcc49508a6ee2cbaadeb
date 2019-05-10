@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0bb90057_ee223029",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-10T11:46:43Z",
+      "side": 1,
+      "message": "Yup",
+      "range": {
+        "startLine": 20,
+        "startChar": 2,
+        "endLine": 20,
+        "endChar": 44
+      },
+      "revId": "849159346bee5b15d05cfcc49508a6ee2cbaadeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d316d360_5bcbeced",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-10T11:46:43Z",
+      "side": 1,
+      "message": "Dont you have to run SPDK first?",
+      "range": {
+        "startLine": 21,
+        "startChar": 2,
+        "endLine": 21,
+        "endChar": 24
+      },
+      "revId": "849159346bee5b15d05cfcc49508a6ee2cbaadeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
