@@ -113,25 +113,7 @@ shift "$((OPTIND-1))"   # Discard the options and sentinel --
 SPDK_VAGRANT_DISTRO="$@"
 
 case "$SPDK_VAGRANT_DISTRO" in
-	centos7)
-		export SPDK_VAGRANT_DISTRO
-	;;
-	ubuntu16)
-		export SPDK_VAGRANT_DISTRO
-	;;
-	ubuntu18)
-		export SPDK_VAGRANT_DISTRO
-	;;
-	fedora26)
-		export SPDK_VAGRANT_DISTRO
-	;;
-	fedora27)
-		export SPDK_VAGRANT_DISTRO
-	;;
-	fedora28)
-		export SPDK_VAGRANT_DISTRO
-	;;
-	freebsd11)
+	centos7|ubuntu16|ubuntu18|fedora26|fedora27|fedora28|freebsd11)
 		export SPDK_VAGRANT_DISTRO
 	;;
 	*)
@@ -141,8 +123,8 @@ case "$SPDK_VAGRANT_DISTRO" in
 	;;
 esac
 
-if ! echo "$SPDK_VAGRANT_DISTRO" | grep -q fedora && [ $DEPLOY_TEST_VM -eq 1 ]; then
-	echo "Warning: Test machine deployment is only available on fedora distros. Disabling it for this build"
+if ! echo "$SPDK_VAGRANT_DISTRO" | grep -q -E 'fedora|ubuntu' && [ $DEPLOY_TEST_VM -eq 1 ]; then
+	echo "Warning: Test machine deployment is available on fedora/ubuntu distros. Disabling it for this build"
 	DEPLOY_TEST_VM=0
 fi
 
