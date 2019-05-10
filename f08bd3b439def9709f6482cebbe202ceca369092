@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2d647b5_b6c2f39a",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-10T08:22:43Z",
+      "side": 1,
+      "message": "I feel this not reach the aim to test opal scan or other.\nit seems this iter has no use \nreport_test_completion \"opal\"",
+      "revId": "f08bd3b439def9709f6482cebbe202ceca369092",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
