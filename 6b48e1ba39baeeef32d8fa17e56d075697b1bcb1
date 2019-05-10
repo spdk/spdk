@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "772d0cab_c42ab70e",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2426,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-10T07:13:02Z",
+      "side": 1,
+      "message": "The point here is that:  if the rc \u003c 0, it means that the req is not allocated. In the case, it uses sem_post, so I think that we need do sem_wait here.",
+      "range": {
+        "startLine": 2424,
+        "startChar": 2,
+        "endLine": 2426,
+        "endChar": 3
+      },
+      "revId": "6b48e1ba39baeeef32d8fa17e56d075697b1bcb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
