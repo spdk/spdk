@@ -22,6 +22,30 @@
       "revId": "3cc31bece65ec89408db6a7051feb274dd23f288",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1655276_02016391",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1544,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-10T06:16:37Z",
+      "side": 1,
+      "message": "See your multiple SGL support in the further patch, please ingore this.",
+      "parentUuid": "06beb8f6_3e6bc974",
+      "range": {
+        "startLine": 1543,
+        "startChar": 0,
+        "endLine": 1544,
+        "endChar": 21
+      },
+      "revId": "3cc31bece65ec89408db6a7051feb274dd23f288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
