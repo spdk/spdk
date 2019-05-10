@@ -91,9 +91,6 @@ struct ftl_flush {
 	LIST_ENTRY(ftl_flush)		list_entry;
 };
 
-static void _ftl_read(void *);
-static void _ftl_write(void *);
-
 static int
 ftl_rwb_flags_from_io(const struct ftl_io *io)
 {
@@ -1584,50 +1581,30 @@ _ftl_io_write(void *ctx)
 	ftl_io_write((struct ftl_io *)ctx);
 }
 
-int
+void
 ftl_io_write(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 
 	/* For normal IOs we just need to copy the data onto the rwb */
 	if (!(io->flags & FTL_IO_MD)) {
-		return ftl_rwb_fill(io);
+		/* Other errors should be handled by ftl_rwb_fill */
+		if (ftl_rwb_fill(io) == -EAGAIN) {
+			spdk_thread_send_msg(spdk_get_thread(), _ftl_io_write, io);
+		}
+
+		return;
 	}
 
 	/* Metadata has its own buffer, so it doesn't have to be copied, so just */
 	/* send it the the core thread and schedule the write immediately */
 	if (ftl_check_core_thread(dev)) {
-		return ftl_submit_write(ftl_wptr_from_band(io->band), io);
+		/* We don't care about the errors, as the IO is either retried or completed
+		 * internally by ftl_submit_write */
+		ftl_submit_write(ftl_wptr_from_band(io->band), io);
+	} else {
+		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_write, io);
 	}
-
-	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_write, io);
-
-	return 0;
-}
-
-static int
-_spdk_ftl_write(struct ftl_io *io)
-{
-	int rc;
-
-	rc = ftl_io_write(io);
-	if (rc == -EAGAIN) {
-		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ioch),
-				     _ftl_write, io);
-		return 0;
-	}
-
-	if (rc) {
-		ftl_io_free(io);
-	}
-
-	return rc;
-}
-
-static void
-_ftl_write(void *ctx)
-{
-	_spdk_ftl_write(ctx);
 }
 
 int
@@ -1658,26 +1635,29 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 	}
 
 	ftl_io_user_init(dev, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
-	return _spdk_ftl_write(io);
+	ftl_io_write(io);
+
+	return 0;
 }
 
-int
+static void
+_ftl_io_read(void *arg)
+{
+	ftl_io_read((struct ftl_io *)arg);
+}
+
+void
 ftl_io_read(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 
 	if (ftl_check_read_thread(dev)) {
-		return ftl_submit_read(io);
+		/* We don't care about the errors, as the IO is either retried or completed
+		 * internally by ftl_submit_read */
+		ftl_submit_read(io);
+	} else {
+		spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_io_read, io);
 	}
-
-	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
-	return 0;
-}
-
-static void
-_ftl_read(void *arg)
-{
-	ftl_io_read((struct ftl_io *)arg);
 }
 
 int
@@ -1798,7 +1778,7 @@ ftl_process_retry_queue(struct spdk_ftl_dev *dev)
 
 		/* Retry only if IO is still healthy */
 		if (spdk_likely(io->status == 0)) {
-			rc = ftl_io_read(io);
+			rc = ftl_submit_read(io);
 			if (rc == -ENOMEM) {
 				break;
 			}
