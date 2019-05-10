@@ -633,6 +633,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		rc = spdk_bdev_register(&pt_node->pt_bdev);
 		if (rc) {
 			SPDK_ERRLOG("could not register pt_bdev\n");
+			spdk_bdev_module_release_bdev(&pt_node->pt_bdev);
 			spdk_bdev_close(pt_node->base_desc);
 			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
 			spdk_io_device_unregister(pt_node, NULL);
