@@ -938,7 +938,7 @@ opal_usage(void)
 	printf("Opal General Usage:\n");
 	printf("\n");
 	printf("\t[1: scan device]\n");
-	printf("\t[2: take ownership]\n");
+	printf("\t[2: Init - take ownership and activate locking]\n");
 	printf("\t[3: revert tper]\n");
 	printf("\t[0: quit]\n");
 }
@@ -968,7 +968,7 @@ opal_scan(struct dev *iter)
 }
 
 static void
-opal_take_ownership(struct dev *iter)
+opal_init(struct dev *iter)
 {
 	char new_passwd[MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
@@ -990,9 +990,15 @@ opal_take_ownership(struct dev *iter)
 					printf("Take ownership failure: %d\n", ret);
 					return;
 				}
-				printf("...\n...\nTake Ownership Success\n");
+
+				ret = spdk_opal_cmd_activate_locking_sp(iter->opal_dev, passwd_p);
+				if (ret) {
+					printf("Locking SP activate failure: %d\n", ret);
+					return;
+				}
+				printf("...\n...\nOpal Init Success\n");
 			} else {
-				printf("Input password invalid. Take ownership failure\n");
+				printf("Input password invalid. Opal Init failure\n");
 			}
 		}
 		spdk_opal_close(iter->opal_dev);
@@ -1068,7 +1074,7 @@ test_opal(void)
 			opal_scan(ctrlr);
 			break;
 		case 2:
-			opal_take_ownership(ctrlr);
+			opal_init(ctrlr);   /* Take ownership, Activate Locking SP */
 			break;
 		case 3:
 			opal_revert_tper(ctrlr);
