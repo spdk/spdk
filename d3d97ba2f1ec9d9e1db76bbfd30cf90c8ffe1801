@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f49dd264_ca300fa3",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-10T02:49:00Z",
+      "side": 1,
+      "message": "in this case should we invoke temporally timer poller to be called when io_ctx-\u003ecompletion_tick \u003d\u003d ticks?",
+      "range": {
+        "startLine": 177,
+        "startChar": 3,
+        "endLine": 177,
+        "endChar": 9
+      },
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "57863302_ac766891",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 3
@@ -16,6 +39,69 @@
       "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2151fe6_d53a70d3",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-10T02:49:00Z",
+      "side": 1,
+      "message": "I\u0027m not expert in this area but related with Curt\u0027s comment, should we use rand_r like bdevperf or nvmeperf? According to the man page of rand, \"The function rand() is not reentrant or thread-safe, since it uses hidden state that is modified on each call.\"",
+      "range": {
+        "startLine": 285,
+        "startChar": 10,
+        "endLine": 285,
+        "endChar": 14
+      },
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "545e2d48_1c12bc58",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-10T02:49:00Z",
+      "side": 1,
+      "message": "I think you followed passthrough bdev but should we call spdk_bdev_module_release_bdev() in this case?",
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59230e35_96b995ca",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-10T02:49:00Z",
+      "side": 1,
+      "message": "create_delay_bdev? Because this is an new one.",
+      "range": {
+        "startLine": 409,
+        "startChar": 8,
+        "endLine": 409,
+        "endChar": 28
+      },
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
