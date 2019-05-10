@@ -217,6 +217,14 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 
 	ftl_io_init_iovec(io, opts->data, opts->lbk_cnt);
 
+	if (opts->flags & FTL_IO_VECTOR_LBA) {
+		io->lba.vector = calloc(io->lbk_cnt, sizeof(uint64_t));
+		if (!io->lba.vector) {
+			ftl_io_free(io);
+			return NULL;
+		}
+	}
+
 	return io;
 }
 
@@ -302,6 +310,10 @@ _ftl_io_free(struct ftl_io *io)
 	struct ftl_io_channel *ioch;
 
 	assert(LIST_EMPTY(&io->children));
+
+	if (io->flags & FTL_IO_VECTOR_LBA) {
+		free(io->lba.vector);
+	}
 
 	if (pthread_spin_destroy(&io->lock)) {
 		SPDK_ERRLOG("pthread_spin_destroy failed\n");
