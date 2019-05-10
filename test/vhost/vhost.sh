@@ -44,7 +44,7 @@ timing_exit vhost_boot
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter integrity_blk
 	echo 'Running blk integrity suite...'
-	run_test case $WORKDIR/fiotest/autotest.sh -x --fio-bin=$FIO_BIN \
+	run_test case $WORKDIR/fiotest/fio.sh -x --fio-bin=$FIO_BIN \
 	--vm=0,$VM_IMAGE,Nvme0n1p0:RaidBdev0:RaidBdev1:RaidBdev2 \
 	--test-type=spdk_vhost_blk \
 	--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job
@@ -53,7 +53,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 
 	timing_enter integrity
 	echo 'Running SCSI integrity suite...'
-	run_test case $WORKDIR/fiotest/autotest.sh -x --fio-bin=$FIO_BIN \
+	run_test case $WORKDIR/fiotest/fio.sh -x --fio-bin=$FIO_BIN \
 	--vm=0,$VM_IMAGE,Nvme0n1p0:RaidBdev0:RaidBdev1:RaidBdev2 \
 	--test-type=spdk_vhost_scsi \
 	--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job
