@@ -1,4 +1,4 @@
-source $SPDK_BUILD_DIR/test/nvmf/common.sh
+source $rootdir/test/nvmf/common.sh
 source $MIGRATION_DIR/autotest.config
 
 incoming_vm=1
@@ -94,20 +94,20 @@ function host1_cleanup_vhost()
 function host1_start_nvmf()
 {
 	nvmf_dir="$TEST_DIR/nvmf_tgt"
-	rpc_nvmf="$SPDK_BUILD_DIR/scripts/rpc.py -s $nvmf_dir/nvmf_rpc.sock"
+	rpc_nvmf="$rootdir/scripts/rpc.py -s $nvmf_dir/nvmf_rpc.sock"
 
 	notice "Starting nvmf_tgt instance on local server"
 	mkdir -p $nvmf_dir
 	rm -rf $nvmf_dir/*
 
 	trap 'host1_cleanup_nvmf SIGKILL; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
-	$SPDK_BUILD_DIR/app/nvmf_tgt/nvmf_tgt -s 512 -m 0xF -r $nvmf_dir/nvmf_rpc.sock --wait-for-rpc &
+	$rootdir/app/nvmf_tgt/nvmf_tgt -s 512 -m 0xF -r $nvmf_dir/nvmf_rpc.sock --wait-for-rpc &
 	nvmf_tgt_pid=$!
 	echo $nvmf_tgt_pid > $nvmf_dir/nvmf_tgt.pid
 	waitforlisten "$nvmf_tgt_pid" "$nvmf_dir/nvmf_rpc.sock"
 	$rpc_nvmf start_subsystem_init
 	$rpc_nvmf nvmf_create_transport -t RDMA -u 8192 -p 4
-	$SPDK_BUILD_DIR/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
+	$rootdir/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 
 	$rpc_nvmf nvmf_subsystem_create nqn.2018-02.io.spdk:cnode1 -a -s SPDK01
 	$rpc_nvmf nvmf_subsystem_add_ns nqn.2018-02.io.spdk:cnode1 Nvme0n1
@@ -116,7 +116,7 @@ function host1_start_nvmf()
 
 function host1_start_vhost()
 {
-	rpc_0="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
+	rpc_0="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 	notice "Starting vhost0 instance on local server"
 	trap 'host1_cleanup_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
@@ -154,7 +154,7 @@ function host_1_create_share()
 	mkdir -p $VM_BASE_DIR # This dir would've been created later but we need it now
 	rm -rf $share_dir/spdk.tar.gz $share_dir/spdk || true
 	cp $os_image $share_dir/migration.qcow2
-	tar --exclude="*.o"--exclude="*.d" --exclude="*.git" -C $SPDK_BUILD_DIR -zcf $share_dir/spdk.tar.gz .
+	tar --exclude="*.o"--exclude="*.d" --exclude="*.git" -C $rootdir -zcf $share_dir/spdk.tar.gz .
 }
 
 function host_2_create_share()

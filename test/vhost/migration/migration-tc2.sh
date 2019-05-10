@@ -1,4 +1,4 @@
-source $SPDK_BUILD_DIR/test/nvmf/common.sh
+source $rootdir/test/nvmf/common.sh
 
 function migration_tc2_cleanup_nvmf_tgt()
 {
@@ -76,9 +76,9 @@ function migration_tc2_configure_vhost()
 	incoming_vm_ctrlr=naa.VhostScsi0.$incoming_vm
 	target_vm_ctrlr=naa.VhostScsi0.$target_vm
 
-	rpc_nvmf="$SPDK_BUILD_DIR/scripts/rpc.py -s $nvmf_dir/rpc.sock"
-	rpc_0="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
-	rpc_1="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 1)/rpc.sock"
+	rpc_nvmf="$rootdir/scripts/rpc.py -s $nvmf_dir/rpc.sock"
+	rpc_0="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
+	rpc_1="$rootdir/scripts/rpc.py -s $(get_vhost_dir 1)/rpc.sock"
 
 	# Default cleanup/error handlers will not shutdown nvmf_tgt app so setup it
 	# here to teardown in cleanup function
@@ -93,13 +93,13 @@ function migration_tc2_configure_vhost()
 	notice "Running nvmf_tgt..."
 	mkdir -p $nvmf_dir
 	rm -f $nvmf_dir/*
-	$SPDK_BUILD_DIR/app/nvmf_tgt/nvmf_tgt -s 512 -m 0x4 -r $nvmf_dir/rpc.sock --wait-for-rpc &
+	$rootdir/app/nvmf_tgt/nvmf_tgt -s 512 -m 0x4 -r $nvmf_dir/rpc.sock --wait-for-rpc &
 	local nvmf_tgt_pid=$!
 	echo $nvmf_tgt_pid > $nvmf_dir/nvmf_tgt.pid
 	waitforlisten "$nvmf_tgt_pid" "$nvmf_dir/rpc.sock"
 	$rpc_nvmf start_subsystem_init
 	$rpc_nvmf nvmf_create_transport -t RDMA -u 8192 -p 4
-	$SPDK_BUILD_DIR/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
+	$rootdir/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 	timing_exit start_nvmf_tgt
 
 	spdk_vhost_run --memory=512 --vhost-num=0 --no-pci

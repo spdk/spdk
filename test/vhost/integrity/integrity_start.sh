@@ -53,7 +53,7 @@ done
 vhosttestinit $1
 
 . $(readlink -e "$(dirname $0)/../common.sh") || exit 1
-rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 
