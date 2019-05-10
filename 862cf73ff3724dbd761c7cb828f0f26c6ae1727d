@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b8e4c6b_f834d536",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 728,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-10T09:19:52Z",
+      "side": 1,
+      "message": "shouldn\u0027t it be the opposite?\n\nrc \u003d\u003d 0 ? CACHE : INVALID",
+      "range": {
+        "startLine": 728,
+        "startChar": 37,
+        "endLine": 728,
+        "endChar": 40
+      },
+      "revId": "862cf73ff3724dbd761c7cb828f0f26c6ae1727d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c808fd6a_e3f00017",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 730,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-10T09:19:52Z",
+      "side": 1,
+      "message": "That\u0027s a NOP. We set rc at the start of the loop (#716) and don\u0027t use it anywhere outside.",
+      "range": {
+        "startLine": 730,
+        "startChar": 3,
+        "endLine": 730,
+        "endChar": 10
+      },
+      "revId": "862cf73ff3724dbd761c7cb828f0f26c6ae1727d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
