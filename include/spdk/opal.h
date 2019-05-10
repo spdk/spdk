@@ -138,6 +138,20 @@ enum spdk_opal_user {
 	OPAL_USER9 = 0x09,
 };
 
+enum spdk_opal_locking_range {
+	OPAL_LOCKING_RANGE_GLOBAL = 0x0,
+	OPAL_LOCKING_RANGE_1,
+	OPAL_LOCKING_RANGE_2,
+	OPAL_LOCKING_RANGE_3,
+	OPAL_LOCKING_RANGE_4,
+	OPAL_LOCKING_RANGE_5,
+	OPAL_LOCKING_RANGE_6,
+	OPAL_LOCKING_RANGE_7,
+	OPAL_LOCKING_RANGE_8,
+	OPAL_LOCKING_RANGE_9,
+	OPAL_LOCKING_RANGE_10,
+};
+
 struct spdk_opal_dev;
 
 struct spdk_opal_dev *spdk_opal_init_dev(void *dev_handler);
