@@ -462,7 +462,8 @@ if $INSTALL; then
         python3-pandas \
         btrfs-progs \
         rpm-build \
-        iptables
+        iptables \
+        bc
 
     elif [ $PACKAGEMNG == 'apt-get' ]; then
         echo "Package perl-open is not available at Ubuntu repositories" >&2
@@ -523,7 +524,8 @@ if $INSTALL; then
         sshfs \
         sshpass \
         python3-pandas \
-        btrfs-tools
+        btrfs-tools \
+        bc
 
         # rpm-build is not used
         # iptables installed by default
