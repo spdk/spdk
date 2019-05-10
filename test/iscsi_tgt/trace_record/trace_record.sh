@@ -52,15 +52,17 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+RPCS=
+RPCS+="add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT\n"
+RPCS+="add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK\n"
 
 echo "Create bdevs and target nodes"
 CONNECTION_NUMBER=15
 for i in $(seq 0 $CONNECTION_NUMBER); do
-	malloc_bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-	$rpc_py construct_target_node Target$i Target${i}_alias "${malloc_bdev}:0" $PORTAL_TAG:$INITIATOR_TAG 256 -d
+	RPCS+="construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i\n"
+	RPCS+="construct_target_node Target$i Target${i}_alias "Malloc$i:0" $PORTAL_TAG:$INITIATOR_TAG 256 -d\n"
 done
+echo -e $RPCS | $rpc_py
 
 sleep 1
 
@@ -78,11 +80,14 @@ echo "Running FIO"
 $fio_py iscsi 131072 32 randrw 1 1
 
 iscsicleanup
+
+RPCS=
 # Delete Malloc blockdevs and targets
 for i in $(seq 0 $CONNECTION_NUMBER); do
-	$rpc_py delete_target_node iqn.2016-06.io.spdk:Target${i}
-	$rpc_py delete_malloc_bdev Malloc${i}
+	RPCS+="delete_target_node iqn.2016-06.io.spdk:Target$i\n"
+	RPCS+="delete_malloc_bdev Malloc$i\n"
 done
+echo -e $RPCS | $rpc_py
 
 trap "delete_tmp_files; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
 
