@@ -2,9 +2,9 @@
 set -e
 
 testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $(dirname $0))/../../..
-vhost_common_dir=$(readlink -e "$(dirname $0)/../common")
-source "$vhost_common_dir/../common.sh"
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 ctrl_type="spdk_vhost_scsi"

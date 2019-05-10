@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-rootdir=$(readlink -f $(dirname $0))/../../..
-source "$rootdir/scripts/common.sh"
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
 
-LVOL_TEST_DIR=$(readlink -f $(dirname $0))
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $LVOL_TEST_DIR/../../../../ && pwd)"
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $LVOL_TEST_DIR/../common && pwd)"
-
-. $COMMON_DIR/../common.sh
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 vm_count=1
@@ -113,7 +110,7 @@ fi
 
 if $distribute_cores; then
     # FIXME: this need to be handled entirely in common.sh
-    source $LVOL_TEST_DIR/autotest.config
+    source $testdir/autotest.config
 fi
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
@@ -249,7 +246,7 @@ else
     job_file="default_integrity.job"
 fi
 # Run FIO traffic
-run_fio $fio_bin --job-file=$COMMON_DIR/fio_jobs/$job_file --out="$TEST_DIR/fio_results" $fio_disks
+run_fio $fio_bin --job-file=$rootdir/test/vhost/common/fio_jobs/$job_file --out="$TEST_DIR/fio_results" $fio_disks
 
 notice "Shutting down virtual machines..."
 vm_shutdown_all
