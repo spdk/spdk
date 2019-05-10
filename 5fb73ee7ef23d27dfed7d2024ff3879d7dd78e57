@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "550ee1f3_267a5e54",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 988,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-10T10:21:17Z",
+      "side": 1,
+      "message": "This variable looks unnecessary",
+      "range": {
+        "startLine": 988,
+        "startChar": 19,
+        "endLine": 988,
+        "endChar": 30
+      },
+      "revId": "5fb73ee7ef23d27dfed7d2024ff3879d7dd78e57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee1ee7a0_453c81f7",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1419,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-10T10:21:17Z",
+      "side": 1,
+      "message": "Can you make this cleanup in a separate patch?",
+      "revId": "5fb73ee7ef23d27dfed7d2024ff3879d7dd78e57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7fbb33a5_00e54aa0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1435,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-10T10:21:17Z",
+      "side": 1,
+      "message": "^",
+      "revId": "5fb73ee7ef23d27dfed7d2024ff3879d7dd78e57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30ee0585_aee0bfc3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1451,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-10T10:21:17Z",
+      "side": 1,
+      "message": "^",
+      "revId": "5fb73ee7ef23d27dfed7d2024ff3879d7dd78e57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
