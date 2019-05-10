@@ -22,6 +22,30 @@
       "revId": "d27ed1073f46986d78d56518938f755dee525e2e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb46c478_a58bb13f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-10T05:47:34Z",
+      "side": 0,
+      "message": "Hi Ziye,\n\nI think this is OK.  Reconnect will not touch the outstanding or queued requests - it will only re-establish the TCP connection or the RDMA queue pair.  Requests will not get aborted until the queue is checked for completions by its polling thread after the reset is complete.  See nvme_qpair_check_enabled() and how it is called from the process_completions function.\n\nThanks for your reviews.  This reset code is tricky.  The more people reviewing it the better!\n\n-Jim",
+      "parentUuid": "7d28214c_120c8345",
+      "range": {
+        "startLine": 868,
+        "startChar": 2,
+        "endLine": 874,
+        "endChar": 3
+      },
+      "revId": "d27ed1073f46986d78d56518938f755dee525e2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
