@@ -55,6 +55,7 @@ DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
 	    (uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2), NULL);
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
+DEFINE_STUB(rte_vhost_vring_call, int, (int vid, uint16_t vring_idx), 0);
 
 static struct spdk_cpuset *g_app_core_mask;
 struct spdk_cpuset *spdk_app_get_core_mask(void)
