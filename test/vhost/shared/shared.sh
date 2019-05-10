@@ -9,7 +9,7 @@ source $rootdir/test/vhost/common.sh
 
 PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 FIO_PATH="/usr/src/fio"
-rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_PATH/fio --ioengine=spdk_bdev \
