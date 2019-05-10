@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from rpc.client import print_dict, JSONRPCException
-from rpc.helpers import deprecated_aliases
 
 import logging
 import argparse
@@ -1769,14 +1768,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-n', '--max', help="""Maximum number of notifications to return in response""", type=int)
     p.set_defaults(func=get_notifications)
 
-    def check_called_name(name):
-        if name in deprecated_aliases:
-            print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
+    def check_called_name(rpc_name, func_name):
+        if rpc_name != func_name:
+            print("{} is deprecated, use {} instead.".format(rpc_name, func_name), file=sys.stderr)
 
     def call_rpc_func(args):
         try:
             args.func(args)
-            check_called_name(args.called_rpc_name)
+            check_called_name(args.called_rpc_name, args.func.__name__)
         except JSONRPCException as ex:
             print("Exception:")
             print(ex.message)
