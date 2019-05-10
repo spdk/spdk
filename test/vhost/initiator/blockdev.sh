@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
 set -e
-INITIATOR_DIR=$(readlink -f $(dirname $0))
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $INITIATOR_DIR/../common && pwd)"
-ROOT_DIR=$(readlink -f $INITIATOR_DIR/../../..)
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
 
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 FIO_PATH="/usr/src/fio"
@@ -39,8 +41,7 @@ while getopts 'h-:' optchar; do
 	esac
 done
 
-source $COMMON_DIR/../common.sh
-source $INITIATOR_DIR/autotest.config
+source $testdir/autotest.config
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
@@ -106,7 +107,7 @@ function create_bdev_config()
 	$RPC_PY construct_vhost_scsi_controller naa.Malloc1.0
 	$RPC_PY add_vhost_scsi_lun naa.Malloc1.0 0 Malloc1
 
-	vbdevs=$(discover_bdevs $ROOT_DIR $INITIATOR_DIR/bdev.conf)
+	vbdevs=$(discover_bdevs $ROOT_DIR $testdir/bdev.conf)
 	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
 	virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
 	 | join(":")' <<< $vbdevs)
@@ -121,14 +122,14 @@ create_bdev_config
 timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
-run_spdk_fio $INITIATOR_DIR/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
-	--section=job_write --section=job_rw --spdk_conf=$INITIATOR_DIR/bdev.conf
+run_spdk_fio $testdir/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
+	--section=job_write --section=job_rw --spdk_conf=$testdir/bdev.conf
 report_test_completion "vhost_run_spdk_fio"
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_unmap
-run_spdk_fio $INITIATOR_DIR/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$INITIATOR_DIR/bdev.conf \
-	--spdk_conf=$INITIATOR_DIR/bdev.conf
+run_spdk_fio $testdir/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$testdir/bdev.conf \
+	--spdk_conf=$testdir/bdev.conf
 timing_exit run_spdk_fio_unmap
 
 timing_enter create_kernel_vhost

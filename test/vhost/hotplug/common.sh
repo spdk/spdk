@@ -1,7 +1,13 @@
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+source $rootdir/test/vhost/hotplug/common.sh
+
 dry_run=false
 no_shutdown=false
 fio_bin="fio"
-fio_jobs="$HOTPLUG_DIR/fio_jobs/"
+fio_jobs="$testdir/fio_jobs/"
 test_type=spdk_vhost_scsi
 reuse_vms=false
 vms=()
@@ -56,10 +62,9 @@ while getopts 'xh-:' optchar; do
 done
 shift $(( OPTIND - 1 ))
 
-fio_job=$HOTPLUG_DIR/fio_jobs/default_integrity.job
-tmp_attach_job=$HOTPLUG_DIR/fio_jobs/fio_attach.job.tmp
-tmp_detach_job=$HOTPLUG_DIR/fio_jobs/fio_detach.job.tmp
-. $HOTPLUG_DIR/../common.sh
+fio_job=$testdir/fio_jobs/default_integrity.job
+tmp_attach_job=$testdir/fio_jobs/fio_attach.job.tmp
+tmp_detach_job=$testdir/fio_jobs/fio_detach.job.tmp
 
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
