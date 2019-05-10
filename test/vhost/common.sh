@@ -3,15 +3,10 @@ set -e
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 
-BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
-
-# Default running dir -> spdk/..
-[[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../
-
-TEST_DIR="$(mkdir -p $TEST_DIR && cd $TEST_DIR && echo $PWD)"
-SPDK_BUILD_DIR=$BASE_DIR/../../
-
+TEST_DIR=$rootdir/test
+SPDK_BUILD_DIR=$rootdir
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
+VM_BASE_DIR="$TEST_DIR/vms"
 
 # SSH key file
 : ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
@@ -21,15 +16,10 @@ if [[ ! -r "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
 fi
 echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 
-VM_BASE_DIR="$TEST_DIR/vms"
-
-
-mkdir -p $TEST_DIR
-
 #
 # Source config describing QEMU and VHOST cores and NUMA
 #
-source $BASE_DIR/common/autotest.config
+source $rootdir/test/vhost/common/autotest.config
 
 function message()
 {
