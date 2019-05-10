@@ -59,6 +59,7 @@ static struct spdk_ftl_punit_range g_range = {
 DEFINE_STUB(ftl_dev_tail_md_disk_size, size_t, (const struct spdk_ftl_dev *dev), 1);
 DEFINE_STUB_V(ftl_band_set_state, (struct ftl_band *band, enum ftl_band_state state));
 DEFINE_STUB_V(ftl_trace_lba_io_init, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
+DEFINE_STUB_V(ftl_free_io, (struct ftl_io *io));
 
 int
 ftl_band_alloc_lba_map(struct ftl_band *band)
@@ -154,6 +155,12 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->cb_ctx = io;
 	io->lbk_cnt = opts->lbk_cnt;
 	io->iov[0].iov_base = opts->data;
+
+	if (opts->flags & FTL_IO_VECTOR_LBA) {
+		io->lba.vector = calloc(io->lbk_cnt, sizeof(uint64_t));
+		SPDK_CU_ASSERT_FATAL(io->lba.vector != NULL);
+	}
+
 	return io;
 }
 
@@ -211,7 +218,12 @@ cleanup_reloc(struct spdk_ftl_dev *dev, struct ftl_reloc *reloc)
 {
 	size_t i;
 
+	for (i = 0; i < ftl_dev_num_bands(reloc->dev); ++i) {
+		SPDK_CU_ASSERT_FATAL(reloc->brelocs[i].active == false);
+	}
+
 	ftl_reloc_free(reloc);
+
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 		test_free_ftl_band(&dev->bands[i]);
 	}
@@ -457,6 +469,7 @@ test_reloc_empty_band(void)
 	ftl_reloc(reloc);
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, 0);
+	SPDK_CU_ASSERT_FATAL(breloc->moves != NULL);
 
 	cleanup_reloc(dev, reloc);
 }
