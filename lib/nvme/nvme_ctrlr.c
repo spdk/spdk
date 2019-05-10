@@ -161,6 +161,10 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	if (FIELD_OK(data_digest)) {
 		opts->data_digest = false;
 	}
+
+	if (FIELD_OK(disable_error_logging)) {
+		opts->disable_error_logging = false;
+	}
 #undef FIELD_OK
 }
 
