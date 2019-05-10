@@ -3,7 +3,6 @@ set -e
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 
-SPDK_VHOST_SCSI_TEST_DIR=$rootdir/test/vhost
 VM_BASE_DIR="$rootdir/test/vms"
 
 # SSH key file
@@ -70,13 +69,13 @@ function get_vhost_dir()
 		local vhost_num=0
 	fi
 
-	echo "$SPDK_VHOST_SCSI_TEST_DIR${vhost_num}"
+	echo "$rootdir/test/vhost/${vhost_num}"
 }
 
 function spdk_vhost_list_all()
 {
 	shopt -s nullglob
-	local vhost_list="$(echo $SPDK_VHOST_SCSI_TEST_DIR[0-9]*)"
+	local vhost_list="$(echo $rootdir/test/vhost/[0-9]*)"
 	shopt -u nullglob
 
 	if [[ ! -z "$vhost_list" ]]; then
