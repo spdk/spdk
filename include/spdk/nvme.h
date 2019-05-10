@@ -181,6 +181,13 @@ struct spdk_nvme_ctrlr_opts {
 	 * Set to true, means having data digest for the data in the NVMe/TCP PDU
 	 */
 	bool data_digest;
+
+	/**
+	 * Disable logging of requests that are completed with error status.
+	 *
+	 * Defaults to 'false' (errors are logged).
+	 */
+	bool disable_error_logging;
 };
 
 /**

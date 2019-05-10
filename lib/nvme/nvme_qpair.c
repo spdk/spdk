@@ -377,7 +377,7 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 
 	error = spdk_nvme_cpl_is_error(&cpl);
 
-	if (error && print_on_error) {
+	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
 		SPDK_NOTICELOG("Command completed manually:\n");
 		nvme_qpair_print_command(qpair, &req->cmd);
 		nvme_qpair_print_completion(qpair, &cpl);
@@ -395,7 +395,9 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	while (!STAILQ_EMPTY(&qpair->queued_req)) {
 		req = STAILQ_FIRST(&qpair->queued_req);
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-		SPDK_ERRLOG("aborting queued i/o\n");
+		if (!qpair->ctrlr->opts.disable_error_logging) {
+			SPDK_ERRLOG("aborting queued i/o\n");
+		}
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
 	}
