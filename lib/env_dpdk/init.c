@@ -439,6 +439,8 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	rc = rte_eal_init(g_eal_cmdline_argcount, dpdk_args);
 	optind = orig_optind;
 
+	rte_log_set_global_level(RTE_LOG_ERR);
+
 	free(dpdk_args);
 
 	if (rc < 0) {
