@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1f169bc7_7cfaae26",
+        "filename": "autobuild.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-10T14:58:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50656d7c_ecf50cc8",
+      "revId": "646c060b6903f6a133b12efa050c9fa7e6dc807c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e23a2671_56802eaa",
         "filename": "autobuild.sh",
         "patchSetId": 29
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-09T19:05:05Z",
       "side": 1,
       "message": "Did you mean to leave this \u0027ls\u0027 here? You may only want to do that if the check fails",
+      "revId": "646c060b6903f6a133b12efa050c9fa7e6dc807c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94b282f3_f54fe96f",
+        "filename": "autobuild.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-10T14:58:26Z",
+      "side": 1,
+      "message": "In make install section command \"ls -lR /tmp/spdk\" is used.\nI want do do this after \"make uninstall\".\nShould I use this command only if uninstall failes?",
+      "parentUuid": "e23a2671_56802eaa",
       "revId": "646c060b6903f6a133b12efa050c9fa7e6dc807c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
