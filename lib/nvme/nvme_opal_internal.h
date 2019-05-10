@@ -260,8 +260,8 @@ struct spdk_opal_key {
 };
 
 struct opal_locking_range_activate_session {
-	struct spdk_opal_key key;
-	uint32_t sum;		/* single user mode */
+	struct spdk_opal_key *key;
+	bool    sum_supported;		/* single user mode */
 	uint8_t lockingrange_num;
 	uint8_t lockingrange[OPAL_MAX_LRS];
 };
