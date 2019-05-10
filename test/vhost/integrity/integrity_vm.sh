@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -xe
 
-basedir=$(readlink -f $(dirname $0))
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+
 MAKE="make -j$(( $(nproc)  * 2 ))"
 
 if [[ $1 == "spdk_vhost_scsi" ]]; then

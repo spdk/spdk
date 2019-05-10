@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
 
 set -e
-SHARED_DIR=$(readlink -f $(dirname $0))
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $SHARED_DIR/../common && pwd)"
-ROOT_DIR=$(readlink -f $SHARED_DIR/../../..)
-source $COMMON_DIR/../common.sh
-PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+
+PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 FIO_PATH="/usr/src/fio"
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_PATH/fio --ioengine=spdk_bdev \
-	"$COMMON_DIR/fio_jobs/default_initiator.job" --runtime=10 --rw=randrw \
-	--spdk_mem=1024 --spdk_single_seg=1 --spdk_conf=$SHARED_DIR/bdev.conf "$@"
+	"$rootdir/test/vhost/common/fio_jobs/default_initiator.job" --runtime=10 --rw=randrw \
+	--spdk_mem=1024 --spdk_single_seg=1 --spdk_conf=$testdir/bdev.conf "$@"
 }
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR SIGTERM SIGABRT
