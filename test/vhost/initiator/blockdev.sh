@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
 set -e
-INITIATOR_DIR=$(readlink -f $(dirname $0))
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $INITIATOR_DIR/../common && pwd)"
-ROOT_DIR=$(readlink -f $INITIATOR_DIR/../../..)
 
-PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+
+PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 FIO_PATH="/usr/src/fio"
 virtio_bdevs=""
 virtio_with_unmap=""
@@ -39,10 +41,9 @@ while getopts 'h-:' optchar; do
 	esac
 done
 
-source $COMMON_DIR/../common.sh
-source $INITIATOR_DIR/autotest.config
-PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
-RPC_PY="$ROOT_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+source $testdir/autotest.config
+PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
+RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 if [ ! -x $FIO_PATH ]; then
 	error "Invalid path of fio binary"
@@ -72,7 +73,7 @@ function remove_kernel_vhost()
 	fi
 }
 
-trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz $(get_vhost_dir)/Virtio0;\
+trap 'rm -f *.state $rootdir/spdk.tar.gz $rootdir/fio.tar.gz $(get_vhost_dir)/Virtio0;\
  remove_kernel_vhost; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_PATH/fio --ioengine=spdk_bdev\
@@ -106,7 +107,7 @@ function create_bdev_config()
 	$RPC_PY construct_vhost_scsi_controller naa.Malloc1.0
 	$RPC_PY add_vhost_scsi_lun naa.Malloc1.0 0 Malloc1
 
-	vbdevs=$(discover_bdevs $ROOT_DIR $INITIATOR_DIR/bdev.conf)
+	vbdevs=$(discover_bdevs $rootdir $testdir/bdev.conf)
 	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
 	virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
 	 | join(":")' <<< $vbdevs)
@@ -121,14 +122,14 @@ create_bdev_config
 timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
-run_spdk_fio $INITIATOR_DIR/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
-	--section=job_write --section=job_rw --spdk_conf=$INITIATOR_DIR/bdev.conf
+run_spdk_fio $testdir/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
+	--section=job_write --section=job_rw --spdk_conf=$testdir/bdev.conf
 report_test_completion "vhost_run_spdk_fio"
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_unmap
-run_spdk_fio $INITIATOR_DIR/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$INITIATOR_DIR/bdev.conf \
-	--spdk_conf=$INITIATOR_DIR/bdev.conf
+run_spdk_fio $testdir/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$testdir/bdev.conf \
+	--spdk_conf=$testdir/bdev.conf
 timing_exit run_spdk_fio_unmap
 
 timing_enter create_kernel_vhost
@@ -150,14 +151,14 @@ vm_wait_for_boot 300 $vm_no
 timing_exit vm_wait_for_boot
 
 timing_enter vm_scp_spdk
-touch $ROOT_DIR/spdk.tar.gz
-tar --exclude="spdk.tar.gz" --exclude="*.o" --exclude="*.d" --exclude=".git" -C $ROOT_DIR -zcf $ROOT_DIR/spdk.tar.gz .
-vm_scp $vm_no $ROOT_DIR/spdk.tar.gz "127.0.0.1:/root"
+touch $rootdir/spdk.tar.gz
+tar --exclude="spdk.tar.gz" --exclude="*.o" --exclude="*.d" --exclude=".git" -C $rootdir -zcf $rootdir/spdk.tar.gz .
+vm_scp $vm_no $rootdir/spdk.tar.gz "127.0.0.1:/root"
 vm_ssh $vm_no "mkdir -p /root/spdk; tar -zxf /root/spdk.tar.gz -C /root/spdk --strip-components=1"
 
-touch $ROOT_DIR/fio.tar.gz
-tar --exclude="fio.tar.gz" --exclude="*.o" --exclude="*.d" --exclude=".git" -C $FIO_PATH -zcf $ROOT_DIR/fio.tar.gz .
-vm_scp $vm_no $ROOT_DIR/fio.tar.gz "127.0.0.1:/root"
+touch $rootdir/fio.tar.gz
+tar --exclude="fio.tar.gz" --exclude="*.o" --exclude="*.d" --exclude=".git" -C $FIO_PATH -zcf $rootdir/fio.tar.gz .
+vm_scp $vm_no $rootdir/fio.tar.gz "127.0.0.1:/root"
 vm_ssh $vm_no "rm -rf /root/fio_src; mkdir -p /root/fio_src; tar -zxf /root/fio.tar.gz -C /root/fio_src --strip-components=1"
 timing_exit vm_scp_spdk
 
@@ -192,7 +193,7 @@ timing_enter vm_shutdown_all
 vm_shutdown_all
 timing_exit vm_shutdown_all
 
-rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz $(get_vhost_dir)/Virtio0
+rm -f *.state $rootdir/spdk.tar.gz $rootdir/fio.tar.gz $(get_vhost_dir)/Virtio0
 timing_enter remove_kernel_vhost
 remove_kernel_vhost
 timing_exit remove_kernel_vhost

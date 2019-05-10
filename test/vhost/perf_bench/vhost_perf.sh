@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+
 vm_count=1
 vm_memory=2048
 vm_image="/home/sys_sgsw/vhost_vm_image.qcow2"
@@ -136,10 +141,6 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
-. $(readlink -e "$(dirname $0)/../common.sh") || exit 1
-. $(readlink -e "$(dirname $0)/../../../scripts/common.sh") || exit 1
-BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
-COMMON_DIR="$(cd $(readlink -f $(dirname $0))/../common && pwd)"
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 if [[ -n $custom_cpu_cfg ]]; then
@@ -148,7 +149,7 @@ fi
 
 if [[ -z $fio_job ]]; then
 	warning "No FIO job specified! Will use default from common directory."
-	fio_job="$COMMON_DIR/fio_jobs/default_integrity.job"
+	fio_job="$rootdir/test/vhost/common/fio_jobs/default_integrity.job"
 fi
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR

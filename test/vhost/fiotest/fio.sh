@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -e
-AUTOTEST_BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $AUTOTEST_BASE_DIR/../common && pwd)"
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $AUTOTEST_BASE_DIR/../../../../ && pwd)"
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
 
 dry_run=false
 no_shutdown=false
@@ -69,8 +71,6 @@ if [[ ! -r "$fio_job" ]]; then
 	fail "no fio job file specified"
 fi
 
-. $COMMON_DIR/../common.sh
-
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 vm_kill_all
@@ -80,7 +80,7 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	spdk_vhost_run --json-path=$AUTOTEST_BASE_DIR
+	spdk_vhost_run --json-path=$testdir
 	notice ""
 fi
 
