@@ -115,7 +115,7 @@ nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *chil
 	TAILQ_REMOVE(&parent->children, child, child_tailq);
 }
 
-static void
+void
 nvme_request_free_children(struct nvme_request *req)
 {
 	struct nvme_request *child, *tmp;

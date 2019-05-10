@@ -961,6 +961,7 @@ nvme_free_request(struct nvme_request *req)
 }
 
 void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);
+void    nvme_request_free_children(struct nvme_request *req);
 int	nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 				   struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick);
 uint64_t nvme_get_quirks(const struct spdk_pci_id *id);

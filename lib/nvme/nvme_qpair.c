@@ -515,6 +515,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	bool			child_req_failed = false;
 
 	if (ctrlr->is_failed) {
+		nvme_request_free_children(req);
 		nvme_free_request(req);
 		return -ENXIO;
 	}
@@ -531,11 +532,30 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 				rc = nvme_qpair_submit_request(qpair, child_req);
 				if (rc != 0) {
 					child_req_failed = true;
+
+					/*
+					 * If the request is failed to submit with error code -ENXIO,
+					 * and it has no any children, free it.
+					 */
+					if (rc != -ENXIO && child_req->num_children == 0) {
+						nvme_request_remove_child(req, child_req);
+						nvme_free_request(child_req);
+					}
 				}
 			} else { /* free remaining child_reqs since one child_req fails */
 				nvme_request_remove_child(req, child_req);
+				nvme_request_free_children(child_req);
 				nvme_free_request(child_req);
 			}
+		}
+
+		/* Free the request if all of the children are freed */
+		if (child_req_failed && req->num_children == 0) {
+			if (req->parent != NULL) {
+				nvme_request_remove_child(req->parent, req);
+			}
+			nvme_free_request(req);
+			rc = -ENXIO;
 		}
 
 		return rc;
