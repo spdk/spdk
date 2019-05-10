@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e47e6097_58c05d50",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-10T11:36:15Z",
+      "side": 1,
+      "message": "But... why?\n\nIf we\u0027re going to do that, then You should just probably delete this function and rename the other one on link 343, and keep the comment about Windows VMs.\nThe other thing is that we should probably try to use vm_create_ssh_config, as it has some OK features for us (though I\u0027m not sure if thats possible with sshpass).",
+      "range": {
+        "startLine": 322,
+        "startChar": 0,
+        "endLine": 331,
+        "endChar": 14
+      },
+      "revId": "5ad69c08ff236bbca4d960914ef2365562760fcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
