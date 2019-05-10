@@ -12,7 +12,6 @@ function usage()
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo
 	echo "-h, --help                Print help and exit"
-	echo "    --work-dir=WORK_DIR   Workspace for the test to run"
 	echo "    --ctrl-type=TYPE      Controller type to use for test:"
 	echo "                          spdk_vhost_scsi - use spdk vhost scsi"
 	echo "    --fs=FS_LIST          Filesystems to use for test in VM:"

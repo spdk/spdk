@@ -8,10 +8,9 @@ function usage()
 {
 	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for running vhost app."
-	echo "Usage: $(basename $1) [-x] [-h|--help] [--clean-build] [--work-dir=PATH]"
+	echo "Usage: $(basename $1) [-x] [-h|--help] [--clean-build]"
 	echo "-h, --help           print help and exit"
 	echo "-x                   Set -x for script debug"
-	echo "    --work-dir=PATH  Where to find source/project. [default=$TEST_DIR]"
 
 	exit 0
 }
@@ -22,7 +21,6 @@ while getopts 'xh-:' optchar; do
 		-)
 		case "$OPTARG" in
 			help) usage $0 ;;
-			work-dir=*) TEST_DIR="${OPTARG#*=}" ;;
 			conf-dir=*) CONF_DIR="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'" ;;
 		esac
