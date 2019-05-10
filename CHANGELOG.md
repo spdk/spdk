@@ -23,6 +23,8 @@ and "bdevs" array with the per-bdev statistics.
 ### NVMe
 
 Nvme Opal library spdk_opal_cmd deprecated. Adding seperate command APIs.
+NVMe Opal library add support for activating locking SP.
+
 
 ## v19.04:
 
