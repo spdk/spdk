@@ -16,6 +16,24 @@
       "revId": "6f3af80de85ace57843fd21f7f02e157415c85cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d732edc_e5f57603",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-10T06:06:51Z",
+      "side": 1,
+      "message": "Thank you for quick and nice review!\n\nYes, setting lun-\u003eremoved to true and removing lun up front will be same. I\u0027ll check and then do the latter. Please review tomorrow again.",
+      "parentUuid": "eae1702c_117b4918",
+      "revId": "6f3af80de85ace57843fd21f7f02e157415c85cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
