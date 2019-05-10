@@ -1308,6 +1308,7 @@ iscsi_parse_globals(void)
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
 		free(g_spdk_iscsi.session);
+		g_spdk_iscsi.session = NULL;
 		return -1;
 	}
 
@@ -1315,6 +1316,7 @@ iscsi_parse_globals(void)
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
 		free(g_spdk_iscsi.session);
+		g_spdk_iscsi.session = NULL;
 		return rc;
 	}
 
@@ -1352,7 +1354,10 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 
 	spdk_iscsi_portal_grp_close_all();
 	spdk_shutdown_iscsi_conns();
-	free(g_spdk_iscsi.session);
+
+	if (g_spdk_iscsi.session) {
+		free(g_spdk_iscsi.session);
+	}
 }
 
 static void
