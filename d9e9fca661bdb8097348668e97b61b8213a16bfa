@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "92d1090e_dbe93d00",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5db84519_f8837bf2",
+      "range": {
+        "startLine": 297,
+        "startChar": 2,
+        "endLine": 297,
+        "endChar": 8
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c130fe19_5fce91ce",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 15
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "this may not be necessary",
+      "range": {
+        "startLine": 300,
+        "startChar": 1,
+        "endLine": 300,
+        "endChar": 7
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c03d8b2_9c0e3951",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c130fe19_5fce91ce",
       "range": {
         "startLine": 300,
         "startChar": 1,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "664b5adf_4c28b3a5",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fc4c1f9a_c9273004",
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c108486_0ba1f124",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -82,6 +148,24 @@
     },
     {
       "key": {
+        "uuid": "0b57e322_2a06cc3c",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8c108486_0ba1f124",
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bfd834dd_b42915da",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -93,6 +177,30 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "We haven\u0027t seen this type of cast to free in SPDK. So we can remove",
+      "range": {
+        "startLine": 254,
+        "startChar": 6,
+        "endLine": 254,
+        "endChar": 14
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "502fddb8_988ed37d",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bfd834dd_b42915da",
       "range": {
         "startLine": 254,
         "startChar": 6,
@@ -128,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "d79efd51_a1408d8c",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "38ba66df_f995b79e",
+      "range": {
+        "startLine": 257,
+        "startChar": 6,
+        "endLine": 257,
+        "endChar": 14
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "964e648e_e22e18f8",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -139,6 +271,30 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "same",
+      "range": {
+        "startLine": 258,
+        "startChar": 6,
+        "endLine": 258,
+        "endChar": 14
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48c8478d_c9590490",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "964e648e_e22e18f8",
       "range": {
         "startLine": 258,
         "startChar": 6,
@@ -174,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "f5aa8665_1f3402d2",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "35d0c546_4e391721",
+      "range": {
+        "startLine": 261,
+        "startChar": 6,
+        "endLine": 261,
+        "endChar": 14
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a2729749_6be0cd60",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -185,6 +365,30 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "calloc(nvmf_transport-\u003eopts.max_qpairs_per_ctrlr, sizeof(struct spdk_nvmf_fc_conn)) may be better.",
+      "range": {
+        "startLine": 277,
+        "startChar": 20,
+        "endLine": 278,
+        "endChar": 39
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0454556f_ae3b1448",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a2729749_6be0cd60",
       "range": {
         "startLine": 277,
         "startChar": 20,
@@ -220,6 +424,30 @@
     },
     {
       "key": {
+        "uuid": "60898143_19ff4534",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3007835_7fa5965a",
+      "range": {
+        "startLine": 292,
+        "startChar": 1,
+        "endLine": 292,
+        "endChar": 21
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d70352ad_fb150baa",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -231,6 +459,30 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "this cast can be removed.",
+      "range": {
+        "startLine": 346,
+        "startChar": 9,
+        "endLine": 346,
+        "endChar": 44
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee5d7f5f_f32ba480",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d70352ad_fb150baa",
       "range": {
         "startLine": 346,
         "startChar": 9,
@@ -260,6 +512,24 @@
     },
     {
       "key": {
+        "uuid": "48dc8397_4a6b352a",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Thanks! Done.",
+      "parentUuid": "2d22e9ce_5ace7427",
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fe89810_3d316e66",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -277,6 +547,24 @@
     },
     {
       "key": {
+        "uuid": "82015dd0_fd8669d6",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9fe89810_3d316e66",
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0219c10e_cdcfc228",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -288,6 +576,30 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "This helper functions is critical? Embedding calloc() simply may be enough.",
+      "range": {
+        "startLine": 456,
+        "startChar": 1,
+        "endLine": 457,
+        "endChar": 52
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "109b1633_69a051de",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0219c10e_cdcfc228",
       "range": {
         "startLine": 456,
         "startChar": 1,
@@ -323,6 +635,30 @@
     },
     {
       "key": {
+        "uuid": "4775aaa7_2a13559e",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "61571d31_49fb49c9",
+      "range": {
+        "startLine": 463,
+        "startChar": 1,
+        "endLine": 463,
+        "endChar": 23
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4d5295b_13a1e189",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -334,6 +670,24 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "Please leave a line between line 473 and 444.",
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "974ff87c_3fe0c7bf",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4d5295b_13a1e189",
       "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -357,6 +711,24 @@
     },
     {
       "key": {
+        "uuid": "83f18d1f_e4179f43",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "affadf99_deb57779",
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55724671_7f7bce3e",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -374,6 +746,24 @@
     },
     {
       "key": {
+        "uuid": "20127a1d_0f312ac1",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55724671_7f7bce3e",
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d51af1a7_8c4e57fc",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -385,6 +775,30 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "this cast can be removed.",
+      "range": {
+        "startLine": 665,
+        "startChar": 1,
+        "endLine": 665,
+        "endChar": 7
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c84573f3_592b9620",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d51af1a7_8c4e57fc",
       "range": {
         "startLine": 665,
         "startChar": 1,
@@ -420,6 +834,30 @@
     },
     {
       "key": {
+        "uuid": "c7d5cda2_97891dd2",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 684,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "578d3ae0_774dd3d1",
+      "range": {
+        "startLine": 676,
+        "startChar": 0,
+        "endLine": 684,
+        "endChar": 2
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e08654d8_8d43ca0a",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -431,6 +869,30 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "This cast may not be necessary.",
+      "range": {
+        "startLine": 930,
+        "startChar": 1,
+        "endLine": 930,
+        "endChar": 7
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12475e7f_5e0a1894",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 930,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e08654d8_8d43ca0a",
       "range": {
         "startLine": 930,
         "startChar": 1,
@@ -460,6 +922,24 @@
     },
     {
       "key": {
+        "uuid": "a69cace3_a935bfb0",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 943,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "70a761b2_24b2907f",
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8ec2c3c_5a882a1c",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -471,6 +951,24 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "Consolidating error path may be easier to follow:\n\n\trc \u003d FCNVME_RJT_FC_NONE;\n\n\tif (ls_rqst-\u003erqst_len \u003c FCNVME_LS_CA_CMD_MIN_LEN) {\n\t\tSPDK_ERRLOG(\"assoc_cmd req len \u003d %d, should be at least %d\\n\",\n\t\t\t    ls_rqst-\u003erqst_len, FCNVME_LS_CA_CMD_MIN_LEN);\n\t\terrmsg_ind \u003d VERR_CR_ASSOC_LEN;\n\t\trc \u003d FCNVME_RJT_RC_INV_PARAM;\n\t\tec \u003d FCNVME_RJT_EXP_INV_LEN;\n\t} else if (be32_to_cpu(\u0026rqst-\u003edesc_list_len) \u003c\n\t\t   FCNVME_LS_CA_DESC_LIST_MIN_LEN) {\n\n\t\t(snip)\n\n\t} else if (from_be16(\u0026rqst-\u003eassoc_cmd.sqsize) \u003d\u003d 0 ||\n\t\t   from_be16(\u0026rqst-\u003eassoc_cmd.sqsize) \u003e\u003d transport-\u003eopts.max_aq_depth) {\n\t\terrmsg_ind \u003d VERR_SQSIZE;\n\t\trc \u003d FCNVME_RJT_RC_INV_PARAM;\n\t\tec \u003d FCNVME_RJT_EXP_SQ_SIZE;\n\t}\n\n\tif (rc !\u003d FCNVME_RJT_FC_NONE) {\n\t\tgoto error;\n\t}\n\n\t/* get new association */\n\tassoc \u003d nvmf_fc_ls_new_association(s_id, tgtport, ls_rqst-\u003erport,\n\t\t\t\t\t   \u0026rqst-\u003eassoc_cmd,\n\t\t\t\t\t   subsystem, host,\n\t\t\t\t\t   ls_rqst-\u003erpi,\n\t\t\t\t\t   transport);\n\tif (!assoc) {\n\t\terrmsg_ind \u003d VERR_ASSOC_ALLOC_FAIL;\n\t\trc \u003d FCNVME_RJT_RC_INSUFF_RES;\n\t\tec \u003d FCNVME_RJT_EXP_NONE;\n\t\tgoto error;\n\t}\n\n\t/* alloc admin q (i.e. connection) */\n\tfc_conn \u003d nvmf_fc_ls_new_connection(assoc, host, 0,\n\t\t\t\t\t    from_be16(\u0026rqst-\u003eassoc_cmd.ersp_ratio),\n\t\t\t\t\t    ls_rqst-\u003erpi,\n\t\t\t\t\t    from_be16(\u0026rqst-\u003eassoc_cmd.sqsize),\n\t\t\t\t\t    tgtport);\n\tif (!fc_conn) {\n\t\tnvmf_fc_ls_free_association(assoc);\n\t\terrmsg_ind \u003d VERR_CONN_ALLOC_FAIL;\n\t\trc \u003d FCNVME_RJT_RC_INSUFF_RES;\n\t\tec \u003d FCNVME_RJT_EXP_NONE;\n\t\tgoto error;\n\t}\n\n\t/* format accept response */\n\tbzero(acc, sizeof(*acc));\n\n\tls_rqst-\u003ersp_len \u003d sizeof(*acc);\n\n\tnvmf_fc_ls_format_rsp_hdr(acc, FCNVME_LS_ACC,\n\t\t\t\t  nvmf_fc_lsdesc_len(\n\t\t\t\t\t  sizeof(struct spdk_nvmf_fc_ls_cr_assoc_acc)),\n\t\t\t\t  FCNVME_LS_CREATE_ASSOCIATION);\n\tto_be32(\u0026acc-\u003eassoc_id.desc_tag, FCNVME_LSDESC_ASSOC_ID);\n\tacc-\u003eassoc_id.desc_len \u003d\n\t\tnvmf_fc_lsdesc_len(sizeof(struct spdk_nvmf_fc_lsdesc_assoc_id));\n\tto_be32(\u0026acc-\u003econn_id.desc_tag, FCNVME_LSDESC_CONN_ID);\n\tacc-\u003econn_id.desc_len \u003d\n\t\tnvmf_fc_lsdesc_len(sizeof(struct spdk_nvmf_fc_lsdesc_conn_id));\n\n\t/* assign connection to HWQP poller - also sends response */\n\tnvmf_fc_ls_add_conn_to_poller(assoc, ls_rqst, fc_conn, true);\n\n\treturn;\n\nerror:\n\tSPDK_ERRLOG(\"Create Association LS failed: %s\\n\",\n\t\t    validation_errors[errmsg_ind]);\n\tls_rqst-\u003ersp_len \u003d nvmf_fc_ls_format_rjt(acc,\n\t\t\t   FCNVME_MAX_LS_BUFFER_SIZE,\n\t\t\t   rqst-\u003ew0.ls_cmd, rc,\n\t\t\t   ec, 0);\n\t(void)nvmf_fc_xmt_ls_rsp(tgtport, ls_rqst);",
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "836ab778_8a769a3f",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1039,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a8ec2c3c_5a882a1c",
       "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -500,6 +998,30 @@
     },
     {
       "key": {
+        "uuid": "7e46a903_68f2093b",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1161,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "acdf1bae_33b6c1fc",
+      "range": {
+        "startLine": 1161,
+        "startChar": 0,
+        "endLine": 1161,
+        "endChar": 23
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6a3ff3a_ef1119b3",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 15
@@ -511,6 +1033,30 @@
       "writtenOn": "2019-05-07T05:51:21Z",
       "side": 1,
       "message": "same as CASS",
+      "range": {
+        "startLine": 1285,
+        "startChar": 0,
+        "endLine": 1285,
+        "endChar": 23
+      },
+      "revId": "d9e9fca661bdb8097348668e97b61b8213a16bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "130aaa3a_18760719",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-10T21:59:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6a3ff3a_ef1119b3",
       "range": {
         "startLine": 1285,
         "startChar": 0,
