@@ -52,6 +52,24 @@
       "revId": "f08bd3b439def9709f6482cebbe202ceca369092",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3049b49_f396391b",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-10T09:21:27Z",
+      "side": 1,
+      "message": "Hi Yidong,\nWe will add opal-supported device in the test pool. For now, there is no device that suppport opal in the test pool.",
+      "parentUuid": "36cccb27_27448123",
+      "revId": "f08bd3b439def9709f6482cebbe202ceca369092",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
