@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a42b899_46770545",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-10T08:45:30Z",
+      "side": 1,
+      "message": "If spdk_io_device_unregister() is called here, checking if dev is registered in ftl_dev_free_sync() can be replaced by checking if dev-\u003eioch is non-null?",
+      "revId": "f3519f46f6a1507e3ed566106141a174de331042",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
