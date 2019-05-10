@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8cf761c0_6760116f",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 728,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-10T09:50:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b8e4c6b_f834d536",
+      "range": {
+        "startLine": 728,
+        "startChar": 37,
+        "endLine": 728,
+        "endChar": 40
+      },
+      "revId": "862cf73ff3724dbd761c7cb828f0f26c6ae1727d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c808fd6a_e3f00017",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "862cf73ff3724dbd761c7cb828f0f26c6ae1727d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7aa7804f_70e574c4",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 730,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-10T09:50:28Z",
+      "side": 1,
+      "message": "We do return it. Without this line, if the last block was completed due to the block never being written (COMPLETION_INVALID), ftl_submit_read will incorrectly return an error.",
+      "parentUuid": "c808fd6a_e3f00017",
+      "range": {
+        "startLine": 730,
+        "startChar": 3,
+        "endLine": 730,
+        "endChar": 10
+      },
+      "revId": "862cf73ff3724dbd761c7cb828f0f26c6ae1727d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
