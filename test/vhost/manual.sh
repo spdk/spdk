@@ -54,7 +54,7 @@ WORKDIR=$(readlink -f $(dirname $0))
 case $1 in
 	-p|--performance)
 		echo 'Running performance suite...'
-		run_test case $WORKDIR/fiotest/autotest.sh --fio-bin=$FIO_BIN \
+		run_test case $WORKDIR/fiotest/fio.sh --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_scsi \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
@@ -62,7 +62,7 @@ case $1 in
 		;;
 	-pb|--performance-blk)
 		echo 'Running blk performance suite...'
-		run_test case $WORKDIR/fiotest/autotest.sh --fio-bin=$FIO_BIN \
+		run_test case $WORKDIR/fiotest/fio.sh --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_blk \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
