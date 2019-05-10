@@ -472,4 +472,16 @@ int rte_vhost_set_vring_base(int vid, uint16_t queue_id,
 int rte_vhost_get_vring_base(int vid, uint16_t queue_id,
 		uint16_t *last_avail_idx, uint16_t *last_used_idx);
 
+/**
+ * Notify the guest that used descriptors have been added to the vring.
+ *
+ * @param vid
+ *  vhost device ID
+ * @param vring_idx
+ *  vring index
+ * @return
+ *  0 on success, -1 on failure
+ */
+int rte_vhost_vring_call(int vid, uint16_t vring_idx);
+
 #endif /* _RTE_VHOST_H_ */
