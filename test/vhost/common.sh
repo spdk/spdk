@@ -3,8 +3,7 @@ set -e
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 
-BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
-SPDK_BUILD_DIR=$BASE_DIR/../../
+SPDK_BUILD_DIR=$rootdir
 
 TEST_DIR=$(readlink -f $SPDK_BUILD_DIR/test/vhost/test_run)
 
@@ -20,12 +19,10 @@ echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 
 VM_BASE_DIR="$TEST_DIR/vms"
 
-
-
 #
 # Source config describing QEMU and VHOST cores and NUMA
 #
-source $BASE_DIR/common/autotest.config
+source $rootdir/test/vhost/common/autotest.config
 
 function vhosttestinit()
 {
