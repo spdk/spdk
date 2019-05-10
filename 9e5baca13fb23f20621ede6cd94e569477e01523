@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "225e6d3b_f394b72a",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-10T12:23:36Z",
+      "side": 1,
+      "message": "Do we want to give up on using common.sh/spdk_vhost_run()?\nBecause using VHOST_SOCK and VHOST_RPC will not work with this function, as it creates its own directory structure, allowing to run multiple vhost instances where sockets are kept inside separate directories which are easily accessible with get_vhost_dir() function.\n\nMultiple vhost instances are needed for example in case of migration cases.",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 32
+      },
+      "revId": "9e5baca13fb23f20621ede6cd94e569477e01523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
