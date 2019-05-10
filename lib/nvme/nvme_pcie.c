@@ -1296,7 +1296,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 	retry = error && nvme_completion_is_retry(cpl) &&
 		req->retries < spdk_nvme_retry_count;
 
-	if (error && print_on_error) {
+	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
 		nvme_qpair_print_command(qpair, &req->cmd);
 		nvme_qpair_print_completion(qpair, cpl);
 	}
@@ -1361,7 +1361,9 @@ nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	struct nvme_tracker *tr, *temp;
 
 	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, temp) {
-		SPDK_ERRLOG("aborting outstanding command\n");
+		if (!qpair->ctrlr->opts.disable_error_logging) {
+			SPDK_ERRLOG("aborting outstanding command\n");
+		}
 		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 							SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
 	}
