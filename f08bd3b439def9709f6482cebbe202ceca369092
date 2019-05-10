@@ -34,6 +34,24 @@
       "revId": "f08bd3b439def9709f6482cebbe202ceca369092",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36cccb27_27448123",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-10T09:16:55Z",
+      "side": 1,
+      "message": "hi chunyang,\n    I mean  this run will bind to nvme device that the same as other tests.\nbut like identify, scan which one is no difference.\nbut opal is not , if scan the one that not supported, we will got the log all the same, that\u0027s \nnot support, So I thihk this can\u0027t check you lib indeed.",
+      "parentUuid": "972668d1_5e5a6d54",
+      "revId": "f08bd3b439def9709f6482cebbe202ceca369092",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
