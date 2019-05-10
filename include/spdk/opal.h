@@ -145,6 +145,15 @@ struct spdk_opal_info *spdk_opal_get_info(struct spdk_opal_dev *dev);
 
 bool spdk_opal_supported(struct spdk_opal_dev *dev);
 
+/**
+ * Submit Opal command to opal-supported controller. SPDK now only supports
+ * Opal for NVMe.
+ *
+ * \param dev 	Opal device handler.
+ * \param cmd	Opal command that supports, including OPAL_CMD_SCAN,
+ * 		OPAL_CMD_TAKE_OWNERSHIP, OPAL_CMD_REVERT_TPER, OPAL_CMD_ACTIVATE_LSP.
+ * \param arg	Other arguments that might need for specific command.
+ */
 int spdk_opal_cmd(struct spdk_opal_dev *dev, unsigned int cmd, void *arg);
 
 #endif

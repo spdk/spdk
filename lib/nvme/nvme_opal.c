@@ -1144,6 +1144,90 @@ opal_generic_pw_cmd(uint8_t *key, size_t key_len, uint8_t *cpin_uid,
 }
 
 static int
+opal_get_locking_sp_lifecycle_cb(struct spdk_opal_dev *dev)
+{
+	uint8_t lifecycle;
+	int error = 0;
+
+	error = opal_parse_and_check_status(dev);
+	if (error) {
+		return error;
+	}
+
+	lifecycle = opal_response_get_u64(&dev->parsed_resp, 4);
+	if (lifecycle != OPAL_MANUFACTURED_INACTIVE) { /* status before activate */
+		SPDK_ERRLOG("Couldn't determine the status of the Lifecycle state\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int
+opal_get_locking_sp_lifecycle(struct spdk_opal_dev *dev)
+{
+	int err = 0;
+
+	opal_clear_cmd(dev);
+	opal_set_comid(dev, dev->comid);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_CALL);
+	opal_add_token_bytestring(&err, dev, spdk_opal_uid[UID_LOCKINGSP],
+				  OPAL_UID_LENGTH);
+	opal_add_token_bytestring(&err, dev, spdk_opal_method[GET_METHOD], OPAL_UID_LENGTH);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
+	opal_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_STARTNAME);
+	opal_add_token_u8(&err, dev, SPDK_OPAL_STARTCOLUMN); /* Start Column */
+	opal_add_token_u8(&err, dev, SPDK_OPAL_LIFECYCLE); /* Lifecycle Column */
+	opal_add_token_u8(&err, dev, SPDK_OPAL_ENDNAME);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_STARTNAME);
+	opal_add_token_u8(&err, dev, SPDK_OPAL_ENDCOLUMN); /* End Column */
+	opal_add_token_u8(&err, dev, SPDK_OPAL_LIFECYCLE); /* Lifecycle Column */
+	opal_add_token_u8(&err, dev, SPDK_OPAL_ENDNAME);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+	opal_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+
+	if (err) {
+		SPDK_ERRLOG("Error Building GET Lifecycle Status command\n");
+		return err;
+	}
+
+	return opal_finalize_and_send(dev, 1, opal_get_locking_sp_lifecycle_cb);
+}
+
+static int
+opal_activate(struct spdk_opal_dev *dev)
+{
+	int err = 0;
+
+	opal_clear_cmd(dev);
+	opal_set_comid(dev, dev->comid);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_CALL);
+	opal_add_token_bytestring(&err, dev, spdk_opal_uid[UID_LOCKINGSP],
+				  OPAL_UID_LENGTH);
+	opal_add_token_bytestring(&err, dev, spdk_opal_method[ACTIVATE_METHOD],
+				  OPAL_UID_LENGTH);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
+	opal_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+
+	if (err) {
+		SPDK_ERRLOG("Error building Activate LockingSP command.\n");
+		return err;
+	}
+
+	/* TODO: Single User Mode for activatation */
+
+	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status);
+}
+
+static int
 opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, void *data)
 {
 	uint8_t cpin_uid[OPAL_UID_LENGTH];
@@ -1308,6 +1392,66 @@ end:
 	return ret;
 }
 
+static int
+spdk_opal_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd)
+{
+	struct opal_locking_range_activate_session *activate_session;
+	struct spdk_opal_key *opal_key;
+	int ret;
+
+	activate_session = calloc(1, sizeof(struct opal_locking_range_activate_session));
+	if (activate_session == NULL) {
+		SPDK_ERRLOG("Memory allocation failed for activate session");
+		return -ENOMEM;
+	}
+
+	opal_key = opal_create_key(passwd);
+	if (opal_key == NULL) {
+		free(activate_session);
+		return -EINVAL;
+	}
+
+	activate_session->key = opal_key;
+
+	pthread_mutex_lock(&dev->mutex_lock);
+	ret = opal_start_adminsp_session(dev, activate_session->key);
+	if (ret) {
+		opal_end_session_error(dev);
+		SPDK_ERRLOG("Error on starting admin SP session with error %d: %s\n", ret,
+			    opal_error_to_human(ret));
+		goto end;
+	}
+
+	ret = opal_get_locking_sp_lifecycle(dev);
+	if (ret) {
+		opal_end_session_error(dev);
+		SPDK_ERRLOG("Error on getting SP lifecycle with error %d: %s\n", ret,
+			    opal_error_to_human(ret));
+		goto end;
+	}
+
+	ret = opal_activate(dev);
+	if (ret) {
+		opal_end_session_error(dev);
+		SPDK_ERRLOG("Error on activation with error %d: %s\n", ret,
+			    opal_error_to_human(ret));
+		goto end;
+	}
+
+	ret = opal_end_session(dev, NULL);
+	if (ret) {
+		SPDK_ERRLOG("Error on ending session with error %d: %s\n", ret,
+			    opal_error_to_human(ret));
+		goto end;
+	}
+
+end:
+	pthread_mutex_unlock(&dev->mutex_lock);
+	free(opal_key);
+	free(activate_session);
+	return ret;
+}
+
 struct spdk_opal_info *
 spdk_opal_get_info(struct spdk_opal_dev *dev)
 {
@@ -1339,8 +1483,10 @@ spdk_opal_cmd(struct spdk_opal_dev *dev, unsigned int cmd, void *arg)
 		return spdk_opal_take_ownership(dev, arg);
 	case OPAL_CMD_REVERT_TPER:
 		return spdk_opal_revert_tper(dev, arg);
-	case OPAL_CMD_LOCK_UNLOCK:
 	case OPAL_CMD_ACTIVATE_LSP:
+		return spdk_opal_activate_locking_sp(dev, arg);
+	case OPAL_CMD_LOCK_UNLOCK:
+
 	case OPAL_CMD_SETUP_LOCKING_RANGE:
 
 	default:
