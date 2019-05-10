@@ -1416,6 +1416,7 @@ ftl_rwb_entry_fill(struct ftl_rwb_entry *entry, struct ftl_io *io)
 	}
 
 	entry->trace = io->trace;
+	entry->lba = ftl_io_current_lba(io);
 
 	if (entry->md) {
 		memcpy(entry->md, &entry->lba, sizeof(entry->lba));
@@ -1429,11 +1430,9 @@ ftl_rwb_fill(struct ftl_io *io)
 	struct ftl_rwb_entry *entry;
 	struct ftl_ppa ppa = { .cached = 1 };
 	int flags = ftl_rwb_flags_from_io(io);
-	uint64_t lba;
 
 	while (io->pos < io->lbk_cnt) {
-		lba = ftl_io_current_lba(io);
-		if (lba == FTL_LBA_INVALID) {
+		if (ftl_io_current_lba(io) == FTL_LBA_INVALID) {
 			ftl_io_advance(io, 1);
 			continue;
 		}
@@ -1443,14 +1442,13 @@ ftl_rwb_fill(struct ftl_io *io)
 			return -EAGAIN;
 		}
 
-		entry->lba = lba;
 		ftl_rwb_entry_fill(entry, io);
 
 		ppa.offset = entry->pos;
 
 		ftl_trace_rwb_fill(dev, io);
-		ftl_io_advance(io, 1);
 		ftl_update_l2p(dev, entry, ppa);
+		ftl_io_advance(io, 1);
 
 		/* Needs to be done after L2P is updated to avoid race with */
 		/* write completion callback when it's processed faster than */
