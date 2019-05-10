@@ -164,5 +164,6 @@ bool spdk_opal_supported(struct spdk_opal_dev *dev);
 int spdk_opal_cmd_scan(struct spdk_opal_dev *dev);
 int spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd);
 int spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd);
+int spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd);
 
 #endif
