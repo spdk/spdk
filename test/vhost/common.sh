@@ -5,8 +5,6 @@ set -e
 
 TEST_DIR=$(readlink -f $SPDK_BUILD_DIR/test/vhost/test_run)
 
-SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
-
 # SSH key file
 : ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
 if [[ ! -r "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
@@ -92,13 +90,13 @@ function get_vhost_dir()
 		local vhost_num=0
 	fi
 
-	echo "$SPDK_VHOST_SCSI_TEST_DIR${vhost_num}"
+	echo "$TEST_DIR/vhost${vhost_num}"
 }
 
 function spdk_vhost_list_all()
 {
 	shopt -s nullglob
-	local vhost_list="$(echo $SPDK_VHOST_SCSI_TEST_DIR[0-9]*)"
+	local vhost_list="$(echo $TEST_DIR/vhost[0-9]*)"
 	shopt -u nullglob
 
 	if [[ ! -z "$vhost_list" ]]; then
