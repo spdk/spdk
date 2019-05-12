@@ -43,6 +43,8 @@
 
 #include "spdk_internal/memory.h"
 
+#include <rte_bus_pci.h>
+
 struct vhost_poll_group {
 	struct spdk_thread *thread;
 	TAILQ_ENTRY(vhost_poll_group) tailq;
@@ -77,7 +79,9 @@ struct spdk_vhost_session_fn_ctx {
 	/** Custom user context */
 	void *user_ctx;
 };
-
+#ifndef SPDK_CONFIG_VHOST_INTERNAL_LIB
+void spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device);
+#endif
 static int new_connection(int vid);
 static int start_device(int vid);
 static void stop_device(int vid);
@@ -777,6 +781,40 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 			rc = -EINVAL;
 			goto out;
 		}
+
+		/* Register the vvu PCI device to SPDK's internal list of DMA-capable devices.
+		 * This will enable finding the physical addresses of the vhost-user memory
+		 * regions in case of vfio no-IOMMU mode. Search for `rte_device` instance
+		 * in DPDK's internal PCI device list using a key-value pair for the BDF PCI
+		 * address.
+		 */
+		struct rte_bus *bus;
+		struct rte_device *dev;
+		struct rte_pci_device *pci_dev;
+		char kv_pci_addr[PATH_MAX];
+		int key_len = sizeof("addr=") - 1;
+		int kv_len = key_len + strlen(name);
+
+		bus = rte_bus_find_by_name("pci");
+		if (bus == NULL) {
+			SPDK_ERRLOG("Cannot find bus (pci)\n");
+			rc = -ENOENT;
+			goto out;
+		}
+		if (snprintf(kv_pci_addr, sizeof(kv_pci_addr), "addr=%s", name) != kv_len) {
+			SPDK_ERRLOG("Failed to copy PCI address '%s' for controller.\n", name);
+			rc = -EINVAL;
+			goto out;
+		}
+
+		dev = bus->dev_iterate(NULL, kv_pci_addr, NULL);
+		if (dev == NULL) {
+			SPDK_ERRLOG("Cannot find virtio-vhost-user device with BDF PCI address %s\n", name);
+			rc = -EINVAL;
+			goto out;
+		}
+		pci_dev = RTE_DEV_TO_PCI(dev);
+		spdk_vtophys_pci_device_added(pci_dev);
 	}
 
 	if (rte_vhost_driver_register(path, transport) != 0) {
