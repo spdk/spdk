@@ -56,6 +56,9 @@ DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(rte_vhost_vring_call, int, (int vid, uint16_t vring_idx), 0);
+DEFINE_STUB(rte_pci_dev_iterate, void *, (const void *start, const char *str,
+		const struct rte_dev_iterator *it), NULL);
+DEFINE_STUB_V(spdk_vtophys_pci_device_added, (struct rte_pci_device *pci_device));
 
 static struct spdk_cpuset *g_app_core_mask;
 struct spdk_cpuset *spdk_app_get_core_mask(void)

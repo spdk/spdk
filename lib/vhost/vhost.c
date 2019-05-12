@@ -43,6 +43,8 @@
 
 #include "spdk_internal/memory.h"
 
+#include <rte_bus_pci.h>
+
 static uint32_t *g_num_ctrlrs;
 
 /* Path to folder where character device will be created. Can be set by user. */
@@ -72,6 +74,9 @@ struct spdk_vhost_session_fn_ctx {
 	/** Response to be written by enqueued event. */
 	int response;
 };
+
+void *rte_pci_dev_iterate(const void *start, const char *str, const struct rte_dev_iterator *it);
+void spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device);
 
 static int new_connection(int vid);
 static int start_device(int vid);
@@ -791,6 +796,30 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 			rc = -EINVAL;
 			goto out;
 		}
+
+		/* Register the vvu PCI device to SPDK's internal list of DMA-capable devices.
+		 * This will enable finding the physical addresses of the vhost-user memory
+		 * regions in case of vfio no-IOMMU mode. Search for `rte__device` instance
+		 * in DPDK's internal PCI device list using a key-value pair for the BDF PCI
+		 * address.
+		 */
+		struct rte_device *dev;
+		struct rte_pci_device *pci_dev;
+		char *kv_pci_addr;
+		int key_len = sizeof("addr=") - 1;
+
+		kv_pci_addr = (char *)malloc(PATH_MAX + key_len);
+		if (snprintf(kv_pci_addr, PATH_MAX + key_len, "addr=%s",
+			     dev_dirname) != dev_dirname_len + key_len) {
+			SPDK_ERRLOG("Something went wrong while copying PCI address '%s' for controller %s.\n", dev_dirname,
+				    name);
+			rc = -EINVAL;
+			goto out;
+		}
+		dev = rte_pci_dev_iterate(NULL, kv_pci_addr, NULL);
+		pci_dev = RTE_DEV_TO_PCI(dev);
+		spdk_vtophys_pci_device_added(pci_dev);
+		free(kv_pci_addr);
 	}
 
 	if (rte_vhost_driver_register(path, transport) != 0) {
