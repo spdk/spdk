@@ -1264,14 +1264,16 @@ start_device(int vid)
 		goto out;
 	}
 
-	for (i = 0; i < vsession->mem->nregions; i++) {
-		uint64_t mmap_size = vsession->mem->regions[i].mmap_size;
+	if (transport != RTE_VHOST_USER_VIRTIO_TRANSPORT) {
+		for (i = 0; i < vsession->mem->nregions; i++) {
+			uint64_t mmap_size = vsession->mem->regions[i].mmap_size;
 
-		if (mmap_size & MASK_2MB) {
-			SPDK_ERRLOG("vhost device %d: Guest mmaped memory size %" PRIx64
-				    " is not a 2MB multiple\n", vid, mmap_size);
-			free(vsession->mem);
-			goto out;
+			if (mmap_size & MASK_2MB) {
+				SPDK_ERRLOG("vhost device %d: Guest mmaped memory size %" PRIx64
+					    " is not a 2MB multiple\n", vid, mmap_size);
+				free(vsession->mem);
+				goto out;
+			}
 		}
 	}
 
