@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b2e80a6c_ea5a8bff",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-13T01:40:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "feee7864_6d77683e",
+      "range": {
+        "startLine": 631,
+        "startChar": 0,
+        "endLine": 631,
+        "endChar": 1
+      },
+      "revId": "93b6d611ca7eb090011d763d32fc1014f74f6969",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5513cec8_8586d015",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-10T10:05:29Z",
       "side": 1,
       "message": "Do you mean\n\n  passwd[0] \u003d\u003d \u0027\\0\u0027\n\n?",
+      "range": {
+        "startLine": 635,
+        "startChar": 23,
+        "endLine": 635,
+        "endChar": 49
+      },
+      "revId": "93b6d611ca7eb090011d763d32fc1014f74f6969",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be33e4d3_ee11181f",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-13T01:40:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5513cec8_8586d015",
       "range": {
         "startLine": 635,
         "startChar": 23,
