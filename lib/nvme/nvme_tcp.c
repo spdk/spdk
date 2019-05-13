@@ -1582,7 +1582,8 @@ nvme_tcp_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 }
 
 int
-nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions,
+				   uint64_t current_tsc)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 	uint32_t reaped;
@@ -1642,7 +1643,7 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_send_icreq_complete, tqpair);
 
 	while (tqpair->state == NVME_TCP_QPAIR_STATE_INVALID) {
-		nvme_tcp_qpair_process_completions(&tqpair->qpair, 0);
+		nvme_tcp_qpair_process_completions(&tqpair->qpair, 0, UINT64_MAX);
 	}
 
 	if (tqpair->state != NVME_TCP_QPAIR_STATE_RUNNING) {
