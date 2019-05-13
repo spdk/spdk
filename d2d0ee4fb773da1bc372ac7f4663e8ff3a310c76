@@ -52,6 +52,24 @@
       "revId": "d2d0ee4fb773da1bc372ac7f4663e8ff3a310c76",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9d9b686_1798e671",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 3511,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-13T22:25:45Z",
+      "side": 1,
+      "message": "Thank you Seth, Ben for very helpful comments. I understood that preparing receive and then sending are the correct order.",
+      "parentUuid": "017b3201_cc561d84",
+      "revId": "d2d0ee4fb773da1bc372ac7f4663e8ff3a310c76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
