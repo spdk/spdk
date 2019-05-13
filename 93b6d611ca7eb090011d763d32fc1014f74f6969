@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "99eff7de_83c548a9",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-13T02:05:51Z",
+      "side": 1,
+      "message": "I have no idea why astyle add a tab here when doing check_format.sh. Does anybody has a fix? Thank you.",
+      "parentUuid": "b2e80a6c_ea5a8bff",
+      "range": {
+        "startLine": 631,
+        "startChar": 0,
+        "endLine": 631,
+        "endChar": 1
+      },
+      "revId": "93b6d611ca7eb090011d763d32fc1014f74f6969",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5513cec8_8586d015",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 3
