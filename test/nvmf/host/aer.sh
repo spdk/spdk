@@ -26,7 +26,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF &
 nvmfpid=$!
 
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
@@ -82,6 +82,5 @@ trap - SIGINT SIGTERM EXIT
 
 
 nvmfcleanup
-killprocess $nvmfpid
 nvmftestfini
 timing_exit aer
