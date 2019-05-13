@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f04baa89_77c0c58e",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T23:49:41Z",
+      "side": 1,
+      "message": "I see what I think was the PT driver as the foundation for this and it didn\u0027t have this either so I need to go update that. But here you shoudl check the rc from readv and error if it fails. Like this (from crypto): \n\n\trc \u003d spdk_bdev_readv_blocks(bla bla bla)\n\tif (rc !\u003d 0) {\n\t\tSPDK_ERRLOG(\"ERROR on bdev_io submission!\\n\");\n\t\tspdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);\n\t}",
+      "revId": "713bb668271bac6d2bc1759bb305728af230c5f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
