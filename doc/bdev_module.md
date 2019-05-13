@@ -25,7 +25,7 @@ module, add a new directory with a single C file and a Makefile. A great
 starting point is to copy the existing 'null' bdev module.
 
 The primary interface that bdev modules will interact with is in
-include/spdk_internal/bdev.h. In that header a macro is defined that registers
+include/spdk/bdev_module.h. In that header a macro is defined that registers
 a new bdev module - SPDK_BDEV_MODULE_REGISTER. This macro take as argument a
 pointer spdk_bdev_module structure that is used to register new bdev module.
 
