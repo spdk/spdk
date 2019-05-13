@@ -242,6 +242,10 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 		opts->delay_pcie_doorbell = false;
 	}
 
+	if (FIELD_OK(max_delay_pcie_cq_doorbell)) {
+		opts->max_delay_pcie_cq_doorbell = 0;
+	}
+
 #undef FIELD_OK
 }
 
