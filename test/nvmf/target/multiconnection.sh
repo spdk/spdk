@@ -13,16 +13,11 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
+timing_enter multiconnection
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./multiconnection.sh iso
 nvmftestinit
-
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
+nvmfappstart "-m 0xF"
 
 # SoftRoce does not have enough queues available for
 # multiconnection tests. Detect if we're using software RDMA.
@@ -32,19 +27,7 @@ if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	NVMF_SUBSYS=1
 fi
 
-timing_enter multiconnection
-timing_enter start_nvmf_tgt
-# Start up the NVMf target in another process
-$NVMF_APP -m 0xF &
-pid=$!
-
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
-
-waitforlisten $pid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
-timing_exit start_nvmf_tgt
-
-modprobe -v nvme-rdma
 
 for i in `seq 1 $NVMF_SUBSYS`
 do
@@ -75,6 +58,5 @@ rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
-killprocess $pid
 nvmftestfini
 timing_exit multiconnection

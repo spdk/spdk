@@ -12,36 +12,21 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
+timing_enter srq_overwhelm
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./fio.sh iso
 nvmftestinit
-
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
 
 if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	echo "Using software RDMA, Likely not enough memory to run this test. aborting."
 	exit 0
 fi
 
-timing_enter srq_overwhelm
-timing_enter start_nvmf_tgt
+nvmfappstart "-m 0xF"
 
-$NVMF_APP -m 0xF &
-nvmfpid=$!
-
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
-
-waitforlisten $nvmfpid
 # create the rdma transport with an intentionally small SRQ depth
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -s 1024
-timing_exit start_nvmf_tgt
 
-modprobe -v nvme-rdma
 declare -a malloc_bdevs
 malloc_bdevs[0]="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 malloc_bdevs[1]+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
@@ -77,6 +62,5 @@ done
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
-killprocess $nvmfpid
 nvmftestfini
 timing_exit srq_overwhelm

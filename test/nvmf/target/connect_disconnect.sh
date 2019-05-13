@@ -12,30 +12,15 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
-# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
-# e.g. sudo ./filesystem.sh iso
-nvmftestinit
-
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
-
 # connect disconnect is geared towards ensuring that we are properly freeing resources after disconnecting qpairs.
 timing_enter connect_disconnect
 
-# Start up the NVMf target in another process
-$NVMF_APP -m 0xF &
-nvmfpid=$!
+# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
+# e.g. sudo ./filesystem.sh iso
+nvmftestinit
+nvmfappstart "-m 0xF"
 
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
-
-waitforlisten $nvmfpid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4 -c 0
-
-modprobe -v nvme-rdma
 
 bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
@@ -61,7 +46,5 @@ set -x
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
-killprocess $nvmfpid
-
 nvmftestfini
 timing_exit connect_disconnect
