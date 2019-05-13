@@ -15,7 +15,7 @@ timing_enter rpc
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
+$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
 
 # set times for subsystem construct/delete
 if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -35,7 +35,7 @@ for bdev in $bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 done
 $rpc_py nvmf_subsystem_allow_any_host -d nqn.2016-06.io.spdk:cnode1
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # This connect should fail - the host NQN is not allowed
 ! nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
@@ -65,7 +65,7 @@ do
 	for bdev in $bdevs; do
 		let j=j+1
 		$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001
-		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j $bdev -n 5
 		$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode$j
 		nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode$j -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
@@ -101,7 +101,7 @@ do
 	for bdev in $bdevs; do
 		let j=j+1
 		$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001
-		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j $bdev
 		$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode$j
 	done
