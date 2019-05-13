@@ -20,18 +20,18 @@ nvmfappstart "-m 0xF"
 
 NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | sed -n 2p)
 
-$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
+$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
 
 # Create subsystems
 $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK1
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 
 echo "test case1: single bdev can't be used in multiple subsystems"
 set +e
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode2 -a -s SPDK2
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t rdma -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 Malloc0
 nmic_status=$?
 
@@ -46,7 +46,7 @@ set -e
 
 echo "test case2: host connect to nvmf target in multiple paths"
 if [ ! -z $NVMF_SECOND_TARGET_IP ]; then
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_SECOND_TARGET_IP -s $NVMF_PORT
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_SECOND_TARGET_IP -s $NVMF_PORT
 
 	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT"

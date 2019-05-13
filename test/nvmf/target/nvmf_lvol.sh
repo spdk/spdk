@@ -28,7 +28,7 @@ if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	SUBSYS_NR=1
 fi
 
-$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
+$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
 
 # Construct a RAID volume for the logical volume store
 base_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
@@ -47,7 +47,7 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 $lvol
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # Start random writes in the background
-$rootdir/examples/nvme/perf/perf -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 128 -s 512 -w randwrite -t 10 -c 0x18 &
+$rootdir/examples/nvme/perf/perf -r "trtype:rdma adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 128 -s 512 -w randwrite -t 10 -c 0x18 &
 perf_pid=$!
 
 sleep 1

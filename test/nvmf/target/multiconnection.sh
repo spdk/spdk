@@ -27,7 +27,7 @@ if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	NVMF_SUBSYS=1
 fi
 
-$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
+$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
 
 for i in `seq 1 $NVMF_SUBSYS`
 do
