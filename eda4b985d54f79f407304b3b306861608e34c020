@@ -22,6 +22,30 @@
       "revId": "eda4b985d54f79f407304b3b306861608e34c020",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a212b901_a4f06931",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1455,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-13T09:13:32Z",
+      "side": 1,
+      "message": "OK, if we clear head_unalign, we will be able to merge. I\u0027ll split the change into two patches, refactor no-split case and then add split case.",
+      "parentUuid": "81f2cc7a_7fb6fd4b",
+      "range": {
+        "startLine": 1424,
+        "startChar": 1,
+        "endLine": 1455,
+        "endChar": 2
+      },
+      "revId": "eda4b985d54f79f407304b3b306861608e34c020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
