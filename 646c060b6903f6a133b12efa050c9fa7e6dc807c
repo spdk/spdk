@@ -69,6 +69,24 @@
       "revId": "646c060b6903f6a133b12efa050c9fa7e6dc807c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b67d006a_eb9da583",
+        "filename": "autobuild.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-13T20:50:13Z",
+      "side": 1,
+      "message": "The ls-lR on the make_install was added as part of this patch and I think you should remove it. Similarly here - only do the ls on the directory if the uninstall fails. It\u0027s just for debugging.",
+      "parentUuid": "94b282f3_f54fe96f",
+      "revId": "646c060b6903f6a133b12efa050c9fa7e6dc807c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
