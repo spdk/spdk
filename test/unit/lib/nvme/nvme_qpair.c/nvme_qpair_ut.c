@@ -69,7 +69,8 @@ nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_r
 }
 
 int32_t
-nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions,
+					 uint64_t current_tsc)
 {
 	/* TODO */
 	return 0;
