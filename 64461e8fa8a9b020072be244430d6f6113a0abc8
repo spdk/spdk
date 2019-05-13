@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "542594c6_6cc8a8bf",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 787,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-13T08:38:36Z",
+      "side": 1,
+      "message": "Yeah, this parameter never really made sense, as it\u0027s always just io-\u003epos. I\u0027ll get rid of it.",
+      "parentUuid": "82f2acda_aff085df",
+      "revId": "64461e8fa8a9b020072be244430d6f6113a0abc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5f5cea9a_acb44d32",
         "filename": "lib/ftl/ftl_trace.c",
         "patchSetId": 14
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-10T22:20:41Z",
       "side": 1,
       "message": "it seems like the changes in this file do more than just use the macro\n\nline 227 and 301 used to pass the same value, but now they pass different value\nline 227 and 236 used to pass different values, but now they pass the same value\n\nif there are functional reasons to change what\u0027s passed here that\u0027s fine, but we should do it in a separate patch",
+      "revId": "64461e8fa8a9b020072be244430d6f6113a0abc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "641ddfc4_0e6eb3d0",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-13T08:38:36Z",
+      "side": 1,
+      "message": "There\u0027s no real reason for line 227, but this trace is bound to be called during the initialization of the IO, so it\u0027s guaranteed to be equal to ftl_io_get_lba(io, 0). But sure, I can replace it with ftl_io_get_lba(io, 0), just to underline that fact.\n\nAs for line 301, for requests that are completed from without sending anything to the SSD (i.e. cache hit, unwritten data read), it makes more sense to record the actual LBA that was completed rather than the first one.",
+      "parentUuid": "5f5cea9a_acb44d32",
       "revId": "64461e8fa8a9b020072be244430d6f6113a0abc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
