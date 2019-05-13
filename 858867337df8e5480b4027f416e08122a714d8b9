@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbc66e61_73c4da40",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T10:48:15Z",
+      "side": 1,
+      "message": "Vitaliy, please try not to relocate functions when you refactor them. I\u0027m not able to review this patch in side-by-side diff right now. This ocf_mngt_cache_add_core used to be called before vbdev-\u003eexp_bdev was set (line #762 this patchset).\n\nYou can first split the functions and introduce trylocks in one patch while trying to keep the code relatively in the same order, then make another patch where you reorder functions to make them readable upwards (to make the entire vbdev_ocf_mngt_fn call chain more readable).",
+      "revId": "858867337df8e5480b4027f416e08122a714d8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
