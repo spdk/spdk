@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "17e23beb_455266c8",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-13T20:59:39Z",
+      "side": 1,
+      "message": "Instead of adding a new API to the bdev layer, keep a count of the outstanding I/O in struct spdk_nvmf_subsystem_poll_group. Do that as a separate patch up front.",
+      "revId": "40b6cafbb736939be8918e74edab7458985839e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c39d700c_b2a96143",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1142,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-13T20:59:39Z",
+      "side": 1,
+      "message": "If you have a global count of I/O (for any namespace) on the sgroup, this logic becomes very easy.\n\nif (sgroup-\u003eio_outstanding \u003e 0) {\n    return;\n}",
+      "revId": "40b6cafbb736939be8918e74edab7458985839e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6cc49d65_10aa9fcc",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 5
@@ -19,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "db33681e_8fd54cb6",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-13T20:59:39Z",
+      "side": 1,
+      "message": "If there is I/O outstanding, you should be returning here without doing the spdk_thread_send_msg(). Since there is I/O outstanding, you know you\u0027ll get a completion for that I/O at some point. You can simply store the cb_fn and cb_arg in the sgroup and when the I/O count goes to 0 and the state is \"pausing\", change the state to \"paused\" and call the callback.",
+      "parentUuid": "6cc49d65_10aa9fcc",
+      "revId": "40b6cafbb736939be8918e74edab7458985839e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "03ae0b94_a7b04cde",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 5
@@ -30,6 +82,23 @@
       "writtenOn": "2019-05-13T13:46:05Z",
       "side": 1,
       "message": "If line 1151 adds a return, the line here means all the outstanding I/Os have finished.\nSo this judgement could be removed or used as an assert.",
+      "revId": "40b6cafbb736939be8918e74edab7458985839e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d51ada9_1dc4077d",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1194,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-13T20:59:39Z",
+      "side": 1,
+      "message": "You can store the cb_fn and cb_arg inside the sgroup - there\u0027s only one of these operations occurring at a time.",
       "revId": "40b6cafbb736939be8918e74edab7458985839e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
