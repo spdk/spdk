@@ -90,7 +90,7 @@ struct ftl_flush {
 	LIST_ENTRY(ftl_flush)		list_entry;
 };
 
-typedef int (*ftl_next_ppa_fn)(struct ftl_io *, struct ftl_ppa *, size_t);
+typedef int (*ftl_next_ppa_fn)(struct ftl_io *, struct ftl_ppa *);
 static void _ftl_read(void *);
 static void _ftl_write(void *);
 
@@ -214,7 +214,7 @@ ftl_md_write_cb(void *arg, int status)
 }
 
 static int
-ftl_ppa_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa, size_t lbk)
+ftl_ppa_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	size_t lbk_cnt, max_lbks;
@@ -222,10 +222,10 @@ ftl_ppa_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa, size_t lbk)
 	assert(ftl_io_mode_ppa(io));
 	assert(io->iov_pos < io->iov_cnt);
 
-	if (lbk == 0) {
+	if (io->pos == 0) {
 		*ppa = io->ppa;
 	} else {
-		*ppa = ftl_band_next_xfer_ppa(io->band, io->ppa, lbk);
+		*ppa = ftl_band_next_xfer_ppa(io->band, io->ppa, io->pos);
 	}
 
 	assert(!ftl_ppa_invalid(*ppa));
@@ -704,8 +704,7 @@ ftl_add_to_retry_queue(struct ftl_io *io)
 }
 
 static int
-ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
-		void *ctx)
+ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_ppa ppa;
@@ -713,7 +712,7 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 
 	while (io->pos < io->lbk_cnt) {
 		/* We might hit the cache here, if so, skip the read */
-		lbk_cnt = rc = next_ppa(io, &ppa, io->pos);
+		lbk_cnt = rc = next_ppa(io, &ppa);
 
 		/* We might need to retry the read from scratch (e.g. */
 		/* because write was under way and completed before */
@@ -784,7 +783,7 @@ out:
 }
 
 static int
-ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa, size_t lbk)
+ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_ppa next_ppa;
@@ -1500,7 +1499,7 @@ ftl_io_read(struct ftl_io *io)
 			next_ppa = ftl_lba_read_next_ppa;
 		}
 
-		return ftl_submit_read(io, next_ppa, NULL);
+		return ftl_submit_read(io, next_ppa);
 	}
 
 	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
