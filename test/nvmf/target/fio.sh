@@ -12,29 +12,13 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
+timing_enter fio
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./fio.sh iso
 nvmftestinit $1
+nvmfappstart "-m 0xF"
 
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
-
-timing_enter fio
-timing_enter start_nvmf_tgt
-# Start up the NVMf target in another process
-$NVMF_APP -m 0xF &
-nvmfpid=$!
-
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
-
-waitforlisten $nvmfpid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
-
-timing_exit start_nvmf_tgt
 
 malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
@@ -42,8 +26,6 @@ malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_S
 raid_malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 raid_malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 $rpc_py construct_raid_bdev -n raid0 -s 64 -r 0 -b "$raid_malloc_bdevs"
-
-modprobe -v nvme-rdma
 
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 for malloc_bdev in $malloc_bdevs; do

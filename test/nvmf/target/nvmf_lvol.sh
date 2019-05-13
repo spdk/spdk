@@ -14,16 +14,11 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
+timing_enter lvol_integrity
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./nvmf_lvol.sh iso
 nvmftestinit $1
-
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
+nvmfappstart "-m 0x7"
 
 # SoftRoce does not have enough queues available for
 # multiconnection tests. Detect if we're using software RDMA.
@@ -33,19 +28,7 @@ if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	SUBSYS_NR=1
 fi
 
-timing_enter lvol_integrity
-timing_enter start_nvmf_tgt
-# Start up the NVMf target in another process
-$NVMF_APP -m 0x7 &
-pid=$!
-
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
-
-waitforlisten $pid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
-timing_exit start_nvmf_tgt
-
-modprobe -v nvme-rdma
 
 # Construct a RAID volume for the logical volume store
 base_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
@@ -88,6 +71,6 @@ rm -f ./local-job*
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
-killprocess $pid
+killprocess $nvmfpid
 nvmftestfini $1
 timing_exit lvol_integrity

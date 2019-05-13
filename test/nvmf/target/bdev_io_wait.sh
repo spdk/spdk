@@ -12,33 +12,16 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
+timing_enter bdev_io_wait
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./bdev_io_wait.sh iso
 nvmftestinit $1
+nvmfappstart "-m 0xF --wait-for-rpc"
 
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
-
-timing_enter bdev_io_wait
-timing_enter start_nvmf_tgt
-
-$NVMF_APP -m 0xF --wait-for-rpc &
-nvmfpid=$!
-
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
-
-waitforlisten $nvmfpid
 # Minimal number of bdev io pool (5) and cache (1)
 $rpc_py set_bdev_options -p 5 -c 1
 $rpc_py start_subsystem_init
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
-timing_exit start_nvmf_tgt
-
-modprobe -v nvme-rdma
 
 $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001

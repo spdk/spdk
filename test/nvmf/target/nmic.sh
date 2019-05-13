@@ -12,29 +12,15 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
+timing_enter nmic
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./nmic.sh iso
 nvmftestinit $1
+nvmfappstart "-m 0xF"
 
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | sed -n 2p)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
 
-timing_enter nmic
-timing_enter start_nvmf_tgt
-# Start up the NVMf target in another process
-$NVMF_APP -m 0xF &
-pid=$!
-
-trap "killprocess $pid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
-
-waitforlisten $pid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
-timing_exit start_nvmf_tgt
 
 # Create subsystems
 $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
@@ -58,8 +44,6 @@ else
 fi
 set -e
 
-modprobe -v nvme-rdma
-
 echo "test case2: host connect to nvmf target in multiple paths"
 if [ ! -z $NVMF_SECOND_TARGET_IP ]; then
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_SECOND_TARGET_IP -s $NVMF_PORT
@@ -77,7 +61,7 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
-killprocess $pid
+killprocess $nvmfpid
 
 nvmftestfini $1
 timing_exit nmic
