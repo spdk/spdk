@@ -16,6 +16,24 @@
       "revId": "d2d0ee4fb773da1bc372ac7f4663e8ff3a310c76",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "342e9b32_bf373c02",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 3511,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-13T20:20:20Z",
+      "side": 1,
+      "message": "I think either would be acceptable.\nWhen we post recvs, we are registering space for the NIC to place work requests. When we post sends, we are giving the NIC more work to do. I can\u0027t think of how putting one before the other would affect performance or functionality. \nThe only reason I placed them in this order is because I like to think of the order of operations as being from the top of the request state machine to the bottom.\n\nDo you think there might be a difference in the ordering?",
+      "parentUuid": "1c2e5634_9f9f0c92",
+      "revId": "d2d0ee4fb773da1bc372ac7f4663e8ff3a310c76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
