@@ -434,7 +434,7 @@ void
 ftl_io_complete(struct ftl_io *io)
 {
 	struct ftl_io *parent = io->parent;
-	bool complete, keep_alive = io->flags & FTL_IO_KEEP_ALIVE;
+	bool complete;
 
 	io->flags &= ~FTL_IO_INITIALIZED;
 
@@ -452,9 +452,7 @@ ftl_io_complete(struct ftl_io *io)
 			ftl_io_complete(parent);
 		}
 
-		if (!keep_alive) {
-			_ftl_io_free(io);
-		}
+		_ftl_io_free(io);
 	}
 }
 
