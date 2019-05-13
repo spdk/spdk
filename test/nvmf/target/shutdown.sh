@@ -12,17 +12,6 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
-# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
-# e.g. sudo ./shutdown.sh iso
-nvmftestinit $1
-
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
-
 function waitforio() {
 	# $1 = RPC socket
 	if [ -z "$1" ]; then
@@ -48,16 +37,12 @@ function waitforio() {
 }
 
 timing_enter shutdown
-timing_enter start_nvmf_tgt
-# Start up the NVMf target in another process
-$NVMF_APP -m 0xF &
-pid=$!
+# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
+# e.g. sudo ./shutdown.sh iso
+nvmftestinit $1
+nvmfappstart "-m 0xF"
 
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; nvmfcleanup; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
-
-waitforlisten $pid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
-timing_exit start_nvmf_tgt
 
 num_subsystems=10
 # SoftRoce does not have enough queues available for
@@ -100,7 +85,7 @@ rm -f /var/run/spdk_bdev1
 
 # Verify the target stays up
 sleep 1
-kill -0 $pid
+kill -0 $nvmfpid
 
 # Connect with bdevperf and confirm it works
 $rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 1
@@ -122,7 +107,7 @@ killprocess $perfpid
 
 # Verify the target stays up
 sleep 1
-kill -0 $pid
+kill -0 $nvmfpid
 timing_exit test2
 
 # Test 3: Kill the target unexpectedly with I/O outstanding
@@ -140,7 +125,7 @@ trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; kill -9 $perfpid; nvm
 waitforio /var/tmp/bdevperf.sock Nvme1n1
 
 # Kill the target half way through
-killprocess $pid
+killprocess $nvmfpid
 
 # Verify bdevperf exits successfully
 sleep 1
