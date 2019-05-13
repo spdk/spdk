@@ -3,6 +3,10 @@ function xtrace_disable() {
 	set +x
 }
 
+xtrace_disable
+set -e
+shopt -s expand_aliases
+
 # Dummy function to be called after restoring xtrace just so that it appears in the
 # xtrace log. This way we can consistently track when xtrace is enabled/disabled.
 function xtrace_enable() {
@@ -11,17 +15,10 @@ function xtrace_enable() {
 	function xtrace_dummy() { :; }
 }
 
-function xtrace_restore() {
-	if [[ "$PREV_BASH_OPTS" != *"x"* ]]; then
-		return
-	fi
-
-	set -x
-	xtrace_enable
-}
-
-xtrace_disable
-set -e
+# Keep it as alias to avoid xtrace_enable backtrace always pointing to xtrace_restore.
+# xtrace_enable will appear as called directly from the user script, from the same line
+# that "called" xtrace_restore.
+alias xtrace_restore='if [[ "$PREV_BASH_OPTS" == *"x"* ]]; then set -x; xtrace_enable; fi'
 
 if [ "$(uname -s)" = "Linux" ]; then
 	MAKE=make
@@ -769,6 +766,7 @@ set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
 
 PS4=' \t	\$ '
+PS4='\r> \t $BASH_SOURCE $LINENO $((${#FUNCNAME[@]} - 1)) $BASH_SUBSHELL \$ '
 if $SPDK_AUTOTEST_X; then
 	# explicitly enable xtraces
 	set -x
