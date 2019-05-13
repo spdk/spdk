@@ -2725,8 +2725,9 @@ cache_free_buffers(struct spdk_file *file)
 	/* If not freed, put it in the end of the queue */
 	if (file->tree->present_mask != 0) {
 		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+	} else {
+		file->last = NULL;
 	}
-	file->last = NULL;
 	pthread_spin_unlock(&g_caches_lock);
 	pthread_spin_unlock(&file->lock);
 }
