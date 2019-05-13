@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14b2353f_ea90ee5a",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-13T21:33:58Z",
+      "side": 1,
+      "message": "I think you want to assert here that the queued_comp_ops TAILQ is not empty.  Otherwise you really aren\u0027t testing that anything was queued.\n\nSimilar for other tests below.",
+      "revId": "9ae58717b190accc68561c1a467d1c92edf86cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
