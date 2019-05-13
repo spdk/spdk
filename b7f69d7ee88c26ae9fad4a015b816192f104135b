@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "347bee34_58c16b94",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-13T00:59:36Z",
+      "side": 1,
+      "message": "Please take care UT will get seg fault if vbdev_reduce_load_cb that calls spdk_reduce_vol_get_params is actually tested.",
+      "range": {
+        "startLine": 150,
+        "startChar": 36,
+        "endLine": 150,
+        "endChar": 40
+      },
+      "revId": "b7f69d7ee88c26ae9fad4a015b816192f104135b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
