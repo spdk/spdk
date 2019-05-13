@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "48025ed4_79eec8b6",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-13T09:06:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b420af4_7e1eeb39",
+      "revId": "ecf27b186c17a94dbeeb275d244a09e5c36481d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bcbdb980_0e26d4d9",
         "filename": "lib/util/dif.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "9079a944_8fb34937",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-13T09:06:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bcbdb980_0e26d4d9",
+      "revId": "ecf27b186c17a94dbeeb275d244a09e5c36481d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f0b4ece7_112de2f0",
         "filename": "lib/util/dif.c",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2019-05-13T07:23:25Z",
       "side": 1,
       "message": "Shouldn\u0027t it be better using \u0027ctx-\u003eiov[ctx-\u003eiovpos++]\u0027 here ?",
+      "revId": "ecf27b186c17a94dbeeb275d244a09e5c36481d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0029a916_23f75bb4",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-13T09:06:28Z",
+      "side": 1,
+      "message": "I got it.\n\nctx-\u003eiov[ctx-\u003eiovpos].iov_base \u003d data;\nctx-\u003eiov[ctx-\u003eiovpos++].iov_len \u003d data_len\n\ncan reduce two lines compared with the following.\n\nctx-\u003eiov-\u003eiov_base \u003d data;\nctx-\u003eiov-\u003eiov_len \u003d data_len;\nctx-\u003eiov++;\nctx-\u003eiovpos++;",
+      "parentUuid": "f0b4ece7_112de2f0",
       "revId": "ecf27b186c17a94dbeeb275d244a09e5c36481d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
