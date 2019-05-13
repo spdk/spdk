@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5b137891_ff1416fd",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T23:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b942ca08_935dc6e2",
+      "revId": "23f972be58301820dcbada69a9009cefbfa47f03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c89e525_4934c212",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 1
