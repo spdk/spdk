@@ -168,7 +168,11 @@ struct nvme_pcie_qpair {
 		uint8_t phase			: 1;
 		uint8_t delay_pcie_doorbell	: 1;
 		uint8_t has_shadow_doorbell	: 1;
+		uint8_t cq_doorbell_write_pending : 1;
 	} flags;
+
+	uint64_t last_cq_doorbell_write_ticks;
+	uint64_t max_delay_cq_doorbell_ticks;
 
 	/*
 	 * Base qpair structure.
@@ -1007,6 +1011,9 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	pqpair->max_completions_cap = spdk_min(pqpair->max_completions_cap, NVME_MAX_COMPLETIONS);
 	num_trackers = pqpair->num_entries - pqpair->max_completions_cap;
 
+	pqpair->last_cq_doorbell_write_ticks = spdk_get_ticks();
+	pqpair->flags.cq_doorbell_write_pending = false;
+
 	SPDK_INFOLOG(SPDK_LOG_NVME, "max_completions_cap = %" PRIu16 " num_trackers = %" PRIu16 "\n",
 		     pqpair->max_completions_cap, num_trackers);
 
@@ -1599,6 +1606,8 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	pqpair->num_entries = opts->io_queue_size;
 	pqpair->flags.delay_pcie_doorbell = opts->delay_pcie_doorbell;
+	pqpair->max_delay_cq_doorbell_ticks = opts->max_delay_pcie_cq_doorbell * spdk_get_ticks_hz() /
+					      SPDK_SEC_TO_USEC;
 
 	qpair = &pqpair->qpair;
 
@@ -2048,7 +2057,8 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 }
 
 int32_t
-nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions,
+				    uint64_t current_tsc)
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_tracker	*tr;
@@ -2108,8 +2118,17 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (num_completions > 0) {
-		TAILQ_CONCAT(&pqpair->free_tr, &pqpair->completed_tr, tq_list);
-		nvme_pcie_qpair_ring_cq_doorbell(qpair);
+		pqpair->flags.cq_doorbell_write_pending = true;
+	}
+
+	if (current_tsc == UINT64_MAX ||
+	    (pqpair->last_cq_doorbell_write_ticks + pqpair->max_delay_cq_doorbell_ticks) <= current_tsc) {
+		if (pqpair->flags.cq_doorbell_write_pending) {
+			TAILQ_CONCAT(&pqpair->free_tr, &pqpair->completed_tr, tq_list);
+			nvme_pcie_qpair_ring_cq_doorbell(qpair);
+			pqpair->last_cq_doorbell_write_ticks = current_tsc;
+			pqpair->flags.cq_doorbell_write_pending = false;
+		}
 	}
 
 	if (pqpair->flags.delay_pcie_doorbell) {
