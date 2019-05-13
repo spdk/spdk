@@ -31,7 +31,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF &
 nvmfpid=$!
 
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid;  nvmftestfini; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
@@ -111,6 +111,5 @@ done
 
 trap - SIGINT SIGTERM EXIT
 
-killprocess $nvmfpid
 nvmftestfini
 timing_exit perf

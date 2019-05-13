@@ -163,10 +163,28 @@ function nvmftestinit()
 		$rootdir/scripts/setup.sh
 		rdma_device_init
 	fi
+	RDMA_IP_LIST=$(get_available_rdma_ips)
+	NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
+	if [ -z $NVMF_FIRST_TARGET_IP ]; then
+		echo "no NIC for nvmf test"
+		exit 0
+	fi
+}
+
+function nvmfappstart()
+{
+	timing_enter start_nvmf_tgt
+	$NVMF_APP $1 &
+	nvmfpid=$!
+	trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
+	waitforlisten $nvmfpid
+	modprobe nvme-rdma
+	timing_exit start_nvmf_tgt
 }
 
 function nvmftestfini()
 {
+	killprocess $nvmfpid
 	if [ "$NVMF_TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh reset
 		rdma_device_init
