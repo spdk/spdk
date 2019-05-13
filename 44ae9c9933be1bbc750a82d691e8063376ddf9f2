@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9301924d_237aa61a",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1439,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-05-13T13:26:08Z",
+      "side": 1,
+      "message": "how about separating spdk_debuglog insertions into another patch?",
+      "revId": "44ae9c9933be1bbc750a82d691e8063376ddf9f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e175cf8a_63b06f92",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1446,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-05-13T13:26:08Z",
+      "side": 1,
+      "message": "^",
+      "revId": "44ae9c9933be1bbc750a82d691e8063376ddf9f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90146317_899a271a",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1507,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-05-13T13:26:08Z",
+      "side": 1,
+      "message": "^",
+      "revId": "44ae9c9933be1bbc750a82d691e8063376ddf9f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
