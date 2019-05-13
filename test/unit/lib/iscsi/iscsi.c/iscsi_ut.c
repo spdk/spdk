@@ -42,7 +42,6 @@
 #include "iscsi/iscsi.c"
 
 #include "../common.c"
-#include "iscsi/acceptor.h"
 #include "iscsi/portal_grp.h"
 #include "scsi/scsi_internal.h"
 #include "common/lib/test_env.c"

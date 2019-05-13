@@ -44,9 +44,54 @@
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"
 #include "iscsi/portal_grp.h"
-#include "iscsi/acceptor.h"
 
 #define PORTNUMSTRLEN 32
+#define ACCEPT_TIMEOUT_US 1000 /* 1ms */
+
+static int
+iscsi_portal_accept(void *arg)
+{
+	struct spdk_iscsi_portal	*portal = arg;
+	struct spdk_sock		*sock;
+	int				rc;
+	int				count = 0;
+
+	if (portal->sock == NULL) {
+		return -1;
+	}
+
+	while (1) {
+		sock = spdk_sock_accept(portal->sock);
+		if (sock != NULL) {
+			rc = spdk_iscsi_conn_construct(portal, sock);
+			if (rc < 0) {
+				spdk_sock_close(&sock);
+				SPDK_ERRLOG("spdk_iscsi_connection_construct() failed\n");
+				break;
+			}
+			count++;
+		} else {
+			if (errno != EAGAIN && errno != EWOULDBLOCK) {
+				SPDK_ERRLOG("accept error(%d): %s\n", errno, spdk_strerror(errno));
+			}
+			break;
+		}
+	}
+
+	return count;
+}
+
+static void
+spdk_iscsi_acceptor_start(struct spdk_iscsi_portal *p)
+{
+	p->acceptor_poller = spdk_poller_register(iscsi_portal_accept, p, ACCEPT_TIMEOUT_US);
+}
+
+static void
+spdk_iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
+{
+	spdk_poller_unregister(&p->acceptor_poller);
+}
 
 static struct spdk_iscsi_portal *
 iscsi_portal_find_by_addr(const char *host, const char *port)

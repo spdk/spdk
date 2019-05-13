@@ -36,9 +36,18 @@
 
 #include "spdk_cunit.h"
 
+#include "common/lib/test_env.c"
+#include "common/lib/test_sock.c"
+
 #include "../common.c"
 #include "iscsi/portal_grp.c"
 #include "unit/lib/json_mock.c"
+
+#include "spdk_internal/thread.h"
+
+DEFINE_STUB(spdk_iscsi_conn_construct, int,
+	    (struct spdk_iscsi_portal *portal, struct spdk_sock *sock),
+	    0);
 
 struct spdk_iscsi_globals g_spdk_iscsi;
 
@@ -381,9 +390,14 @@ portal_grp_register_twice_case(void)
 static void
 portal_grp_add_delete_case(void)
 {
+	struct spdk_sock sock = {};
+	struct spdk_thread *thread;
 	struct spdk_iscsi_portal_grp *pg1, *pg2;
 	struct spdk_iscsi_portal *p;
 	int rc;
+
+	thread = spdk_thread_create(NULL, NULL);
+	spdk_set_thread(thread);
 
 	const char *host = "192.168.2.0";
 	const char *port = "3260";
@@ -398,8 +412,10 @@ portal_grp_add_delete_case(void)
 
 	spdk_iscsi_portal_grp_add_portal(pg1, p);
 
+	MOCK_SET(spdk_sock_listen, &sock);
 	rc = spdk_iscsi_portal_grp_open(pg1);
 	CU_ASSERT(rc == 0);
+	MOCK_CLEAR_P(spdk_sock_listen);
 
 	rc = spdk_iscsi_portal_grp_register(pg1);
 	CU_ASSERT(rc == 0);
@@ -413,6 +429,8 @@ portal_grp_add_delete_case(void)
 
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+
+	spdk_thread_exit(thread);
 }
 
 static void
