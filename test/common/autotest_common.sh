@@ -830,6 +830,7 @@ set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
 
 PS4=' \t	\$ '
+PS4='\r> \t $BASH_SOURCE $LINENO $((${#FUNCNAME[@]} - 1)) $BASH_SUBSHELL \$ '
 if $SPDK_AUTOTEST_X; then
 	# explicitly enable xtraces
 	set -x
