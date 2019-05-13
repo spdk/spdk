@@ -25,7 +25,7 @@ fi
 nvmfappstart "-m 0xF"
 
 # create the rdma transport with an intentionally small SRQ depth
-$rpc_py nvmf_create_transport -t RDMA -u 8192 -s 1024
+$rpc_py nvmf_create_transport -t rdma -u 8192 -s 1024
 
 declare -a malloc_bdevs
 malloc_bdevs[0]="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
