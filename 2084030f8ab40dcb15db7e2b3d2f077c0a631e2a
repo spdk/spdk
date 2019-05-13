@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cf7a824_4717fd35",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-13T21:20:11Z",
+      "side": 1,
+      "message": "is this supposed to just return 0 here?  I would think some kind of queueing operations has to happen first",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58dc01c0_c80ca51a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-13T21:20:11Z",
+      "side": 1,
+      "message": "I\u0027d prefer to not do a calloc here; this is already a low-memory condition path, so doing another calloc just means this is more likely to fail\n\nin this function, is the reduce_cb_arg the bdev_io?  maybe you can put some of these vbdev_comp_op fields in the crypto-specific bdev_io area (including a TAILQ_ENTRY specific for this queue) - and then you can just queue up the bdev_ios and not have to do an extra memory allocation\n\nyour crypto-specific bdev_io area is pretty small compared to some other bdev modules, so I\u0027m not worried about this causing extra memory usage (the bdev io pool is allocated for the worst case module which is not this one)",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afca1709_6ae548a7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-13T21:20:11Z",
+      "side": 1,
+      "message": "this is a nit, but I\u0027d put the assert before the reduce_args assignment",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
