@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b783ad4f_1ca71084",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1155,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T16:09:09Z",
+      "side": 1,
+      "message": "not that it\u0027s a big deal or anything but now you are lumping together an invalid input error and a memory alloc error and using a generic error to cover both.  You could restructure this function slightly in a few different ways to return the specific error code.",
+      "revId": "4b0b39d76cb7aaca2643bfeb20dd736bb7932fb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
