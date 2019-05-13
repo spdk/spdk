@@ -24,16 +24,10 @@ else
 	times=3
 fi
 
-MALLOC_BDEV_SIZE=64
-MALLOC_BLOCK_SIZE=512
-
-$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
+echo -e "$(create_malloc_nvmf_subsystem 1 rdma)" | $rpc_py
 
 # Disallow host NQN and make sure connect fails
-$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
 $rpc_py nvmf_subsystem_allow_any_host -d nqn.2016-06.io.spdk:cnode1
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # This connect should fail - the host NQN is not allowed
 ! nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
