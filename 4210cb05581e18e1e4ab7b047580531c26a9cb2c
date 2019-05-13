@@ -1,0 +1,676 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a66d74e_0937b588",
+        "filename": "examples/vmd/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "To be removed",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 39
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6afebc4_5aacd53b",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "We don\u0027t need some of those includes. To be cleaned up.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7e0fd70_750c92b1",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "g_vmd_trid is unused",
+      "range": {
+        "startLine": 50,
+        "startChar": 45,
+        "endLine": 50,
+        "endChar": 55
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d97a4445_08c41559",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "We need just r:",
+      "range": {
+        "startLine": 60,
+        "startChar": 34,
+        "endLine": 60,
+        "endChar": 47
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "acad7e00_817f8afd",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "I don\u0027t think we have to use spdk_nvme_transport_id_parse here. A regular PCI BDF string + spdk_pci_addr_parse should be enough.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32131ce9_3c61cd39",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "This isn\u0027t doxygen, let\u0027s remove those tags",
+      "range": {
+        "startLine": 79,
+        "startChar": 3,
+        "endLine": 79,
+        "endChar": 9
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8332f387_ee74b0ee",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "This should just return with error. We can probably call spdk_pci_addr_parse() only if -r option was specified",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc5a67de_691facab",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "We try to use spec-defined #ifdefs rather than #pragma",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b30a660_a00a2f8c",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "To be removed, those don\u0027t introduce any value.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 14
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6cfb624_eae33087",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "I think we can get function merged as is and clean it up later.\n\nWe\u0027ll be probably moving to a model where PCI devices are managed only from a single thread, so it should be possible for the VMD driver to directly expose a list of all devices behind a VMD endpoint.",
+      "range": {
+        "startLine": 62,
+        "startChar": 4,
+        "endLine": 62,
+        "endChar": 27
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2d5d900_f44fcf31",
+        "filename": "lib/env_dpdk/pci_vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "This can be added in a separate patch before all the lib/vmd additions.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6278488_104c63bb",
+        "filename": "lib/vmd/hotplug.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "This is not SPDK doxygen code style. It should be either refactored to use /** instead of those asterisk walls, \\brief instead of @brief, etc - or it could be stripped of all doxygen references.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bdee732_218eb695",
+        "filename": "lib/vmd/hotplug.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "Can we put this entire file to a separate patch? Then we won\u0027t have to merge it right now since hotplug needs some more work anyway. All hotplug references could be removed from this patch.\n\nThe code path could behave the same as if this vmd_hot_plug allocation failed.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43786e2b_512cdc56",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "It should be static",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a5cdedc_7c090385",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "not needed",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b99c8bbb_d030fe16",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "static",
+      "range": {
+        "startLine": 154,
+        "startChar": 0,
+        "endLine": 154,
+        "endChar": 3
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21004caa_ecc19769",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "spdk_pci_addr_compare() can be used instead.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d9aebd7_dd84bad2",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "PCI hooks can be removed from this patch. We\u0027ll add them later. This means we don\u0027t need any of the spdk_vmd_dev_* functions or vmd_pci_device-\u003epci field.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36841b18_77b79e13",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "No need to cast anything. We don\u0027t have any warning for unused results.",
+      "range": {
+        "startLine": 326,
+        "startChar": 1,
+        "endLine": 326,
+        "endChar": 7
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b68b69c_9aab25c9",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "Those look local to vmdpci.c. They should be static.\n\nMaybe we could just reorder the code so we don\u0027t need those declarations at all? I see some of them are not needed already.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed52cd42_b3c772d1",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "No need for that",
+      "range": {
+        "startLine": 60,
+        "startChar": 35,
+        "endLine": 60,
+        "endChar": 58
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1531bf9_d37c6b4e",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "Just return the condition.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45819a25_1ede5c17",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "Please be consistent with the style. Also move the variable declaration to the top of the function.",
+      "range": {
+        "startLine": 273,
+        "startChar": 46,
+        "endLine": 273,
+        "endChar": 54
+      },
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d41c894_aac70623",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "This is fine for now.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1466545_e3fdadf9",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "We can put this in that other hotplug patch. It\u0027s unused right now.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2308608f_0b3ecf37",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "This is fine for now.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc50577c_cd4f120d",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1032,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "Unused. To be removed.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fd29b89_5a5c1449",
+        "filename": "lib/vmd/vmdpci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "We should separate spec-defined structures from the driver-specific ones. Probably a new header vmd_spec.h will do.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a6d084b_db031ad0",
+        "filename": "lib/vmd/vmdpci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "We shouldn\u0027t need this struct for now.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03b92939_c39d9e5d",
+        "filename": "lib/vmd/vmdpci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "unused",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f9bbfec_6d5b9dac",
+        "filename": "lib/vmd/vmdpci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "unused",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afa3ac3f_8dbe0506",
+        "filename": "lib/vmd/vmdpci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "unused",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29590c59_64573de0",
+        "filename": "lib/vmd/vmdpci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "We can probably move the entire structure to vmd.c",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fec2a008_954b0fd0",
+        "filename": "lib/vmd/vmdpci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "This isn\u0027t even defined.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "194317a7_8091676b",
+        "filename": "mk/vmd.libtest.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "To be cleaned up. We don\u0027t need all of those here.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38c939f9_247bcd90",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-13T05:53:36Z",
+      "side": 1,
+      "message": "Jim commented earlier:\n\u003e This part I\u0027m not sure about.  If a user has a mounted filesystem on an NVMe SSD behind a VMD endpoint, will this forcibly unmount that filesystem?\n\u003e \n\u003e I\u0027m wondering if VMD should be special cases.  Meaning we don\u0027t try to unbind VMD unless user specifically says \u003e UNBIND_VMD\u003d1 or something.  At least for now...\n\nI think the easiest way forward is to require all VMDs to be specified in PCI_WHITELIST.\n\nThe setup.sh changes should be also done in a separate patch.",
+      "revId": "4210cb05581e18e1e4ab7b047580531c26a9cb2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
