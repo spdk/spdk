@@ -149,6 +149,7 @@ struct nvme_pcie_qpair {
 	struct spdk_nvme_cpl *cpl;
 
 	TAILQ_HEAD(, nvme_tracker) free_tr;
+	TAILQ_HEAD(, nvme_tracker) completed_tr;
 	TAILQ_HEAD(nvme_outstanding_tr_head, nvme_tracker) outstanding_tr;
 
 	/* Array of trackers indexed by command ID. */
@@ -167,7 +168,11 @@ struct nvme_pcie_qpair {
 		uint8_t phase			: 1;
 		uint8_t delay_pcie_doorbell	: 1;
 		uint8_t has_shadow_doorbell	: 1;
+		uint8_t cq_doorbell_write_pending : 1;
 	} flags;
+
+	uint64_t last_cq_doorbell_write_ticks;
+	uint64_t max_delay_cq_doorbell_ticks;
 
 	/*
 	 * Base qpair structure.
@@ -1006,6 +1011,9 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	pqpair->max_completions_cap = spdk_min(pqpair->max_completions_cap, NVME_MAX_COMPLETIONS);
 	num_trackers = pqpair->num_entries - pqpair->max_completions_cap;
 
+	pqpair->last_cq_doorbell_write_ticks = spdk_get_ticks();
+	pqpair->flags.cq_doorbell_write_pending = false;
+
 	SPDK_INFOLOG(SPDK_LOG_NVME, "max_completions_cap = %" PRIu16 " num_trackers = %" PRIu16 "\n",
 		     pqpair->max_completions_cap, num_trackers);
 
@@ -1078,6 +1086,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	}
 
 	TAILQ_INIT(&pqpair->free_tr);
+	TAILQ_INIT(&pqpair->completed_tr);
 	TAILQ_INIT(&pqpair->outstanding_tr);
 
 	for (i = 0; i < num_trackers; i++) {
@@ -1322,7 +1331,11 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		tr->req = NULL;
 
 		TAILQ_REMOVE(&pqpair->outstanding_tr, tr, tq_list);
-		TAILQ_INSERT_HEAD(&pqpair->free_tr, tr, tq_list);
+		if (pqpair->max_delay_cq_doorbell_ticks > 0) {
+			TAILQ_INSERT_HEAD(&pqpair->completed_tr, tr, tq_list);
+		} else {
+			TAILQ_INSERT_HEAD(&pqpair->free_tr, tr, tq_list);
+		}
 
 		/*
 		 * If the controller is in the middle of resetting, don't
@@ -1355,6 +1368,24 @@ nvme_pcie_qpair_manual_complete_tracker(struct spdk_nvme_qpair *qpair,
 }
 
 static void
+nvme_pcie_qpair_release_completed_trackers(struct nvme_pcie_qpair *pqpair)
+{
+	if (TAILQ_EMPTY(&pqpair->completed_tr)) {
+		return;
+	}
+
+	/* We want the most recently released trackers at the head of the TAILQ,
+	 * since the TAILQ implementation makes it most efficient to insert/remove
+	 * at the head.  So when we release the completed trackers, we will append
+	 * the free trackers to the end of the completed trackers, and then swap
+	 * the two TAILQs.  This isn't optimal, but we only do this when doing
+	 * cq doorbell coalescing so the operation doesn't happen very often.
+	 */
+	TAILQ_CONCAT(&pqpair->completed_tr, &pqpair->free_tr, tq_list);
+	TAILQ_SWAP(&pqpair->completed_tr, &pqpair->free_tr, nvme_tracker, tq_list);
+}
+
+static void
 nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
@@ -1367,6 +1398,8 @@ nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 							SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
 	}
+
+	nvme_pcie_qpair_release_completed_trackers(pqpair);
 }
 
 void
@@ -1595,6 +1628,8 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	pqpair->num_entries = opts->io_queue_size;
 	pqpair->flags.delay_pcie_doorbell = opts->delay_pcie_doorbell;
+	pqpair->max_delay_cq_doorbell_ticks = opts->max_delay_pcie_cq_doorbell * spdk_get_ticks_hz() /
+					      SPDK_SEC_TO_USEC;
 
 	qpair = &pqpair->qpair;
 
@@ -2105,7 +2140,17 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (num_completions > 0) {
-		nvme_pcie_qpair_ring_cq_doorbell(qpair);
+		pqpair->flags.cq_doorbell_write_pending = true;
+	}
+
+	if (current_tsc == UINT64_MAX ||
+	    (pqpair->last_cq_doorbell_write_ticks + pqpair->max_delay_cq_doorbell_ticks) <= current_tsc) {
+		if (pqpair->flags.cq_doorbell_write_pending) {
+			nvme_pcie_qpair_ring_cq_doorbell(qpair);
+			pqpair->last_cq_doorbell_write_ticks = current_tsc;
+			pqpair->flags.cq_doorbell_write_pending = false;
+			nvme_pcie_qpair_release_completed_trackers(pqpair);
+		}
 	}
 
 	if (pqpair->flags.delay_pcie_doorbell) {
