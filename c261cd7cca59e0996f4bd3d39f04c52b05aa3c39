@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3878adc5_43afd5b2",
+        "filename": "Makefile",
+        "patchSetId": 18
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-13T07:06:43Z",
+      "side": 1,
+      "message": "Changing lib to $(LIB) fixed the issue. Will you check if this is correct and satisfies your requirement?",
+      "range": {
+        "startLine": 94,
+        "startChar": 5,
+        "endLine": 94,
+        "endChar": 8
+      },
+      "revId": "c261cd7cca59e0996f4bd3d39f04c52b05aa3c39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
