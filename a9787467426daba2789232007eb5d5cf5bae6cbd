@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32d40edf_2acf129d",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T15:55:27Z",
+      "side": 1,
+      "message": "Why change a generic example to something this specific?",
+      "revId": "a9787467426daba2789232007eb5d5cf5bae6cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
