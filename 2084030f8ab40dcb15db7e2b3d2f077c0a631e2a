@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e15dfc81_ae8dff71",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T21:43:55Z",
+      "side": 1,
+      "message": "if we got a 1 then nothing was queued so we just return.  If we got a 0 or a 2 we fall through and queue",
+      "parentUuid": "3cf7a824_4717fd35",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "58dc01c0_c80ca51a",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-13T21:20:11Z",
       "side": 1,
       "message": "I\u0027d prefer to not do a calloc here; this is already a low-memory condition path, so doing another calloc just means this is more likely to fail\n\nin this function, is the reduce_cb_arg the bdev_io?  maybe you can put some of these vbdev_comp_op fields in the crypto-specific bdev_io area (including a TAILQ_ENTRY specific for this queue) - and then you can just queue up the bdev_ios and not have to do an extra memory allocation\n\nyour crypto-specific bdev_io area is pretty small compared to some other bdev modules, so I\u0027m not worried about this causing extra memory usage (the bdev io pool is allocated for the worst case module which is not this one)",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2a17d06_a95cde23",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T21:43:55Z",
+      "side": 1,
+      "message": "No, I don\u0027t have the bdev_io in this function. This is the cb_arg that you give me when you call into compress/decompress. I stuff it in the one opaque mbuf field I have for context and get it back in the poller so I can call the correct reuce CB with its arg. I had made changes at one point to get get the bdevio back from reduce (I pass it in on the initial read/write) when working on another patch but didn\u0027t end up using it.  I could do that or I could make my own global pool of ops for queuing to grab from. Any preference?",
+      "parentUuid": "58dc01c0_c80ca51a",
       "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f125a707_c1d2ff5e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T21:43:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "afca1709_6ae548a7",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
