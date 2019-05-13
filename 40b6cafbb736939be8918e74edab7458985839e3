@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6cc49d65_10aa9fcc",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1151,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-05-13T13:46:05Z",
+      "side": 1,
+      "message": "I think a return is required here for two reasons:\na. If one namespace has outstanding I/Os, there\u0027s no need to continue to check the remaining namespaces, for the remaining namespaces will still be checked in next call.\nb. Without a return here, the line 1148 may cause a bug: If there exists another namespace which also has outstanding I/Os in the remaining ones, ctx-\u003enext_index will be updated to that namespace, causing current namespace to be skipped in next call.",
+      "revId": "40b6cafbb736939be8918e74edab7458985839e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03ae0b94_a7b04cde",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1156,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-05-13T13:46:05Z",
+      "side": 1,
+      "message": "If line 1151 adds a return, the line here means all the outstanding I/Os have finished.\nSo this judgement could be removed or used as an assert.",
+      "revId": "40b6cafbb736939be8918e74edab7458985839e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
