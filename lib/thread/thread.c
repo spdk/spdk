@@ -107,6 +107,7 @@ struct spdk_thread {
 
 	struct spdk_cpuset		*cpumask;
 
+	uint64_t			tsc_current;
 	uint64_t			tsc_last;
 	struct spdk_thread_stats	stats;
 
@@ -450,6 +451,8 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		now = spdk_get_ticks();
 	}
 
+	thread->tsc_current = now;
+
 	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
 	if (msg_count) {
 		rc = 1;
@@ -675,6 +678,12 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 		spdk_mempool_put(g_spdk_msg_mempool, msg);
 		return;
 	}
+}
+
+uint64_t
+spdk_thread_get_ticks(const struct spdk_thread *thread)
+{
+	return thread->tsc_current;
 }
 
 struct spdk_poller *

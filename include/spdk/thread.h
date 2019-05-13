@@ -352,6 +352,8 @@ int spdk_thread_get_stats(struct spdk_thread_stats *stats);
  */
 void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx);
 
+uint64_t spdk_thread_get_ticks(const struct spdk_thread *thread);
+
 /**
  * Send a message to each thread, serially.
  *
