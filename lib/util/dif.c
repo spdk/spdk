@@ -1379,25 +1379,18 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 	_iov_ctx_init(&iov_ctx, iovs, iovcnt);
 	buf += offset_blocks * dif_ctx->block_size;
 
-	if (head_unalign != 0) {
+	while (offset_blocks < num_blocks) {
 		buf += head_unalign;
 
 		if (!_iov_ctx_set_iov(&iov_ctx, buf, data_block_size - head_unalign)) {
-			goto end;
+			break;
 		}
 		buf += dif_ctx->block_size - head_unalign;
 		offset_blocks++;
+
+		head_unalign = 0;
 	}
 
-	while (offset_blocks < num_blocks) {
-		if (!_iov_ctx_set_iov(&iov_ctx, buf, data_block_size)) {
-			goto end;
-		}
-		buf += dif_ctx->block_size;
-		offset_blocks++;
-	}
-
-end:
 	if (_mapped_len != NULL) {
 		*_mapped_len = iov_ctx.mapped_len;
 	}
