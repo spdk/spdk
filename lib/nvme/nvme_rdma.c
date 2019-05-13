@@ -1681,7 +1681,7 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 
 int
 nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
-				    uint32_t max_completions)
+				    uint32_t max_completions, uint64_t tsc)
 {
 	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
 	struct ibv_wc			wc[MAX_COMPLETIONS_PER_POLL];

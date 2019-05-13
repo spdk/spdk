@@ -417,7 +417,8 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 }
 
 int32_t
-spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+spdk_nvme_qpair_process_completions_tsc(struct spdk_nvme_qpair *qpair, uint32_t max_completions,
+					uint64_t current_tsc)
 {
 	int32_t ret;
 	struct nvme_request *req, *tmp;
@@ -448,7 +449,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	qpair->in_completion_context = 1;
-	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
+	ret = nvme_transport_qpair_process_completions(qpair, max_completions, current_tsc);
 	qpair->in_completion_context = 0;
 	if (qpair->delete_after_completion_context) {
 		/*
@@ -458,6 +459,12 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 	return ret;
+}
+
+int32_t
+spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+{
+	return spdk_nvme_qpair_process_completions_tsc(qpair, max_completions, UINT64_MAX);
 }
 
 int
