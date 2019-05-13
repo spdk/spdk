@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0422a182_98cacea2",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-13T21:37:43Z",
+      "side": 1,
+      "message": "That\u0027s a cool idea. It could save us from jumping into this function a few times, but wouldn\u0027t I have to un-register and re-register the poller every time I poll it in that case? It seems like for situations where we have a lot of pollers registered, the overhead of removing the poller from the list and placing it back on in the proper spot might have more overhead than calling into this function and finding no work to do.",
+      "parentUuid": "f49dd264_ca300fa3",
+      "range": {
+        "startLine": 177,
+        "startChar": 3,
+        "endLine": 177,
+        "endChar": 9
+      },
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "57863302_ac766891",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 3
@@ -39,6 +63,24 @@
       "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53bc415a_7242ffa2",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-13T21:37:43Z",
+      "side": 1,
+      "message": "Good point. I am also taking Shuhei\u0027s advice about using the re-entrant version of rand instead which gets rid of this srand call.",
+      "parentUuid": "57863302_ac766891",
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "d827bdaa_40bea118",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-13T21:37:43Z",
+      "side": 1,
+      "message": "I think you are right Shuhei. Since we will be using this in a testing environment, it might be useful to have a random number generator that is reproducible/predictable between runs if we need to double check some behavior.",
+      "parentUuid": "d2151fe6_d53a70d3",
+      "range": {
+        "startLine": 285,
+        "startChar": 10,
+        "endLine": 285,
+        "endChar": 14
+      },
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "545e2d48_1c12bc58",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 3
@@ -76,6 +142,24 @@
       "writtenOn": "2019-05-10T02:49:00Z",
       "side": 1,
       "message": "I think you followed passthrough bdev but should we call spdk_bdev_module_release_bdev() in this case?",
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0641e54_fb0032a4",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-13T21:37:43Z",
+      "side": 1,
+      "message": "I did take this from passthru. But you are absolutely right. We should be releasing the underlying bdev.",
+      "parentUuid": "545e2d48_1c12bc58",
       "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
