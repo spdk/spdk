@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "58e365ac_a95994ab",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T16:39:55Z",
+      "side": 1,
+      "message": "why not return NULL instead? The call below can be used to get the free mask. Just seems like a dev using this could typo the name and get a mask back not realizing its not what they were looking for.",
+      "revId": "8bf5a516b264207f6e3df1b7933f260483f22cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1e6bafb_45228705",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T16:39:55Z",
+      "side": 1,
+      "message": "see comment in .h file, I think return NULL here would be better",
+      "revId": "8bf5a516b264207f6e3df1b7933f260483f22cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cae62f5f_6e1ee893",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T16:39:55Z",
+      "side": 1,
+      "message": "why not -EINVAL?",
+      "revId": "8bf5a516b264207f6e3df1b7933f260483f22cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10ef0ee4_472fd506",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T16:39:55Z",
+      "side": 1,
+      "message": "-EINVAL?",
+      "revId": "8bf5a516b264207f6e3df1b7933f260483f22cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "faf34331_01d366de",
         "filename": "lib/event/app.c",
         "patchSetId": 31
