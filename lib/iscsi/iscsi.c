@@ -53,7 +53,6 @@
 #include "spdk/scsi.h"
 #include "spdk/bdev.h"
 #include "iscsi/portal_grp.h"
-#include "iscsi/acceptor.h"
 
 #include "spdk_internal/log.h"
 
