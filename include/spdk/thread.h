@@ -362,6 +362,18 @@ int spdk_thread_get_stats(struct spdk_thread_stats *stats);
 void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx);
 
 /**
+ * Get the TSC from when the current thread started its current poll operation.
+ *
+ * The TSC in this case is stored in the current thread's data structure, avoiding
+ * the need to get the TSC again from the CPU which can be expensive when performed
+ * too frequently.  It is intended for use cases where a reasonably close TSC value
+ * is suitable.
+ *
+ * \return TSC from when the current thread started its current poll operation
+ */
+uint64_t spdk_thread_get_ticks(void);
+
+/**
  * Send a message to each thread, serially.
  *
  * The message is sent asynchronously - i.e. spdk_for_each_thread will return
