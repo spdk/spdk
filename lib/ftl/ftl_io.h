@@ -52,23 +52,21 @@ typedef int (*ftl_md_pack_fn)(struct ftl_band *);
 enum ftl_io_flags {
 	/* Indicates whether IO is already initialized */
 	FTL_IO_INITIALIZED	= (1 << 0),
-	/* Keep the IO when done with the request */
-	FTL_IO_KEEP_ALIVE	= (1 << 1),
 	/* Internal based IO (defrag, metadata etc.) */
-	FTL_IO_INTERNAL		= (1 << 2),
+	FTL_IO_INTERNAL		= (1 << 1),
 	/* Indicates that the IO should not go through if there's */
 	/* already another one scheduled to the same LBA */
-	FTL_IO_WEAK		= (1 << 3),
+	FTL_IO_WEAK		= (1 << 2),
 	/* Indicates that the IO is used for padding */
-	FTL_IO_PAD		= (1 << 4),
+	FTL_IO_PAD		= (1 << 3),
 	/* The IO operates on metadata */
-	FTL_IO_MD		= (1 << 5),
+	FTL_IO_MD		= (1 << 4),
 	/* Using PPA instead of LBA */
-	FTL_IO_PPA_MODE		= (1 << 6),
+	FTL_IO_PPA_MODE		= (1 << 5),
 	/* Indicates that IO contains noncontiguous LBAs */
-	FTL_IO_VECTOR_LBA	= (1 << 7),
+	FTL_IO_VECTOR_LBA	= (1 << 6),
 	/* Indicates that IO is being retried */
-	FTL_IO_RETRY		= (1 << 8),
+	FTL_IO_RETRY		= (1 << 7),
 };
 
 enum ftl_io_type {
