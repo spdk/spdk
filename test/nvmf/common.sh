@@ -240,3 +240,13 @@ function nvme_connect()
 	done
 	return 1
 }
+
+function create_malloc_nvmf_subsystem()
+{
+	# $1 - subsystem index
+	# $2 - transport (rdma, tcp)
+	echo "construct_malloc_bdev 64 512 -b Malloc$1"
+	echo "nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$1 -a -s SPDK0000000000000$1 -d SPDK_Controller$1"
+	echo "nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$1 Malloc$1"
+	echo "nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$1 -t $2 -a $NVMF_FIRST_TARGET_IP -s 4420"
+}

@@ -5,9 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-MALLOC_BDEV_SIZE=64
-MALLOC_BLOCK_SIZE=512
-
 rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
@@ -23,16 +20,13 @@ NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | sed -n 2p)
 $rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
 
 # Create subsystems
-$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
-$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK1
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+echo -e "$(create_malloc_nvmf_subsystem 1 rdma)" | $rpc_py
 
 echo "test case1: single bdev can't be used in multiple subsystems"
 set +e
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode2 -a -s SPDK2
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t rdma -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 Malloc0
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 Malloc1
 nmic_status=$?
 
 if [ $nmic_status -eq 0 ]; then
