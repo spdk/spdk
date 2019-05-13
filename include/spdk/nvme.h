@@ -945,14 +945,30 @@ struct spdk_nvme_io_qpair_opts {
 
 	/**
 	 * When submitting I/O via spdk_nvme_ns_read/write and similar functions,
-	 * don't immediately write the submission queue doorbell. Instead, write
-	 * to the doorbell as necessary inside spdk_nvme_qpair_process_completions().
+	 * don't immediately write the submission or completion queue doorbells.
+	 * Instead, write to the doorbells as necessary inside
+	 * spdk_nvme_qpair_process_completions().
 	 *
-	 * This results in better batching of I/O submission and consequently fewer
-	 * MMIO writes to the doorbell, which may increase performance.
+	 * For the submission queue, it will notify the SSD of any I/O submitted to
+	 * the driver since the last call to spdk_nvme_qpair_process_completions().
+	 *
+	 * For the completion queue, it will acknowledge any I/O completed after a
+	 * period of period of max_delay_pcie_cq_doorbell (see below) has expired.
+	 *
+	 * This results in better batching of I/O submission and completion
+	 * acknowledgments and consequently fewer MMIO writes to the doorbells,
+	 * which may increase performance.
 	 *
 	 * This only applies to local PCIe devices. */
 	bool delay_pcie_doorbell;
+
+	/**
+	 * Controls the maximum amount of delay after receiving a completion before
+	 * it will be acknowledged by a write to the completion queue doorbell.
+	 *
+	 * Setting this value to 0 disables coalescing of CQ doorbell writes.
+	 */
+	uint64_t max_delay_pcie_cq_doorbell; /* in microseconds */
 };
 
 /**
@@ -1120,6 +1136,8 @@ int spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions);
 
+int32_t spdk_nvme_qpair_process_completions_tsc(struct spdk_nvme_qpair *qpair,
+		uint32_t max_completions, uint64_t current_tsc);
 /**
  * Send the given admin command to the NVMe controller.
  *
