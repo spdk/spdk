@@ -16,6 +16,24 @@
       "revId": "9ae58717b190accc68561c1a467d1c92edf86cdf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cca1bcf1_89a05cce",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T21:51:08Z",
+      "side": 1,
+      "message": "good call",
+      "parentUuid": "14b2353f_ea90ee5a",
+      "revId": "9ae58717b190accc68561c1a467d1c92edf86cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
