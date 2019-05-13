@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "5c237b20_d2eae45c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-13T21:46:20Z",
+      "side": 1,
+      "message": "Or consider that the low mem conditions at this point are with pre-allocated rte pools, not heap so I dunno, maybe this is OK?",
+      "parentUuid": "e2a17d06_a95cde23",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "afca1709_6ae548a7",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 13
