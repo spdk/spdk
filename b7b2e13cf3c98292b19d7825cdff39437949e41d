@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f02e470c_2413d026",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-14T02:12:09Z",
+      "side": 1,
+      "message": "I think you should check err after each opal_add_token_xx call, and you may think a method to simplify the section, like using a array.",
+      "revId": "b7b2e13cf3c98292b19d7825cdff39437949e41d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28fc499e_56624c7f",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1211,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-14T02:12:09Z",
+      "side": 1,
+      "message": "ditto.",
+      "revId": "b7b2e13cf3c98292b19d7825cdff39437949e41d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2288a70_913307d0",
+        "filename": "lib/nvme/nvme_opal_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-14T02:12:09Z",
+      "side": 1,
+      "message": "You can change this part as a separate patch, it\u0027s non-related with what you are describing here.",
+      "revId": "b7b2e13cf3c98292b19d7825cdff39437949e41d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
