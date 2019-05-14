@@ -42,6 +42,7 @@
 #define MAX_RAIDS 2
 #define INVALID_IO_SUBMIT 0xFFFF
 #define MAX_TEST_IO_RANGE (3 * 3 * 3 * (MAX_BASE_DRIVES + 5))
+#define BLOCK_CNT (1024ul * 1024ul * 1024ul * 1024ul)
 
 /* Data structure to capture the output of IO for verification */
 struct io_output {
@@ -1086,7 +1087,7 @@ create_base_bdevs(uint32_t bbdev_start_idx)
 		base_bdev->name = strdup(name);
 		SPDK_CU_ASSERT_FATAL(base_bdev->name != NULL);
 		base_bdev->blocklen = g_block_len;
-		base_bdev->blockcnt = (uint64_t)1024 * 1024 * 1024 * 1024;
+		base_bdev->blockcnt = BLOCK_CNT;
 		TAILQ_INSERT_TAIL(&g_bdev_list, base_bdev, internal.link);
 	}
 }
@@ -2200,7 +2201,7 @@ test_multi_raid_with_io(void)
 		}
 	}
 
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i < g_max_raids; i++) {
 		lba = 0;
 		idx = 0;
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
@@ -2455,7 +2456,7 @@ test_asym_base_drives_blockcnt(void)
 	for (i = 0; i < construct_req.base_bdevs.num_base_bdevs; i++) {
 		bbdev = spdk_bdev_get_by_name(construct_req.base_bdevs.base_bdevs[i]);
 		SPDK_CU_ASSERT_FATAL(bbdev != NULL);
-		bbdev->blockcnt = rand() + 1;
+		bbdev->blockcnt = BLOCK_CNT;
 	}
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
