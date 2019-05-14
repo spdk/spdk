@@ -57,6 +57,7 @@ struct spdk_sock {
 
 struct spdk_sock_group {
 	STAILQ_HEAD(, spdk_sock_group_impl)	group_impls;
+	void					*ctx;
 };
 
 struct spdk_sock_group_impl {
