@@ -16,6 +16,24 @@
       "revId": "6fc0a9d66b249ea2ff93102ad4884b5c5f1afba1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41748ca3_02f44798",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-14T01:56:14Z",
+      "side": 1,
+      "message": "the case that ctx-\u003eiovpos \u003e\u003d ctx-\u003eiovcnt is unexpected. So I want to add assert(ctx-\u003eiovpos \u003c ctx-\u003eiovcnt).\n\nAnd we don\u0027t want to go to the next iteration. So we have to keep this if - else.\n\nI followed this pattern in iscsi and nvmf-tcp.",
+      "parentUuid": "aa86200f_04a96c2c",
+      "revId": "6fc0a9d66b249ea2ff93102ad4884b5c5f1afba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
