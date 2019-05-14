@@ -60,21 +60,41 @@ struct spdk_scsi_port {
 	char			name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
 };
 
+/* Registrant with I_T nextus */
+struct spdk_scsi_pr_registrant {
+	uint64_t				rkey;
+	uint16_t				relative_target_port_id;
+	uint16_t				transport_id_len;
+	char					transport_id[SPDK_SCSI_MAX_TRANSPORT_ID_LENGTH];
+	char					initiator_port_name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
+	char					target_port_name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
+	struct spdk_scsi_port			*initiator_port;
+	struct spdk_scsi_port			*target_port;
+	TAILQ_ENTRY(spdk_scsi_pr_registrant)	link;
+};
+
+/* Reservation with LU_SCOPE */
+struct spdk_scsi_pr_reservation {
+	struct spdk_scsi_pr_registrant		*holder;
+	enum spdk_scsi_pr_type_code		rtype;
+	uint64_t				crkey;
+};
+
 struct spdk_scsi_dev {
-	int				id;
-	int				is_allocated;
-	bool				removed;
-	spdk_scsi_dev_destruct_cb_t	remove_cb;
-	void				*remove_ctx;
+	int					id;
+	int					is_allocated;
+	bool					removed;
+	spdk_scsi_dev_destruct_cb_t		remove_cb;
+	void					*remove_ctx;
 
-	char				name[SPDK_SCSI_DEV_MAX_NAME + 1];
+	char					name[SPDK_SCSI_DEV_MAX_NAME + 1];
 
-	struct spdk_scsi_lun		*lun[SPDK_SCSI_DEV_MAX_LUN];
+	struct spdk_scsi_lun			*lun[SPDK_SCSI_DEV_MAX_LUN];
 
-	int				num_ports;
-	struct spdk_scsi_port		port[SPDK_SCSI_DEV_MAX_PORTS];
+	int					num_ports;
+	struct spdk_scsi_port			port[SPDK_SCSI_DEV_MAX_PORTS];
 
-	uint8_t				protocol_id;
+	uint8_t					protocol_id;
 };
 
 struct spdk_scsi_lun_desc {
@@ -114,6 +134,13 @@ struct spdk_scsi_lun {
 
 	/** Argument for hotremove_cb */
 	void *hotremove_ctx;
+
+	/** Registrant head for I_T nexus */
+	TAILQ_HEAD(, spdk_scsi_pr_registrant) reg_head;
+	/** Persistent Reservation Generation */
+	uint32_t pr_generation;
+	/** Reservation for the LUN */
+	struct spdk_scsi_pr_reservation reservation;
 
 	/** List of open descriptors for this LUN. */
 	TAILQ_HEAD(, spdk_scsi_lun_desc) open_descs;
@@ -173,6 +200,8 @@ void spdk_bdev_scsi_reset(struct spdk_scsi_task *task);
 
 bool spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset,
 				struct spdk_dif_ctx *dif_ctx);
+
+int spdk_scsi_pr_out(struct spdk_scsi_task *task, uint8_t *cdb, uint8_t *data, uint16_t data_len);
 
 struct spdk_scsi_globals {
 	pthread_mutex_t mutex;
