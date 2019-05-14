@@ -200,6 +200,7 @@ bool spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t o
 				struct spdk_dif_ctx *dif_ctx);
 
 int spdk_scsi_pr_out(struct spdk_scsi_task *task, uint8_t *cdb, uint8_t *data, uint16_t data_len);
+int spdk_scsi_pr_in(struct spdk_scsi_task *task, uint8_t *cdb, uint8_t *data, uint16_t data_len);
 
 struct spdk_scsi_globals {
 	pthread_mutex_t mutex;

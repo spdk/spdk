@@ -2035,6 +2035,14 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		data_len = 0;
 		break;
 
+	case SPDK_SPC_PERSISTENT_RESERVE_IN:
+		alloc_len = from_be16(&cdb[7]);
+		data_len = alloc_len;
+		data = spdk_dma_zmalloc(data_len, 0, NULL);
+		assert(data != NULL);
+		rc = spdk_scsi_pr_in(task, cdb, data, data_len);
+		break;
+
 	default:
 		return SPDK_SCSI_TASK_UNKNOWN;
 	}
