@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c094485d_1bf4e20b",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 0,
+      "message": "This trace is missing.",
+      "range": {
+        "startLine": 411,
+        "startChar": 0,
+        "endLine": 411,
+        "endChar": 36
+      },
+      "revId": "82a75df5bdf5fc58d8553b5ca46b6088f8ebea80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

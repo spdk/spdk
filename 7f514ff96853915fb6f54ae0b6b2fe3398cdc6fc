@@ -1,0 +1,337 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40e1ca6b_4ab6bd34",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "Free stuff where they\u0027re allocated. Since this isn\u0027t allocated here remove this.",
+      "range": {
+        "startLine": 313,
+        "startChar": 0,
+        "endLine": 315,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f4b5b83_e195cae2",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "Just move the ftl_reloc_fn typedef below the structure declaration. Or better yet, move it to the place it\u0027s needed.",
+      "range": {
+        "startLine": 49,
+        "startChar": 7,
+        "endLine": 49,
+        "endChar": 21
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f090a311_f3cef0e2",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "I think keeping track of the ftl_io associated with the move makes sense. I\u0027d set it for all of the IOs.",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 59
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f208901_791c9073",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "This shouldn\u0027t be here. Or at least this array should not be allocated for each of the band_relocs, only for the active ones.",
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecdcefb8_dc218ed6",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "What the point in passing ftl_reloc_move here? ftl_reloc_read_lba_map_cb only uses it to retrieve breloc - pass it.",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 49
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83a1f376_46da30d0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "It\u0027s a static function, do we ever call this with move \u003d\u003d NULL?",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7de5d83d_a3335ebf",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "I think we should change ftl_io_init_opts to be able to pass this instead of setting it here.",
+      "range": {
+        "startLine": 430,
+        "startChar": 2,
+        "endLine": 430,
+        "endChar": 16
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75508c1b_c14c1f88",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "Let\u0027s try to free this in the place it\u0027s allocated.",
+      "range": {
+        "startLine": 433,
+        "startChar": 3,
+        "endLine": 433,
+        "endChar": 28
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0b65d31_1a988fc5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "Why not just do ppa.lbk++ as part of the loop?",
+      "range": {
+        "startLine": 438,
+        "startChar": 0,
+        "endLine": 438,
+        "endChar": 29
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c44d804_4d950d6a",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "You\u0027re not checking the result of the ftl_reloc_io_init.",
+      "range": {
+        "startLine": 462,
+        "startChar": 2,
+        "endLine": 462,
+        "endChar": 4
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad3f017e_d3ffc5f7",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "Let\u0027s just get rid of this \u0027io\u0027 variable and just set move-\u003eio here:\n\nif (spdk_likely(move-\u003eio \u003d\u003d NULL)) {\n  move-\u003eio \u003d ftl_reloc_io_init();\n}",
+      "range": {
+        "startLine": 459,
+        "startChar": 0,
+        "endLine": 465,
+        "endChar": 0
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "868ca263_741d7b38",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "No point in initializing this.",
+      "range": {
+        "startLine": 480,
+        "startChar": 18,
+        "endLine": 480,
+        "endChar": 25
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8e901d5_e6f9e9f6",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you release move-\u003edata here?",
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e244f93_874eccd7",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "What is the point of this? It\u0027s called by ftl_reloc_release, when band relocation is completed. However, ftl_reloc_prep does the opposite - it enqueues all of the IOs onto the free_queue. We should leave free_queue as it is here.",
+      "range": {
+        "startLine": 550,
+        "startChar": 0,
+        "endLine": 550,
+        "endChar": 23
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da46e7b7_0f14ad5c",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:29:30Z",
+      "side": 1,
+      "message": "Aren\u0027t the ftl_reloc_move kept on the free_queue by the time we reach this?",
+      "range": {
+        "startLine": 656,
+        "startChar": 0,
+        "endLine": 656,
+        "endChar": 89
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
