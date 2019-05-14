@@ -90,6 +90,49 @@ struct raid_io_ranges g_io_ranges[MAX_TEST_IO_RANGE];
 uint32_t g_io_range_idx;
 uint64_t g_lba_offset;
 
+DEFINE_STUB(spdk_bdev_flush_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
+		void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
+		enum spdk_bdev_io_type io_type), true);
+DEFINE_STUB(spdk_get_io_channel, struct spdk_io_channel *, (void *io_device), NULL);
+DEFINE_STUB_V(spdk_io_device_unregister, (void *io_device,
+		spdk_io_device_unregister_cb unregister_cb));
+DEFINE_STUB_V(spdk_io_device_register, (void *io_device, spdk_io_channel_create_cb create_cb,
+					spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size,
+					const char *name));
+DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
+DEFINE_STUB(spdk_json_write_named_string, int, (struct spdk_json_write_ctx *w,
+		const char *name, const char *val), 0);
+DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_named_object_begin, int, (struct spdk_json_write_ctx *w,
+		const char *name), 0);
+DEFINE_STUB(spdk_json_write_named_array_begin, int, (struct spdk_json_write_ctx *w,
+		const char *name), 0);
+DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
+DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
+	    (void *)1);
+DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
+DEFINE_STUB(spdk_conf_next_section, struct spdk_conf_section *, (struct spdk_conf_section *sp),
+	    NULL);
+DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
+DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_json_decode_string, int, (const struct spdk_json_val *val, void *out), 0);
+DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
+					struct spdk_json_write_ctx *w));
+DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_strerror, const char *, (int errnum), NULL);
+DEFINE_STUB(spdk_json_decode_array, int, (const struct spdk_json_val *values,
+		spdk_json_decode_fn decode_func,
+		void *out, size_t max_size, size_t *out_size, size_t stride), 0);
+DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_handler func,
+		uint32_t state_mask));
+DEFINE_STUB(spdk_json_decode_uint32, int, (const struct spdk_json_val *val, void *out), 0);
+DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
+
 static void
 set_test_opts(void)
 {
@@ -295,12 +338,6 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return g_bdev_io_submit_status;
 }
 
-DEFINE_STUB(spdk_bdev_flush_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		uint64_t offset_blocks, uint64_t num_blocks, spdk_bdev_io_completion_cb cb,
-		void *cb_arg), 0);
-DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
-		enum spdk_bdev_io_type io_type), true);
-
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
@@ -325,20 +362,11 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 	CU_ASSERT(ch == (void *)1);
 }
 
-DEFINE_STUB(spdk_get_io_channel, struct spdk_io_channel *, (void *io_device), NULL);
-DEFINE_STUB_V(spdk_io_device_unregister, (void *io_device,
-		spdk_io_device_unregister_cb unregister_cb));
-
 char *
 spdk_sprintf_alloc(const char *format, ...)
 {
 	return strdup(format);
 }
-
-DEFINE_STUB_V(spdk_io_device_register, (void *io_device, spdk_io_channel_create_cb create_cb,
-					spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size,
-					const char *name));
-DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
 
 int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val)
 {
@@ -360,20 +388,6 @@ int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name
 	}
 	return 0;
 }
-
-DEFINE_STUB(spdk_json_write_named_string, int, (struct spdk_json_write_ctx *w,
-		const char *name, const char *val), 0);
-DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_named_object_begin, int, (struct spdk_json_write_ctx *w,
-		const char *name), 0);
-DEFINE_STUB(spdk_json_write_named_array_begin, int, (struct spdk_json_write_ctx *w,
-		const char *name), 0);
-DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
-DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
-	    (void *)1);
 
 void
 spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
@@ -435,8 +449,6 @@ spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 	bdev->internal.claim_module = NULL;
 }
 
-DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
-
 struct spdk_conf_section *
 spdk_conf_first_section(struct spdk_conf *cp)
 {
@@ -489,9 +501,6 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 	return 0;
 }
 
-DEFINE_STUB(spdk_conf_next_section, struct spdk_conf_section *, (struct spdk_conf_section *sp),
-	    NULL);
-
 char *
 spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int idx1, int idx2)
 {
@@ -509,8 +518,6 @@ spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int i
 	return NULL;
 }
 
-DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
-
 int
 spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_bdev_module *module)
@@ -521,9 +528,6 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	bdev->internal.claim_module = module;
 	return 0;
 }
-
-DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *bdev), 0);
-DEFINE_STUB(spdk_json_decode_string, int, (const struct spdk_json_val *val, void *out), 0);
 
 int
 spdk_json_decode_object(const struct spdk_json_val *values,
@@ -564,8 +568,6 @@ spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 	}
 }
 
-DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
-
 int
 spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
 {
@@ -592,9 +594,6 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 	g_rpc_err = 1;
 }
 
-DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
-					struct spdk_json_write_ctx *w));
-
 struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {
@@ -610,15 +609,6 @@ spdk_bdev_get_by_name(const char *bdev_name)
 
 	return NULL;
 }
-
-DEFINE_STUB(spdk_strerror, const char *, (int errnum), NULL);
-DEFINE_STUB(spdk_json_decode_array, int, (const struct spdk_json_val *values,
-		spdk_json_decode_fn decode_func,
-		void *out, size_t max_size, size_t *out_size, size_t stride), 0);
-DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_handler func,
-		uint32_t state_mask));
-DEFINE_STUB(spdk_json_decode_uint32, int, (const struct spdk_json_val *val, void *out), 0);
-DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 
 static void
 bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
