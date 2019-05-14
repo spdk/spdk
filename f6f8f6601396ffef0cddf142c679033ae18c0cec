@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d836a214_404dae90",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T09:01:47Z",
+      "side": 1,
+      "message": "Since the management queue handles requests initiated by vbdev_ocf_mngt_fn chains, it might have been better to just register the poller on start and unregister when it ends. Especially since no management requests come from OCF, all are SPDK initiated.\nUnfortunately that complicates the utils functions since they do not depend on OCF (meanwhile it is used here).\n\nI\u0027m fine with keeping it here, but please increase the poller timer. It generally does not handle IO in most cases (exception being flush and metadata updates), so it doesn\u0027t need to poll with this frequency.\n\nPolling with 100us or 1ms frequency might do fine, unless we see that it takes way too long for flush to complete.",
+      "range": {
+        "startLine": 886,
+        "startChar": 0,
+        "endLine": 886,
+        "endChar": 23
+      },
+      "revId": "f6f8f6601396ffef0cddf142c679033ae18c0cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fc4eff7_6ee7000e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T09:01:47Z",
+      "side": 1,
+      "message": "Same as in previous patch, why not set vbdev-\u003emngt_ctx.status and call vbdev_ocf_mngt_stop(vbdev) ?\nBetter would be to provide actual error path, but I\u0027m fine with just stopping execution at this point.",
+      "range": {
+        "startLine": 944,
+        "startChar": 2,
+        "endLine": 944,
+        "endChar": 37
+      },
+      "revId": "f6f8f6601396ffef0cddf142c679033ae18c0cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
