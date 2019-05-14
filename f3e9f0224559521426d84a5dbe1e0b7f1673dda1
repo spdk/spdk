@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f41d0b3_80e1ecaa",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2773,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-14T09:48:58Z",
+      "side": 1,
+      "message": "Question - should we make it more general (for future use) and change this line for something like:\n\nif (bserrno \u003d\u003d -ENOENT) {\n    spdk_blob_close(blob, _spdk_bs_delete_corrupted_blob, ctx);\n    return;\n}\n\n?",
+      "range": {
+        "startLine": 2773,
+        "startChar": 1,
+        "endLine": 2773,
+        "endChar": 28
+      },
+      "revId": "f3e9f0224559521426d84a5dbe1e0b7f1673dda1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
