@@ -326,9 +326,6 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 }
 
 DEFINE_STUB(spdk_get_io_channel, struct spdk_io_channel *, (void *io_device), NULL);
-DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller));
-DEFINE_STUB(spdk_poller_register, struct spdk_poller *, (spdk_poller_fn fn,
-		void *arg, uint64_t period_microseconds), (void *)1);
 DEFINE_STUB_V(spdk_io_device_unregister, (void *io_device,
 		spdk_io_device_unregister_cb unregister_cb));
 
@@ -385,15 +382,11 @@ spdk_for_each_thread(spdk_msg_fn fn, void *ctx, spdk_msg_fn cpl)
 	cpl(ctx);
 }
 
-DEFINE_STUB(spdk_get_thread, struct spdk_thread *, (void), NULL);
-
 void
 spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
 {
 	fn(ctx);
 }
-
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 
 void
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
@@ -530,7 +523,6 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 }
 
 DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *bdev), 0);
-DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), 0);
 DEFINE_STUB(spdk_json_decode_string, int, (const struct spdk_json_val *val, void *out), 0);
 
 int
