@@ -268,7 +268,7 @@ spdk_sock_is_ipv4(struct spdk_sock *sock)
 }
 
 struct spdk_sock_group *
-spdk_sock_group_create(void)
+spdk_sock_group_create(void *ctx)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock_group *group;
@@ -290,7 +290,18 @@ spdk_sock_group_create(void)
 		}
 	}
 
+	group->ctx = ctx;
 	return group;
+}
+
+void *
+spdk_sock_group_get_ctx(struct spdk_sock_group *group)
+{
+	if (group == NULL) {
+		return NULL;
+	}
+
+	return group->ctx;
 }
 
 int
