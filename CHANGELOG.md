@@ -29,6 +29,11 @@ and "bdevs" array with the per-bdev statistics.
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
 previously attached controller.
 
+### sock
+
+spdk_sock_get_optimal_sock_group() was added to support getting the optimal
+sock group.
+
 ## v19.04:
 
 ### nvme
