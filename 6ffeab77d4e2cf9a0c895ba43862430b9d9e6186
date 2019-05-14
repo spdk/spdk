@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfd3378e_38c3b081",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 21
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T13:39:36Z",
+      "side": 1,
+      "message": "Please correct me if I\u0027m wrong, but this patch flushes all dirty data from cache to _all cores_. It will happen on any vbdev_ocf delete - regardless if this last core or not. \nCan\u0027t see any dependence on persistent metadata seen here. Are we sure ocf_mngt_cache_flush() writes metadata to cache ?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 61
+      },
+      "revId": "6ffeab77d4e2cf9a0c895ba43862430b9d9e6186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
