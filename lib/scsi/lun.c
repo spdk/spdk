@@ -214,6 +214,12 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 static void
 scsi_lun_remove(struct spdk_scsi_lun *lun)
 {
+	struct spdk_scsi_pr_registrant *reg, *tmp;
+
+	TAILQ_FOREACH_SAFE(reg, &lun->reg_head, link, tmp) {
+		TAILQ_REMOVE(&lun->reg_head, reg, link);
+		free(reg);
+	}
 	spdk_bdev_close(lun->bdev_desc);
 
 	free(lun);
@@ -358,6 +364,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 	lun->hotremove_cb = hotremove_cb;
 	lun->hotremove_ctx = hotremove_ctx;
 	TAILQ_INIT(&lun->open_descs);
+	TAILQ_INIT(&lun->reg_head);
 
 	return lun;
 }
