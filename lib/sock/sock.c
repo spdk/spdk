@@ -40,6 +40,121 @@
 
 static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
 
+#define SPDK_SOCK_GROUP_MAP_NUM_MAX 8192
+struct spdk_sock_group_map {
+	int placement_id;
+	struct spdk_sock_group *sock_group;
+	uint32_t ref;
+};
+
+static pthread_mutex_t g_map_table_mutex = PTHREAD_MUTEX_INITIALIZER;
+static struct spdk_sock_group_map g_sock_group_map_table[SPDK_SOCK_GROUP_MAP_NUM_MAX];
+static uint32_t g_map_table_num;
+
+static int
+spdk_sock_add_sock_group_to_map_table(uint32_t placement_id, struct spdk_sock_group *group)
+{
+	int i;
+
+	pthread_mutex_lock(&g_map_table_mutex);
+	if (g_map_table_num == SPDK_SOCK_GROUP_MAP_NUM_MAX) {
+		SPDK_ERRLOG("Cannot create sock group exceeding %d\n", SPDK_SOCK_GROUP_MAP_NUM_MAX);
+		pthread_mutex_unlock(&g_map_table_mutex);
+		return -1;
+	}
+
+	g_map_table_num++;
+	for (i = 0; i < SPDK_SOCK_GROUP_MAP_NUM_MAX; i++) {
+		if (g_sock_group_map_table[i].placement_id == 0) {
+			assert(g_sock_group_map_table[i].sock_group == NULL);
+			assert(g_sock_group_map_table[i].ref == 0);
+			g_sock_group_map_table[i].placement_id = placement_id;
+			g_sock_group_map_table[i].sock_group = group;
+			g_sock_group_map_table[i].ref = 1;
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&g_map_table_mutex);
+	return 0;
+}
+
+static void
+spdk_sock_remove_sock_group_from_map_table(struct spdk_sock_group *group)
+{
+	int i;
+
+	pthread_mutex_lock(&g_map_table_mutex);
+	for (i = 0; i < SPDK_SOCK_GROUP_MAP_NUM_MAX; i++) {
+		/* Many different placement_ids may map to same group */
+		if (g_sock_group_map_table[i].sock_group == group) {
+			g_map_table_num--;
+			g_sock_group_map_table[i].placement_id = 0;
+			g_sock_group_map_table[i].sock_group = NULL;
+			g_sock_group_map_table[i].ref = 0;
+		}
+	}
+
+	pthread_mutex_unlock(&g_map_table_mutex);
+}
+
+static void
+spdk_sock_find_sock_group_from_map_table(int placement_id, struct spdk_sock_group **group,
+		bool inc_ref)
+{
+	int i;
+
+	*group = NULL;
+	pthread_mutex_lock(&g_map_table_mutex);
+	for (i = 0; i < SPDK_SOCK_GROUP_MAP_NUM_MAX; i++) {
+		if (g_sock_group_map_table[i].placement_id == placement_id) {
+			assert(g_sock_group_map_table[i].sock_group != NULL);
+			*group = g_sock_group_map_table[i].sock_group;
+			if (inc_ref) {
+				g_sock_group_map_table[i].ref++;
+			}
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_map_table_mutex);
+}
+
+static void
+spdk_sock_remove_placement_id_from_map_table(int placement_id)
+{
+	int i;
+
+	pthread_mutex_lock(&g_map_table_mutex);
+	for (i = 0; i < SPDK_SOCK_GROUP_MAP_NUM_MAX; i++) {
+		if (g_sock_group_map_table[i].placement_id == placement_id) {
+			assert(g_sock_group_map_table[i].ref > 0);
+			g_sock_group_map_table[i].ref--;
+			if (!g_sock_group_map_table[i].ref) {
+				g_map_table_num--;
+				g_sock_group_map_table[i].placement_id = 0;
+				g_sock_group_map_table[i].sock_group = NULL;
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&g_map_table_mutex);
+}
+
+
+int
+spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)
+{
+	int placement_id = 0, rc;
+
+	rc = sock->net_impl->get_placement_id(sock, &placement_id);
+	if (!rc && (placement_id != 0)) {
+		spdk_sock_find_sock_group_from_map_table(placement_id, group, false);
+		return 0;
+	} else {
+		return -1;
+	}
+}
+
 int
 spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
 		  char *caddr, int clen, uint16_t *cport)
@@ -212,7 +327,8 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 			 spdk_sock_cb cb_fn, void *cb_arg)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
-	int rc;
+	int rc, placement_id = 0;
+	struct spdk_sock_group *_group;
 
 	if (cb_fn == NULL) {
 		errno = EINVAL;
@@ -226,6 +342,20 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		 */
 		errno = EBUSY;
 		return -1;
+	}
+
+	rc = sock->net_impl->get_placement_id(sock, &placement_id);
+	if (!rc && (placement_id != 0)) {
+		spdk_sock_find_sock_group_from_map_table(placement_id, &_group, true);
+		if (_group != NULL) {
+			assert(_group == group);
+		} else {
+			rc = spdk_sock_add_sock_group_to_map_table(placement_id, group);
+			if (rc < 0) {
+				return -1;
+			}
+		}
+
 	}
 
 	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
@@ -253,7 +383,7 @@ int
 spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
-	int rc;
+	int rc, placement_id = 0;
 
 	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
 		if (sock->net_impl == group_impl->net_impl) {
@@ -264,6 +394,11 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	if (group_impl == NULL) {
 		errno = EINVAL;
 		return -1;
+	}
+
+	rc = sock->net_impl->get_placement_id(sock, &placement_id);
+	if (!rc && (placement_id != 0)) {
+		spdk_sock_remove_placement_id_from_map_table(placement_id);
 	}
 
 	rc = group_impl->net_impl->group_impl_remove_sock(group_impl, sock);
@@ -366,6 +501,7 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 		free(group_impl);
 	}
 
+	spdk_sock_remove_sock_group_from_map_table(*group);
 	free(*group);
 	*group = NULL;
 
