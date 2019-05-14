@@ -2018,6 +2018,23 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		rc = 0;
 		break;
 
+	case SPDK_SPC_PERSISTENT_RESERVE_OUT:
+		pllen = from_be32(&cdb[5]);
+		data = spdk_scsi_task_gather_data(task, &rc);
+		if (rc < 0) {
+			break;
+		}
+		data_len = rc;
+
+		rc = spdk_scsi_pr_out(task, cdb, data, data_len);
+		if (rc < 0) {
+			break;
+		}
+		rc = pllen;
+
+		data_len = 0;
+		break;
+
 	default:
 		return SPDK_SCSI_TASK_UNKNOWN;
 	}

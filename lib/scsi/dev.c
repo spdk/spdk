@@ -81,6 +81,7 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev,
 {
 	int lun_cnt;
 	int i;
+	struct spdk_scsi_pr_registrant *reg, *tmp;
 
 	if (dev == NULL) {
 		if (cb_fn) {
@@ -100,6 +101,14 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev,
 	dev->remove_cb = cb_fn;
 	dev->remove_ctx = cb_arg;
 	lun_cnt = 0;
+
+	pthread_mutex_destroy(&dev->pr_lock);
+
+	TAILQ_FOREACH_SAFE(reg, &dev->reg_head, link, tmp) {
+		TAILQ_REMOVE(&dev->reg_head, reg, link);
+		free(reg);
+	}
+	memset(&dev->reservation, 0, sizeof(struct spdk_scsi_pr_reservation));
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == NULL) {
@@ -249,6 +258,13 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 
 	dev->num_ports = 0;
 	dev->protocol_id = protocol_id;
+	TAILQ_INIT(&dev->reg_head);
+	rc = pthread_mutex_init(&dev->pr_lock, NULL);
+	if (rc != 0) {
+		free_dev(dev);
+		SPDK_ERRLOG("pthread_mutex_init() failed\n");
+		return NULL;
+	}
 
 	for (i = 0; i < num_luns; i++) {
 		rc = spdk_scsi_dev_add_lun(dev, bdev_name_list[i], lun_id_list[i],
