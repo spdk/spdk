@@ -469,7 +469,7 @@ _sock_group(const char *ip, int port)
 	server_sock = spdk_sock_accept(listen_sock);
 	SPDK_CU_ASSERT_FATAL(server_sock != NULL);
 
-	group = spdk_sock_group_create();
+	group = spdk_sock_group_create(NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 
 	/* pass null cb_fn */
@@ -581,7 +581,7 @@ posix_sock_group_fairness(void)
 	listen_sock = spdk_sock_listen("127.0.0.1", UT_PORT);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
-	group = spdk_sock_group_create();
+	group = spdk_sock_group_create(NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 
 	for (i = 0; i < 3; i++) {
