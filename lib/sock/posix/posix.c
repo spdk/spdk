@@ -469,6 +469,25 @@ spdk_posix_sock_is_ipv4(struct spdk_sock *_sock)
 	return (sa.ss_family == AF_INET);
 }
 
+static int
+spdk_posix_sock_get_placement_id(struct spdk_sock *_sock)
+{
+	int val = 0;
+
+#if defined(SO_INCOMING_NAPI_ID)
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	socklen_t salen;
+	int rc;
+
+	rc = getsockopt(sock->fd, SOL_SOCKET, SO_INCOMING_NAPI_ID, &val, &salen);
+	if (rc != 0) {
+		SPDK_ERRLOG("getsockopt() failed (errno=%d)\n", errno);
+		return 0;
+	}
+#endif
+	return val;
+}
+
 static struct spdk_sock_group_impl *
 spdk_posix_sock_group_impl_create(void)
 {
@@ -604,6 +623,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.set_sendbuf	= spdk_posix_sock_set_sendbuf,
 	.is_ipv6	= spdk_posix_sock_is_ipv6,
 	.is_ipv4	= spdk_posix_sock_is_ipv4,
+	.get_placement_id	= spdk_posix_sock_get_placement_id,
 	.group_impl_create	= spdk_posix_sock_group_impl_create,
 	.group_impl_add_sock	= spdk_posix_sock_group_impl_add_sock,
 	.group_impl_remove_sock = spdk_posix_sock_group_impl_remove_sock,

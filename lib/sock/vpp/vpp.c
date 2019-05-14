@@ -518,6 +518,12 @@ spdk_vpp_sock_is_ipv4(struct spdk_sock *_sock)
 	return (ep.is_ip4 == VPPCOM_IS_IP4);
 }
 
+static int
+spdk_vpp_sock_get_placement_id(struct spdk_sock *_sock)
+{
+	return 0;
+}
+
 static struct spdk_sock_group_impl *
 spdk_vpp_sock_group_impl_create(void)
 {
@@ -649,6 +655,7 @@ static struct spdk_net_impl g_vpp_net_impl = {
 	.set_sendbuf	= spdk_vpp_sock_set_sendbuf,
 	.is_ipv6	= spdk_vpp_sock_is_ipv6,
 	.is_ipv4	= spdk_vpp_sock_is_ipv4,
+	.get_placement_id	= spdk_vpp_sock_get_placement_id,
 	.group_impl_create	= spdk_vpp_sock_group_impl_create,
 	.group_impl_add_sock	= spdk_vpp_sock_group_impl_add_sock,
 	.group_impl_remove_sock = spdk_vpp_sock_group_impl_remove_sock,
