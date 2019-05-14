@@ -56,7 +56,9 @@ struct spdk_sock {
 };
 
 struct spdk_sock_group {
+	int placement_id;
 	STAILQ_HEAD(, spdk_sock_group_impl)	group_impls;
+	TAILQ_ENTRY(spdk_sock_group)		link;
 };
 
 struct spdk_sock_group_impl {

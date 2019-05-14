@@ -40,6 +40,82 @@
 
 static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
 
+static pthread_mutex_t g_sock_groups_mutex = PTHREAD_MUTEX_INITIALIZER;
+static TAILQ_HEAD(, spdk_sock_group) g_sock_groups = TAILQ_HEAD_INITIALIZER(g_sock_groups);
+
+static struct spdk_sock_group *
+_spdk_sock_find_sock_group_from_list(int placement_id)
+{
+	struct spdk_sock_group *group;
+
+	TAILQ_FOREACH(group, &g_sock_groups, link) {
+		if (group->placement_id == placement_id) {
+			return group;
+		}
+
+	}
+
+	return NULL;
+}
+
+static void
+spdk_sock_find_sock_group_from_list(int placement_id, struct spdk_sock_group **group)
+{
+	struct spdk_sock_group *_group;
+
+	pthread_mutex_lock(&g_sock_groups_mutex);
+	_group = _spdk_sock_find_sock_group_from_list(placement_id);
+	*group = _group;
+	pthread_mutex_unlock(&g_sock_groups_mutex);
+}
+
+static void
+spdk_sock_allocate_sock_group(int placement_id, struct spdk_sock_group *group)
+{
+	struct spdk_sock_group *_group;
+
+	pthread_mutex_lock(&g_sock_groups_mutex);
+	_group = _spdk_sock_find_sock_group_from_list(placement_id);
+	if (_group != NULL) {
+		assert(_group == group);
+		pthread_mutex_unlock(&g_sock_groups_mutex);
+		return;
+	}
+
+	if (group->placement_id == 0) {
+		group->placement_id = placement_id;
+		TAILQ_INSERT_TAIL(&g_sock_groups, group, link);
+	}
+	pthread_mutex_unlock(&g_sock_groups_mutex);
+}
+
+static void
+spdk_sock_remove_sock_group_from_list(struct spdk_sock_group *group)
+{
+	if (!group->placement_id) {
+		return;
+	}
+
+	pthread_mutex_lock(&g_sock_groups_mutex);
+	TAILQ_REMOVE(&g_sock_groups, group, link);
+	pthread_mutex_unlock(&g_sock_groups_mutex);
+}
+
+int
+spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)
+{
+	int placement_id = 0, rc;
+
+	*group = NULL;
+	rc = sock->net_impl->get_placement_id(sock, &placement_id);
+	if (!rc && (placement_id != 0)) {
+		spdk_sock_find_sock_group_from_list(placement_id, group);
+		return 0;
+	} else {
+		return -1;
+	}
+}
+
 int
 spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
 		  char *caddr, int clen, uint16_t *cport)
@@ -212,7 +288,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 			 spdk_sock_cb cb_fn, void *cb_arg)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
-	int rc;
+	int rc, placement_id = 0;
 
 	if (cb_fn == NULL) {
 		errno = EINVAL;
@@ -226,6 +302,11 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		 */
 		errno = EBUSY;
 		return -1;
+	}
+
+	rc = sock->net_impl->get_placement_id(sock, &placement_id);
+	if (!rc && (placement_id != 0)) {
+		spdk_sock_allocate_sock_group(placement_id, group);
 	}
 
 	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
@@ -366,6 +447,7 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 		free(group_impl);
 	}
 
+	spdk_sock_remove_sock_group_from_list(*group);
 	free(*group);
 	*group = NULL;
 
