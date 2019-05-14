@@ -38,8 +38,8 @@
 #include "bdev/raid/bdev_raid.c"
 #include "bdev/raid/bdev_raid_rpc.c"
 
-#define MAX_BASE_DRIVES 255
-#define MAX_RAIDS 31
+#define MAX_BASE_DRIVES 32
+#define MAX_RAIDS 16
 #define INVALID_IO_SUBMIT 0xFFFF
 #define MAX_TEST_IO_RANGE (3 * 3 * 3 * (MAX_BASE_DRIVES + 5))
 
@@ -58,12 +58,6 @@ struct raid_io_ranges {
 	uint64_t lba;
 	uint64_t nblocks;
 };
-
-/* Different test options, more options to test can be added here */
-uint32_t g_blklen_opts[] = {512, 4096};
-uint32_t g_strip_opts[] = {64, 128, 256, 512, 1024, 2048};
-uint32_t g_iosize_opts[] = {256, 512, 1024};
-uint32_t g_max_qd_opts[] = {64, 128, 256, 512, 1024, 2048};
 
 /* Globals */
 int g_bdev_io_submit_status;
@@ -96,22 +90,18 @@ struct raid_io_ranges g_io_ranges[MAX_TEST_IO_RANGE];
 uint32_t g_io_range_idx;
 uint64_t g_lba_offset;
 
-/* Set randomly test options, in every run it is different */
 static void
 set_test_opts(void)
 {
-	uint32_t seed = time(0);
 
-	/* Generate random test options */
-	srand(seed);
-	g_max_base_drives = (rand() % MAX_BASE_DRIVES) + 1;
-	g_max_raids = (rand() % MAX_RAIDS) + 1;
-	g_block_len = g_blklen_opts[rand() % SPDK_COUNTOF(g_blklen_opts)];
-	g_strip_size = g_strip_opts[rand() % SPDK_COUNTOF(g_strip_opts)];
-	g_max_io_size = g_iosize_opts[rand() % SPDK_COUNTOF(g_iosize_opts)];
-	g_max_qd = g_max_qd_opts[rand() % SPDK_COUNTOF(g_max_qd_opts)];
+	g_max_base_drives = MAX_BASE_DRIVES;
+	g_max_raids = MAX_RAIDS;
+	g_block_len = 4096;
+	g_strip_size = 64;
+	g_max_io_size = 1024;
+	g_max_qd = 32;
 
-	printf("Test Options, seed = %u\n", seed);
+	printf("Test Options n");
 	printf("blocklen = %u, strip_size = %u, max_io_size = %u, max_qd = %u, g_max_base_drives = %u, g_max_raids = %u\n",
 	       g_block_len, g_strip_size, g_max_io_size, g_max_qd, g_max_base_drives, g_max_raids);
 }
