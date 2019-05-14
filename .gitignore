@@ -27,4 +27,5 @@ CONFIG.local
 .settings
 mk/cc.mk
 mk/config.mk
+mk/cc.flags.mk
 PYTHON_COMMAND
