@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0064bb8f_ac905de2",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-14T20:01:25Z",
+      "side": 1,
+      "message": "Maybe call this struct dif_sgl? Is there some way to combine this with the _iov_iter above? They\u0027re the same except for mapped_length tracking.",
+      "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "58998de1_5717be79",
         "filename": "lib/util/dif.c",
         "patchSetId": 4
@@ -46,6 +63,40 @@
       "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba13f32d_8fc5c542",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-14T20:01:25Z",
+      "side": 1,
+      "message": "total_size? And in the comment say that this is in bytes.",
+      "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30a727bc_5dd16dfc",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-14T20:01:25Z",
+      "side": 1,
+      "message": "Maybe call this dif_sgl_append?",
+      "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
