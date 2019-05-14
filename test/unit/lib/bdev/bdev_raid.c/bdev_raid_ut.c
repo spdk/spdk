@@ -42,6 +42,7 @@
 #define MAX_RAIDS 16
 #define INVALID_IO_SUBMIT 0xFFFF
 #define MAX_TEST_IO_RANGE (3 * 3 * 3 * (MAX_BASE_DRIVES + 5))
+#define BLOCK_CNT (1024ul * 1024ul * 1024ul * 1024ul)
 
 /* Data structure to capture the output of IO for verification */
 struct io_output {
@@ -1086,7 +1087,7 @@ create_base_bdevs(uint32_t bbdev_start_idx)
 		base_bdev->name = strdup(name);
 		SPDK_CU_ASSERT_FATAL(base_bdev->name != NULL);
 		base_bdev->blocklen = g_block_len;
-		base_bdev->blockcnt = (uint64_t)1024 * 1024 * 1024 * 1024;
+		base_bdev->blockcnt = BLOCK_CNT;
 		TAILQ_INSERT_TAIL(&g_bdev_list, base_bdev, internal.link);
 	}
 }
@@ -2430,49 +2431,6 @@ test_context_size(void)
 	CU_ASSERT(raid_bdev_get_ctx_size() == sizeof(struct raid_bdev_io));
 }
 
-static void
-test_asym_base_drives_blockcnt(void)
-{
-	struct rpc_construct_raid_bdev construct_req;
-	struct rpc_destroy_raid_bdev destroy_req;
-	struct spdk_bdev *bbdev;
-	uint32_t i;
-
-	set_globals();
-	create_test_req(&construct_req, "raid1", 0, true);
-	rpc_req = &construct_req;
-	rpc_req_size = sizeof(construct_req);
-	CU_ASSERT(raid_bdev_init() == 0);
-	verify_raid_config_present(construct_req.name, false);
-	verify_raid_bdev_present(construct_req.name, false);
-	g_rpc_err = 0;
-	for (i = 0; i < construct_req.base_bdevs.num_base_bdevs; i++) {
-		bbdev = spdk_bdev_get_by_name(construct_req.base_bdevs.base_bdevs[i]);
-		SPDK_CU_ASSERT_FATAL(bbdev != NULL);
-		bbdev->blockcnt = rand() + 1;
-	}
-	g_json_decode_obj_construct = 1;
-	spdk_rpc_construct_raid_bdev(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_config(&construct_req, true);
-	verify_raid_bdev(&construct_req, true, RAID_BDEV_STATE_ONLINE);
-	free_test_req(&construct_req);
-
-	destroy_req.name = strdup("raid1");
-	rpc_req = &destroy_req;
-	rpc_req_size = sizeof(destroy_req);
-	g_rpc_err = 0;
-	g_json_decode_obj_construct = 0;
-	spdk_rpc_destroy_raid_bdev(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-
-	raid_bdev_exit();
-	base_bdevs_cleanup();
-	reset_globals();
-}
-
 int main(int argc, char **argv)
 {
 	CU_pSuite       suite = NULL;
@@ -2507,8 +2465,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_create_raid_from_config_invalid_params",
 			    test_create_raid_from_config_invalid_params) == NULL ||
 		CU_add_test(suite, "test_raid_json_dump_info", test_raid_json_dump_info) == NULL ||
-		CU_add_test(suite, "test_context_size", test_context_size) == NULL ||
-		CU_add_test(suite, "test_asym_base_drives_blockcnt", test_asym_base_drives_blockcnt) == NULL
+		CU_add_test(suite, "test_context_size", test_context_size) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
