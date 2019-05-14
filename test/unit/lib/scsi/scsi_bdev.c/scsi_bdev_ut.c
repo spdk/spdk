@@ -105,6 +105,9 @@ DEFINE_STUB(spdk_bdev_is_dif_check_enabled, bool,
 DEFINE_STUB(spdk_scsi_pr_out, int, (struct spdk_scsi_task *task,
 				    uint8_t *cdb, uint8_t *data, uint16_t data_len), 0);
 
+DEFINE_STUB(spdk_scsi_pr_in, int, (struct spdk_scsi_task *task, uint8_t *cdb,
+				   uint8_t *data, uint16_t data_len), 0);
+
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
