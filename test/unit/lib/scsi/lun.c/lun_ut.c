@@ -111,6 +111,8 @@ DEFINE_STUB_V(spdk_scsi_dev_queue_mgmt_task,
 DEFINE_STUB_V(spdk_scsi_dev_delete_lun,
 	      (struct spdk_scsi_dev *dev, struct spdk_scsi_lun *lun));
 
+DEFINE_STUB(spdk_scsi_pr_check, int, (struct spdk_scsi_task *task), 0);
+
 void
 spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 {
