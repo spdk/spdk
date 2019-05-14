@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9328cbc9_b376242c",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:38:32Z",
+      "side": 1,
+      "message": "The name is misleading, what it actually is is not the number of requests, but the number of stripes across all parallel units. Let\u0027s call it num_stripes.",
+      "range": {
+        "startLine": 622,
+        "startChar": 1,
+        "endLine": 622,
+        "endChar": 8
+      },
+      "revId": "8cc83bd8a5fabf3490c4fa17dc3ec491505178c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "309bda37_9d447094",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:38:32Z",
+      "side": 1,
+      "message": "Let\u0027s put brackets around these. I know the precedence is from left to right here, but seeing stuff like this always makes me check if it\u0027s correct.",
+      "range": {
+        "startLine": 622,
+        "startChar": 11,
+        "endLine": 622,
+        "endChar": 30
+      },
+      "revId": "8cc83bd8a5fabf3490c4fa17dc3ec491505178c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eff1546a_24a87de4",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T13:38:32Z",
+      "side": 1,
+      "message": "Since this is pretty trivial now and is only called from one place let\u0027s just move it there.",
+      "range": {
+        "startLine": 860,
+        "startChar": 0,
+        "endLine": 871,
+        "endChar": 0
+      },
+      "revId": "8cc83bd8a5fabf3490c4fa17dc3ec491505178c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
