@@ -72,23 +72,6 @@ static const char *const spdk_opal_errors[] = {
 	"AUTHORITY LOCKED OUT",
 };
 
-enum spdk_opal_cmd {
-	OPAL_CMD_SAVE,
-	OPAL_CMD_LOCK_UNLOCK,
-	OPAL_CMD_TAKE_OWNERSHIP,
-	OPAL_CMD_ACTIVATE_LSP,	/* locking sp */
-	OPAL_CMD_SET_NEW_PASSWD,
-	OPAL_CMD_ACTIVATE_USER,
-	OPAL_CMD_REVERT_TPER,
-	OPAL_CMD_SETUP_LOCKING_RANGE,
-	OPAL_CMD_ADD_USER_TO_LOCKING_RANGE,
-	OPAL_CMD_ENABLE_DISABLE_SHADOW_MBR,
-	OPAL_CMD_ERASE_LOCKING_RANGE,
-	OPAL_CMD_SECURE_ERASE_LOCKING_RANGE,
-	OPAL_CMD_INITIAL_SETUP,
-	OPAL_CMD_SCAN,
-};
-
 struct spdk_opal_info {
 	uint8_t tper : 1;
 	uint8_t locking : 1;
@@ -135,16 +118,37 @@ struct spdk_opal_info {
 	uint16_t vu_feature_code; /* vendor specific feature */
 };
 
+enum spdk_opal_lock_state {
+	OPAL_LS_DISALBELOCKING		= 0x00,
+	OPAL_LS_READLOCK_ENABLE		= 0x01,
+	OPAL_LS_WRITELOCK_ENABLE	= 0x02,
+	OPAL_LS_RWLOCK_ENABLE		= 0x04,
+};
+
+enum spdk_opal_user {
+	OPAL_ADMIN1 = 0x0,
+	OPAL_USER1 = 0x01,
+	OPAL_USER2 = 0x02,
+	OPAL_USER3 = 0x03,
+	OPAL_USER4 = 0x04,
+	OPAL_USER5 = 0x05,
+	OPAL_USER6 = 0x06,
+	OPAL_USER7 = 0x07,
+	OPAL_USER8 = 0x08,
+	OPAL_USER9 = 0x09,
+};
+
 struct spdk_opal_dev;
 
 struct spdk_opal_dev *spdk_opal_init_dev(void *dev_handler);
 
-int spdk_opal_scan(struct spdk_opal_dev *dev);
 void spdk_opal_close(struct spdk_opal_dev *dev);
 struct spdk_opal_info *spdk_opal_get_info(struct spdk_opal_dev *dev);
 
 bool spdk_opal_supported(struct spdk_opal_dev *dev);
 
-int spdk_opal_cmd(struct spdk_opal_dev *dev, unsigned int cmd, void *arg);
+int spdk_opal_cmd_scan(struct spdk_opal_dev *dev);
+int spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd);
+int spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd);
 
 #endif
