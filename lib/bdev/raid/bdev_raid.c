@@ -376,8 +376,8 @@ static void
 raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_io *bdev_io,
 				 struct raid_bdev_io *raid_io, int ret)
 {
-	struct   raid_bdev_io_channel *raid_ch;
-	uint8_t pd_idx;
+	struct raid_bdev_io_channel	*raid_ch;
+	uint8_t				pd_idx;
 
 	if (ret != -ENOMEM) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -410,11 +410,11 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 static void
 raid_bdev_waitq_io_process(void *ctx)
 {
-	struct   raid_bdev_io         *raid_io = ctx;
-	struct   spdk_bdev_io         *bdev_io;
-	struct   raid_bdev            *raid_bdev;
-	int                           ret;
-	uint64_t                      start_strip;
+	struct raid_bdev_io	*raid_io = ctx;
+	struct spdk_bdev_io	*bdev_io;
+	struct raid_bdev	*raid_bdev;
+	int			ret;
+	uint64_t		start_strip;
 
 	bdev_io = SPDK_CONTAINEROF(raid_io, struct spdk_bdev_io, driver_ctx);
 	/*
