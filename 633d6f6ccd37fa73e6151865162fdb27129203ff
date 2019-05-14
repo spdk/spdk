@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab27e1ba_2a320ec3",
+        "filename": "lib/bdev/ocf/utils.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-14T22:28:08Z",
+      "side": 1,
+      "message": "I think you can just convert directly from milliseconds, rather than first converting to microseconds.\n\nWe already use a hardcoded 1000 on line 125, so just hardcoding 1000 (instead of creating SPDK_SEC_TO_MSEC) is fine with me.\n\nticks \u003d millisec * spdk_get_ticks_hz() / 1000;\nvbdev-\u003emngt_ctx_timeout_ts \u003d spdk_get_ticks() + ticks;",
+      "revId": "633d6f6ccd37fa73e6151865162fdb27129203ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46acad97_196bd4a5",
+        "filename": "lib/bdev/ocf/utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-14T22:28:08Z",
+      "side": 1,
+      "message": "similar to last patch - I don\u0027t think this declaration needs to be in the header file",
+      "revId": "633d6f6ccd37fa73e6151865162fdb27129203ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
