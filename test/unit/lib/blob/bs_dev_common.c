@@ -42,6 +42,75 @@ uint8_t *g_dev_buffer;
 uint64_t g_dev_write_bytes;
 uint64_t g_dev_read_bytes;
 
+uint64_t g_power_failure_general_counter;
+uint64_t g_power_failure_read_counter;
+uint64_t g_power_failure_write_counter;
+uint64_t g_power_failure_unmap_counter;
+uint64_t g_power_failure_write_zero_counter;
+uint64_t g_power_failure_flush_counter;
+
+uint64_t g_power_failure_general_treshold;
+uint64_t g_power_failure_read_treshold;
+uint64_t g_power_failure_write_treshold;
+uint64_t g_power_failure_unmap_treshold;
+uint64_t g_power_failure_write_zero_treshold;
+uint64_t g_power_failure_flush_treshold;
+
+uint64_t g_power_failure_rc;
+
+void dev_reset_power_failure_event(void);
+void dev_set_power_failure_event(uint64_t general_treshold,
+				 uint64_t read_treshold,
+				 uint64_t write_treshold,
+				 uint64_t unmap_treshold,
+				 uint64_t write_zero_treshold,
+				 uint64_t flush_treshold);
+
+
+void
+dev_reset_power_failure_event(void)
+{
+	g_power_failure_general_counter = 0;
+	g_power_failure_read_counter = 0;
+	g_power_failure_write_counter = 0;
+	g_power_failure_unmap_counter = 0;
+	g_power_failure_write_zero_counter = 0;
+	g_power_failure_flush_counter = 0;
+
+	g_power_failure_general_treshold = 0;
+	g_power_failure_read_treshold = 0;
+	g_power_failure_write_treshold = 0;
+	g_power_failure_unmap_treshold = 0;
+	g_power_failure_write_zero_treshold = 0;
+	g_power_failure_flush_treshold = 0;
+
+	g_power_failure_rc = 0;
+}
+
+/**
+ * Set power failure event. Power failure will occur after given number
+ * of IO operations. It may occure after number of particular operations
+ * (read, write, unmap, write zero or flush) or after given number of
+ * any IO operations (general_treshold). Value 0 means that the treshold
+ * is disabled. Any other value is the number of operation starting from
+ * which power failure event will happen.
+ */
+void
+dev_set_power_failure_event(uint64_t general_treshold,
+			    uint64_t read_treshold,
+			    uint64_t write_treshold,
+			    uint64_t unmap_treshold,
+			    uint64_t write_zero_treshold,
+			    uint64_t flush_treshold)
+{
+	g_power_failure_general_treshold = general_treshold;
+	g_power_failure_read_treshold = read_treshold;
+	g_power_failure_write_treshold = write_treshold;
+	g_power_failure_unmap_treshold = unmap_treshold;
+	g_power_failure_write_zero_treshold = write_zero_treshold;
+	g_power_failure_flush_treshold = flush_treshold;
+}
+
 /* Define here for UT only. */
 struct spdk_io_channel g_io_channel;
 
@@ -68,7 +137,7 @@ dev_complete_cb(void *arg)
 {
 	struct spdk_bs_dev_cb_args *cb_args = arg;
 
-	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, g_power_failure_rc);
 }
 
 static void
@@ -84,11 +153,28 @@ dev_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload
 {
 	uint64_t offset, length;
 
-	offset = lba * dev->blocklen;
-	length = lba_count * dev->blocklen;
-	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
-	memcpy(payload, &g_dev_buffer[offset], length);
-	g_dev_read_bytes += length;
+	if (g_power_failure_read_treshold != 0) {
+		g_power_failure_read_counter++;
+	}
+
+	if (g_power_failure_general_treshold != 0) {
+		g_power_failure_general_counter++;
+	}
+
+	if ((g_power_failure_read_treshold == 0 ||
+	     g_power_failure_read_counter < g_power_failure_read_treshold) &&
+	    (g_power_failure_general_treshold == 0 ||
+	     g_power_failure_general_counter < g_power_failure_general_treshold)) {
+		offset = lba * dev->blocklen;
+		length = lba_count * dev->blocklen;
+		SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+
+		memcpy(payload, &g_dev_buffer[offset], length);
+		g_dev_read_bytes += length;
+	} else {
+		g_power_failure_rc = -EIO;
+	}
+
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
@@ -99,11 +185,28 @@ dev_write(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payloa
 {
 	uint64_t offset, length;
 
-	offset = lba * dev->blocklen;
-	length = lba_count * dev->blocklen;
-	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
-	memcpy(&g_dev_buffer[offset], payload, length);
-	g_dev_write_bytes += length;
+	if (g_power_failure_write_treshold != 0) {
+		g_power_failure_write_counter++;
+	}
+
+	if (g_power_failure_general_treshold != 0) {
+		g_power_failure_general_counter++;
+	}
+
+	if ((g_power_failure_write_treshold == 0 ||
+	     g_power_failure_write_counter < g_power_failure_write_treshold) &&
+	    (g_power_failure_general_treshold == 0 ||
+	     g_power_failure_general_counter < g_power_failure_general_treshold)) {
+		offset = lba * dev->blocklen;
+		length = lba_count * dev->blocklen;
+		SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+
+		memcpy(&g_dev_buffer[offset], payload, length);
+		g_dev_write_bytes += length;
+	} else {
+		g_power_failure_rc = -EIO;
+	}
+
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
@@ -128,17 +231,33 @@ dev_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	uint64_t offset, length;
 	int i;
 
-	offset = lba * dev->blocklen;
-	length = lba_count * dev->blocklen;
-	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
-	__check_iov(iov, iovcnt, length);
-
-	for (i = 0; i < iovcnt; i++) {
-		memcpy(iov[i].iov_base, &g_dev_buffer[offset], iov[i].iov_len);
-		offset += iov[i].iov_len;
+	if (g_power_failure_read_treshold != 0) {
+		g_power_failure_read_counter++;
 	}
 
-	g_dev_read_bytes += length;
+	if (g_power_failure_general_treshold != 0) {
+		g_power_failure_general_counter++;
+	}
+
+	if ((g_power_failure_read_treshold == 0 ||
+	     g_power_failure_read_counter < g_power_failure_read_treshold) &&
+	    (g_power_failure_general_treshold == 0 ||
+	     g_power_failure_general_counter < g_power_failure_general_treshold)) {
+		offset = lba * dev->blocklen;
+		length = lba_count * dev->blocklen;
+		SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+		__check_iov(iov, iovcnt, length);
+
+		for (i = 0; i < iovcnt; i++) {
+			memcpy(iov[i].iov_base, &g_dev_buffer[offset], iov[i].iov_len);
+			offset += iov[i].iov_len;
+		}
+
+		g_dev_read_bytes += length;
+	} else {
+		g_power_failure_rc = -EIO;
+	}
+
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
@@ -151,17 +270,33 @@ dev_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	uint64_t offset, length;
 	int i;
 
-	offset = lba * dev->blocklen;
-	length = lba_count * dev->blocklen;
-	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
-	__check_iov(iov, iovcnt, length);
-
-	for (i = 0; i < iovcnt; i++) {
-		memcpy(&g_dev_buffer[offset], iov[i].iov_base, iov[i].iov_len);
-		offset += iov[i].iov_len;
+	if (g_power_failure_write_treshold != 0) {
+		g_power_failure_write_counter++;
 	}
 
-	g_dev_write_bytes += length;
+	if (g_power_failure_general_treshold != 0) {
+		g_power_failure_general_counter++;
+	}
+
+	if ((g_power_failure_write_treshold == 0 ||
+	     g_power_failure_write_counter < g_power_failure_write_treshold)  &&
+	    (g_power_failure_general_treshold == 0 ||
+	     g_power_failure_general_counter < g_power_failure_general_treshold)) {
+		offset = lba * dev->blocklen;
+		length = lba_count * dev->blocklen;
+		SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+		__check_iov(iov, iovcnt, length);
+
+		for (i = 0; i < iovcnt; i++) {
+			memcpy(&g_dev_buffer[offset], iov[i].iov_base, iov[i].iov_len);
+			offset += iov[i].iov_len;
+		}
+
+		g_dev_write_bytes += length;
+	} else {
+		g_power_failure_rc = -EIO;
+	}
+
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
@@ -169,6 +304,21 @@ static void
 dev_flush(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	  struct spdk_bs_dev_cb_args *cb_args)
 {
+	if (g_power_failure_flush_treshold != 0) {
+		g_power_failure_flush_counter++;
+	}
+
+	if (g_power_failure_general_treshold != 0) {
+		g_power_failure_general_counter++;
+	}
+
+	if ((g_power_failure_flush_treshold != 0 &&
+	     g_power_failure_flush_counter >= g_power_failure_flush_treshold)  ||
+	    (g_power_failure_general_treshold != 0 &&
+	     g_power_failure_general_counter >= g_power_failure_general_treshold)) {
+		g_power_failure_rc = -EIO;
+	}
+
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
@@ -179,10 +329,26 @@ dev_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 {
 	uint64_t offset, length;
 
-	offset = lba * dev->blocklen;
-	length = lba_count * dev->blocklen;
-	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
-	memset(&g_dev_buffer[offset], 0, length);
+	if (g_power_failure_unmap_treshold != 0) {
+		g_power_failure_unmap_counter++;
+	}
+
+	if (g_power_failure_general_treshold != 0) {
+		g_power_failure_general_counter++;
+	}
+
+	if ((g_power_failure_unmap_treshold == 0 ||
+	     g_power_failure_unmap_counter < g_power_failure_unmap_treshold)  &&
+	    (g_power_failure_general_treshold == 0 ||
+	     g_power_failure_general_counter < g_power_failure_general_treshold)) {
+		offset = lba * dev->blocklen;
+		length = lba_count * dev->blocklen;
+		SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+		memset(&g_dev_buffer[offset], 0, length);
+	} else {
+		g_power_failure_rc = -EIO;
+	}
+
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
@@ -193,11 +359,27 @@ dev_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 {
 	uint64_t offset, length;
 
-	offset = lba * dev->blocklen;
-	length = lba_count * dev->blocklen;
-	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
-	memset(&g_dev_buffer[offset], 0, length);
-	g_dev_write_bytes += length;
+	if (g_power_failure_write_zero_treshold != 0) {
+		g_power_failure_write_zero_counter++;
+	}
+
+	if (g_power_failure_general_treshold != 0) {
+		g_power_failure_general_counter++;
+	}
+
+	if ((g_power_failure_write_zero_treshold == 0 ||
+	     g_power_failure_write_zero_counter < g_power_failure_write_zero_treshold)  &&
+	    (g_power_failure_general_treshold == 0 ||
+	     g_power_failure_general_counter < g_power_failure_general_treshold)) {
+		offset = lba * dev->blocklen;
+		length = lba_count * dev->blocklen;
+		SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+		memset(&g_dev_buffer[offset], 0, length);
+		g_dev_write_bytes += length;
+	} else {
+		g_power_failure_rc = -EIO;
+	}
+
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
 }
 
