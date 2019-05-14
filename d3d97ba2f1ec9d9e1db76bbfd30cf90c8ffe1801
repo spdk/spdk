@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "fa8af78d_b0eaf7b5",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-14T00:19:44Z",
+      "side": 1,
+      "message": "Thank you for kind explanation. I understood current code is reasonable.",
+      "parentUuid": "0422a182_98cacea2",
+      "range": {
+        "startLine": 177,
+        "startChar": 3,
+        "endLine": 177,
+        "endChar": 9
+      },
+      "revId": "d3d97ba2f1ec9d9e1db76bbfd30cf90c8ffe1801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "57863302_ac766891",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 3
