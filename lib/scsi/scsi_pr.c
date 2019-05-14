@@ -381,6 +381,123 @@ error_exit:
 	return -EINVAL;
 }
 
+static void
+spdk_scsi_pr_remove_all_regs_by_key(struct spdk_scsi_lun *lun, uint64_t sa_rkey)
+{
+	struct spdk_scsi_pr_registrant *reg, *tmp;
+
+	TAILQ_FOREACH_SAFE(reg, &lun->reg_head, link, tmp) {
+		if (reg->rkey == sa_rkey) {
+			spdk_scsi_pr_unregister_registrant(lun, reg);
+		}
+	}
+}
+
+static void
+spdk_scsi_pr_remove_all_other_regs(struct spdk_scsi_lun *lun, struct spdk_scsi_pr_registrant *reg)
+{
+	struct spdk_scsi_pr_registrant *reg_tmp, *reg_tmp2;
+
+	TAILQ_FOREACH_SAFE(reg_tmp, &lun->reg_head, link, reg_tmp2) {
+		if (reg_tmp != reg) {
+			spdk_scsi_pr_unregister_registrant(lun, reg_tmp);
+		}
+	}
+}
+
+static int
+spdk_scsi_pr_out_preempt(struct spdk_scsi_task *task,
+			 enum spdk_scsi_pr_out_service_action_code action,
+			 enum spdk_scsi_pr_type_code rtype,
+			 uint64_t rkey, uint64_t sa_rkey)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_pr_registrant *reg;
+	bool all_regs = false;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT PREEMPT: rkey 0x%"PRIx64", sa_rkey 0x%"PRIx64" "
+		      "action %u, type %u, reservation type %u\n",
+		      rkey, sa_rkey, action, rtype, lun->reservation.rtype);
+
+	/* I_T nexus is not registered */
+	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	if (!reg) {
+		SPDK_ERRLOG("No registration\n");
+		goto conflict;
+	}
+	if (rkey != reg->rkey) {
+		SPDK_ERRLOG("Reservation key 0x%"PRIx64" doesn't match "
+			    "registrant's key 0x%"PRIx64"\n", rkey, reg->rkey);
+		goto conflict;
+	}
+
+	/* no persistent reservation */
+	if (lun->reservation.holder == NULL) {
+		spdk_scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: no persistent reservation\n");
+		goto exit;
+	}
+
+	all_regs = spdk_scsi_pr_is_all_registrants_type(lun);
+
+	if (all_regs) {
+		if (sa_rkey != 0) {
+			spdk_scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
+			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: All registrants type with sa_rkey\n");
+		} else {
+			/* remove all other registrants and release persistent reservation if any */
+			spdk_scsi_pr_remove_all_other_regs(lun, reg);
+			/* create persistent reservation using new type and scope */
+			spdk_scsi_pr_reserve_reservation(lun, rtype, 0, reg);
+			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: All registrants type with sa_rkey zeroed\n");
+		}
+		goto exit;
+	}
+
+	assert(lun->reservation.crkey != 0);
+
+	if (sa_rkey != lun->reservation.crkey) {
+		if (!sa_rkey) {
+			SPDK_ERRLOG("Zeroed sa_rkey\n");
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+			return -EINVAL;
+		}
+		spdk_scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
+		goto exit;
+	}
+
+	if (spdk_scsi_pr_registrant_is_holder(lun, reg)) {
+		spdk_scsi_pr_reserve_reservation(lun, rtype, rkey, reg);
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: preempt itself with type %u\n", rtype);
+		goto exit;
+	}
+
+	/* unregister registrants if any */
+	spdk_scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
+	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	if (!reg) {
+		SPDK_ERRLOG("Current I_T nexus registrant was removed\n");
+		goto conflict;
+	}
+
+	/* preempt the holder */
+	spdk_scsi_pr_reserve_reservation(lun, rtype, rkey, reg);
+
+exit:
+	lun->pr_generation++;
+	return 0;
+
+conflict:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+				  SPDK_SCSI_SENSE_NO_SENSE,
+				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return -EINVAL;
+}
+
 int
 spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		 uint8_t *cdb, uint8_t *data,
@@ -425,6 +542,12 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		break;
 	case SPDK_SCSI_PR_OUT_CLEAR:
 		rc = spdk_scsi_pr_out_clear(task, rkey);
+		break;
+	case SPDK_SCSI_PR_OUT_PREEMPT:
+		if (scope != SPDK_SCSI_PR_LU_SCOPE) {
+			goto invalid;
+		}
+		rc = spdk_scsi_pr_out_preempt(task, action, rtype, rkey, sa_rkey);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
