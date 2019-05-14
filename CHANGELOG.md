@@ -20,6 +20,10 @@ The format of the data returned by the get_bdevs_iostat RPC has changed to
 make it easier to parse.  It now returns an object with a "ticks" object
 and "bdevs" array with the per-bdev statistics.
 
+### NVMe
+
+Nvme Opal library spdk_opal_cmd deprecated. Adding seperate command APIs.
+
 ## v19.04:
 
 ### nvme
