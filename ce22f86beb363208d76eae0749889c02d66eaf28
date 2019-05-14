@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9df33af0_26b9b0f9",
+        "filename": "lib/bdev/ocf/ctx.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T13:23:42Z",
+      "side": 1,
+      "message": "Is this any different from base-\u003ecleaner_channel when base is cache ? Wouldn\u0027t keeping it just in base be simpler ?",
+      "range": {
+        "startLine": 51,
+        "startChar": 30,
+        "endLine": 51,
+        "endChar": 43
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fd461e1_fab5666f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T13:23:42Z",
+      "side": 1,
+      "message": "I assume that the message sending here is done to prevent API calls to vbdev_ocf_delete() from any thread in custom app ? Right now its only performed from RPC which is basically the same as app init thread and cleaner_thread.\n\nIf one were to assume that vbdev_ocf_delete() is called from thread !\u003d cleaner_thread. Then how do we go back to original caller after put_cleaner_channel() ?\n\nOverall I\u0027m not sure if any of message passing is required when using any of provided frameworks - app init or rpc.",
+      "range": {
+        "startLine": 264,
+        "startChar": 1,
+        "endLine": 264,
+        "endChar": 92
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7fe212e_e46105a2",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T13:23:42Z",
+      "side": 1,
+      "message": "Besides comment below, can flush requests even have offset set ?",
+      "range": {
+        "startLine": 182,
+        "startChar": 7,
+        "endLine": 182,
+        "endChar": 30
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2891f5de_3cab2179",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T13:23:42Z",
+      "side": 1,
+      "message": "This comment might be confusing. I think just specifying that iovs were not allocated, so it that it makes sense we are skipping free here.\n\n/* No iovs were allocated for flush requests */",
+      "range": {
+        "startLine": 183,
+        "startChar": 3,
+        "endLine": 183,
+        "endChar": 57
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23232bdd_9022344b",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T13:23:42Z",
+      "side": 1,
+      "message": "This assignment changes can be separate from this patch.",
+      "range": {
+        "startLine": 220,
+        "startChar": 0,
+        "endLine": 233,
+        "endChar": 17
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72f461d0_68c1266b",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T13:23:42Z",
+      "side": 1,
+      "message": "Please help me understand the changes here.\nFrom what I gather, cctx-\u003emngt_queue was added in previous patch and any flush requests sent on that queue were always returning 0 via io-\u003eend(io, 0).\nThis patch adds a cleaner which as well submits flushes.\nNext patch adds explicit flushes in the shutdown path.\nYet this patch enables all of those besides adding cleaner.\n\nIs there anything blocking from adding patch before this one, that will just enable flushes on mngt_queue - doing so on cleaner_channel on cleaner_thread ? [probably adjusting naming as well]",
+      "range": {
+        "startLine": 246,
+        "startChar": 0,
+        "endLine": 249,
+        "endChar": 2
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

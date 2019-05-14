@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82113e8d_7c3d6c32",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T13:23:42Z",
+      "side": 1,
+      "message": "General question on the OCF API here.\nFreeing the cleaner_priv here implies that cleaner stop (vbdev_ocf_ctx_cleaner_stop()) is called before cleaner queue stop (cleaner_queue_stop()).\nOtherwise we would crash when accessing cleaner_priv in vbdev_ocf_ctx_cleaner_stop().\n\nIt just seems backwards to first stop cleaner, and then stop its queue. Especially since init path is other way around.\nHave we confirmed this works like that ?",
+      "range": {
+        "startLine": 375,
+        "startChar": 2,
+        "endLine": 375,
+        "endChar": 14
+      },
+      "revId": "f835cf7cc3d4bcdd3c3cd96e4f0750b7715b812b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
