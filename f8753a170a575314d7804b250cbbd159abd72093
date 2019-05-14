@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "147da967_8d1d14c1",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "spdk_nvmf_fc_init_poller_queues() is still required as it is called from fc_adm_api.c during port reset and re-init path. So we might as well keep this call to keep the code flow uniform.",
+      "parentUuid": "87b962ec_0400bef5",
+      "range": {
+        "startLine": 295,
+        "startChar": 1,
+        "endLine": 295,
+        "endChar": 32
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4c8f58a_96d30941",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 19
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "Sorry, spdk_nvmf_fc_poll_group_add_hwqp will be better.",
+      "range": {
+        "startLine": 349,
+        "startChar": 0,
+        "endLine": 349,
+        "endChar": 28
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fad1cd38_ce9f6ca0",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4c8f58a_96d30941",
       "range": {
         "startLine": 349,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "42a8ca11_459549d3",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4ee81598_71fa7664",
+      "range": {
+        "startLine": 383,
+        "startChar": 0,
+        "endLine": 383,
+        "endChar": 31
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0884043c_b77ccf1e",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 19
@@ -82,6 +154,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "\u003c 0 may be intuitive.",
+      "range": {
+        "startLine": 1179,
+        "startChar": 43,
+        "endLine": 1179,
+        "endChar": 44
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c86c69a5_819e7d67",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0884043c_b77ccf1e",
       "range": {
         "startLine": 1179,
         "startChar": 43,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "0e009a4f_28846433",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1181,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Used in line 1174 as well, so will keep the code as is.",
+      "parentUuid": "f093973e_e2c6618d",
+      "range": {
+        "startLine": 1181,
+        "startChar": 8,
+        "endLine": 1181,
+        "endChar": 15
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c80f1857_10e74cae",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 19
@@ -128,6 +248,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "the label error is used only here, so inlining the line 1227 to 1330 may be enough.",
+      "range": {
+        "startLine": 1197,
+        "startChar": 8,
+        "endLine": 1197,
+        "endChar": 13
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cecad2b9_a9119846",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1197,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c80f1857_10e74cae",
       "range": {
         "startLine": 1197,
         "startChar": 8,
@@ -157,6 +301,24 @@
     },
     {
       "key": {
+        "uuid": "3e49e91d_ff425fcc",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d037287_865b3832",
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa368f27_c92c1e1a",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 19
@@ -174,6 +336,24 @@
     },
     {
       "key": {
+        "uuid": "0e2560fc_6b4c190d",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fa368f27_c92c1e1a",
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8af09b8_030538e8",
         "filename": "lib/nvmf/fc_poller_api.c",
         "patchSetId": 19
@@ -185,6 +365,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "passing NULL is probable? If no, assert(arg) may be better.",
+      "range": {
+        "startLine": 52,
+        "startChar": 1,
+        "endLine": 52,
+        "endChar": 11
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf929307_aa5b4d64",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "args should never be NULL. Changed to assert.",
+      "parentUuid": "a8af09b8_030538e8",
       "range": {
         "startLine": 52,
         "startChar": 1,
@@ -220,6 +424,30 @@
     },
     {
       "key": {
+        "uuid": "bc571ffd_bedcb71e",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done. Improvised to define non-static spdk_nvmf_fc_hwqp_find_fc_conn() as similar code block is also present couple of other files.",
+      "parentUuid": "dc1de54e_948b02e1",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 2
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "691695e3_45b96b2a",
         "filename": "lib/nvmf/fc_poller_api.c",
         "patchSetId": 19
@@ -231,6 +459,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "This is a preliminary question. q_args-\u003ehwqp-\u003ethread is different from the thread on which this function runs?",
+      "range": {
+        "startLine": 127,
+        "startChar": 32,
+        "endLine": 127,
+        "endChar": 44
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9733315_4074ad01",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "No, they are the same thread.",
+      "parentUuid": "691695e3_45b96b2a",
       "range": {
         "startLine": 127,
         "startChar": 32,
@@ -289,6 +541,30 @@
     },
     {
       "key": {
+        "uuid": "07c5cf6b_aeaeb866",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "655ce03c_2d1084fc",
+      "range": {
+        "startLine": 206,
+        "startChar": 0,
+        "endLine": 211,
+        "endChar": 2
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4478798c_4177df03",
         "filename": "lib/nvmf/fc_poller_api.c",
         "patchSetId": 19
@@ -300,6 +576,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "Please more this to the top of the function, then we can use hwqp in the whole function.",
+      "range": {
+        "startLine": 214,
+        "startChar": 2,
+        "endLine": 214,
+        "endChar": 51
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd1e390a_d32796b5",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4478798c_4177df03",
       "range": {
         "startLine": 214,
         "startChar": 2,
@@ -335,6 +635,30 @@
     },
     {
       "key": {
+        "uuid": "5eb7e095_425ee782",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aac50016_6035b018",
+      "range": {
+        "startLine": 235,
+        "startChar": 17,
+        "endLine": 235,
+        "endChar": 32
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3071c5fe_681525b9",
         "filename": "lib/nvmf/fc_poller_api.c",
         "patchSetId": 19
@@ -346,6 +670,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "NULL is probable here? If no, assert(arg) may be better.",
+      "range": {
+        "startLine": 299,
+        "startChar": 1,
+        "endLine": 299,
+        "endChar": 11
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4f942ab_ef73d32b",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3071c5fe_681525b9",
       "range": {
         "startLine": 299,
         "startChar": 1,
@@ -381,6 +729,30 @@
     },
     {
       "key": {
+        "uuid": "b6b9e0e0_e0681d77",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "323fead5_f7de8db7",
+      "range": {
+        "startLine": 380,
+        "startChar": 26,
+        "endLine": 380,
+        "endChar": 27
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5299b630_7146cd7a",
         "filename": "lib/nvmf/nvmf_fc.h",
         "patchSetId": 19
@@ -392,6 +764,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "hwqp?",
+      "range": {
+        "startLine": 605,
+        "startChar": 8,
+        "endLine": 605,
+        "endChar": 11
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33016357_b2f28a77",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5299b630_7146cd7a",
       "range": {
         "startLine": 605,
         "startChar": 8,
@@ -427,6 +823,30 @@
     },
     {
       "key": {
+        "uuid": "99ec1364_652c7a31",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "I guess this is a carry over from before trace macros were moved to rdma.c and tcp.c. This doesn\u0027t belong here anymore. Removed.",
+      "parentUuid": "f31b7267_48464a3b",
+      "range": {
+        "startLine": 422,
+        "startChar": 0,
+        "endLine": 422,
+        "endChar": 30
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d710085f_5094e279",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 19
@@ -438,6 +858,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "Do we have to make this group general one? Should be TRACE_GROUP_NVMF_FC instead and should be located in any file specific for NVMe/FC transport?",
+      "range": {
+        "startLine": 424,
+        "startChar": 8,
+        "endLine": 424,
+        "endChar": 24
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b468fc9_0ca87fd4",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "I guess this is a carry over from before trace macros were moved to rdma.c and tcp.c. This doesn\u0027t belong here anymore. Removed.",
+      "parentUuid": "d710085f_5094e279",
       "range": {
         "startLine": 424,
         "startChar": 8,
@@ -473,6 +917,30 @@
     },
     {
       "key": {
+        "uuid": "3c896315_40c41f50",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "I guess this is a carry over from before trace macros were moved to rdma.c and tcp.c. This doesn\u0027t belong here anymore. Removed.",
+      "parentUuid": "84321186_1bc1d05b",
+      "range": {
+        "startLine": 425,
+        "startChar": 0,
+        "endLine": 433,
+        "endChar": 70
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2cbab7d2_7dee3e7b",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 19
@@ -484,6 +952,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "Can we locate these macros in any file specific for NVMe/FC transport (e.g. nvmf_fc.h)?",
+      "range": {
+        "startLine": 435,
+        "startChar": 0,
+        "endLine": 449,
+        "endChar": 86
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f18cd04_f8ff01e2",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2cbab7d2_7dee3e7b",
       "range": {
         "startLine": 435,
         "startChar": 0,
@@ -524,6 +1016,30 @@
       "writtenOn": "2019-05-14T04:09:11Z",
       "side": 1,
       "message": "Will you move this change to a separate patch?",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 45
+      },
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35130ff0_4254a5a3",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-14T23:38:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea1cbeb8_aad661f2",
       "range": {
         "startLine": 93,
         "startChar": 0,
