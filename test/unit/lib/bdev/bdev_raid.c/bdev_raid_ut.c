@@ -39,7 +39,7 @@
 #include "bdev/raid/bdev_raid_rpc.c"
 
 #define MAX_BASE_DRIVES 32
-#define MAX_RAIDS 16
+#define MAX_RAIDS 2
 #define INVALID_IO_SUBMIT 0xFFFF
 #define MAX_TEST_IO_RANGE (3 * 3 * 3 * (MAX_BASE_DRIVES + 5))
 
