@@ -34,10 +34,13 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
+
 #include "spdk_internal/mock.h"
 #include "spdk_internal/thread.h"
 
 #include "common/lib/test_env.c"
+#include "common/lib/test_sock.c"
+
 #include "nvmf/ctrlr.c"
 #include "nvmf/tcp.c"
 
@@ -340,6 +343,7 @@ test_nvmf_tcp_poll_group_create(void)
 	struct spdk_nvmf_transport_poll_group *group;
 	struct spdk_thread *thread;
 	struct spdk_nvmf_transport_opts opts;
+	struct spdk_sock_group grp = {};
 
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
@@ -356,7 +360,9 @@ test_nvmf_tcp_poll_group_create(void)
 	transport = spdk_nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	transport->opts = opts;
+	MOCK_SET(spdk_sock_group_create, &grp);
 	group = spdk_nvmf_tcp_poll_group_create(transport);
+	MOCK_CLEAR_P(spdk_sock_group_create);
 	SPDK_CU_ASSERT_FATAL(group);
 	group->transport = transport;
 	spdk_nvmf_tcp_poll_group_destroy(group);
