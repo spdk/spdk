@@ -169,7 +169,14 @@ _scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 	spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
 	TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 	if (!lun->removed) {
-		rc = spdk_bdev_scsi_execute(task);
+		/* Check the command is allowed or not when reservation is exist */
+		rc = spdk_scsi_pr_check(task);
+		if (spdk_unlikely(rc < 0)) {
+			/* Reservation Conflict */
+			rc = SPDK_SCSI_TASK_COMPLETE;
+		} else {
+			rc = spdk_bdev_scsi_execute(task);
+		}
 	} else {
 		spdk_scsi_task_process_abort(task);
 		rc = SPDK_SCSI_TASK_COMPLETE;
