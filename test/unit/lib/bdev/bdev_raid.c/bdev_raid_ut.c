@@ -2139,7 +2139,7 @@ test_multi_raid_no_io(void)
 	reset_globals();
 }
 
-/* Create multiple raids, fire IOs randomly on various raids */
+/* Create multiple raids, fire IOs on raids */
 static void
 test_multi_raid_with_io(void)
 {
@@ -2155,10 +2155,8 @@ test_multi_raid_with_io(void)
 	struct spdk_bdev_io *bdev_io;
 	uint64_t io_len;
 	uint64_t lba;
-	struct spdk_io_channel *ch_random;
-	struct raid_bdev_io_channel *ch_ctx_random;
 	int16_t iotype;
-	uint32_t raid_random;
+	uint32_t idx;
 
 	set_globals();
 	construct_req = calloc(g_max_raids, sizeof(struct rpc_construct_raid_bdev));
@@ -2196,28 +2194,29 @@ test_multi_raid_with_io(void)
 		}
 	}
 
-	lba = 0;
-	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
-	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-	io_len = (rand() % g_strip_size) + 1;
-	iotype = (rand() % 2) ? SPDK_BDEV_IO_TYPE_WRITE : SPDK_BDEV_IO_TYPE_READ;
-	memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
-	g_io_output_index = 0;
-	raid_random = rand() % g_max_raids;
-	ch_random = &ch[raid_random];
-	ch_ctx_random = spdk_io_channel_get_ctx(ch_random);
-	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(pbdev->bdev.name, construct_req[raid_random].name) == 0) {
-			break;
+	for (i = 0; i < 2; i++) {
+		lba = 0;
+		idx = 0;
+		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
+		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+		io_len = g_strip_size;
+		iotype = (i) ? SPDK_BDEV_IO_TYPE_WRITE : SPDK_BDEV_IO_TYPE_READ;
+		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
+		g_io_output_index = 0;
+		TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
+			if (strcmp(pbdev->bdev.name, construct_req[idx++].name) == 0) {
+				break;
+			}
 		}
+		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, iotype);
+		lba += g_strip_size;
+		CU_ASSERT(pbdev != NULL);
+		raid_bdev_submit_request(ch, bdev_io);
+		verify_io(bdev_io, g_max_base_drives, ch_ctx, pbdev,
+			  g_child_io_status_flag);
+		bdev_io_cleanup(bdev_io);
+		free(bdev_io);
 	}
-	bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, iotype);
-	CU_ASSERT(pbdev != NULL);
-	raid_bdev_submit_request(ch_random, bdev_io);
-	verify_io(bdev_io, g_max_base_drives, ch_ctx_random, pbdev,
-		  g_child_io_status_flag);
-	bdev_io_cleanup(bdev_io);
-	free(bdev_io);
 
 	for (i = 0; i < g_max_raids; i++) {
 		TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
