@@ -130,6 +130,17 @@ spdk_scsi_pr_release_reservation(struct spdk_scsi_dev *dev, struct spdk_scsi_pr_
 }
 
 static void
+spdk_scsi_pr_reserve_reservation(struct spdk_scsi_dev *dev,
+				 enum spdk_scsi_pr_type_code type,
+				 uint64_t rkey,
+				 struct spdk_scsi_pr_registrant *holder)
+{
+	dev->reservation.rtype = type;
+	dev->reservation.crkey = rkey;
+	dev->reservation.holder = holder;
+}
+
+static void
 spdk_scsi_pr_unregister_registrant(struct spdk_scsi_dev *dev,
 				   struct spdk_scsi_pr_registrant *reg)
 {
@@ -154,6 +165,69 @@ spdk_scsi_pr_replace_registrant_key(struct spdk_scsi_dev *dev,
 		      "reservation key 0x%"PRIx64"\n", sa_rkey);
 	reg->rkey = sa_rkey;
 	dev->pr_generation++;
+}
+
+static int
+spdk_scsi_pr_out_reserve(struct spdk_scsi_task *task,
+			 enum spdk_scsi_pr_type_code rtype, uint64_t rkey,
+			 uint8_t spec_i_pt, uint8_t all_tg_pt, uint8_t aptpl)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_registrant *reg;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT RESERVE: rkey 0x%"PRIx64", requested "
+		      "reservation type %u, type %u\n", rkey, rtype, dev->reservation.rtype);
+
+	/* TODO: don't support now */
+	if (spec_i_pt || all_tg_pt || aptpl) {
+		SPDK_ERRLOG("RESERVE: unspported spec_i_pt/all_tg_pt fields "
+			    "or invalid aptpl field\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -EINVAL;
+	}
+
+	reg = spdk_scsi_pr_get_registrant(dev, task->initiator_port, task->target_port);
+	/* No registration for the I_T nexus */
+	if (!reg) {
+		SPDK_ERRLOG("RESERVE: no registration\n");
+		goto conflict;
+	}
+
+	/* invalid reservation key */
+	if (reg->rkey != rkey) {
+		SPDK_ERRLOG("RESERVE: reservation key 0x%"PRIx64" don't match 0x%"PRIx64"\n",
+			    rkey, reg->rkey);
+		goto conflict;
+	}
+
+	/* reservation holder already exists */
+	if (dev->reservation.holder) {
+		if (rtype != dev->reservation.rtype) {
+			SPDK_ERRLOG("RESERVE: reservation type doesn't match\n");
+			goto conflict;
+		}
+
+		if (!spdk_scsi_pr_registrant_is_holder(dev, reg)) {
+			SPDK_ERRLOG("RESERVE: only 1 holder is allowed for type %u\n", rtype);
+			goto conflict;
+		}
+	} else {
+		/* current I_T nexus is the first reservation holder */
+		spdk_scsi_pr_reserve_reservation(dev, rtype, rkey, reg);
+	}
+
+	return 0;
+
+conflict:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+				  SPDK_SCSI_SENSE_NO_SENSE,
+				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return -EINVAL;
 }
 
 static int
@@ -235,9 +309,13 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 	uint64_t rkey, sa_rkey;
 	uint8_t spec_i_pt, all_tg_pt, aptpl;
 	enum spdk_scsi_pr_out_service_action_code action;
+	enum spdk_scsi_pr_scope_code scope;
+	enum spdk_scsi_pr_type_code rtype;
 	struct spdk_scsi_pr_out_param_list *param = (struct spdk_scsi_pr_out_param_list *)data;
 
 	action = cdb[1] & 0x0f;
+	scope = (cdb[2] >> 4) & 0x0f;
+	rtype = cdb[2] & 0x0f;
 
 	rkey = from_be64(&param->rkey);
 	sa_rkey = from_be64(&param->sa_rkey);
@@ -250,6 +328,13 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 	case SPDK_SCSI_PR_OUT_REG_AND_IGNORE_KEY:
 		rc = spdk_scsi_pr_out_register(task, action, rkey, sa_rkey,
 					       spec_i_pt, all_tg_pt, aptpl);
+		break;
+	case SPDK_SCSI_PR_OUT_RESERVE:
+		if (scope != SPDK_SCSI_PR_LU_SCOPE) {
+			goto invalid;
+		}
+		rc = spdk_scsi_pr_out_reserve(task, rtype, rkey,
+					      spec_i_pt, all_tg_pt, aptpl);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
