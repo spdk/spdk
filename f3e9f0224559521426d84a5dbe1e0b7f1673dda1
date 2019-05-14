@@ -22,6 +22,30 @@
       "revId": "f3e9f0224559521426d84a5dbe1e0b7f1673dda1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2bd6421_b223df28",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2773,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-14T09:50:45Z",
+      "side": 1,
+      "message": "Correction:\n\nif (bserrno \u003d\u003d -ENOENT) {\n    _spdk_bs_delete_corrupted_blob(ctx, 0);\n    return;\n}",
+      "parentUuid": "6f41d0b3_80e1ecaa",
+      "range": {
+        "startLine": 2773,
+        "startChar": 1,
+        "endLine": 2773,
+        "endChar": 28
+      },
+      "revId": "f3e9f0224559521426d84a5dbe1e0b7f1673dda1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
