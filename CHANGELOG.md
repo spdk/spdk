@@ -39,6 +39,8 @@ taken into account if trying to achieve an artificial latency on top of an nvme 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
 previously attached controller.
 
+Nvme Opal library spdk_opal_cmd deprecated. Adding seperate command APIs.
+
 ### env
 
 The parameter `free_space` has been added to spdk_ring_enqueue() to wait when
