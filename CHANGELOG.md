@@ -20,6 +20,12 @@ The format of the data returned by the get_bdevs_iostat RPC has changed to
 make it easier to parse.  It now returns an object with a "ticks" object
 and "bdevs" array with the per-bdev statistics.
 
+
+### sock
+
+spdk_sock_get_optimal_sock_group() was added to support getting the optimal
+sock group.
+
 ## v19.04:
 
 ### nvme
