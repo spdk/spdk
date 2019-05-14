@@ -128,23 +128,23 @@ union spdk_discovery0_features {
 	struct spdk_d0_opal_v100 opalv100;
 };
 
-struct spdk_opal_session {
+struct opal_common_session {
 	uint32_t sum; /* single user mode */
 	uint32_t who;
 	struct spdk_opal_key *opal_key;
 };
 
-struct spdk_opal_lock_unlock {
-	struct spdk_opal_session session;
+struct spdk_opal_locking_session {
+	struct opal_common_session session;
 	uint32_t l_state;
 };
 
-struct spdk_opal_new_pw {
-	struct spdk_opal_session session_start;
-	struct spdk_opal_session new_user_pw;
+struct spdk_opal_new_pw_session {
+	struct opal_common_session old_session;
+	struct opal_common_session new_pw_session;
 };
 
-static const uint8_t spdk_opal_uid[][OPAL_UID_LENGTH] = {
+const uint8_t spdk_opal_uid[][OPAL_UID_LENGTH] = {
 	/* users */
 	[UID_SMUID] = /* Session Manager UID */
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff },
@@ -205,7 +205,7 @@ static const uint8_t spdk_opal_uid[][OPAL_UID_LENGTH] = {
 /*
  * TCG Storage SSC Methods.
  */
-static const uint8_t spdk_opal_method[][OPAL_UID_LENGTH] = {
+const uint8_t spdk_opal_method[][OPAL_UID_LENGTH] = {
 	[PROPERTIES_METHOD] =
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x01 },
 	[STARTSESSION_METHOD] =
@@ -232,19 +232,6 @@ static const uint8_t spdk_opal_method[][OPAL_UID_LENGTH] = {
 	{ 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x06, 0x01 },
 };
 
-enum spdk_opal_user {
-	OPAL_ADMIN1 = 0x0,
-	OPAL_USER1 = 0x01,
-	OPAL_USER2 = 0x02,
-	OPAL_USER3 = 0x03,
-	OPAL_USER4 = 0x04,
-	OPAL_USER5 = 0x05,
-	OPAL_USER6 = 0x06,
-	OPAL_USER7 = 0x07,
-	OPAL_USER8 = 0x08,
-	OPAL_USER9 = 0x09,
-};
-
 /*
  * Response token
  */
@@ -265,11 +252,6 @@ struct spdk_opal_resp_parsed {
 	struct spdk_opal_resp_token resp_tokens[MAX_TOKS];
 };
 
-struct spdk_opal_step {
-	int (*opal_fn)(struct spdk_opal_dev *dev, void *data);
-	void *data;
-};
-
 struct spdk_opal_key {
 	uint8_t locking_range;
 	uint8_t key_len;
@@ -277,21 +259,21 @@ struct spdk_opal_key {
 	uint8_t key[OPAL_KEY_MAX];
 };
 
-struct spdk_opal_locking_range_activate {
+struct opal_locking_range_activate_session {
 	struct spdk_opal_key key;
 	uint32_t sum;		/* single user mode */
 	uint8_t lockingrange_num;
 	uint8_t lockingrange[OPAL_MAX_LRS];
 };
 
-struct spdk_opal_locking_range_setup {
+struct opal_locking_range_setup_session {
 	uint8_t id;
 	uint8_t _padding[7];
 	uint64_t range_start;
 	uint64_t range_length;
 	bool RLE; /* Read Lock enabled */
 	bool WLE; /* Write Lock Enabled */
-	struct spdk_opal_session session;
+	struct opal_common_session session;
 };
 
 /* header of a response */
@@ -305,7 +287,6 @@ struct spdk_opal_dev {
 	bool supported;
 	void *dev_handler;
 
-	const struct spdk_opal_step *steps;
 	uint16_t comid;
 	uint32_t hsn;
 	uint32_t tsn;
@@ -327,13 +308,6 @@ struct spdk_opal_dev {
 	uint64_t timeout;   /* seconds */
 
 	pthread_mutex_t mutex_lock; /* some structs are accessed by current thread only */
-};
-
-enum opal_lock_state {
-	OPAL_LS_DISALBELOCKING		= 0x00,
-	OPAL_LS_READLOCK_ENABLE		= 0x01,
-	OPAL_LS_WRITELOCK_ENABLE	= 0x02,
-	OPAL_LS_RWLOCK_ENABLE		= 0x04,
 };
 
 #endif

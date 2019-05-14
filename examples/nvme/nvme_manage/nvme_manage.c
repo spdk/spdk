@@ -955,7 +955,7 @@ opal_scan(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("\n\nOpal Supported:\n");
 			display_controller(iter, CONTROLLER_DISPLAY_SIMPLISTIC);
-			spdk_opal_scan(iter->opal_dev);
+			spdk_opal_cmd_scan(iter->opal_dev);
 			opal_dump_info(spdk_opal_get_info(iter->opal_dev));
 		}
 		spdk_opal_close(iter->opal_dev);
@@ -985,7 +985,7 @@ opal_take_ownership(struct dev *iter)
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin);
 			if (passwd_p) {
-				ret = spdk_opal_cmd(iter->opal_dev, OPAL_CMD_TAKE_OWNERSHIP, passwd_p);
+				ret = spdk_opal_cmd_take_ownership(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("Take ownership failure: %d\n", ret);
 					return;
@@ -1021,7 +1021,7 @@ opal_revert_tper(struct dev *iter)
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
 			if (passwd_p) {
-				ret = spdk_opal_cmd(iter->opal_dev, OPAL_CMD_REVERT_TPER, passwd_p);
+				ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("Revert TPer failure: %d\n", ret);
 					return;
