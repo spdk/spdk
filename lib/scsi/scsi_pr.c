@@ -641,6 +641,53 @@ spdk_scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
 	return sizeof(*param);
 }
 
+static int
+spdk_scsi_pr_in_read_full_status(struct spdk_scsi_task *task,
+				 uint8_t *data, uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_pr_in_full_status_data *param;
+	struct spdk_scsi_pr_in_full_status_desc *desc;
+	struct spdk_scsi_pr_registrant *reg, *tmp;
+	bool all_regs = false;
+	uint32_t add_len = 0;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN READ FULL STATUS\n");
+
+	all_regs = spdk_scsi_pr_is_all_registrants_type(lun);
+	param = (struct spdk_scsi_pr_in_full_status_data *)data;
+	to_be32(&param->header.pr_generation, lun->pr_generation);
+
+	TAILQ_FOREACH_SAFE(reg, &lun->reg_head, link, tmp) {
+		desc = (struct spdk_scsi_pr_in_full_status_desc *)
+		       ((uint8_t *)param->desc_list + add_len);
+		if (add_len + sizeof(*desc) + sizeof(param->header) > data_len) {
+			break;
+		}
+		add_len += sizeof(*desc);
+		desc->rkey = reg->rkey;
+		if (all_regs || lun->reservation.holder == reg) {
+			desc->r_holder = true;
+			desc->type = lun->reservation.rtype;
+		} else {
+			desc->r_holder = false;
+			desc->type = 0;
+		}
+		desc->all_tg_pt = 0;
+		desc->scope = SPDK_SCSI_PR_LU_SCOPE;
+		desc->relative_target_port_id = reg->relative_target_port_id;
+		if (add_len + reg->transport_id_len + sizeof(param->header) > data_len) {
+			break;
+		}
+		add_len += reg->transport_id_len;
+		memcpy(&desc->transport_id, reg->transport_id, reg->transport_id_len);
+		to_be32(&desc->desc_len, reg->transport_id_len);
+	}
+	to_be32(&param->header.additional_len, add_len);
+
+	return (sizeof(param->header) + add_len);
+}
+
 int
 spdk_scsi_pr_in(struct spdk_scsi_task *task,
 		uint8_t *cdb, uint8_t *data,
@@ -666,6 +713,9 @@ spdk_scsi_pr_in(struct spdk_scsi_task *task,
 		break;
 	case SPDK_SCSI_PR_IN_REPORT_CAPABILITIES:
 		rc = spdk_scsi_pr_in_report_capabilities(task, data, data_len);
+		break;
+	case SPDK_SCSI_PR_IN_READ_FULL_STATUS:
+		rc = spdk_scsi_pr_in_read_full_status(task, data, data_len);
 		break;
 	default:
 		goto invalid;
