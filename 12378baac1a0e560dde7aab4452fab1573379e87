@@ -16,6 +16,24 @@
       "revId": "12378baac1a0e560dde7aab4452fab1573379e87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00cf8693_ebed4330",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1415,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-14T02:08:18Z",
+      "side": 1,
+      "message": "No, offset_blocks is initialized at the line 1408, and we can increment in the loop until it is equal to num_blocks.\n\nPlease check dif_set_md_interleave_iovs located just above.",
+      "parentUuid": "01d0a7e1_f6b39895",
+      "revId": "12378baac1a0e560dde7aab4452fab1573379e87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
