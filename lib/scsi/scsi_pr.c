@@ -340,6 +340,43 @@ check_condition:
 	return -EINVAL;
 }
 
+static int
+spdk_scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_pr_registrant *reg, *tmp;
+	int sc, sk, asc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT CLEAR: rkey 0x%"PRIx64"\n", rkey);
+
+	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	if (!reg) {
+		SPDK_ERRLOG("No registration\n");
+		sc = SPDK_SCSI_STATUS_CHECK_CONDITION;
+		sk = SPDK_SCSI_SENSE_NOT_READY;
+		asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+		goto error_exit;
+	}
+
+	if (rkey != reg->rkey) {
+		SPDK_ERRLOG("Reservation key 0x%"PRIx64" doesn't match "
+			    "registrant's key 0x%"PRIx64"\n", rkey, reg->rkey);
+		sc = SPDK_SCSI_STATUS_RESERVATION_CONFLICT;
+		sk = SPDK_SCSI_SENSE_NO_SENSE;
+		asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+		goto error_exit;
+	}
+
+	TAILQ_FOREACH_SAFE(reg, &lun->reg_head, link, tmp) {
+		spdk_scsi_pr_unregister_registrant(lun, reg);
+	}
+
+	return 0;
+
+error_exit:
+	spdk_scsi_task_set_status(task, sc, sk, asc, SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return -EINVAL;
+}
 
 int
 spdk_scsi_pr_out(struct spdk_scsi_task *task,
@@ -382,6 +419,9 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 			goto invalid;
 		}
 		rc = spdk_scsi_pr_out_release(task, rtype, rkey);
+		break;
+	case SPDK_SCSI_PR_OUT_CLEAR:
+		rc = spdk_scsi_pr_out_clear(task, rkey);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
