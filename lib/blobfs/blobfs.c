@@ -1409,6 +1409,21 @@ spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 }
 
 static void
+blob_delete_attr_cb(void *ctx, int bserrno)
+{
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
+	struct spdk_file *f;
+
+	f = args->file;
+	f->is_deleted = true;
+	args->file = NULL;
+	args->fn.file_op(args->arg, bserrno);
+	free_fs_request(req);
+}
+
+
+static void
 blob_delete_cb(void *ctx, int bserrno)
 {
 	struct spdk_fs_request *req = ctx;
@@ -1426,6 +1441,7 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	spdk_blob_id blobid;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
+	bool is_deleted = true;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", name);
 
@@ -1453,10 +1469,14 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	args->arg = cb_arg;
 
 	if (f->ref_count > 0) {
-		/* If the ref > 0, we mark the file as deleted and delete it when we close it. */
-		f->is_deleted = true;
-		spdk_blob_set_xattr(f->blob, "is_deleted", &f->is_deleted, sizeof(bool));
-		spdk_blob_sync_md(f->blob, blob_delete_cb, req);
+		if (!f->is_deleted) {
+			args->file = f;
+			spdk_blob_set_xattr(f->blob, "is_deleted", &is_deleted, sizeof(bool));
+			spdk_blob_sync_md(f->blob, blob_delete_attr_cb, req);
+		} else {
+			blob_delete_cb(req, 0);
+		}
+
 		return;
 	}
 
