@@ -1174,7 +1174,7 @@ spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 		return NULL;
 	}
 
-	tgroup->sock_group = spdk_sock_group_create();
+	tgroup->sock_group = spdk_sock_group_create(NULL);
 	if (!tgroup->sock_group) {
 		goto cleanup;
 	}
