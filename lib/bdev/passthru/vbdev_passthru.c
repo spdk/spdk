@@ -216,16 +216,27 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_passthru,
 					 pt_bdev);
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
 
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-			       bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-			       bdev_io->u.bdev.num_blocks, _pt_complete_io,
-			       bdev_io);
+	rc = spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+				    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+				    bdev_io->u.bdev.num_blocks, _pt_complete_io,
+				    bdev_io);
+	if (rc != 0) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("No memory, start to queue io for passthru.\n");
+			io_ctx->ch = ch;
+			vbdev_passthru_queue_io(bdev_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
 }
 
 /* Called when someone above submits IO to this pt vbdev. We're simply passing it on here
