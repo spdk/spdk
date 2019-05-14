@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d64cab1_ad438133",
+        "filename": "Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-14T22:34:31Z",
+      "side": 1,
+      "message": "can this go right after the install target?",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a369cca0_d741fb20",
+        "filename": "examples/nvme/identify/Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-14T22:34:31Z",
+      "side": 1,
+      "message": "I think this should go before the include nvme.libtest.mk (to make them consistent with later files in this patch)",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90ae6be5_3de8f220",
+        "filename": "isalbuild/Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-14T22:34:31Z",
+      "side": 1,
+      "message": "let\u0027s move this right after install",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7f91023_79004b78",
+        "filename": "lib/bdev/ocf/env/Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-14T22:34:31Z",
+      "side": 1,
+      "message": "the install: targets look wrong here - I think you did the right thing by putting the uninstall here, but I\u0027d either move the empty install target here, or copy this same uninstall target in both places above (just after install)",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bca1bfea_65dc8e67",
+        "filename": "mk/spdk.app.mk",
+        "patchSetId": 32
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-14T22:34:31Z",
+      "side": 1,
+      "message": "can this stuff go after install?",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70d0a9dc_e18d1f81",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 32
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-14T22:34:31Z",
+      "side": 1,
+      "message": "do we need the \"SHARED LIB\" part here?  we don\u0027t have this for install\n\nsame for BINARY and EXAMPLE below",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a75255f_6ef73dae",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-14T22:34:31Z",
+      "side": 1,
+      "message": "before the include spdk.subdirs.mk",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
