@@ -41,10 +41,16 @@
 #define UNIX 0
 #define VVU 1
 
+/* Log levels */
+#define VHOST_LOG_NONE 0
+#define VHOST_LOG_INFO 1
+#define VHOST_LOG_DEBUG 2
+
 static const char *g_pid_path = NULL;
 
 static int chosen_trans = UNIX;
 static int valid_basename = 0;
+static int log_level = VHOST_LOG_NONE;
 
 static void
 vhost_usage(void)
@@ -52,6 +58,7 @@ vhost_usage(void)
 	printf(" -f <path>                 save pid to file under given path\n");
 	printf(" -S <path>                 directory where UNIX domain sockets will be created (default: pwd) or PCI address of the VVU device\n");
 	printf(" -T <option>               choose vhost transport (\"unix\" or \"vvu\") - \"unix\" is the default\n");
+	printf(" -l <option>               choose vhost log level (\"none\", \"info\", \"debug\") - \"none\" is the default\n");
 }
 
 static void
@@ -70,6 +77,21 @@ save_pid(const char *pid_path)
 }
 
 static int
+spdk_vhost_set_vhost_log_level(char *arg)
+{
+	if (strcmp(arg, "none") == 0) {
+		return VHOST_LOG_NONE;
+	} else if (strcmp(arg, "info") == 0) {
+		return VHOST_LOG_INFO;
+	} else if (strcmp(arg, "debug") == 0) {
+		return VHOST_LOG_DEBUG;
+	} else {
+		SPDK_ERRLOG("Invalid vhost log level %s\n", arg);
+		return -EINVAL;
+	}
+}
+
+static int
 vhost_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
@@ -81,6 +103,9 @@ vhost_parse_arg(int ch, char *arg)
 		break;
 	case 'T':
 		chosen_trans = spdk_vhost_set_transport(arg);
+		break;
+	case 'l':
+		log_level = spdk_vhost_set_vhost_log_level(arg);
 		break;
 	default:
 		return -EINVAL;
@@ -102,10 +127,25 @@ main(int argc, char *argv[])
 	spdk_app_opts_init(&opts);
 	opts.name = "vhost";
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:T:l:", NULL,
 				      vhost_parse_arg, vhost_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
+	}
+
+	switch (log_level) {
+	case VHOST_LOG_NONE:
+		break;
+	case VHOST_LOG_INFO:
+		opts.env_context = "--log-level=user1:7";
+		break;
+	case VHOST_LOG_DEBUG:
+		opts.env_context = "--log-level=user1:8";
+		break;
+	default:
+		fprintf(stderr, "Exiting...\n");
+		exit(EXIT_FAILURE);
+
 	}
 
 	if (chosen_trans < 0) {
