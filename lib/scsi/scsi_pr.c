@@ -293,6 +293,54 @@ error_exit:
 	return -EINVAL;
 }
 
+static int
+spdk_scsi_pr_out_release(struct spdk_scsi_task *task,
+			 enum spdk_scsi_pr_type_code rtype, uint64_t rkey)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_pr_registrant *reg;
+	int sk, asc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT RELEASE: rkey 0x%"PRIx64", "
+		      "reservation type %u\n", rkey, rtype);
+
+	reg = spdk_scsi_pr_get_registrant(lun, task->initiator_port, task->target_port);
+	if (!reg) {
+		SPDK_ERRLOG("No registration\n");
+		sk = SPDK_SCSI_SENSE_NOT_READY;
+		asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+		goto check_condition;
+	}
+
+	/* no reservation holder */
+	if (!lun->reservation.holder) {
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "RELEASE: no reservation holder\n");
+		return 0;
+	}
+
+	if (lun->reservation.rtype != rtype || rkey != lun->reservation.crkey) {
+		sk = SPDK_SCSI_SENSE_ILLEGAL_REQUEST;
+		asc = SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB;
+		goto check_condition;
+	}
+
+	/* I_T nexus is not a persistent reservation holder */
+	if (!spdk_scsi_pr_registrant_is_holder(lun, reg)) {
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "RELEASE: current I_T nexus is not holder\n");
+		return 0;
+	}
+
+	spdk_scsi_pr_release_reservation(lun, reg);
+
+	return 0;
+
+check_condition:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION, sk, asc,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return -EINVAL;
+}
+
+
 int
 spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		 uint8_t *cdb, uint8_t *data,
@@ -328,6 +376,12 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		}
 		rc = spdk_scsi_pr_out_reserve(task, rtype, rkey,
 					      spec_i_pt, all_tg_pt, aptpl);
+		break;
+	case SPDK_SCSI_PR_OUT_RELEASE:
+		if (scope != SPDK_SCSI_PR_LU_SCOPE) {
+			goto invalid;
+		}
+		rc = spdk_scsi_pr_out_release(task, rtype, rkey);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
