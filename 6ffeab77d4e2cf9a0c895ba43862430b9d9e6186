@@ -22,6 +22,30 @@
       "revId": "6ffeab77d4e2cf9a0c895ba43862430b9d9e6186",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aadfcd02_d9085f4d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 21
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-14T13:51:42Z",
+      "side": 1,
+      "message": "You are right, metadata is written on every change\nI will fix this comment",
+      "parentUuid": "cfd3378e_38c3b081",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 61
+      },
+      "revId": "6ffeab77d4e2cf9a0c895ba43862430b9d9e6186",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
