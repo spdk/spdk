@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16b19435_41a9f85a",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T12:52:15Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it look prettier if all the structures declarations were grouped together?",
+      "range": {
+        "startLine": 315,
+        "startChar": 0,
+        "endLine": 316,
+        "endChar": 45
+      },
+      "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9c07970_65a84171",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T12:52:15Z",
+      "side": 1,
+      "message": "Let\u0027s use lba_map instead.",
+      "range": {
+        "startLine": 872,
+        "startChar": 1,
+        "endLine": 872,
+        "endChar": 34
+      },
+      "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7271e126_8971b7ab",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-14T12:52:15Z",
+      "side": 1,
+      "message": "What is the point of this?",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 265,
+        "endChar": 48
+      },
+      "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
