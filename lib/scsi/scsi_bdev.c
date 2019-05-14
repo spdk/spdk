@@ -2070,6 +2070,11 @@ spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
 {
 	int rc;
 
+	rc = spdk_scsi_pr_check(task);
+	if (rc < 0) {
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
 	if ((rc = bdev_scsi_process_block(task)) == SPDK_SCSI_TASK_UNKNOWN) {
 		if ((rc = bdev_scsi_process_primary(task)) == SPDK_SCSI_TASK_UNKNOWN) {
 			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "unsupported SCSI OP=0x%x\n", task->cdb[0]);

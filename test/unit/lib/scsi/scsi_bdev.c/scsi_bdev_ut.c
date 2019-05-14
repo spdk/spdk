@@ -108,6 +108,8 @@ DEFINE_STUB(spdk_scsi_pr_out, int, (struct spdk_scsi_task *task,
 DEFINE_STUB(spdk_scsi_pr_in, int, (struct spdk_scsi_task *task, uint8_t *cdb,
 				   uint8_t *data, uint16_t data_len), 0);
 
+DEFINE_STUB(spdk_scsi_pr_check, int, (struct spdk_scsi_task *task), 0);
+
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
@@ -366,7 +368,7 @@ mode_sense_6_test(void)
 	struct spdk_bdev bdev;
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
-	struct spdk_scsi_dev dev;
+	struct spdk_scsi_dev dev = {0};
 	char cdb[12];
 	unsigned char *data;
 	int rc;
@@ -391,6 +393,7 @@ mode_sense_6_test(void)
 
 	rc = spdk_bdev_scsi_execute(&task);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(task.status == SPDK_SCSI_STATUS_GOOD);
 
 	data = task.iovs[0].iov_base;
 	mode_data_len = data[0];
@@ -416,7 +419,7 @@ mode_sense_10_test(void)
 	struct spdk_bdev bdev;
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
-	struct spdk_scsi_dev dev;
+	struct spdk_scsi_dev dev = {0};
 	char cdb[12];
 	unsigned char *data;
 	int rc;
@@ -440,6 +443,7 @@ mode_sense_10_test(void)
 
 	rc = spdk_bdev_scsi_execute(&task);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(task.status == SPDK_SCSI_STATUS_GOOD);
 
 	data = task.iovs[0].iov_base;
 	mode_data_len = ((data[0] << 8) + data[1]);
@@ -506,7 +510,7 @@ inquiry_standard_test(void)
 	struct spdk_bdev bdev = { .blocklen = 512 };
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
-	struct spdk_scsi_dev dev;
+	struct spdk_scsi_dev dev = {0};
 	char cdb[6];
 	char *data;
 	struct spdk_scsi_cdb_inquiry_data *inq_data;
@@ -528,12 +532,13 @@ inquiry_standard_test(void)
 	task.lun = &lun;
 
 	rc = spdk_bdev_scsi_execute(&task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(task.status == SPDK_SCSI_STATUS_GOOD);
 
 	data = task.iovs[0].iov_base;
 	inq_data = (struct spdk_scsi_cdb_inquiry_data *)&data[0];
 
 	CU_ASSERT_EQUAL(inq_data->version, SPDK_SPC_VERSION_SPC3);
-	CU_ASSERT_EQUAL(rc, 0);
 
 	ut_put_task(&task);
 }
