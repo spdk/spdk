@@ -82,3 +82,10 @@ function iscsitestfini() {
 		$rootdir/scripts/setup.sh reset
 	fi
 }
+
+function waitforiscsilogin() {
+	DEVICES=$( iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}' )
+	for DEV in $DEVICES; do
+		waitforfile "/dev/${DEV}"
+	done
+}
