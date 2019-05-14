@@ -22,6 +22,29 @@
       "revId": "8c7f8d9cee19cbba59b1a6d1d007bfe661503279",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e79c0b3_68fd5857",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-14T14:29:29Z",
+      "side": 1,
+      "message": "Do we need this line?",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 47
+      },
+      "revId": "8c7f8d9cee19cbba59b1a6d1d007bfe661503279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
