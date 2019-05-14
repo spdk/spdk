@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac1b0508_8d01d4d3",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T11:02:17Z",
+      "side": 1,
+      "message": "Just noticed after going after next patch in series, vbdev_ocf_queue_create() should be used since being introduced in previous patch.",
+      "range": {
+        "startLine": 891,
+        "startChar": 6,
+        "endLine": 891,
+        "endChar": 22
+      },
+      "revId": "4393d52ce470e18b4d21ac5ce18a0612a4334a22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
