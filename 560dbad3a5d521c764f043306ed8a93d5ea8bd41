@@ -22,6 +22,30 @@
       "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5798ab3e_29920ad3",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-14T05:18:37Z",
+      "side": 1,
+      "message": "Thank you Ziye. Either is OK for me. We may have other comments and this is the first in the series. So I want to wait for extra reviews first.",
+      "parentUuid": "58998de1_5717be79",
+      "range": {
+        "startLine": 107,
+        "startChar": 6,
+        "endLine": 107,
+        "endChar": 12
+      },
+      "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
