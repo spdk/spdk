@@ -29,6 +29,8 @@ and "bdevs" array with the per-bdev statistics.
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
 previously attached controller.
 
+Nvme Opal library spdk_opal_cmd deprecated. Adding seperate command APIs.
+
 ## v19.04:
 
 ### nvme
