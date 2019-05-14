@@ -83,6 +83,7 @@ COMMON_CFLAGS += -march=native
 endif
 ifeq ($(TARGET_MACHINE),aarch64)
 COMMON_CFLAGS += -march=armv8-a+crc
+COMMON_CFLAGS += -DPAGE_SIZE=$(shell getconf PAGESIZE)
 endif
 
 ifeq ($(CONFIG_WERROR), y)
