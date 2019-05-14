@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "b823caeb_9a811f4e",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-14T02:43:01Z",
+      "side": 1,
+      "message": "Yes. Will have a name here for more clearness. Thanks.",
+      "parentUuid": "7c241b06_1163f1fd",
+      "revId": "1a4023573130da790d78595cb118cd0e3c7536d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a9e1fc7_3ec2b363",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 23
@@ -47,6 +65,24 @@
       "writtenOn": "2019-05-13T16:20:52Z",
       "side": 1,
       "message": "I think \"disabled\" should be \"disabling\" if I\u0027m reading this correctly. and then add to after Qos, so \"by disabling QoS to less than min\"",
+      "revId": "1a4023573130da790d78595cb118cd0e3c7536d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26370757_e631022a",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-14T02:43:01Z",
+      "side": 1,
+      "message": "In this case, the QoS is not enabled. This is to examine on the particular running environment (VM or host), whether there is high enough IOPS there before enabling QoS testing. I will make some changes to make it more clear.",
+      "parentUuid": "2a9e1fc7_3ec2b363",
       "revId": "1a4023573130da790d78595cb118cd0e3c7536d0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -81,6 +117,24 @@
       "writtenOn": "2019-05-13T16:20:52Z",
       "side": 1,
       "message": "Are both RAID and malloc needed in the config? Seems like testing QoS, maool should be sufficient.",
+      "revId": "1a4023573130da790d78595cb118cd0e3c7536d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9539449_ad391139",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-14T02:43:01Z",
+      "side": 1,
+      "message": "Now the Malloc device added the ZCopy supported so that only Malloc will not under QoS limit. This is another follow up I need to take a look. Currently use RAID, not only from performance perspective, but also for the normal R/W operations.",
+      "parentUuid": "02988c9b_456cc4ca",
       "revId": "1a4023573130da790d78595cb118cd0e3c7536d0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
