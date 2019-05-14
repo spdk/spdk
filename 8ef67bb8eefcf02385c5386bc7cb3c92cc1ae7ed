@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f266cdb_a83060cf",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-14T14:23:59Z",
+      "side": 1,
+      "message": "Now vms dir is created in spdk source directory.$VM_BASE_DIR/$1 indicates directory one step below the spdk source dir. Do we want to change it?",
+      "range": {
+        "startLine": 290,
+        "startChar": 15,
+        "endLine": 290,
+        "endChar": 23
+      },
+      "revId": "8ef67bb8eefcf02385c5386bc7cb3c92cc1ae7ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
