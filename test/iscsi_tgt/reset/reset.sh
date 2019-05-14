@@ -53,7 +53,6 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 sleep 1
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
-sleep 1
 $fio_py iscsi 512 1 read 60 1 &
 fiopid=$!
 echo "FIO pid: $fiopid"
