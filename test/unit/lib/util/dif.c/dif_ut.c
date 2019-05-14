@@ -44,7 +44,7 @@ static int
 ut_data_pattern_generate(struct iovec *iovs, int iovcnt,
 			 uint32_t block_size, uint32_t md_size, uint32_t num_blocks)
 {
-	struct _iov_iter iter;
+	struct _dif_sgl sgl;
 	uint32_t offset_blocks, offset_in_block, buf_len, data_offset, i;
 	uint8_t *buf;
 
@@ -53,13 +53,13 @@ ut_data_pattern_generate(struct iovec *iovs, int iovcnt,
 	}
 
 	offset_blocks = 0;
-	_iov_iter_init(&iter, iovs, iovcnt);
+	_dif_sgl_init(&sgl, iovs, iovcnt);
 	data_offset = 0;
 
 	while (offset_blocks < num_blocks) {
 		offset_in_block = 0;
 		while (offset_in_block < block_size) {
-			_iov_iter_get_buf(&iter, (void *)&buf, &buf_len);
+			_dif_sgl_get_buf(&sgl, (void *)&buf, &buf_len);
 			if (offset_in_block < block_size - md_size) {
 				buf_len = spdk_min(buf_len,
 						   block_size - md_size - offset_in_block);
@@ -71,7 +71,7 @@ ut_data_pattern_generate(struct iovec *iovs, int iovcnt,
 				buf_len = spdk_min(buf_len, block_size - offset_in_block);
 				memset(buf, 0, buf_len);
 			}
-			_iov_iter_advance(&iter, buf_len);
+			_dif_sgl_advance(&sgl, buf_len);
 			offset_in_block += buf_len;
 		}
 		offset_blocks++;
@@ -84,7 +84,7 @@ static int
 ut_data_pattern_verify(struct iovec *iovs, int iovcnt,
 		       uint32_t block_size, uint32_t md_size, uint32_t num_blocks)
 {
-	struct _iov_iter iter;
+	struct _dif_sgl sgl;
 	uint32_t offset_blocks, offset_in_block, buf_len, data_offset, i;
 	uint8_t *buf;
 
@@ -93,13 +93,13 @@ ut_data_pattern_verify(struct iovec *iovs, int iovcnt,
 	}
 
 	offset_blocks = 0;
-	_iov_iter_init(&iter, iovs, iovcnt);
+	_dif_sgl_init(&sgl, iovs, iovcnt);
 	data_offset = 0;
 
 	while (offset_blocks < num_blocks) {
 		offset_in_block = 0;
 		while (offset_in_block < block_size) {
-			_iov_iter_get_buf(&iter, (void *)&buf, &buf_len);
+			_dif_sgl_get_buf(&sgl, (void *)&buf, &buf_len);
 
 			if (offset_in_block < block_size - md_size) {
 				buf_len = spdk_min(buf_len,
@@ -113,7 +113,7 @@ ut_data_pattern_verify(struct iovec *iovs, int iovcnt,
 			} else {
 				buf_len = spdk_min(buf_len, block_size - offset_in_block);
 			}
-			_iov_iter_advance(&iter, buf_len);
+			_dif_sgl_advance(&sgl, buf_len);
 			offset_in_block += buf_len;
 		}
 		offset_blocks++;
