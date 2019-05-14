@@ -1791,7 +1791,7 @@ test_io_failure(void)
 	for (count = 0; count < 1; count++) {
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-		io_len = (rand() % g_strip_size) + 1;
+		io_len = (g_strip_size / 2) << count;
 		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_INVALID);
 		lba += g_strip_size;
 		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
@@ -1809,7 +1809,7 @@ test_io_failure(void)
 	for (count = 0; count < 1; count++) {
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-		io_len = (rand() % g_strip_size) + 1;
+		io_len = (g_strip_size / 2) << count;
 		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
 		lba += g_strip_size;
 		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
