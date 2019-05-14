@@ -22,6 +22,30 @@
       "revId": "b8177b51ba6898713dba281ccbe31600e844d925",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8663aa20_9680fb18",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-14T09:41:36Z",
+      "side": 1,
+      "message": "Ack, stop() is correct here.",
+      "parentUuid": "5eb19fd0_5b13ac74",
+      "range": {
+        "startLine": 853,
+        "startChar": 2,
+        "endLine": 853,
+        "endChar": 42
+      },
+      "revId": "b8177b51ba6898713dba281ccbe31600e844d925",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
