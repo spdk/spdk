@@ -358,7 +358,7 @@ hello_sock_listen(struct hello_context_t *ctx)
 	/*
 	 * Create sock group for server socket
 	 */
-	ctx->group = spdk_sock_group_create();
+	ctx->group = spdk_sock_group_create(NULL);
 
 	g_is_running = true;
 

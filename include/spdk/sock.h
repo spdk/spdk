@@ -195,11 +195,19 @@ bool spdk_sock_is_ipv4(struct spdk_sock *sock);
 typedef void (*spdk_sock_cb)(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock);
 
 /**
- * Create a new socket group.
+ * Create a new socket group with user provided pointer
  *
  * \return a pointer to the created group on success, or NULL on failure.
  */
-struct spdk_sock_group *spdk_sock_group_create(void);
+struct spdk_sock_group *spdk_sock_group_create(void *ctx);
+
+/**
+ * Get the ctx of the sock group
+ *
+ * \return a pointer which is ctx of the sock_group.
+ */
+void *spdk_sock_group_get_ctx(struct spdk_sock_group *sock_group);
+
 
 /**
  * Add a socket to the group.

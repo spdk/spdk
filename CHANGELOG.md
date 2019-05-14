@@ -25,6 +25,8 @@ and "bdevs" array with the per-bdev statistics.
 
 spdk_sock_get_optimal_sock_group() was added to support getting the optimal
 sock group.
+spdk_sock_group_get_ctx() was added to return the context of the spdk_sock_group.
+spdk_sock_group_create() is updated to allow input the user provided ctx.
 
 ## v19.04:
 
