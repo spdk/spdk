@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01d0a7e1_f6b39895",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1415,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-14T01:52:04Z",
+      "side": 1,
+      "message": "If you want to reuse the variable offset_blocks, I think you should set offset_blocks to 0 before line 1415.",
+      "revId": "12378baac1a0e560dde7aab4452fab1573379e87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
