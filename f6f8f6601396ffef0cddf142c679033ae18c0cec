@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f4924344_5b192af1",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-14T11:04:39Z",
+      "side": 1,
+      "message": "Ok, I will increase polling to 100us. Although is is hard to see/test if that is ok. But most of the metadata updates are actually sent from usual IO queues, so at least that we can say is ok.\n\nWe discussed offline the unregistering poller after management operation thing, and I don\u0027t thing that is the clear way to achieve what we actually want. I proposed introducing queue-\u003eis_idle() function to OCF which will do exactly what we want - tell us when queue is not busy. Unless that is going to be added I don\u0027t think it is worth to implement such functionality.",
+      "parentUuid": "d836a214_404dae90",
+      "range": {
+        "startLine": 886,
+        "startChar": 0,
+        "endLine": 886,
+        "endChar": 23
+      },
+      "revId": "f6f8f6601396ffef0cddf142c679033ae18c0cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fc4eff7_6ee7000e",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 28
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-14T09:01:47Z",
       "side": 1,
       "message": "Same as in previous patch, why not set vbdev-\u003emngt_ctx.status and call vbdev_ocf_mngt_stop(vbdev) ?\nBetter would be to provide actual error path, but I\u0027m fine with just stopping execution at this point.",
+      "range": {
+        "startLine": 944,
+        "startChar": 2,
+        "endLine": 944,
+        "endChar": 37
+      },
+      "revId": "f6f8f6601396ffef0cddf142c679033ae18c0cec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a24dea0c_b80576ba",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-14T11:04:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9fc4eff7_6ee7000e",
       "range": {
         "startLine": 944,
         "startChar": 2,
