@@ -83,7 +83,6 @@ run_nvme_remote "local"
 
 trap "iscsicleanup; killprocess $iscsipid; \
 	rm -f ./local-job0-0-verify.state; iscsitestfini $1 $2; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
-sleep 1
 
 echo "Running FIO"
 $fio_py iscsi 4096 1 randrw 1 1 verify
