@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28068595_a10fde69",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-14T20:31:47Z",
+      "side": 1,
+      "message": "If you follow the pattern from this patch: https://review.gerrithub.io/c/spdk/spdk/+/453957\n\nThen you don\u0027t need the file.",
+      "revId": "2155f6be79caee012d681574778f8729822bd08f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
