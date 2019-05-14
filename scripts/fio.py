@@ -4,6 +4,8 @@ from subprocess import check_call, call, check_output, Popen, PIPE, CalledProces
 import re
 import sys
 import signal
+import os.path
+import time
 
 fio_template = """
 [global]
@@ -135,6 +137,16 @@ def set_device_parameter(devices, filename_template, value):
 
 
 def configure_devices(devices):
+
+    for dev in devices:
+        retry = 30
+        while retry > 0:
+            if os.path.exists("/sys/block/%s/queue/nomerges" % dev):
+                break
+            else:
+                retry = retry - 1
+                time.sleep(0.1)
+
     set_device_parameter(devices, "/sys/block/%s/queue/nomerges", "2")
     set_device_parameter(devices, "/sys/block/%s/queue/nr_requests", "128")
     requested_qd = 128
