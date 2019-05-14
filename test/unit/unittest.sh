@@ -124,6 +124,7 @@ $valgrind $testdir/lib/scsi/dev.c/dev_ut
 $valgrind $testdir/lib/scsi/lun.c/lun_ut
 $valgrind $testdir/lib/scsi/scsi.c/scsi_ut
 $valgrind $testdir/lib/scsi/scsi_bdev.c/scsi_bdev_ut
+$valgrind $testdir/lib/scsi/scsi_pr.c/scsi_pr_ut
 
 $valgrind $testdir/lib/lvol/lvol.c/lvol_ut
 
