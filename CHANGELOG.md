@@ -69,6 +69,11 @@ the ring.
 A new API `spdk_mempool_lookup` has been added to lookup the memory pool created
 by the primary process.
 
+### sock
+
+spdk_sock_get_optimal_sock_group() was added to support getting the optimal
+sock group.
+
 ## v19.04:
 
 ### nvme
