@@ -52,16 +52,19 @@ struct raid_config	g_raid_config = {
  * List of raid bdev in configured list, these raid bdevs are registered with
  * bdev layer
  */
-struct raid_configured_tailq	g_raid_bdev_configured_list;
+struct raid_configured_tailq	g_raid_bdev_configured_list = TAILQ_HEAD_INITIALIZER(
+			g_raid_bdev_configured_list);
 
 /* List of raid bdev in configuring list */
-struct raid_configuring_tailq	g_raid_bdev_configuring_list;
+struct raid_configuring_tailq	g_raid_bdev_configuring_list = TAILQ_HEAD_INITIALIZER(
+			g_raid_bdev_configuring_list);
 
 /* List of all raid bdevs */
-struct raid_all_tailq		g_raid_bdev_list;
+struct raid_all_tailq		g_raid_bdev_list = TAILQ_HEAD_INITIALIZER(g_raid_bdev_list);
 
 /* List of all raid bdevs that are offline */
-struct raid_offline_tailq	g_raid_bdev_offline_list;
+struct raid_offline_tailq	g_raid_bdev_offline_list = TAILQ_HEAD_INITIALIZER(
+			g_raid_bdev_offline_list);
 
 /* Function declarations */
 static void	raid_bdev_examine(struct spdk_bdev *bdev);
@@ -1490,11 +1493,6 @@ static int
 raid_bdev_init(void)
 {
 	int ret;
-
-	TAILQ_INIT(&g_raid_bdev_configured_list);
-	TAILQ_INIT(&g_raid_bdev_configuring_list);
-	TAILQ_INIT(&g_raid_bdev_list);
-	TAILQ_INIT(&g_raid_bdev_offline_list);
 
 	/* Parse config file for raids */
 	ret = raid_bdev_parse_config();
