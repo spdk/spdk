@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11258b98_bbae5b74",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1898,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-14T20:07:15Z",
+      "side": 1,
+      "message": "Change CU_ASSERT(rc \u003d\u003d 0) to SPDK_CU_ASSERT_FATAL(rc \u003d\u003d 0) - that should fix it.\n\nCU_ASSERT doesn\u0027t stop the test if it fails - it just logs it and continues on. So if raid_bdev_create_cb returns -ENOMEM, CU_ASSERT will note that but then the loop below will still execute. That\u0027s why we invented SPDK_CU_ASSERT_FATAL.",
+      "revId": "dca16515e896631df94ec663027702dda52ebf9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
