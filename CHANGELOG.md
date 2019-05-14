@@ -53,6 +53,9 @@ spdk_sock_group_add_sock so that a set of sockets can be polled more efficiently
 For some network devices, it is optimal to assign particular sockets to specific
 sock groups. This API is intended to provide the user with that information.
 
+spdk_sock_group_get_ctx() was added to return the context of the spdk_sock_group.
+spdk_sock_group_create() is updated to allow input the user provided ctx.
+
 ## v19.04:
 
 ### nvme
