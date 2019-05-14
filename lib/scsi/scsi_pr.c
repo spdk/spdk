@@ -586,6 +586,38 @@ spdk_scsi_pr_in_read_keys(struct spdk_scsi_task *task, uint8_t *data,
 	return (sizeof(keys->header) + count * 8);
 }
 
+static int
+spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
+				  uint8_t *data, uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_pr_in_read_reservations_data *param;
+	bool all_regs = false;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN READ RESERVATIONS\n");
+	param = (struct spdk_scsi_pr_in_read_reservations_data *)(data);
+
+	to_be32(&param->header.pr_generation, lun->pr_generation);
+	if (lun->reservation.holder) {
+		all_regs = spdk_scsi_pr_is_all_registrants_type(lun);
+		if (all_regs) {
+			to_be64(&param->rkey, 0);
+		} else {
+			to_be64(&param->rkey, lun->reservation.crkey);
+		}
+		to_be32(&param->header.addiontal_len, 16);
+		param->scope = SPDK_SCSI_PR_LU_SCOPE;
+		param->type = lun->reservation.rtype;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "READ RESERVATIONS with valid reservation\n");
+		return sizeof(*param);
+	}
+
+	/* no reservation */
+	to_be32(&param->header.addiontal_len, 0);
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "READ RESERVATIONS no reservation\n");
+	return sizeof(param->header);
+}
+
 int
 spdk_scsi_pr_in(struct spdk_scsi_task *task,
 		uint8_t *cdb, uint8_t *data,
@@ -602,6 +634,12 @@ spdk_scsi_pr_in(struct spdk_scsi_task *task,
 	switch (action) {
 	case SPDK_SCSI_PR_IN_READ_KEYS:
 		rc = spdk_scsi_pr_in_read_keys(task, data, data_len);
+		break;
+	case SPDK_SCSI_PR_IN_READ_RESERVATION:
+		if (data_len < sizeof(struct spdk_scsi_pr_in_read_reservations_data)) {
+			goto invalid;
+		}
+		rc = spdk_scsi_pr_in_read_reservations(task, data, data_len);
 		break;
 	default:
 		goto invalid;
