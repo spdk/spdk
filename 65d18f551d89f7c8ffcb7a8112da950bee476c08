@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d443d074_e49610a4",
+        "filename": "test/ocf/integrity/mallocs.conf",
+        "patchSetId": 18
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-14T13:50:00Z",
+      "side": 1,
+      "message": "Probably mistype, can you remove this ?",
+      "revId": "65d18f551d89f7c8ffcb7a8112da950bee476c08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
