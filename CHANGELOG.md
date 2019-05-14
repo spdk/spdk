@@ -62,6 +62,11 @@ The parameter `free_space` has been added to spdk_ring_enqueue() to wait when
 the ring is almost full and resume when there is enough space available in
 the ring.
 
+### sock
+
+spdk_sock_get_optimal_sock_group() was added to support getting the optimal
+sock group.
+
 ## v19.04:
 
 ### nvme
