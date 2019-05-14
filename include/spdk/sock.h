@@ -252,6 +252,16 @@ int spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events);
  */
 int spdk_sock_group_close(struct spdk_sock_group **group);
 
+/**
+ * Get the optimal sock group for this sock.
+ *
+ * \param sock The socket
+ * \param group Returns the optimal sock group. If there is no optimal sock group, returns NULL.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group);
+
 #ifdef __cplusplus
 }
 #endif
