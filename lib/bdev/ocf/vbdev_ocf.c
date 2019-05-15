@@ -737,6 +737,37 @@ io_device_destroy_cb(void *io_device, void *ctx_buf)
 	ocf_queue_put(qctx->queue);
 }
 
+static void
+finish_register(struct vbdev_ocf *vbdev)
+{
+	int result;
+
+	/* Copy properties of the base bdev */
+	vbdev->exp_bdev.blocklen = vbdev->core.bdev->blocklen;
+	vbdev->exp_bdev.write_cache = vbdev->core.bdev->write_cache;
+	vbdev->exp_bdev.required_alignment = vbdev->core.bdev->required_alignment;
+
+	vbdev->exp_bdev.name = vbdev->name;
+	vbdev->exp_bdev.product_name = "SPDK OCF";
+
+	vbdev->exp_bdev.blockcnt = vbdev->core.bdev->blockcnt;
+	vbdev->exp_bdev.ctxt = vbdev;
+	vbdev->exp_bdev.fn_table = &cache_dev_fn_table;
+	vbdev->exp_bdev.module = &ocf_if;
+
+	/* Finally register vbdev in SPDK */
+	spdk_io_device_register(vbdev, io_device_create_cb, io_device_destroy_cb,
+				sizeof(struct vbdev_ocf_qcxt), vbdev->name);
+	result = spdk_bdev_register(&vbdev->exp_bdev);
+	if (result) {
+		SPDK_ERRLOG("Could not register exposed bdev\n");
+	} else {
+		vbdev->state.started = true;
+	}
+
+	vbdev_ocf_mngt_continue(vbdev, result);
+}
+
 /* Try to lock cache, then add core */
 static void
 add_core_poll(struct vbdev_ocf *vbdev)
@@ -802,37 +833,6 @@ start_cache(struct vbdev_ocf *vbdev)
 	ocf_mngt_cache_unlock(vbdev->ocf_cache);
 
 	vbdev_ocf_mngt_continue(vbdev, rc);
-}
-
-static void
-finish_register(struct vbdev_ocf *vbdev)
-{
-	int result;
-
-	/* Copy properties of the base bdev */
-	vbdev->exp_bdev.blocklen = vbdev->core.bdev->blocklen;
-	vbdev->exp_bdev.write_cache = vbdev->core.bdev->write_cache;
-	vbdev->exp_bdev.required_alignment = vbdev->core.bdev->required_alignment;
-
-	vbdev->exp_bdev.name = vbdev->name;
-	vbdev->exp_bdev.product_name = "SPDK OCF";
-
-	vbdev->exp_bdev.blockcnt = vbdev->core.bdev->blockcnt;
-	vbdev->exp_bdev.ctxt = vbdev;
-	vbdev->exp_bdev.fn_table = &cache_dev_fn_table;
-	vbdev->exp_bdev.module = &ocf_if;
-
-	/* Finally register vbdev in SPDK */
-	spdk_io_device_register(vbdev, io_device_create_cb, io_device_destroy_cb,
-				sizeof(struct vbdev_ocf_qcxt), vbdev->name);
-	result = spdk_bdev_register(&vbdev->exp_bdev);
-	if (result) {
-		SPDK_ERRLOG("Could not register exposed bdev\n");
-	} else {
-		vbdev->state.started = true;
-	}
-
-	vbdev_ocf_mngt_continue(vbdev, result);
 }
 
 /* Procedures called during register operation */
