@@ -1005,6 +1005,24 @@
     },
     {
       "key": {
+        "uuid": "d1acb7c2_08017ea7",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-15T00:30:22Z",
+      "side": 1,
+      "message": "This code was refactored and merged into lib/nvmf/ctrlr.c in 19.04 release. This was include by mistake when first created patch against Gitlab development branch. Removing this file.",
+      "parentUuid": "df639a12_48de8109",
+      "revId": "f8753a170a575314d7804b250cbbd159abd72093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea1cbeb8_aad661f2",
         "filename": "lib/nvmf/transport.c",
         "patchSetId": 19
