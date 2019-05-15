@@ -543,6 +543,11 @@ void *spdk_io_channel_iter_get_ctx(struct spdk_io_channel_iter *i);
  */
 void spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status);
 
+
+uint64_t spdk_get_thread_time(const struct spdk_thread *thread);
+
+
+
 #ifdef __cplusplus
 }
 #endif
