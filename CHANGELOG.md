@@ -109,6 +109,11 @@ Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
 
 A snapshot can now be deleted if there is only a single clone on top of it.
 
+### thread
+
+Add spdk_get_thread_time(), which returns the last updated tsc value maintained
+by the thread.
+
 ## v19.04:
 
 ### nvme
