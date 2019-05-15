@@ -163,6 +163,15 @@ void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn);
 struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt);
 
 /**
+ * Get optimal nvmf poll group for the qpair.
+ *
+ * \param qpair Requested qpair
+ *
+ * \return a poll group on success, or NULL on failure.
+ */
+struct spdk_nvmf_poll_group *spdk_nvmf_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair);
+
+/**
  * Destroy a poll group.
  *
  * \param group The poll group to destroy.

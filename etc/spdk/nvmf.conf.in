@@ -65,6 +65,15 @@
   # poll. Units in microseconds.
   AcceptorPollRate 10000
 
+  # Set how the connection is scheduled among multiple threads, current supported string value are
+  # "RoundRobin", "Host", "Transport".
+  # RoundRobin: Schedule the connection with roundrobin manner.
+  # Host: Schedule the connection according to host IP.
+  # Transport: Schedule the connection according to the transport characteristics.
+  #  For example, for  TCP transport, we can schedule the connection according to socket NAPI_ID info.
+  #  The connection which has the same scoket NAPI_ID info will be grouped in the same polling group.
+  ConnectionScheduler RoundRobin
+
 # One valid transport type must be set in each [Transport].
 # The first is the case of RDMA transport and the second is the case of TCP transport.
 [Transport]

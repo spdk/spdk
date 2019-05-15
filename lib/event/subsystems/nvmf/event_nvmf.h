@@ -48,6 +48,7 @@
 enum spdk_nvmf_connect_sched {
 	CONNECT_SCHED_ROUND_ROBIN = 0,
 	CONNECT_SCHED_HOST_IP,
+	CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP,
 };
 
 struct spdk_nvmf_tgt_conf {
