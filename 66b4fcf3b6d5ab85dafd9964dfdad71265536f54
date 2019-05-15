@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0770e954_240f2ab3",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1551,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T04:36:08Z",
+      "side": 1,
+      "message": "staying lba\u003d0 here is easier to read because initialization and update are close.",
+      "revId": "66b4fcf3b6d5ab85dafd9964dfdad71265536f54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58447ada_a5217c1c",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1555,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T04:36:08Z",
+      "side": 1,
+      "message": "we should cover the cases of io_len \u003c g_strip_size and io_len \u003e g_strip_size? How about using (g_strip / 2) + g_strip_size * i ?",
+      "range": {
+        "startLine": 1555,
+        "startChar": 11,
+        "endLine": 1555,
+        "endChar": 34
+      },
+      "revId": "66b4fcf3b6d5ab85dafd9964dfdad71265536f54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
