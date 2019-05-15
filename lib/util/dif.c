@@ -90,7 +90,7 @@ _dif_sgl_get_buf(struct _dif_sgl *s, void **_buf, uint32_t *_buf_len)
 static void
 _dif_sgl_fast_forward(struct _dif_sgl *s, uint32_t offset)
 {
-	s->iov_offset = offset;
+	s->iov_offset += offset;
 	while (s->iovcnt != 0) {
 		if (s->iov_offset < s->iov->iov_len) {
 			break;
