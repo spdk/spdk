@@ -259,11 +259,14 @@ bdev_ut_destroy_ch(void *io_device, void *ctx_buf)
 	g_bdev_ut_channel = NULL;
 }
 
+struct spdk_bdev_module bdev_ut_if;
+
 static int
 bdev_ut_module_init(void)
 {
 	spdk_io_device_register(&g_bdev_ut_io_device, bdev_ut_create_ch, bdev_ut_destroy_ch,
 				sizeof(struct bdev_ut_channel), NULL);
+	spdk_bdev_module_init_done(&bdev_ut_if);
 	return 0;
 }
 
@@ -277,6 +280,7 @@ struct spdk_bdev_module bdev_ut_if = {
 	.name = "bdev_ut",
 	.module_init = bdev_ut_module_init,
 	.module_fini = bdev_ut_module_fini,
+	.async_init = true,
 };
 
 static void vbdev_ut_examine(struct spdk_bdev *bdev);
