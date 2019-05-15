@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8daac6e_947e2ae1",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-15T10:12:27Z",
+      "side": 1,
+      "message": "Isn\u0027t this a similar condition to the one on line 523? Why not treat it the same:\n\nif (spdk_unlikely(offset \u003e tail_md_offset) {\n  return 0;\n}\n\nreturn tail_md_offset - offset;",
+      "range": {
+        "startLine": 527,
+        "startChar": 8,
+        "endLine": 527,
+        "endChar": 64
+      },
+      "revId": "57abd75efad622d9dade66b9bebc1428a2b8ee67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
