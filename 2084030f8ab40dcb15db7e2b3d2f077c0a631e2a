@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "9a87501e_0a09820c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T18:03:04Z",
+      "side": 1,
+      "message": "Oh - I completely misread this.  I understand now.",
+      "parentUuid": "e15dfc81_ae8dff71",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "58dc01c0_c80ca51a",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 13
@@ -84,6 +102,24 @@
       "side": 1,
       "message": "Or consider that the low mem conditions at this point are with pre-allocated rte pools, not heap so I dunno, maybe this is OK?",
       "parentUuid": "e2a17d06_a95cde23",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1791459a_c3f2e13d",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T18:03:04Z",
+      "side": 1,
+      "message": "What if we added the \u0027original\u0027 cb_arg in the spdk_reduce_vol_cb_args structures that I pass you?\n\nIf it\u0027s NULL, it means it\u0027s related to some operation internal to libreduce (i.e. reading/writing metadata).  I don\u0027t see that ever happening with compress/decompress operations though.",
+      "parentUuid": "5c237b20_d2eae45c",
       "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
