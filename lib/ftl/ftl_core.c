@@ -801,6 +801,8 @@ ftl_submit_read(struct ftl_io *io)
 	struct ftl_ppa ppa;
 	int rc = 0, lbk_cnt;
 
+	assert(LIST_EMPTY(&io->children));
+
 	while (io->pos < io->lbk_cnt) {
 		if (ftl_io_mode_ppa(io)) {
 			lbk_cnt = rc = ftl_ppa_read_next_ppa(io, &ppa);
@@ -1580,6 +1582,35 @@ _ftl_io_write(void *ctx)
 	ftl_io_write((struct ftl_io *)ctx);
 }
 
+static int
+ftl_rwb_fill_leaf(struct ftl_io *io)
+{
+	int rc;
+
+	rc = ftl_rwb_fill(io);
+	if (rc == -EAGAIN) {
+		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ioch),
+				     _ftl_io_write, io);
+		return 0;
+	}
+
+	return rc;
+}
+
+static int
+ftl_submit_write_leaf(struct ftl_io *io)
+{
+	int rc;
+
+	rc = ftl_submit_write(ftl_wptr_from_band(io->band), io);
+	if (rc == -EAGAIN) {
+		/* EAGAIN means that the request was put on the pending queue */
+		return 0;
+	}
+
+	return rc;
+}
+
 void
 ftl_io_write(struct ftl_io *io)
 {
@@ -1587,22 +1618,15 @@ ftl_io_write(struct ftl_io *io)
 
 	/* For normal IOs we just need to copy the data onto the rwb */
 	if (!(io->flags & FTL_IO_MD)) {
-		/* Other errors should be handled by ftl_rwb_fill */
-		if (ftl_rwb_fill(io) == -EAGAIN) {
-			spdk_thread_send_msg(spdk_get_thread(), _ftl_io_write, io);
-		}
-
-		return;
-	}
-
-	/* Metadata has its own buffer, so it doesn't have to be copied, so just */
-	/* send it the the core thread and schedule the write immediately */
-	if (ftl_check_core_thread(dev)) {
-		/* We don't care about the errors, as the IO is either retried or completed
-		 * internally by ftl_submit_write */
-		ftl_submit_write(ftl_wptr_from_band(io->band), io);
+		ftl_io_call_foreach_child(io, ftl_rwb_fill_leaf);
 	} else {
-		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_write, io);
+		/* Metadata has its own buffer, so it doesn't have to be copied, so just */
+		/* send it the the core thread and schedule the write immediately */
+		if (ftl_check_core_thread(dev)) {
+			ftl_io_call_foreach_child(io, ftl_submit_write_leaf);
+		} else {
+			spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_write, io);
+		}
 	}
 }
 
@@ -1612,7 +1636,7 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 {
 	struct ftl_io *io;
 
-	if (iov_cnt == 0 || iov_cnt > FTL_IO_MAX_IOVEC) {
+	if (iov_cnt == 0) {
 		return -EINVAL;
 	}
 
@@ -1638,6 +1662,20 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 	return 0;
 }
 
+static int
+ftl_io_read_leaf(struct ftl_io *io)
+{
+	int rc;
+
+	rc = ftl_submit_read(io);
+	if (rc == -ENOMEM) {
+		/* ENOMEM means that the request was put on a pending queue */
+		return 0;
+	}
+
+	return rc;
+}
+
 static void
 _ftl_io_read(void *arg)
 {
@@ -1650,9 +1688,7 @@ ftl_io_read(struct ftl_io *io)
 	struct spdk_ftl_dev *dev = io->dev;
 
 	if (ftl_check_read_thread(dev)) {
-		/* We don't care about the errors, as the IO is either retried or completed
-		 * internally by ftl_submit_read */
-		ftl_submit_read(io);
+		ftl_io_call_foreach_child(io, ftl_io_read_leaf);
 	} else {
 		spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_io_read, io);
 	}
@@ -1664,7 +1700,7 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 {
 	struct ftl_io *io;
 
-	if (iov_cnt == 0 || iov_cnt > FTL_IO_MAX_IOVEC) {
+	if (iov_cnt == 0) {
 		return -EINVAL;
 	}
 
