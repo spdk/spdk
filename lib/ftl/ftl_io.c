@@ -463,3 +463,32 @@ ftl_io_free(struct ftl_io *io)
 
 	_ftl_io_free(io);
 }
+
+void
+ftl_io_call_foreach_child(struct ftl_io *io, int (*callback)(struct ftl_io *))
+{
+	struct ftl_io *child, *tmp;
+
+	assert(!io->done);
+
+	if (LIST_EMPTY(&io->children)) {
+		callback(io);
+		return;
+	}
+
+	LIST_FOREACH_SAFE(child, &io->children, child_entry, tmp) {
+		int rc = callback(child);
+		if (rc) {
+			assert(rc != -EAGAIN);
+			ftl_io_fail(io, rc);
+			break;
+		}
+	}
+
+	/*
+	 * If all the callbacks were processed or an error occurred, treat this IO as completed.
+	 * Multiple calls to ftl_io_call_foreach_child are not supported, resubmissions are supposed
+	 * to be handled in the callback.
+	 */
+	ftl_io_complete(io);
+}
