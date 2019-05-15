@@ -50,7 +50,7 @@ ut_data_pattern_generate(struct iovec *iovs, int iovcnt,
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 
-	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&sgl, block_size * num_blocks)) {
 		return -1;
 	}
 
@@ -91,7 +91,7 @@ ut_data_pattern_verify(struct iovec *iovs, int iovcnt,
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 
-	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&sgl, block_size * num_blocks)) {
 		return -1;
 	}
 
