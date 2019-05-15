@@ -855,6 +855,7 @@ spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 		return -1;
 	}
 
+	tgroup->group = group;
 	TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
 
 	return 0;
@@ -1210,4 +1211,19 @@ fini:
 	if (cb_fn) {
 		cb_fn(cb_arg, rc);
 	}
+}
+
+
+struct spdk_nvmf_poll_group *
+spdk_nvmf_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	tgroup = spdk_nvmf_transport_get_optimal_poll_group(qpair->transport, qpair);
+
+	if (tgroup == NULL) {
+		return NULL;
+	}
+
+	return tgroup->group;
 }

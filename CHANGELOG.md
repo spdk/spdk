@@ -25,6 +25,11 @@ Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.
 
+spdk_nvmf_get_optimal_poll_group was added, which is used to return the optimal
+poll group for the qpair. And `ConnectionScheduler` configuration is added into the
+[Nvmf] section in etc/spdk/nvmf.conf.in to demonstrate how to configure the connection
+scheduling strategy among different spdk threads.
+
 ### notify
 
 The function `spdk_notify_get_types()` and `spdk_notify_get_events()` were

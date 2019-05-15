@@ -101,16 +101,42 @@ spdk_nvmf_read_config_file_tgt_max_subsystems(struct spdk_conf_section *sp,
 	}
 }
 
-static void
+static int
 spdk_nvmf_read_config_file_tgt_conf(struct spdk_conf_section *sp,
 				    struct spdk_nvmf_tgt_conf *conf)
 {
 	int acceptor_poll_rate;
+	const char *conn_scheduler;
+	int rc = 0;
 
 	acceptor_poll_rate = spdk_conf_section_get_intval(sp, "AcceptorPollRate");
 	if (acceptor_poll_rate >= 0) {
 		conf->acceptor_poll_rate = acceptor_poll_rate;
 	}
+
+	conn_scheduler = spdk_conf_section_get_val(sp, "ConnectionScheduler");
+
+	if (conn_scheduler) {
+		if (strcasecmp(conn_scheduler, "RoundRobin") == 0) {
+			conf->conn_sched = CONNECT_SCHED_ROUND_ROBIN;
+		} else if (strcasecmp(conn_scheduler, "Host") == 0) {
+			conf->conn_sched = CONNECT_SCHED_HOST_IP;
+		} else if (strcasecmp(conn_scheduler, "Transport") == 0) {
+			conf->conn_sched = CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP;
+		} else {
+			SPDK_ERRLOG("The valid value of ConnectionScheduler should be:\n"
+				    "\t RoundRobin\n"
+				    "\t Host\n"
+				    "\t Transport\n");
+			rc = -1;
+		}
+
+	} else {
+		SPDK_NOTICELOG("The value of ConnectionScheduler is not configured,\n"
+			       "we will use RoundRobin as the default scheduler\n");
+	}
+
+	return rc;
 }
 
 static int
@@ -132,6 +158,7 @@ spdk_nvmf_parse_tgt_conf(void)
 {
 	struct spdk_nvmf_tgt_conf *conf;
 	struct spdk_conf_section *sp;
+	int rc;
 
 	conf = calloc(1, sizeof(*conf));
 	if (!conf) {
@@ -144,7 +171,11 @@ spdk_nvmf_parse_tgt_conf(void)
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
 	if (sp != NULL) {
-		spdk_nvmf_read_config_file_tgt_conf(sp, conf);
+		rc = spdk_nvmf_read_config_file_tgt_conf(sp, conf);
+		if (rc) {
+			free(conf);
+			return NULL;
+		}
 	}
 
 	return conf;
