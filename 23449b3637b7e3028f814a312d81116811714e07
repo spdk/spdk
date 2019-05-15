@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77bdc786_c30ef4e1",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2729,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T20:05:35Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct.  The cache buffers may be flushed but completed out of order.  So if we have a case where:\n\nbuffer for section A and A+1 are in the cache\nfile-\u003elast \u003d A+1\nA and A+1 are flushed\nA+1 is completed\ncache_free_buffers() on this file\n  A+1 is freed\n  A is not freed since flush is still in progress, so present_mask !\u003d 0\nwith this patch, file-\u003elast points to invalid cache buffer\n\nWhat is the problem with always setting file-\u003elast \u003d NULL?",
+      "revId": "23449b3637b7e3028f814a312d81116811714e07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
