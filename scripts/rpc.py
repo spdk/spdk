@@ -605,6 +605,26 @@ if __name__ == "__main__":
     p.add_argument('bdev_name', help='name of the NVMe device')
     p.set_defaults(func=apply_firmware)
 
+    # Fuzz Testing
+    def fuzz_vhost_create_dev(args):
+        rpc.fuzz.fuzz_vhost_create_dev(
+            args.client,
+            args.socket,
+            args.is_blk,
+            args.use_bogus_buffer,
+            args.use_valid_buffer,
+            args.test_scsi_tmf,
+            args.valid_lun)
+
+    p = subparsers.add_parser('fuzz_vhost_create_dev', help="Add a new device to the vhost fuzzer.")
+    p.add_argument('-s', '--socket', help="Path to a valid unix domain socket for dev binding.")
+    p.add_argument('-b', '--is-blk', help='The specified socket corresponds to a vhost-blk dev.', action='store_true')
+    p.add_argument('-u', '--use-bogus-buffer', help='Pass bogus buffer addresses with requests when fuzzing.', action='store_true')
+    p.add_argument('-v', '--use-valid-buffer', help='Pass valid buffers when fuzzing. overrides use-bogus-buffer.', action='store_true')
+    p.add_argument('-m', '--test-scsi-tmf', help='for a scsi device, test scsi management commands.', action='store_true')
+    p.add_argument('-l', '--valid-lun', help='for a scsi device, test only using valid lun IDs.', action='store_true')
+    p.set_defaults(func=fuzz_vhost_create_dev)
+
     # iSCSI
     def set_iscsi_options(args):
         rpc.iscsi.set_iscsi_options(
