@@ -108,11 +108,38 @@ spdk_nvmf_subsystem_fini(void)
 	_spdk_nvmf_shutdown_cb(NULL);
 }
 
+static struct nvmf_tgt_poll_group *
+spdk_nvmf_get_optimized_pg(struct spdk_nvmf_qpair *qpair)
+{
+	struct nvmf_tgt_poll_group *pg, *_pg = NULL;
+	struct spdk_nvmf_poll_group *group = spdk_nvmf_get_optimized_poll_group(qpair);
+
+	if (group == NULL) {
+		return NULL;
+	}
+
+	TAILQ_FOREACH(pg, &g_poll_groups, link) {
+		if (pg->group == group) {
+			_pg = pg;
+			break;
+		}
+
+	}
+
+	assert(_pg != NULL);
+	return _pg;
+}
+
 /* Round robin selection of poll groups */
 static struct nvmf_tgt_poll_group *
-spdk_nvmf_get_next_pg(void)
+spdk_nvmf_get_next_pg(struct spdk_nvmf_qpair *qpair)
 {
 	struct nvmf_tgt_poll_group *pg;
+
+	pg = spdk_nvmf_get_optimized_pg(qpair);
+	if (pg) {
+		return pg;
+	}
 
 	pg = g_next_poll_group;
 	g_next_poll_group = TAILQ_NEXT(pg, link);
@@ -186,7 +213,7 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 				break;
 			}
 			/* Get the next available poll group for the new host */
-			pg = spdk_nvmf_get_next_pg();
+			pg = spdk_nvmf_get_next_pg(qpair);
 			new_trid->pg = pg;
 			memcpy(new_trid->host_trid.traddr, trid.traddr,
 			       SPDK_NVMF_TRADDR_MAX_LEN + 1);
@@ -195,7 +222,7 @@ nvmf_tgt_get_pg(struct spdk_nvmf_qpair *qpair)
 		break;
 	case CONNECT_SCHED_ROUND_ROBIN:
 	default:
-		pg = spdk_nvmf_get_next_pg();
+		pg = spdk_nvmf_get_next_pg(qpair);
 		break;
 	}
 
