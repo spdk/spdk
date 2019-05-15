@@ -581,6 +581,7 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 	}
 	assert(band->num_chunks == _num_chunks);
 #endif
+	assert(band->num_chunks != 0);
 	num_stripes = (num_lbks / dev->xfer_size) / band->num_chunks;
 	ppa.lbk  += num_stripes * dev->xfer_size;
 	num_lbks -= num_stripes * dev->xfer_size * band->num_chunks;
