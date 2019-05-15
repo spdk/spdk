@@ -455,6 +455,12 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 	}
 }
 
+static size_t
+ftl_wptr_user_lbks_left(const struct ftl_wptr *wptr)
+{
+	return ftl_band_user_lbks_left(wptr->band, wptr->offset);
+}
+
 static int
 ftl_wptr_ready(struct ftl_wptr *wptr)
 {
@@ -590,11 +596,13 @@ ftl_remove_free_bands(struct spdk_ftl_dev *dev)
 }
 
 static void
-ftl_process_shutdown(struct spdk_ftl_dev *dev)
+ftl_process_shutdown(struct ftl_wptr *wptr)
 {
+	struct spdk_ftl_dev *dev = wptr->dev;
 	size_t size = ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_INTERNAL) +
 		      ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_USER);
 	size_t num_active = dev->xfer_size * ftl_rwb_get_active_batches(dev->rwb);
+	size_t band_length, rwb_free_space, pad_length;
 
 	num_active = num_active ? num_active : dev->xfer_size;
 	if (size >= num_active) {
@@ -607,10 +615,12 @@ ftl_process_shutdown(struct spdk_ftl_dev *dev)
 		ftl_remove_free_bands(dev);
 	}
 
+	band_length = ftl_wptr_user_lbks_left(wptr);
+	rwb_free_space = ftl_rwb_size(dev->rwb) - size;
+	pad_length = spdk_min(band_length, rwb_free_space);
+
 	/* Pad write buffer until band is full */
-	/* TODO : It would be better to request padding to as many as PUs possible */
-	/* instead of requesting to one PU at a time */
-	ftl_rwb_pad(dev, num_active - size);
+	ftl_rwb_pad(dev, pad_length);
 }
 
 static int
@@ -1155,7 +1165,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	}
 
 	if (dev->halt) {
-		ftl_process_shutdown(dev);
+		ftl_process_shutdown(wptr);
 	}
 
 	batch = ftl_rwb_pop(dev->rwb);
