@@ -69,6 +69,24 @@
       "revId": "633d6f6ccd37fa73e6151865162fdb27129203ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9956b9e_d11e55a3",
+        "filename": "lib/bdev/ocf/utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T18:59:10Z",
+      "side": 1,
+      "message": "That\u0027s fine if it gets added back later.  In general we try to avoid adding it to the header file until it\u0027s actually needed.",
+      "parentUuid": "0486b3ef_eb6b2bd0",
+      "revId": "633d6f6ccd37fa73e6151865162fdb27129203ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
