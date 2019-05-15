@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8b6d5f99_361d78a2",
+        "filename": "Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-15T20:21:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3d64cab1_ad438133",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a369cca0_d741fb20",
         "filename": "examples/nvme/identify/Makefile",
         "patchSetId": 32
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-14T22:34:31Z",
       "side": 1,
       "message": "I think this should go before the include nvme.libtest.mk (to make them consistent with later files in this patch)",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b587b28_e9db1427",
+        "filename": "examples/nvme/identify/Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-15T20:21:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a369cca0_d741fb20",
       "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "bde268dd_d1d94812",
+        "filename": "isalbuild/Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-15T20:21:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "90ae6be5_3de8f220",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f7f91023_79004b78",
         "filename": "lib/bdev/ocf/env/Makefile",
         "patchSetId": 32
@@ -64,6 +118,24 @@
       "writtenOn": "2019-05-14T22:34:31Z",
       "side": 1,
       "message": "the install: targets look wrong here - I think you did the right thing by putting the uninstall here, but I\u0027d either move the empty install target here, or copy this same uninstall target in both places above (just after install)",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d4018c9_dd04bb03",
+        "filename": "lib/bdev/ocf/env/Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-15T20:21:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f7f91023_79004b78",
       "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "2994c4ad_744d7d9d",
+        "filename": "mk/spdk.app.mk",
+        "patchSetId": 32
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-15T20:21:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bca1bfea_65dc8e67",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "70d0a9dc_e18d1f81",
         "filename": "mk/spdk.common.mk",
         "patchSetId": 32
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "c7baceef_472b0c8d",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 32
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-15T20:21:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "70d0a9dc_e18d1f81",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6a75255f_6ef73dae",
         "filename": "shared_lib/Makefile",
         "patchSetId": 32
@@ -115,6 +223,24 @@
       "writtenOn": "2019-05-14T22:34:31Z",
       "side": 1,
       "message": "before the include spdk.subdirs.mk",
+      "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6d2e437_64a836b9",
+        "filename": "shared_lib/Makefile",
+        "patchSetId": 32
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-15T20:21:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a75255f_6ef73dae",
       "revId": "8a47819ea7c0975eb59a799591a3195aaaa8459f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
