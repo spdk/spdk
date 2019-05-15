@@ -211,6 +211,17 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 	return group;
 }
 
+struct spdk_nvmf_transport_poll_group *
+spdk_nvmf_transport_get_optimal_poll_group(struct spdk_nvmf_transport *transport,
+		struct spdk_nvmf_qpair *qpair)
+{
+	if (transport->ops->get_optimal_poll_group) {
+		return transport->ops->get_optimal_poll_group(qpair);
+	} else {
+		return NULL;
+	}
+}
+
 void
 spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
