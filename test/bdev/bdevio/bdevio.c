@@ -958,6 +958,55 @@ blockdev_test_nvme_passthru_vendor_specific(void)
 }
 
 static void
+__blockdev_nvme_admin_passthru(void *arg1, void *arg2)
+{
+	struct bdevio_passthrough_request *pt_req = arg1;
+	struct io_target *target = pt_req->target;
+	int rc;
+
+	rc = spdk_bdev_nvme_admin_passthru(target->bdev_desc, target->ch,
+					   &pt_req->cmd, pt_req->buf, pt_req->len,
+					   nvme_pt_test_complete, pt_req);
+	if (rc) {
+		wake_ut_thread();
+	}
+}
+
+static void
+blockdev_nvme_admin_passthru(struct io_target *target)
+{
+	struct bdevio_passthrough_request pt_req;
+
+	if (!spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN)) {
+		return;
+	}
+
+	memset(&pt_req, 0, sizeof(pt_req));
+	pt_req.target = target;
+	pt_req.cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	pt_req.cmd.nsid = 1;
+	*(uint64_t *)&pt_req.cmd.cdw10 = SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST;
+
+	pt_req.sct = SPDK_NVME_SCT_GENERIC;
+	pt_req.sc = SPDK_NVME_SC_SUCCESS;
+	execute_spdk_function(__blockdev_nvme_admin_passthru, &pt_req, NULL);
+	CU_ASSERT(pt_req.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(pt_req.sc == SPDK_NVME_SC_SUCCESS);
+}
+
+static void
+blockdev_test_nvme_admin_passthru(void)
+{
+	struct io_target	*target;
+
+	target = g_io_targets;
+	while (target != NULL) {
+		blockdev_nvme_admin_passthru(target);
+		target = target->next;
+	}
+}
+
+static void
 __stop_init_thread(void *arg1, void *arg2)
 {
 	unsigned num_failures = (unsigned)(uintptr_t)arg1;
@@ -1029,6 +1078,8 @@ __run_ut_thread(void *arg1, void *arg2)
 			       blockdev_test_nvme_passthru_rw) == NULL
 		|| CU_add_test(suite, "blockdev nvme passthru vendor specific",
 			       blockdev_test_nvme_passthru_vendor_specific) == NULL
+		|| CU_add_test(suite, "blockdev nvme admin passthru",
+			       blockdev_test_nvme_admin_passthru) == NULL
 	) {
 		CU_cleanup_registry();
 		stop_init_thread(CU_get_error());
