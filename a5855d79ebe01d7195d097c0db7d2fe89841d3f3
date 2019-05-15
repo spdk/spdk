@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6515600d_f8e954ef",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1448,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T20:45:56Z",
+      "side": 1,
+      "message": "doesn\u0027t this need to wait until the previous spdk_blob_sync_md is completed?\n\notherwise first caller to delete the file could still be in progress - the second caller should not get a successful completion until the first one is done",
+      "revId": "a5855d79ebe01d7195d097c0db7d2fe89841d3f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
