@@ -161,6 +161,16 @@ DEFINE_STUB(spdk_nvmf_transport_req_complete,
 	    (struct spdk_nvmf_request *req),
 	    0);
 
+DEFINE_STUB(spdk_sock_get_optimal_sock_group,
+	    int,
+	    (struct spdk_sock *sock, struct spdk_sock_group **group),
+	    0);
+
+DEFINE_STUB(spdk_sock_group_get_ctx,
+	    void *,
+	    (struct spdk_sock_group *group),
+	    NULL);
+
 DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
 
 struct spdk_trace_histories *g_trace_histories;
