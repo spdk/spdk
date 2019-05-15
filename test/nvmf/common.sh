@@ -6,7 +6,14 @@ NVMF_IP_LEAST_ADDR=8
 NVMF_TCP_IP_ADDRESS="127.0.0.1"
 
 : ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
+
+if [[ -n "$(ls /sys/kernel/iommu_groups)" || \
+     (-e /sys/module/vfio/parameters/enable_unsafe_noiommu_mode && \
+     "$(cat /sys/module/vfio/parameters/enable_unsafe_noiommu_mode)" == "Y") ]]; then
+: ${NVMF_APP="sudo -u $(logname) ./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"}; export NVMF_APP
+else
 : ${NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"}; export NVMF_APP
+fi
 
 have_pci_nics=0
 
