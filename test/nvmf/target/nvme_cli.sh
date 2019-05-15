@@ -45,7 +45,7 @@ nvme list
 for ctrl in /dev/nvme?; do
 	nvme id-ctrl $ctrl
 	nvme smart-log $ctrl
-	nvme_model = $(nvme id-ctrl $ctrl | grep -w mn | sed 's/^.*: //')
+	nvme_model=$(nvme id-ctrl $ctrl | grep -w mn | sed 's/^.*: //' | sed 's/ *$//')
 	if [ "$nvme_model" != "SPDK_Controller1" ]; then
 		echo "Wrong model number for controller" $nvme_model
 		exit 1
@@ -56,8 +56,7 @@ for ns in /dev/nvme?n*; do
 	nvme id-ns $ns
 done
 
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode2" || true
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 
 if [ -d  $spdk_nvme_cli ]; then
 	# Test spdk/nvme-cli NVMe-oF commands: discover, connect and disconnect
