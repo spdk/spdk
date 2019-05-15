@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "d2ee9f77_c6d79182",
+        "filename": "lib/bdev/ocf/utils.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-15T06:15:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4cb32c88_128b45e4",
+      "revId": "54b5975beae7dfce54108d7230977f8d51dca679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "966c7b5d_cb731321",
         "filename": "lib/bdev/ocf/utils.h",
         "patchSetId": 2
@@ -48,6 +66,24 @@
       "writtenOn": "2019-05-14T22:22:24Z",
       "side": 1,
       "message": "does this function need to be exposed in utils.h?\n\nit is only called in the .c file - it would probably be better to just mark it static in the .c file\n\n(it would be good to see what other function declarations we could remove from ocf/utils.h that are similar)",
+      "revId": "54b5975beae7dfce54108d7230977f8d51dca679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32fdd415_92abe8dc",
+        "filename": "lib/bdev/ocf/utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-15T06:15:44Z",
+      "side": 1,
+      "message": "Yes, it is intended to be called when we want to stop earlier. In case of error for example. I already use this function outside in next patches in ocf series.\nIn this patch I just refactored mngt_continue() to not duplicate the code.",
+      "parentUuid": "966c7b5d_cb731321",
       "revId": "54b5975beae7dfce54108d7230977f8d51dca679",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
