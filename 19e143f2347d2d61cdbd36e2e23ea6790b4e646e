@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f916c28b_f6ed0868",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T20:41:53Z",
+      "side": 1,
+      "message": "why \u003e\u003d?\n\nif io-\u003eiov_cnt \u003d\u003d iov_cnt, we can avoid free and then calloc of the same size\n\nso I\u0027d say this should either assert io-\u003eiov_cnt \u003e iov_cnt, or if you allow it to be equal, skip the free/calloc",
+      "revId": "19e143f2347d2d61cdbd36e2e23ea6790b4e646e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
