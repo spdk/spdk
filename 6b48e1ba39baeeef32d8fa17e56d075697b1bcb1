@@ -22,6 +22,23 @@
       "revId": "6b48e1ba39baeeef32d8fa17e56d075697b1bcb1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bbda231_c0125e1a",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2498,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T19:59:04Z",
+      "side": 1,
+      "message": "would it be simpler if we moved sub_reads++ to before the __file_read call here?  then if rc !\u003d 0, we break but still do a sem_wait below at line 2502",
+      "revId": "6b48e1ba39baeeef32d8fa17e56d075697b1bcb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
