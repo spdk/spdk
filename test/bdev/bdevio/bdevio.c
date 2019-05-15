@@ -52,6 +52,7 @@ pthread_cond_t g_test_cond;
 static uint32_t g_lcore_id_init;
 static uint32_t g_lcore_id_ut;
 static uint32_t g_lcore_id_io;
+static bool wait_for_tests = false;
 
 struct io_target {
 	struct spdk_bdev	*bdev;
@@ -979,6 +980,10 @@ __stop_init_thread(void *arg1, void *arg2)
 	unsigned num_failures = (unsigned)(uintptr_t)arg1;
 
 	bdevio_cleanup_targets();
+	if (wait_for_tests) {
+		/* Do not stop the app yet, wait for another RPC */
+		return;
+	}
 	spdk_app_stop(num_failures);
 }
 
@@ -1077,6 +1082,11 @@ test_main(void *arg1)
 		spdk_app_stop(-1);
 	}
 
+	if (wait_for_tests) {
+		/* Do not perform any tests until RPC is received */
+		return;
+	}
+
 	if (bdevio_construct_targets() < 0) {
 		spdk_app_stop(-1);
 		return;
@@ -1089,11 +1099,19 @@ test_main(void *arg1)
 static void
 bdevio_usage(void)
 {
+	printf(" -w                        start bdevio app and wait for RPC to start the tests\n");
 }
 
 static int
 bdevio_parse_arg(int ch, char *arg)
 {
+	switch (ch) {
+	case 'w':
+		wait_for_tests =  true;
+		break;
+	default:
+		return -EINVAL;
+	}
 	return 0;
 }
 
@@ -1107,7 +1125,7 @@ main(int argc, char **argv)
 	opts.name = "bdevio";
 	opts.reactor_mask = "0x7";
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "w", NULL,
 				      bdevio_parse_arg, bdevio_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
