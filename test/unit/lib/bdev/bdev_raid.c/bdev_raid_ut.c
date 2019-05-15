@@ -2415,6 +2415,81 @@ test_raid_json_dump_info(void)
 }
 
 static void
+test_io_sizes(void)
+{
+	struct rpc_construct_raid_bdev req;
+	struct rpc_destroy_raid_bdev destroy_req;
+	struct raid_bdev *pbdev;
+	struct spdk_io_channel *ch;
+	struct raid_bdev_io_channel *ch_ctx;
+	struct spdk_bdev_io *bdev_io;
+	uint64_t io_len;
+	uint64_t lba = 0;
+	uint32_t i;
+
+	set_globals();
+	create_test_req(&req, "raid1", 0, true);
+	rpc_req = &req;
+	rpc_req_size = sizeof(req);
+	CU_ASSERT(raid_bdev_init() == 0);
+	verify_raid_config_present(req.name, false);
+	verify_raid_bdev_present(req.name, false);
+	g_rpc_err = 0;
+	g_json_decode_obj_construct = 1;
+	spdk_rpc_construct_raid_bdev(NULL, NULL);
+	CU_ASSERT(g_rpc_err == 0);
+	verify_raid_config(&req, true);
+	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
+	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
+		if (strcmp(pbdev->bdev.name, req.name) == 0) {
+			break;
+		}
+	}
+	CU_ASSERT(pbdev != NULL);
+	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct raid_bdev_io_channel));
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	ch_ctx = spdk_io_channel_get_ctx(ch);
+	SPDK_CU_ASSERT_FATAL(ch_ctx != NULL);
+
+	SPDK_CU_ASSERT_FATAL(raid_bdev_create_cb(pbdev, ch_ctx) == 0);
+	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
+		CU_ASSERT(ch_ctx->base_channel && ch_ctx->base_channel[i] == (void *)0x1);
+	}
+	free_test_req(&req);
+
+	/* test bad IO sizes, 0 and > the strip size */
+	for (i = 0; i < 2; i += 2) {
+		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
+		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+		io_len = i * g_strip_size;
+		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_READ);
+		memset(g_io_output, 0, (g_max_io_size / g_strip_size) + 1 * sizeof(struct io_output));
+		g_io_output_index = 0;
+		raid_bdev_submit_request(ch, bdev_io);
+		CU_ASSERT(g_io_comp_status == 0);
+		bdev_io_cleanup(bdev_io);
+		free(bdev_io);
+	}
+
+	raid_bdev_destroy_cb(pbdev, ch_ctx);
+	CU_ASSERT(ch_ctx->base_channel == NULL);
+	free(ch);
+	destroy_req.name = strdup("raid1");
+	rpc_req = &destroy_req;
+	rpc_req_size = sizeof(destroy_req);
+	g_rpc_err = 0;
+	g_json_decode_obj_construct = 0;
+	spdk_rpc_destroy_raid_bdev(NULL, NULL);
+	CU_ASSERT(g_rpc_err == 0);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
+
+	raid_bdev_exit();
+	base_bdevs_cleanup();
+	reset_globals();
+}
+
+static void
 test_context_size(void)
 {
 	CU_ASSERT(raid_bdev_get_ctx_size() == sizeof(struct raid_bdev_io));
@@ -2454,7 +2529,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_create_raid_from_config_invalid_params",
 			    test_create_raid_from_config_invalid_params) == NULL ||
 		CU_add_test(suite, "test_raid_json_dump_info", test_raid_json_dump_info) == NULL ||
-		CU_add_test(suite, "test_context_size", test_context_size) == NULL
+		CU_add_test(suite, "test_context_size", test_context_size) == NULL ||
+		CU_add_test(suite, "test_io_sizes", test_io_sizes) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
