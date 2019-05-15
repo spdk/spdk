@@ -365,7 +365,9 @@ _spdk_nvmf_ctrlr_destruct(void *ctx)
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 
 	spdk_nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
-
+	if (!ctrlr) {
+		return;
+	}
 	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
 		TAILQ_REMOVE(&ctrlr->log_head, log, link);
 		free(log);
