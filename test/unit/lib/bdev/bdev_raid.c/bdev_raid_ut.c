@@ -642,7 +642,6 @@ bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev,
 	bdev_io->u.bdev.iovs->iov_base = calloc(1, bdev_io->u.bdev.num_blocks * g_block_len);
 	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs->iov_base != NULL);
 	bdev_io->u.bdev.iovs->iov_len = bdev_io->u.bdev.num_blocks * g_block_len;
-	bdev_io->u.bdev.iovs = bdev_io->u.bdev.iovs;
 }
 
 static void
@@ -711,7 +710,7 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 		}
 		CU_ASSERT(pd_lba == g_io_output[index].offset_blocks);
 		CU_ASSERT(pd_blocks == g_io_output[index].num_blocks);
-		CU_ASSERT(ch_ctx->base_channel[pd_idx] == g_io_output[index].ch);
+		SPDK_CU_ASSERT_FATAL(ch_ctx->base_channel[pd_idx] == g_io_output[index].ch);
 		CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].desc == g_io_output[index].desc);
 		CU_ASSERT(bdev_io->type == g_io_output[index].iotype);
 		buf += (pd_blocks << spdk_u32log2(g_block_len));
