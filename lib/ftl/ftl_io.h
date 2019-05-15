@@ -281,5 +281,6 @@ void ftl_io_complete(struct ftl_io *io);
 void ftl_io_shrink_iovec(struct ftl_io *io, size_t lbk_cnt);
 void ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status);
 void ftl_io_reset(struct ftl_io *io);
+void ftl_io_call_foreach_child(struct ftl_io *io, int (*callback)(struct ftl_io *));
 
 #endif /* FTL_IO_H */
