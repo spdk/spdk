@@ -48,12 +48,13 @@ ut_data_pattern_generate(struct iovec *iovs, int iovcnt,
 	uint32_t offset_blocks, offset_in_block, buf_len, data_offset, i;
 	uint8_t *buf;
 
+	_dif_sgl_init(&sgl, iovs, iovcnt);
+
 	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
 		return -1;
 	}
 
 	offset_blocks = 0;
-	_dif_sgl_init(&sgl, iovs, iovcnt);
 	data_offset = 0;
 
 	while (offset_blocks < num_blocks) {
@@ -88,12 +89,13 @@ ut_data_pattern_verify(struct iovec *iovs, int iovcnt,
 	uint32_t offset_blocks, offset_in_block, buf_len, data_offset, i;
 	uint8_t *buf;
 
+	_dif_sgl_init(&sgl, iovs, iovcnt);
+
 	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
 		return -1;
 	}
 
 	offset_blocks = 0;
-	_dif_sgl_init(&sgl, iovs, iovcnt);
 	data_offset = 0;
 
 	while (offset_blocks < num_blocks) {
