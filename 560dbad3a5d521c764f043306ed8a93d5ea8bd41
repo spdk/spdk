@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "292e1fff_3193c740",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T01:51:33Z",
+      "side": 1,
+      "message": "As you may see, I intended that _iov_iter is used for iteration and _iov_ctx is used for creation.\n\nBut only either case is used for each iovec. So unifying both cases into a common struct is a nice idea.\n\nI added a few patches up front and changed this patch based on them.\n\nThank you for nice suggestion.",
+      "parentUuid": "0064bb8f_ac905de2",
+      "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "58998de1_5717be79",
         "filename": "lib/util/dif.c",
         "patchSetId": 4
@@ -83,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "df17316e_7b504cc3",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T01:51:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ba13f32d_8fc5c542",
+      "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "30a727bc_5dd16dfc",
         "filename": "lib/util/dif.c",
         "patchSetId": 4
@@ -94,6 +130,24 @@
       "writtenOn": "2019-05-14T20:01:25Z",
       "side": 1,
       "message": "Maybe call this dif_sgl_append?",
+      "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4bc541f_a9afb44e",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T01:51:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "30a727bc_5dd16dfc",
       "revId": "560dbad3a5d521c764f043306ed8a93d5ea8bd41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
