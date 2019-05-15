@@ -1325,25 +1325,18 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 	buf += offset_blocks * ctx->block_size;
 
-	if (head_unalign != 0) {
+	while (offset_blocks < num_blocks) {
 		buf += head_unalign;
 
 		if (!_dif_sgl_append(&sgl, buf, data_block_size - head_unalign)) {
-			goto end;
+			break;
 		}
 		buf += ctx->block_size - head_unalign;
 		offset_blocks++;
+
+		head_unalign = 0;
 	}
 
-	while (offset_blocks < num_blocks) {
-		if (!_dif_sgl_append(&sgl, buf, data_block_size)) {
-			goto end;
-		}
-		buf += ctx->block_size;
-		offset_blocks++;
-	}
-
-end:
 	if (_mapped_len != NULL) {
 		*_mapped_len = sgl.total_size;
 	}
