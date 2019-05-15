@@ -187,9 +187,12 @@ static struct spdk_bdev_fn_table fn_table = {
 	.submit_request =	stub_submit_request,
 };
 
+struct spdk_bdev_module bdev_ut_if;
+
 static int
 module_init(void)
 {
+	spdk_bdev_module_init_done(&bdev_ut_if);
 	return 0;
 }
 
@@ -214,6 +217,7 @@ struct spdk_bdev_module bdev_ut_if = {
 	.name = "bdev_ut",
 	.module_init = module_init,
 	.module_fini = module_fini,
+	.async_init = true,
 	.init_complete = init_complete,
 	.fini_start = fini_start,
 };
