@@ -597,16 +597,16 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	bdev_io_stailq_t *stailq;
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
 	uint64_t alignment;
-	bool buf_allocated;
+	bool buf_allocated, buf_aligned;
 	void *buf;
 
 	assert(cb != NULL);
 
 	alignment = spdk_bdev_get_buf_align(bdev_io->bdev);
 	buf_allocated = _is_buf_allocated(bdev_io->u.bdev.iovs);
+	buf_aligned = _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment);
 
-	if (buf_allocated &&
-	    _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment)) {
+	if (buf_allocated && buf_aligned) {
 		/* Buffer already present and aligned */
 		cb(bdev_io->internal.ch->channel, bdev_io, true);
 		return;
