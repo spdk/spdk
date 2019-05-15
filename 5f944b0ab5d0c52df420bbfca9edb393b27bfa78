@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d85cb5b5_e9e426d3",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 763,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-15T06:26:28Z",
+      "side": 1,
+      "message": "This was previously located after add_core()/start_cache(), and now it\u0027s before. That\u0027s why I\u0027m suggesting to split this patch into two:\n 1) introduce trylocks, but keep all the add_core()/start_cache() code before register_vbdev().\n 2) reorder those functions",
+      "range": {
+        "startLine": 761,
+        "startChar": 0,
+        "endLine": 763,
+        "endChar": 75
+      },
+      "revId": "5f944b0ab5d0c52df420bbfca9edb393b27bfa78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
