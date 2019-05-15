@@ -454,12 +454,8 @@ raid_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
 	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
 		    raid_bdev->strip_size_shift;
-	if (start_strip != end_strip && raid_bdev->num_base_bdevs > 1) {
-		assert(false);
-		SPDK_ERRLOG("I/O spans strip boundary!\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
-	}
+	assert((start_strip != end_strip && raid_bdev->num_base_bdevs > 1) == false);
+
 	ret = raid_bdev_submit_rw_request(bdev_io, start_strip);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
