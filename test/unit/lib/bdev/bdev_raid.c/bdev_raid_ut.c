@@ -642,7 +642,6 @@ bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev,
 	bdev_io->u.bdev.iovs->iov_base = calloc(1, bdev_io->u.bdev.num_blocks * g_block_len);
 	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs->iov_base != NULL);
 	bdev_io->u.bdev.iovs->iov_len = bdev_io->u.bdev.num_blocks * g_block_len;
-	bdev_io->u.bdev.iovs = bdev_io->u.bdev.iovs;
 }
 
 static void
