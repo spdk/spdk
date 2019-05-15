@@ -65,6 +65,12 @@
   # poll. Units in microseconds.
   AcceptorPollRate 10000
 
+  # Set how the connection is scheduled among multiple threads, value ranged from 0 to 2.
+  # 0: RoundRobin
+  # 1: Schedule according to host IP
+  # 2: Schedule according to the socket NAPI_ID info of the connection. (Only for TCP)
+  ConnSched 0
+
 # One valid transport type must be set in each [Transport].
 # The first is the case of RDMA transport and the second is the case of TCP transport.
 [Transport]

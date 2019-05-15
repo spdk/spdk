@@ -105,11 +105,16 @@ static void
 spdk_nvmf_read_config_file_tgt_conf(struct spdk_conf_section *sp,
 				    struct spdk_nvmf_tgt_conf *conf)
 {
-	int acceptor_poll_rate;
+	int acceptor_poll_rate, sched_conf;
 
 	acceptor_poll_rate = spdk_conf_section_get_intval(sp, "AcceptorPollRate");
 	if (acceptor_poll_rate >= 0) {
 		conf->acceptor_poll_rate = acceptor_poll_rate;
+	}
+
+	sched_conf = spdk_conf_section_get_intval(sp, "ConnSched");
+	if ((sched_conf >= CONNECT_SCHED_ROUND_ROBIN) && (sched_conf <= CONNECT_SCHED_OPTIMIZED_GROUP)) {
+		conf->conn_sched = sched_conf;
 	}
 }
 
