@@ -1,0 +1,95 @@
+{
+  "vhost_scsi_mgmt_cmd": {
+    "req_iov": {
+      "iov_base": "20007960ff60",
+      "iov_len": 51
+    },
+    "data_iov": {
+      "iov_base": "2000794dbe00",
+      "iov_len": 1024
+    },
+    "resp_iov": {
+      "iov_base": "20007960ff98",
+      "iov_len": 108
+    },
+    "lun": "AQA5vBf3KyE=",
+    "tag": 6163879237324549222,
+    "task_attr": 247,
+    "prio": 242,
+    "crn": 169,
+    "cdb": "ErxZ/qpHBau8gPzjbpotpbTnOW/2g0ns2yRh4jhe5kc="
+  },
+  "vhost_scsi_mgmt_cmd": {
+    "req_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 51
+    },
+    "data_iov": {
+      "iov_base": "2000794dbe00",
+      "iov_len": 1024
+    },
+    "resp_iov": {
+      "iov_base": "20007960feb0",
+      "iov_len": 108
+    },
+    "lun": "AQAwWRrhAoo=",
+    "tag": 10457151189012466200,
+    "task_attr": 97,
+    "prio": 158,
+    "crn": 41,
+    "cdb": "Ejjxdzl8KwRDhq+MPfY3J3niYfAHj+2irE8Q2vIfQIk="
+  },
+  "vhost_scsi_cmd": {
+    "req_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 24
+    },
+    "data_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 1024
+    },
+    "resp_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 5
+    },
+    "type": 3,
+    "subtype": 872683406,
+    "lun": "LdaLkHOIQxI=",
+    "tag": 8452696012704506104
+  },
+  "vhost_scsi_cmd": {
+    "req_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 24
+    },
+    "data_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 1024
+    },
+    "resp_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 5
+    },
+    "type": 3,
+    "subtype": 872683406,
+    "lun": "LdaLkHOIQxI=",
+    "tag": 8452696012704506104
+  },
+  "vhost_blk_cmd": {
+    "req_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 24
+    },
+    "data_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 1024
+    },
+    "resp_iov": {
+      "iov_base": "20007960fe78",
+      "iov_len": 5
+    },
+    "type": 2,
+    "ioprio": 4343,
+    "sector": 24323523
+  }
+}

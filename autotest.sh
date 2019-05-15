@@ -231,6 +231,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test suite ./test/vhost/initiator/blockdev.sh
 		run_test suite ./test/spdkcli/virtio.sh
 		run_test suite ./test/vhost/shared/shared.sh
+		run_test suite ./test/vhost/fuzz/fuzz.sh
 		report_test_completion "vhost_initiator"
 		timing_exit vhost_initiator
 	fi
