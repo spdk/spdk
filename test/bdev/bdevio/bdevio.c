@@ -124,8 +124,7 @@ bdevio_construct_targets(void)
 		if (rc != 0) {
 			free(target);
 			SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
-			bdev = spdk_bdev_next_leaf(bdev);
-			continue;
+			return rc;
 		}
 
 		printf("  %s: %" PRIu64 " blocks of %" PRIu32 " bytes (%" PRIu64 " MiB)\n",
