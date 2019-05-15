@@ -33,7 +33,12 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 
 # Test multi-process access to local NVMe device
 if [ -n "$local_nvme_trid" ]; then
-	$rootdir/examples/nvme/perf/perf -i $NVMF_APP_SHM_ID -q 32 -o 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
+	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
+		perf_app="sudo -u $(logname) $rootdir/examples/nvme/perf/perf"
+	else
+		perf_app="$rootdir/examples/nvme/perf/perf"
+	fi
+	$perf_app -i $NVMF_APP_SHM_ID -q 32 -o 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
 fi
 
 $rootdir/examples/nvme/perf/perf -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
