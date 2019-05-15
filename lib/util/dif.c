@@ -37,16 +37,21 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 
-/* Context to iterate a iovec array. */
+/* Context to iterate or create a iovec array.
+ * Each sgl is either iterated or created at a time.
+ */
 struct _dif_sgl {
-	/* Current iovec in the iteration */
+	/* Current iovec in the iteration or iteration */
 	struct iovec *iov;
 
-	/* Remaining count of iovecs in the iteration. */
+	/* Remaining count of iovecs in the iteration or iteration. */
 	int iovcnt;
 
 	/* Current offset in the iovec */
 	uint32_t iov_offset;
+
+	/* Size of the created iovec array in bytes */
+	uint32_t total_size;
 };
 
 static inline void
@@ -55,6 +60,7 @@ _dif_sgl_init(struct _dif_sgl *s, struct iovec *iovs, int iovcnt)
 	s->iov = iovs;
 	s->iovcnt = iovcnt;
 	s->iov_offset = 0;
+	s->total_size = 0;
 }
 
 static inline void
@@ -92,6 +98,23 @@ _dif_sgl_fast_forward(struct _dif_sgl *s, uint32_t offset)
 		s->iov_offset -= s->iov->iov_len;
 		s->iov++;
 		s->iovcnt--;
+	}
+}
+
+static inline bool
+_dif_sgl_append(struct _dif_sgl *s, uint8_t *data, uint32_t data_len)
+{
+	assert(s->iovcnt > 0);
+	s->iov->iov_base = data;
+	s->iov->iov_len = data_len;
+	s->total_size += data_len;
+	s->iov++;
+	s->iovcnt--;
+
+	if (s->iovcnt > 0) {
+		return true;
+	} else {
+		return false;
 	}
 }
 
