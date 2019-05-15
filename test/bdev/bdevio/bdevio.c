@@ -102,41 +102,52 @@ __get_io_channel(void *arg1, void *arg2)
 }
 
 static int
+bdevio_construct_target(struct spdk_bdev *bdev)
+{
+	struct io_target *target;
+	int rc;
+	uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+
+	target = malloc(sizeof(struct io_target));
+	if (target == NULL) {
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
+	if (rc != 0) {
+		free(target);
+		return rc;
+	}
+
+	printf("  %s: %" PRIu64 " blocks of %" PRIu32 " bytes (%" PRIu64 " MiB)\n",
+	       spdk_bdev_get_name(bdev),
+	       num_blocks, block_size,
+	       (num_blocks * block_size + 1024 * 1024 - 1) / (1024 * 1024));
+
+	target->bdev = bdev;
+	target->next = g_io_targets;
+	execute_spdk_function(__get_io_channel, target, NULL);
+	g_io_targets = target;
+
+	return 0;
+}
+
+static int
 bdevio_construct_targets(void)
 {
 	struct spdk_bdev *bdev;
-	struct io_target *target;
 	int rc;
 
 	printf("I/O targets:\n");
 
 	bdev = spdk_bdev_first_leaf();
 	while (bdev != NULL) {
-		uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);
-		uint32_t block_size = spdk_bdev_get_block_size(bdev);
-
-		target = malloc(sizeof(struct io_target));
-		if (target == NULL) {
-			return -ENOMEM;
-		}
-
-		rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
-		if (rc != 0) {
-			free(target);
+		rc = bdevio_construct_target(bdev);
+		if (rc < 0) {
 			SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
 			return rc;
 		}
-
-		printf("  %s: %" PRIu64 " blocks of %" PRIu32 " bytes (%" PRIu64 " MiB)\n",
-		       spdk_bdev_get_name(bdev),
-		       num_blocks, block_size,
-		       (num_blocks * block_size + 1024 * 1024 - 1) / (1024 * 1024));
-
-		target->bdev = bdev;
-		target->next = g_io_targets;
-		execute_spdk_function(__get_io_channel, target, NULL);
-		g_io_targets = target;
-
 		bdev = spdk_bdev_next_leaf(bdev);
 	}
 
