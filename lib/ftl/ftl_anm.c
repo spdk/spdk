@@ -402,7 +402,7 @@ ftl_anm_unregister_device(struct spdk_ftl_dev *dev)
 
 	pthread_mutex_lock(&g_anm.lock);
 	ctrlr = ftl_anm_find_ctrlr(&g_anm, dev->ctrlr);
-
+	assert(ctrlr != NULL);
 	pthread_mutex_lock(&ctrlr->lock);
 
 	LIST_FOREACH_SAFE(poller, &ctrlr->pollers, list_entry, temp_poller) {
