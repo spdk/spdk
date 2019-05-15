@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5df7aeba_df6ce0bc",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T05:22:39Z",
+      "side": 1,
+      "message": "Firstly, could we use temporary _opal_key and substitute _opal_key to *opal_key just before return?\n\nSecondly, this doesn\u0027t look safe. Can we use something like the following?\n\n#define _member_size(type, member) (((type *)0)-\u003emember)\n\n_opal_key-\u003ekey_len \u003d snprintf(_opal_key-\u003ekey, _member_size(spdk_opal_key, key), \"%s\", passwd).\n\nThirdly, should we check the length of password is less than the size of buffer?",
+      "range": {
+        "startLine": 629,
+        "startChar": 1,
+        "endLine": 630,
+        "endChar": 56
+      },
+      "revId": "075c78d4cb9ed17f242271e61538a6b2936a901c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
