@@ -39,6 +39,8 @@
 #include "spdk/bdev.h"
 #include "spdk/bdev_module.h"
 
+#define VBDEV_OCF_MD_MAX_LEN 4096
+
 struct vbdev_ocf;
 
 /* Context for OCF queue poller
@@ -81,6 +83,9 @@ struct vbdev_ocf_config {
 
 	/* Core initial config */
 	struct ocf_mngt_core_config         core;
+
+	/* LoadFlag */
+	bool                                loadq;
 };
 
 /* Types for management operations */
@@ -165,6 +170,9 @@ struct vbdev_ocf {
 	/* Exposed SPDK bdev. Registered in bdev layer */
 	struct spdk_bdev             exp_bdev;
 
+	/* OCF uuid for core device of this vbdev */
+	char uuid[VBDEV_OCF_MD_MAX_LEN];
+
 	/* Link to global list of this type structures */
 	TAILQ_ENTRY(vbdev_ocf)       tailq;
 };
@@ -174,6 +182,7 @@ void vbdev_ocf_construct(
 	const char *cache_mode_name,
 	const char *cache_name,
 	const char *core_name,
+	bool loadq,
 	void (*cb)(int, struct vbdev_ocf *, void *),
 	void *cb_arg);
 

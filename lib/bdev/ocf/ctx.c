@@ -225,11 +225,11 @@ vbdev_ocf_ctx_data_seek(ctx_data_t *dst, ctx_data_seek_t seek, uint32_t offset)
 
 	switch (seek) {
 	case ctx_data_seek_begin:
-		off = MIN(off, d->size);
+		off = MIN(offset, d->size);
 		d->seek = off;
 		break;
 	case ctx_data_seek_current:
-		off = MIN(off, d->size - d->seek);
+		off = MIN(offset, d->size - d->seek);
 		d->seek += off;
 		break;
 	}
@@ -400,15 +400,6 @@ vbdev_ocf_ctx_cleaner_init(ocf_cleaner_t cleaner)
 		return rc;
 	}
 
-	/* We start cleaner poller at the same thread where cache was created
-	 * TODO: allow user to specify core at which cleaner should run */
-	priv->poller = spdk_poller_register(cleaner_poll, cleaner, 0);
-	if (priv->poller == NULL) {
-		vbdev_ocf_queue_put(priv->queue);
-		free(priv);
-		return -ENOMEM;
-	}
-
 	ocf_queue_set_priv(priv->queue, priv);
 
 	cctx->cleaner_queue  = priv->queue;
@@ -426,6 +417,20 @@ vbdev_ocf_ctx_cleaner_stop(ocf_cleaner_t cleaner)
 	struct cleaner_priv *priv = ocf_cleaner_get_priv(cleaner);
 
 	vbdev_ocf_queue_put(priv->queue);
+}
+
+static void
+vbdev_ocf_ctx_cleaner_kick(ocf_cleaner_t cleaner)
+{
+	struct cleaner_priv *priv  = ocf_cleaner_get_priv(cleaner);
+
+	if (priv->poller) {
+		return;
+	}
+
+	/* We start cleaner poller at the same thread where cache was created
+	 * TODO: allow user to specify core at which cleaner should run */
+	priv->poller = spdk_poller_register(cleaner_poll, cleaner, 0);
 }
 
 static void
@@ -510,6 +515,7 @@ static const struct ocf_ctx_config vbdev_ocf_ctx_cfg = {
 		.cleaner = {
 			.init = vbdev_ocf_ctx_cleaner_init,
 			.stop = vbdev_ocf_ctx_cleaner_stop,
+			.kick = vbdev_ocf_ctx_cleaner_kick,
 		},
 
 		.logger = {

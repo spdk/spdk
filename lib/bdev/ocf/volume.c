@@ -47,11 +47,21 @@ static int
 vbdev_ocf_volume_open(ocf_volume_t volume, void *opts)
 {
 	struct vbdev_ocf_base **priv = ocf_volume_get_priv(volume);
-	struct vbdev_ocf_base *base = vbdev_ocf_get_base_by_name(ocf_volume_get_uuid(volume)->data);
+	struct vbdev_ocf_base *base;
 
-	if (base == NULL) {
-		assert(false);
-		return -EINVAL;
+	if (opts) {
+		base = opts;
+	} else {
+		base = vbdev_ocf_get_base_by_name(ocf_volume_get_uuid(volume)->data);
+		if (base == NULL || !base->attached) {
+			return -ENODEV;
+		}
+		/* We don't want to attach core device during cache load
+		 * because we want to get reference to it in a usual way */
+		if (base->parent->cfg.loadq && base->is_cache == false &&
+		    base->parent->cache_ctx->cache_attached == false) {
+			return -EPERM;
+		}
 	}
 
 	*priv = base;
@@ -313,31 +323,26 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 	len = io->bytes;
 	offset = io_ctx->offset;
 
-	if (offset) {
-		i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
+	i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
 
-		if (i < 0) {
-			SPDK_ERRLOG("offset bigger than data size\n");
-			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-			return;
-		}
-
-		iovcnt = io_ctx->data->iovcnt - i;
-
-		iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
-
-		if (!iovs) {
-			SPDK_ERRLOG("allocation failed\n");
-			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-			return;
-		}
-
-		initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
-				      iovcnt, offset, len);
-	} else {
-		iovs = io_ctx->data->iovs;
-		iovcnt = io_ctx->data->iovcnt;
+	if (i < 0) {
+		SPDK_ERRLOG("offset bigger than data size\n");
+		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+		return;
 	}
+
+	iovcnt = io_ctx->data->iovcnt - i;
+
+	iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
+
+	if (!iovs) {
+		SPDK_ERRLOG("allocation failed\n");
+		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+		return;
+	}
+
+	initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
+			      iovcnt, offset, len);
 
 	if (io->dir == OCF_READ) {
 		status = spdk_bdev_readv(base->desc, io_ctx->ch,

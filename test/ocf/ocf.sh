@@ -14,10 +14,11 @@ function suite()
 
 timing_enter ocf
 
-suite "$testdir/integrity/fio-modes.sh"
-suite "$testdir/integrity/bdevperf-iotypes.sh"
+suite "$testdir/management/persistent-metadata.sh"
 suite "$testdir/management/create-destruct.sh"
 suite "$testdir/management/multicore.sh"
+suite "$testdir/integrity/bdevperf-iotypes.sh"
+suite "$testdir/integrity/fio-modes.sh"
 
 timing_exit ocf
 report_test_completion "ocf"

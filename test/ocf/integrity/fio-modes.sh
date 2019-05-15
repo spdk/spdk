@@ -41,14 +41,10 @@ echo "
   AIO $curdir/aio_core_wb  aio_core_wb  512
 
 [OCF]
-  OCF WT_MCache-0 wt Malloc0      aio_core_m0
-  OCF WT_MCache-1 wt Malloc0      aio_core_m1
-
-  OCF PT_AIOCache pt aio_cache_pt aio_core_pt
   OCF WB_AIOCache wb aio_cache_wb aio_core_wb
 " > $curdir/modes.conf
 
-fio_verify --filename=WT_MCache-0:WT_MCache-1:PT_AIOCache:WB_AIOCache --spdk_conf=$curdir/modes.conf
+fio_verify --filename=WB_AIOCache --spdk_conf=$curdir/modes.conf
 
 trap - SIGINT SIGTERM EXIT
 cleanup
