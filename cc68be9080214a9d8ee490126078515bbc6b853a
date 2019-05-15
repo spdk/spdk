@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "baca8b4a_eb2c280c",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-15T09:09:38Z",
+      "side": 1,
+      "message": "This function still can be void.",
+      "range": {
+        "startLine": 225,
+        "startChar": 0,
+        "endLine": 225,
+        "endChar": 10
+      },
+      "revId": "cc68be9080214a9d8ee490126078515bbc6b853a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29a76e6d_d5fcf0b1",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-15T09:09:38Z",
+      "side": 1,
+      "message": "you can break earlier if the err was set to value other than 0",
+      "revId": "cc68be9080214a9d8ee490126078515bbc6b853a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ae791f1_02a8bb9b",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-15T09:09:38Z",
+      "side": 1,
+      "message": "redundant err here, see comment in line 225",
+      "revId": "cc68be9080214a9d8ee490126078515bbc6b853a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
