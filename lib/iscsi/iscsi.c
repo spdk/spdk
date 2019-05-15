@@ -367,7 +367,7 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 			     uint32_t segment_len)
 {
 	struct spdk_dif_ctx dif_ctx;
-	struct iovec iovs[32];
+	struct iovec buf_iov, iovs[32];
 	int rc, _rc;
 
 	if (spdk_likely(!spdk_iscsi_get_dif_ctx(conn, pdu, &dif_ctx))) {
@@ -376,8 +376,9 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 						 pdu->data_buf + pdu->data_valid_bytes);
 	} else {
 		pdu->dif_insert_or_strip = true;
-		rc = spdk_dif_set_md_interleave_iovs(iovs, 32,
-						     pdu->data_buf, pdu->data_buf_len,
+		buf_iov.iov_base = pdu->data_buf;
+		buf_iov.iov_len = pdu->data_buf_len;
+		rc = spdk_dif_set_md_interleave_iovs(iovs, 32, &buf_iov, 1,
 						     pdu->data_valid_bytes, segment_len, NULL,
 						     &dif_ctx);
 		if (rc > 0) {
@@ -637,12 +638,15 @@ _iov_ctx_set_md_interleave_iov(struct _iov_ctx *ctx,
 {
 	int rc;
 	uint32_t mapped_len = 0;
+	struct iovec buf_iov;
 
 	if (ctx->iov_offset >= data_len) {
 		ctx->iov_offset -= buf_len;
 	} else {
+		buf_iov.iov_base = buf;
+		buf_iov.iov_len = buf_len;
 		rc = spdk_dif_set_md_interleave_iovs(ctx->iov, ctx->num_iovs - ctx->iovcnt,
-						     buf, buf_len,
+						     &buf_iov, 1,
 						     ctx->iov_offset, data_len, &mapped_len,
 						     dif_ctx);
 		if (rc < 0) {
