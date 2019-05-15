@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6e148a7_a69eb73f",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2157,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T04:20:52Z",
+      "side": 1,
+      "message": "we can change this in the previous patch. but even doing here is fine.",
+      "range": {
+        "startLine": 2157,
+        "startChar": 10,
+        "endLine": 2157,
+        "endChar": 17
+      },
+      "revId": "1afced093b12333f946f0bff76206500208a8722",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22877378_2251c9e7",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2206,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T04:20:52Z",
+      "side": 1,
+      "message": "Sorry I don\u0027t understand this increment yet.\n\nShould we remove idx and should fix the pattern instead?\n write - raid0 and read - raid1, or\n write - raid1 and read - raid0.\n\nIf the first option, we can simply use i.",
+      "range": {
+        "startLine": 2206,
+        "startChar": 46,
+        "endLine": 2206,
+        "endChar": 51
+      },
+      "revId": "1afced093b12333f946f0bff76206500208a8722",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
