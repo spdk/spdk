@@ -876,6 +876,9 @@ spdk_bdev_modules_init(void)
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		g_resume_bdev_module = module;
+		if (module->async_init) {
+			module->internal.action_in_progress = 1;
+		}
 		rc = module->module_init();
 		if (rc != 0) {
 			return rc;
@@ -4172,10 +4175,6 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 	if (spdk_bdev_module_list_find(bdev_module->name)) {
 		SPDK_ERRLOG("ERROR: module '%s' already registered.\n", bdev_module->name);
 		assert(false);
-	}
-
-	if (bdev_module->async_init) {
-		bdev_module->internal.action_in_progress = 1;
 	}
 
 	/*
