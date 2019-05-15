@@ -173,7 +173,7 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 		io_ctx->error |= 1;
 	}
 
-	if (io_ctx->offset && bdev_io != NULL) {
+	if (bdev_io != NULL) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
 		case SPDK_BDEV_IO_TYPE_WRITE:
@@ -183,7 +183,6 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 			/* Context offset doesn't matter for flush requests */
 			break;
 		default:
-			assert(false);
 			break;
 		}
 	}
@@ -313,31 +312,26 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 	len = io->bytes;
 	offset = io_ctx->offset;
 
-	if (offset) {
-		i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
+	i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
 
-		if (i < 0) {
-			SPDK_ERRLOG("offset bigger than data size\n");
-			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-			return;
-		}
-
-		iovcnt = io_ctx->data->iovcnt - i;
-
-		iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
-
-		if (!iovs) {
-			SPDK_ERRLOG("allocation failed\n");
-			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-			return;
-		}
-
-		initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
-				      iovcnt, offset, len);
-	} else {
-		iovs = io_ctx->data->iovs;
-		iovcnt = io_ctx->data->iovcnt;
+	if (i < 0) {
+		SPDK_ERRLOG("offset bigger than data size\n");
+		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+		return;
 	}
+
+	iovcnt = io_ctx->data->iovcnt - i;
+
+	iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
+
+	if (!iovs) {
+		SPDK_ERRLOG("allocation failed\n");
+		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+		return;
+	}
+
+	initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
+			      iovcnt, offset, len);
 
 	if (io->dir == OCF_READ) {
 		status = spdk_bdev_readv(base->desc, io_ctx->ch,
