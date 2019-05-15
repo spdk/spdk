@@ -95,13 +95,14 @@ _dif_sgl_fast_forward(struct _dif_sgl *s, uint32_t offset)
 	}
 }
 
+/* This function must be used before starting iteration. */
 static bool
-_are_iovs_bytes_multiple(struct iovec *iovs, int iovcnt, uint32_t bytes)
+_dif_sgl_is_bytes_multiple(struct _dif_sgl *s, uint32_t bytes)
 {
 	int i;
 
-	for (i = 0; i < iovcnt; i++) {
-		if (iovs[i].iov_len % bytes) {
+	for (i = 0; i < s->iovcnt; i++) {
+		if (s->iov[i].iov_len % bytes) {
 			return false;
 		}
 	}
@@ -110,13 +111,13 @@ _are_iovs_bytes_multiple(struct iovec *iovs, int iovcnt, uint32_t bytes)
 }
 
 static bool
-_are_iovs_valid(struct iovec *iovs, int iovcnt, uint32_t bytes)
+_dif_sgl_is_valid(struct _dif_sgl *s, uint32_t bytes)
 {
 	uint64_t total = 0;
 	int i;
 
-	for (i = 0; i < iovcnt; i++) {
-		total += iovs[i].iov_len;
+	for (i = 0; i < s->iovcnt; i++) {
+		total += s->iov[i].iov_len;
 	}
 
 	return total >= bytes;
@@ -339,7 +340,7 @@ spdk_dif_generate(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 
-	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&sgl, ctx->block_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec array is not valid.\n");
 		return -EINVAL;
 	}
@@ -348,7 +349,7 @@ spdk_dif_generate(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 		return 0;
 	}
 
-	if (_are_iovs_bytes_multiple(iovs, iovcnt, ctx->block_size)) {
+	if (_dif_sgl_is_bytes_multiple(&sgl, ctx->block_size)) {
 		dif_generate(&sgl, num_blocks, ctx);
 	} else {
 		dif_generate_split(&sgl, num_blocks, ctx);
@@ -567,7 +568,7 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 
-	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&sgl, ctx->block_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec array is not valid.\n");
 		return -EINVAL;
 	}
@@ -576,7 +577,7 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 		return 0;
 	}
 
-	if (_are_iovs_bytes_multiple(iovs, iovcnt, ctx->block_size)) {
+	if (_dif_sgl_is_bytes_multiple(&sgl, ctx->block_size)) {
 		return dif_verify(&sgl, num_blocks, ctx, err_blk);
 	} else {
 		return dif_verify_split(&sgl, num_blocks, ctx, err_blk);
@@ -682,8 +683,8 @@ spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	if (!_are_iovs_valid(iovs, iovcnt, data_block_size * num_blocks) ||
-	    !_are_iovs_valid(bounce_iov, 1, ctx->block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&src_sgl, data_block_size * num_blocks) ||
+	    !_dif_sgl_is_valid(&dst_sgl, ctx->block_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec arrays are not valid.\n");
 		return -EINVAL;
 	}
@@ -692,7 +693,7 @@ spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 		return 0;
 	}
 
-	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+	if (_dif_sgl_is_bytes_multiple(&src_sgl, data_block_size)) {
 		dif_generate_copy(&src_sgl, &dst_sgl, num_blocks, ctx);
 	} else {
 		dif_generate_copy_split(&src_sgl, &dst_sgl, num_blocks, ctx);
@@ -816,8 +817,8 @@ spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	if (!_are_iovs_valid(iovs, iovcnt, data_block_size * num_blocks) ||
-	    !_are_iovs_valid(bounce_iov, 1, ctx->block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&dst_sgl, data_block_size * num_blocks) ||
+	    !_dif_sgl_is_valid(&src_sgl, ctx->block_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec arrays are not valid\n");
 		return -EINVAL;
 	}
@@ -826,7 +827,7 @@ spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 		return 0;
 	}
 
-	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+	if (_dif_sgl_is_bytes_multiple(&dst_sgl, data_block_size)) {
 		return dif_verify_copy(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
 	} else {
 		return dif_verify_copy_split(&src_sgl, &dst_sgl, num_blocks, ctx, err_blk);
@@ -918,7 +919,7 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 
-	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&sgl, ctx->block_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec array is not valid.\n");
 		return -EINVAL;
 	}
@@ -1059,8 +1060,8 @@ spdk_dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	_dif_sgl_init(&data_sgl, iovs, iovcnt);
 	_dif_sgl_init(&md_sgl, md_iov, 1);
 
-	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks) ||
-	    !_are_iovs_valid(md_iov, 1, ctx->md_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&data_sgl, ctx->block_size * num_blocks) ||
+	    !_dif_sgl_is_valid(&md_sgl, ctx->md_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec array is not valid.\n");
 		return -EINVAL;
 	}
@@ -1069,7 +1070,7 @@ spdk_dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 		return 0;
 	}
 
-	if (_are_iovs_bytes_multiple(iovs, iovcnt, ctx->block_size)) {
+	if (_dif_sgl_is_bytes_multiple(&data_sgl, ctx->block_size)) {
 		dix_generate(&data_sgl, &md_sgl, num_blocks, ctx);
 	} else {
 		dix_generate_split(&data_sgl, &md_sgl, num_blocks, ctx);
@@ -1176,8 +1177,8 @@ spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	_dif_sgl_init(&data_sgl, iovs, iovcnt);
 	_dif_sgl_init(&md_sgl, md_iov, 1);
 
-	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks) ||
-	    !_are_iovs_valid(md_iov, 1, ctx->md_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&data_sgl, ctx->block_size * num_blocks) ||
+	    !_dif_sgl_is_valid(&md_sgl, ctx->md_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec array is not valid.\n");
 		return -EINVAL;
 	}
@@ -1186,7 +1187,7 @@ spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 		return 0;
 	}
 
-	if (_are_iovs_bytes_multiple(iovs, iovcnt, ctx->block_size)) {
+	if (_dif_sgl_is_bytes_multiple(&data_sgl, ctx->block_size)) {
 		return dix_verify(&data_sgl, &md_sgl, num_blocks, ctx, err_blk);
 	} else {
 		return dix_verify_split(&data_sgl, &md_sgl, num_blocks, ctx, err_blk);
@@ -1204,8 +1205,8 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	_dif_sgl_init(&data_sgl, iovs, iovcnt);
 	_dif_sgl_init(&md_sgl, md_iov, 1);
 
-	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks) ||
-	    !_are_iovs_valid(md_iov, 1, ctx->md_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&data_sgl, ctx->block_size * num_blocks) ||
+	    !_dif_sgl_is_valid(&md_sgl, ctx->md_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec array is not valid.\n");
 		return -EINVAL;
 	}
