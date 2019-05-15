@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "28847e4f_7f774a8c",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2157,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T16:14:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b6e148a7_a69eb73f",
+      "range": {
+        "startLine": 2157,
+        "startChar": 10,
+        "endLine": 2157,
+        "endChar": 17
+      },
+      "revId": "1afced093b12333f946f0bff76206500208a8722",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22877378_2251c9e7",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-15T04:20:52Z",
       "side": 1,
       "message": "Sorry I don\u0027t understand this increment yet.\n\nShould we remove idx and should fix the pattern instead?\n write - raid0 and read - raid1, or\n write - raid1 and read - raid0.\n\nIf the first option, we can simply use i.",
+      "range": {
+        "startLine": 2206,
+        "startChar": 46,
+        "endLine": 2206,
+        "endChar": 51
+      },
+      "revId": "1afced093b12333f946f0bff76206500208a8722",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48130fed_80b5672e",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2206,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T16:14:11Z",
+      "side": 1,
+      "message": "I see your point. They\u0027re both the same raid level so I think just using i is sufficient. In the future this will be fairly easy to update to accommodate read/write on multiple raid levels.  Thanks",
+      "parentUuid": "22877378_2251c9e7",
       "range": {
         "startLine": 2206,
         "startChar": 46,
