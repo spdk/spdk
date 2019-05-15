@@ -56,6 +56,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_RUN_ASAN=0}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=0}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=0}; export SPDK_RUN_INSTALLED_DPDK
+: ${SPDK_RUN_NON_ROOT=0}; export SPDK_RUN_NON_ROOT
 : ${SPDK_TEST_CRYPTO=0}; export SPDK_TEST_CRYPTO
 : ${SPDK_TEST_FTL=0}; export SPDK_TEST_FTL
 : ${SPDK_TEST_BDEV_FTL=0}; export SPDK_TEST_BDEV_FTL
@@ -433,8 +434,19 @@ function killprocess() {
 	fi
 
 	if kill -0 $1; then
-		echo "killing process with pid $1"
-		kill $1
+		if [ "$(ps --no-headers -o comm= $1)" = "sudo" ]; then
+			# kill the child process, which is the actual app
+			# (assume $1 has just one child)
+			local child="$(pgrep -P $1)"
+			echo "killing process with pid $child"
+			kill $child
+		else
+			echo "killing process with pid $1"
+			kill $1
+		fi
+
+		# wait for the process regardless if its the dummy sudo one
+		# or the actual app - it should terminate anyway
 		wait $1
 	fi
 }
