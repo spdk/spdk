@@ -5,8 +5,17 @@ NVMF_IP_PREFIX="192.168.100"
 NVMF_IP_LEAST_ADDR=8
 NVMF_TCP_IP_ADDRESS="127.0.0.1"
 
+function build_nvmf_app_args()
+{
+	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
+		echo "sudo -u $(logname) ./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
+	else
+		echo "./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
+	fi
+}
+
 : ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
-: ${NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"}; export NVMF_APP
+: ${NVMF_APP="$(build_nvmf_app_args)"}; export NVMF_APP
 
 have_pci_nics=0
 
