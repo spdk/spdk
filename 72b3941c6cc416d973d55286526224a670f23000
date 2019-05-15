@@ -16,6 +16,24 @@
       "revId": "72b3941c6cc416d973d55286526224a670f23000",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89a8e9cd_13e5b34e",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1441,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-15T06:59:54Z",
+      "side": 1,
+      "message": "I did not see the code in the top of this function to handle this issue. For the fs_find_file function, it does not check this condition, so added it here.\nAnd I updated the commit message.",
+      "parentUuid": "1b7374dd_e711db83",
+      "revId": "72b3941c6cc416d973d55286526224a670f23000",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
