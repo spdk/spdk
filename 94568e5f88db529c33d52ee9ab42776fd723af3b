@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83fb5adc_044698e4",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T02:33:38Z",
+      "side": 1,
+      "message": "not n but \\n :-)\n\nWill you merge set_test_opts() to set_globals() in the following patch? All global variables are statically initialized now.\n\nThis update will fix \\n automatically. But it\u0027s nice if fixing in this patch.",
+      "range": {
+        "startLine": 104,
+        "startChar": 21,
+        "endLine": 104,
+        "endChar": 23
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72e7a68a_933012b9",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T02:33:38Z",
+      "side": 1,
+      "message": "we can remove this if - else. just max_splits \u003d (g_max_io_size / g_strip_size) +1.",
+      "range": {
+        "startLine": 116,
+        "startChar": 1,
+        "endLine": 116,
+        "endChar": 36
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb52fd5b_2a0ab95f",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T02:33:38Z",
+      "side": 1,
+      "message": "max_splits is set to 33 (\u003d1024 / 32 + 1) but reduced to 32 just below.\n\nso removing the line 116 to 120 entirely and then just setting max_splits to g_max_base_drives may be better.\n\nmax_splits is used only in a place, but keeping local variable max_splits may be kind for reader.",
+      "range": {
+        "startLine": 121,
+        "startChar": 5,
+        "endLine": 121,
+        "endChar": 15
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00d4f4e0_bdfb0572",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1055,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T02:33:38Z",
+      "side": 1,
+      "message": "This is not related with your patch but we should remove all of them separately. We should avoid the case that global variables have the same name as local variables.",
+      "range": {
+        "startLine": 1054,
+        "startChar": 3,
+        "endLine": 1055,
+        "endChar": 56
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c31ee39_77cceec3",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2379,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T02:33:38Z",
+      "side": 1,
+      "message": "we may be able remove this but keeping this will be better because any user may want to change g_max_base_drives to 1 manually.",
+      "range": {
+        "startLine": 2379,
+        "startChar": 1,
+        "endLine": 2379,
+        "endChar": 29
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
