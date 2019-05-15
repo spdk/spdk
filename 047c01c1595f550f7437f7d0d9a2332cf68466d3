@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41ba9d00_7902141b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-15T11:52:48Z",
+      "side": 1,
+      "message": "This change looks like one for another patch.",
+      "range": {
+        "startLine": 388,
+        "startChar": 0,
+        "endLine": 388,
+        "endChar": 40
+      },
+      "revId": "047c01c1595f550f7437f7d0d9a2332cf68466d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
