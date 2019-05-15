@@ -14,6 +14,10 @@ cd $rootdir
 date -u
 git describe --tags
 
+if [ "$SPDK_TEST_LVOL" -eq 1]; then
+	export CFLAGS=-DSPDK_ENABLE_SNAPSHOT_DELETION
+fi
+
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	# We compile OCF sources ourselves
 	# They don't need to be checked with scanbuild and code coverage is not applicable
