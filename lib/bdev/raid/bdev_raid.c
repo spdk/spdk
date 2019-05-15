@@ -455,6 +455,9 @@ raid_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
 		    raid_bdev->strip_size_shift;
 	if (start_strip != end_strip && raid_bdev->num_base_bdevs > 1) {
+		/* I still want to remove this, jsut testing to see
+		 * if it has anything to do with the scan-build issues
+		 */
 		assert(false);
 		SPDK_ERRLOG("I/O spans strip boundary!\n");
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
