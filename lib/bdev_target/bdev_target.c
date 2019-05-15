@@ -102,6 +102,7 @@ struct spdk_bdev_aio_ctx {
 	struct spdk_bdev_target *bt;
 
 	pthread_spinlock_t ctx_lock;
+	// TODO: separate aio and sync mode counter!
 	int reqs_submitting;	// number of requests haven't been submitted into bdev
 	int reqs_submitted;	// number of requests have been submitted into bdev, but haven't been completed
 	int reqs_completed;	// number of requests have been completed, but haven't been realized
@@ -508,7 +509,7 @@ __aio_ctx_get_reqs(void *_args)
 	struct spdk_bdev_aio_get_reqs_ctx *get_reqs = _args;
 	struct spdk_bdev_aio_ctx *ctx = get_reqs->ctx;
 	struct spdk_bdev_aio_req *req;
-	int i, nreqs;
+	int i, nreqs = 0;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BT, "bt internal get requests\n");
 	assert(ctx->reqs_completed >= 0);
@@ -522,6 +523,14 @@ __aio_ctx_get_reqs(void *_args)
 		return;
 	}
 
+	pthread_spin_lock(&ctx->ctx_lock);
+
+	/* If there is no aio req, then directly notify get_reqs */
+	if (ctx->reqs_completed + ctx->reqs_submitted + ctx->reqs_submitting == 0) {
+		pthread_spin_unlock(&ctx->ctx_lock);
+		goto notify;
+	}
+
 	/* whether need to run out all reqs */
 	if (get_reqs->all == true) {
 		get_reqs->nr_min = ctx->reqs_completed + ctx->reqs_submitted + ctx->reqs_submitting;
@@ -530,6 +539,7 @@ __aio_ctx_get_reqs(void *_args)
 	/* register get_reqs, if completed reqs are not enough */
 	if (ctx->reqs_completed < get_reqs->nr_min && get_reqs->timeout == NULL) {
 		ctx->get_reqs = get_reqs;
+		pthread_spin_unlock(&ctx->ctx_lock);
 		return;
 	}
 
@@ -544,7 +554,9 @@ __aio_ctx_get_reqs(void *_args)
 		}
 		ctx->reqs_completed--;
 	}
+	pthread_spin_unlock(&ctx->ctx_lock);
 
+notify:
 	get_reqs->get_reqs_rc = nreqs;
 	get_reqs->get_reqs_cb(get_reqs->get_reqs_cb_arg);
 }
@@ -623,7 +635,7 @@ _bdev_aio_ctx_req_complete(void *arg, int bterrno, struct spdk_bdev_ret *nvm_ret
 {
 	struct spdk_bdev_aio_req *req = arg;
 	struct spdk_bdev_aio_ctx *ctx = req->ctx;
-	int nreqs, i;
+	int nreqs = 0, i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BT, "bdev target bdev cmd complete req\n");
 
@@ -661,6 +673,7 @@ _bdev_aio_ctx_req_complete(void *arg, int bterrno, struct spdk_bdev_ret *nvm_ret
 			ctx->reqs_completed, ctx->get_reqs->nr_min);
 
 	pthread_spin_lock(&ctx->ctx_lock);
+
 	/* whether need to run out all reqs */
 	if (ctx->get_reqs->all == true) {
 		ctx->get_reqs->nr_min = ctx->reqs_completed + ctx->reqs_submitted + ctx->reqs_submitting;
