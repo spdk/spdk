@@ -268,7 +268,7 @@ int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
  * during DIF insertion and strip.
  *
  * \param iovs iovec array set by this function.
- * \param num_iovs Number of elements in the iovec array.
+ * \param iovcnt Number of elements in the iovec array.
  * \param buf Buffer to create extended LBA payload.
  * \param buf_len Length of the buffer to create extended LBA payload.
  * \param data_offset Offset to store the next incoming data.
@@ -280,7 +280,7 @@ int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
  * \return Number of used elements in the iovec array on success or negated
  * errno otherwise.
  */
-int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
+int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 				    uint8_t *buf, uint32_t buf_len,
 				    uint32_t data_offset, uint32_t data_len,
 				    uint32_t *mapped_len,
