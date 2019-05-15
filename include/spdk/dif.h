@@ -269,8 +269,8 @@ int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
  *
  * \param iovs iovec array set by this function.
  * \param iovcnt Number of elements in the iovec array.
- * \param buf Buffer to create extended LBA payload.
- * \param buf_len Length of the buffer to create extended LBA payload.
+ * \param buf_iovs SGL for the buffer to create extended LBA payload.
+ * \param buf_iovcnt Size of the SGL for the buffer to create extended LBA payload.
  * \param data_offset Offset to store the next incoming data.
  * \param data_len Expected data length of the payload.
  * \param mapped_len Output parameter that will contain data length mapped by
@@ -281,7 +281,7 @@ int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
  * errno otherwise.
  */
 int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
-				    uint8_t *buf, uint32_t buf_len,
+				    struct iovec *buf_iovs, int buf_iovcnt,
 				    uint32_t data_offset, uint32_t data_len,
 				    uint32_t *mapped_len,
 				    const struct spdk_dif_ctx *ctx);
