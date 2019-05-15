@@ -1105,7 +1105,6 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "bdevio";
-	opts.rpc_addr = NULL;
 	opts.reactor_mask = "0x7";
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
