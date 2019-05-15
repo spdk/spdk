@@ -53,7 +53,7 @@
 
 /* TODO: valdiate these are good starting values */
 #define NUM_MAX_XFORMS 16
-#define NUM_MAX_INFLIGHT_OPS 512
+#define NUM_MAX_INFLIGHT_OPS 64
 #define DEFAULT_WINDOW_SIZE 15
 #define MAX_MBUFS_PER_OP 16
 #define CHUNK_SIZE (1024 * 16)
@@ -494,38 +494,38 @@ comp_dev_poller(void *args)
 {
 	struct vbdev_compress *comp_bdev = args;
 	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
-	struct rte_comp_op *deq_ops;
+	struct rte_comp_op *deq_ops[NUM_MAX_INFLIGHT_OPS];
 	uint16_t num_deq;
 	struct spdk_reduce_vol_cb_args *reduce_args;
+	int i;
 
-	num_deq = rte_compressdev_dequeue_burst(cdev_id, 0, &deq_ops, 1);
+	num_deq = rte_compressdev_dequeue_burst(cdev_id, 0, deq_ops, NUM_MAX_INFLIGHT_OPS);
 
-	if (num_deq > 0) {
-		reduce_args = (struct spdk_reduce_vol_cb_args *)deq_ops->m_src->userdata;
+	for (i = 0; i < num_deq; i++) {
+		reduce_args = (struct spdk_reduce_vol_cb_args *)deq_ops[i]->m_src->userdata;
 
-		if (deq_ops->status != RTE_COMP_OP_STATUS_SUCCESS) {
-			SPDK_ERRLOG("deque status %u\n", deq_ops->status);
+		if (deq_ops[i]->status != RTE_COMP_OP_STATUS_SUCCESS) {
+			SPDK_ERRLOG("deque status %u\n", deq_ops[i]->status);
 
-			/* TODO update produced with translated -errno */
-			/*
-			 * RTE_COMP_OP_STATUS_SUCCESS = 0,
-			 * RTE_COMP_OP_STATUS_NOT_PROCESSED,
-			 * RTE_COMP_OP_STATUS_INVALID_ARGS,
-			 * RTE_COMP_OP_STATUS_ERROR,
-			 * RTE_COMP_OP_STATUS_INVALID_STATE,
-			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_TERMINATED,
-			 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_RECOVERABLE,
+			/* Reduce will simply store uncompressed on any negative value
+			 * passed in to deq_ops[i]->produced so set that now.
 			 */
+			deq_ops[i]->produced = -EINVAL;
 		}
-		reduce_args->cb_fn(reduce_args->cb_arg, deq_ops->produced);
+		reduce_args->cb_fn(reduce_args->cb_arg, deq_ops[i]->produced);
 
 		/* Now free both mbufs and the compress operation. The rte_pktmbuf_free()
 		 * call takes care of freeing all of the mbufs in the chain back to their
 		 * original pool.
 		 */
-		rte_pktmbuf_free(deq_ops->m_src);
-		rte_pktmbuf_free(deq_ops->m_dst);
-		rte_comp_op_free(deq_ops);
+		rte_pktmbuf_free(deq_ops[i]->m_src);
+		rte_pktmbuf_free(deq_ops[i]->m_dst);
+
+		/* There is no bulk free for com ops so we have to free them one at a time
+		 * here however it would be rare that we'd ever have more than 1 at a time
+		 * anyways.
+		 */
+		rte_comp_op_free(deq_ops[i]);
 	}
 	return 0;
 }
