@@ -534,7 +534,8 @@ comp_dev_poller(void *args)
 	struct vbdev_comp_op *op_to_resubmit;
 	int rc, i;
 
-	num_deq = rte_compressdev_dequeue_burst(cdev_id, 0, deq_ops, NUM_MAX_INFLIGHT_OPS);
+	num_deq = rte_compressdev_dequeue_burst(cdev_id, comp_bdev->device_qp->qp, deq_ops,
+						NUM_MAX_INFLIGHT_OPS);
 	for (i = 0; i < num_deq; i++) {
 		reduce_args = (struct spdk_reduce_vol_cb_args *)deq_ops[i]->m_src->userdata;
 
