@@ -22,6 +22,30 @@
       "revId": "edbf24b01e621c392fe9a3a38b3e25d52bb43c41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5a07dcb_22fb77fe",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-15T20:29:54Z",
+      "side": 1,
+      "message": "That sounds so much better, thanks",
+      "parentUuid": "f6818701_192ebcb0",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 24
+      },
+      "revId": "edbf24b01e621c392fe9a3a38b3e25d52bb43c41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
