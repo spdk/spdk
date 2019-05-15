@@ -107,7 +107,7 @@ spdk_bs_sequence_start(struct spdk_io_channel *_channel,
 	struct spdk_bs_request_set	*set;
 
 	channel = spdk_io_channel_get_ctx(_channel);
-
+	assert(channel != NULL);
 	set = TAILQ_FIRST(&channel->reqs);
 	if (!set) {
 		return NULL;
@@ -311,7 +311,7 @@ spdk_bs_batch_open(struct spdk_io_channel *_channel,
 	struct spdk_bs_request_set	*set;
 
 	channel = spdk_io_channel_get_ctx(_channel);
-
+	assert(channel != NULL);
 	set = TAILQ_FIRST(&channel->reqs);
 	if (!set) {
 		return NULL;
@@ -466,7 +466,7 @@ spdk_bs_user_op_alloc(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl,
 	struct spdk_bs_user_op_args	*args;
 
 	channel = spdk_io_channel_get_ctx(_channel);
-
+	assert(channel != NULL);
 	set = TAILQ_FIRST(&channel->reqs);
 	if (!set) {
 		return NULL;
