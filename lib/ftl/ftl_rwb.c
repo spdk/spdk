@@ -305,6 +305,12 @@ ftl_rwb_num_batches(const struct ftl_rwb *rwb)
 }
 
 size_t
+ftl_rwb_size(const struct ftl_rwb *rwb)
+{
+	return rwb->num_batches * rwb->xfer_size;
+}
+
+size_t
 ftl_rwb_batch_get_offset(const struct ftl_rwb_batch *batch)
 {
 	return batch->pos;

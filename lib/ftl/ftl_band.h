@@ -172,6 +172,7 @@ struct ftl_ppa ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa,
 struct ftl_ppa ftl_band_next_ppa(struct ftl_band *band, struct ftl_ppa ppa,
 				 size_t offset);
 size_t		ftl_band_num_usable_lbks(const struct ftl_band *band);
+size_t		ftl_band_user_lbks_left(const struct ftl_band *band, size_t offset);
 size_t		ftl_band_user_lbks(const struct ftl_band *band);
 void		ftl_band_set_addr(struct ftl_band *band, uint64_t lba,
 				  struct ftl_ppa ppa);
