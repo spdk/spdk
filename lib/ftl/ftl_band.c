@@ -120,7 +120,7 @@ ftl_tail_md_num_lbks(const struct spdk_ftl_dev *dev)
 }
 
 static uint64_t
-ftl_band_tail_md_offset(struct ftl_band *band)
+ftl_band_tail_md_offset(const struct ftl_band *band)
 {
 	return ftl_band_num_usable_lbks(band) -
 	       ftl_tail_md_num_lbks(band->dev);
@@ -513,6 +513,22 @@ size_t
 ftl_band_num_usable_lbks(const struct ftl_band *band)
 {
 	return band->num_chunks * ftl_dev_lbks_in_chunk(band->dev);
+}
+
+size_t
+ftl_band_user_lbks_left(const struct ftl_band *band, size_t offset)
+{
+	size_t tail_md_offset = ftl_band_tail_md_offset(band);
+
+	if (spdk_unlikely(offset <= ftl_head_md_num_lbks(band->dev))) {
+		return ftl_band_user_lbks(band);
+	}
+
+	if (spdk_unlikely(offset > tail_md_offset)) {
+		return 0;
+	}
+
+	return tail_md_offset - offset;
 }
 
 size_t
