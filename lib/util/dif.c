@@ -37,16 +37,21 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 
-/* Context to iterate a iovec array. */
+/* Context to iterate or create a iovec array.
+ * Each sgl is either iterated or created at a time.
+ * */
 struct _dif_sgl {
-	/* Current iovec in the iteration */
+	/* Current iovec in the iteration or creation */
 	struct iovec *iov;
 
-	/* Remaining count of iovecs in the iteration. */
+	/* Remaining count of iovecs in the iteration or creation. */
 	int iovcnt;
 
 	/* Current offset in the iovec */
 	uint32_t iov_offset;
+
+	/* Size of the created iovec array in bytes */
+	uint32_t total_size;
 };
 
 static inline void
@@ -55,6 +60,7 @@ _dif_sgl_init(struct _dif_sgl *s, struct iovec *iovs, int iovcnt)
 	s->iov = iovs;
 	s->iovcnt = iovcnt;
 	s->iov_offset = 0;
+	s->total_size = 0;
 }
 
 static inline void
@@ -92,6 +98,23 @@ _dif_sgl_fast_forward(struct _dif_sgl *s, uint32_t offset)
 		s->iov_offset -= s->iov->iov_len;
 		s->iov++;
 		s->iovcnt--;
+	}
+}
+
+static inline bool
+_dif_sgl_append(struct _dif_sgl *s, uint8_t *data, uint32_t data_len)
+{
+	assert(s->iovcnt > 0);
+	s->iov->iov_base = data;
+	s->iov->iov_len = data_len;
+	s->total_size += data_len;
+	s->iov++;
+	s->iovcnt--;
+
+	if (s->iovcnt > 0) {
+		return true;
+	} else {
+		return false;
 	}
 }
 
@@ -1263,18 +1286,17 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 }
 
 int
-spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
+spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 				uint8_t *buf, uint32_t buf_len,
 				uint32_t data_offset, uint32_t data_len,
 				uint32_t *_mapped_len,
 				const struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, head_unalign, mapped_len = 0;
+	uint32_t data_block_size, head_unalign;
 	uint32_t num_blocks, offset_blocks;
-	struct iovec *iov = iovs;
-	int iovcnt = 0;
+	struct _dif_sgl sgl;
 
-	if (iovs == NULL || num_iovs == 0) {
+	if (iovs == NULL || iovcnt == 0) {
 		return -EINVAL;
 	}
 
@@ -1302,37 +1324,33 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
 	offset_blocks = data_offset / data_block_size;
 	head_unalign = data_offset % data_block_size;
 
+	_dif_sgl_init(&sgl, iovs, iovcnt);
 	buf += offset_blocks * ctx->block_size;
 
 	if (head_unalign != 0) {
 		buf += head_unalign;
 
-		iov->iov_base = buf;
-		iov->iov_len = data_block_size - head_unalign;
-		mapped_len += data_block_size - head_unalign;
-		iov++;
-		iovcnt++;
-
+		if (!_dif_sgl_append(&sgl, buf, data_block_size - head_unalign)) {
+			goto end;
+		}
 		buf += ctx->block_size - head_unalign;
 		offset_blocks++;
 	}
 
-	while (offset_blocks < num_blocks && iovcnt < num_iovs) {
-		iov->iov_base = buf;
-		iov->iov_len = data_block_size;
-		mapped_len += data_block_size;
-		iov++;
-		iovcnt++;
-
+	while (offset_blocks < num_blocks) {
+		if (!_dif_sgl_append(&sgl, buf, data_block_size)) {
+			goto end;
+		}
 		buf += ctx->block_size;
 		offset_blocks++;
 	}
 
+end:
 	if (_mapped_len != NULL) {
-		*_mapped_len = mapped_len;
+		*_mapped_len = sgl.total_size;
 	}
 
-	return iovcnt;
+	return iovcnt - sgl.iovcnt;
 }
 
 int
