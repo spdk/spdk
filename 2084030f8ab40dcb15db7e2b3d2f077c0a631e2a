@@ -126,6 +126,24 @@
     },
     {
       "key": {
+        "uuid": "f52d041b_f06918bc",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T18:52:59Z",
+      "side": 1,
+      "message": "I\u0027m OK with these changes for now.  This is a good step forward.  But I\u0027d like to pursue the optional approach I\u0027ve laid out here after we get this series merged.\n\nOnce you fix up the small item below, I\u0027ll +2.",
+      "parentUuid": "1791459a_c3f2e13d",
+      "revId": "2084030f8ab40dcb15db7e2b3d2f077c0a631e2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "afca1709_6ae548a7",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 13
