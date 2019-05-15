@@ -1169,7 +1169,7 @@ spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 		return NULL;
 	}
 
-	tgroup->sock_group = spdk_sock_group_create(NULL);
+	tgroup->sock_group = spdk_sock_group_create(&tgroup->group);
 	if (!tgroup->sock_group) {
 		goto cleanup;
 	}
@@ -1181,6 +1181,22 @@ spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 
 cleanup:
 	free(tgroup);
+	return NULL;
+}
+
+static struct spdk_nvmf_transport_poll_group *
+spdk_nvmf_tcp_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_tcp_qpair *tqpair;
+	struct spdk_sock_group *group = NULL;
+	int rc;
+
+	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	rc = spdk_sock_get_optimal_sock_group(tqpair->sock, &group);
+	if (!rc && group != NULL) {
+		return spdk_sock_group_get_ctx(group);
+	}
+
 	return NULL;
 }
 
@@ -2857,6 +2873,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.listener_discover = spdk_nvmf_tcp_discover,
 
 	.poll_group_create = spdk_nvmf_tcp_poll_group_create,
+	.get_optimal_poll_group = spdk_nvmf_tcp_get_optimal_poll_group,
 	.poll_group_destroy = spdk_nvmf_tcp_poll_group_destroy,
 	.poll_group_add = spdk_nvmf_tcp_poll_group_add,
 	.poll_group_remove = spdk_nvmf_tcp_poll_group_remove,

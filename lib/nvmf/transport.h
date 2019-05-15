@@ -102,6 +102,11 @@ struct spdk_nvmf_transport_ops {
 	struct spdk_nvmf_transport_poll_group *(*poll_group_create)(struct spdk_nvmf_transport *transport);
 
 	/**
+	 * Get the polling group of the queue pair optimal for the specific transport
+	 */
+	struct spdk_nvmf_transport_poll_group *(*get_optimal_poll_group)(struct spdk_nvmf_qpair *qpair);
+
+	/**
 	 * Destroy a poll group
 	 */
 	void (*poll_group_destroy)(struct spdk_nvmf_transport_poll_group *group);
@@ -164,7 +169,6 @@ struct spdk_nvmf_transport_ops {
 	int (*qpair_set_sqsize)(struct spdk_nvmf_qpair *qpair);
 };
 
-
 int spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 				    const struct spdk_nvme_transport_id *trid);
 
@@ -176,6 +180,8 @@ void spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport
 
 struct spdk_nvmf_transport_poll_group *spdk_nvmf_transport_poll_group_create(
 	struct spdk_nvmf_transport *transport);
+struct spdk_nvmf_transport_poll_group *spdk_nvmf_transport_get_optimal_poll_group(
+	struct spdk_nvmf_transport *transport, struct spdk_nvmf_qpair *qpair);
 
 void spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
