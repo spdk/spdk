@@ -101,6 +101,7 @@ void	ftl_rwb_set_limits(struct ftl_rwb *rwb, const size_t limit[FTL_RWB_TYPE_MAX
 void	ftl_rwb_get_limits(struct ftl_rwb *rwb, size_t limit[FTL_RWB_TYPE_MAX]);
 size_t	ftl_rwb_num_acquired(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type);
 size_t	ftl_rwb_num_batches(const struct ftl_rwb *rwb);
+size_t	ftl_rwb_size(const struct ftl_rwb *rwb);
 struct ftl_rwb_entry *ftl_rwb_acquire(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type);
 struct ftl_rwb_batch *ftl_rwb_pop(struct ftl_rwb *rwb);
 struct ftl_rwb_batch *ftl_rwb_first_batch(struct ftl_rwb *rwb);
