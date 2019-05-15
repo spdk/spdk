@@ -141,6 +141,11 @@ bdevio_construct_targets(void)
 		bdev = spdk_bdev_next_leaf(bdev);
 	}
 
+	if (g_io_targets == NULL) {
+		SPDK_ERRLOG("No bdevs to perform tests on\n");
+		return -1;
+	}
+
 	return 0;
 }
 
