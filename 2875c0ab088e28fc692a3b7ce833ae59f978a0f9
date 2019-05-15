@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "770e2e43_e0d024a9",
+        "filename": "lib/blob/request.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T20:53:49Z",
+      "side": 1,
+      "message": "let\u0027s change this to assert(channel !\u003d NULL);\n\nsame for ones below",
+      "revId": "2875c0ab088e28fc692a3b7ce833ae59f978a0f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
