@@ -54,6 +54,7 @@
 #define NVMF_TCP_PDU_MAX_H2C_DATA_SIZE	131072
 #define NVMF_TCP_PDU_MAX_C2H_DATA_SIZE	131072
 #define NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM  64  /* Maximal c2h_data pdu number for ecah tqpair */
+#define NVMF_POLL_GROUP_TIME_PERIOD_TO_WAIT_IN_US 50
 
 /* spdk nvmf related structure */
 enum spdk_nvmf_tcp_req_state {
@@ -270,6 +271,9 @@ struct spdk_nvmf_tcp_poll_group {
 	TAILQ_HEAD(, spdk_nvmf_tcp_req)		pending_data_buf_queue;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
+
+	uint64_t				tsc_start;
+	uint64_t				max_tsc_period;
 };
 
 struct spdk_nvmf_tcp_port {
@@ -1159,6 +1163,7 @@ spdk_nvmf_tcp_discover(struct spdk_nvmf_transport *transport,
 	entry->tsas.tcp.sectype = SPDK_NVME_TCP_SECURITY_NONE;
 }
 
+
 static struct spdk_nvmf_transport_poll_group *
 spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 {
@@ -1176,6 +1181,9 @@ spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 
 	TAILQ_INIT(&tgroup->qpairs);
 	TAILQ_INIT(&tgroup->pending_data_buf_queue);
+	tgroup->max_tsc_period = (uint64_t)((spdk_get_ticks_hz() *
+					     NVMF_POLL_GROUP_TIME_PERIOD_TO_WAIT_IN_US) / (double)1000000);
+	tgroup->tsc_start = spdk_get_ticks();
 
 	return &tgroup->group;
 
@@ -2742,13 +2750,19 @@ spdk_nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair)
 	spdk_nvmf_tcp_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair));
 }
 
+
 static int
 spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 	int rc;
+	uint64_t now;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
+	now = spdk_get_thread_time(group->group->thread);
+	if (now < tgroup->tsc_start) {
+		return 0;
+	}
 
 	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs))) {
 		return 0;
@@ -2758,6 +2772,16 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
 		return rc;
+	} else if (rc == 0) {
+		if ((now - tgroup->tsc_start) <  tgroup->max_tsc_period) {
+			tgroup->tsc_start = 2 * now - tgroup->tsc_start;
+		} else {
+			tgroup->tsc_start = now + tgroup->max_tsc_period;
+		}
+	} else {
+		if (now > tgroup->tsc_start) {
+			tgroup->tsc_start = now;
+		}
 	}
 
 	return 0;
