@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "ef4eaf08_67c30f60",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T15:59:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d19864f8_2e9e27bc",
+      "range": {
+        "startLine": 104,
+        "startChar": 21,
+        "endLine": 104,
+        "endChar": 23
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72e7a68a_933012b9",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 2
@@ -60,6 +84,30 @@
       "writtenOn": "2019-05-15T02:33:38Z",
       "side": 1,
       "message": "we can remove this if - else. just max_splits \u003d (g_max_io_size / g_strip_size) +1.",
+      "range": {
+        "startLine": 116,
+        "startChar": 1,
+        "endLine": 116,
+        "endChar": 36
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22ffe010_799b374d",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T15:59:24Z",
+      "side": 1,
+      "message": "well, I wanted to keep the globals around in case we find some situation where we want to set either of these to different values in the future.",
+      "parentUuid": "72e7a68a_933012b9",
       "range": {
         "startLine": 116,
         "startChar": 1,
@@ -95,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "70f674fd_0f5de89e",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T15:59:24Z",
+      "side": 1,
+      "message": "Same as above.  Keeping the globals I think implies that that can be changed, if we update the logic that uses them to assume their current values then it can easily mess things up in the future if someone finds a need to change one for some crazy real life test case out in the field.",
+      "parentUuid": "bb52fd5b_2a0ab95f",
+      "range": {
+        "startLine": 121,
+        "startChar": 5,
+        "endLine": 121,
+        "endChar": 15
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3f2ebb0_f584ec42",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 2
@@ -106,6 +178,30 @@
       "writtenOn": "2019-05-15T02:41:34Z",
       "side": 1,
       "message": "size of g_io_output is statically determined now. So we can allocate g_io_output statically now.",
+      "range": {
+        "startLine": 125,
+        "startChar": 1,
+        "endLine": 125,
+        "endChar": 13
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a9c82f8_1c433bed",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T15:59:24Z",
+      "side": 1,
+      "message": "same comment as above",
+      "parentUuid": "f3f2ebb0_f584ec42",
       "range": {
         "startLine": 125,
         "startChar": 1,
@@ -141,6 +237,30 @@
     },
     {
       "key": {
+        "uuid": "863e3c56_e4ca6769",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T15:59:24Z",
+      "side": 1,
+      "message": "Hmm, I didn\u0027t see that but sure seems like someone made a copy-n-paste error.  I will fix it in its own patch just in case :)",
+      "parentUuid": "3bdf83de_ea3e886c",
+      "range": {
+        "startLine": 664,
+        "startChar": 1,
+        "endLine": 664,
+        "endChar": 45
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "00d4f4e0_bdfb0572",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 2
@@ -164,6 +284,30 @@
     },
     {
       "key": {
+        "uuid": "52e72b77_3d52471c",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1055,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T15:59:24Z",
+      "side": 1,
+      "message": "totally agree, not in this patch of course though",
+      "parentUuid": "00d4f4e0_bdfb0572",
+      "range": {
+        "startLine": 1054,
+        "startChar": 3,
+        "endLine": 1055,
+        "endChar": 56
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c31ee39_77cceec3",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 2
@@ -175,6 +319,30 @@
       "writtenOn": "2019-05-15T02:33:38Z",
       "side": 1,
       "message": "we may be able remove this but keeping this will be better because any user may want to change g_max_base_drives to 1 manually.",
+      "range": {
+        "startLine": 2379,
+        "startChar": 1,
+        "endLine": 2379,
+        "endChar": 29
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c70a9643_d8dfa4b5",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2379,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T15:59:24Z",
+      "side": 1,
+      "message": "yes, the same reason I kept many of the other items you commented on, I want the logic to support putting any reasonable value in place",
+      "parentUuid": "8c31ee39_77cceec3",
       "range": {
         "startLine": 2379,
         "startChar": 1,
