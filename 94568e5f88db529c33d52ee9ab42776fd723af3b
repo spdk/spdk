@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d19864f8_2e9e27bc",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T02:41:34Z",
+      "side": 1,
+      "message": "Sorry, set_test_opts() is only once at startup but set_globals is for every test run. So merging may not be possible.",
+      "parentUuid": "83fb5adc_044698e4",
+      "range": {
+        "startLine": 104,
+        "startChar": 21,
+        "endLine": 104,
+        "endChar": 23
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72e7a68a_933012b9",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 2
@@ -64,6 +88,29 @@
         "startChar": 5,
         "endLine": 121,
         "endChar": 15
+      },
+      "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3f2ebb0_f584ec42",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-15T02:41:34Z",
+      "side": 1,
+      "message": "size of g_io_output is statically determined now. So we can allocate g_io_output statically now.",
+      "range": {
+        "startLine": 125,
+        "startChar": 1,
+        "endLine": 125,
+        "endChar": 13
       },
       "revId": "94568e5f88db529c33d52ee9ab42776fd723af3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
