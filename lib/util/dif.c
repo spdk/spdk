@@ -324,11 +324,10 @@ static void
 dif_generate_split(struct _dif_sgl *sgl, uint32_t num_blocks,
 		   const struct spdk_dif_ctx *ctx)
 {
-	uint32_t offset_blocks = 0;
+	uint32_t offset_blocks;
 
-	while (offset_blocks < num_blocks) {
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
 		_dif_generate_split(sgl, offset_blocks, ctx);
-		offset_blocks++;
 	}
 }
 
@@ -547,15 +546,14 @@ static int
 dif_verify_split(struct _dif_sgl *sgl, uint32_t num_blocks,
 		 const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
-	uint32_t offset_blocks = 0;
+	uint32_t offset_blocks;
 	int rc;
 
-	while (offset_blocks < num_blocks) {
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
 		rc = _dif_verify_split(sgl, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
-		offset_blocks++;
 	}
 
 	return 0;
@@ -665,11 +663,10 @@ static void
 dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 			uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
 {
-	uint32_t offset_blocks = 0;
+	uint32_t offset_blocks;
 
-	while (offset_blocks < num_blocks) {
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
 		_dif_generate_copy_split(src_sgl, dst_sgl, offset_blocks, ctx);
-		offset_blocks++;
 	}
 }
 
@@ -793,15 +790,14 @@ dif_verify_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 		      uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
 		      struct spdk_dif_error *err_blk)
 {
-	uint32_t offset_blocks = 0;
+	uint32_t offset_blocks;
 	int rc;
 
-	while (offset_blocks < num_blocks) {
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
 		rc = _dif_verify_copy_split(src_sgl, dst_sgl, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
-		offset_blocks++;
 	}
 
 	return 0;
@@ -1047,11 +1043,10 @@ static void
 dix_generate_split(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 		   uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
 {
-	uint32_t offset_blocks = 0;
+	uint32_t offset_blocks;
 
-	while (offset_blocks < num_blocks) {
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
 		_dix_generate_split(data_sgl, md_sgl, offset_blocks, ctx);
-		offset_blocks++;
 	}
 }
 
@@ -1158,15 +1153,14 @@ dix_verify_split(struct _dif_sgl *data_sgl, struct _dif_sgl *md_sgl,
 		 uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
 		 struct spdk_dif_error *err_blk)
 {
-	uint32_t offset_blocks = 0;
+	uint32_t offset_blocks;
 	int rc;
 
-	while (offset_blocks < num_blocks) {
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
 		rc = _dix_verify_split(data_sgl, md_sgl, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
-		offset_blocks++;
 	}
 
 	return 0;
