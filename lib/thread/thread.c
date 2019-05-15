@@ -1270,5 +1270,11 @@ end:
 	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
 
+uint64_t
+spdk_get_thread_time(const struct spdk_thread *thread)
+{
+	return thread->tsc_last;
+}
+
 
 SPDK_LOG_REGISTER_COMPONENT("thread", SPDK_LOG_THREAD)

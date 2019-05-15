@@ -543,6 +543,15 @@ void *spdk_io_channel_iter_get_ctx(struct spdk_io_channel_iter *i);
  */
 void spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status);
 
+/**
+ * Get the thread's last updated time stamp.
+ *
+ * \param thread The thread to get the last time stamp
+ *
+ * \return the time stamp value
+ */
+uint64_t spdk_get_thread_time(const struct spdk_thread *thread);
+
 #ifdef __cplusplus
 }
 #endif

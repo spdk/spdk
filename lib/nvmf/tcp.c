@@ -54,6 +54,8 @@
 #define NVMF_TCP_PDU_MAX_H2C_DATA_SIZE	131072
 #define NVMF_TCP_PDU_MAX_C2H_DATA_SIZE	131072
 #define NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM  64  /* Maximal c2h_data pdu number for ecah tqpair */
+#define NVMF_POLL_GROUP_MIN_DELAY 1
+#define NVMF_POLL_GROUP_MAX_DELAY 64
 
 /* spdk nvmf related structure */
 enum spdk_nvmf_tcp_req_state {
@@ -270,6 +272,9 @@ struct spdk_nvmf_tcp_poll_group {
 	TAILQ_HEAD(, spdk_nvmf_tcp_req)		pending_data_buf_queue;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
+
+	uint64_t				delay_end;
+	uint64_t				delay;
 };
 
 struct spdk_nvmf_tcp_port {
@@ -1180,6 +1185,7 @@ spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 	TAILQ_INIT(&tgroup->qpairs);
 	TAILQ_INIT(&tgroup->pending_data_buf_queue);
 
+	tgroup->delay = NVMF_POLL_GROUP_MIN_DELAY;
 	return &tgroup->group;
 
 cleanup:
@@ -2760,13 +2766,19 @@ spdk_nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair)
 	spdk_nvmf_tcp_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair));
 }
 
+
 static int
 spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 	int rc;
+	uint64_t now;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
+	now = spdk_get_thread_time(group->group->thread);
+	if (now <= tgroup->delay_end) {
+		return 0;
+	}
 
 	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs))) {
 		return 0;
@@ -2776,6 +2788,11 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
 		return rc;
+	} else if (rc == 0) {
+		tgroup->delay = spdk_min(2 * tgroup->delay, NVMF_POLL_GROUP_MAX_DELAY);
+		tgroup->delay_end = now + tgroup->delay * spdk_get_ticks_hz() / 1000000ULL;
+	} else {
+		tgroup->delay = NVMF_POLL_GROUP_MIN_DELAY;
 	}
 
 	return 0;
