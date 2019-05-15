@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fd57b1d4_c70f1dd9",
+        "filename": "lib/bdev/ocf/utils.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-15T10:53:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ab27e1ba_2a320ec3",
+      "revId": "633d6f6ccd37fa73e6151865162fdb27129203ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46acad97_196bd4a5",
         "filename": "lib/bdev/ocf/utils.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-14T22:28:08Z",
       "side": 1,
       "message": "similar to last patch - I don\u0027t think this declaration needs to be in the header file",
+      "revId": "633d6f6ccd37fa73e6151865162fdb27129203ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0486b3ef_eb6b2bd0",
+        "filename": "lib/bdev/ocf/utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-15T10:53:52Z",
+      "side": 1,
+      "message": "Ack\nAlthough I will expect someone to add it back when the default timeout needs to be changed",
+      "parentUuid": "46acad97_196bd4a5",
       "revId": "633d6f6ccd37fa73e6151865162fdb27129203ff",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
