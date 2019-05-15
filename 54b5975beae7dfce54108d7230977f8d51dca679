@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e21325f5_cecda650",
+        "filename": "lib/bdev/ocf/utils.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-15T06:12:47Z",
+      "side": 1,
+      "message": "I would prefer to keep this as is. The docs for spdk_poller_unregister don\u0027t say anything about poller \u003d\u003d NULL so for me that is not a defined behavior.",
+      "parentUuid": "4cb32c88_128b45e4",
+      "revId": "54b5975beae7dfce54108d7230977f8d51dca679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "966c7b5d_cb731321",
         "filename": "lib/bdev/ocf/utils.h",
         "patchSetId": 2
