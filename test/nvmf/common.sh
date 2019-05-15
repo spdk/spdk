@@ -5,8 +5,22 @@ NVMF_IP_PREFIX="192.168.100"
 NVMF_IP_LEAST_ADDR=8
 NVMF_TCP_IP_ADDRESS="127.0.0.1"
 
+function build_nvmf_app_args()
+{
+	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	set +x
+	if [[ -n "$(ls /sys/kernel/iommu_groups)" || \
+	(-e /sys/module/vfio/parameters/enable_unsafe_noiommu_mode && \
+	"$(cat /sys/module/vfio/parameters/enable_unsafe_noiommu_mode)" == "Y") ]]; then
+		echo "sudo -u $(logname) ./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
+	else
+		echo "./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
+	fi
+	$shell_restore
+}
+
 : ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
-: ${NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"}; export NVMF_APP
+: ${NVMF_APP="$(build_nvmf_app_args)"}; export NVMF_APP
 
 have_pci_nics=0
 
