@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47d44220_b6a8c94e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-15T11:40:36Z",
+      "side": 1,
+      "message": "Can the buf_aligned addition be moved to separate patch before this one?",
+      "range": {
+        "startLine": 674,
+        "startChar": 1,
+        "endLine": 674,
+        "endChar": 90
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15150e69_c67767b5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-15T11:40:36Z",
+      "side": 1,
+      "message": "This condition should take bit more in consideration. First as we already do, check if data buf is allocated and aligned. Then if there is separate_md - check if md_buf is allocated and aligned.\nIn this version of the code we do not check if there is separate md and whether the buffer is present.",
+      "range": {
+        "startLine": 677,
+        "startChar": 0,
+        "endLine": 678,
+        "endChar": 60
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa6f071c_6a29e14f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-15T11:40:36Z",
+      "side": 1,
+      "message": "Wouldn\u0027t using \u0027+ len\u0027 be more clear here ? We move the buffer up to start of the md.",
+      "range": {
+        "startLine": 720,
+        "startChar": 39,
+        "endLine": 720,
+        "endChar": 67
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5554881a_c6f60882",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-15T11:40:36Z",
+      "side": 1,
+      "message": "Why not move it to case where there is separate md, only calculating it in that condition.",
+      "range": {
+        "startLine": 720,
+        "startChar": 3,
+        "endLine": 720,
+        "endChar": 67
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "205fcdcd_45fa2c43",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-15T11:40:36Z",
+      "side": 1,
+      "message": "Why not mirror flow above ?\n\nalign the md buf by doing line 720\nif md_buf is allocated\n   do _bdev_io_set_bounce_md_buf()\nelse\n   do spdk_bdev_io_set_md_buf()",
+      "range": {
+        "startLine": 724,
+        "startChar": 0,
+        "endLine": 729,
+        "endChar": 4
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e629ecf2_8e2c04c0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4368,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-15T11:40:36Z",
+      "side": 1,
+      "message": "I wonder if this name will be confusing within bdev.c file - since we already have spdk_bdev_io_get_buf() [without _md_].",
+      "range": {
+        "startLine": 4368,
+        "startChar": 0,
+        "endLine": 4368,
+        "endChar": 23
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
