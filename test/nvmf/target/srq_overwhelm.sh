@@ -27,21 +27,12 @@ nvmfappstart "-m 0xF"
 # create the rdma transport with an intentionally small SRQ depth
 $rpc_py nvmf_create_transport -t rdma -u 8192 -s 1024
 
-declare -a malloc_bdevs
-malloc_bdevs[0]="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-malloc_bdevs[1]+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-malloc_bdevs[2]+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-malloc_bdevs[3]+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-malloc_bdevs[4]+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-malloc_bdevs[5]+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-
 for i in $(seq 0 5); do
-	let j=$i+1
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$j -a -s SPDK00000000000001
-	echo ${malloc_bdevs[i]}
-	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j "${malloc_bdevs[i]}"
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
-	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${j}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -i 16
+	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK00000000000001
+	$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
+	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -i 16
 	waitforblk "nvme${i}n1"
 done
 
@@ -54,7 +45,7 @@ $rootdir/scripts/fio.py nvmf 1048576 128 read 10 13
 
 sync
 
-for i in $(seq 1 6); do
+for i in $(seq 0 5); do
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}"
 	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i
 done
