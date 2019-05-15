@@ -57,6 +57,30 @@
       "revId": "66b4fcf3b6d5ab85dafd9964dfdad71265536f54",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "473b323e_61f9fed4",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1555,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-15T16:37:36Z",
+      "side": 1,
+      "message": "So the raid module sets the split for bdev to strip size so it\u0027s not possible to get an IO large than a strip. The raid code itself will check this in raid_bdev_start_rw_request() and assert(FALSE) if that happens. With this patch I was just removing the random nature of the test but I can see an improvement here where we remove the assert from the code under test and CU_ASSERT that the IO is failed in this.  I\u0027ll put it on the list, let me know if you disagree. The current test, as is, tests something smaller than strip and then strip size which seemed like two good boundaries for UT",
+      "parentUuid": "58447ada_a5217c1c",
+      "range": {
+        "startLine": 1555,
+        "startChar": 11,
+        "endLine": 1555,
+        "endChar": 34
+      },
+      "revId": "66b4fcf3b6d5ab85dafd9964dfdad71265536f54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
