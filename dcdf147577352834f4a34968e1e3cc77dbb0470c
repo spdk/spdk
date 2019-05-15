@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82eaf678_c91cbfda",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T21:02:10Z",
+      "side": 1,
+      "message": "I don\u0027t think this mix error codes with placement ids.  For example, what if some sock implementation uses 0 as a valid NAPI_ID.\n\nBetter to have an output parameter for the placement id.\n\nOr even just return -1 to mean error.  0 usually means success, so return 0 for an error may be confusing to future readers of this code.",
+      "revId": "dcdf147577352834f4a34968e1e3cc77dbb0470c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35c9ed50_491b769a",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T21:02:10Z",
+      "side": 1,
+      "message": "return -1 (see previous comment on posix file)",
+      "revId": "dcdf147577352834f4a34968e1e3cc77dbb0470c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b32a9df_6c0fd751",
+        "filename": "test/unit/lib/sock/sock.c/sock_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-15T21:02:10Z",
+      "side": 1,
+      "message": "return -1",
+      "revId": "dcdf147577352834f4a34968e1e3cc77dbb0470c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
