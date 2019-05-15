@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/ftl.h"
 #include "spdk/likely.h"
+#include "spdk/util.h"
 
 #include "ftl_io.h"
 #include "ftl_core.h"
@@ -156,24 +157,101 @@ ftl_io_iovec_len_left(struct ftl_io *io)
 }
 
 static void
-ftl_io_init_iovec(struct ftl_io *io, void *buf, size_t lbk_cnt)
+_ftl_io_init_iovec(struct ftl_io *io, const struct iovec *iov, size_t iov_cnt, size_t lbk_cnt)
 {
-	io->iov_pos = 0;
-	io->lbk_cnt = lbk_cnt;
-	io->iov_cnt = 1;
+	size_t iov_off;
 
-	io->iov[0].iov_base = buf;
-	io->iov[0].iov_len = lbk_cnt * PAGE_SIZE;
+	io->iov_pos = 0;
+	io->iov_cnt = iov_cnt;
+	io->lbk_cnt = lbk_cnt;
+
+	memcpy(io->iov, iov, iov_cnt * sizeof(*iov));
+
+	if (lbk_cnt == 0) {
+		for (iov_off = 0; iov_off < iov_cnt; ++iov_off) {
+			io->lbk_cnt += iov[iov_off].iov_len / PAGE_SIZE;
+		}
+	}
+}
+
+static void _ftl_io_free(struct ftl_io *io);
+
+static int
+ftl_io_add_child(struct ftl_io *io, const struct iovec *iov, size_t iov_cnt)
+{
+	struct ftl_io *child;
+
+	child = ftl_io_alloc_child(io);
+	if (spdk_unlikely(!child)) {
+		return -ENOMEM;
+	}
+
+	_ftl_io_init_iovec(child, iov, iov_cnt, 0);
+
+	if (io->flags & FTL_IO_VECTOR_LBA) {
+		child->lba.vector = io->lba.vector + io->lbk_cnt;
+	} else {
+		child->lba.single = io->lba.single + io->lbk_cnt;
+	}
+
+	io->lbk_cnt += child->lbk_cnt;
+	return 0;
+}
+
+static int
+ftl_io_init_iovec(struct ftl_io *io, const struct iovec *iov, size_t iov_cnt, size_t lbk_cnt)
+{
+	struct ftl_io *child;
+	size_t iov_off = 0, iov_left;
+	int rc;
+
+	if (spdk_likely(iov_cnt <= FTL_IO_MAX_IOVEC)) {
+		_ftl_io_init_iovec(io, iov, iov_cnt, lbk_cnt);
+		return 0;
+	}
+
+	while (iov_off < iov_cnt) {
+		iov_left = spdk_min(iov_cnt - iov_off, FTL_IO_MAX_IOVEC);
+
+		rc = ftl_io_add_child(io, &iov[iov_off], iov_left);
+		if (spdk_unlikely(rc != 0)) {
+			while ((child = LIST_FIRST(&io->children))) {
+				assert(LIST_EMPTY(&child->children));
+				LIST_REMOVE(child, child_entry);
+				_ftl_io_free(child);
+			}
+
+			return -ENOMEM;
+		}
+
+		iov_off += iov_left;
+	}
+
+	assert(io->lbk_cnt == lbk_cnt);
+	return 0;
 }
 
 void
 ftl_io_shrink_iovec(struct ftl_io *io, size_t lbk_cnt)
 {
-	assert(io->iov_cnt == 1);
+	size_t iov_off = 0, lbk_off = 0;
+
 	assert(io->lbk_cnt >= lbk_cnt);
 	assert(io->pos == 0 && io->iov_pos == 0 && io->iov_off == 0);
 
-	ftl_io_init_iovec(io, ftl_io_iovec_addr(io), lbk_cnt);
+	for (; iov_off < io->iov_cnt; ++iov_off) {
+		size_t num_iov = io->iov[iov_off].iov_len / PAGE_SIZE;
+		size_t num_left = lbk_cnt - lbk_off;
+
+		if (num_iov >= num_left) {
+			io->iov[iov_off].iov_len = num_left * PAGE_SIZE;
+			io->iov_cnt = iov_off + 1;
+			io->lbk_cnt = lbk_cnt;
+			break;
+		}
+
+		lbk_off += num_iov;
+	}
 }
 
 static void
@@ -195,6 +273,10 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 {
 	struct ftl_io *io = opts->io;
 	struct spdk_ftl_dev *dev = opts->dev;
+	struct iovec iov = {
+		.iov_base = opts->data,
+		.iov_len  = opts->lbk_cnt * PAGE_SIZE
+	};
 
 	if (!io) {
 		if (opts->parent) {
@@ -215,7 +297,12 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->band = opts->band;
 	io->md = opts->md;
 
-	ftl_io_init_iovec(io, opts->data, opts->lbk_cnt);
+	if (ftl_io_init_iovec(io, &iov, 1, opts->lbk_cnt)) {
+		if (!opts->io) {
+			ftl_io_free(io);
+		}
+		return NULL;
+	}
 
 	return io;
 }
@@ -283,16 +370,14 @@ ftl_io_user_init(struct spdk_io_channel *_ioch, uint64_t lba, size_t lbk_cnt, st
 	}
 
 	ftl_io_init(io, dev, cb_fn, cb_arg, 0, type);
-
 	io->lba.single = lba;
-	io->lbk_cnt = lbk_cnt;
-	io->iov_cnt = iov_cnt;
 
-	assert(iov_cnt < FTL_IO_MAX_IOVEC);
-	memcpy(io->iov, iov, iov_cnt * sizeof(*iov));
+	if (ftl_io_init_iovec(io, iov, iov_cnt, lbk_cnt)) {
+		ftl_io_free(io);
+		return NULL;
+	}
 
 	ftl_trace_lba_io_init(io->dev, io);
-
 	return io;
 }
 
@@ -364,6 +449,7 @@ ftl_io_alloc_child(struct ftl_io *parent)
 		return NULL;
 	}
 
+	ftl_io_init(io, parent->dev, NULL, NULL, parent->flags, parent->type);
 	io->parent = parent;
 
 	pthread_spin_lock(&parent->lock);
