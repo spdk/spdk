@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34d21e0a_cc319994",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 863,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T06:02:54Z",
+      "side": 1,
+      "message": "We don\u0027t need this.\nJust \n\tstruct spdk_scsi_lun *lun \u003d task-\u003elun;\n\tstruct spdk_bdev *bdev \u003d lun-\u003ebdev;\nshould be fine.\nPlease see scsi_bdev.c\n\nI put the same comment to the second patch in this series.",
+      "range": {
+        "startLine": 856,
+        "startChar": 0,
+        "endLine": 863,
+        "endChar": 2
+      },
+      "revId": "e8abc378f11cfbd19471750b305ce35e67c700da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
