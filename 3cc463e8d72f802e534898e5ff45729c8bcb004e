@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "a6f284a8_fffdd305",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 959,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T01:46:12Z",
+      "side": 1,
+      "message": "Thank you OK to me as same as others.",
+      "parentUuid": "fd0d83d5_70b549f6",
+      "range": {
+        "startLine": 957,
+        "startChar": 4,
+        "endLine": 959,
+        "endChar": 5
+      },
+      "revId": "3cc463e8d72f802e534898e5ff45729c8bcb004e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "717878c9_bfab44f2",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 4
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "Hmmm, this one I think we should remove simply because it tests nothing at the moment and can probably confuse someone.  If later different or multiple block count sizes are added that patch should be responsible for whatever tests are needed to accommodate it. Thanks Shuhei.",
       "parentUuid": "717878c9_bfab44f2",
+      "range": {
+        "startLine": 2433,
+        "startChar": 0,
+        "endLine": 2433,
+        "endChar": 30
+      },
+      "revId": "3cc463e8d72f802e534898e5ff45729c8bcb004e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6d9480a_b8180a53",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2433,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T01:46:12Z",
+      "side": 1,
+      "message": "Thank you, let\u0027s consider when this becomes necessary again.",
+      "parentUuid": "49b14dc9_0869a8bb",
       "range": {
         "startLine": 2433,
         "startChar": 0,
