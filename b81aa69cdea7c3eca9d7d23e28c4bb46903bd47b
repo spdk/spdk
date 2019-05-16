@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c2ff40d_d005e98e",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-16T02:26:45Z",
+      "side": 1,
+      "message": "so scanbuild doesn\u0027t compliant about dev-\u003exfer_size ?",
+      "revId": "b81aa69cdea7c3eca9d7d23e28c4bb46903bd47b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
