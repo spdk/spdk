@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e5b95681_8f53eb5b",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-16T01:47:43Z",
+      "side": 1,
+      "message": "Hi Jim, I checked the kernel code, the NAPI_ID will not be 0. the Minal is NR_CPUs + 1.  But I can change this code to make it clear.",
+      "parentUuid": "82eaf678_c91cbfda",
+      "revId": "dcdf147577352834f4a34968e1e3cc77dbb0470c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "35c9ed50_491b769a",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 5
