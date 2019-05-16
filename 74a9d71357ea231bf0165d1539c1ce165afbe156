@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bcb28ab_b0716d7d",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 802,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-16T04:45:28Z",
+      "side": 1,
+      "message": "Should probably have the g_ prefix",
+      "range": {
+        "startLine": 802,
+        "startChar": 27,
+        "endLine": 802,
+        "endChar": 42
+      },
+      "revId": "74a9d71357ea231bf0165d1539c1ce165afbe156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
