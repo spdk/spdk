@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7a1b10eb_9eb97e45",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-16T11:32:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "16b19435_41a9f85a",
+      "range": {
+        "startLine": 315,
+        "startChar": 0,
+        "endLine": 316,
+        "endChar": 45
+      },
+      "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9c07970_65a84171",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 8
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "3b6b96de_00c5bc74",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-16T11:32:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9c07970_65a84171",
+      "range": {
+        "startLine": 872,
+        "startChar": 1,
+        "endLine": 872,
+        "endChar": 34
+      },
+      "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7271e126_8971b7ab",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 8
@@ -59,6 +107,30 @@
       "writtenOn": "2019-05-14T12:52:15Z",
       "side": 1,
       "message": "What is the point of this?",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 265,
+        "endChar": 48
+      },
+      "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07b966a7_d5473d54",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-16T11:32:04Z",
+      "side": 1,
+      "message": "We need to pass restore-\u003emd_buf somehow. It is not allocated by ftl_band_alloc_lba_map but is has size for whole head md from all bands. This should be changed after we get rid of md_buf.",
+      "parentUuid": "7271e126_8971b7ab",
       "range": {
         "startLine": 264,
         "startChar": 0,
