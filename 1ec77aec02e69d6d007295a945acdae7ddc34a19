@@ -22,6 +22,30 @@
       "revId": "1ec77aec02e69d6d007295a945acdae7ddc34a19",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e22ce8ab_cbf170f1",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-16T14:58:27Z",
+      "side": 1,
+      "message": "Oh - good catch Shuhei.\n\nYes - I plan to change this to exit 1 in a future patch.  Thanks for reminding me.  Keeping it as exit 0 here keeps it consistent with how the scripts run today.",
+      "parentUuid": "c34d9792_70e09f27",
+      "range": {
+        "startLine": 167,
+        "startChar": 2,
+        "endLine": 168,
+        "endChar": 8
+      },
+      "revId": "1ec77aec02e69d6d007295a945acdae7ddc34a19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
