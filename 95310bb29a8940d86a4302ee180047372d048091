@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5253313_970198b9",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-16T14:21:10Z",
+      "side": 1,
+      "message": "Can you do explicit type conversion from void * to struct vbdev_ocf *vbdev ?\nIt just makes it extra clear.",
+      "range": {
+        "startLine": 337,
+        "startChar": 25,
+        "endLine": 337,
+        "endChar": 29
+      },
+      "revId": "95310bb29a8940d86a4302ee180047372d048091",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
