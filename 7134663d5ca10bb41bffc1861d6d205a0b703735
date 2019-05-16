@@ -22,6 +22,30 @@
       "revId": "7134663d5ca10bb41bffc1861d6d205a0b703735",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2853c3e_bd664d5f",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T09:34:25Z",
+      "side": 1,
+      "message": "OK, your comment make sense to me. I\u0027ll add it to my enhancements.",
+      "parentUuid": "185ce38c_4038d457",
+      "range": {
+        "startLine": 114,
+        "startChar": 1,
+        "endLine": 118,
+        "endChar": 2
+      },
+      "revId": "7134663d5ca10bb41bffc1861d6d205a0b703735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
