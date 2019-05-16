@@ -539,15 +539,16 @@ comp_dev_poller(void *args)
 	for (i = 0; i < num_deq; i++) {
 		reduce_args = (struct spdk_reduce_vol_cb_args *)deq_ops[i]->m_src->userdata;
 
-		if (deq_ops[i]->status != RTE_COMP_OP_STATUS_SUCCESS) {
+		if (deq_ops[i]->status == RTE_COMP_OP_STATUS_SUCCESS) {
+
+			/* tell reduce this is done and what the bytecount was */
+			reduce_args->cb_fn(reduce_args->cb_arg, deq_ops[i]->produced);
+		} else {
 			SPDK_ERRLOG("deque status %u\n", deq_ops[i]->status);
 
-			/* Reduce will simply store uncompressed on any negative value
-			 * passed in to deq_ops[i]->produced so set that now.
-			 */
-			deq_ops[i]->produced = -EINVAL;
+			/* Reduce will simply store uncompressed on neg errno value. */
+			reduce_args->cb_fn(reduce_args->cb_arg, -EINVAL);
 		}
-		reduce_args->cb_fn(reduce_args->cb_arg, deq_ops[i]->produced);
 
 		/* Now free both mbufs and the compress operation. The rte_pktmbuf_free()
 		 * call takes care of freeing all of the mbufs in the chain back to their
