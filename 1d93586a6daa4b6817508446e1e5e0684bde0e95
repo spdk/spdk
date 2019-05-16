@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b2bad27_41c96f0b",
+        "filename": "test/vhost/windows/windows_scsi_compliance.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-16T11:23:12Z",
+      "side": 1,
+      "message": "Please use the new naming convention that Ben introduced recently: https://review.gerrithub.io/c/spdk/spdk/+/454380/5\n\nThis should probably become:\ntestdir\u003d$(readlink -f $(dirname $0))\nrootdir\u003d$(readlink -f $testdir/../../..)\nsource $rootdir/test/common/autotest_common.sh\nsource $rootdir/test/vhost/common.sh",
+      "revId": "1d93586a6daa4b6817508446e1e5e0684bde0e95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
