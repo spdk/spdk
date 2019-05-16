@@ -42,7 +42,7 @@ timing_enter shutdown
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
+$rpc_py nvmf_create_transport -t rdma -u 8192
 
 num_subsystems=10
 # SoftRoce does not have enough queues available for

@@ -28,7 +28,7 @@ if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	SUBSYS_NR=1
 fi
 
-$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
+$rpc_py nvmf_create_transport -t rdma -u 8192
 
 # Construct a RAID volume for the logical volume store
 base_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
