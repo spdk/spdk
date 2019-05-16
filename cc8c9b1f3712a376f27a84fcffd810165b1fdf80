@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfbc0430_58119870",
+        "filename": "test/nvmf/target/nvme_cli.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-16T17:12:14Z",
+      "side": 1,
+      "message": "This works for me locally.",
+      "revId": "cc8c9b1f3712a376f27a84fcffd810165b1fdf80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
