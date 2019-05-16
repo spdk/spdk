@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81b468fd_b11c94c4",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T05:15:57Z",
+      "side": 1,
+      "message": "consolidating two error paths may be better by passing sense key and code as variables.\n\n  sc \u003d ...;\n  sk \u003d ...;\n  goto check_condition;\n\ncheck_condition:\n  pthread_mutex_unlock(\u0026dev-\u003epr_lock);\n  spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,\n    sc, sk, SPDK_ASCQ_CAUSE_NOT_REPORTABLE);\n  return -EINVAL;",
+      "range": {
+        "startLine": 371,
+        "startChar": 0,
+        "endLine": 371,
+        "endChar": 15
+      },
+      "revId": "91343248169ca07489257f3b5aa92258c2d289ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
