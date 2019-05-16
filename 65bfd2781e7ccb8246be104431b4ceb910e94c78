@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0921c4c8_cb34b70a",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T05:48:58Z",
+      "side": 1,
+      "message": "Please locate this under spdk_scsi_pr_in_read_keys because the following switch - case is the ordering.",
+      "revId": "65bfd2781e7ccb8246be104431b4ceb910e94c78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
