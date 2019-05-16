@@ -6,12 +6,12 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/scripts/common.sh
 source $rootdir/test/nvmf/common.sh
 
+parse_common_script_args $@
+
 rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
-# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
-# e.g. sudo ./fio.sh iso
 nvmftestinit
 
 RDMA_IP_LIST=$(get_available_rdma_ips)

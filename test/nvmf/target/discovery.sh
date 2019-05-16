@@ -5,6 +5,8 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+parse_common_script_args $@
+
 NULL_BDEV_SIZE=102400
 NULL_BLOCK_SIZE=512
 
@@ -18,8 +20,6 @@ if ! hash nvme; then
 fi
 
 timing_enter discovery
-# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
-# e.g. sudo ./discovery.sh iso
 nvmftestinit
 nvmfappstart "-m 0xF"
 
