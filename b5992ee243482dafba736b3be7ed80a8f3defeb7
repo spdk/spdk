@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "914d99e7_9e3ecebf",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T05:22:38Z",
+      "side": 1,
+      "message": "The following will remove the assert at the line 499.\n\nif (all_regs) {\n  if (sa_key !\u003d 0) {\n    spdk_scsi_pr_remove_all_regs_by_key(dev, sa_rkey);\n  } else {\n    spdk_scsi_pr_remove_all_other_regs(dev, reg);\n    spdk_scsi_pr_reserve_reservation(dev, rtype, 0, reg);\n  }\n  goto exit;\n}",
+      "revId": "b5992ee243482dafba736b3be7ed80a8f3defeb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
