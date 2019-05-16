@@ -69,6 +69,30 @@
       "revId": "047c01c1595f550f7437f7d0d9a2332cf68466d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8f6b82e_0b04455e",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1811,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T10:15:20Z",
+      "side": 1,
+      "message": "Hi Konrad, so sorry for my wrong comments. This change is necessary and will you restore this change? I added extra comment but I forgot to correct this comment.",
+      "parentUuid": "3ef6741d_0bc8e045",
+      "range": {
+        "startLine": 1811,
+        "startChar": 6,
+        "endLine": 1811,
+        "endChar": 36
+      },
+      "revId": "047c01c1595f550f7437f7d0d9a2332cf68466d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
