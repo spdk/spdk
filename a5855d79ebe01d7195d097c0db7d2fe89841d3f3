@@ -16,6 +16,24 @@
       "revId": "a5855d79ebe01d7195d097c0db7d2fe89841d3f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86a97b1b_8357030b",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1448,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-16T04:02:38Z",
+      "side": 1,
+      "message": "If that, mark f-\u003eis_deleted \u003d true in original code is also not correct. If the spdk_blobk_sync_md fails, we should not mark it as is_deleted \u003d true here.",
+      "parentUuid": "6515600d_f8e954ef",
+      "revId": "a5855d79ebe01d7195d097c0db7d2fe89841d3f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
