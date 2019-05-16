@@ -14,7 +14,7 @@ set -e
 
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./discovery.sh iso
-nvmftestinit $1
+nvmftestinit
 
 if ! hash nvme; then
 	echo "nvme command not found; skipping discovery test"
@@ -34,7 +34,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF &
 nvmfpid=$!
 
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
@@ -72,5 +72,5 @@ trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 killprocess $nvmfpid
-nvmftestfini $1
+nvmftestfini
 timing_exit discovery

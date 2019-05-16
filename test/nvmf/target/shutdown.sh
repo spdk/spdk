@@ -14,7 +14,7 @@ set -e
 
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./shutdown.sh iso
-nvmftestinit $1
+nvmftestinit
 
 RDMA_IP_LIST=$(get_available_rdma_ips)
 NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
@@ -53,7 +53,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF &
 pid=$!
 
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; nvmfcleanup; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; nvmfcleanup; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
@@ -135,7 +135,7 @@ waitforlisten $perfpid /var/tmp/bdevperf.sock
 $rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
 
 # Expand the trap to clean up bdevperf if something goes wrong
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; kill -9 $perfpid; nvmfcleanup; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $pid; kill -9 $perfpid; nvmfcleanup; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforio /var/tmp/bdevperf.sock Nvme1n1
 
@@ -158,6 +158,6 @@ timing_enter cleanup
 nvmfcleanup
 timing_exit cleanup
 timing_enter testfini
-nvmftestfini $1
+nvmftestfini
 timing_exit testfini
 timing_exit shutdown

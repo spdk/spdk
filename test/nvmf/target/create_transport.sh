@@ -14,7 +14,7 @@ set -e
 
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./crt_trprt.sh iso
-nvmftestinit $1
+nvmftestinit
 
 if ! hash nvme; then
 	echo "nvme command not found; skipping create transport test"
@@ -34,7 +34,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF &
 nvmfpid=$!
 
-trap "killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 # Use nvmf_create_transport call to create transport
@@ -73,5 +73,5 @@ trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 killprocess $nvmfpid
-nvmftestfini $1
+nvmftestfini
 timing_exit crt_trprt

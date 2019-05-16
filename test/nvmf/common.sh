@@ -10,6 +10,8 @@ NVMF_TCP_IP_ADDRESS="127.0.0.1"
 
 have_pci_nics=0
 
+NVMF_TEST_MODE=$1
+
 function load_ib_rdma_modules()
 {
 	if [ `uname` != Linux ]; then
@@ -157,7 +159,7 @@ function nvmfcleanup()
 
 function nvmftestinit()
 {
-	if [ "$1" == "iso" ]; then
+	if [ "$NVMF_TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
 		rdma_device_init
 	fi
@@ -165,7 +167,7 @@ function nvmftestinit()
 
 function nvmftestfini()
 {
-	if [ "$1" == "iso" ]; then
+	if [ "$NVMF_TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh reset
 		rdma_device_init
 	fi
