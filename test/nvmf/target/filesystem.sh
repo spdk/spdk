@@ -18,7 +18,7 @@ nvmftestinit
 for incapsule in 0 4096; do
 	nvmfappstart "-m 0xF"
 
-	$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4 -c $incapsule
+	$rpc_py nvmf_create_transport -t rdma -u 8192 -c $incapsule
 
 	echo -e "$(create_malloc_nvmf_subsystem 1 rdma)" | $rpc_py
 

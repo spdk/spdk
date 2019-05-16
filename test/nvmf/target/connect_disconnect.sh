@@ -17,7 +17,7 @@ timing_enter connect_disconnect
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4 -c 0
+$rpc_py nvmf_create_transport -t rdma -u 8192 -c 0
 
 echo -e "$(create_malloc_nvmf_subsystem 1 rdma)" | $rpc_py
 

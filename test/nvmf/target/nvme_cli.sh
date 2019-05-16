@@ -25,7 +25,7 @@ timing_enter nvme_cli
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
+$rpc_py nvmf_create_transport -t rdma -u 8192
 
 echo -e "$(create_malloc_nvmf_subsystem 1 rdma)" | $rpc_py
 $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc2

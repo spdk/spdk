@@ -305,7 +305,7 @@ function create_nvmf_subsystem_config() {
 	tgt_rpc construct_malloc_bdev 8 512 --name MallocForNvmf0
 	tgt_rpc construct_malloc_bdev 4 1024 --name MallocForNvmf1
 
-	tgt_rpc nvmf_create_transport -t RDMA -u 8192 -p 4 -c 0
+	tgt_rpc nvmf_create_transport -t RDMA -u 8192 -c 0
 	tgt_rpc nvmf_subsystem_create       nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 	tgt_rpc nvmf_subsystem_add_ns       nqn.2016-06.io.spdk:cnode1 MallocForNvmf0
 	tgt_rpc nvmf_subsystem_add_ns       nqn.2016-06.io.spdk:cnode1 MallocForNvmf1
