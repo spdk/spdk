@@ -652,8 +652,12 @@ class SPDKInitiator(Initiator):
 if __name__ == "__main__":
     spdk_zip_path = "/tmp/spdk.zip"
     target_results_dir = "/tmp/results"
+    path = os.path.dirname(os.path.realpath(__file__))
+    configfilepath = os.path.join(path, "config.json")
+    if (len(sys.argv) > 1):
+        configfilepath = sys.argv[1]
 
-    with open("./scripts/perf/nvmf/config.json", "r") as config:
+    with open(configfilepath, "r") as config:
         data = json.load(config)
 
     initiators = []
