@@ -63,6 +63,24 @@
       "revId": "1ec77aec02e69d6d007295a945acdae7ddc34a19",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38a4d873_dec42495",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-16T19:01:18Z",
+      "side": 1,
+      "message": "Good catch!",
+      "parentUuid": "4414ec46_6955d760",
+      "revId": "1ec77aec02e69d6d007295a945acdae7ddc34a19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
