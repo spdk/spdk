@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ca571e8_2678586a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 771,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-16T14:08:30Z",
+      "side": 0,
+      "message": "Can this change be separate from this patch - not really relevant to try_lock ? \n\nIt would move the check if cache is already started to register_vbdev() and start_cache() would only check the vbdev-\u003eocf_cache and return 0 if it was already started.",
+      "range": {
+        "startLine": 761,
+        "startChar": 0,
+        "endLine": 771,
+        "endChar": 2
+      },
+      "revId": "d83a3489ccf850c4fac99225f67a6c931ac3c648",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

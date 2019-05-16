@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3a44b7e_177f7728",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-16T14:08:30Z",
+      "side": 1,
+      "message": "I don\u0027t think this should ever occur since vbdev_ocf_mngt_start() is already using the vbdev. Definitely going further into vbdev_ocf_mngt_continue() with NULL vbdev would cause crash anyway.",
+      "range": {
+        "startLine": 273,
+        "startChar": 0,
+        "endLine": 276,
+        "endChar": 2
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18b12032_14bfe79c",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-16T14:08:30Z",
+      "side": 1,
+      "message": "I realize this was in original function, but I don\u0027t think this will ever be true. We already were checking ocf_cache_has_pending_requests() with this pointer.\n\nSee comment on line 306",
+      "range": {
+        "startLine": 278,
+        "startChar": 0,
+        "endLine": 281,
+        "endChar": 2
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4855d6ed_8bb8881e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-16T14:08:30Z",
+      "side": 1,
+      "message": "Same as line 306. Cache is always running at this point, right ?",
+      "range": {
+        "startLine": 283,
+        "startChar": 0,
+        "endLine": 286,
+        "endChar": 2
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0267de26_76d105f6",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-16T14:08:30Z",
+      "side": 1,
+      "message": "ocf_cache_has_pending_requests() should crash when done on NULL. Best would be to assert that vbdev-\u003eocf_cache is not NULL. This shouldn\u0027t happen at this point, right ?\n\nI\u0027m assuming that case where vbdev_ocf is not started is handled by vbdev_ocf_destruct(), right ?\n\nThis could be done in another patch.",
+      "range": {
+        "startLine": 306,
+        "startChar": 0,
+        "endLine": 306,
+        "endChar": 52
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0bc1324_e82e7cf3",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-16T14:08:30Z",
+      "side": 1,
+      "message": "Would it be possible to do vbdev_ocf_mngt_start() on register_path in separate patch ? Trylock does not seem required for that.",
+      "range": {
+        "startLine": 850,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 2
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
