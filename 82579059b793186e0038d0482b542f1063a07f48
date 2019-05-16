@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1cc891a_d6f4ee7e",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T03:00:44Z",
+      "side": 1,
+      "message": "should we set non-zero value to iov_base too?",
+      "range": {
+        "startLine": 428,
+        "startChar": 0,
+        "endLine": 429,
+        "endChar": 32
+      },
+      "revId": "82579059b793186e0038d0482b542f1063a07f48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
