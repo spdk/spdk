@@ -17,7 +17,7 @@ nvmfappstart "-m 0xF"
 
 NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | sed -n 2p)
 
-$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
+$rpc_py nvmf_create_transport -t rdma -u 8192
 
 # Create subsystems
 echo -e "$(create_malloc_nvmf_subsystem 1 rdma)" | $rpc_py

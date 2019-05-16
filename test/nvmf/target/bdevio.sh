@@ -15,7 +15,7 @@ timing_enter bdevio
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t rdma -u 8192 -p 4
+$rpc_py nvmf_create_transport -t rdma -u 8192
 echo -e "$(create_malloc_nvmf_subsystem 1 rdma)" | $rpc_py
 
 echo "[Nvme]" > $testdir/bdevperf.conf
