@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cea9581_260b6db3",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T05:51:31Z",
+      "side": 1,
+      "message": "sizeof(*param) ?",
+      "range": {
+        "startLine": 635,
+        "startChar": 16,
+        "endLine": 635,
+        "endChar": 17
+      },
+      "revId": "b7a1039ef262445f859322c0d3c169ae4e85d58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f60bace3_e220b23b",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T05:51:31Z",
+      "side": 1,
+      "message": "sizeof(*param)",
+      "range": {
+        "startLine": 642,
+        "startChar": 25,
+        "endLine": 642,
+        "endChar": 26
+      },
+      "revId": "b7a1039ef262445f859322c0d3c169ae4e85d58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
