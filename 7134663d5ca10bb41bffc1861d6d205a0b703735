@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "185ce38c_4038d457",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-16T08:36:48Z",
+      "side": 1,
+      "message": "looks fine to me, but I still think we should change existing similar code to return a clear message, e.g.: true on success, false on failure, currently false means end.",
+      "range": {
+        "startLine": 114,
+        "startChar": 1,
+        "endLine": 118,
+        "endChar": 2
+      },
+      "revId": "7134663d5ca10bb41bffc1861d6d205a0b703735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
