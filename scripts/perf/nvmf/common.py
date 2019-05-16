@@ -1,8 +1,13 @@
 import os
+import sys
 import re
 import json
 from itertools import product, chain
 from subprocess import check_output, Popen
+path = os.path.dirname(os.path.realpath(__file__))
+dirpath = path
+path = os.path.dirname(os.path.dirname(path))
+sys.path.insert(0, path)
 
 
 def get_used_numa_nodes():

@@ -11,9 +11,9 @@ import subprocess
 import itertools
 import time
 import uuid
+from common import *
 import rpc
 import rpc.client
-from common import *
 
 
 class Server:
@@ -651,8 +651,9 @@ class SPDKInitiator(Initiator):
 if __name__ == "__main__":
     spdk_zip_path = "/tmp/spdk.zip"
     target_results_dir = "/tmp/results"
+    config_path = dirpath + "/config.json"
 
-    with open("./scripts/perf/nvmf/config.json", "r") as config:
+    with open(config_path, "r") as config:
         data = json.load(config)
 
     initiators = []
