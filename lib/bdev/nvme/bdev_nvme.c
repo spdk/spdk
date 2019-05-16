@@ -384,6 +384,8 @@ static int
 _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev *bdev = bdev_io->bdev;
+
 	if (nvme_ch->qpair == NULL) {
 		/* The device is currently resetting */
 		return -1;
@@ -392,11 +394,11 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb,
-				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+				     bdev_io->u.bdev.num_blocks * bdev->blocklen);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		return bdev_nvme_writev((struct nvme_bdev *)bdev_io->bdev->ctxt,
+		return bdev_nvme_writev((struct nvme_bdev *)bdev->ctxt,
 					ch,
 					(struct nvme_bdev_io *)bdev_io->driver_ctx,
 					bdev_io->u.bdev.iovs,
@@ -405,31 +407,31 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					bdev_io->u.bdev.offset_blocks);
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
+		return bdev_nvme_unmap((struct nvme_bdev *)bdev->ctxt,
 				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
 				       bdev_io->u.bdev.offset_blocks,
 				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
+		return bdev_nvme_unmap((struct nvme_bdev *)bdev->ctxt,
 				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
 				       bdev_io->u.bdev.offset_blocks,
 				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return bdev_nvme_reset((struct nvme_bdev *)bdev_io->bdev->ctxt,
+		return bdev_nvme_reset((struct nvme_bdev *)bdev->ctxt,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		return bdev_nvme_flush((struct nvme_bdev *)bdev_io->bdev->ctxt,
+		return bdev_nvme_flush((struct nvme_bdev *)bdev->ctxt,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
 				       bdev_io->u.bdev.offset_blocks,
 				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
-		return bdev_nvme_admin_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,
+		return bdev_nvme_admin_passthru((struct nvme_bdev *)bdev->ctxt,
 						ch,
 						(struct nvme_bdev_io *)bdev_io->driver_ctx,
 						&bdev_io->u.nvme_passthru.cmd,
@@ -437,7 +439,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 						bdev_io->u.nvme_passthru.nbytes);
 
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
-		return bdev_nvme_io_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,
+		return bdev_nvme_io_passthru((struct nvme_bdev *)bdev->ctxt,
 					     ch,
 					     (struct nvme_bdev_io *)bdev_io->driver_ctx,
 					     &bdev_io->u.nvme_passthru.cmd,
@@ -445,7 +447,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					     bdev_io->u.nvme_passthru.nbytes);
 
 	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
-		return bdev_nvme_io_passthru_md((struct nvme_bdev *)bdev_io->bdev->ctxt,
+		return bdev_nvme_io_passthru_md((struct nvme_bdev *)bdev->ctxt,
 						ch,
 						(struct nvme_bdev_io *)bdev_io->driver_ctx,
 						&bdev_io->u.nvme_passthru.cmd,
