@@ -46,6 +46,30 @@
       "revId": "813a38962b4ea1f2f947ba254c7446172d73929e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d7a47ef_a0451c68",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-16T15:49:28Z",
+      "side": 1,
+      "message": "Thanks, that\u0027s a good catch!",
+      "parentUuid": "c6662ec1_835d170f",
+      "range": {
+        "startLine": 464,
+        "startChar": 3,
+        "endLine": 464,
+        "endChar": 43
+      },
+      "revId": "813a38962b4ea1f2f947ba254c7446172d73929e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
