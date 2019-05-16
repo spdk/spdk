@@ -11,6 +11,11 @@ import subprocess
 import itertools
 import time
 import uuid
+
+path = os.path.dirname(os.path.realpath(__file__))
+dirpath = path
+path = os.path.dirname(os.path.dirname(path))
+sys.path.insert(0, path)
 import rpc
 import rpc.client
 from common import *
@@ -651,8 +656,9 @@ class SPDKInitiator(Initiator):
 if __name__ == "__main__":
     spdk_zip_path = "/tmp/spdk.zip"
     target_results_dir = "/tmp/results"
+    config_path = dirpath + "/config.json"
 
-    with open("./scripts/perf/nvmf/config.json", "r") as config:
+    with open(config_path, "r") as config:
         data = json.load(config)
 
     initiators = []
