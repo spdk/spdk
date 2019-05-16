@@ -14,7 +14,7 @@ set -e
 
 # pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
 # e.g. sudo ./bdev_io_wait.sh iso
-nvmftestinit $1
+nvmftestinit
 
 RDMA_IP_LIST=$(get_available_rdma_ips)
 NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
@@ -29,7 +29,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF &
 nvmfpid=$!
 
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 timing_exit start_nvmf_tgt
@@ -54,5 +54,5 @@ trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 killprocess $nvmfpid
-nvmftestfini $1
+nvmftestfini
 timing_exit bdev_io_wait
