@@ -67,8 +67,8 @@ struct ftl_wptr {
 	/* Current erase block */
 	struct ftl_chunk		*chunk;
 
-	/* IO that is currently processed */
-	struct ftl_io			*current_io;
+	/* Pending IO queue */
+	TAILQ_HEAD(, ftl_io)		pending_queue;
 
 	/* List link */
 	LIST_ENTRY(ftl_wptr)		list_entry;
@@ -405,6 +405,7 @@ ftl_wptr_init(struct ftl_band *band)
 	wptr->band = band;
 	wptr->chunk = CIRCLEQ_FIRST(&band->chunks);
 	wptr->ppa = wptr->chunk->start_ppa;
+	TAILQ_INIT(&wptr->pending_queue);
 
 	return wptr;
 }
@@ -1243,15 +1244,14 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 		/* There are no guarantees of the order of completion of NVMe IO submission queue */
 		/* so wait until chunk is not busy before submitting another write */
 		if (wptr->chunk->busy) {
-			wptr->current_io = io;
+			TAILQ_INSERT_TAIL(&wptr->pending_queue, io, retry_entry);
 			rc = -EAGAIN;
 			break;
 		}
 
 		rc = ftl_submit_child_write(wptr, io, dev->xfer_size);
-
 		if (rc == -EAGAIN) {
-			wptr->current_io = io;
+			TAILQ_INSERT_TAIL(&wptr->pending_queue, io, retry_entry);
 			break;
 		} else if (rc) {
 			ftl_io_fail(io, rc);
@@ -1301,11 +1301,13 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	struct ftl_io		*io;
 	struct ftl_ppa		ppa, prev_ppa;
 
-	if (wptr->current_io) {
-		if (ftl_submit_write(wptr, wptr->current_io) == -EAGAIN) {
+	if (spdk_unlikely(!TAILQ_EMPTY(&wptr->pending_queue))) {
+		io = TAILQ_FIRST(&wptr->pending_queue);
+		TAILQ_REMOVE(&wptr->pending_queue, io, retry_entry);
+
+		if (ftl_submit_write(wptr, io) == -EAGAIN) {
 			return 0;
 		}
-		wptr->current_io = NULL;
 	}
 
 	/* Make sure the band is prepared for writing */
