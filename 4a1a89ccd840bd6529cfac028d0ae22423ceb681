@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2387887_f14b45c4",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T05:35:02Z",
+      "side": 1,
+      "message": "we may be able to consolidate three check condition paths into one by using sc and sk.",
+      "revId": "4a1a89ccd840bd6529cfac028d0ae22423ceb681",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
