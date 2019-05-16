@@ -69,6 +69,9 @@ Run the script on the NVMe-oF target system:
 
     cd spdk
     sudo PYTHONPATH=$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py
+The script uses the config.json configuration file in the scripts/perf/nvmf directory by default. You can
+specify a different configuration file at runtime as shown below:
+sudo PYTHONPATH=$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py /path/to/config file/json config file
 
 The script uses another spdk script (scripts/rpc.py) so we pass the path to rpc.py by setting the Python path
 as a runtime environment parameter.

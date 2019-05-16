@@ -653,7 +653,14 @@ if __name__ == "__main__":
     spdk_zip_path = "/tmp/spdk.zip"
     target_results_dir = "/tmp/results"
 
-    with open("./scripts/perf/nvmf/config.json", "r") as config:
+    if (len(sys.argv) > 1):
+        config_file_path = sys.argv[1]
+    else:
+        script_full_dir = os.path.dirname(os.path.realpath(__file__))
+        config_file_path = os.path.join(script_full_dir, "config.json")
+
+    print("Using config file: %s" % config_file_path)
+    with open(config_file_path, "r") as config:
         data = json.load(config)
 
     initiators = []
