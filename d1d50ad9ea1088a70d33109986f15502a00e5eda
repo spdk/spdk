@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "d8940b95_99998eb7",
+        "filename": "doc/rpc_names.txt",
+        "patchSetId": 16
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-16T17:21:32Z",
+      "side": 1,
+      "message": "I 100% agree with differentiating all \"subsystem\" related RPCs between event and nvmf.",
+      "parentUuid": "81545808_f426bbe5",
+      "revId": "d1d50ad9ea1088a70d33109986f15502a00e5eda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a47b051a_d4234940",
         "filename": "doc/rpc_names.txt",
         "patchSetId": 16
