@@ -16,6 +16,24 @@
       "revId": "b81aa69cdea7c3eca9d7d23e28c4bb46903bd47b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc2e4a00_4a7171d4",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-16T02:34:36Z",
+      "side": 1,
+      "message": "hi changpeng,\n    let me double checking about this ,and will reply you. thanks.",
+      "parentUuid": "4c2ff40d_d005e98e",
+      "revId": "b81aa69cdea7c3eca9d7d23e28c4bb46903bd47b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
