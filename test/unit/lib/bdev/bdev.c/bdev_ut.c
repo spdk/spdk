@@ -225,11 +225,8 @@ bdev_ut_get_io_channel(void *ctx)
 	return spdk_get_io_channel(&g_bdev_ut_io_device);
 }
 
-static bool
-stub_io_type_supported(void *_bdev, enum spdk_bdev_io_type io_type)
-{
-	return true;
-}
+DEFINE_STUB(stub_io_type_supported, static bool, (void *_bdev, enum spdk_bdev_io_type io_type),
+	    true);
 
 static struct spdk_bdev_fn_table fn_table = {
 	.destruct = stub_destruct,
@@ -753,6 +750,45 @@ io_wait_cb(void *arg)
 	rc = spdk_bdev_read_blocks(entry->desc, entry->io_ch, NULL, 0, 1, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	entry->submitted = true;
+}
+
+static void
+bdev_io_types_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 4,
+		.bdev_io_cache_size = 2,
+	};
+	int rc;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	poll_threads();
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	/* WRITE and WRITE ZEROES are not supported */
+	MOCK_SET(stub_io_type_supported, false);
+	rc = spdk_bdev_write_zeroes_blocks(desc, io_ch, 0, 128, io_done, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+	MOCK_SET(stub_io_type_supported, true);
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
 }
 
 static void
@@ -1567,6 +1603,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
 		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL ||
 		CU_add_test(suite, "get_device_stat", get_device_stat_test) == NULL ||
+		CU_add_test(suite, "bdev_io_types", bdev_io_types_test) == NULL ||
 		CU_add_test(suite, "bdev_io_wait", bdev_io_wait_test) == NULL ||
 		CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test) == NULL ||
 		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
