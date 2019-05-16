@@ -1416,8 +1416,8 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	pdu->ctx = tcp_req;
-	iov_index = pdu->hdr.h2c_data.datao / ttransport->transport.opts.io_unit_size;
-	nvme_tcp_pdu_set_data(pdu, tcp_req->req.iov[iov_index].iov_base + (pdu->hdr.h2c_data.datao %
+	iov_index = h2c_data->datao / ttransport->transport.opts.io_unit_size;
+	nvme_tcp_pdu_set_data(pdu, tcp_req->req.iov[iov_index].iov_base + (h2c_data->datao %
 			      ttransport->transport.opts.io_unit_size), h2c_data->datal);
 	spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	return;
