@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c7f2c41_6c831311",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T05:08:36Z",
+      "side": 1,
+      "message": "both paths are good and consolidating unlock may be helpful to avoid bug.\n\n\tif (dev-\u003ereservation.holder) {\n\t\t/* reservation holder already exists */\n\t\tif (rtype !\u003d dev-\u003ereservation.rtype) {\n\t\t\tgoto conflict;\n\t\t}\n\t\tif (!spdk_scsi_pr_registrant_is_holder(dev, reg)) {\n\t\t\tgoto conflict;\n\t\t}\n\t} else {\n\t\t/* current I_T nexus is the first reservation holder */\n\t\tspdk_scsi_pr_reserve_reservation(dev, rtype, rkey, reg);\n\t}\n\n\tpthread_mutex_unlock(\u0026dev-\u003epr_lock);\n\n\treturn 0;",
+      "revId": "376f6ad9218f96fa3d1cd18160eb2dac537ff552",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
