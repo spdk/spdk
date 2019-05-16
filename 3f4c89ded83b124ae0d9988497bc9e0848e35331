@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "84619cf6_90a90dca",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-16T09:21:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47d44220_b6a8c94e",
+      "range": {
+        "startLine": 674,
+        "startChar": 1,
+        "endLine": 674,
+        "endChar": 90
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15150e69_c67767b5",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-15T11:40:36Z",
       "side": 1,
       "message": "This condition should take bit more in consideration. First as we already do, check if data buf is allocated and aligned. Then if there is separate_md - check if md_buf is allocated and aligned.\nIn this version of the code we do not check if there is separate md and whether the buffer is present.",
+      "range": {
+        "startLine": 677,
+        "startChar": 0,
+        "endLine": 678,
+        "endChar": 60
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2497401b_52e44087",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-16T09:21:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "15150e69_c67767b5",
       "range": {
         "startLine": 677,
         "startChar": 0,
@@ -94,6 +142,54 @@
     },
     {
       "key": {
+        "uuid": "03b7a20a_f679552c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-16T09:21:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fa6f071c_6a29e14f",
+      "range": {
+        "startLine": 720,
+        "startChar": 39,
+        "endLine": 720,
+        "endChar": 67
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad2583f6_b9e57f31",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-16T09:21:27Z",
+      "side": 1,
+      "message": "Keeping it here means that we\u0027re placing the metadata at the first available address. Moving it under md_separate condition would mean that in case buf_allocated \u003d\u003d true \u0026\u0026 buf_aligned \u003d\u003d true, the buffer would be unnecessarily shifted.",
+      "parentUuid": "5554881a_c6f60882",
+      "range": {
+        "startLine": 720,
+        "startChar": 3,
+        "endLine": 720,
+        "endChar": 67
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "205fcdcd_45fa2c43",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "89165f95_77ca84a6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-16T09:21:27Z",
+      "side": 1,
+      "message": "Why would we want to set bounce md_buf if md_buf passed by the user was already aligned?",
+      "parentUuid": "205fcdcd_45fa2c43",
+      "range": {
+        "startLine": 724,
+        "startChar": 0,
+        "endLine": 729,
+        "endChar": 4
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e629ecf2_8e2c04c0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -128,6 +248,30 @@
       "writtenOn": "2019-05-15T11:40:36Z",
       "side": 1,
       "message": "I wonder if this name will be confusing within bdev.c file - since we already have spdk_bdev_io_get_buf() [without _md_].",
+      "range": {
+        "startLine": 4368,
+        "startChar": 0,
+        "endLine": 4368,
+        "endChar": 23
+      },
+      "revId": "3f4c89ded83b124ae0d9988497bc9e0848e35331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3de6a2ee_c3e3f179",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4368,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-16T09:21:27Z",
+      "side": 1,
+      "message": "Yeah, I guess that can be a little confusing... I was aiming for it to be similar to spdk_bdev_io_get_iovec, which does the same thing for the data buffers. Any suggestions?",
+      "parentUuid": "e629ecf2_8e2c04c0",
       "range": {
         "startLine": 4368,
         "startChar": 0,
