@@ -81,6 +81,30 @@
       "revId": "66b4fcf3b6d5ab85dafd9964dfdad71265536f54",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ec80a31_7aa7c4b1",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1555,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-16T01:51:19Z",
+      "side": 1,
+      "message": "Thank you for correcting me. My comment was wrong. The general bdev layer splits IO to raid bdev, so both your change and the existing code are correct. Why I was wrong was that I thought that the existing code was (rand() % g_strip_size) + (g_strip_size * i).\n\nI have seen you add removing assert and adding tests in subsequent patches. But I was wrong and keeping assert will be better. Sorry for bothering you.",
+      "parentUuid": "473b323e_61f9fed4",
+      "range": {
+        "startLine": 1555,
+        "startChar": 11,
+        "endLine": 1555,
+        "endChar": 34
+      },
+      "revId": "66b4fcf3b6d5ab85dafd9964dfdad71265536f54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
