@@ -67,7 +67,7 @@ echo "NVMf target launched. pid: $nvmfpid"
 trap "iscsitestfini $1 $2; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid
 $rpc_py start_subsystem_init
-$rpc_py nvmf_create_transport -t RDMA -u 8192 -p 4
+$rpc_py nvmf_create_transport -t RDMA -u 8192
 echo "NVMf target has started."
 bdevs=$($rpc_py construct_malloc_bdev 64 512)
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
