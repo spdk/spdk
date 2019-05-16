@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d0d77ce_4b57555f",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-16T08:22:19Z",
+      "side": 1,
+      "message": "Would it make sense to rename this function to ftl_wptr_process_shutdown?\n\nIt isn\u0027t really consistent with `ftl_shutdown_complete`, which still accepts spdk_ftl_dev as a param.",
+      "range": {
+        "startLine": 599,
+        "startChar": 0,
+        "endLine": 599,
+        "endChar": 20
+      },
+      "revId": "3266ce12854ee5a18f3693318062f901f7503902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
