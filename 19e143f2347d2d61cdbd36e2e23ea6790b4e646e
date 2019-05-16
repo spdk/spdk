@@ -16,6 +16,24 @@
       "revId": "19e143f2347d2d61cdbd36e2e23ea6790b4e646e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0441758_6e0297ff",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-16T10:46:26Z",
+      "side": 1,
+      "message": "Because we might want to use smaller req_size with iov_cnt staying the same. Keep in mind that this won\u0027t cause any additional memory allocations (note the _ftl_io_init_iovec use) and the free on line 200 is only needed, because io-\u003eiov is a union (pointer to struct iovec, single struct iovec) that is accessed differently based on the iov_cnt.",
+      "parentUuid": "f916c28b_f6ed0868",
+      "revId": "19e143f2347d2d61cdbd36e2e23ea6790b4e646e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
