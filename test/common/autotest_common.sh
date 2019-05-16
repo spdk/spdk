@@ -236,6 +236,23 @@ function timing_finish() {
 	fi
 }
 
+function parse_common_script_args() {
+	TEST_MODE=
+	for i in "$@"; do
+		case "$i" in
+			--iso)
+				TEST_MODE=iso
+				;;
+			--transport=*)
+				TEST_TRANSPORT="${i#*=}"
+				;;
+			--sock=*)
+				TEST_SOCK="${i#*=}"
+				;;
+		esac
+	done
+}
+
 function create_test_list() {
 	grep -rshI --exclude="autotest_common.sh" --exclude="$rootdir/test/common/autotest_common.sh" -e "report_test_completion" $rootdir | sed 's/report_test_completion//g; s/[[:blank:]]//g; s/"//g;' > $output_dir/all_tests.txt || true
 }

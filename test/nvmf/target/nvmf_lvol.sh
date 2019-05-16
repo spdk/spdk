@@ -5,6 +5,8 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+parse_common_script_args $@
+
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 LVOL_BDEV_INIT_SIZE=20
@@ -15,8 +17,6 @@ rpc_py="$rootdir/scripts/rpc.py"
 set -e
 
 timing_enter lvol_integrity
-# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
-# e.g. sudo ./nvmf_lvol.sh iso
 nvmftestinit
 nvmfappstart "-m 0x7"
 

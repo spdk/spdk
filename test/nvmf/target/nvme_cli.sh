@@ -5,6 +5,8 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+parse_common_script_args $@
+
 if [ -z "${DEPENDENCY_DIR}" ]; then
         echo DEPENDENCY_DIR not defined!
         exit 1
@@ -20,8 +22,6 @@ rpc_py="$rootdir/scripts/rpc.py"
 set -e
 
 timing_enter nvme_cli
-# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
-# e.g. sudo ./nvme_cli.sh iso
 nvmftestinit
 nvmfappstart "-m 0xF"
 
