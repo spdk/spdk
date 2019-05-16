@@ -46,6 +46,23 @@
       "revId": "1ec77aec02e69d6d007295a945acdae7ddc34a19",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4414ec46_6955d760",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-16T16:59:58Z",
+      "side": 1,
+      "message": "You are using two different meanings for $1 here and on line 177 in the trap. If you were to run this iso and it failed to start the app, nvmftestfini wouldn\u0027t do anything.",
+      "revId": "1ec77aec02e69d6d007295a945acdae7ddc34a19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
