@@ -140,6 +140,30 @@
       "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7931dd44_ac458a8e",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-16T12:39:29Z",
+      "side": 1,
+      "message": "I still don\u0027t understand the purpose of these two assignments. You\u0027re setting lba_map.dma_buf for restore-\u003ebands[0] here. Then on line 274 you\u0027re doing exactly the same, this time for each band.",
+      "parentUuid": "07b966a7_d5473d54",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 265,
+        "endChar": 48
+      },
+      "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
