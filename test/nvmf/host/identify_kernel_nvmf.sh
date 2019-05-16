@@ -5,9 +5,9 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+parse_common_script_args $@
+
 set -e
-# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
-# e.g. sudo ./identify_kernel_nvmf.sh iso
 nvmftestinit
 
 RDMA_IP_LIST=$(get_available_rdma_ips)
