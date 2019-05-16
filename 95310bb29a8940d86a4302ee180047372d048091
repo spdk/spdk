@@ -22,6 +22,30 @@
       "revId": "95310bb29a8940d86a4302ee180047372d048091",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85c2e506_e582f392",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-16T14:44:40Z",
+      "side": 1,
+      "message": "Ack, agree it is better",
+      "parentUuid": "d5253313_970198b9",
+      "range": {
+        "startLine": 337,
+        "startChar": 25,
+        "endLine": 337,
+        "endChar": 29
+      },
+      "revId": "95310bb29a8940d86a4302ee180047372d048091",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
