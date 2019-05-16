@@ -199,6 +199,7 @@ function timing() {
 		export timing_stack="${timing_stack};${now}"
 		export test_stack="${test_stack};${testname}"
 	else
+		touch "$output_dir/timing.txt"
 		child_time=$(grep "^${test_stack:1};" $output_dir/timing.txt | awk '{s+=$2} END {print s}')
 
 		start_time=$(echo "$timing_stack" | sed -e 's@^.*;@@')
