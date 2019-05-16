@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "531e943f_be931c33",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-16T02:21:26Z",
+      "side": 1,
+      "message": "if we move the check at the beginning of the function, does that help for scanbuild ?",
+      "range": {
+        "startLine": 368,
+        "startChar": 1,
+        "endLine": 370,
+        "endChar": 2
+      },
+      "revId": "1ff1eab4822c8f37921022c1474f77892b51876a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
