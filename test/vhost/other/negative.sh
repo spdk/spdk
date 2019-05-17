@@ -46,6 +46,7 @@ $VHOST_APP -c /path/to/non_existing_file/conf -S $testdir -e 0x0 -s 1024 -d -h -
 if $VHOST_APP -c /path/to/non_existing_file/conf -f $SPDK_VHOST_SCSI_TEST_DIR/vhost.pid; then
 	fail "vhost started when specifying invalid config file"
 fi
+rm -f $SPDK_VHOST_SCSI_TEST_DIR/vhost.pid
 
 # Testing vhost start with invalid config. Vhost will exit with error as bdev module init failed
 if $VHOST_APP -c $testdir/invalid.config; then
