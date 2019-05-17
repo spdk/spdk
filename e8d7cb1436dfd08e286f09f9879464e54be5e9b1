@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b87a4fe5_cb1f3713",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 79
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-17T07:09:16Z",
+      "side": 1,
+      "message": "Wondering if this is really the most fair way to distribute the polls.\nThe last poll of whole group will always returns number of sockets % max_events. In worst case just a single socket.",
+      "range": {
+        "startLine": 1038,
+        "startChar": 0,
+        "endLine": 1041,
+        "endChar": 2
+      },
+      "revId": "e8d7cb1436dfd08e286f09f9879464e54be5e9b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
