@@ -98,6 +98,8 @@ while getopts 'xh-:' optchar; do
     esac
 done
 
+vhosttestinit $1
+
 notice "Get NVMe disks:"
 nvmes=($(iter_pci_class_code 01 08 02))
 
@@ -282,3 +284,5 @@ $rpc_py get_vhost_controllers
 
 notice "Shutting down SPDK vhost app..."
 spdk_vhost_kill
+
+vhosttestfini

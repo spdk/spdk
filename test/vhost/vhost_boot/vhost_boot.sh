@@ -56,6 +56,8 @@ if [[ -z $os_image ]]; then
 	exit 1
 fi
 
+vhosttestinit $1
+
 timing_enter vhost_boot
 trap 'err_clean "${FUNCNAME}" "${LINENO}"' ERR
 timing_enter start_vhost
@@ -112,3 +114,5 @@ spdk_vhost_kill
 timing_exit clean_vhost
 
 timing_exit vhost_boot
+
+vhosttestfini

@@ -71,6 +71,8 @@ if [[ ! -r "$fio_job" ]]; then
 	fail "no fio job file specified"
 fi
 
+vhosttestinit $1
+
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 vm_kill_all
@@ -263,3 +265,5 @@ else
 	notice ""
 	notice "==============="
 fi
+
+vhosttestfini
