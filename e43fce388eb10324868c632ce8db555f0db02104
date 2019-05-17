@@ -16,6 +16,24 @@
       "revId": "e43fce388eb10324868c632ce8db555f0db02104",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ba16b8a_0235b2ac",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-17T10:59:34Z",
+      "side": 1,
+      "message": "Done. Please see this patch for refactoring spdk_vhost_vring_desc_to_iov(): https://review.gerrithub.io/c/spdk/spdk/+/454878\n\nand this patch for removing the 2MB alignment check entirely: https://review.gerrithub.io/c/spdk/spdk/+/454879",
+      "parentUuid": "43f32dda_bc81bca8",
+      "revId": "e43fce388eb10324868c632ce8db555f0db02104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
