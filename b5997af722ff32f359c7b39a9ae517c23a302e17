@@ -80,6 +80,30 @@
       "revId": "b5997af722ff32f359c7b39a9ae517c23a302e17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52e0fd76_953099a8",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T01:25:01Z",
+      "side": 1,
+      "message": "I got it. If you can merge related UT code into this patch, it may be helpful to remove this check.",
+      "parentUuid": "b6347b32_89643f5c",
+      "range": {
+        "startLine": 255,
+        "startChar": 0,
+        "endLine": 270,
+        "endChar": 2
+      },
+      "revId": "b5997af722ff32f359c7b39a9ae517c23a302e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
