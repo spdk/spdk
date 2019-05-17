@@ -181,7 +181,7 @@ reset_device(struct virtio_net *dev)
  * there is a new virtio device being attached).
  */
 int
-vhost_new_device(uint64_t features)
+vhost_new_device(uint64_t features, struct vhost_device_ops const *ops)
 {
 	struct virtio_net *dev;
 	int i;
@@ -207,6 +207,7 @@ vhost_new_device(uint64_t features)
 	vhost_devices[i] = dev;
 	dev->vid = i;
 	dev->features = features;
+	dev->notify_ops = ops;
 
 	return i;
 }
