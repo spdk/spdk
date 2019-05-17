@@ -56,6 +56,30 @@
       "revId": "b5997af722ff32f359c7b39a9ae517c23a302e17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6347b32_89643f5c",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-17T01:12:14Z",
+      "side": 1,
+      "message": "Scanbuild always complains about this, I need to look it\u0027s introduced by UT, if so I can add assertion there.",
+      "parentUuid": "7fbf322a_bc03180e",
+      "range": {
+        "startLine": 255,
+        "startChar": 0,
+        "endLine": 270,
+        "endChar": 2
+      },
+      "revId": "b5997af722ff32f359c7b39a9ae517c23a302e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
