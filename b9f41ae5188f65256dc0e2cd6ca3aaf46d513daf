@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "bd2c7a06_859dc3e6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-17T08:44:34Z",
+      "side": 1,
+      "message": "tried this, if do this,\n20190517011529/spdk/lib/nvmf/ctrlr.c:85:6: warning: Access to field \u0027keep_alive_poller\u0027 results in a dereference of a null pointer (loaded from variable \u0027ctrlr\u0027)\n        if (ctrlr-\u003ekeep_alive_poller \u003d\u003d NULL) {\n            ^~~~~~~~~~~~~~~~~~~~~~~~\n1 warning generated.",
+      "parentUuid": "f173daef_4cd0d732",
+      "revId": "b9f41ae5188f65256dc0e2cd6ca3aaf46d513daf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "44a447a2_edccbe71",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
