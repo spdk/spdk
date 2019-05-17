@@ -50,6 +50,8 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
+vhosttestinit $1
+
 . $(readlink -e "$(dirname $0)/../common.sh") || exit 1
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
@@ -98,3 +100,5 @@ $rpc_py delete_nvme_controller Nvme0
 
 notice "Shutting down SPDK vhost app..."
 spdk_vhost_kill
+
+vhosttestfini
