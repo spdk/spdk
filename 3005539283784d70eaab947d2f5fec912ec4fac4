@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24770b76_341cb87f",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-17T08:19:47Z",
+      "side": 1,
+      "message": "Please see my comment on the previous patch.\n\nWe don\u0027t really need any static command line configuration here and the less we have, the better. Historically vhost was a standalone SPDK application, but now it\u0027s just an SPDK module. We still have the vhost application (this file) for compatibility reasons, but vhost can be run e.g. through spdk_tgt app as well. I\u0027d still vote for removing `chosen_trans` and detecting the transport at runtime basing on the provided vhost device name.",
+      "revId": "3005539283784d70eaab947d2f5fec912ec4fac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
