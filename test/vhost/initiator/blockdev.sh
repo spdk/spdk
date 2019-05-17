@@ -41,6 +41,8 @@ while getopts 'h-:' optchar; do
 	esac
 done
 
+vhosttestinit $1
+
 source $testdir/autotest.config
 PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
@@ -203,3 +205,5 @@ $RPC_PY delete_nvme_controller Nvme0
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
 timing_exit spdk_vhost_kill
+
+vhosttestfini
