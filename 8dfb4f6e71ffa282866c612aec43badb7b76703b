@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd367586_d1110b1f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-17T07:16:18Z",
+      "side": 1,
+      "message": "Declaration for spdk_vtophys_pci_device_added() is okay, but this one not really.\n\nIsn\u0027t there any other way to get rte_pci_device from bdf? This function is not a part of public DPDK API and might change without any further notice. I\u0027d like to avoid relying on it.",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 97
+      },
+      "revId": "8dfb4f6e71ffa282866c612aec43badb7b76703b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c99da12_f3d8319b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-17T07:16:18Z",
+      "side": 1,
+      "message": "should we check for dev \u003d\u003d NULL?",
+      "revId": "8dfb4f6e71ffa282866c612aec43badb7b76703b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
