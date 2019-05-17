@@ -22,6 +22,30 @@
       "revId": "ef7f8df8d1e3db5a5785c34784150d528fa49a0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "927c3785_57b92125",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1015163
+      },
+      "writtenOn": "2019-05-17T16:42:39Z",
+      "side": 1,
+      "message": "Totally agree with you about that. Extending the `construct_vhost_scsi/blk_controller` RPC calls sounds good to me too. Maybe even better actually because we could then create multiple vhost controllers over multiple virtio-vhost-user devices from within the same SPDK vhost app instance.\n\nFYI, here is how I came to this solution:\n\nUnlike the AF_UNIX transport, where SPDK supports multiple connections on the same vhost controller, there is 1:1 correspondence among virtio-vhost-user devices and vhost controllers. This means that we can have a single master VM connected to one vhost controller via a virtio-vhost-user device. So, it was technically the same having a command-line parameter in the vhost app and extending the `construct_vhost_scsi/blk_controller` RPC calls. I just chose the first solution (maybe a little bit easier).\n\nSo, I will try to extend the RPC calls. Should I add a `--trtype` option like in case of `construct_virtio_dev` RPC call or directly pass the bdf address as the name of the controller? I am in favour of the first option because this makes it obvious to the end user that there are two available transports.",
+      "parentUuid": "bfef3266_1542ba65",
+      "range": {
+        "startLine": 774,
+        "startChar": 37,
+        "endLine": 774,
+        "endChar": 48
+      },
+      "revId": "ef7f8df8d1e3db5a5785c34784150d528fa49a0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
