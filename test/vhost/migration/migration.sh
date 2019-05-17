@@ -53,6 +53,8 @@ for param in "$@"; do
 	esac
 done
 
+vhosttestinit $1
+
 . $(readlink -e "$(dirname $0)/../common.sh") || exit 1
 MIGRATION_DIR=$(readlink -f $(dirname $0))
 
@@ -149,3 +151,5 @@ notice "Migration Test SUCCESS"
 notice "==============="
 
 trap - SIGINT ERR EXIT
+
+vhosttestfini

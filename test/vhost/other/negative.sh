@@ -32,6 +32,8 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
+vhosttestinit $1
+
 trap error_exit ERR
 
 VHOST_APP="$SPDK_BUILD_DIR/app/vhost/vhost"
@@ -143,3 +145,5 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	notice "EXIT DONE"
 	notice "==============="
 fi
+
+vhosttestfini

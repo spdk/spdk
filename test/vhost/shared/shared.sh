@@ -17,6 +17,8 @@ function run_spdk_fio() {
 	--spdk_mem=1024 --spdk_single_seg=1 --spdk_conf=$testdir/bdev.conf "$@"
 }
 
+vhosttestinit $1
+
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR SIGTERM SIGABRT
 
 spdk_vhost_run
@@ -30,3 +32,5 @@ sleep 1
 run_spdk_fio --size=50% --offset=50% --filename=VirtioBlk0
 wait $run_fio_pid
 spdk_vhost_kill
+
+vhosttestfini
