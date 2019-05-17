@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1fe04e8_4e35baec",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-17T06:18:10Z",
+      "side": 1,
+      "message": "Can we set it to UINT64_MAX? We might try to register vaddr 0 as a part of unit tests and currently `start` will be always bumped to SIZE_2MB.",
+      "range": {
+        "startLine": 574,
+        "startChar": 27,
+        "endLine": 574,
+        "endChar": 28
+      },
+      "revId": "5dfdaf2c38142b925d540f42317cfa8ee7870697",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
