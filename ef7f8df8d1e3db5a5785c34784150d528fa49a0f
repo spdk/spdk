@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfef3266_1542ba65",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-17T08:08:31Z",
+      "side": 1,
+      "message": "That looks very hacky. We can\u0027t just store a bdf inside a variable named dev_dirname.\n\nIs there any reason not to use `name` for the bdf? Then the user can provide it at runtime via RPCs. We also won\u0027t have to touch spdk_vhost_dev_find() - it would just work for virtio-vhost-user.",
+      "range": {
+        "startLine": 774,
+        "startChar": 37,
+        "endLine": 774,
+        "endChar": 48
+      },
+      "revId": "ef7f8df8d1e3db5a5785c34784150d528fa49a0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
