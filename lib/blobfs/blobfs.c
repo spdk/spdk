@@ -1473,13 +1473,21 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	spdk_bs_delete_blob(fs->bs, blobid, blob_delete_cb, req);
 }
 
+static uint64_t
+fs_name_to_uint64(const char *name)
+{
+	uint64_t result = 0;
+	memcpy(&result, name, spdk_min(sizeof(result), strlen(name)));
+	return result;
+}
+
 static void
 __fs_delete_file_done(void *arg, int fserrno)
 {
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	spdk_trace_record(TRACE_BLOBFS_DELETE_DONE, 0, 0, 0, *((uint64_t *)args->op.delete.name));
+	spdk_trace_record(TRACE_BLOBFS_DELETE_DONE, 0, 0, 0, fs_name_to_uint64(args->op.delete.name));
 	__wake_caller(args, fserrno);
 }
 
@@ -1489,7 +1497,7 @@ __fs_delete_file(void *arg)
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	spdk_trace_record(TRACE_BLOBFS_DELETE_START, 0, 0, 0, *((uint64_t *)args->op.delete.name));
+	spdk_trace_record(TRACE_BLOBFS_DELETE_START, 0, 0, 0, fs_name_to_uint64(args->op.delete.name));
 	spdk_fs_delete_file_async(args->fs, args->op.delete.name, __fs_delete_file_done, req);
 }
 
