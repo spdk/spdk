@@ -2,7 +2,6 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
-source $rootdir/test/vhost/hotplug/common.sh
 
 dry_run=false
 no_shutdown=false
