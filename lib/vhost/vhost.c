@@ -479,9 +479,8 @@ int
 spdk_vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 			     uint16_t *iov_index, const struct vring_desc *desc)
 {
-	uint32_t remaining = desc->len;
-	uint32_t to_boundary;
-	uint32_t len;
+	uint64_t len;
+	uint64_t remaining = desc->len;
 	uintptr_t payload = desc->addr;
 	uintptr_t vva;
 
@@ -490,30 +489,11 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *
 			SPDK_ERRLOG("SPDK_VHOST_IOVS_MAX(%d) reached\n", SPDK_VHOST_IOVS_MAX);
 			return -1;
 		}
-		vva = (uintptr_t)rte_vhost_gpa_to_vva(vsession->mem, payload);
-		if (vva == 0) {
+		len = remaining;
+		vva = (uintptr_t)rte_vhost_va_from_guest_pa(vsession->mem, payload, &len);
+		if (vva == 0 || len == 0) {
 			SPDK_ERRLOG("gpa_to_vva(%p) == NULL\n", (void *)payload);
 			return -1;
-		}
-		to_boundary = VALUE_2MB - _2MB_OFFSET(payload);
-		if (spdk_likely(remaining <= to_boundary)) {
-			len = remaining;
-		} else {
-			/*
-			 * Descriptor crosses a 2MB hugepage boundary.  vhost memory regions are allocated
-			 *  from hugepage memory, so this means this descriptor may be described by
-			 *  discontiguous vhost memory regions.  Do not blindly split on the 2MB boundary,
-			 *  only split it if the two sides of the boundary do not map to the same vhost
-			 *  memory region.  This helps ensure we do not exceed the max number of IOVs
-			 *  defined by SPDK_VHOST_IOVS_MAX.
-			 */
-			len = to_boundary;
-			while (len < remaining) {
-				if (vva + len != (uintptr_t)rte_vhost_gpa_to_vva(vsession->mem, payload + len)) {
-					break;
-				}
-				len += spdk_min(remaining - len, VALUE_2MB);
-			}
 		}
 		iov[*iov_index].iov_base = (void *)vva;
 		iov[*iov_index].iov_len = len;
