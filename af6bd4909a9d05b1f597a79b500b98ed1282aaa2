@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96bfa237_6391d172",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-17T04:37:53Z",
+      "side": 1,
+      "message": "Could you explain necessity of adding this enum type in commit message?",
+      "revId": "af6bd4909a9d05b1f597a79b500b98ed1282aaa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8dc8bbbf_841e26be",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-17T04:37:53Z",
+      "side": 1,
+      "message": "The behaviour of strlen(NULL) is undefined, so we should call strlen(passwd) after line 625.",
+      "revId": "af6bd4909a9d05b1f597a79b500b98ed1282aaa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
