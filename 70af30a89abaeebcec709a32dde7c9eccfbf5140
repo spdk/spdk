@@ -22,6 +22,30 @@
       "revId": "70af30a89abaeebcec709a32dde7c9eccfbf5140",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e900867d_8fb43d11",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-17T12:47:32Z",
+      "side": 1,
+      "message": "I\u0027ll check it out, thanks!",
+      "parentUuid": "bbd6c096_f3c2110e",
+      "range": {
+        "startLine": 116,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 16
+      },
+      "revId": "70af30a89abaeebcec709a32dde7c9eccfbf5140",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
