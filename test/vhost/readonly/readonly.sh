@@ -46,6 +46,8 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
+vhosttestinit $1
+
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 if [[ $EUID -ne 0 ]]; then
@@ -131,3 +133,5 @@ blk_ro_tc1
 $rpc_py delete_nvme_controller Nvme0
 
 spdk_vhost_kill
+
+vhosttestfini
