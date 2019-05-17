@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f173daef_4cd0d732",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-17T07:10:33Z",
+      "side": 1,
+      "message": "Could you trying this modification:\n\n@@ -76,11 +76,6 @@ spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,\n static void\n spdk_nvmf_ctrlr_stop_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)\n {\n-       if (!ctrlr) {\n-               SPDK_ERRLOG(\"Controller is NULL\\n\");\n-               return;\n-       }\n-\n        if (ctrlr-\u003ekeep_alive_poller \u003d\u003d NULL) {\n                return;\n        }\n\nAlthough I\u0027m not familiar with scanbuild.",
+      "parentUuid": "a8188804_92f88c39",
+      "revId": "b9f41ae5188f65256dc0e2cd6ca3aaf46d513daf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "44a447a2_edccbe71",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
