@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbd6c096_f3c2110e",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T04:53:40Z",
+      "side": 1,
+      "message": "we may have to update this to return meaningful value because raid_ch-\u003ebase_channel will be configured in raid_bdev_create_cb by calling spdk_bdev_get_io_channel.",
+      "range": {
+        "startLine": 116,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 16
+      },
+      "revId": "70af30a89abaeebcec709a32dde7c9eccfbf5140",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
