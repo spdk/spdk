@@ -836,20 +836,27 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 		return rc;
 	}
 
+	/* Always start extent table on a new page */
+	rc = _spdk_blob_serialize_add_page(blob, pages, page_count, &cur_page);
+	if (rc < 0) {
+		return rc;
+	}
+
 	/* Serialize extents */
 	last_cluster = 0;
 	while (last_cluster < blob->active.num_clusters) {
+		/* Start extents on a new page */
+		rc = _spdk_blob_serialize_add_page(blob, pages, page_count,
+						   &cur_page);
+		if (rc < 0) {
+			return rc;
+		}
+
 		_spdk_blob_serialize_extent(blob, last_cluster, &last_cluster,
 					    buf, remaining_sz);
 
 		if (last_cluster == blob->active.num_clusters) {
 			break;
-		}
-
-		rc = _spdk_blob_serialize_add_page(blob, pages, page_count,
-						   &cur_page);
-		if (rc < 0) {
-			return rc;
 		}
 
 		buf = (uint8_t *)cur_page->descriptors;
