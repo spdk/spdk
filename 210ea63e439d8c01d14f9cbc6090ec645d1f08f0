@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80ca473e_67c7b83d",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-17T21:38:50Z",
+      "side": 1,
+      "message": "Why is there no public virtio header for you to use? This isn\u0027t so much a comment on this patch, as a comment on the state of our virtio initiator library.",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b802f2aa_d53eeba8",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-17T21:38:50Z",
+      "side": 1,
+      "message": "This fuzz_io_ctx doesn\u0027t need to be a global. You can allocate one and pass a pointer around to it. This will be useful if you want to have multiple threads fuzzing at once in the future.",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "343546e9_0a86e7fb",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-17T21:38:50Z",
+      "side": 1,
+      "message": "This will only return values up to RAND_MAX. I don\u0027t know what that is on this system, but it\u0027s at most MAX_INT due to the return type. You\u0027ll likely want to look at what RAND_MAX actually is, then construct the address using something like:\n\naddress \u003d (rand() \u003c\u003c 32) | rand();\n\nThen you\u0027ll actually get addresses across the entire range.",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37a35868_ca901db3",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-17T21:38:50Z",
+      "side": 1,
+      "message": "consider using a mempool with more than one of these buffers.",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06d90481_0e7cc958",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-17T21:38:50Z",
+      "side": 1,
+      "message": "Maybe move setting all of the iov_req and iov_resp values inside of these craft* functions",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "630a4144_f660ece8",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-17T21:38:50Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to pre-allocate memory",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "658ddc12_222edbae",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-17T21:38:50Z",
+      "side": 1,
+      "message": "Consider using the full spdk app framework. It may give us more flexibility in the future.",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
