@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c95cdb7b_3040a3d8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T00:08:25Z",
+      "side": 1,
+      "message": "inlining bdev_io-\u003eu.bdev.md_buf \u003d md_buf here may bey easier to read?",
+      "range": {
+        "startLine": 540,
+        "startChar": 1,
+        "endLine": 540,
+        "endChar": 24
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cba743a4_3f736add",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T00:08:25Z",
+      "side": 1,
+      "message": "separating two patches may be better:\n1. in a new patch, just factor out the current check if orig_iovcnt is NULL into a helper function _bdev_io_has_bounce_buf.\n2. in this patch, add the check if orig_md_buf is NULL into the _bdev_io_has_bounce_buf",
+      "range": {
+        "startLine": 620,
+        "startChar": 0,
+        "endLine": 620,
+        "endChar": 23
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d7fdd1a_06b45af6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T00:08:25Z",
+      "side": 1,
+      "message": "this check is duplicated with the line 3698. Either one can be removed?",
+      "range": {
+        "startLine": 629,
+        "startChar": 1,
+        "endLine": 629,
+        "endChar": 41
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff06857b_3fe7a43e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T00:08:25Z",
+      "side": 1,
+      "message": "meaning of buf_allocated is changed. Could we insert a patch for this change before this patch?",
+      "range": {
+        "startLine": 679,
+        "startChar": 0,
+        "endLine": 680,
+        "endChar": 78
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aabc5708_86ccb6a5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2659,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T00:08:25Z",
+      "side": 1,
+      "message": "this md_separate is whether md is separate in payload, and the following spdk_bdev_is_md_separate decides whether bdev accepts separate md.\n\nso md_separate_payload or anything may avoid misread.",
+      "range": {
+        "startLine": 2659,
+        "startChar": 77,
+        "endLine": 2659,
+        "endChar": 88
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc82f72f_4f86c27a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2660,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T00:08:25Z",
+      "side": 1,
+      "message": "the following check is nice but this function ls called in every read or write I/O. So adding if (spdk_likely(!md_separate)) first will be better to avoid performance degradation.",
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a1b291f_9fdc952f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2662,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T00:08:25Z",
+      "side": 1,
+      "message": "is is_md_separate is false, md_buf is not transferred anyway. So we may be able to remove this check.",
+      "range": {
+        "startLine": 2662,
+        "startChar": 2,
+        "endLine": 2662,
+        "endChar": 39
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b922b268_55829b8a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2671,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-17T00:08:25Z",
+      "side": 1,
+      "message": "Could we separate introducing _spdk_bdev_read_blocks_with_md into an intermediate patch?\n\nWe can add the code for md in this patch then.",
+      "range": {
+        "startLine": 2671,
+        "startChar": 0,
+        "endLine": 2671,
+        "endChar": 30
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
