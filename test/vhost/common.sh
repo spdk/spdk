@@ -4,12 +4,9 @@ set -e
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 
 BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
-
-# Default running dir -> spdk/..
-[[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../
-
-TEST_DIR="$(mkdir -p $TEST_DIR && cd $TEST_DIR && echo $PWD)"
 SPDK_BUILD_DIR=$BASE_DIR/../../
+
+TEST_DIR=$(readlink -f $SPDK_BUILD_DIR/..)
 
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
 
@@ -22,7 +19,6 @@ fi
 echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 
 VM_BASE_DIR="$TEST_DIR/vms"
-
 
 mkdir -p $TEST_DIR
 
@@ -469,6 +465,8 @@ function vm_kill_all()
 	for vm in $(vm_list_all); do
 		vm_kill $vm
 	done
+
+	rm -rf $VM_BASE_DIR
 }
 
 # Shutdown all VM in $VM_BASE_DIR
@@ -506,6 +504,8 @@ function vm_shutdown_all()
 		((timeo-=1))
 		sleep 1
 	done
+
+	rm -rf $VM_BASE_DIR
 
 	$shell_restore_x
 	error "Timeout waiting for some VMs to shutdown"
