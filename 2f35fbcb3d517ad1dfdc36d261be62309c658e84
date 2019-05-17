@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8866c20b_a3aed34b",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-05-17T07:47:21Z",
+      "side": 1,
+      "message": "Usually,\"spdk_strtol(optarg, 10)\" can work well. I looked into the code carefully and retest, then found the root cause is \"s:\".  :)",
+      "range": {
+        "startLine": 450,
+        "startChar": 39,
+        "endLine": 450,
+        "endChar": 40
+      },
+      "revId": "2f35fbcb3d517ad1dfdc36d261be62309c658e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e47068dc_c5355944",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-05-17T07:47:21Z",
+      "side": 1,
+      "message": "Now it can be changed back to spdk_strtol(optarg, 10). That\u0027s right. When \"s\", optarg is null(report core dumped), argv[optind] can find next parameter.",
+      "range": {
+        "startLine": 465,
+        "startChar": 16,
+        "endLine": 465,
+        "endChar": 45
+      },
+      "revId": "2f35fbcb3d517ad1dfdc36d261be62309c658e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5e47377_4ddcc42a",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-05-17T07:47:21Z",
+      "side": 1,
+      "message": "Is this can be replaced by error_test?",
+      "range": {
+        "startLine": 470,
+        "startChar": 19,
+        "endLine": 470,
+        "endChar": 48
+      },
+      "revId": "2f35fbcb3d517ad1dfdc36d261be62309c658e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
