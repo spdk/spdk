@@ -710,6 +710,7 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 
 		f = file_alloc(fs);
 		if (f == NULL) {
+			SPDK_ERRLOG("Cannot allocate file to handle deleted file on disk\n");
 			args->fn.fs_op_with_handle(args->arg, fs, -ENOMEM);
 			free_fs_request(req);
 			return;
@@ -949,6 +950,7 @@ spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 
 	req = alloc_fs_request(channel);
 	if (req == NULL) {
+		SPDK_ERRLOG("Cannot allocate stat req on file=%s\n", name);
 		return -ENOMEM;
 	}
 
@@ -1053,12 +1055,14 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 
 	file = file_alloc(fs);
 	if (file == NULL) {
+		SPDK_ERRLOG("Cannot allocate new file for creation\n");
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
+		SPDK_ERRLOG("Cannot allocate create async req for file=%s\n", name);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -1106,6 +1110,7 @@ spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx, 
 
 	req = alloc_fs_request(channel);
 	if (req == NULL) {
+		SPDK_ERRLOG("Cannot allocate req to create file=%s\n", name);
 		return -ENOMEM;
 	}
 
@@ -1200,6 +1205,7 @@ spdk_fs_open_file_async(struct spdk_filesystem *fs, const char *name, uint32_t f
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
+		SPDK_ERRLOG("Cannot allocate async open req for file=%s\n", name);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
@@ -1253,6 +1259,7 @@ spdk_fs_open_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 
 	req = alloc_fs_request(channel);
 	if (req == NULL) {
+		SPDK_ERRLOG("Cannot allocate req for opening file=%s\n", name);
 		return -ENOMEM;
 	}
 
@@ -1338,6 +1345,8 @@ spdk_fs_rename_file_async(struct spdk_filesystem *fs,
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
+		SPDK_ERRLOG("Cannot allocate rename async req for renaming file from %s to %s\n", old_name,
+			    new_name);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -1392,6 +1401,7 @@ spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 
 	req = alloc_fs_request(channel);
 	if (req == NULL) {
+		SPDK_ERRLOG("Cannot allocate rename req for file=%s\n", old_name);
 		return -ENOMEM;
 	}
 
@@ -1436,14 +1446,14 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 
 	f = fs_find_file(fs, name);
 	if (f == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "Cannot find the file=%s to deleted\n", name);
+		SPDK_ERRLOG("Cannot find the file=%s to deleted\n", name);
 		cb_fn(cb_arg, -ENOENT);
 		return;
 	}
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
-		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "Cannot allocate the req for the file=%s to deleted\n", name);
+		SPDK_ERRLOG("Cannot allocate the req for the file=%s to deleted\n", name);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -2543,6 +2553,7 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 
 	sync_req = alloc_fs_request(channel);
 	if (!sync_req) {
+		SPDK_ERRLOG("Cannot allocate sync req for file=%s\n", file->name);
 		pthread_spin_unlock(&file->lock);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -2551,6 +2562,7 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 
 	flush_req = alloc_fs_request(channel);
 	if (!flush_req) {
+		SPDK_ERRLOG("Cannot allocate flush req for file=%s\n", file->name);
 		pthread_spin_unlock(&file->lock);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -2665,6 +2677,7 @@ spdk_file_close_async(struct spdk_file *file, spdk_file_op_complete cb_fn, void 
 
 	req = alloc_fs_request(file->fs->md_target.md_fs_channel);
 	if (req == NULL) {
+		SPDK_ERRLOG("Cannot allocate close async req for file=%s\n", file->name);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -2696,6 +2709,7 @@ spdk_file_close(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx)
 
 	req = alloc_fs_request(channel);
 	if (req == NULL) {
+		SPDK_ERRLOG("Cannot allocate close req for file=%s\n", file->name);
 		return -ENOMEM;
 	}
 
