@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43f32dda_bc81bca8",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-17T07:31:30Z",
+      "side": 1,
+      "message": "You risk having a security issue without this check. spdk_vhost_vring_desc_to_iov() can split a memory region contiguous in the guest physical address space into multiple non-contiguous chunks in the virtual address space, but it assumes the memory is backed by hugepages and doesn\u0027t check if the end of the translated buffer lies still within the guest\u0027s memory region. It only checks the starting 2MB address boundary and assumes the next 2MB is valid memory.\n\nWe need to do some more changes to spdk_vhost_vring_desc_to_iov() to make it work for non-2MB-multiple memory regions. I\u0027ll look into that.",
+      "revId": "e43fce388eb10324868c632ce8db555f0db02104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
