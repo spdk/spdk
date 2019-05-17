@@ -33,6 +33,8 @@ function usage()
 	echo "    --vm_image=PATH   Path to VM image used in these tests"
 }
 
+parse_common_script_args $@
+
 while getopts 'h-:' optchar; do
 	case "$optchar" in
 		-)
@@ -55,6 +57,8 @@ if [[ -z $os_image ]]; then
 	echo "No path to os image is given"
 	exit 1
 fi
+
+vhosttestinit
 
 timing_enter vhost_boot
 trap 'err_clean "${FUNCNAME}" "${LINENO}"' ERR
@@ -112,3 +116,5 @@ spdk_vhost_kill
 timing_exit clean_vhost
 
 timing_exit vhost_boot
+
+vhosttestfini

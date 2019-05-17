@@ -33,6 +33,8 @@ function clean_lvol_cfg()
 	$rpc_py destroy_lvol_store -l lvol_store
 }
 
+parse_common_script_args $@
+
 while getopts 'xh-:' optchar; do
 	case "$optchar" in
 		-)
@@ -49,6 +51,8 @@ while getopts 'xh-:' optchar; do
 	*) usage $0 "Invalid argument '$OPTARG'"
 	esac
 done
+
+vhosttestinit
 
 . $(readlink -e "$(dirname $0)/../common.sh") || exit 1
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
@@ -98,3 +102,5 @@ $rpc_py delete_nvme_controller Nvme0
 
 notice "Shutting down SPDK vhost app..."
 spdk_vhost_kill
+
+vhosttestfini

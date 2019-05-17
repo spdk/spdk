@@ -29,6 +29,8 @@ function usage()
 	echo "-x                        set -x for script debug"
 }
 
+parse_common_script_args $@
+
 while getopts 'xh-:' optchar; do
 	case "$optchar" in
 	-)
@@ -45,6 +47,8 @@ while getopts 'xh-:' optchar; do
 	*)	usage $0 "Invalid argument '$OPTARG'" && exit 1
 	esac
 done
+
+vhosttestinit
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
@@ -131,3 +135,5 @@ blk_ro_tc1
 $rpc_py delete_nvme_controller Nvme0
 
 spdk_vhost_kill
+
+vhosttestfini

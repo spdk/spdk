@@ -75,6 +75,8 @@ function clean_lvol_cfg()
     done
 }
 
+parse_common_script_args $@
+
 while getopts 'xh-:' optchar; do
     case "$optchar" in
         -)
@@ -97,6 +99,8 @@ while getopts 'xh-:' optchar; do
     *) usage $0 "Invalid argument '$OPTARG'"
     esac
 done
+
+vhosttestinit
 
 notice "Get NVMe disks:"
 nvmes=($(iter_pci_class_code 01 08 02))
@@ -282,3 +286,5 @@ $rpc_py get_vhost_controllers
 
 notice "Shutting down SPDK vhost app..."
 spdk_vhost_kill
+
+vhosttestfini

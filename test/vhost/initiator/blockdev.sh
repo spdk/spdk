@@ -26,6 +26,8 @@ function usage()
 	echo "    --fiopath=PATH    Path to fio directory on host [default=$FIO_PATH]"
 }
 
+parse_common_script_args $@
+
 while getopts 'h-:' optchar; do
 	case "$optchar" in
 		-)
@@ -40,6 +42,8 @@ while getopts 'h-:' optchar; do
 		*) usage $0 "Invalid argument '$optchar'" && exit 1 ;;
 	esac
 done
+
+vhosttestinit
 
 source $testdir/autotest.config
 PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
@@ -203,3 +207,5 @@ $RPC_PY delete_nvme_controller Nvme0
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
 timing_exit spdk_vhost_kill
+
+vhosttestfini

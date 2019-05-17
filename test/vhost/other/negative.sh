@@ -16,6 +16,8 @@ function usage()
 	exit 0
 }
 
+parse_common_script_args $@
+
 run_in_background=false
 while getopts 'xh-:' optchar; do
 	case "$optchar" in
@@ -31,6 +33,8 @@ while getopts 'xh-:' optchar; do
 	*) usage $0 "Invalid argument '$optchar'" ;;
 	esac
 done
+
+vhosttestinit
 
 trap error_exit ERR
 
@@ -143,3 +147,5 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	notice "EXIT DONE"
 	notice "==============="
 fi
+
+vhosttestfini

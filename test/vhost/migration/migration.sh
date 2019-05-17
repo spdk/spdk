@@ -32,6 +32,8 @@ function usage()
 	echo "-x                        set -x for script debug"
 }
 
+parse_common_script_args $@
+
 for param in "$@"; do
 	case "$param" in
 		--help|-h)
@@ -52,6 +54,8 @@ for param in "$@"; do
 			exit 1;;
 	esac
 done
+
+vhosttestinit
 
 . $(readlink -e "$(dirname $0)/../common.sh") || exit 1
 MIGRATION_DIR=$(readlink -f $(dirname $0))
@@ -149,3 +153,5 @@ notice "Migration Test SUCCESS"
 notice "==============="
 
 trap - SIGINT ERR EXIT
+
+vhosttestfini

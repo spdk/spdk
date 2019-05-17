@@ -43,6 +43,8 @@ function usage()
 	exit 0
 }
 
+parse_common_script_args $@
+
 #default raw file is NVMe drive
 
 while getopts 'xh-:' optchar; do
@@ -70,6 +72,8 @@ shift $(( OPTIND - 1 ))
 if [[ ! -r "$fio_job" ]]; then
 	fail "no fio job file specified"
 fi
+
+vhosttestinit
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
@@ -263,3 +267,5 @@ else
 	notice ""
 	notice "==============="
 fi
+
+vhosttestfini
