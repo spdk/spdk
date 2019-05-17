@@ -71,6 +71,7 @@ struct bdevio_request {
 };
 
 struct io_target *g_io_targets = NULL;
+struct io_target *g_current_io_target = NULL;
 
 static void
 execute_spdk_function(spdk_event_fn fn, void *arg1, void *arg2)
@@ -357,48 +358,44 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 	char	*rx_buf = NULL;
 	int	rc;
 
-	target = g_io_targets;
-	while (target != NULL) {
-		if (data_length < spdk_bdev_get_block_size(target->bdev) ||
-		    data_length / spdk_bdev_get_block_size(target->bdev) > spdk_bdev_get_num_blocks(target->bdev)) {
-			target = target->next;
-			continue;
-		}
+	target = g_current_io_target;
 
-		if (!write_zeroes) {
-			initialize_buffer(&tx_buf, pattern, data_length);
-			initialize_buffer(&rx_buf, 0, data_length);
+	if (data_length < spdk_bdev_get_block_size(target->bdev) ||
+	    data_length / spdk_bdev_get_block_size(target->bdev) > spdk_bdev_get_num_blocks(target->bdev)) {
+		return;
+	}
 
-			blockdev_write(target, tx_buf, offset, data_length, iov_len);
-		} else {
-			initialize_buffer(&tx_buf, 0, data_length);
-			initialize_buffer(&rx_buf, pattern, data_length);
+	if (!write_zeroes) {
+		initialize_buffer(&tx_buf, pattern, data_length);
+		initialize_buffer(&rx_buf, 0, data_length);
 
-			blockdev_write_zeroes(target, tx_buf, offset, data_length);
-		}
+		blockdev_write(target, tx_buf, offset, data_length, iov_len);
+	} else {
+		initialize_buffer(&tx_buf, 0, data_length);
+		initialize_buffer(&rx_buf, pattern, data_length);
+
+		blockdev_write_zeroes(target, tx_buf, offset, data_length);
+	}
 
 
-		if (expected_rc == 0) {
-			CU_ASSERT_EQUAL(g_completion_success, true);
-		} else {
-			CU_ASSERT_EQUAL(g_completion_success, false);
-		}
-		blockdev_read(target, rx_buf, offset, data_length, iov_len);
+	if (expected_rc == 0) {
+		CU_ASSERT_EQUAL(g_completion_success, true);
+	} else {
+		CU_ASSERT_EQUAL(g_completion_success, false);
+	}
+	blockdev_read(target, rx_buf, offset, data_length, iov_len);
 
-		if (expected_rc == 0) {
-			CU_ASSERT_EQUAL(g_completion_success, true);
-		} else {
-			CU_ASSERT_EQUAL(g_completion_success, false);
-		}
+	if (expected_rc == 0) {
+		CU_ASSERT_EQUAL(g_completion_success, true);
+	} else {
+		CU_ASSERT_EQUAL(g_completion_success, false);
+	}
 
-		if (g_completion_success) {
-			rc = blockdev_write_read_data_match(rx_buf, tx_buf, data_length);
-			/* Assert the write by comparing it with values read
-			 * from each blockdev */
-			CU_ASSERT_EQUAL(rc, 0);
-		}
-
-		target = target->next;
+	if (g_completion_success) {
+		rc = blockdev_write_read_data_match(rx_buf, tx_buf, data_length);
+		/* Assert the write by comparing it with values read
+		 * from each blockdev */
+		CU_ASSERT_EQUAL(rc, 0);
 	}
 }
 
@@ -687,33 +684,29 @@ blockdev_write_read_offset_plus_nbytes_equals_bdev_size(void)
 	uint32_t block_size;
 	int rc;
 
-	target = g_io_targets;
-	while (target != NULL) {
-		bdev = target->bdev;
+	target = g_current_io_target;
+	bdev = target->bdev;
 
-		block_size = spdk_bdev_get_block_size(bdev);
+	block_size = spdk_bdev_get_block_size(bdev);
 
-		/* The start offset has been set to a marginal value
-		 * such that offset + nbytes == Total size of
-		 * blockdev. */
-		offset = ((spdk_bdev_get_num_blocks(bdev) - 1) * block_size);
+	/* The start offset has been set to a marginal value
+	 * such that offset + nbytes == Total size of
+	 * blockdev. */
+	offset = ((spdk_bdev_get_num_blocks(bdev) - 1) * block_size);
 
-		initialize_buffer(&tx_buf, 0xA3, block_size);
-		initialize_buffer(&rx_buf, 0, block_size);
+	initialize_buffer(&tx_buf, 0xA3, block_size);
+	initialize_buffer(&rx_buf, 0, block_size);
 
-		blockdev_write(target, tx_buf, offset, block_size, 0);
-		CU_ASSERT_EQUAL(g_completion_success, true);
+	blockdev_write(target, tx_buf, offset, block_size, 0);
+	CU_ASSERT_EQUAL(g_completion_success, true);
 
-		blockdev_read(target, rx_buf, offset, block_size, 0);
-		CU_ASSERT_EQUAL(g_completion_success, true);
+	blockdev_read(target, rx_buf, offset, block_size, 0);
+	CU_ASSERT_EQUAL(g_completion_success, true);
 
-		rc = blockdev_write_read_data_match(rx_buf, tx_buf, block_size);
-		/* Assert the write by comparing it with values read
-		 * from each blockdev */
-		CU_ASSERT_EQUAL(rc, 0);
-
-		target = target->next;
-	}
+	rc = blockdev_write_read_data_match(rx_buf, tx_buf, block_size);
+	/* Assert the write by comparing it with values read
+	 * from each blockdev */
+	CU_ASSERT_EQUAL(rc, 0);
 }
 
 static void
@@ -732,26 +725,22 @@ blockdev_write_read_offset_plus_nbytes_gt_bdev_size(void)
 	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
 	pattern = 0xA3;
 
-	target = g_io_targets;
-	while (target != NULL) {
-		bdev = target->bdev;
+	target = g_current_io_target;
+	bdev = target->bdev;
 
-		/* The start offset has been set to a valid value
-		 * but offset + nbytes is greater than the Total size
-		 * of the blockdev. The test should fail. */
-		offset = ((spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev)) - 1024);
+	/* The start offset has been set to a valid value
+	 * but offset + nbytes is greater than the Total size
+	 * of the blockdev. The test should fail. */
+	offset = ((spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev)) - 1024);
 
-		initialize_buffer(&tx_buf, pattern, data_length);
-		initialize_buffer(&rx_buf, 0, data_length);
+	initialize_buffer(&tx_buf, pattern, data_length);
+	initialize_buffer(&rx_buf, 0, data_length);
 
-		blockdev_write(target, tx_buf, offset, data_length, 0);
-		CU_ASSERT_EQUAL(g_completion_success, false);
+	blockdev_write(target, tx_buf, offset, data_length, 0);
+	CU_ASSERT_EQUAL(g_completion_success, false);
 
-		blockdev_read(target, rx_buf, offset, data_length, 0);
-		CU_ASSERT_EQUAL(g_completion_success, false);
-
-		target = target->next;
-	}
+	blockdev_read(target, rx_buf, offset, data_length, 0);
+	CU_ASSERT_EQUAL(g_completion_success, false);
 }
 
 static void
@@ -838,17 +827,13 @@ blockdev_test_reset(void)
 {
 	struct io_target	*target;
 
-	target = g_io_targets;
-	while (target != NULL) {
-		blockdev_reset(target);
-		/* Workaround: NVMe-oF target doesn't support reset yet - so for now
-		 *  don't fail the test if it's an NVMe bdev.
-		 */
-		if (!spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_NVME_IO)) {
-			CU_ASSERT_EQUAL(g_completion_success, true);
-		}
-
-		target = target->next;
+	target = g_current_io_target;
+	blockdev_reset(target);
+	/* Workaround: NVMe-oF target doesn't support reset yet - so for now
+	 *  don't fail the test if it's an NVMe bdev.
+	 */
+	if (!spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_NVME_IO)) {
+		CU_ASSERT_EQUAL(g_completion_success, true);
 	}
 }
 
@@ -934,11 +919,8 @@ blockdev_test_nvme_passthru_rw(void)
 {
 	struct io_target	*target;
 
-	target = g_io_targets;
-	while (target != NULL) {
-		blockdev_nvme_passthru_rw(target);
-		target = target->next;
-	}
+	target = g_current_io_target;
+	blockdev_nvme_passthru_rw(target);
 }
 
 static void
@@ -967,11 +949,8 @@ blockdev_test_nvme_passthru_vendor_specific(void)
 {
 	struct io_target	*target;
 
-	target = g_io_targets;
-	while (target != NULL) {
-		blockdev_nvme_passthru_vendor_specific(target);
-		target = target->next;
-	}
+	target = g_current_io_target;
+	blockdev_nvme_passthru_vendor_specific(target);
 }
 
 static void
@@ -997,22 +976,22 @@ stop_init_thread(unsigned num_failures)
 	spdk_event_call(event);
 }
 
-static void
-__run_ut_thread(void *arg1, void *arg2)
+static int
+__run_ut_on_single_target(void)
 {
+	unsigned rc = 0;
 	CU_pSuite suite = NULL;
-	unsigned num_failures;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
-		stop_init_thread(CU_get_error());
-		return;
+		rc = CU_get_error();
+		return -rc;
 	}
 
 	suite = CU_add_suite("components_suite", NULL, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
-		stop_init_thread(CU_get_error());
-		return;
+		rc = CU_get_error();
+		return -rc;
 	}
 
 	if (
@@ -1052,14 +1031,34 @@ __run_ut_thread(void *arg1, void *arg2)
 			       blockdev_test_nvme_passthru_vendor_specific) == NULL
 	) {
 		CU_cleanup_registry();
-		stop_init_thread(CU_get_error());
-		return;
+		rc = CU_get_error();
+		return -rc;
 	}
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
-	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+
+	return CU_get_number_of_failures();
+}
+
+static void
+__run_ut_thread(void *arg1, void *arg2)
+{
+	int rc = 0;
+	unsigned num_failures = 0;
+
+	g_current_io_target = g_io_targets;
+	while (g_current_io_target != NULL) {
+		rc = __run_ut_on_single_target();
+		if (rc < 0) {
+			/* CUnit error, probably won't recover */
+			stop_init_thread(rc);
+		}
+		num_failures += rc;
+
+		g_current_io_target = g_current_io_target->next;
+	}
 	stop_init_thread(num_failures);
 }
 
