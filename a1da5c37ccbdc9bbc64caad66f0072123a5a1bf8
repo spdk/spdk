@@ -46,6 +46,30 @@
       "revId": "a1da5c37ccbdc9bbc64caad66f0072123a5a1bf8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64af0968_77cb7a81",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-17T05:39:43Z",
+      "side": 1,
+      "message": "Ok, that sounds fair.",
+      "parentUuid": "bdadaef3_10eaad97",
+      "range": {
+        "startLine": 738,
+        "startChar": 37,
+        "endLine": 738,
+        "endChar": 46
+      },
+      "revId": "a1da5c37ccbdc9bbc64caad66f0072123a5a1bf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
