@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5e62b74_21f54d29",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-19T22:34:43Z",
+      "side": 1,
+      "message": "nit: you don\u0027t need to put \"PREEMPT:\" in all of these log messages, the function name will appear before the message",
+      "revId": "b3a1922c44caa4c8e29f4b012144a81111e266ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d58ae0ac_d111fdc2",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-19T22:34:43Z",
+      "side": 1,
+      "message": "these 3 comments don\u0027t seem to match the next 2 lines of code, are they correct?",
+      "revId": "b3a1922c44caa4c8e29f4b012144a81111e266ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
