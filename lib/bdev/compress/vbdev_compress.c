@@ -511,17 +511,20 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	/* We always expect 1 got queued, if 0 then we need to queue it up. */
 	if (rc == 1) {
 		return 0;
+	} else {
+		/* we free mbufs differently depending on whether they were chained or not */
+		rte_pktmbuf_free(comp_op->m_src);
+		rte_pktmbuf_free(comp_op->m_dst);
+		goto error_enqueue;
 	}
 
 	/* Error cleanup paths. */
-	for (i = 0; i < dst_iovcnt; i++) {
-		rte_pktmbuf_free((struct rte_mbuf *)&dst_mbufs[i]);
-	}
 error_get_dst:
 	for (i = 0; i < src_iovcnt; i++) {
 		rte_pktmbuf_free((struct rte_mbuf *)&src_mbufs[i]);
 	}
 error_get_src:
+error_enqueue:
 	rte_comp_op_free(comp_op);
 error_get_op:
 	op_to_queue = calloc(1, sizeof(struct vbdev_comp_op));
