@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67653a5e_b0720dc9",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2033,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-19T19:47:56Z",
+      "side": 1,
+      "message": "how does line 2029 determine whether rc, here, should be set to pllen?",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b48c0842_8920d7b1",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-19T19:47:56Z",
+      "side": 1,
+      "message": "is it me, these don\u0027t looked lined up? I can never tell though",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf4684c9_477651f1",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-19T19:47:56Z",
+      "side": 1,
+      "message": "what scenario would ca caller pass in NULL reg?",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
