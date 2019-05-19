@@ -625,6 +625,10 @@ rte_vhost_driver_register(const char *path, uint64_t flags)
 	if (!path)
 		return -1;
 
+	/* virtio-vhost-user transport not supported */
+	if (flags & RTE_VHOST_USER_VIRTIO_TRANSPORT)
+		return -1;
+
 	pthread_mutex_lock(&vhost_user.mutex);
 
 	if (vhost_user.vsocket_cnt == MAX_VHOST_SOCKET) {
