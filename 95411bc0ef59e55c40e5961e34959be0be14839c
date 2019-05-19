@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82d45b67_98bb876b",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-19T22:30:10Z",
+      "side": 1,
+      "message": "is this no registrant or no registration?",
+      "revId": "95411bc0ef59e55c40e5961e34959be0be14839c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
