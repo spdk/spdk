@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c04888f0_2dc50045",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "I\u0027ve moved lba.vector allocation to ftl_io",
+      "parentUuid": "40e1ca6b_4ab6bd34",
+      "range": {
+        "startLine": 313,
+        "startChar": 0,
+        "endLine": 315,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5f4b5b83_e195cae2",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7bf19df_ceceb577",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5f4b5b83_e195cae2",
+      "range": {
+        "startLine": 49,
+        "startChar": 7,
+        "endLine": 49,
+        "endChar": 21
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "e10c3c8e_390255d9",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f090a311_f3cef0e2",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 59
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f208901_791c9073",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -88,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "773fe990_c52c92bd",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "I think whole breloc should be allocated/free when it goes to active/free state - I will make separate patch for this.",
+      "parentUuid": "7f208901_791c9073",
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ecdcefb8_dc218ed6",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -99,6 +189,30 @@
       "writtenOn": "2019-05-14T13:29:30Z",
       "side": 1,
       "message": "What the point in passing ftl_reloc_move here? ftl_reloc_read_lba_map_cb only uses it to retrieve breloc - pass it.",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 49
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91bce7c1_6a6071aa",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "This move will be needed when we start reading partially lba_map.",
+      "parentUuid": "ecdcefb8_dc218ed6",
       "range": {
         "startLine": 195,
         "startChar": 0,
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "7bd4e865_514af2b4",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "scan-build had problem with this",
+      "parentUuid": "83a1f376_46da30d0",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7de5d83d_a3335ebf",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -154,6 +292,30 @@
       "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1285d4e5_bb6094f5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7de5d83d_a3335ebf",
+      "range": {
+        "startLine": 430,
+        "startChar": 2,
+        "endLine": 430,
+        "endChar": 16
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "ef11d941_f142e453",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75508c1b_c14c1f88",
+      "range": {
+        "startLine": 433,
+        "startChar": 3,
+        "endLine": 433,
+        "endChar": 28
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a0b65d31_1a988fc5",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -200,6 +386,30 @@
       "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0dddd5c_389a85c2",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a0b65d31_1a988fc5",
+      "range": {
+        "startLine": 438,
+        "startChar": 0,
+        "endLine": 438,
+        "endChar": 29
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -226,6 +436,30 @@
     },
     {
       "key": {
+        "uuid": "cdd2ce8b_55d216e8",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8c44d804_4d950d6a",
+      "range": {
+        "startLine": 462,
+        "startChar": 2,
+        "endLine": 462,
+        "endChar": 4
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ad3f017e_d3ffc5f7",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -249,6 +483,30 @@
     },
     {
       "key": {
+        "uuid": "950a8670_72d965bf",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ad3f017e_d3ffc5f7",
+      "range": {
+        "startLine": 459,
+        "startChar": 0,
+        "endLine": 465,
+        "endChar": 0
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "868ca263_741d7b38",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -260,6 +518,30 @@
       "writtenOn": "2019-05-14T13:29:30Z",
       "side": 1,
       "message": "No point in initializing this.",
+      "range": {
+        "startLine": 480,
+        "startChar": 18,
+        "endLine": 480,
+        "endChar": 25
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c87624b_42704b5e",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "scan-build issue",
+      "parentUuid": "868ca263_741d7b38",
       "range": {
         "startLine": 480,
         "startChar": 18,
@@ -289,6 +571,24 @@
     },
     {
       "key": {
+        "uuid": "7a4e356d_b13b20c9",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8e901d5_e6f9e9f6",
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e244f93_874eccd7",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -312,6 +612,30 @@
     },
     {
       "key": {
+        "uuid": "28ddbe73_74b8e87f",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "We need to drain free queue - when reloc starts it expect that free queue is empty. I\u0027ve change this logic in next commit.",
+      "parentUuid": "8e244f93_874eccd7",
+      "range": {
+        "startLine": 550,
+        "startChar": 0,
+        "endLine": 550,
+        "endChar": 23
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da46e7b7_0f14ad5c",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -323,6 +647,30 @@
       "writtenOn": "2019-05-14T13:29:30Z",
       "side": 1,
       "message": "Aren\u0027t the ftl_reloc_move kept on the free_queue by the time we reach this?",
+      "range": {
+        "startLine": 656,
+        "startChar": 0,
+        "endLine": 656,
+        "endChar": 89
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39dcbf32_7c50bf3c",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T09:50:44Z",
+      "side": 1,
+      "message": "We need to drain write queue during shutdown to avoid memleaks.",
+      "parentUuid": "da46e7b7_0f14ad5c",
       "range": {
         "startLine": 656,
         "startChar": 0,
