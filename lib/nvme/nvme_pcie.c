@@ -149,6 +149,7 @@ struct nvme_pcie_qpair {
 	struct spdk_nvme_cpl *cpl;
 
 	TAILQ_HEAD(nvme_free_tr_head, nvme_tracker) free_tr;
+	TAILQ_HEAD(, nvme_tracker) completed_tr;
 	TAILQ_HEAD(nvme_outstanding_tr_head, nvme_tracker) outstanding_tr;
 
 	/* Array of trackers indexed by command ID. */
@@ -1078,6 +1079,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	}
 
 	TAILQ_INIT(&pqpair->free_tr);
+	TAILQ_INIT(&pqpair->completed_tr);
 	TAILQ_INIT(&pqpair->outstanding_tr);
 
 	for (i = 0; i < num_trackers; i++) {
@@ -1322,7 +1324,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		tr->req = NULL;
 
 		TAILQ_REMOVE(&pqpair->outstanding_tr, tr, tq_list);
-		TAILQ_INSERT_TAIL(&pqpair->free_tr, tr, tq_list);
+		TAILQ_INSERT_TAIL(&pqpair->completed_tr, tr, tq_list);
 
 		/*
 		 * If the controller is in the middle of resetting, don't
@@ -1367,6 +1369,8 @@ nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 							SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
 	}
+
+	TAILQ_CONCAT(&pqpair->free_tr, &pqpair->completed_tr, tq_list);
 }
 
 void
@@ -2104,6 +2108,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (num_completions > 0) {
+		TAILQ_CONCAT(&pqpair->free_tr, &pqpair->completed_tr, tq_list);
 		nvme_pcie_qpair_ring_cq_doorbell(qpair);
 	}
 
