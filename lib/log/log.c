@@ -50,16 +50,24 @@ static const char *const spdk_level_names[] = {
 
 #define MAX_TMPBUF 1024
 
+static logfunc *g_log = NULL;
+
 void
-spdk_log_open(void)
+spdk_log_open(logfunc *logf)
 {
-	openlog("spdk", LOG_PID, LOG_LOCAL7);
+	if (logf) {
+		g_log = logf;
+	} else {
+		openlog("spdk", LOG_PID, LOG_LOCAL7);
+	}
 }
 
 void
 spdk_log_close(void)
 {
-	closelog();
+	if (!g_log) {
+		closelog();
+	}
 }
 
 #ifdef SPDK_LOG_BACKTRACE_LVL
@@ -126,20 +134,25 @@ spdk_log(enum spdk_log_level level, const char *file, const int line, const char
 		return;
 	}
 
-	va_start(ap, format);
+	if (g_log) {
+		g_log(level, file, line, func, format);
 
-	vsnprintf(buf, sizeof(buf), format, ap);
+	} else {
+		va_start(ap, format);
 
-	if (level <= g_spdk_log_print_level) {
-		fprintf(stderr, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
-		spdk_log_unwind_stack(stderr, level);
+		vsnprintf(buf, sizeof(buf), format, ap);
+
+		if (level <= g_spdk_log_print_level) {
+			fprintf(stderr, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+			spdk_log_unwind_stack(stderr, level);
+		}
+
+		if (level <= g_spdk_log_level) {
+			syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+		}
+
+		va_end(ap);
 	}
-
-	if (level <= g_spdk_log_level) {
-		syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
-	}
-
-	va_end(ap);
 }
 
 static void

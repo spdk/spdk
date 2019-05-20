@@ -74,7 +74,7 @@ log_test(void)
 	CU_ASSERT(spdk_log_get_flag("log") == false);
 #endif
 
-	spdk_log_open();
+	spdk_log_open(NULL);
 	spdk_log_set_flag("log");
 	SPDK_WARNLOG("log warning unit test\n");
 	SPDK_DEBUGLOG(SPDK_LOG_LOG, "log test\n");
