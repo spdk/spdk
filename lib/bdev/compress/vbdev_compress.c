@@ -1105,6 +1105,7 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 	meta_ctx->params.chunk_size = CHUNK_SIZE;
 	meta_ctx->params.logical_block_size = bdev->blocklen;
 	meta_ctx->params.backing_io_unit_size = BACKING_IO_SZ;
+
 	return meta_ctx;
 }
 
