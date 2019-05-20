@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "e12b8e43_a8d69e95",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T21:15:27Z",
+      "side": 1,
+      "message": "maybe valid only if?",
+      "range": {
+        "startLine": 637,
+        "startChar": 42,
+        "endLine": 637,
+        "endChar": 55
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04d86381_cc970038",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T21:15:27Z",
+      "side": 1,
+      "message": "data or metadata?",
+      "range": {
+        "startLine": 724,
+        "startChar": 3,
+        "endLine": 724,
+        "endChar": 7
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ee88a14_abfe0cbd",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T21:15:27Z",
+      "side": 1,
+      "message": "valid only if?",
+      "range": {
+        "startLine": 726,
+        "startChar": 22,
+        "endLine": 726,
+        "endChar": 32
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74d2b2b5_1ebbf16b",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -50,6 +119,98 @@
       "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5232bbb0_82910d6c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2674,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T21:15:27Z",
+      "side": 1,
+      "message": "if we can remove md_separate from arguments, we will be able to md_separate_payload from arguments of _bdev_io_check_md_buf.",
+      "range": {
+        "startLine": 2674,
+        "startChar": 15,
+        "endLine": 2674,
+        "endChar": 26
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0795861a_3edfa023",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2745,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T21:15:27Z",
+      "side": 1,
+      "message": "I couldn\u0027t understand why md_separate is necessary as an argument. \n\nWill you explain a little more?\n\nGetting md_separate in spdk_bdev_readv_blocks_with_md as (md_buf !\u003d NULL) is enough? If so, we will not need to add _spdk_bdev_readv_blocks_with_md() like write I/O.",
+      "range": {
+        "startLine": 2745,
+        "startChar": 30,
+        "endLine": 2745,
+        "endChar": 41
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd3c6227_a02567dd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T21:15:27Z",
+      "side": 1,
+      "message": "same as below comment.",
+      "range": {
+        "startLine": 2829,
+        "startChar": 0,
+        "endLine": 2829,
+        "endChar": 22
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fc9efae_8188a655",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2896,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T21:15:27Z",
+      "side": 1,
+      "message": "I think this ordering, writev and then writev_with_md, requires the header file. writev_with_md and then writev may sit well with me.",
+      "range": {
+        "startLine": 2896,
+        "startChar": 0,
+        "endLine": 2896,
+        "endChar": 23
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
