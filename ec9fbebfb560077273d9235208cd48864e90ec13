@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b60c20a_7252d78f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2931,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-20T20:26:26Z",
+      "side": 1,
+      "message": "The snapshot found in _spdk_bs_find_corrupted_blob either is valid (because the clone metadata that points to it wasn\u0027t updated before the power failure) or it is invalid (because the clone metadata that points to it was updated before the power failure). In that second case, we shouldn\u0027t be telling the user about the snapshot via ctx-\u003eiter_cb_fn. Otherwise the user will have a reference to an invalid snapshot.",
+      "revId": "ec9fbebfb560077273d9235208cd48864e90ec13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b26e6c50_243b8406",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2951,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-20T20:26:26Z",
+      "side": 1,
+      "message": "corrupted",
+      "revId": "ec9fbebfb560077273d9235208cd48864e90ec13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
