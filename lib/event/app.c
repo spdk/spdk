@@ -623,7 +623,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 		goto app_start_setup_conf_err;
 	}
 
-	spdk_log_open();
+	spdk_log_open(opts->log);
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
 	/*
