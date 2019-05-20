@@ -46,6 +46,30 @@
       "revId": "ef7f8df8d1e3db5a5785c34784150d528fa49a0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7a885a0_695eeab0",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-20T08:41:51Z",
+      "side": 1,
+      "message": "\u003e So, I will try to extend the RPC calls. Should I add a `--trtype` option like in case of `construct_virtio_dev` RPC call or directly pass the bdf address as the name of the controller? I am in favour of the first option because this makes it obvious to the end user that there are two available transports.\n\nI was thinking of autodetecting trtype basing on whether the name is a parse-able BDF, but additional --trtype param actually sounds even better. Note that it means we\u0027ll also need to store trtype in spdk_vhost_dev and print it in all json config dumps (e.g. spdk_vhost_scsi_write_config_json).",
+      "parentUuid": "927c3785_57b92125",
+      "range": {
+        "startLine": 774,
+        "startChar": 37,
+        "endLine": 774,
+        "endChar": 48
+      },
+      "revId": "ef7f8df8d1e3db5a5785c34784150d528fa49a0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
