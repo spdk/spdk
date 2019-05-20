@@ -682,6 +682,8 @@ _comp_bdev_io_submit(void *arg)
 					   comp_bdev);
 	int rc = 0;
 
+	SPDK_NOTICELOG("type %d offset %lu blocks %lu\n", bdev_io->type,
+		       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, comp_read_get_buf_cb,
