@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c89a28b1_461b9815",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2033,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-20T00:39:31Z",
+      "side": 1,
+      "message": "if set rc to a value bigger than zero, line 2048 will take this scenario as a successful call, so leave rc to a negative number is fine here.",
+      "parentUuid": "67653a5e_b0720dc9",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b48c0842_8920d7b1",
         "filename": "lib/scsi/scsi_internal.h",
         "patchSetId": 13
@@ -47,6 +65,24 @@
       "writtenOn": "2019-05-19T19:47:56Z",
       "side": 1,
       "message": "what scenario would ca caller pass in NULL reg?",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f72c19d4_82342d81",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-20T00:39:31Z",
+      "side": 1,
+      "message": "This can use an assertion here, actually no usage case for the whole patch serial.",
+      "parentUuid": "cf4684c9_477651f1",
       "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
