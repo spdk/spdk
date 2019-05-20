@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "ab37df34_059e678b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T08:33:45Z",
+      "side": 1,
+      "message": "I got it. Thanks for kind explanation.",
+      "parentUuid": "9d5bd0cb_817668ef",
+      "range": {
+        "startLine": 679,
+        "startChar": 0,
+        "endLine": 680,
+        "endChar": 78
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aabc5708_86ccb6a5",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -266,6 +290,24 @@
       "side": 1,
       "message": "But it\u0027ll also hurt the performance of every I/O that uses separate metadata buffers... Are you sure we want to do that?",
       "parentUuid": "fc82f72f_4f86c27a",
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91a0eed6_30c34f38",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2660,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T08:33:45Z",
+      "side": 1,
+      "message": "Yes definitely. The background of this comment was that using metadata bdevs is still rare in SPDK and I just added unlikely in iSCSI target in similar cases.\n\nBy this patch series, metadata will become more popular in SPDK :-)\n\nOK let\u0027s keep not adding likely.",
+      "parentUuid": "1dffdb69_3ab9a0fd",
       "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
