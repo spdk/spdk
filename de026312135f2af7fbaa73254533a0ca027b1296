@@ -164,6 +164,30 @@
       "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38a2ad68_b76248e7",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T08:36:57Z",
+      "side": 1,
+      "message": "Yep, since I\u0027ve moved this buffer setup befor read_md this is not needed anymore.",
+      "parentUuid": "7931dd44_ac458a8e",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 265,
+        "endChar": 48
+      },
+      "revId": "de026312135f2af7fbaa73254533a0ca027b1296",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
