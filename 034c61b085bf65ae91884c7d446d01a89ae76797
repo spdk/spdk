@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7a1d74a_e1fb9599",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2074,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-20T14:01:18Z",
+      "side": 1,
+      "message": "a comment would be good here indicating what the rc value means in terms of pr and why a cmd would be returned complete for that reason",
+      "revId": "034c61b085bf65ae91884c7d446d01a89ae76797",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "316b4f95_73bb35b5",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-20T14:01:18Z",
+      "side": 1,
+      "message": "looks like you can simplify a lof of these case statements by negating the first if and then just dropping letting the break drop through to the last return 0",
+      "revId": "034c61b085bf65ae91884c7d446d01a89ae76797",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
