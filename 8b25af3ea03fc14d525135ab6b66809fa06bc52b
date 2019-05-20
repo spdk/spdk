@@ -53,6 +53,23 @@
     },
     {
       "key": {
+        "uuid": "9e5645d9_31d9a466",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-20T21:20:53Z",
+      "side": 1,
+      "message": "I think we should wait to add the latency until the completion path. Then, statistically, the user configured distribution is added on top of the underlying media latency in an intuitive way.",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d8ebb83f_94966404",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 8
