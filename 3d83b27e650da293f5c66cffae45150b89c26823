@@ -2,6 +2,86 @@
   "comments": [
     {
       "key": {
+        "uuid": "b8f06e93_a099bd3f",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2022,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "should we check pllen is equal to the following rc?",
+      "range": {
+        "startLine": 2022,
+        "startChar": 2,
+        "endLine": 2022,
+        "endChar": 7
+      },
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c5d42a8_303de5b6",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2023,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "From the line 2023 to 2027, the following is easier to follow:\n\ndata \u003d spdk_scsi_task_gather_data(task, \u0026data_len);\nif (data_len \u003c 0) {\n  rc \u003d -1;\n  break;\n}",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79357799_79f1280b",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2028,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "Please add any check between data_len and pllen here if reasonable.",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11b5383f_125371da",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2029,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "I think we should check data_len is large enough to hold related parameters in spdk_scsi_pr_out().",
+      "range": {
+        "startLine": 2029,
+        "startChar": 41,
+        "endLine": 2029,
+        "endChar": 49
+      },
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67653a5e_b0720dc9",
         "filename": "lib/scsi/scsi_bdev.c",
         "patchSetId": 13
@@ -37,6 +117,75 @@
     },
     {
       "key": {
+        "uuid": "a380c759_b941ab15",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2033,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "if we add check between data_len and pllen above, this logic will become clearer. It may not be clear otherwise.",
+      "parentUuid": "c89a28b1_461b9815",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e550e79_6b55e2c4",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2034,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "Please remove the empty line 2034.\ndata_len means size of return data and rc means size of processed data? closing them together may be better.",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86348a4a_4dcd1881",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "Please use tabs to arrange names to go straight.",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76c68a76_49020ffd",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "Please use tabs to arrange names to go straight.",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b48c0842_8920d7b1",
         "filename": "lib/scsi/scsi_internal.h",
         "patchSetId": 13
@@ -48,6 +197,24 @@
       "writtenOn": "2019-05-19T19:47:56Z",
       "side": 1,
       "message": "is it me, these don\u0027t looked lined up? I can never tell though",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96542f8e_9fcfb2c6",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "Hi Paul, Sorry I couldn\u0027t catch your intention. Are you saying adding a tab from 84 to 97 is not meaningful? These look helpful to arrange go straight from the line 84 to 101?",
+      "parentUuid": "b48c0842_8920d7b1",
       "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -86,6 +253,64 @@
       "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eef6cb68_a4681e55",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "I agree with Paul.",
+      "parentUuid": "cf4684c9_477651f1",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0227fd49_81026781",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "Please separate aptpl check and spec_i_pt and all_tg_pt checks.\n\naptpl is Active Persistent Through Power Loss.\n\nOn the other hand, spec_i_pt and all_tg_pt are related, spec_i_pt is to specify transport id by additional parameters, and all_tg_pt is to register all target ports.",
+      "range": {
+        "startLine": 174,
+        "startChar": 1,
+        "endLine": 174,
+        "endChar": 39
+      },
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37b6a7f4_7ca42997",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-20T01:54:32Z",
+      "side": 1,
+      "message": "The following flow sits well on me.\n\n\treg \u003d get_registrant();\n\n\tif (!reg) {\n\t\tif (rkey \u0026\u0026 action \u003d\u003d REGISTER) {\n\t\t\treturn conflict;\n\t\t}\n\n\t\tif (!sa_key) {\n\t\t\treturn good;\n\t\t}\n\n\t\treturn register_registrant();\n\t} else {\n\t\tif (rkey !\u003d reg-\u003erkey \u0026\u0026 action \u003d\u003d REGISTER) {\n\t\t\treturn conflict;\n\t\t}\n\n\t\tif (!sa_key) {\n\t\t\tunregister_registrant();\n\t\t} else {\n\t\t\treplace_registran_key();\n\t\t}\n\t\n\t\treturn 0;\n\t}",
+      "revId": "3d83b27e650da293f5c66cffae45150b89c26823",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
