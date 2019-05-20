@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6fe0e3c3_422fb526",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T14:53:28Z",
+      "side": 1,
+      "message": "Is there a point in checking this? If the move-\u003eio !\u003d NULL, then it\u0027s bound to have io-\u003estatus \u003d\u003d -EAGAIN. Just check move-\u003eio !\u003d NULL and perhaps add an assert that io-\u003estatus \u003d\u003d -EAGAIN. Also what is the actual point in setting io-\u003estatus \u003d -EAGAIN on line 464?",
+      "range": {
+        "startLine": 451,
+        "startChar": 31,
+        "endLine": 451,
+        "endChar": 58
+      },
+      "revId": "ee47d2e02b6c4d889f96d1b77a52678b8e1fd548",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74401741_2813f316",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T14:53:28Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you call free_move instead? Isn\u0027t this going to cause a dangling move object (i.e. remove the move object from the move queue).",
+      "range": {
+        "startLine": 457,
+        "startChar": 3,
+        "endLine": 457,
+        "endChar": 20
+      },
+      "revId": "ee47d2e02b6c4d889f96d1b77a52678b8e1fd548",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
