@@ -45,11 +45,14 @@
 extern "C" {
 #endif
 
+typedef void logfunc(int level, const char *file, const int line,
+		     const char *func, const char *format);
+
 /**
  * Initialize the logging module. Messages prior
  * to this call will be dropped.
  */
-void spdk_log_open(void);
+void spdk_log_open(logfunc *logf);
 
 /**
  * Close the currently active log. Messages after this call
