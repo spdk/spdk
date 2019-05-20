@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3cadbe04_60a197ae",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T08:22:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c95cdb7b_3040a3d8",
+      "range": {
+        "startLine": 540,
+        "startChar": 1,
+        "endLine": 540,
+        "endChar": 24
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cba743a4_3f736add",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-17T00:08:25Z",
       "side": 1,
       "message": "separating two patches may be better:\n1. in a new patch, just factor out the current check if orig_iovcnt is NULL into a helper function _bdev_io_has_bounce_buf.\n2. in this patch, add the check if orig_md_buf is NULL into the _bdev_io_has_bounce_buf",
+      "range": {
+        "startLine": 620,
+        "startChar": 0,
+        "endLine": 620,
+        "endChar": 23
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14e70282_ed0f0d95",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T08:22:51Z",
+      "side": 1,
+      "message": "Makes sense. However, according to your comment below, I\u0027ve moved the bounce_buf checks inside the _bdev_io_unset_bounce_buf, so this function is no longer necessary.",
+      "parentUuid": "cba743a4_3f736add",
       "range": {
         "startLine": 620,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5ff76118_59620f3c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T08:22:51Z",
+      "side": 1,
+      "message": "Yeah, the checks only need to be here.",
+      "parentUuid": "4d7fdd1a_06b45af6",
+      "range": {
+        "startLine": 629,
+        "startChar": 1,
+        "endLine": 629,
+        "endChar": 41
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff06857b_3fe7a43e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -82,6 +154,30 @@
       "writtenOn": "2019-05-17T00:08:25Z",
       "side": 1,
       "message": "meaning of buf_allocated is changed. Could we insert a patch for this change before this patch?",
+      "range": {
+        "startLine": 679,
+        "startChar": 0,
+        "endLine": 680,
+        "endChar": 78
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d5bd0cb_817668ef",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T08:22:51Z",
+      "side": 1,
+      "message": "The reason I\u0027ve removed this variable in the previous patch is because it\u0027d only be used in one place - the condition checking if buffers are allocated and aligned, and since the condition was pretty straight-forward I didn\u0027t think it required additional variables. In this patch however, the condition became much more complex, requiring several metadata checks so I\u0027ve restored the variable (albeit changing it meaning a bit), to be a bit more clear what the checks are supposed to do. Without the metadata, there\u0027s no point in having this variable.",
+      "parentUuid": "ff06857b_3fe7a43e",
       "range": {
         "startLine": 679,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "f48736bb_1f873808",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2659,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T08:22:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aabc5708_86ccb6a5",
+      "range": {
+        "startLine": 2659,
+        "startChar": 77,
+        "endLine": 2659,
+        "endChar": 88
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc82f72f_4f86c27a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -128,6 +248,24 @@
       "writtenOn": "2019-05-17T00:08:25Z",
       "side": 1,
       "message": "the following check is nice but this function ls called in every read or write I/O. So adding if (spdk_likely(!md_separate)) first will be better to avoid performance degradation.",
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1dffdb69_3ab9a0fd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2660,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T08:22:51Z",
+      "side": 1,
+      "message": "But it\u0027ll also hurt the performance of every I/O that uses separate metadata buffers... Are you sure we want to do that?",
+      "parentUuid": "fc82f72f_4f86c27a",
       "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -157,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "53927f7f_e0ef6f64",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2662,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T08:22:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a1b291f_9fdc952f",
+      "range": {
+        "startLine": 2662,
+        "startChar": 2,
+        "endLine": 2662,
+        "endChar": 39
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b922b268_55829b8a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -168,6 +330,30 @@
       "writtenOn": "2019-05-17T00:08:25Z",
       "side": 1,
       "message": "Could we separate introducing _spdk_bdev_read_blocks_with_md into an intermediate patch?\n\nWe can add the code for md in this patch then.",
+      "range": {
+        "startLine": 2671,
+        "startChar": 0,
+        "endLine": 2671,
+        "endChar": 30
+      },
+      "revId": "f6128c0afba0753f00b67b1a4a4e17a38be09060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13f1993a_c969f883",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2671,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T08:22:51Z",
+      "side": 1,
+      "message": "Sure, no problem. Just to be clear, you\u0027re saying that you would like this patch to be split into two: 1) the code for handling the metadata in a separate buffer, allocating it, etc. and 2) spdk_bdev_*_with_md functions actually allowing the separate metadata buffers to be used?",
+      "parentUuid": "b922b268_55829b8a",
       "range": {
         "startLine": 2671,
         "startChar": 0,
