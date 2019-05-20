@@ -112,6 +112,49 @@ if echo -e "#include <libunwind.h>\nint main(int argc, char *argv[]) {return 0;}
 	config_params+=' --enable-log-bt'
 fi
 
+# for options with dependenices but no test flag, set them here
+if [ -f /usr/include/infiniband/verbs.h ]; then
+	config_params+=' --with-rdma'
+fi
+
+if [ -d /usr/src/fio ]; then
+	config_params+=' --with-fio=/usr/src/fio'
+fi
+
+if [ -d ${DEPENDENCY_DIR}/vtune_codes ]; then
+	config_params+=' --with-vtune='${DEPENDENCY_DIR}'/vtune_codes'
+fi
+
+
+if [ -d /usr/include/iscsi ]; then
+	libiscsi_version=`grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}'`
+	if [ $libiscsi_version -ge 20150621 ]; then
+		config_params+=' --with-iscsi-initiator'
+	fi
+fi
+
+# for options with both dependenices and a test flag, set them here
+if [ -f /usr/include/libpmemblk.h ] && [ $SPDK_TEST_PMDK -eq 1 ]; then
+	config_params+=' --with-pmdk'
+fi
+
+if [ -f /usr/include/libpmem.h ] && [ $SPDK_TEST_REDUCE -eq 1 ]; then
+	if [ $SPDK_TEST_ISAL -eq 1 ]; then
+		config_params+=' --with-reduce'
+	else
+		echo "reduce not enabled because isal is not enabled."
+	fi
+fi
+
+if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ] && [ $SPDK_TEST_RBD -eq 1 ]; then
+	if [ $SPDK_TEST_ISAL -eq 0 ]; then
+		config_params+=' --with-rbd'
+	else
+		echo "rbd not enabled because isal is enabled."
+	fi
+fi
+
+# for options with no required dependecies, just test flags, set them here
 if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 	config_params+=' --with-crypto'
 fi
@@ -137,45 +180,6 @@ fi
 # set which will override the default and use that DPDK installation instead.
 if [ ! -z "$WITH_DPDK_DIR" ]; then
 	config_params+=" --with-dpdk=$WITH_DPDK_DIR"
-fi
-
-if [ -f /usr/include/infiniband/verbs.h ]; then
-	config_params+=' --with-rdma'
-fi
-
-if [ -f /usr/include/libpmemblk.h ]; then
-	config_params+=' --with-pmdk'
-fi
-
-if [ -f /usr/include/libpmem.h ]; then
-	config_params+=' --with-reduce'
-fi
-
-if [ -d /usr/src/fio ]; then
-	config_params+=' --with-fio=/usr/src/fio'
-fi
-
-if [ -d ${DEPENDENCY_DIR}/vtune_codes ]; then
-	config_params+=' --with-vtune='${DEPENDENCY_DIR}'/vtune_codes'
-fi
-
-if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ]; then
-	config_params+=' --with-rbd'
-fi
-
-if [ -d /usr/include/iscsi ]; then
-	libiscsi_version=`grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}'`
-	if [ $libiscsi_version -ge 20150621 ]; then
-		config_params+=' --with-iscsi-initiator'
-	fi
-fi
-
-if [ $SPDK_TEST_ISAL -eq 0 ]; then
-	config_params+=' --without-isal'
-fi
-
-if [ $SPDK_TEST_REDUCE -eq 0 ]; then
-        config_params+=' --without-reduce'
 fi
 
 export config_params
