@@ -207,6 +207,7 @@ static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues = 0;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
+static uint64_t g_max_cq_doorbell_delay; /* in microseconds */
 static int g_dpdk_mem;
 static int g_shm_id = -1;
 static uint32_t g_disable_sq_cmb;
@@ -534,7 +535,8 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 	int i, rc;
 
 	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
-		rc = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair[i], g_max_completions);
+		rc = spdk_nvme_qpair_process_completions_tsc(ns_ctx->u.nvme.qpair[i], g_max_completions,
+							     spdk_get_ticks());
 		if (rc < 0) {
 			fprintf(stderr, "NVMe io qpair process completion error\n");
 			exit(1);
@@ -592,6 +594,7 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 		opts.io_queue_requests = entry->num_io_requests;
 	}
 	opts.delay_pcie_doorbell = true;
+	opts.max_delay_pcie_cq_doorbell = g_max_cq_doorbell_delay;
 
 	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
 		ns_ctx->u.nvme.qpair[i] = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
@@ -1088,6 +1091,7 @@ static void usage(char *program_name)
 	printf("\t[-s DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
+	printf("\t[-b max delay per CQ doorbell write in us (default: 100)\n");
 	printf("\t[-i shared memory group ID]\n");
 #ifdef DEBUG
 	printf("\t[-G enable debug logging]\n");
@@ -1493,9 +1497,11 @@ parse_args(int argc, char **argv)
 	g_rw_percentage = -1;
 	g_core_mask = NULL;
 	g_max_completions = 0;
+	g_max_cq_doorbell_delay = 100; /* in microseconds */
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:U:")) != -1) {
+	while ((op = getopt(argc, argv, "b:c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:U:")) != -1) {
 		switch (op) {
+		case 'b':
 		case 'i':
 		case 'm':
 		case 'n':
@@ -1512,6 +1518,9 @@ parse_args(int argc, char **argv)
 				return val;
 			}
 			switch (op) {
+			case 'b':
+				g_max_cq_doorbell_delay = val;
+				break;
 			case 'i':
 				g_shm_id = val;
 				break;
