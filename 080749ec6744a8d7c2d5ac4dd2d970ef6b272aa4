@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03e6b770_dd8b99a2",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-20T14:03:04Z",
+      "side": 1,
+      "message": "It still feel that the logic which decides whether we are able to run or not the QoS test should be in a different place.\nIt kind of doesn\u0027t match the function name \"check_qos_results\", at least for me.",
+      "range": {
+        "startLine": 80,
+        "startChar": 2,
+        "endLine": 81,
+        "endChar": 15
+      },
+      "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03d48715_e10b801c",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-20T14:03:04Z",
+      "side": 1,
+      "message": "bc update to vm_setup.sh was merged recently: https://review.gerrithub.io/#/c/spdk/spdk/+/453998/\nSo I still suggest using it instead of awk for simple operations.\n\nIt should already be installed on testing servers, if you happen to see any which I have missed let me know",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 64
+      },
+      "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71cc11e5_be8e8f3f",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-20T14:03:04Z",
+      "side": 1,
+      "message": "Do we really want to silently skip tests, if the device is not applicable for QoS testing?",
+      "range": {
+        "startLine": 242,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 2
+      },
+      "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
