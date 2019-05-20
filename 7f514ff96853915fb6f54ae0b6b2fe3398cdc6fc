@@ -178,6 +178,24 @@
     },
     {
       "key": {
+        "uuid": "f6d4f1b8_151a8e35",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T12:49:05Z",
+      "side": 1,
+      "message": "Then please make this change and rebase this patch on top of it.",
+      "parentUuid": "773fe990_c52c92bd",
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ecdcefb8_dc218ed6",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -225,6 +243,30 @@
     },
     {
       "key": {
+        "uuid": "97a91b9a_57e955ea",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T12:49:05Z",
+      "side": 1,
+      "message": "Then make change it once it\u0027s needed. Right now it\u0027s only making the code less readable.",
+      "parentUuid": "91bce7c1_6a6071aa",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 49
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "83a1f376_46da30d0",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -260,6 +302,30 @@
       "side": 1,
       "message": "scan-build had problem with this",
       "parentUuid": "83a1f376_46da30d0",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c909010_4d1ed423",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T12:49:05Z",
+      "side": 1,
+      "message": "Then perhaps an assertion would be a better fit here?",
+      "parentUuid": "7bd4e865_514af2b4",
       "range": {
         "startLine": 230,
         "startChar": 0,
@@ -554,6 +620,30 @@
     },
     {
       "key": {
+        "uuid": "25bb8eac_8987c3fb",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T12:49:05Z",
+      "side": 1,
+      "message": "Are you sure? AFAIK scan-build never complained about stuff like this - there\u0027s tons of places we don\u0027t initialize pointers in the declarations... Not sure why this would be a problem.",
+      "parentUuid": "8c87624b_42704b5e",
+      "range": {
+        "startLine": 480,
+        "startChar": 18,
+        "endLine": 480,
+        "endChar": 25
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b8e901d5_e6f9e9f6",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -636,6 +726,30 @@
     },
     {
       "key": {
+        "uuid": "6af90057_92cbd575",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T12:49:05Z",
+      "side": 1,
+      "message": "Then perhaps it\u0027d make sense to swap those patches and make this change before this one.",
+      "parentUuid": "28ddbe73_74b8e87f",
+      "range": {
+        "startLine": 550,
+        "startChar": 0,
+        "endLine": 550,
+        "endChar": 23
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da46e7b7_0f14ad5c",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -671,6 +785,30 @@
       "side": 1,
       "message": "We need to drain write queue during shutdown to avoid memleaks.",
       "parentUuid": "da46e7b7_0f14ad5c",
+      "range": {
+        "startLine": 656,
+        "startChar": 0,
+        "endLine": 656,
+        "endChar": 89
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e796120_61e386f0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T12:49:05Z",
+      "side": 1,
+      "message": "So this can only happen when we\u0027re shutting off? Otherwise this queue should be empty? If so, please add a comment explaining this (an assertion would also be nice here).",
+      "parentUuid": "39dcbf32_7c50bf3c",
       "range": {
         "startLine": 656,
         "startChar": 0,
