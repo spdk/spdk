@@ -2131,12 +2131,13 @@ static int
 spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 			    struct spdk_nvmf_tcp_req *tcp_req)
 {
+	struct spdk_nvmf_request		*req = &tcp_req->req;
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
 
-	cmd = &tcp_req->req.cmd->nvme_cmd;
-	rsp = &tcp_req->req.rsp->nvme_cpl;
+	cmd = &req->cmd->nvme_cmd;
+	rsp = &req->rsp->nvme_cpl;
 	sgl = &cmd->dptr.sgl1;
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK &&
@@ -2149,7 +2150,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		}
 
 		/* fill request length and populate iovs */
-		tcp_req->req.length = sgl->unkeyed.length;
+		req->length = sgl->unkeyed.length;
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Data requested length= 0x%x\n",
 			      sgl->unkeyed.length);
@@ -2161,12 +2162,11 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		}
 
 		/* backward compatible */
-		tcp_req->req.data = tcp_req->req.iov[0].iov_base;
+		req->data = req->iov[0].iov_base;
 
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p took %d buffer/s from central pool, and data=%p\n",
-			      tcp_req,
-			      tcp_req->req.iovcnt, tcp_req->req.data);
+			      tcp_req, req->iovcnt, req->data);
 
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
@@ -2192,13 +2192,13 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 			return -1;
 		}
 
-		tcp_req->req.data = tcp_req->buf + offset;
+		req->data = tcp_req->buf + offset;
 		tcp_req->data_from_pool = false;
-		tcp_req->req.length = sgl->unkeyed.length;
+		req->length = sgl->unkeyed.length;
 
-		tcp_req->req.iov[0].iov_base = tcp_req->req.data;
-		tcp_req->req.iov[0].iov_len = tcp_req->req.length;
-		tcp_req->req.iovcnt = 1;
+		req->iov[0].iov_base = req->data;
+		req->iov[0].iov_len = req->length;
+		req->iovcnt = 1;
 
 		return 0;
 	}
