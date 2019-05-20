@@ -502,6 +502,10 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.env_context = opts->env_context;
 
 	rc = spdk_env_init(&env_opts);
+
+	/* Setting opts->log if user defined it through env_opts */
+	opts->log = env_opts.log;
+
 	free(env_opts.pci_blacklist);
 	free(env_opts.pci_whitelist);
 
@@ -624,7 +628,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 		goto app_start_setup_conf_err;
 	}
 
-	spdk_log_open();
+	spdk_log_open(opts->log);
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
 	/*
