@@ -1253,11 +1253,13 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 	}
 
 	if (_request_spans_chunk_boundary(vol, offset, length)) {
+		SPDK_NOTICELOG("_request_spans_chunk_boundary\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
 
 	if (!_iov_array_is_valid(vol, iov, iovcnt, length)) {
+		SPDK_NOTICELOG("_request_spans_chunk_boundary\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
@@ -1356,11 +1358,13 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	}
 
 	if (_request_spans_chunk_boundary(vol, offset, length)) {
+		SPDK_NOTICELOG("_request_spans_chunk_boundary\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
 
 	if (!_iov_array_is_valid(vol, iov, iovcnt, length)) {
+		SPDK_NOTICELOG("_iov_array_is_valid\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
