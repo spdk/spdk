@@ -94,6 +94,30 @@
       "revId": "ef7f8df8d1e3db5a5785c34784150d528fa49a0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e3c49e8_7561b614",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-20T14:13:38Z",
+      "side": 1,
+      "message": "Sure, we can go the easier route for now and introduce `--trtype` option maybe sometime later.\n\nIt\u0027s actually up to you :)",
+      "parentUuid": "a714ab56_9d130ca7",
+      "range": {
+        "startLine": 774,
+        "startChar": 37,
+        "endLine": 774,
+        "endChar": 48
+      },
+      "revId": "ef7f8df8d1e3db5a5785c34784150d528fa49a0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
