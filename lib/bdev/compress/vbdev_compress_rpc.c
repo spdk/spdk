@@ -85,7 +85,7 @@ spdk_rpc_set_compress_pmd(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, jerr, spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("set_compress_pmd", spdk_rpc_set_compress_pmd, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("set_compress_pmd", spdk_rpc_set_compress_pmd, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_compress {
