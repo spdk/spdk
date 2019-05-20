@@ -1,0 +1,242 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c00d7b26_899a447f",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "avg_write_io",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97ea2542_91e3c0a6",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "p99_read_io",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7a7159e_90f27bdb",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "this is a nit - but you should % 100 instead of 99.  1/100 \u003d 1%, 1/99 \u003d something very slightly larger",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8ebb83f_94966404",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "avg_read_latency?\n\nalso consider reducing duplication of these lines with the similar lines from vbdev_delay_dump_info_json above",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8ed6a4d_0528317b",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "p99_read_latency?",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6001be3_795e9dfa",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "remove NOTICELOG",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6de1b12f_c60d47af",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "remove NOTICELOG - too noisy",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c04c3978_b9794847",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "can you wait to TAILQ_INSERT_TAIL until just before you return from this function?  avoids an extra cleanup step in the open/claim/register failure cases below",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e54a4914_da99777a",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "you didn\u0027t claim the bdev so don\u0027t release it here",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ba1720e_f6b5cade",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "release before you close",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9a622e1_f0465200",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "remove NOTICELOG - it\u0027s too noisy",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4eb3f223_ecec3521",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "I don\u0027t think you want this NOTICELOG here - it\u0027s a bit too noisy (this isn\u0027t really an error case)",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61c54d9b_a1a953b9",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "does --99-read-latency work?  or does it have to be alpha-only characters?\n\nsame for --99-write-latency below",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b0a8aed_4f5d5a9f",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-20T20:49:43Z",
+      "side": 1,
+      "message": "these names are inconsistent with associated names for other bdevs",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
