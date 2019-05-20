@@ -859,6 +859,7 @@ _request_spans_chunk_boundary(struct spdk_reduce_vol *vol, uint64_t offset, uint
 {
 	uint64_t start_chunk, end_chunk;
 
+	spdk_reduce_vol_print_info(vol);
 	start_chunk = offset / vol->logical_blocks_per_chunk;
 	end_chunk = (offset + length - 1) / vol->logical_blocks_per_chunk;
 
