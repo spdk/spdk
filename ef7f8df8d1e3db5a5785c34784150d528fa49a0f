@@ -70,6 +70,30 @@
       "revId": "ef7f8df8d1e3db5a5785c34784150d528fa49a0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a714ab56_9d130ca7",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1015163
+      },
+      "writtenOn": "2019-05-20T12:03:00Z",
+      "side": 1,
+      "message": "Having tried to implement both alternatives, it seems that autodetecting the trtype based on the vhost controller name is the easiest solution. Although inserting a `--trtype` option seems the most suitable choice, it is way more invasive as far as the code is concerned. If we want to insert `--trtype` option, we will have to add changes in the RPC calls (this implies changes in `vhost_rpc.c` and in the python scripts `rpc.py`, `vhost.py`) and in the configuration file parsing (`spdk_vhost_scsi/blk_controller_construct()`). In case of the RPC calls, we may also need to change the APIs just to pass over this extra option all the way through this function chain: `spdk_rpc_construct_vhost_scsi_controller`-\u003e`spdk_vhost_scsi_dev_construct`-\u003e`spdk_vhost_dev_register()`.\n\nI can do both . It\u0027s up to you to decide.",
+      "parentUuid": "a7a885a0_695eeab0",
+      "range": {
+        "startLine": 774,
+        "startChar": 37,
+        "endLine": 774,
+        "endChar": 48
+      },
+      "revId": "ef7f8df8d1e3db5a5785c34784150d528fa49a0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
