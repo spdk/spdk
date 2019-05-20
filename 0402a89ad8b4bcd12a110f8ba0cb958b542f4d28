@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74d2b2b5_1ebbf16b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-20T16:35:58Z",
+      "side": 1,
+      "message": "is there any way the denominator here potentially be zero?",
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bb8a6b1_d28c2905",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-20T16:35:58Z",
+      "side": 1,
+      "message": "I\u0027m not following something here.  If buf_allocated is true then in the prev code we\u0027d call _bdev_io_set_bounce_buf() but here if it is true and buf_aligned is also true we do nothing. Is that the intent?",
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1feacf8f_96e0d720",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-20T16:35:58Z",
+      "side": 1,
+      "message": "so the new has_bounce condition, why was this not needed in the old code?",
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
