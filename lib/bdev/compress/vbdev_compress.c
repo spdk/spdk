@@ -61,8 +61,6 @@
 #define COMP_BDEV_NAME "compress"
 
 #define DEV_CHUNK_SZ (16 * 1024)
-#define DEV_LBA_SZ 512
-#define DEV_BACKING_IO_SZ (4 * 1024)
 
 #define ISAL_PMD "compress_isal"
 #define QAT_PMD "compress_qat"
@@ -682,6 +680,12 @@ _comp_bdev_io_submit(void *arg)
 					   comp_bdev);
 	int rc = 0;
 
+	SPDK_NOTICELOG("target %s type %d offset %lu blocks %lu blocklen %u size %lu\n",
+		       bdev_io->bdev->name,
+		       bdev_io->type,
+		       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+		       bdev_io->bdev->blocklen,
+		       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, comp_read_get_buf_cb,
@@ -1107,8 +1111,8 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 
 	/* TODO, configurable chunk size & logical block size */
 	meta_ctx->params.chunk_size = DEV_CHUNK_SZ;
-	meta_ctx->params.logical_block_size = DEV_LBA_SZ;
-	meta_ctx->params.backing_io_unit_size = DEV_BACKING_IO_SZ;
+	meta_ctx->params.logical_block_size = bdev->blocklen;
+	meta_ctx->params.backing_io_unit_size = bdev->blocklen;
 	return meta_ctx;
 }
 
