@@ -175,6 +175,7 @@ bdev_nvme_poll(void *arg)
 {
 	struct nvme_io_channel *ch = arg;
 	int32_t num_completions;
+	uint64_t ticks;
 
 	if (ch->qpair == NULL) {
 		return -1;
@@ -184,7 +185,8 @@ bdev_nvme_poll(void *arg)
 		ch->start_ticks = spdk_get_ticks();
 	}
 
-	num_completions = spdk_nvme_qpair_process_completions(ch->qpair, 0);
+	ticks = spdk_thread_get_ticks(spdk_get_thread());
+	num_completions = spdk_nvme_qpair_process_completions_tsc(ch->qpair, 0, ticks);
 
 	if (ch->collect_spin_stat) {
 		if (num_completions > 0) {
@@ -282,6 +284,7 @@ _bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	opts.delay_pcie_doorbell = true;
+	opts.max_delay_pcie_cq_doorbell = 100; /* in microseconds */
 
 	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
 	if (!nvme_ch->qpair) {
@@ -533,6 +536,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	opts.delay_pcie_doorbell = true;
+	opts.max_delay_pcie_cq_doorbell = 100; /* in microseconds */
 
 	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
 
