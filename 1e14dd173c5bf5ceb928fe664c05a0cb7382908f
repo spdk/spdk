@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "129933c9_b69d49c5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-20T15:56:23Z",
+      "side": 1,
+      "message": "invokation --\u003e invocation",
+      "revId": "1e14dd173c5bf5ceb928fe664c05a0cb7382908f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
