@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "956e6dbc_eaa2ce79",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-20T13:54:17Z",
+      "side": 1,
+      "message": "For future - do not modify sys.path, as this just creates confusion in my opinion.\n\nIf you need addtional path for Python to use, then this should be done at runtime, eg:\n\nPYTHONPATH\u003d$PYTOHNPATH:/home/spdk/scripts scripts/spdk/nvmf/run_nvmf.py",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 24
+      },
+      "revId": "84e53485a7a516d034c735451919adabce92904f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c48a8f8c_6083b6fb",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-20T13:54:17Z",
+      "side": 1,
+      "message": "Why do we move this up? IMO not a neccessary change.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 20
+      },
+      "revId": "84e53485a7a516d034c735451919adabce92904f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e86a8a0_cef71e01",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-20T13:54:17Z",
+      "side": 1,
+      "message": "So if I understand this right:\n- dirpath variable is created in common.py and not explicitly imported here, thanks to \"import\"\n- we create variable config_path based on dirpath and \"/config.json\" and use it later.\n\nSo in the end - path to config.json is actually still hardcoded (yes, that\u0027s my bad when creating this script in the first place), but we unnecessarily modify sys.path[] and create new variables.\n\nIf the aim of this patch was to be able to specify a custom location of config.json, then I think you should use argparse. Or even just sys.argv[], as using argparse for 1 argument seems like quite an overkill.",
+      "range": {
+        "startLine": 654,
+        "startChar": 3,
+        "endLine": 654,
+        "endChar": 15
+      },
+      "revId": "84e53485a7a516d034c735451919adabce92904f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ead38933_77dba725",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-20T13:54:17Z",
+      "side": 1,
+      "message": "Use os.path.join()",
+      "range": {
+        "startLine": 654,
+        "startChar": 18,
+        "endLine": 654,
+        "endChar": 42
+      },
+      "revId": "84e53485a7a516d034c735451919adabce92904f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
