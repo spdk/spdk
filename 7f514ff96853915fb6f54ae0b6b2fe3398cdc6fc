@@ -196,6 +196,24 @@
     },
     {
       "key": {
+        "uuid": "045264ae_1cd9b536",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T13:27:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f6d4f1b8_151a8e35",
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ecdcefb8_dc218ed6",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -267,6 +285,30 @@
     },
     {
       "key": {
+        "uuid": "2ebcc0af_77673cf6",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T13:27:37Z",
+      "side": 1,
+      "message": "I want to operate on move object as context of each callback in reloc module. I don\u0027t think is less readable.",
+      "parentUuid": "97a91b9a_57e955ea",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 49
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "83a1f376_46da30d0",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -326,6 +368,30 @@
       "side": 1,
       "message": "Then perhaps an assertion would be a better fit here?",
       "parentUuid": "7bd4e865_514af2b4",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4004ccb_1d241ae0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T13:27:37Z",
+      "side": 1,
+      "message": "assert won\u0027t work in non debug build",
+      "parentUuid": "0c909010_4d1ed423",
       "range": {
         "startLine": 230,
         "startChar": 0,
@@ -644,6 +710,30 @@
     },
     {
       "key": {
+        "uuid": "02abb69e_7bfcff10",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T13:27:37Z",
+      "side": 1,
+      "message": "I\u0027ve removed this variable.",
+      "parentUuid": "25bb8eac_8987c3fb",
+      "range": {
+        "startLine": 480,
+        "startChar": 18,
+        "endLine": 480,
+        "endChar": 25
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b8e901d5_e6f9e9f6",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -750,6 +840,30 @@
     },
     {
       "key": {
+        "uuid": "a3ad3a1d_bffd1f50",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T13:27:37Z",
+      "side": 1,
+      "message": "No, I need this patch in first place.",
+      "parentUuid": "6af90057_92cbd575",
+      "range": {
+        "startLine": 550,
+        "startChar": 0,
+        "endLine": 550,
+        "endChar": 23
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da46e7b7_0f14ad5c",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -809,6 +923,30 @@
       "side": 1,
       "message": "So this can only happen when we\u0027re shutting off? Otherwise this queue should be empty? If so, please add a comment explaining this (an assertion would also be nice here).",
       "parentUuid": "39dcbf32_7c50bf3c",
+      "range": {
+        "startLine": 656,
+        "startChar": 0,
+        "endLine": 656,
+        "endChar": 89
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6a79f8d_ae656a47",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T13:27:37Z",
+      "side": 1,
+      "message": "I can add some comment here.",
+      "parentUuid": "2e796120_61e386f0",
       "range": {
         "startLine": 656,
         "startChar": 0,
