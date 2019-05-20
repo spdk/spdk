@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ee0fe72_22ed4d31",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T12:20:52Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct. Consider the following example:\nWe have 5 parallel units, with 1 chunk (second) offline:\n\n[OK] [OFF] [OK] [OK] [OK]\n                 ^^\n              punit_num\n\npunit_num points at the 3rd chunk and ppa.lbk \u003d\u003d 0. The code will incorrectly result with 3 * xfer_size, while it should skip the second chunk resulting in 2 * xfer_size. We need to take that into account, so you should do something similar to what\u0027s in ftl_band_next_xfer_ppa. Retrieve the chunk pointed by punit_num and count the number of operational chunks from the beginning of the band to this one.",
+      "range": {
+        "startLine": 625,
+        "startChar": 35,
+        "endLine": 625,
+        "endChar": 44
+      },
+      "revId": "b57ab51a64a366aafa6af274b7a9a2784d9fd868",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b87a8eb_8a7d74d5",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-20T12:20:52Z",
+      "side": 1,
+      "message": "Why did you change this?",
+      "range": {
+        "startLine": 478,
+        "startChar": 9,
+        "endLine": 478,
+        "endChar": 52
+      },
+      "revId": "b57ab51a64a366aafa6af274b7a9a2784d9fd868",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
