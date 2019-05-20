@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5496b26e_c714aaca",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T13:38:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8ee0fe72_22ed4d31",
+      "range": {
+        "startLine": 625,
+        "startChar": 35,
+        "endLine": 625,
+        "endChar": 44
+      },
+      "revId": "b57ab51a64a366aafa6af274b7a9a2784d9fd868",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b87a8eb_8a7d74d5",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 13
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-20T12:20:52Z",
       "side": 1,
       "message": "Why did you change this?",
+      "range": {
+        "startLine": 478,
+        "startChar": 9,
+        "endLine": 478,
+        "endChar": 52
+      },
+      "revId": "b57ab51a64a366aafa6af274b7a9a2784d9fd868",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2692850_0d5e4f8a",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-20T13:38:12Z",
+      "side": 1,
+      "message": "I need a buffer with the same size that is stored on disk - aligned to 4K.",
+      "parentUuid": "6b87a8eb_8a7d74d5",
       "range": {
         "startLine": 478,
         "startChar": 9,
