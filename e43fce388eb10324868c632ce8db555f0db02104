@@ -34,6 +34,24 @@
       "revId": "e43fce388eb10324868c632ce8db555f0db02104",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "196cf62e_05e343fb",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1015163
+      },
+      "writtenOn": "2019-05-20T12:37:00Z",
+      "side": 1,
+      "message": "It looks OK. I have a problem with pushing. I fetched those two commits, rebased on top and removed the current patch. When I try to push to refs/for/master I get:\n\nTo https://review.gerrithub.io/spdk/spdk\n ! [remote rejected] HEAD -\u003e refs/for/master (cannot add patch set to 454878.)\nerror: failed to push some refs to \u0027https://review.gerrithub.io/spdk/spdk\u0027\n\nDoes it have to do with the fact that I have incorporated patches that are not mine?",
+      "parentUuid": "2ba16b8a_0235b2ac",
+      "revId": "e43fce388eb10324868c632ce8db555f0db02104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
