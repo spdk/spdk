@@ -6,6 +6,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
 rpc_py="$rootdir/scripts/rpc.py"
+source "$rootdir/scripts/common.sh"
 
 function run_fio()
 {
@@ -52,7 +53,51 @@ function nbd_function_test() {
 	return 0
 }
 
+function compress_cleanup() {
+	rm -rf $testdir/compress.conf
+	$rootdir/test/app/bdev_svc/bdev_svc &
+	bdev_svc_pid=$!
+	trap "killprocess $bdev_svc_pid; exit 1" SIGINT SIGTERM EXIT
+	waitforlisten $bdev_svc_pid
+	bdf=$(iter_pci_class_code 01 08 02 | head -1)
+	$rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
+	$rpc_py delete_compress_bdev COMP_Nvme0n1
+	trap - SIGINT SIGTERM EXIT
+	killprocess $bdev_svc_pid
+}
+
 timing_enter bdev
+
+if [ $SPDK_TEST_REDUCE -eq 0 ]; then
+	timing_enter compress
+
+	# create a one entry conf file for the nvme device
+	$rootdir/scripts/gen_nvme.sh >> $testdir/compress.conf
+
+	# use the bdev svc to create a compress bdev, this assumes
+	# there is no other metadata on the nvme device (gpt, lvol, etc)
+	$rootdir/test/app/bdev_svc/bdev_svc &
+	bdev_svc_pid=$!
+	trap "killprocess $bdev_svc_pid; compress_cleanup; exit 1" SIGINT SIGTERM EXIT
+	waitforlisten $bdev_svc_pid
+	bdf=$(iter_pci_class_code 01 08 02 | head -1)
+	$rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
+	$rpc_py construct_compress_bdev -b Nvme0n1 -p /tmp -d compress_isal
+	trap - SIGINT SIGTERM EXIT
+	killprocess $bdev_svc_pid
+
+	# run bdevio and bdevperf tests
+	$testdir/bdevio/bdevio -c $testdir/compress.conf
+	if [ $RUN_NIGHTLY -eq 0 ]; then
+		$testdir/bdevperf/bdevperf -c $testdir/compress.conf -q 32 -o 4096 -w verify -t 3
+	else
+		$testdir/bdevperf/bdevperf -c $testdir/compress.conf -q 64 -o 4096 -w verify -t 30
+	fi
+
+	# remove the compress on disk metadata and config file
+	compress_cleanup
+	timing_exit compress
+fi
 
 # Create a file to be used as an AIO backend
 dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
