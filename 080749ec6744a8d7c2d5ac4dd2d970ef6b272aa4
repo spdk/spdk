@@ -68,6 +68,30 @@
       "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "451d3f8d_53db1340",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-20T15:42:07Z",
+      "side": 1,
+      "message": "These are indeed the qos tests, why would we not skip them?",
+      "parentUuid": "71cc11e5_be8e8f3f",
+      "range": {
+        "startLine": 242,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 2
+      },
+      "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
