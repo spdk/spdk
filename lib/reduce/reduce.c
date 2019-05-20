@@ -859,8 +859,11 @@ _request_spans_chunk_boundary(struct spdk_reduce_vol *vol, uint64_t offset, uint
 {
 	uint64_t start_chunk, end_chunk;
 
+	spdk_reduce_vol_print_info(vol);
 	start_chunk = offset / vol->logical_blocks_per_chunk;
+	SPDK_NOTICELOG("len %lu offset %lu start %lu\n", length, length, start_chunk);
 	end_chunk = (offset + length - 1) / vol->logical_blocks_per_chunk;
+	SPDK_NOTICELOG("end %lu\n", end_chunk);
 
 	return (start_chunk != end_chunk);
 }
@@ -1253,11 +1256,13 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 	}
 
 	if (_request_spans_chunk_boundary(vol, offset, length)) {
+		SPDK_NOTICELOG("_request_spans_chunk_boundary\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
 
 	if (!_iov_array_is_valid(vol, iov, iovcnt, length)) {
+		SPDK_NOTICELOG("_request_spans_chunk_boundary\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
@@ -1356,11 +1361,13 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	}
 
 	if (_request_spans_chunk_boundary(vol, offset, length)) {
+		SPDK_NOTICELOG("_request_spans_chunk_boundary\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
 
 	if (!_iov_array_is_valid(vol, iov, iovcnt, length)) {
+		SPDK_NOTICELOG("_iov_array_is_valid\n");
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}

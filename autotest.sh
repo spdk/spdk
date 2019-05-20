@@ -158,6 +158,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test suite test/rpc_client/rpc_client.sh
 	run_test suite ./test/json_config/json_config.sh
 
+        if [ $SPDK_TEST_REDUCE -eq 1 ]; then
+                run_test suite ./test/compress/compress.sh
+        fi
+
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test suite test/bdev/blockdev.sh
 		if [[ $RUN_NIGHTLY -eq 1 ]]; then
