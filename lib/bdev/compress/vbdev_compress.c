@@ -61,8 +61,7 @@
 #define COMP_BDEV_NAME "compress"
 
 #define DEV_CHUNK_SZ (16 * 1024)
-#define DEV_LBA_SZ 512
-#define DEV_BACKING_IO_SZ (4 * 1024)
+#define DEV_LBA_IO_SZ (4 * 1024)
 
 #define ISAL_PMD "compress_isal"
 #define QAT_PMD "compress_qat"
@@ -1104,8 +1103,8 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 
 	/* TODO, configurable chunk size & logical block size */
 	meta_ctx->params.chunk_size = DEV_CHUNK_SZ;
-	meta_ctx->params.logical_block_size = DEV_LBA_SZ;
-	meta_ctx->params.backing_io_unit_size = DEV_BACKING_IO_SZ;
+	meta_ctx->params.logical_block_size = bdev->blocklen;
+	meta_ctx->params.backing_io_unit_size = DEV_LBA_IO_SZ;
 	return meta_ctx;
 }
 
