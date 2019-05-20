@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c2a08fa_88d7b6d1",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-20T07:31:35Z",
+      "side": 0,
+      "message": "Since the sleep is being removed, shouldn\u0027t waitforiscsilogin() be used instead ?\nSame for other places in this patch where sleep is removed.",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 7
+      },
+      "revId": "ab03d38701886101bc8f011b026194148a024acd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
