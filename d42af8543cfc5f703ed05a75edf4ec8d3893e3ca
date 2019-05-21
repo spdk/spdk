@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc08fe14_9e51caab",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2928,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-21T15:43:27Z",
+      "side": 1,
+      "message": "I was thinking about having one common xattr for this, but couldn\u0027t think of good name that would suit both cases. If you think that this could be a good change and you have a good name for xattr I\u0027d be happy to get such suggestion :)",
+      "range": {
+        "startLine": 2926,
+        "startChar": 0,
+        "endLine": 2928,
+        "endChar": 82
+      },
+      "revId": "d42af8543cfc5f703ed05a75edf4ec8d3893e3ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
