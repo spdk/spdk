@@ -61,7 +61,6 @@ bool lvol_already_opened = false;
 bool g_examine_done = false;
 bool g_bdev_alias_already_exists = false;
 bool g_lvs_with_name_already_exists = false;
-bool g_lvol_deletable = true;
 
 int
 spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
@@ -446,7 +445,7 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 bool
 spdk_lvol_deletable(struct spdk_lvol *lvol)
 {
-	return g_lvol_deletable;
+	return true;
 }
 
 void
@@ -1034,13 +1033,6 @@ ut_lvol_destroy(void)
 	CU_ASSERT(g_lvolerrno == 0);
 	lvol2 = g_lvol;
 
-	/* Unsuccessful lvols destroy */
-	g_lvol_deletable = false;
-	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
-	CU_ASSERT(g_lvol != NULL);
-	CU_ASSERT(g_lvserrno == -EPERM);
-
-	g_lvol_deletable = true;
 	/* Successful lvols destroy */
 	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
