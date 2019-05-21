@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "910789fb_222ced80",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:57:08Z",
+      "side": 1,
+      "message": "blank line after variable declaration",
+      "revId": "641dbc416b208ec68b5ce2c1944ae0e34a086591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "832cbf11_903f98f3",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:57:08Z",
+      "side": 1,
+      "message": "Can you reverse these two:\n\nif (!stat_entry) {\n    ctx-\u003estatus \u003d false;\n    return;\n}\n\nstat_entry-\u003ethread_name \u003d ...",
+      "revId": "641dbc416b208ec68b5ce2c1944ae0e34a086591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18928c67_139d8f61",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:57:08Z",
+      "side": 1,
+      "message": "Also reverse this error check:\n\nif (stat_entry-\u003ethread_name \u003d\u003d NULL) {\n    free(stat_entry-\u003ethread_name);\n    ...\n}\n\nTAILQ_INSERT_TAIL(...)",
+      "revId": "641dbc416b208ec68b5ce2c1944ae0e34a086591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a08ca27_297cc908",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:57:08Z",
+      "side": 1,
+      "message": "In order to match our new RPC naming convention, can you change this to thread_get_stats?",
+      "revId": "641dbc416b208ec68b5ce2c1944ae0e34a086591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
