@@ -231,6 +231,9 @@ struct spdk_vhost_dev_backend {
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len);
 
+void spdk_vhost_set_inflight(struct spdk_vhost_session *vsession,
+			     struct spdk_vhost_virtqueue *virtqueue, uint16_t idx);
+
 uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
 				      uint16_t reqs_len);
 

@@ -222,6 +222,7 @@ spdk_vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev)
 
 	rte_vhost_driver_get_protocol_features(vdev->path, &protocol_features);
 	protocol_features |= (1ULL << VHOST_USER_PROTOCOL_F_CONFIG);
+	protocol_features |= (1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD);
 	rte_vhost_driver_set_protocol_features(vdev->path, protocol_features);
 }
 
