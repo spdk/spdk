@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da7a0af5_8e520052",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-21T10:35:53Z",
+      "side": 1,
+      "message": "You probably meant to return rc here, right ?",
+      "range": {
+        "startLine": 852,
+        "startChar": 5,
+        "endLine": 852,
+        "endChar": 11
+      },
+      "revId": "1bfefb05e884803acc77985ff14d5032a1a995d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
