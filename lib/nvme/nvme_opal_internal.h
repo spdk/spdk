@@ -52,6 +52,8 @@
 
 #define SPDK_DTAERROR_NO_METHOD_STATUS	0x89
 
+typedef int (spdk_opal_cb)(struct spdk_opal_dev *dev, void *data);
+
 enum opal_token_type {
 	OPAL_DTA_TOKENID_BYTESTRING	= 0xE0,
 	OPAL_DTA_TOKENID_SINT		= 0xE1,
@@ -264,8 +266,8 @@ struct opal_locking_range_setup_session {
 	uint8_t _padding[7];
 	uint64_t range_start;
 	uint64_t range_length;
-	bool RLE; /* Read Lock enabled */
-	bool WLE; /* Write Lock Enabled */
+	bool read_lock_enabled;
+	bool write_lock_enabled;
 	struct opal_common_session session;
 };
 
