@@ -126,6 +126,8 @@ struct ftl_cb {
 };
 
 struct ftl_io_channel {
+	/* Device */
+	struct spdk_ftl_dev			*dev;
 	/* IO pool element size */
 	size_t					elem_size;
 	/* IO pool */
