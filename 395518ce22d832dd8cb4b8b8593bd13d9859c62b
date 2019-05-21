@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26ebecd6_d26f73f0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T19:01:07Z",
+      "side": 1,
+      "message": "I think a better name would be \"spdk_nvme_ctrlr_create_io_qpair_raw\" - this function isn\u0027t allocating the queue pair. It\u0027s creating one at the memory location you provided.",
+      "revId": "395518ce22d832dd8cb4b8b8593bd13d9859c62b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2010e46_79f04b85",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T19:01:07Z",
+      "side": 1,
+      "message": "I don\u0027t believe there is ever a functional case where we can\u0027t get the sq_paddr by calling spdk_vtophys on sq_vaddr. So I think the physical addresses can be dropped from the function. Were you thinking there was some scenario where you\u0027d use memory that wasn\u0027t registered with SPDK? I think that could lead to a lot of problems.",
+      "revId": "395518ce22d832dd8cb4b8b8593bd13d9859c62b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "935c6814_246b1619",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T19:01:07Z",
+      "side": 1,
+      "message": "Would it be possible to combine this with nvme_transport_ctrlr_create_io_qpair and just pass NULL for the vaddrs?",
+      "revId": "395518ce22d832dd8cb4b8b8593bd13d9859c62b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
