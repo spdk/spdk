@@ -105,6 +105,8 @@ struct spdk_thread {
 	TAILQ_ENTRY(spdk_thread)	tailq;
 	char				*name;
 
+	bool				exit;
+
 	struct spdk_cpuset		*cpumask;
 
 	uint64_t			tsc_last;
@@ -330,7 +332,19 @@ spdk_set_thread(struct spdk_thread *thread)
 void
 spdk_thread_exit(struct spdk_thread *thread)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Freeing thread %s\n", thread->name);
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Exit thread %s\n", thread->name);
+
+	assert(tls_thread == thread);
+
+	thread->exit = true;
+}
+
+void
+spdk_thread_destroy(struct spdk_thread *thread)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Destroy thread %s\n", thread->name);
+
+	assert(thread->exit == true);
 
 	if (tls_thread == thread) {
 		tls_thread = NULL;
@@ -400,6 +414,10 @@ _spdk_msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 		assert(msg != NULL);
 		msg->fn(msg->arg);
 
+		if (thread->exit) {
+			break;
+		}
+
 		if (thread->msg_cache_count < SPDK_MSG_MEMPOOL_CACHE_SIZE) {
 			/* Insert the messages at the head. We want to re-use the hot
 			 * ones. */
@@ -459,6 +477,10 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 				   active_pollers_head, tailq, tmp) {
 		int poller_rc;
 
+		if (thread->exit) {
+			break;
+		}
+
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 			free(poller);
@@ -490,6 +512,10 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 
 	TAILQ_FOREACH_SAFE(poller, &thread->timer_pollers, tailq, tmp) {
 		int timer_rc = 0;
+
+		if (thread->exit) {
+			break;
+		}
 
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);

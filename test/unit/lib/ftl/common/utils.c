@@ -120,7 +120,9 @@ void
 test_free_ftl_dev(struct spdk_ftl_dev *dev)
 {
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	spdk_set_thread(dev->core_thread.thread);
 	spdk_thread_exit(dev->core_thread.thread);
+	spdk_thread_destroy(dev->core_thread.thread);
 	free(dev->punits);
 	free(dev->bands);
 	free(dev);
