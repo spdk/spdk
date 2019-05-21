@@ -74,11 +74,10 @@
 typedef void (*nvme_tcp_qpair_xfer_complete_cb)(void *cb_arg);
 
 struct _iov_ctx {
-	struct iovec    *iov;
-	int             num_iovs;
-	uint32_t        iov_offset;
-	int             iovcnt;
-	uint32_t        mapped_len;
+	struct iovec	*iov;
+	int		iovcnt;
+	uint32_t	iov_offset;
+	uint32_t	mapped_len;
 };
 
 struct nvme_tcp_pdu {
@@ -192,13 +191,12 @@ nvme_tcp_pdu_calc_data_digest(struct nvme_tcp_pdu *pdu)
 }
 
 static inline void
-_iov_ctx_init(struct _iov_ctx *ctx, struct iovec *iovs, int num_iovs,
+_iov_ctx_init(struct _iov_ctx *ctx, struct iovec *iov, int iovcnt,
 	      uint32_t iov_offset)
 {
-	ctx->iov = iovs;
-	ctx->num_iovs = num_iovs;
+	ctx->iov = iov;
+	ctx->iovcnt = iovcnt;
 	ctx->iov_offset = iov_offset;
-	ctx->iovcnt = 0;
 	ctx->mapped_len = 0;
 }
 
@@ -208,13 +206,14 @@ _iov_ctx_set_iov(struct _iov_ctx *ctx, uint8_t *data, uint32_t data_len)
 	if (ctx->iov_offset >= data_len) {
 		ctx->iov_offset -= data_len;
 	} else {
+		assert(ctx->iovcnt > 0);
 		ctx->iov->iov_base = data + ctx->iov_offset;
 		ctx->iov->iov_len = data_len - ctx->iov_offset;
 		ctx->mapped_len += data_len - ctx->iov_offset;
 		ctx->iov_offset = 0;
 		ctx->iov++;
-		ctx->iovcnt++;
-		if (ctx->iovcnt == ctx->num_iovs) {
+		ctx->iovcnt--;
+		if (ctx->iovcnt == 0) {
 			return false;
 		}
 	}
@@ -292,7 +291,7 @@ end:
 		assert(plen == pdu->hdr.common.plen);
 	}
 
-	return ctx->iovcnt;
+	return num_iovs - ctx->iovcnt;
 }
 
 static int
@@ -324,7 +323,7 @@ end:
 	if (_mapped_length != NULL) {
 		*_mapped_length = ctx->mapped_len;
 	}
-	return ctx->iovcnt;
+	return num_iovs - ctx->iovcnt;
 }
 
 static int
