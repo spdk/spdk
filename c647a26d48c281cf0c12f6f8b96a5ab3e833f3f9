@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cbad3bcb_a2bf0e3e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-21T10:18:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c3a44b7e_177f7728",
+      "range": {
+        "startLine": 273,
+        "startChar": 0,
+        "endLine": 276,
+        "endChar": 2
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18b12032_14bfe79c",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 35
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-16T14:08:30Z",
       "side": 1,
       "message": "I realize this was in original function, but I don\u0027t think this will ever be true. We already were checking ocf_cache_has_pending_requests() with this pointer.\n\nSee comment on line 306",
+      "range": {
+        "startLine": 278,
+        "startChar": 0,
+        "endLine": 281,
+        "endChar": 2
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dccd4738_32dc3f2a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-21T10:18:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "18b12032_14bfe79c",
       "range": {
         "startLine": 278,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5566846b_cf59856f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-21T10:18:08Z",
+      "side": 1,
+      "message": "Ack. Yes, I guess it always running.",
+      "parentUuid": "4855d6ed_8bb8881e",
+      "range": {
+        "startLine": 283,
+        "startChar": 0,
+        "endLine": 286,
+        "endChar": 2
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0267de26_76d105f6",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 35
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "bc5455de_2d677040",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-21T10:18:08Z",
+      "side": 1,
+      "message": "Yes, this should not happen at this point.\nError handling is not tested, but I think that doing just vbdev_ocf_destruct() will crash.",
+      "parentUuid": "0267de26_76d105f6",
+      "range": {
+        "startLine": 306,
+        "startChar": 0,
+        "endLine": 306,
+        "endChar": 52
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0bc1324_e82e7cf3",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 35
@@ -105,6 +201,30 @@
       "writtenOn": "2019-05-16T14:08:30Z",
       "side": 1,
       "message": "Would it be possible to do vbdev_ocf_mngt_start() on register_path in separate patch ? Trylock does not seem required for that.",
+      "range": {
+        "startLine": 850,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 2
+      },
+      "revId": "c647a26d48c281cf0c12f6f8b96a5ab3e833f3f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b1f6708_a170ebd8",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-21T10:18:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d0bc1324_e82e7cf3",
       "range": {
         "startLine": 850,
         "startChar": 0,
