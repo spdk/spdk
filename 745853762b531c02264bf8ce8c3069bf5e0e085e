@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c01ff37c_4ec5fa36",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:57:45Z",
+      "side": 1,
+      "message": "Let\u0027s iterate using the CIRCLEQ instead, as we have it exactly for this case - iterating through the online chunks. Something like this:\n\nstruct ftl_chunk *current \u003d ftl_chunk_from_ppa(band, ppa);\nsize_t punit_offset \u003d 0;\n\nCIRCLEQ_FOREACH(chunk, \u0026band-\u003echunks, circleq) {\n if (current \u003d\u003d chunk) {\n   break;\n }\n punit_offset++;\n}\n\nreturn xfer_size * (num_stripes + punit_offset) + off;",
+      "range": {
+        "startLine": 627,
+        "startChar": 0,
+        "endLine": 632,
+        "endChar": 2
+      },
+      "revId": "745853762b531c02264bf8ce8c3069bf5e0e085e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
