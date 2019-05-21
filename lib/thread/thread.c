@@ -532,9 +532,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	} else if (rc > 0) {
 		/* Poller status busy */
 		thread->stats.busy_tsc += now - thread->tsc_last;
-	} else {
-		/* Poller status unknown */
-		thread->stats.unknown_tsc += now - thread->tsc_last;
 	}
 	thread->tsc_last = now;
 

@@ -328,7 +328,6 @@ const char *spdk_thread_get_name(const struct spdk_thread *thread);
 struct spdk_thread_stats {
 	uint64_t busy_tsc;
 	uint64_t idle_tsc;
-	uint64_t unknown_tsc;
 };
 
 /**
