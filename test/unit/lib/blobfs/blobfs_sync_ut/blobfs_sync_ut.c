@@ -274,6 +274,37 @@ fs_create_sync(void)
 }
 
 static void
+fs_rename_sync(void)
+{
+	int rc;
+	struct spdk_fs_thread_ctx *channel;
+	struct spdk_thread *thread;
+
+	ut_send_request(_fs_init, NULL);
+
+	channel = spdk_fs_alloc_thread_ctx(g_fs);
+	CU_ASSERT(channel != NULL);
+
+	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	CU_ASSERT(strcmp(spdk_file_get_name(g_file), "testfile") == 0);
+
+	rc = spdk_fs_rename_file(g_fs, channel, "testfile", "newtestfile");
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(strcmp(spdk_file_get_name(g_file), "newtestfile") == 0);
+
+	spdk_file_close(g_file, channel);
+	spdk_fs_free_thread_ctx(channel);
+
+	thread = spdk_get_thread();
+	while (spdk_thread_poll(thread, 0, 0) > 0) {}
+
+	ut_send_request(_fs_unload, NULL);
+}
+
+static void
 cache_append_no_cache(void)
 {
 	int rc;
@@ -395,6 +426,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "cache read after write", cache_read_after_write) == NULL ||
 		CU_add_test(suite, "write_null_buffer", cache_write_null_buffer) == NULL ||
 		CU_add_test(suite, "create_sync", fs_create_sync) == NULL ||
+		CU_add_test(suite, "rename_sync", fs_rename_sync) == NULL ||
 		CU_add_test(suite, "append_no_cache", cache_append_no_cache) == NULL ||
 		CU_add_test(suite, "delete_file_without_close", fs_delete_file_without_close) == NULL
 	) {
