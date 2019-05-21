@@ -213,7 +213,7 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 static void
 ftl_reloc_free_io(struct ftl_band_reloc *breloc, struct ftl_io *io)
 {
-	spdk_dma_free(io->iov.single.iov_base);
+	spdk_dma_free(io->iov[0].iov_base);
 	free(io->lba.vector);
 	spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1);
 }

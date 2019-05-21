@@ -75,11 +75,7 @@ ftl_io_dec_req(struct ftl_io *io)
 struct iovec *
 ftl_io_iovec(struct ftl_io *io)
 {
-	if (io->iov_cnt > 1) {
-		return io->iov.vector;
-	} else {
-		return &io->iov.single;
-	}
+	return &io->iov[0];
 }
 
 uint64_t
@@ -166,8 +162,8 @@ ftl_io_init_iovec(struct ftl_io *io, void *buf, size_t lbk_cnt)
 	io->lbk_cnt = lbk_cnt;
 	io->iov_cnt = 1;
 
-	io->iov.single.iov_base = buf;
-	io->iov.single.iov_len = lbk_cnt * PAGE_SIZE;
+	io->iov[0].iov_base = buf;
+	io->iov[0].iov_len = lbk_cnt * PAGE_SIZE;
 }
 
 void
@@ -292,11 +288,8 @@ ftl_io_user_init(struct spdk_io_channel *_ioch, uint64_t lba, size_t lbk_cnt, st
 	io->lbk_cnt = lbk_cnt;
 	io->iov_cnt = iov_cnt;
 
-	if (iov_cnt > 1) {
-		io->iov.vector = iov;
-	} else {
-		io->iov.single = *iov;
-	}
+	assert(iov_cnt < FTL_IO_MAX_IOVEC);
+	memcpy(io->iov, iov, iov_cnt * sizeof(*iov));
 
 	ftl_trace_lba_io_init(io->dev, io);
 
