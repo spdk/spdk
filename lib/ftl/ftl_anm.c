@@ -116,7 +116,8 @@ ftl_anm_log_range(struct spdk_ocssd_chunk_notification_entry *log)
 }
 
 static struct ftl_anm_event *
-ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_ppa ppa, enum ftl_anm_range range)
+ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
+		    enum ftl_anm_range range, size_t num_lbks)
 {
 	struct ftl_anm_event *event;
 
@@ -128,6 +129,19 @@ ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_ppa ppa, enum ftl_anm_r
 	event->dev = dev;
 	event->ppa = ppa;
 	event->range = range;
+
+	switch (event->range) {
+	case FTL_ANM_RANGE_LBK:
+		event->num_lbks = num_lbks;
+		break;
+	case FTL_ANM_RANGE_CHK:
+	case FTL_ANM_RANGE_PU:
+		event->num_lbks = ftl_dev_lbks_in_chunk(dev);
+		break;
+	default:
+		assert(false);
+	}
+
 
 	return event;
 }
@@ -145,7 +159,7 @@ ftl_anm_process_log(struct ftl_anm_poller *poller, struct ftl_anm_ctrlr *ctrlr,
 		return -1;
 	}
 
-	event = ftl_anm_event_alloc(poller->dev, ppa, ftl_anm_log_range(log));
+	event = ftl_anm_event_alloc(poller->dev, ppa, ftl_anm_log_range(log), log->nlb);
 	poller->fn(event);
 
 	return 0;
