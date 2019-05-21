@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "edd08134_b83bcf21",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-21T07:48:46Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "b5e62b74_21f54d29",
+      "revId": "b3a1922c44caa4c8e29f4b012144a81111e266ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d58ae0ac_d111fdc2",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 15
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-19T22:34:43Z",
       "side": 1,
       "message": "these 3 comments don\u0027t seem to match the next 2 lines of code, are they correct?",
+      "revId": "b3a1922c44caa4c8e29f4b012144a81111e266ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c1133cc_793b3d48",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-21T07:48:46Z",
+      "side": 1,
+      "message": "Yeah, I copied from the specification, and 1,2 are implemented in spdk_scsi_pr_remove_all_other_regs().",
+      "parentUuid": "d58ae0ac_d111fdc2",
       "revId": "b3a1922c44caa4c8e29f4b012144a81111e266ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
