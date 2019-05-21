@@ -400,7 +400,7 @@ init(void)
 	struct spdk_env_opts opts;
 
 	spdk_env_opts_init(&opts);
-	opts.name = "perf";
+	opts.name = "ioat_perf";
 	opts.core_mask = g_user_config.core_mask;
 	if (spdk_env_init(&opts) < 0) {
 		return -1;
