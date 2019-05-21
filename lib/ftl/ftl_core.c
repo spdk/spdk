@@ -48,9 +48,6 @@
 #include "ftl_debug.h"
 #include "ftl_reloc.h"
 
-/* Max number of iovecs */
-#define FTL_MAX_IOV 1024
-
 struct ftl_wptr {
 	/* Owner device */
 	struct spdk_ftl_dev		*dev;
@@ -1615,7 +1612,7 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 {
 	struct ftl_io *io;
 
-	if (iov_cnt == 0 || iov_cnt > FTL_MAX_IOV) {
+	if (iov_cnt == 0 || iov_cnt > FTL_IO_MAX_IOVEC) {
 		return -EINVAL;
 	}
 
@@ -1667,7 +1664,7 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 {
 	struct ftl_io *io;
 
-	if (iov_cnt == 0 || iov_cnt > FTL_MAX_IOV) {
+	if (iov_cnt == 0 || iov_cnt > FTL_IO_MAX_IOVEC) {
 		return -EINVAL;
 	}
 

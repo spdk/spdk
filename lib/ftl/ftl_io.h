@@ -161,13 +161,8 @@ struct ftl_io {
 	/* Number of lbks */
 	size_t					lbk_cnt;
 
-	union {
-		/* IO vector table */
-		struct iovec			*vector;
-
-		/* Single iovec */
-		struct iovec			single;
-	} iov;
+#define FTL_IO_MAX_IOVEC 64
+	struct iovec				iov[FTL_IO_MAX_IOVEC];
 
 	/* Metadata */
 	void					*md;
