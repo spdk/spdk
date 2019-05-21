@@ -212,6 +212,8 @@ prepare_submit(struct ocf_io *io)
 	struct vbdev_ocf_qcxt *qctx;
 	struct vbdev_ocf_base *base;
 	ocf_queue_t q = io->io_queue;
+	ocf_cache_t cache;
+	struct vbdev_ocf_cache_ctx *cctx;
 	int rc = 0;
 
 	io_ctx->rq_cnt++;
@@ -229,6 +231,14 @@ prepare_submit(struct ocf_io *io)
 		if (io_ctx->ch == NULL) {
 			return -EPERM;
 		}
+		return 0;
+	}
+
+	cache = ocf_queue_get_cache(q);
+	cctx = ocf_cache_get_priv(cache);
+
+	if (q == cctx->mngt_queue) {
+		io_ctx->ch = base->management_channel;
 		return 0;
 	}
 
