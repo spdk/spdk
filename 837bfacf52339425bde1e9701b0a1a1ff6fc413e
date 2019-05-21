@@ -1,0 +1,170 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb67fbd6_8f57ac0f",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-21T08:45:16Z",
+      "side": 1,
+      "message": "lun will be freed in scsi_lun_remove() later. So memset(\u0026lun-\u003ereservation is not necessary?\n\nAnd when spdk_scsi_lun_destruct is called, outstanding IOs to the LUN may still exist. So clearing reg_head list should be done scsi_lun_remove() instead?",
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab6b5501_6aa16100",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-21T08:45:16Z",
+      "side": 1,
+      "message": "Please use a single space here and use tabs between spdk_scsi_port and *initiator_port",
+      "range": {
+        "startLine": 71,
+        "startChar": 8,
+        "endLine": 71,
+        "endChar": 12
+      },
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef3ef5e4_fb96cbf0",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-21T08:45:16Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 72,
+        "startChar": 8,
+        "endLine": 72,
+        "endChar": 12
+      },
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "004e7f07_43d9f2c3",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-21T08:45:16Z",
+      "side": 1,
+      "message": "this empty line will not be necessary.",
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e96cd405_a22247fa",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-21T08:45:16Z",
+      "side": 1,
+      "message": "unregistered",
+      "range": {
+        "startLine": 179,
+        "startChar": 7,
+        "endLine": 179,
+        "endChar": 17
+      },
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7697f1f8_fdbee19e",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-21T08:45:16Z",
+      "side": 1,
+      "message": "you may be able to write \"return spdk_scsi_pr_register_registrant\" without using rc here.",
+      "range": {
+        "startLine": 196,
+        "startChar": 2,
+        "endLine": 196,
+        "endChar": 6
+      },
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c979ad34_e102e7a0",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-21T08:45:16Z",
+      "side": 1,
+      "message": "this empty line will not be necessary.",
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff7d44e1_9d9cf8b8",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-21T08:45:16Z",
+      "side": 1,
+      "message": "registered?",
+      "range": {
+        "startLine": 201,
+        "startChar": 7,
+        "endLine": 201,
+        "endChar": 16
+      },
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
