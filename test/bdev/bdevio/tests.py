@@ -22,7 +22,7 @@ def perform_tests_func(client, name=None):
     """
 
     Args:
-        name: bdev name to perform bdevio tests on
+        name: bdev name to perform bdevio tests on (optional; if omitted, test all bdevs)
 
     Returns:
         Number of failures in tests. 0 means no errors found.
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser(
         'perform_tests', help='Perform all bdevio tests on select bdev')
-    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=True)
+    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
     p.set_defaults(func=perform_tests)
 
     def call_rpc_func(args):

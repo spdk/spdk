@@ -1132,7 +1132,7 @@ free_rpc_perform_tests(struct rpc_perform_tests *r)
 }
 
 static const struct spdk_json_object_decoder rpc_perform_tests_decoders[] = {
-	{"name", offsetof(struct rpc_perform_tests, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_perform_tests, name), spdk_json_decode_string, true},
 };
 
 static void
@@ -1164,21 +1164,32 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_get_by_name(req.name);
-	if (bdev == NULL) {
-		SPDK_ERRLOG("Bdev '%s' does not exist\n", req.name);
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Bdev '%s' does not exist: %s",
-						     req.name, spdk_strerror(ENODEV));
-		goto invalid;
-	}
-	rc = bdevio_construct_target(bdev);
-	if (rc < 0) {
-		SPDK_ERRLOG("Could not construct target for bdev '%s'\n", spdk_bdev_get_name(bdev));
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Could not construct target for bdev '%s': %s",
-						     spdk_bdev_get_name(bdev), spdk_strerror(-rc));
-		goto invalid;
+	if (req.name) {
+		bdev = spdk_bdev_get_by_name(req.name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("Bdev '%s' does not exist\n", req.name);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Bdev '%s' does not exist: %s",
+							     req.name, spdk_strerror(ENODEV));
+			goto invalid;
+		}
+		rc = bdevio_construct_target(bdev);
+		if (rc < 0) {
+			SPDK_ERRLOG("Could not construct target for bdev '%s'\n", spdk_bdev_get_name(bdev));
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Could not construct target for bdev '%s': %s",
+							     spdk_bdev_get_name(bdev), spdk_strerror(-rc));
+			goto invalid;
+		}
+	} else {
+		rc = bdevio_construct_targets();
+		if (rc < 0) {
+			SPDK_ERRLOG("Could not construct targets for all bdevs\n");
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Could not construct targets for all bdevs: %s",
+							     spdk_strerror(-rc));
+			goto invalid;
+		}
 	}
 	free_rpc_perform_tests(&req);
 
