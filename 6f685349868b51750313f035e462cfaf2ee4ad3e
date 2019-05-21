@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d34db78_495c0eeb",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 832,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-21T11:09:03Z",
+      "side": 1,
+      "message": "Why change it to EINVAL in this patch? Neither error code looks totally correct.\n\nIf we were to be picky error here means that cache was already started and cannot be started again.\nEINVAL means that argument was incorrect, but it was - just not in right state.\nEALREADY usually refers to operations being in progress.\n\nSo if I were to choose among the error codes available EPERM would suit it best. Since \u0027starting\u0027 operation is not permitted on cache that was already started.\n\nYet probably there are as many somewhat understandable choices here. Anyway it does not belong to this patch.\n\nPS. I feel like there already was some discussion on error codes somewhere among the patch sets/patches.",
+      "range": {
+        "startLine": 832,
+        "startChar": 2,
+        "endLine": 832,
+        "endChar": 35
+      },
+      "revId": "6f685349868b51750313f035e462cfaf2ee4ad3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
