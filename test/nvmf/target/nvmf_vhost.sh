@@ -5,7 +5,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$testdir/../../..
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
-source $rootdir/test/vhost/common/common.sh
+source $rootdir/test/vhost/common.sh
 
 MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
