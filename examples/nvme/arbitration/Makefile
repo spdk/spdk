@@ -32,7 +32,6 @@
 #
 
 SPDK_ROOT_DIR := $(CURDIR)/../../..
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 APP = arbitration
 
