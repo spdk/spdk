@@ -1868,7 +1868,14 @@ spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
 void
 ftl_process_anm_event(struct ftl_anm_event *event)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Unconsumed ANM received for dev: %p...\n", event->dev);
+	struct spdk_ftl_dev *dev = event->dev;
+	struct ftl_band *band;
+	size_t lbkoff;
+
+	band = ftl_band_from_ppa(dev, event->ppa);
+	lbkoff = ftl_band_lbkoff_from_ppa(band, event->ppa);
+
+	ftl_reloc_add(dev->reloc, band, lbkoff, event->num_lbks, 0);
 	ftl_anm_event_complete(event);
 }
 
