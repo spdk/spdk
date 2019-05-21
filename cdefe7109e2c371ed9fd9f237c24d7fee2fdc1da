@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "f3c26628_4512d4e8",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1458,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T19:53:01Z",
+      "side": 1,
+      "message": "Who calls this function? Is the LLD supposed to? If so, we should pass the LLD a function pointer to this when it is initialized in order to not have circular dependencies.",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3710dd12_8eb44ae6",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 23
@@ -36,6 +53,57 @@
     },
     {
       "key": {
+        "uuid": "88086b73_f35d1912",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1917,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T19:53:01Z",
+      "side": 1,
+      "message": "This needs to call cb_fn for each new qpair it creates. That qpair will then get assigned to a poll group. I suspect this may be a problem for FC though. Can you walk me through what happens once the LS queue is polled and a new connection is discovered? It needs to get assigned to a hwqp or something, right?",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17856c4f_c02a44d7",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1955,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T19:53:01Z",
+      "side": 1,
+      "message": "Not thread safe",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0a4a342_abcacce3",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1995,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T19:53:01Z",
+      "side": 1,
+      "message": "When you poll the hwqp, where does it come back up to this layer for each request?",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d2d8ade6_8aa5dc8f",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 23
@@ -47,6 +115,24 @@
       "writtenOn": "2019-05-21T19:40:06Z",
       "side": 1,
       "message": "In this FC implementation, the FC layer is allocating its own pool of bdev_io. That\u0027s backward from the SPDK model where the bdev layer owns all of the bdev_io objects. This will need to be reworked into the SPDK model to get merged.\n\nI\u0027m familiar with the history of why this is the way it is, but with the current SPDK bdev_io pooling strategy the original reasons for doing this are no longer valid. It\u0027s important architecturally to SPDK to manage the bdev_io in the bdev layer.\n\nThe transport should know nothing about the bdev layer.",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fe12bb2_a3870c7e",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T19:53:01Z",
+      "side": 1,
+      "message": "Actually, it looks like the work as already been done, but these data members just haven\u0027t been dropped yet. I think you can just delete these 3 data members and you\u0027re good to go.",
+      "parentUuid": "d2d8ade6_8aa5dc8f",
       "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
