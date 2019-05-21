@@ -292,6 +292,8 @@ struct set_qos_limit_ctx {
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
 
+static void _spdk_bdev_io_do_submit(struct spdk_bdev_io *bdev_io);
+
 static void _spdk_bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success,
 		void *cb_arg);
 static void _spdk_bdev_write_zero_buffer_next(void *_bdev_io);
@@ -1401,8 +1403,6 @@ static int
 _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos)
 {
 	struct spdk_bdev_io		*bdev_io = NULL, *tmp = NULL;
-	struct spdk_bdev		*bdev = ch->bdev;
-	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 	int				i, submitted_ios = 0;
 
 	TAILQ_FOREACH_SAFE(bdev_io, &qos->queued, internal.link, tmp) {
@@ -1427,11 +1427,7 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos
 		}
 
 		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
-		ch->io_outstanding++;
-		shared_resource->io_outstanding++;
-		bdev_io->internal.in_submit_request = true;
-		bdev->fn_table->submit_request(ch->channel, bdev_io);
-		bdev_io->internal.in_submit_request = false;
+		_spdk_bdev_io_do_submit(bdev_io);
 		submitted_ios++;
 	}
 
@@ -1675,6 +1671,27 @@ _spdk_bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *
 	_spdk_bdev_io_split(ch, bdev_io);
 }
 
+static inline void
+_spdk_bdev_io_do_submit(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
+	struct spdk_io_channel *ch = bdev_ch->channel;
+	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
+
+	bdev_ch->io_outstanding++;
+	shared_resource->io_outstanding++;
+	bdev_io->internal.in_submit_request = true;
+	if (spdk_likely(TAILQ_EMPTY(&shared_resource->nomem_io))) {
+		bdev->fn_table->submit_request(ch, bdev_io);
+	} else {
+		bdev_ch->io_outstanding--;
+		shared_resource->io_outstanding--;
+		TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, internal.link);
+	}
+	bdev_io->internal.in_submit_request = false;
+}
+
 /* Explicitly mark this inline, since it's used as a function pointer and otherwise won't
  *  be inlined, at least on some compilers.
  */
@@ -1684,25 +1701,22 @@ _spdk_bdev_io_submit(void *ctx)
 	struct spdk_bdev_io *bdev_io = ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
-	struct spdk_io_channel *ch = bdev_ch->channel;
 	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 	uint64_t tsc;
 
 	tsc = spdk_get_ticks();
 	bdev_io->internal.submit_tsc = tsc;
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_START, 0, 0, (uintptr_t)bdev_io, bdev_io->type);
+
+	if (spdk_likely(bdev_ch->flags == 0)) {
+		_spdk_bdev_io_do_submit(bdev_io);
+		return;
+	}
+
 	bdev_ch->io_outstanding++;
 	shared_resource->io_outstanding++;
 	bdev_io->internal.in_submit_request = true;
-	if (spdk_likely(bdev_ch->flags == 0)) {
-		if (spdk_likely(TAILQ_EMPTY(&shared_resource->nomem_io))) {
-			bdev->fn_table->submit_request(ch, bdev_io);
-		} else {
-			bdev_ch->io_outstanding--;
-			shared_resource->io_outstanding--;
-			TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, internal.link);
-		}
-	} else if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
+	if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
 		bdev_ch->io_outstanding--;
