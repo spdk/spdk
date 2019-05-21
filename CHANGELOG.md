@@ -43,7 +43,7 @@ Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
 previously attached controller.
 
 Nvme Opal library spdk_opal_cmd deprecated. Adding seperate command APIs.
-NVMe Opal library add support for activating locking SP.
+NVMe Opal library add support for activating locking SP and locking/unlocking range.
 
 Added spdk_nvme_ctrlr_io_cmd_raw_no_payload_build() allowing a caller to pass
 a completely formed command to an NVMe submission queue (buffer addresses and all).
