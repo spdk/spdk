@@ -163,6 +163,10 @@ remove_base_bdev(struct vbdev_ocf_base *base)
 		spdk_bdev_module_release_bdev(base->bdev);
 		spdk_bdev_close(base->desc);
 		base->attached = false;
+
+		if (base->management_channel && !base->is_cache) {
+			spdk_put_io_channel(base->management_channel);
+		}
 	}
 }
 
@@ -246,6 +250,7 @@ stop_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
 
 	vbdev_ocf_queue_put(vbdev->cache_ctx->mngt_queue);
 	ocf_mngt_cache_unlock(cache);
+	spdk_put_io_channel(vbdev->cache.management_channel);
 
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
@@ -796,6 +801,8 @@ finish_register(struct vbdev_ocf *vbdev)
 {
 	int result;
 
+	vbdev->cache.management_channel = vbdev->cache_ctx->management_channel;
+
 	/* Copy properties of the base bdev */
 	vbdev->exp_bdev.blocklen = vbdev->core.bdev->blocklen;
 	vbdev->exp_bdev.write_cache = vbdev->core.bdev->write_cache;
@@ -836,6 +843,7 @@ add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
 		vbdev->core.id  = ocf_core_get_id(core);
 	}
 
+	vbdev->core.management_channel = spdk_bdev_get_io_channel(vbdev->core.desc);
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
 
@@ -864,6 +872,8 @@ start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 	struct vbdev_ocf *vbdev = priv;
 
 	ocf_mngt_cache_unlock(cache);
+	vbdev->cache_ctx->management_channel = spdk_bdev_get_io_channel(vbdev->cache.desc);
+
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
 
