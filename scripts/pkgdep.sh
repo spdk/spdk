@@ -92,6 +92,8 @@ elif [ -f /etc/debian_version ]; then
 		"Note: Some SPDK CLI dependencies could not be installed."
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool help2man
+	# Additional dependecies for nvmf performance test script
+	apt-get install -y python3-paramiko
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pycodestyle libuuid-devel sg3_utils pciutils

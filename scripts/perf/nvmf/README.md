@@ -61,3 +61,18 @@ Fio job parameters.
 - run_time: time (in seconds) to run workload
 - ramp_time: time (in seconds) to run workload before statistics are gathered
 - run_num: how many times to run given workload in loop
+
+# Running Test
+Before running the test script use the setup.sh script to bind the devices you want to
+use in the test to the VFIO/UIO driver.
+Run the script on the NVMe-oF target system:
+
+    cd spdk
+    sudo PYTHONPATH=$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py
+
+The script uses another spdk script (scripts/rpc.py) so we pass the path to rpc.py by setting the Python path
+as a runtime environment parameter.
+
+# Test Results
+When the test completes, you will find a csv file (nvmf_results.csv) containing the results in the target node
+directory /tmp/results.
