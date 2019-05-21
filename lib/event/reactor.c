@@ -258,6 +258,7 @@ _spdk_reactor_run(void *arg)
 
 	while (1) {
 		uint64_t now;
+		int rc;
 
 		/* For each loop through the reactor, capture the time. This time
 		 * is used for all threads. */
@@ -268,7 +269,11 @@ _spdk_reactor_run(void *arg)
 		TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 			thread = spdk_thread_get_from_ctx(lw_thread);
 
-			spdk_thread_poll(thread, 0, now);
+			rc = spdk_thread_poll(thread, 0, now);
+			if (rc < 0) {
+				TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+				spdk_thread_destroy(thread);
+			}
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
@@ -286,7 +291,9 @@ _spdk_reactor_run(void *arg)
 	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
 		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+		spdk_set_thread(thread);
 		spdk_thread_exit(thread);
+		spdk_thread_destroy(thread);
 	}
 
 	return 0;

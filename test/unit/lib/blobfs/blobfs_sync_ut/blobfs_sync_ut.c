@@ -409,8 +409,13 @@ int main(int argc, char **argv)
 	while (spdk_thread_poll(g_dispatch_thread, 0, 0) > 0) {}
 	while (spdk_thread_poll(thread, 0, 0) > 0) {}
 
+	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
+
+	spdk_set_thread(g_dispatch_thread);
 	spdk_thread_exit(g_dispatch_thread);
+	spdk_thread_destroy(g_dispatch_thread);
 
 	spdk_thread_lib_fini();
 

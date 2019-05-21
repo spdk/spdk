@@ -431,6 +431,7 @@ portal_grp_add_delete_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
 
 	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
 }
 
 static void
@@ -491,6 +492,7 @@ portal_grp_add_delete_twice_case(void)
 
 	MOCK_CLEAR_P(spdk_sock_listen);
 	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
 }
 
 int

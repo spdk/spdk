@@ -57,7 +57,9 @@ thread_alloc(void)
 	spdk_thread_lib_init(NULL, 0);
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
 	spdk_thread_lib_fini();
 
 	/* Schedule callback exists */
@@ -67,7 +69,9 @@ thread_alloc(void)
 	g_sched_rc = 0;
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
 	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
 
 	/* Scheduling fails */
 	g_sched_rc = -1;
@@ -381,6 +385,7 @@ thread_name(void)
 	name = spdk_thread_get_name(thread);
 	CU_ASSERT(name != NULL);
 	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
 
 	/* Create thread named "test_thread" */
 	thread = spdk_thread_create("test_thread", NULL);
@@ -391,6 +396,7 @@ thread_name(void)
 	SPDK_CU_ASSERT_FATAL(name != NULL);
 	CU_ASSERT(strcmp(name, "test_thread") == 0);
 	spdk_thread_exit(thread);
+	spdk_thread_destroy(thread);
 
 	spdk_thread_lib_fini();
 }
