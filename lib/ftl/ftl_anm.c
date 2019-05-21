@@ -38,6 +38,8 @@
 #include "spdk/ftl.h"
 #include "ftl_anm.h"
 #include "ftl_core.h"
+#include "ftl_band.h"
+#include "ftl_debug.h"
 
 /* Number of log pages read in single get_log_page call */
 #define FTL_ANM_LOG_ENTRIES 16
@@ -116,7 +118,8 @@ ftl_anm_log_range(struct spdk_ocssd_chunk_notification_entry *log)
 }
 
 static struct ftl_anm_event *
-ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_ppa ppa, enum ftl_anm_range range)
+ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
+		    enum ftl_anm_range range, size_t num_lbks)
 {
 	struct ftl_anm_event *event;
 
@@ -127,7 +130,19 @@ ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_ppa ppa, enum ftl_anm_r
 
 	event->dev = dev;
 	event->ppa = ppa;
-	event->range = range;
+
+	switch (range) {
+	case FTL_ANM_RANGE_LBK:
+		event->num_lbks = num_lbks;
+		break;
+	case FTL_ANM_RANGE_CHK:
+	case FTL_ANM_RANGE_PU:
+		event->num_lbks = ftl_dev_lbks_in_chunk(dev);
+		break;
+	default:
+		assert(false);
+	}
+
 
 	return event;
 }
@@ -138,6 +153,16 @@ ftl_anm_process_log(struct ftl_anm_poller *poller, struct ftl_anm_ctrlr *ctrlr,
 {
 	struct ftl_anm_event *event;
 	struct ftl_ppa ppa = ftl_ppa_addr_unpack(poller->dev, log->lba);
+	struct spdk_ftl_dev *dev = poller->dev;
+	enum ftl_anm_range range = ftl_anm_log_range(log);
+	char buf[128];
+	int i, num_bands = 1;
+
+	if (ppa.chk >= ftl_dev_num_bands(poller->dev)) {
+		SPDK_ERRLOG("ANM log contains invalid @ppa: %s\n",
+			    ftl_ppa2str(ppa, buf, sizeof(buf)));
+		return -1;
+	}
 
 	/* TODO We need to parse log and decide if action is needed. */
 	/* For now we check only if ppa is in device range. */
@@ -145,8 +170,23 @@ ftl_anm_process_log(struct ftl_anm_poller *poller, struct ftl_anm_ctrlr *ctrlr,
 		return -1;
 	}
 
-	event = ftl_anm_event_alloc(poller->dev, ppa, ftl_anm_log_range(log));
-	poller->fn(event);
+	num_bands = range != FTL_ANM_RANGE_PU ? 1 : ftl_dev_num_bands(dev);
+
+	for (i = 0; i < num_bands; ++i) {
+		struct ftl_chunk *chk = ftl_band_chunk_from_ppa(&dev->bands[i], ppa);
+
+		if (chk->state == FTL_CHUNK_STATE_BAD) {
+			continue;
+		}
+
+		event = ftl_anm_event_alloc(dev, ppa, range, log->nlb);
+		if (!event) {
+			return -ENOMEM;
+		}
+
+		poller->fn(event);
+		ppa.chk++;
+	}
 
 	return 0;
 }
@@ -172,6 +212,7 @@ ftl_anm_log_page_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct ftl_anm_ctrlr *ctrlr = ctx;
 	struct ftl_anm_poller *poller;
+	int rc;
 
 	pthread_mutex_lock(&ctrlr->lock);
 
@@ -187,7 +228,8 @@ ftl_anm_log_page_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 		}
 
 		LIST_FOREACH(poller, &ctrlr->pollers, list_entry) {
-			if (!ftl_anm_process_log(poller, ctrlr, &ctrlr->log[i])) {
+			rc = ftl_anm_process_log(poller, ctrlr, &ctrlr->log[i]);
+			if (rc == 0 || rc == -ENOMEM) {
 				break;
 			}
 		}
