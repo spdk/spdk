@@ -159,6 +159,7 @@ class Target(Server):
         for row in rows:
             with open(os.path.join(results_dir, csv_file), "a") as fh:
                 fh.write(row + "\n")
+        self.log_print("You can find the test results in the file %s" % os.path.join(results_dir, csv_file))
 
     def measure_sar(self, results_dir, sar_file_name):
         self.log_print("Waiting %d delay before measuring SAR stats" % self.sar_delay)
@@ -186,7 +187,7 @@ class Initiator(Server):
             self.nvmecli_bin = "nvme"  # Use system-wide nvme-cli
 
         self.ssh_connection = paramiko.SSHClient()
-        self.ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy)
+        self.ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh_connection.connect(self.ip, username=self.username, password=self.password)
         self.remote_call("sudo rm -rf %s/nvmf_perf" % self.spdk_dir)
         self.remote_call("mkdir -p %s" % self.spdk_dir)
