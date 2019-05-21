@@ -34,6 +34,24 @@
       "revId": "8283fe68069e49194736d108aaef9f32fd96d83f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea27bff5_2f71ae4b",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-21T14:10:24Z",
+      "side": 1,
+      "message": "What if we had rpc.py print out the list of requested RPCs, with clear text pointing out which RPC failed?  This is probably a 3-5 line change in rpc.py.",
+      "parentUuid": "dcb76f4f_04344a2b",
+      "revId": "8283fe68069e49194736d108aaef9f32fd96d83f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
