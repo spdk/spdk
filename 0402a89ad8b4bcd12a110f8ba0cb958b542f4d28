@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fd629384_ae6584d5",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:42:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e12b8e43_a8d69e95",
+      "range": {
+        "startLine": 637,
+        "startChar": 42,
+        "endLine": 637,
+        "endChar": 55
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "04d86381_cc970038",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-20T21:15:27Z",
       "side": 1,
       "message": "data or metadata?",
+      "range": {
+        "startLine": 724,
+        "startChar": 3,
+        "endLine": 724,
+        "endChar": 7
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f25ae678_bed59c3c",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:42:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "04d86381_cc970038",
       "range": {
         "startLine": 724,
         "startChar": 3,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d428c66e_326c421f",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:42:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3ee88a14_abfe0cbd",
+      "range": {
+        "startLine": 726,
+        "startChar": 22,
+        "endLine": 726,
+        "endChar": 32
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74d2b2b5_1ebbf16b",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -82,6 +154,24 @@
       "writtenOn": "2019-05-20T16:35:58Z",
       "side": 1,
       "message": "is there any way the denominator here potentially be zero?",
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7452a4e2_b18e419e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:42:44Z",
+      "side": 1,
+      "message": "No, if this function is called, it means the bdev supports separate metadata buffer, i.e. md_len \u003e 0.",
+      "parentUuid": "74d2b2b5_1ebbf16b",
       "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -105,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "10de3d3e_e3edc7d5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:42:44Z",
+      "side": 1,
+      "message": "Yes, that is the intent, because this function can be called to set the data buffer as well as  metadata buffer. In the latter case, buf_allocated and buf_aligned will be true.",
+      "parentUuid": "2bb8a6b1_d28c2905",
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1feacf8f_96e0d720",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -116,6 +224,24 @@
       "writtenOn": "2019-05-20T16:35:58Z",
       "side": 1,
       "message": "so the new has_bounce condition, why was this not needed in the old code?",
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "591668ad_2ea3ee97",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:42:44Z",
+      "side": 1,
+      "message": "Because previously this condition was checked before calling this function, so we knew that the bounce buffer was set if this function is called. However, after adding metadata bouncing I have to check which one of these buffers were set (as it\u0027s possible to just set one of them). To avoid checking the same condition twice (outside this function to check if any of the buffers were set and inside to check which one was it), I\u0027ve moved it all here and just OR them both to know if we have to call spdk_bdev_io_put_buf.",
+      "parentUuid": "1feacf8f_96e0d720",
       "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -168,6 +294,30 @@
     },
     {
       "key": {
+        "uuid": "354facdc_9c7925f4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2745,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:42:44Z",
+      "side": 1,
+      "message": "The reason was to behave in the same way we do when the user calls spdk_bdev_read_blocks with buf \u003d\u003d NULL. Therefore, we have to know if the user called spdk_bdev_read_*_with_md with md_buf \u003d NULL (we need to allocate md_buf) or just called spdk_bdev_read_* (we can leave md_buf \u003d\u003d NULL).",
+      "parentUuid": "0795861a_3edfa023",
+      "range": {
+        "startLine": 2745,
+        "startChar": 30,
+        "endLine": 2745,
+        "endChar": 41
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd3c6227_a02567dd",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -191,6 +341,30 @@
     },
     {
       "key": {
+        "uuid": "0e9c2507_d04fe132",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:42:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dd3c6227_a02567dd",
+      "range": {
+        "startLine": 2829,
+        "startChar": 0,
+        "endLine": 2829,
+        "endChar": 22
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0fc9efae_8188a655",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -202,6 +376,30 @@
       "writtenOn": "2019-05-20T21:15:27Z",
       "side": 1,
       "message": "I think this ordering, writev and then writev_with_md, requires the header file. writev_with_md and then writev may sit well with me.",
+      "range": {
+        "startLine": 2896,
+        "startChar": 0,
+        "endLine": 2896,
+        "endChar": 23
+      },
+      "revId": "0402a89ad8b4bcd12a110f8ba0cb958b542f4d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a9aa61a_ef472f41",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2896,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T07:42:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0fc9efae_8188a655",
       "range": {
         "startLine": 2896,
         "startChar": 0,
