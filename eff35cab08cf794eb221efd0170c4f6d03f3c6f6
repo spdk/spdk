@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7432a556_2e5324b2",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-21T14:17:29Z",
+      "side": 1,
+      "message": "Thanks Maciek!  I think we should add a bit of text on a couple of characteristics of the RAID bdev module:\n\n1) clarify that this RAID functionality does not store on-disk metadata on the member disks; so user must reconstruct the RAID volume when restarting the application\n2) clarify that it is OK to specify member disks that do no exist yet; as the member disks are registered, the RAID module will claim them, and will surface the RAID volume after all of the member disks are available",
+      "revId": "eff35cab08cf794eb221efd0170c4f6d03f3c6f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
