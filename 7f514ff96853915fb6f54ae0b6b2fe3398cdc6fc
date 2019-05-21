@@ -333,6 +333,30 @@
     },
     {
       "key": {
+        "uuid": "06fc577f_1c7b82f9",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-21T06:47:46Z",
+      "side": 1,
+      "message": "This patch series was created to add partial lba map reading capabilities to reloc module. Next patch in this series are using this move object so I really don\u0027t see your point here.",
+      "parentUuid": "c60d087c_e25578a4",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 49
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "83a1f376_46da30d0",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -440,6 +464,30 @@
       "side": 1,
       "message": "That is the point. There\u0027s no way this will be called with move \u003d\u003d NULL, so let\u0027s just add an assert to keep scan-build happy and not add unnecessary stuff to release configuration.",
       "parentUuid": "b4004ccb_1d241ae0",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2a4b095_876c4c65",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-21T06:47:46Z",
+      "side": 1,
+      "message": "There won\u0027t be assert in release config - scan-build willl complain.",
+      "parentUuid": "894c487d_6078ebce",
       "range": {
         "startLine": 230,
         "startChar": 0,
@@ -604,6 +652,30 @@
       "writtenOn": "2019-05-20T14:53:28Z",
       "side": 1,
       "message": "There\u0027s a lot of move-\u003eio references here. I think keeping this variable would make the code more readable.",
+      "range": {
+        "startLine": 455,
+        "startChar": 1,
+        "endLine": 456,
+        "endChar": 19
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ed6349d_8c79d57f",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-21T06:47:46Z",
+      "side": 1,
+      "message": "I\u0027ve removed some move-\u003eio references here.",
+      "parentUuid": "e84baafe_c54b12bd",
       "range": {
         "startLine": 455,
         "startChar": 1,
@@ -947,6 +1019,30 @@
       "side": 1,
       "message": "I don\u0027t see how that is the case. I think it should definitely be possible to change this behavior before this patch.",
       "parentUuid": "a3ad3a1d_bffd1f50",
+      "range": {
+        "startLine": 550,
+        "startChar": 0,
+        "endLine": 550,
+        "endChar": 23
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3fd9d7b_dd105720",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-21T06:47:46Z",
+      "side": 1,
+      "message": "Intetion of this patch is replacing ftl_io by ftl_move internal relocation structure. This change is needed then to refactor reloc logic so this patch is need to be add in first place.",
+      "parentUuid": "593738fa_445ef295",
       "range": {
         "startLine": 550,
         "startChar": 0,
