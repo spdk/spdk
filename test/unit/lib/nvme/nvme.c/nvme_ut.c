@@ -1155,6 +1155,66 @@ test_nvme_request_check_timeout(void)
 	CU_ASSERT(rc == 0);
 }
 
+#define DELAY_SECS	2
+struct nvme_completion_poll_status g_status;
+bool done_status;
+struct spdk_nvme_status cpl_status;
+int
+spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+{
+	spdk_delay_us(DELAY_SECS * spdk_get_ticks_hz());
+
+	g_status.done = done_status;
+	if (g_status.done != true) {
+		return -1;
+	}
+
+	g_status.cpl.status = cpl_status;
+
+	return 0;
+}
+
+static void
+test_nvme_wait_for_completion(void)
+{
+	struct spdk_nvme_qpair qpair;
+	uint64_t timeout_in_secs;
+	int rc = 0;
+
+	memset(&qpair, 0, sizeof(qpair));
+	memset(&g_status, 0, sizeof(g_status));
+	memset(&cpl_status, 0, sizeof(cpl_status));
+
+	/* completion timeout */
+	timeout_in_secs = 1;
+	done_status = timeout_in_secs < DELAY_SECS ? false : true;
+	rc = spdk_nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	CU_ASSERT(g_status.done == false);
+	CU_ASSERT(rc == -EIO);
+
+	/* complete in time but cpl is error */
+	cpl_status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+	cpl_status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+	timeout_in_secs = 3;
+	done_status = timeout_in_secs < DELAY_SECS ? false : true;
+	rc = spdk_nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	CU_ASSERT(g_status.done == true);
+	CU_ASSERT(g_status.cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+	CU_ASSERT(g_status.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rc == -EIO);
+
+	/* complete in time and cpl is right */
+	cpl_status.sc = SPDK_NVME_SC_SUCCESS;
+	cpl_status.sct = SPDK_NVME_SCT_GENERIC;
+	timeout_in_secs = 3;
+	done_status = timeout_in_secs < DELAY_SECS ? false : true;
+	rc = spdk_nvme_wait_for_completion_timeout(&qpair, &g_status, timeout_in_secs);
+	CU_ASSERT(g_status.done == true);
+	CU_ASSERT(g_status.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(g_status.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rc == -0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1210,7 +1270,9 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL ||
 		CU_add_test(suite, "test_nvme_request_check_timeout",
-			    test_nvme_request_check_timeout) == NULL
+			    test_nvme_request_check_timeout) == NULL ||
+		CU_add_test(suite, "test_nvme_wait_for_completion",
+			    test_nvme_wait_for_completion) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
