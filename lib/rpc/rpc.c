@@ -391,6 +391,7 @@ spdk_rpc_get_spdk_version(struct spdk_jsonrpc_request *request, const struct spd
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "get_spdk_version method requires no parameters");
+		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
