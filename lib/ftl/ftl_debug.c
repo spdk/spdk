@@ -55,7 +55,7 @@ ftl_band_validate_md(struct ftl_band *band)
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_lba_map *lba_map = &band->lba_map;
 	struct ftl_ppa ppa_md, ppa_l2p;
-	size_t i, size;
+	size_t i, size, seg_off;
 	bool valid = true;
 
 	size = ftl_num_band_lbks(dev);
@@ -63,6 +63,11 @@ ftl_band_validate_md(struct ftl_band *band)
 	pthread_spin_lock(&lba_map->lock);
 	for (i = 0; i < size; ++i) {
 		if (!spdk_bit_array_get(lba_map->vld, i)) {
+			continue;
+		}
+
+		seg_off = i / lba_map->seg_size;
+		if (lba_map->seg_state_map[seg_off] != FTL_LBA_MAP_SEG_CACHED) {
 			continue;
 		}
 

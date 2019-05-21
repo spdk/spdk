@@ -204,6 +204,8 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 	struct ftl_reloc_move *move;
 	size_t i;
 
+	assert(!breloc->active);
+
 	breloc->active = 1;
 	reloc->num_active++;
 
@@ -768,6 +770,11 @@ ftl_reloc(struct ftl_reloc *reloc)
 		if (reloc->num_active == reloc->max_active) {
 			break;
 		}
+
+		if (breloc->band->state != FTL_BAND_STATE_CLOSED || breloc->active) {
+			continue;
+		}
+
 		ftl_reloc_add_active_queue(breloc);
 	}
 
