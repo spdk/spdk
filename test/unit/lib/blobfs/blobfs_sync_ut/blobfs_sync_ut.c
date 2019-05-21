@@ -154,12 +154,13 @@ _fs_unload(void *arg)
 }
 
 static void
-cache_write(void)
+cache_read_after_write(void)
 {
 	uint64_t length;
 	int rc;
-	char buf[100];
+	char w_buf[100], r_buf[100];
 	struct spdk_fs_thread_ctx *channel;
+	struct spdk_file_stat stat;
 
 	ut_send_request(_fs_init, NULL);
 
@@ -173,12 +174,27 @@ cache_write(void)
 	rc = spdk_file_truncate(g_file, channel, length);
 	CU_ASSERT(rc == 0);
 
-	spdk_file_write(g_file, channel, buf, 0, sizeof(buf));
+	memset(w_buf, 0x5a, sizeof(w_buf));
+	spdk_file_write(g_file, channel, w_buf, 0, sizeof(w_buf));
 
 	CU_ASSERT(spdk_file_get_length(g_file) == length);
 
-	rc = spdk_file_truncate(g_file, channel, sizeof(buf));
+	rc = spdk_file_truncate(g_file, channel, sizeof(w_buf));
 	CU_ASSERT(rc == 0);
+
+	spdk_file_close(g_file, channel);
+
+	rc = spdk_fs_file_stat(g_fs, channel, "testfile", &stat);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sizeof(w_buf) == stat.size);
+
+	rc = spdk_fs_open_file(g_fs, channel, "testfile", 0, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	memset(r_buf, 0, sizeof(r_buf));
+	spdk_file_read(g_file, channel, r_buf, 0, sizeof(r_buf));
+	CU_ASSERT(memcmp(w_buf, r_buf, sizeof(r_buf)) == 0);
 
 	spdk_file_close(g_file, channel);
 	rc = spdk_fs_delete_file(g_fs, channel, "testfile");
@@ -376,7 +392,7 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "write", cache_write) == NULL ||
+		CU_add_test(suite, "cache read after write", cache_read_after_write) == NULL ||
 		CU_add_test(suite, "write_null_buffer", cache_write_null_buffer) == NULL ||
 		CU_add_test(suite, "create_sync", fs_create_sync) == NULL ||
 		CU_add_test(suite, "append_no_cache", cache_append_no_cache) == NULL ||
