@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "298e92d4_e3800983",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2931,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-21T06:31:01Z",
+      "side": 1,
+      "message": "I agree, but unfortunately at this point we don\u0027t know yet which of these 2 case it is. One way to address it is to re-iterate after clearing corrupted ones and call iter_cb_fn only in that second iteration. I\u0027m still thinking about something simpler...",
+      "parentUuid": "6b60c20a_7252d78f",
+      "revId": "ec9fbebfb560077273d9235208cd48864e90ec13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b26e6c50_243b8406",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "ec9fbebfb560077273d9235208cd48864e90ec13",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff9a0c39_1f0f1138",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2951,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-21T06:31:01Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b26e6c50_243b8406",
+      "revId": "ec9fbebfb560077273d9235208cd48864e90ec13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
