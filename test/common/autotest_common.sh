@@ -46,6 +46,10 @@ else
 	exit 1
 fi
 
+# Export PYTHONPATH with addition of RPC framework. New scripts can be created
+# specific use cases for tests.
+export PYTHONPATH=$PYTHONPATH:$rootdir/scripts
+
 # Export flag to skip the known bug that exists in librados
 # Bug is reported on ceph bug tracker with number 24078
 export ASAN_OPTIONS=new_delete_type_mismatch=0
