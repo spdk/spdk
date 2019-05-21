@@ -60,11 +60,11 @@ spdk_cpuset_equal(const struct spdk_cpuset *set1, const struct spdk_cpuset *set2
 }
 
 void
-spdk_cpuset_copy(struct spdk_cpuset *set1, const struct spdk_cpuset *set2)
+spdk_cpuset_copy(struct spdk_cpuset *dst, const struct spdk_cpuset *src)
 {
-	assert(set1 != NULL);
-	assert(set2 != NULL);
-	memcpy(&set1->cpus, &set2->cpus, sizeof(set2->cpus));
+	assert(dst != NULL);
+	assert(src != NULL);
+	memcpy(&dst->cpus, &src->cpus, sizeof(src->cpus));
 }
 
 void
@@ -78,35 +78,35 @@ spdk_cpuset_negate(struct spdk_cpuset *set)
 }
 
 void
-spdk_cpuset_and(struct spdk_cpuset *set1, const struct spdk_cpuset *set2)
+spdk_cpuset_and(struct spdk_cpuset *dst, const struct spdk_cpuset *src)
 {
 	unsigned int i;
-	assert(set1 != NULL);
-	assert(set2 != NULL);
-	for (i = 0; i < sizeof(set2->cpus); i++) {
-		set1->cpus[i] &= set2->cpus[i];
+	assert(dst != NULL);
+	assert(src != NULL);
+	for (i = 0; i < sizeof(src->cpus); i++) {
+		dst->cpus[i] &= src->cpus[i];
 	}
 }
 
 void
-spdk_cpuset_or(struct spdk_cpuset *set1, const struct spdk_cpuset *set2)
+spdk_cpuset_or(struct spdk_cpuset *dst, const struct spdk_cpuset *src)
 {
 	unsigned int i;
-	assert(set1 != NULL);
-	assert(set2 != NULL);
-	for (i = 0; i < sizeof(set2->cpus); i++) {
-		set1->cpus[i] |= set2->cpus[i];
+	assert(dst != NULL);
+	assert(src != NULL);
+	for (i = 0; i < sizeof(src->cpus); i++) {
+		dst->cpus[i] |= src->cpus[i];
 	}
 }
 
 void
-spdk_cpuset_xor(struct spdk_cpuset *set1, const struct spdk_cpuset *set2)
+spdk_cpuset_xor(struct spdk_cpuset *dst, const struct spdk_cpuset *src)
 {
 	unsigned int i;
-	assert(set1 != NULL);
-	assert(set2 != NULL);
-	for (i = 0; i < sizeof(set2->cpus); i++) {
-		set1->cpus[i] ^= set2->cpus[i];
+	assert(dst != NULL);
+	assert(src != NULL);
+	for (i = 0; i < sizeof(src->cpus); i++) {
+		dst->cpus[i] ^= src->cpus[i];
 	}
 }
 
