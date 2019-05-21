@@ -92,6 +92,30 @@
       "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "090a494a_f7c9ed4e",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-21T05:22:27Z",
+      "side": 1,
+      "message": "Quoting from https://review.gerrithub.io/c/spdk/spdk/+/453603 (\"test/qos: bring back qos testing.\"):\n\n\u003e Patch Set 8: Code-Review-2\n\u003e \n\u003e The iSCSI bdev on our test machines can barely reach the hardcoded QoS limit and we can\u0027t fix it by increasing the allowed QoS deviation. We can still end up not running the test if the device happens to be to slow, which in my opinion is much worse than not running it at all. That\u0027s because instead of knowing you don\u0027t run any QoS tests, you might think you run them, but in reality you don\u0027t - because the test is being skipped all the time.\n\u003e \n\u003e We should always avoid scenarios where we end up skipping the test. In this case it would be fairly simple - instead of setting an arbitrary QoS limit, we could set a limit that\u0027s a % of the actual disk performance. Then we don\u0027t have to check if the disk is fast enough and the test is always run. Please see this patch:\n\u003e \n\u003e https://review.gerrithub.io/c/spdk/spdk/+/451887 test/qos: set qos limits to a % of the maximum disk performance\n\nPlease refactor this code not to skip the tests.",
+      "parentUuid": "451d3f8d_53db1340",
+      "range": {
+        "startLine": 242,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 2
+      },
+      "revId": "080749ec6744a8d7c2d5ac4dd2d970ef6b272aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
