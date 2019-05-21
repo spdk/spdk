@@ -635,7 +635,7 @@ nvme_tcp_pdu_set_data_buf(struct nvme_tcp_pdu *pdu,
 		}
 
 		assert(remain_len == 0);
-		pdu->data_iovcnt = ctx->iovcnt;
+		pdu->data_iovcnt = tcp_req->iovcnt - ctx->iovcnt;
 		pdu->data_len = data_len;
 	}
 }
