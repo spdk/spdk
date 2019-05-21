@@ -2782,6 +2782,7 @@ _spdk_bs_update_corrupted_blob(void *cb_arg, int bserrno)
 
 	ctx->blob->md_ro = false;
 	_spdk_blob_remove_xattr(ctx->blob, SNAPSHOT_PENDING_REMOVAL, true);
+	_spdk_blob_remove_xattr(ctx->blob, SNAPSHOT_IN_PROGRESS, true);
 	spdk_blob_set_read_only(ctx->blob);
 
 	if (ctx->iter_cb_fn) {
@@ -2804,10 +2805,12 @@ _spdk_bs_examine_clone(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	}
 
 	if (blob->parent_id == ctx->blob->id) {
-		/* Power failure occured before updating clone - keep snapshot */
+		/* Power failure occured before updating clone (snapshot delete case)
+		 * or after updating clone (creating snapshot case) - keep snapshot */
 		spdk_blob_close(blob, _spdk_bs_update_corrupted_blob, ctx);
 	} else {
-		/* Power failure occured after updating clone - remove snapshot */
+		/* Power failure occured after updating clone (snapshot delete case)
+		 * or before updating clone (creating snapshot case) - remove snapshot */
 		spdk_blob_close(blob, _spdk_bs_delete_corrupted_blob, ctx);
 	}
 }
@@ -2826,13 +2829,17 @@ _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 		 * ones. If it is not corrupted just process it */
 		rc = _spdk_blob_get_xattr_value(blob, SNAPSHOT_PENDING_REMOVAL, &value, &len, true);
 		if (rc != 0) {
-			/* Not corrupted - process it and continue with iterating through blobs */
-			if (ctx->iter_cb_fn) {
-				ctx->iter_cb_fn(ctx->iter_cb_arg, blob, 0);
+			rc = _spdk_blob_get_xattr_value(blob, SNAPSHOT_IN_PROGRESS, &value, &len, true);
+			if (rc != 0) {
+				/* Not corrupted - process it and continue with iterating through blobs */
+				if (ctx->iter_cb_fn) {
+					ctx->iter_cb_fn(ctx->iter_cb_arg, blob, 0);
+				}
+				_spdk_bs_blob_list_add(blob);
+				spdk_bs_iter_next(ctx->bs, blob, _spdk_bs_load_iter, ctx);
+				return;
 			}
-			_spdk_bs_blob_list_add(blob);
-			spdk_bs_iter_next(ctx->bs, blob, _spdk_bs_load_iter, ctx);
-			return;
+
 		}
 
 		assert(len == sizeof(spdk_blob_id));
