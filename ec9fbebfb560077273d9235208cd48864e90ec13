@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "fce6a909_654c2f4a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2931,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T20:25:44Z",
+      "side": 1,
+      "message": "I think you can do it in a single pass using this algorithm:\n\nFor each blob you open here, look at it\u0027s xattrs. If it has SNAPSHOT_PENDING_REMOVAL, get the blob id for it\u0027s only clone from the xattr. Then open that blob and see if it points at the current snapshot. If it does, delete the xattr. If it doesn\u0027t, delete the snapshot. Then close the clone and call spdk_bs_iter_next.",
+      "parentUuid": "298e92d4_e3800983",
+      "revId": "ec9fbebfb560077273d9235208cd48864e90ec13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b26e6c50_243b8406",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
