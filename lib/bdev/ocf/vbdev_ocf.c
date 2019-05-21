@@ -1037,7 +1037,7 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 
 	/* TODO [metadata]: make configurable with persistent
 	 * metadata support */
-	cfg->cache.metadata_volatile = true;
+	cfg->cache.metadata_volatile = false;
 
 	/* TODO [cache line size]: make cache line size configurable
 	 * Using standard 4KiB for now */
@@ -1397,15 +1397,155 @@ vbdev_ocf_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&ocf_if);
 }
 
+struct metadata_probe_ctx {
+	struct vbdev_ocf_base base;
+	ocf_volume_t volume;
+
+	struct ocf_volume_uuid *core_uuids;
+	unsigned int uuid_count;
+
+	int result;
+	int refcnt;
+};
+
+static void
+examine_ctx_put(struct metadata_probe_ctx *ctx)
+{
+	unsigned int i;
+
+	ctx->refcnt--;
+	if (ctx->refcnt > 0) {
+		return;
+	}
+
+	if (ctx->result) {
+		SPDK_ERRLOG("OCF metadata probe for bdev '%s' failed with %d\n",
+			    spdk_bdev_get_name(ctx->base.bdev), ctx->result);
+	}
+
+	if (ctx->base.desc) {
+		spdk_bdev_close(ctx->base.desc);
+	}
+
+	if (ctx->volume) {
+		ocf_volume_destroy(ctx->volume);
+	}
+
+	if (ctx->core_uuids) {
+		for (i = 0; i < ctx->uuid_count; i++) {
+			free(ctx->core_uuids[i].data);
+		}
+	}
+	free(ctx->core_uuids);
+
+	examine_done(ctx->result, NULL, ctx->base.bdev);
+	free(ctx);
+}
+
+static void
+metadata_probe_construct_cb(int rc, struct vbdev_ocf *vbdev, void *vctx)
+{
+	struct metadata_probe_ctx *ctx = vctx;
+
+	examine_ctx_put(ctx);
+}
+
+/* This is second callback for ocf_metadata_probe_cores()
+ * Here we create vbdev configurations based on UUIDs */
+static void
+metadata_probe_cores_construct(void *priv, int error, unsigned int num_cores)
+{
+	struct metadata_probe_ctx *ctx = priv;
+	const char *vbdev_name;
+	const char *core_name;
+	unsigned int i;
+
+	if (error) {
+		ctx->result = error;
+		examine_ctx_put(ctx);
+		return;
+	}
+
+	for (i = 0; i < num_cores; i++) {
+		core_name = ocf_uuid_to_str(&ctx->core_uuids[i]);
+		vbdev_name = core_name + strlen(core_name) + 1;
+		ctx->refcnt++;
+		vbdev_ocf_construct(vbdev_name, NULL, ctx->base.bdev->name, core_name, true,
+				    metadata_probe_construct_cb, ctx);
+	}
+
+	examine_ctx_put(ctx);
+}
+
+/* This callback is called after OCF reads cores UUIDs from cache metadata
+ * Here we allocate memory for those UUIDs and call ocf_metadata_probe_cores() again */
+static void
+metadata_probe_cores_get_num(void *priv, int error, unsigned int num_cores)
+{
+	struct metadata_probe_ctx *ctx = priv;
+	unsigned int i;
+
+	if (error) {
+		ctx->result = error;
+		examine_ctx_put(ctx);
+		return;
+	}
+
+	ctx->uuid_count = num_cores;
+	ctx->core_uuids = calloc(num_cores, sizeof(struct ocf_volume_uuid));
+	if (!ctx->core_uuids) {
+		ctx->result = -ENOMEM;
+		examine_ctx_put(ctx);
+		return;
+	}
+
+	for (i = 0; i < ctx->uuid_count; i++) {
+		ctx->core_uuids[i].size = OCF_VOLUME_UUID_MAX_SIZE;
+		ctx->core_uuids[i].data = malloc(OCF_VOLUME_UUID_MAX_SIZE);
+		if (!ctx->core_uuids[i].data) {
+			ctx->result = -ENOMEM;
+			examine_ctx_put(ctx);
+			return;
+		}
+	}
+
+	ocf_metadata_probe_cores(vbdev_ocf_ctx, ctx->volume, ctx->core_uuids, ctx->uuid_count,
+				 metadata_probe_cores_construct, ctx);
+}
+
+static void
+metadata_probe_cb(void *priv, int rc,
+		  struct ocf_metadata_probe_status *status)
+{
+	struct metadata_probe_ctx *ctx = priv;
+
+	if (rc) {
+		/* -ENODATA means device does not have cache metadata on it */
+		if (rc != -ENODATA) {
+			ctx->result = rc;
+		}
+		examine_ctx_put(ctx);
+		return;
+	}
+
+	ocf_metadata_probe_cores(vbdev_ocf_ctx, ctx->volume, NULL, 0,
+				 metadata_probe_cores_get_num, ctx);
+}
+
 /* This is called after vbdev_ocf_examine
  * It allows to delay application initialization
  * until all OCF bdevs get registered
- * If vbdev has all of its base devices it starts asynchronously here */
+ * If vbdev has all of its base devices it starts asynchronously here
+ * We first check if bdev appears in configuration,
+ * if not we do metadata_probe() to create its configuration from bdev metadata */
 static void
 vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 {
 	const char *bdev_name = spdk_bdev_get_name(bdev);
 	struct vbdev_ocf *vbdev;
+	struct metadata_probe_ctx *ctx;
+	bool created_from_config = false;
+	int rc;
 
 	examine_start(bdev);
 
@@ -1417,16 +1557,58 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 		if (!strcmp(bdev_name, vbdev->cache.name)) {
 			examine_start(bdev);
 			register_vbdev(vbdev, examine_done, bdev);
+			created_from_config = true;
 			continue;
 		}
 		if (!strcmp(bdev_name, vbdev->core.name)) {
 			examine_start(bdev);
 			register_vbdev(vbdev, examine_done, bdev);
-			break;
+			examine_done(0, NULL, bdev);
+			return;
 		}
 	}
 
-	examine_done(0, NULL, bdev);
+	/* If devices is discovered during config we do not check for metadata */
+	if (created_from_config) {
+		examine_done(0, NULL, bdev);
+		return;
+	}
+
+	/* Metadata probe path
+	 * We create temporary OCF volume and a temporary base structure
+	 * to use them for ocf_metadata_probe() and for bottom adapter IOs
+	 * Then we get UUIDs of core devices an create configurations based on them */
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		examine_done(-ENOMEM, NULL, bdev);
+		return;
+	}
+
+	ctx->base.bdev = bdev;
+	ctx->refcnt = 1;
+
+	rc = spdk_bdev_open(ctx->base.bdev, true, NULL, NULL, &ctx->base.desc);
+	if (rc) {
+		ctx->result = rc;
+		examine_ctx_put(ctx);
+		return;
+	}
+
+	rc = ocf_ctx_volume_create(vbdev_ocf_ctx, &ctx->volume, NULL, SPDK_OBJECT);
+	if (rc) {
+		ctx->result = rc;
+		examine_ctx_put(ctx);
+		return;
+	}
+
+	rc = ocf_volume_open(ctx->volume, &ctx->base);
+	if (rc) {
+		ctx->result = rc;
+		examine_ctx_put(ctx);
+		return;
+	}
+
+	ocf_metadata_probe(vbdev_ocf_ctx, ctx->volume, metadata_probe_cb, ctx);
 }
 
 static int
