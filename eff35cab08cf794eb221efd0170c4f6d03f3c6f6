@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "0df53dfe_f94f59ae",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-21T15:21:55Z",
+      "side": 1,
+      "message": "Thanks for suggestions. I was missing that knowledge and I will definitively add this information.",
+      "parentUuid": "fb64f0f7_847317da",
+      "revId": "eff35cab08cf794eb221efd0170c4f6d03f3c6f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1e85bc97_cdb2fcf9",
         "filename": "doc/bdev.md",
         "patchSetId": 1
@@ -48,6 +66,24 @@
       "writtenOn": "2019-05-21T15:17:42Z",
       "side": 1,
       "message": "you should add the strip_size_kb parm as well \"-z 64\" for exmaple",
+      "revId": "eff35cab08cf794eb221efd0170c4f6d03f3c6f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cfd1af5_5477650b",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-21T15:21:55Z",
+      "side": 1,
+      "message": "This is actually the one that I intended to add, but i made mistake. Can we use only -z as -s is deprecated or we still want to have both?",
+      "parentUuid": "1e85bc97_cdb2fcf9",
       "revId": "eff35cab08cf794eb221efd0170c4f6d03f3c6f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
