@@ -6,6 +6,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
 rpc_py="$rootdir/scripts/rpc.py"
+rpc_sock=/var/tmp/spdk-bdevio.sock
 
 function run_fio()
 {
@@ -95,7 +96,13 @@ else
 	# Dynamic memory management is not supported on BSD
 	PRE_RESERVED_MEM=2048
 fi
-$testdir/bdevio/bdevio -s $PRE_RESERVED_MEM -c $testdir/bdev.conf
+$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -r $rpc_sock -c $testdir/bdev.conf &
+bdevio_pid=$!
+echo "Process bdevio pid: $bdevio_pid"
+waitforlisten $bdevio_pid $rpc_sock
+trap "killprocess $bdevio_pid; exit 1" SIGINT SIGTERM EXIT
+$testdir/bdevio/tests.py -s $rpc_sock perform_tests
+killprocess $bdevio_pid
 timing_exit bounds
 
 timing_enter nbd_gpt
