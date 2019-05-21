@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1bbac8ba_9fcb7297",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-21T10:47:23Z",
+      "side": 1,
+      "message": "Overall this change should belong to another patch, but if no one else posts -1. I\u0027m fine with leaving this here.",
+      "range": {
+        "startLine": 753,
+        "startChar": 0,
+        "endLine": 759,
+        "endChar": 36
+      },
+      "revId": "69d850eed5706c5696268fbd45aeedcf9430c255",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e916e610_6827b7d0",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-21T10:47:23Z",
+      "side": 1,
+      "message": "Same as above in regards to separate patch. +1, unless someone has some other feedback.",
+      "range": {
+        "startLine": 786,
+        "startChar": 0,
+        "endLine": 804,
+        "endChar": 36
+      },
+      "revId": "69d850eed5706c5696268fbd45aeedcf9430c255",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
