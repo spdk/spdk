@@ -4499,7 +4499,7 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 
 	if (bserrno != 0) {
 		_spdk_bs_snapshot_swap_cluster_maps(newblob, origblob);
-		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
 
