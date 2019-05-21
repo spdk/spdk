@@ -16,6 +16,24 @@
       "revId": "0206be688fae81084eaf86f9ba4e928e03f039b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b455a26c_4d056f4d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 5311,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-21T06:14:45Z",
+      "side": 1,
+      "message": "1 \u003d only we opened it for removal, 2 \u003d clone also opened it. I will update comment so that it will explain it better.",
+      "parentUuid": "b9b969d1_06a43c75",
+      "revId": "0206be688fae81084eaf86f9ba4e928e03f039b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
