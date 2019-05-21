@@ -2832,20 +2832,19 @@ _spdk_bs_delete_corrupted_blob(void *cb_arg, int bserrno)
 }
 
 static void
-_spdk_bs_remove_pending_removal_xattr(void *cb_arg, struct spdk_blob *blob, int bserrno)
+_spdk_bs_remove_corrupted_snapshot_xattr(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
-	bool md_ro;
 
 	if (bserrno != 0) {
 		_spdk_bs_remove_corrupted_blobs(ctx, bserrno);
 		return;
 	}
 
-	md_ro = blob->md_ro;
 	blob->md_ro = false;
 	_spdk_blob_remove_xattr(blob, SNAPSHOT_PENDING_REMOVAL, true);
-	blob->md_ro = md_ro;
+	_spdk_blob_remove_xattr(blob, SNAPSHOT_IN_PROGRESS, true);
+	spdk_blob_set_read_only(blob);
 
 	_spdk_bs_remove_corrupted_blob_entry(ctx);
 
@@ -2862,7 +2861,7 @@ _spdk_bs_update_corrupted_blob(void *cb_arg, int bserrno)
 		return;
 	}
 
-	spdk_bs_open_blob(ctx->bs, ctx->corrupted_blob->id, _spdk_bs_remove_pending_removal_xattr, ctx);
+	spdk_bs_open_blob(ctx->bs, ctx->corrupted_blob->id, _spdk_bs_remove_corrupted_snapshot_xattr, ctx);
 }
 
 static void
@@ -2883,10 +2882,12 @@ _spdk_bs_find_clone(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	}
 
 	if (blob->parent_id == ctx->corrupted_blob->id) {
-		/* Power failure occured before updating clone - keep snapshot */
+		/* Power failure occured before updating clone (snapshot delete case) /
+		 * after updating clone (creating snapshot case) - keep snapshot */
 		spdk_blob_close(blob, _spdk_bs_update_corrupted_blob, ctx);
 	} else {
-		/* Power failure occured after updating clone - remove snapshot */
+		/* Power failure occured after updating clone (snapshot delete case) /
+		 * before updating clone (creating snapshot case) - remove snapshot */
 		spdk_blob_close(blob, _spdk_bs_delete_corrupted_blob, ctx);
 	}
 }
@@ -2924,7 +2925,10 @@ _spdk_bs_find_corrupted_blob(struct spdk_blob *blob, struct spdk_bs_load_ctx *ct
 
 	rc = _spdk_blob_get_xattr_value(blob, SNAPSHOT_PENDING_REMOVAL, &value, &len, true);
 	if (rc != 0) {
-		return 0;
+		rc = _spdk_blob_get_xattr_value(blob, SNAPSHOT_IN_PROGRESS, &value, &len, true);
+		if (rc != 0) {
+			return 0;
+		}
 	}
 
 	assert(len == sizeof(spdk_blob_id));
