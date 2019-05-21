@@ -16,6 +16,24 @@
       "revId": "8283fe68069e49194736d108aaef9f32fd96d83f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dcb76f4f_04344a2b",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-21T08:54:22Z",
+      "side": 1,
+      "message": "We should discuss this on a community meeting.",
+      "parentUuid": "eb4d642a_1eba95c7",
+      "revId": "8283fe68069e49194736d108aaef9f32fd96d83f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
