@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6d77c155_c8c542a9",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2042,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-21T08:00:22Z",
+      "side": 1,
+      "message": "Existing code uses the calloc() and assertion() so spdk_dma_zmalloc() is not correct here, I can fix it later in a separate patch.",
+      "parentUuid": "f545c2d1_662482a7",
+      "revId": "7b7596fc57380227e2d84e1355b11bca5cd5a6c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e51ca820_d6f44796",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 15
