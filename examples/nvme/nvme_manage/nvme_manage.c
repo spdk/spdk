@@ -939,7 +939,8 @@ opal_usage(void)
 	printf("\n");
 	printf("\t[1: scan device]\n");
 	printf("\t[2: Init - take ownership and activate locking]\n");
-	printf("\t[3: revert tper]\n");
+	printf("\t[3: lock/unlock the range]\n");
+	printf("\t[9: revert tper]\n");
 	printf("\t[0: quit]\n");
 }
 
@@ -1010,6 +1011,91 @@ opal_init(struct dev *iter)
 }
 
 static void
+opal_locking_usage(void)
+{
+	printf("Choose Opal locking state:\n");
+	printf("\n");
+	printf("\t[1: read write lock]\n");
+	printf("\t[2: read only]\n");
+	printf("\t[3: read write unlock]\n");
+}
+
+static void
+opal_lock_range(struct dev *iter)
+{
+	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ret;
+	int ch;
+	int state;
+	enum spdk_opal_lock_state state_flag;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		if (spdk_opal_supported(iter->opal_dev)) {
+			printf("Please input the password for locking the range:\n");
+			while ((ch = getchar()) != '\n' && ch != EOF);
+			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
+			if (passwd_p) {
+				ret = spdk_opal_cmd_lock_unlock(iter->opal_dev, OPAL_ADMIN1, OPAL_READWRITE,
+								OPAL_LOCKING_RANGE_GLOBAL, passwd_p);
+				if (ret) {
+					printf("Unlock range failure: %d\n", ret);
+					return;
+				}
+
+				ret = spdk_opal_cmd_setup_locking_range(iter->opal_dev,
+									OPAL_ADMIN1, OPAL_LOCKING_RANGE_GLOBAL, 0, 0, passwd_p); /* just put here for testing */
+				if (ret) {
+					printf("Setup locking range failure: %d\n", ret);
+					return;
+				}
+
+				opal_locking_usage();
+				ret = scanf("%d", &state);
+				if (ret != 1) {
+					printf("Invalid input\n");
+					return;
+				}
+
+				switch (state) {
+				case 1:
+					state_flag = OPAL_RWLOCK;
+					break;
+				case 2:
+					state_flag = OPAL_READONLY;
+					break;
+				case 3:
+					state_flag = OPAL_READWRITE;
+					break;
+				default:
+					printf("Invalid options\n");
+					return;
+				}
+
+				ret = spdk_opal_cmd_lock_unlock(iter->opal_dev, OPAL_ADMIN1, state_flag,
+								OPAL_LOCKING_RANGE_GLOBAL, passwd_p);
+				if (ret) {
+					printf("lock range failure: %d\n", ret);
+					return;
+				}
+
+				printf("...\n...\nOpal setup locking range success\n");
+			} else {
+				printf("Input password invalid. Opal setup locking range failure\n");
+			}
+		}
+		spdk_opal_close(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
 opal_revert_tper(struct dev *iter)
 {
 	char passwd[MAX_PASSWORD_SIZE] = {0};
@@ -1062,7 +1148,7 @@ test_opal(void)
 	while (!exit_flag) {
 		int cmd;
 		if (!scanf("%d", &cmd)) {
-			printf("Invalid Command: command must be number 0-2\n");
+			printf("Invalid Command: command must be number 0-9\n");
 			while (getchar() != '\n');
 			opal_usage();
 			continue;
@@ -1079,6 +1165,9 @@ test_opal(void)
 			opal_init(ctrlr);   /* Take ownership, Activate Locking SP */
 			break;
 		case 3:
+			opal_lock_range(ctrlr);
+			break;
+		case 9:
 			opal_revert_tper(ctrlr);
 			break;
 
