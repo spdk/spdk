@@ -216,6 +216,7 @@ scsi_lun_remove(struct spdk_scsi_lun *lun)
 {
 	spdk_bdev_close(lun->bdev_desc);
 
+	spdk_scsi_dev_delete_lun(lun->dev, lun);
 	free(lun);
 }
 
@@ -298,8 +299,6 @@ scsi_lun_hot_remove(void *remove_ctx)
 	}
 
 	lun->removed = true;
-	spdk_scsi_dev_delete_lun(lun->dev, lun);
-
 	if (lun->io_channel == NULL) {
 		_scsi_lun_hot_remove(lun);
 		return;
