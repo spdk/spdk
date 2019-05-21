@@ -119,10 +119,9 @@ struct spdk_opal_info {
 };
 
 enum spdk_opal_lock_state {
-	OPAL_LS_DISALBELOCKING		= 0x00,
-	OPAL_LS_READLOCK_ENABLE		= 0x01,
-	OPAL_LS_WRITELOCK_ENABLE	= 0x02,
-	OPAL_LS_RWLOCK_ENABLE		= 0x04,
+	OPAL_READONLY	= 0x01,
+	OPAL_RWLOCK		= 0x02,
+	OPAL_READWRITE	= 0x04,
 };
 
 enum spdk_opal_user {
@@ -165,5 +164,11 @@ int spdk_opal_cmd_scan(struct spdk_opal_dev *dev);
 int spdk_opal_cmd_take_ownership(struct spdk_opal_dev *dev, char *new_passwd);
 int spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd);
 int spdk_opal_cmd_activate_locking_sp(struct spdk_opal_dev *dev, const char *passwd);
+int spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user user,
+			      enum spdk_opal_lock_state flag, enum spdk_opal_locking_range locking_range,
+			      const char *passwd);
+int spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user user,
+				      enum spdk_opal_locking_range locking_range_id, uint64_t range_start,
+				      uint64_t range_length, const char *passwd);
 
 #endif
