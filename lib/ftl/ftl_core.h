@@ -361,22 +361,28 @@ ftl_ppa_from_packed(const struct spdk_ftl_dev *dev, struct ftl_ppa p)
 	return ppa;
 }
 
+static inline size_t
+ftl_dev_num_bands(const struct spdk_ftl_dev *dev)
+{
+	return dev->geo.num_chk;
+}
+
 static inline unsigned int
 ftl_ppa_flatten_punit(const struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 {
 	return ppa.pu * dev->geo.num_grp + ppa.grp - dev->range.begin;
 }
 
-static inline int
+static inline bool
 ftl_ppa_in_range(const struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 {
 	unsigned int punit = ftl_ppa_flatten_punit(dev, ppa) + dev->range.begin;
 
-	if (punit >= dev->range.begin && punit <= dev->range.end) {
-		return 1;
+	if (punit < dev->range.begin || punit > dev->range.end) {
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 #define _ftl_l2p_set(l2p, off, val, bits) \
@@ -423,11 +429,6 @@ ftl_l2p_get(struct spdk_ftl_dev *dev, uint64_t lba)
 	} else {
 		return ftl_to_ppa(_ftl_l2p_get64(dev->l2p, lba));
 	}
-}
-static inline size_t
-ftl_dev_num_bands(const struct spdk_ftl_dev *dev)
-{
-	return dev->geo.num_chk;
 }
 
 static inline size_t
