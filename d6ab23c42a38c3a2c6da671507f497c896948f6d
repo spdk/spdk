@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad038c49_3815cb45",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-21T13:24:08Z",
+      "side": 1,
+      "message": "For the following check, here is better than in pr_out_reserve ?",
+      "revId": "d6ab23c42a38c3a2c6da671507f497c896948f6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
