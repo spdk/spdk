@@ -221,12 +221,27 @@ _iov_ctx_set_iov(struct _iov_ctx *ctx, uint8_t *data, uint32_t data_len)
 	return true;
 }
 
+static inline bool
+_iov_ctx_set_iovs(struct _iov_ctx *ctx, struct iovec *data_iov,
+		  int data_iovcnt)
+{
+	int i;
+
+	for (i = 0; i < data_iovcnt; i++) {
+		if (!_iov_ctx_set_iov(ctx, data_iov[i].iov_base, data_iov[i].iov_len)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 static int
 nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 		    bool hdgst_enable, bool ddgst_enable, uint32_t *_mapped_length)
 {
 	int enable_digest;
-	uint32_t hlen, plen, i;
+	uint32_t hlen, plen;
 	struct _iov_ctx *ctx;
 
 	if (iovcnt == 0) {
@@ -269,10 +284,8 @@ nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 
 	/* Data Segment */
 	plen += pdu->data_len;
-	for (i = 0; i < pdu->data_iovcnt; i++) {
-		if (!_iov_ctx_set_iov(ctx, pdu->data_iov[i].iov_base, pdu->data_iov[i].iov_len)) {
-			goto end;
-		}
+	if (!_iov_ctx_set_iovs(ctx, pdu->data_iov, pdu->data_iovcnt)) {
+		goto end;
 	}
 
 	/* Data Digest */
@@ -299,7 +312,6 @@ nvme_tcp_build_payload_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *
 			    bool ddgst_enable, uint32_t *_mapped_length)
 {
 	struct _iov_ctx *ctx;
-	uint32_t i;
 
 	if (iovcnt == 0) {
 		return 0;
@@ -308,10 +320,8 @@ nvme_tcp_build_payload_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *
 	ctx = &pdu->iov_ctx;
 	_iov_ctx_init(ctx, iov, iovcnt, pdu->readv_offset);
 
-	for (i = 0; i < pdu->data_iovcnt; i++) {
-		if (!_iov_ctx_set_iov(ctx, pdu->data_iov[i].iov_base, pdu->data_iov[i].iov_len)) {
-			goto end;
-		}
+	if (!_iov_ctx_set_iovs(ctx, pdu->data_iov, pdu->data_iovcnt)) {
+		goto end;
 	}
 
 	/* Data Digest */
