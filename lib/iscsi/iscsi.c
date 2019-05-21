@@ -590,20 +590,18 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 struct _iov_ctx {
 	struct iovec	*iov;
-	int		num_iovs;
-	uint32_t	iov_offset;
 	int		iovcnt;
+	uint32_t	iov_offset;
 	uint32_t	mapped_len;
 };
 
 static inline void
-_iov_ctx_init(struct _iov_ctx *ctx, struct iovec *iovs, int num_iovs,
+_iov_ctx_init(struct _iov_ctx *ctx, struct iovec *iovs, int iovcnt,
 	      uint32_t iov_offset)
 {
 	ctx->iov = iovs;
-	ctx->num_iovs = num_iovs;
+	ctx->iovcnt = iovcnt;
 	ctx->iov_offset = iov_offset;
-	ctx->iovcnt = 0;
 	ctx->mapped_len = 0;
 }
 
@@ -613,13 +611,14 @@ _iov_ctx_set_iov(struct _iov_ctx *ctx, uint8_t *data, uint32_t data_len)
 	if (ctx->iov_offset >= data_len) {
 		ctx->iov_offset -= data_len;
 	} else {
+		assert(ctx->iovcnt > 0);
 		ctx->iov->iov_base = data + ctx->iov_offset;
 		ctx->iov->iov_len = data_len - ctx->iov_offset;
 		ctx->mapped_len += data_len - ctx->iov_offset;
 		ctx->iov_offset = 0;
 		ctx->iov++;
-		ctx->iovcnt++;
-		if (ctx->iovcnt == ctx->num_iovs) {
+		ctx->iovcnt--;
+		if (ctx->iovcnt == 0) {
 			return false;
 		}
 	}
@@ -644,7 +643,7 @@ _iov_ctx_set_md_interleave_iov(struct _iov_ctx *ctx,
 	} else {
 		buf_iov.iov_base = buf;
 		buf_iov.iov_len = buf_len;
-		rc = spdk_dif_set_md_interleave_iovs(ctx->iov, ctx->num_iovs - ctx->iovcnt,
+		rc = spdk_dif_set_md_interleave_iovs(ctx->iov, ctx->iovcnt,
 						     &buf_iov, 1,
 						     ctx->iov_offset, data_len, &mapped_len,
 						     dif_ctx);
@@ -655,9 +654,10 @@ _iov_ctx_set_md_interleave_iov(struct _iov_ctx *ctx,
 
 		ctx->mapped_len += mapped_len;
 		ctx->iov_offset = 0;
-		ctx->iovcnt += rc;
+		assert(ctx->iovcnt >= rc);
+		ctx->iovcnt -= rc;
 
-		if (ctx->iovcnt == ctx->num_iovs) {
+		if (ctx->iovcnt == 0) {
 			return false;
 		}
 	}
@@ -666,7 +666,7 @@ _iov_ctx_set_md_interleave_iov(struct _iov_ctx *ctx,
 }
 
 int
-spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_iovs,
+spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
 		      struct spdk_iscsi_pdu *pdu, uint32_t *_mapped_length)
 {
 	struct _iov_ctx ctx;
@@ -674,7 +674,7 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_
 	uint32_t total_ahs_len;
 	uint32_t data_len;
 
-	if (num_iovs == 0) {
+	if (iovcnt == 0) {
 		return 0;
 	}
 
@@ -688,7 +688,7 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_
 		enable_digest = 0;
 	}
 
-	_iov_ctx_init(&ctx, iovs, num_iovs, pdu->writev_offset);
+	_iov_ctx_init(&ctx, iovs, iovcnt, pdu->writev_offset);
 
 	/* BHS */
 	if (!_iov_ctx_set_iov(&ctx, (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN)) {
@@ -732,7 +732,7 @@ end:
 		*_mapped_length = ctx.mapped_len;
 	}
 
-	return ctx.iovcnt;
+	return iovcnt - ctx.iovcnt;
 }
 
 static int
