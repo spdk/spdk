@@ -1,0 +1,242 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5fdc303_54abd766",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 1332,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "meatadata",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20df40f8_91e1a999",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "Do you even need this? You can always check if the bdev supports separate metadata as well as if md_buf is not NULL.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d188c50f_9ffe81d0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "You can eliminate this forward declaration by rearranging the functions - that\u0027s how we normally do it where possible.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "846ce2cf_ef0de4cf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "Why do you need the alignment check here? This function already aligns the buffer on line 559.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "140f6e43_ca14765d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 571,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "After aligning the buffer and reducing the length, the remaining data in the buffer should be for the md_buf. That buffer should also be aligned automatically (because you have an aligned buffer of blocks before it). I guess this could break if the block size is not a multiple of the alignment, but for separate metadata that shouldn\u0027t be allowed (blocks are a power of two with separate metadata).\n\nI think this should be as simple as grabbing a pointer to the start of the md_buf from within aligned_buf and calling spdk_bdev_io_set_md_buf - no need for the double buffer case.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17290866_fed74ae4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "You can check if the md_buf is NULL and if spdk_bdev_md_is_separate().",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98bb4f56_f03e56be",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "I actually think it would be a serious error condition if the buffers were allocated but the metadata was not. So maybe instead of always calculating md_allocated/md_len here, you could do something like this:\n\nbuf_allocated \u003d ...\nif (spdk_bdev_md_is_separate(bdev)) {\n    if (buf_allocated) {\n        /* Check if md is properly allocated. Assert/blow up/return error if it is not. */\n    }\n    md_len \u003d num_blocks * bdev-\u003emd_len;\n} else if (buf_allocated) {\n    /* Buffers already present and aligned */\n    ....\n} else {\n    md_len \u003d 0;\n}\n\nThis also lets us avoid the division to calculate num_blocks for devices that don\u0027t support metadata, which is important for performance.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcbd9772_1ab7579f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1627,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "Can you throw in an assert that parent_iov_offset % blocklen is 0?",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a563ad2e_5e43986f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2671,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "This function doesn\u0027t need the md_separate parameter. That\u0027s equivalent to checking whether md_buf is not NULL.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3fe281e_93ae3a85",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2683,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "I think you should move this check into spdk_bdev_read_blocks_with_md. In the other path (via spdk_bdev_read_blocks) this check doesn\u0027t do anything - md_buf is always NULL and md_separate is false.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e730b19_0e0df0fb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2737,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "This call should check if md_buf is NULL. If it is, fail here.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41aed3c2_44b5ef9b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2755,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "Similar to the non-vectored path, move this check into spdk_bdev_readv_blocks_with_md.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01c65b1f_b5dc7f14",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2809,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "Check that md_buf is not null.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0eafc14_c78dec1a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2871,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-21T17:31:01Z",
+      "side": 1,
+      "message": "On the read side you took the old implementation and made it a static, internal function that both the md and non-md paths called. I like that approach better because I don\u0027t want to allow the user to call spdk_bdev_write_blocks_with_md and pass in a null pointer for md_buf.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
