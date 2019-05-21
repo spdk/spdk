@@ -5018,6 +5018,132 @@ Example response:
 }
 ~~~
 
+# RAID
+
+## get_raid_bdevs {#rpc_get_raid_bdevs}
+
+This is used to list all the raid bdev names based on the input category requested. Category should be one
+of 'all', 'online', 'configuring' or 'offline'. 'all' means all the raid bdevs whether they are online or
+configuring or offline. 'online' is the raid bdev which is registered with bdev layer. 'configuring' is
+the raid bdev which does not have full configuration discovered yet. 'offline' is the raid bdev which is
+not registered with bdev as of now and it has encountered any error or user has requested to offline
+the raid bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+category                | Required | string      | all or online or configuring or offline
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_raid_bdevs",
+  "id": 1,
+  "params": {
+    "category": "all"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    "Raid0"
+  ]
+}
+~~~
+
+## construct_raid_bdev {#rpc_construct_raid_bdev}
+
+Constructs new RAID bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | RAID bdev name
+strip_size_kb           | Required | number      | Strip size in KB
+raid_level              | Required | number      | RAID level
+base_bdevs              | Required | string      | Base bdevs name, whitespace separated list in quotes
+
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "construct_raid_bdev",
+  "id": 1,
+  "params": {
+    "name": "Raid0",
+    "raid_level": 0,
+    "base_bdevs": [
+      "Malloc0",
+      "Malloc1",
+      "Malloc2",
+      "Malloc3"
+    ],
+    "strip_size": 4096
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## destroy_raid_bdev {#rpc_destroy_raid_bdev}
+
+Removes RAID bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | RAID bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "destroy_raid_bdev",
+  "id": 1,
+  "params": {
+    "name": "Raid0"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # Notifications
 
 ## get_notification_types {#rpc_get_notification_types}
