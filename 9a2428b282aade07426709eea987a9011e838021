@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1be76f9_b69ea1d4",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T14:08:32Z",
+      "side": 1,
+      "message": "The spdk_unlikely seemed to make sense here.",
+      "range": {
+        "startLine": 451,
+        "startChar": 5,
+        "endLine": 451,
+        "endChar": 14
+      },
+      "revId": "9a2428b282aade07426709eea987a9011e838021",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "f782da0d_1a3a4fba",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T14:08:32Z",
+      "side": 1,
+      "message": "Makes sense.",
+      "parentUuid": "c04888f0_2dc50045",
+      "range": {
+        "startLine": 313,
+        "startChar": 0,
+        "endLine": 315,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f4b5b83_e195cae2",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -357,6 +381,30 @@
     },
     {
       "key": {
+        "uuid": "1a1c0714_141fd0cd",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T14:08:32Z",
+      "side": 1,
+      "message": "My point is to make each individual patch making sense. In my opinion it\u0027s better to change one thing in the very next patch, if it\u0027s needed there. This approach makes sure we avoid some weird leftovers in the code produced by the fact that the conception changed between the two patches, but the code was left as it is (e.g. you don\u0027t really need to pass the move here, but the code will stay like that for a long time).",
+      "parentUuid": "06fc577f_1c7b82f9",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 49
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "83a1f376_46da30d0",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -488,6 +536,30 @@
       "side": 1,
       "message": "There won\u0027t be assert in release config - scan-build willl complain.",
       "parentUuid": "894c487d_6078ebce",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8c083ac_d5341719",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T14:08:32Z",
+      "side": 1,
+      "message": "I\u0027ve seen a lot of scan-build fixes that were just adding asserts (e.g. 26683005dd6aabf5a67c41d167e6109e5b8ae4e0, 04ce0e12544d6f8f1298c6cb7bb3eb335b70f4e9, etc.), so I think assert should be fine.",
+      "parentUuid": "a2a4b095_876c4c65",
       "range": {
         "startLine": 230,
         "startChar": 0,
@@ -877,6 +949,30 @@
     },
     {
       "key": {
+        "uuid": "2336cd32_184a4aeb",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T14:08:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "02abb69e_7bfcff10",
+      "range": {
+        "startLine": 480,
+        "startChar": 18,
+        "endLine": 480,
+        "endChar": 25
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b8e901d5_e6f9e9f6",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -1052,6 +1148,30 @@
       "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a000fba0_958100b6",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-21T14:08:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e3fd9d7b_dd105720",
+      "range": {
+        "startLine": 550,
+        "startChar": 0,
+        "endLine": 550,
+        "endChar": 23
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
