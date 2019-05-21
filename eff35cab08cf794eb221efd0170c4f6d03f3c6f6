@@ -16,6 +16,41 @@
       "revId": "eff35cab08cf794eb221efd0170c4f6d03f3c6f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb64f0f7_847317da",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-21T15:17:42Z",
+      "side": 1,
+      "message": "Maybe also add that when disks of different sizes are used, the smallest size disk will be the amount of space used on each member disk",
+      "parentUuid": "7432a556_2e5324b2",
+      "revId": "eff35cab08cf794eb221efd0170c4f6d03f3c6f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e85bc97_cdb2fcf9",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-21T15:17:42Z",
+      "side": 1,
+      "message": "you should add the strip_size_kb parm as well \"-z 64\" for exmaple",
+      "revId": "eff35cab08cf794eb221efd0170c4f6d03f3c6f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
