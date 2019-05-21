@@ -112,6 +112,12 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test case $WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 	--ctrl-type=spdk_vhost_blk --max-disks=1
 	timing_exit integrity_lvol_blk_nightly
+
+	timing_enter readonly
+	echo 'Running readonly tests suite...'
+	run_test case $WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1 -x
+	report_test_completion "vhost_readonly"
+	timing_exit readonly
 fi
 
 if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
@@ -120,12 +126,6 @@ if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
 	run_test case $WORKDIR/migration/migration.sh -x \
 	--fio-bin=$FIO_BIN --os=$VM_IMAGE --test-cases=1,2
 	timing_exit vhost_migration
-
-	timing_enter readonly
-	echo 'Running readonly tests suite...'
-	run_test case $WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1 -x
-	report_test_completion "vhost_readonly"
-	timing_exit readonly
 fi
 
 timing_enter integrity_lvol_scsi

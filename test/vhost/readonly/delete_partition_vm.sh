@@ -3,9 +3,6 @@
 set -xe
 
 testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
-source $rootdir/test/vhost/common.sh
 
 disk_name="vda"
 test_folder_name="readonly_test"
