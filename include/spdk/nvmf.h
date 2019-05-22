@@ -562,11 +562,13 @@ void spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_
  * \param bdev Block device to add as a namespace.
  * \param opts Namespace options, or NULL to use defaults.
  * \param opts_size sizeof(*opts)
+ * \param ptpl_file Persist through power loss file path.
  *
  * \return newly added NSID on success, or 0 on failure.
  */
 uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
-				    const struct spdk_nvmf_ns_opts *opts, size_t opts_size);
+				    const struct spdk_nvmf_ns_opts *opts, size_t opts_size,
+				    const char *ptpl_file);
 
 /**
  * Remove a namespace from a subsytem.
