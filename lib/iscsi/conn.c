@@ -625,7 +625,13 @@ _iscsi_conn_remove_lun(void *arg1, void *arg2)
 
 	spdk_clear_all_transfer_task(conn, lun, NULL);
 	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
-		if (pdu->task && (lun == pdu->task->scsi.lun)) {
+		/* If the pdu's LUN matches the LUN that was removed, free this
+		 * PDU immediately.  If the pdu's LUN is NULL, then we know
+		 * the datain handling code already detected the hot removal,
+		 * so we can free that PDU as well.
+		 */
+		if (pdu->task &&
+		    (lun == pdu->task->scsi.lun || NULL == pdu->task->scsi.lun)) {
 			TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
 			spdk_iscsi_conn_free_pdu(conn, pdu);
 		}
@@ -1335,7 +1341,6 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 			MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
 		}
 	}
-
 	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
 	iscsi_conn_flush_pdus(conn);
 }
