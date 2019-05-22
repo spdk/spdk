@@ -40,6 +40,7 @@
 #include "spdk/nvmf.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/json.h"
 
 #define SPDK_NVMF_MAX_NAMESPACES (1 << 14)
 
@@ -625,4 +626,60 @@ spdk_nvmf_parse_conf(spdk_nvmf_parse_conf_done_fn cb_fn)
 	}
 
 	return 0;
+}
+
+static int
+spdk_nvmf_ns_json_write_cb(void *cb_ctx, const void *data, size_t size)
+{
+	char *file = cb_ctx;
+	size_t rc;
+	FILE *fd;
+
+	fd = fopen(file, "w");
+	if (!fd) {
+		SPDK_ERRLOG("Can't open file %s for write\n", file);
+		return -ENOENT;
+	}
+	rc = fwrite(data, 1, size, fd);
+	fclose(fd);
+
+	return rc == size ? 0 : -1;
+}
+
+int
+spdk_nvmf_ns_reservation_update(const char *file, struct spdk_nvmf_reservation_info *info)
+{
+	struct spdk_json_write_ctx *w;
+	uint32_t i;
+	int rc = 0;
+
+	w = spdk_json_write_begin(spdk_nvmf_ns_json_write_cb, (void *)file, 0);
+	if (w == NULL) {
+		return -ENOMEM;
+	}
+	/* clear the configuration file */
+	if (!info->ptpl_activated) {
+		goto exit;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_bool(w, "ptpl", info->ptpl_activated);
+	spdk_json_write_named_uint32(w, "rtype", info->rtype);
+	spdk_json_write_named_uint64(w, "crkey", info->crkey);
+	spdk_json_write_named_string(w, "bdev_uuid", info->bdev_uuid);
+	spdk_json_write_named_string(w, "holder_uuid", info->holder_uuid);
+
+	spdk_json_write_named_array_begin(w, "registrants");
+	for (i = 0; i < info->num_regs; i++) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_uint64(w, "rkey", info->registrants[i].rkey);
+		spdk_json_write_named_string(w, "host_uuid", info->registrants[i].host_uuid);
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+	spdk_json_write_object_end(w);
+
+exit:
+	rc = spdk_json_write_end(w);
+	return rc;
 }

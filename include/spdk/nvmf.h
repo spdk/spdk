@@ -95,6 +95,16 @@ struct spdk_nvmf_reservation_info {
 };
 
 /**
+ * Store Namespace's registrants and reservation information into a file.
+ *
+ * \param file Path to the configuration file.
+ * \param info Registrants and reservation information which need to be stored.
+ *
+ * \return 0 on success, otherwise on failure.
+ */
+int spdk_nvmf_ns_reservation_update(const char *file, struct spdk_nvmf_reservation_info *info);
+
+/**
  * Construct an NVMe-oF target.
  *
  * \param max_subsystems the maximum number of subsystems allowed by the target.
