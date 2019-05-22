@@ -82,6 +82,7 @@ struct spdk_nvmf_poll_group_stat {
 	char *name;
 	uint32_t admin_qpairs;
 	uint32_t io_qpairs;
+	uint64_t pending_bdev_io;
 	STAILQ_ENTRY(spdk_nvmf_poll_group_stat) link;
 };
 

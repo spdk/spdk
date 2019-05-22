@@ -176,6 +176,7 @@ struct spdk_nvmf_poll_group {
 	/* Statistics */
 	uint64_t					admin_qpairs;
 	uint64_t					io_qpairs;
+	uint64_t					pending_bdev_io;
 };
 
 typedef enum _spdk_nvmf_request_exec_status {
