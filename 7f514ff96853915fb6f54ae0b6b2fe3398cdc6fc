@@ -429,6 +429,30 @@
     },
     {
       "key": {
+        "uuid": "15ee8c52_2bf417e5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-22T13:40:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0f863965_f3ed3c12",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 49
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83a1f376_46da30d0",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -608,6 +632,30 @@
       "side": 1,
       "message": "So please try to build this code with scan-build without debug enabled.",
       "parentUuid": "e8c083ac_d5341719",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c48bb9d_035236f0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-22T13:40:06Z",
+      "side": 1,
+      "message": "I don\u0027t think it\u0027s a valid configuration that we should worry about. scan-build run by autotest.sh runs only on debug configuration.",
+      "parentUuid": "928770a1_3beefccd",
       "range": {
         "startLine": 230,
         "startChar": 0,
@@ -805,6 +853,30 @@
       "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5232c6b_5033248b",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-22T13:40:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7ed6349d_8c79d57f",
+      "range": {
+        "startLine": 455,
+        "startChar": 1,
+        "endLine": 456,
+        "endChar": 19
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -1315,6 +1387,30 @@
       "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fba0e159_4ed98041",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-22T13:40:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f6a79f8d_ae656a47",
+      "range": {
+        "startLine": 656,
+        "startChar": 0,
+        "endLine": 656,
+        "endChar": 89
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
