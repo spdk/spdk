@@ -22,6 +22,40 @@
       "revId": "9c728b71f4e8c7553443ee671df6ff2ffe2de3e9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2d1e721_340b4fa7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1683,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-22T16:59:24Z",
+      "side": 1,
+      "message": "since you have broken out this code, you can just increment io_outstanding when the nomem_io TAILQ is empty, rather than incrementing and then decrementing if we need to append to the nomem_io TAILQ",
+      "revId": "9c728b71f4e8c7553443ee671df6ff2ffe2de3e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c1243b3_b76dc425",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1686,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-22T16:59:24Z",
+      "side": 1,
+      "message": "now that you have split this into a separate function, you can put the in_submit_request \u003d true/false just inside of this part here (around the submit_request call)\n\nthe else clause does not need in_submit_request set to true, since it is only decrementing variables and adding the bdev_io to the TAILQ",
+      "revId": "9c728b71f4e8c7553443ee671df6ff2ffe2de3e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
