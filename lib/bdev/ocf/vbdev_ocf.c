@@ -56,6 +56,8 @@ static TAILQ_HEAD(, vbdev_ocf) g_ocf_vbdev_head
 static TAILQ_HEAD(, examining_bdev) g_ocf_examining_bdevs_head
 	= TAILQ_HEAD_INITIALIZER(g_ocf_examining_bdevs_head);
 
+bool g_fini_started = false;
+
 /* Structure for keeping list of bdevs that are claimed but not used yet */
 struct examining_bdev {
 	struct spdk_bdev           *bdev;
@@ -264,7 +266,7 @@ stop_vbdev_poll(struct vbdev_ocf *vbdev)
 		return;
 	}
 
-	if (get_other_cache_instance(vbdev)) {
+	if (!g_fini_started && get_other_cache_instance(vbdev)) {
 		SPDK_NOTICELOG("Not stopping cache instance '%s'"
 			       " because it is referenced by other OCF bdev\n",
 			       vbdev->cache.name);
@@ -1426,12 +1428,18 @@ vbdev_ocf_get_ctx_size(void)
 	return sizeof(struct bdev_ocf_data);
 }
 
+static void
+fini_start(void)
+{
+	g_fini_started = true;
+}
+
 /* Module-global function table
  * Does not relate to vbdev instances */
 static struct spdk_bdev_module ocf_if = {
 	.name = "ocf",
 	.module_init = vbdev_ocf_init,
-	.fini_start = NULL,
+	.fini_start = fini_start,
 	.module_fini = vbdev_ocf_module_fini,
 	.config_text = NULL,
 	.get_ctx_size = vbdev_ocf_get_ctx_size,
