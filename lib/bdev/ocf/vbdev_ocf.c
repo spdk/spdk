@@ -671,7 +671,7 @@ vbdev_ocf_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", vbdev->name);
 	spdk_json_write_named_string(w, "mode",
-				     ocf_get_cache_modename(vbdev->cfg.cache.cache_mode));
+				     ocf_get_cache_modename(ocf_cache_get_mode(vbdev->ocf_cache)));
 	spdk_json_write_named_string(w, "cache_bdev_name", vbdev->cache.name);
 	spdk_json_write_named_string(w, "core_bdev_name", vbdev->core.name);
 	spdk_json_write_object_end(w);
@@ -1101,7 +1101,7 @@ init_vbdev(const char *vbdev_name,
 	if (cache_mode_name) {
 		vbdev->cfg.cache.cache_mode
 			= ocf_get_cache_mode(cache_mode_name);
-	} else {
+	} else if (!loadq) { /* In load path it is OK to pass NULL as cache mode */
 		SPDK_ERRLOG("No cache mode specified\n");
 		rc = -EINVAL;
 		goto error_free;
