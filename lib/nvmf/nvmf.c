@@ -505,16 +505,18 @@ nvmf_poll_group_get_stat_done(struct spdk_io_channel_iter *i, int status)
 static void
 nvmf_poll_group_get_stat(struct spdk_io_channel_iter *i)
 {
-	struct nvmf_get_stat_ctx *ctx;
+	struct nvmf_get_stat_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
 	struct spdk_nvmf_poll_group_stat *pg_stat;
 	int status = 0;
-
-	ctx = spdk_io_channel_iter_get_ctx(i);
 
 	pg_stat = calloc(1, sizeof(struct spdk_nvmf_poll_group_stat));
 	if (pg_stat) {
 		pg_stat->name = strdup(spdk_thread_get_name(spdk_get_thread()));
 		if (pg_stat->name) {
+			pg_stat->admin_qpairs = group->admin_qpairs;
+			pg_stat->io_qpairs = group->io_qpairs;
 			STAILQ_INSERT_TAIL(&ctx->stat.poll_groups, pg_stat, link);
 		} else {
 			free(pg_stat);

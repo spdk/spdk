@@ -591,6 +591,12 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	if (0 == qpair->qid) {
+		qpair->group->admin_qpairs++;
+	} else {
+		qpair->group->io_qpairs++;
+	}
+
 	if (cmd->qid == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect Admin Queue for controller ID 0x%x\n", data->cntlid);
 
