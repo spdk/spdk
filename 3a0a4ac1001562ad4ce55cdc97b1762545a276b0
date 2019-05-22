@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "239d4c40_18626026",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1678,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-22T08:44:05Z",
+      "side": 1,
+      "message": "can we pass bdev_ch as the second argument of _spdk_bdev_io_do_submit?",
+      "range": {
+        "startLine": 1678,
+        "startChar": 25,
+        "endLine": 1678,
+        "endChar": 57
+      },
+      "revId": "3a0a4ac1001562ad4ce55cdc97b1762545a276b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
