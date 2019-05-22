@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63d2c167_8084d230",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1431,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-05-22T13:04:36Z",
+      "side": 1,
+      "message": "it seems that we could have \"bdev\" as the input parameter.",
+      "range": {
+        "startLine": 1431,
+        "startChar": 2,
+        "endLine": 1431,
+        "endChar": 26
+      },
+      "revId": "9c728b71f4e8c7553443ee671df6ff2ffe2de3e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
