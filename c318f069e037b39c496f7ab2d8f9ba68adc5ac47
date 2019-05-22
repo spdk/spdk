@@ -16,6 +16,24 @@
       "revId": "c318f069e037b39c496f7ab2d8f9ba68adc5ac47",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc9fa396_e9acaa0e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1015163
+      },
+      "writtenOn": "2019-05-22T17:53:49Z",
+      "side": 1,
+      "message": "Yes, it makes sense. I will post a new version soon.",
+      "parentUuid": "f8c4739f_a9a70a21",
+      "revId": "c318f069e037b39c496f7ab2d8f9ba68adc5ac47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
