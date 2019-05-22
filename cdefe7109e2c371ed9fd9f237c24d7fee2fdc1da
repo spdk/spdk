@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "7e927f36_853150c9",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1458,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-22T23:57:59Z",
+      "side": 1,
+      "message": "This gets called in poll context from LLD when it pulls a new command frame from receive queue. Don\u0027t think this will cause any circular dependency issue.",
+      "parentUuid": "f3c26628_4512d4e8",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3710dd12_8eb44ae6",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 23
@@ -125,6 +143,24 @@
     },
     {
       "key": {
+        "uuid": "513a50a9_64e25c83",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1892,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-22T23:57:59Z",
+      "side": 1,
+      "message": "Ben, there is no need to have server side listening for FC-NVMe. We can try implement WWNN/WWPN based listening to match RDMA \u0026 TCP but it is not necessary. The current implementation would satisfy most FC vendor/customer requirements.",
+      "parentUuid": "18885cb0_45b4db9e",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88086b73_f35d1912",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 23
@@ -178,6 +214,24 @@
     },
     {
       "key": {
+        "uuid": "79720d57_ac199a02",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1917,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-22T23:57:59Z",
+      "side": 1,
+      "message": "shuhei, you are right, CIOC creates IOQ connections only. AQ connections are implicitly created upon successful CASS. Yes, HWQP\u0027s are uniformly distributed among available cores. When target accepts a new connection, transport will scan hwqp\u0027s and assigns the new connection to the one with highest number of available command slots.",
+      "parentUuid": "51fb1ad8_44faee99",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17856c4f_c02a44d7",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 23
@@ -192,6 +246,24 @@
       "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b68c892_506e16b4",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1955,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-22T23:57:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "17856c4f_c02a44d7",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -227,6 +299,24 @@
       "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5b8d8bc_7b6ec6fc",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1995,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-22T23:57:59Z",
+      "side": 1,
+      "message": "LLD would handover few request frame to FC transport in spdk_nvmf_fc_hwqp_process_frame() call.",
+      "parentUuid": "22be13f7_5a49c19c",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
