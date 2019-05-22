@@ -23,36 +23,6 @@ function xtrace_restore() {
 xtrace_disable
 set -e
 
-if [ "$(uname -s)" = "Linux" ]; then
-	MAKE=make
-	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
-	DPDK_LINUX_DIR=/usr/share/dpdk/x86_64-default-linuxapp-gcc
-	if [ -d $DPDK_LINUX_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
-		WITH_DPDK_DIR=$DPDK_LINUX_DIR
-	fi
-	# Override the default HUGEMEM in scripts/setup.sh to allocate 8GB in hugepages.
-	export HUGEMEM=8192
-elif [ "$(uname -s)" = "FreeBSD" ]; then
-	MAKE=gmake
-	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
-	DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
-	if [ -d $DPDK_FREEBSD_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
-		WITH_DPDK_DIR=$DPDK_FREEBSD_DIR
-	fi
-	# FreeBSD runs a much more limited set of tests, so keep the default 2GB.
-	export HUGEMEM=2048
-else
-	echo "Unknown OS \"$(uname -s)\""
-	exit 1
-fi
-
-# Export flag to skip the known bug that exists in librados
-# Bug is reported on ceph bug tracker with number 24078
-export ASAN_OPTIONS=new_delete_type_mismatch=0
-export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
-
-export DEFAULT_RPC_ADDR="/var/tmp/spdk.sock"
-
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
 
@@ -94,6 +64,13 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_FTL_EXTENDED=0}; export SPDK_TEST_FTL_EXTENDED
 : ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
 
+# Export flag to skip the known bug that exists in librados
+# Bug is reported on ceph bug tracker with number 24078
+export ASAN_OPTIONS=new_delete_type_mismatch=0
+export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
+
+export DEFAULT_RPC_ADDR="/var/tmp/spdk.sock"
+
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
 else
@@ -103,6 +80,29 @@ fi
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''
+fi
+
+if [ "$(uname -s)" = "Linux" ]; then
+	MAKE=make
+	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
+	DPDK_LINUX_DIR=/usr/share/dpdk/x86_64-default-linuxapp-gcc
+	if [ -d $DPDK_LINUX_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
+		WITH_DPDK_DIR=$DPDK_LINUX_DIR
+	fi
+	# Override the default HUGEMEM in scripts/setup.sh to allocate 8GB in hugepages.
+	export HUGEMEM=8192
+elif [ "$(uname -s)" = "FreeBSD" ]; then
+	MAKE=gmake
+	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
+	DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
+	if [ -d $DPDK_FREEBSD_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
+		WITH_DPDK_DIR=$DPDK_FREEBSD_DIR
+	fi
+	# FreeBSD runs a much more limited set of tests, so keep the default 2GB.
+	export HUGEMEM=2048
+else
+	echo "Unknown OS \"$(uname -s)\""
+	exit 1
 fi
 
 config_params='--enable-debug --enable-werror'
