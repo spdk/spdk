@@ -517,6 +517,7 @@ nvmf_poll_group_get_stat(struct spdk_io_channel_iter *i)
 		if (pg_stat->name) {
 			pg_stat->admin_qpairs = group->admin_qpairs;
 			pg_stat->io_qpairs = group->io_qpairs;
+			pg_stat->pending_bdev_io = group->pending_bdev_io;
 			STAILQ_INSERT_TAIL(&ctx->stat.poll_groups, pg_stat, link);
 		} else {
 			free(pg_stat);
