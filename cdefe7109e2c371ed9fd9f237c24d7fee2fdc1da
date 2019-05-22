@@ -140,6 +140,24 @@
     },
     {
       "key": {
+        "uuid": "22be13f7_5a49c19c",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1995,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-22T07:46:43Z",
+      "side": 1,
+      "message": "Hi Anil, related with this, will you clarify what APIs are called by LLD especially when polling the hwqp?",
+      "parentUuid": "b0a4a342_abcacce3",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d2d8ade6_8aa5dc8f",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 23
