@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8c4739f_a9a70a21",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-22T12:10:20Z",
+      "side": 1,
+      "message": "I really don\u0027t like those ifdefs. It looks like we duplicate some code.\n\nSince the internal rte_vhost will become only a legacy implementation soon, I think it would be fair just to add the missing defines there. spdk_pci_addr_parse() in this file could select the transport regardless of SPDK_CONFIG_VHOST_INTERNAL_LIB, but the internal rte_vhost_driver_register() would return -1 if the virtio-vhost-user transport was provided (as if it was unsupported). Then we don\u0027t need any ifdefs. Would it make sense?\n\nI think the same goes for rte_vhost_vring_call() in the next patch. We could make it just unconditionally do eventfd_write() inside - just to match the existing behavior.",
+      "revId": "c318f069e037b39c496f7ab2d8f9ba68adc5ac47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
