@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7c7ed658_b812033c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1431,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-05-22T18:48:26Z",
+      "side": 1,
+      "message": "Hi Gang, \n\nPreviously function _spdk_bdev_qos_io_submit gets bdev variable with a single purpose of using its fn_table to submit bdev_io. After moving submission work to _spdk_bdev_qos_io_submit function, I think we could get bdev variable inside that function.",
+      "parentUuid": "63d2c167_8084d230",
+      "range": {
+        "startLine": 1431,
+        "startChar": 2,
+        "endLine": 1431,
+        "endChar": 26
+      },
+      "revId": "9c728b71f4e8c7553443ee671df6ff2ffe2de3e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b2d1e721_340b4fa7",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "2abcebd8_845616be",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1683,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-05-22T18:48:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b2d1e721_340b4fa7",
+      "revId": "9c728b71f4e8c7553443ee671df6ff2ffe2de3e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4c1243b3_b76dc425",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -53,6 +95,24 @@
       "writtenOn": "2019-05-22T16:59:24Z",
       "side": 1,
       "message": "now that you have split this into a separate function, you can put the in_submit_request \u003d true/false just inside of this part here (around the submit_request call)\n\nthe else clause does not need in_submit_request set to true, since it is only decrementing variables and adding the bdev_io to the TAILQ",
+      "revId": "9c728b71f4e8c7553443ee671df6ff2ffe2de3e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5629d4b3_743fd7cf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1686,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-05-22T18:48:26Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nThe logic of this function turns clearer after making the two changes you mentioned. If nomem_io TAILQ is empty, inc io_outstanding, set in_submit_request flag and submit bdev_io to bdev module. Otherwise, just append bdev_io to the queue.",
+      "parentUuid": "4c1243b3_b76dc425",
       "revId": "9c728b71f4e8c7553443ee671df6ff2ffe2de3e9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
