@@ -1064,7 +1064,8 @@ static int
 init_vbdev(const char *vbdev_name,
 	   const char *cache_mode_name,
 	   const char *cache_name,
-	   const char *core_name)
+	   const char *core_name,
+	   bool loadq)
 {
 	struct vbdev_ocf *vbdev;
 	int rc = 0;
@@ -1113,6 +1114,7 @@ init_vbdev(const char *vbdev_name,
 		goto error_mem;
 	}
 
+	vbdev->cfg.loadq = loadq;
 	init_vbdev_config(vbdev);
 	TAILQ_INSERT_TAIL(&g_ocf_vbdev_head, vbdev, tailq);
 	return rc;
@@ -1180,7 +1182,7 @@ vbdev_ocf_init(void)
 			continue;
 		}
 
-		status = init_vbdev(vbdev_name, modename, cache_name, core_name);
+		status = init_vbdev(vbdev_name, modename, cache_name, core_name, false);
 		if (status) {
 			SPDK_ERRLOG("Config initialization failed with code: %d\n", status);
 		}
@@ -1304,6 +1306,7 @@ vbdev_ocf_construct(const char *vbdev_name,
 		    const char *cache_mode_name,
 		    const char *cache_name,
 		    const char *core_name,
+		    bool loadq,
 		    void (*cb)(int, struct vbdev_ocf *, void *),
 		    void *cb_arg)
 {
@@ -1312,7 +1315,7 @@ vbdev_ocf_construct(const char *vbdev_name,
 	struct spdk_bdev *core_bdev = spdk_bdev_get_by_name(core_name);
 	struct vbdev_ocf *vbdev;
 
-	rc = init_vbdev(vbdev_name, cache_mode_name, cache_name, core_name);
+	rc = init_vbdev(vbdev_name, cache_mode_name, cache_name, core_name, loadq);
 	if (rc) {
 		cb(rc, NULL, cb_arg);
 		return;
