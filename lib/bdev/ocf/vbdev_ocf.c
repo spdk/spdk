@@ -904,7 +904,6 @@ start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 	struct vbdev_ocf *vbdev = priv;
 
 	ocf_mngt_cache_unlock(cache);
-	vbdev->cache_ctx->management_channel = spdk_bdev_get_io_channel(vbdev->cache.desc);
 
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
@@ -988,7 +987,14 @@ start_cache(struct vbdev_ocf *vbdev)
 		return;
 	}
 
-	ocf_mngt_cache_attach(vbdev->ocf_cache, &vbdev->cfg.device, start_cache_cmpl, vbdev);
+	vbdev->cache_ctx->management_channel = spdk_bdev_get_io_channel(vbdev->cache.desc);
+	vbdev->cache.management_channel = vbdev->cache_ctx->management_channel;
+
+	if (vbdev->cfg.loadq) {
+		ocf_mngt_cache_load(vbdev->ocf_cache, &vbdev->cfg.device, start_cache_cmpl, vbdev);
+	} else {
+		ocf_mngt_cache_attach(vbdev->ocf_cache, &vbdev->cfg.device, start_cache_cmpl, vbdev);
+	}
 }
 
 /* Procedures called during register operation */
@@ -1052,6 +1058,13 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	cfg->core.volume_type = SPDK_OBJECT;
 	cfg->device.volume_type = SPDK_OBJECT;
 	cfg->core.core_id = OCF_CORE_MAX;
+
+	if (vbdev->cfg.loadq) {
+		/* When doing cache_load(), we need to set try_add to true,
+		 * otherwise OCF will interpret this core as new
+		 * instead of the inactive one */
+		vbdev->cfg.core.try_add = true;
+	}
 
 	cfg->device.uuid.size = strlen(vbdev->cache.name) + 1;
 	cfg->device.uuid.data = vbdev->cache.name;
