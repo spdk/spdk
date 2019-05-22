@@ -525,6 +525,7 @@ if $INSTALL; then
         sshpass \
         python3-pandas \
         btrfs-tools \
+        rdma-core \
         bc
 
         # rpm-build is not used
@@ -537,7 +538,11 @@ fi
 
 sudo mkdir -p /usr/src
 
-install_rxe_cfg&
+if [ $PACKAGEMNG != 'apt-get' ]; then
+    #Ubuntu integrates librxe to rdma-core, libibverbs-dev no longer ships infiniband/driver.h.
+    #Don't compile librxe on ubuntu, install package rdma-core instead.
+    install_rxe_cfg&
+fi
 install_iscsi_adm&
 install_rocksdb&
 install_fio&
