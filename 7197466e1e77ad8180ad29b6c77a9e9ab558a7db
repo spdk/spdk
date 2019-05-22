@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47b5e35f_278c7f97",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2696,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-22T20:22:04Z",
+      "side": 1,
+      "message": "You can move this function up here in a patch before this one.",
+      "revId": "7197466e1e77ad8180ad29b6c77a9e9ab558a7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ec93e38_d536e7ad",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2782,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-22T20:22:04Z",
+      "side": 1,
+      "message": "Does closing the blob not automatically sync it?",
+      "revId": "7197466e1e77ad8180ad29b6c77a9e9ab558a7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f07ed593_c56c3b61",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-22T20:22:04Z",
+      "side": 1,
+      "message": "examine\n\nAlso, I think you can probably get away with inlining this code into _spdk_bs_load_iter.",
+      "revId": "7197466e1e77ad8180ad29b6c77a9e9ab558a7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
