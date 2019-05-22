@@ -1068,10 +1068,17 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 		vbdev->cfg.core.try_add = true;
 	}
 
+	/* Serialize bdev names in OCF UUID to interpret on future loads
+	 * Core UUID is pair of (core bdev name, cache bdev name)
+	 * Cache UUID is cache bdev name */
 	cfg->device.uuid.size = strlen(vbdev->cache.name) + 1;
 	cfg->device.uuid.data = vbdev->cache.name;
-	cfg->core.uuid.size = strlen(vbdev->core.name) + 1;
-	cfg->core.uuid.data = vbdev->core.name;
+
+	snprintf(vbdev->uuid, VBDEV_OCF_MD_MAX_LEN, "%s %s",
+		 vbdev->core.name, vbdev->name);
+	cfg->core.uuid.size = strlen(vbdev->uuid) + 1;
+	cfg->core.uuid.data = vbdev->uuid;
+	vbdev->uuid[strlen(vbdev->core.name)] = 0;
 }
 
 /* Allocate vbdev structure object and add it to the global list */
