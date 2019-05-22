@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4b1ae390_6b419a69",
+        "filename": "include/spdk/fc_adm_api.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-22T20:40:08Z",
+      "side": 1,
+      "message": "LLD driver uses this API to post notification such as link events, port online/offline, initiator disconnect, ABTS etc. back to FC-NVMe transport. Moving this to include/spdk_internal.",
+      "parentUuid": "c16a9585_3c9862fc",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3c26628_4512d4e8",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 23
@@ -71,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "18885cb0_45b4db9e",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1892,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-22T20:40:08Z",
+      "side": 1,
+      "message": "Shuhei, your understanding is correct. Are you suggesting to add spdk_nvmf_fc_port_list to spdk_nvmf_fc_transport structure?",
+      "parentUuid": "381bca7e_9a9ebc77",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "88086b73_f35d1912",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 23
@@ -103,6 +139,24 @@
       "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51fb1ad8_44faee99",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1917,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-22T20:40:08Z",
+      "side": 1,
+      "message": "That is exactly what happens during LS queue polling. Here are the 3 relevant flows,\n\nController Admin Queue setup:\nspdk_nvmf_fc_hwqp_process_pending_ls_rqsts() --\u003e spdk_nvmf_fc_handle_ls_rqst() --\u003e nvmf_fc_ls_process_cass() --\u003e nvmf_fc_ls_add_conn_to_poller(AQ connection)\n\nIO Queue setup:\nspdk_nvmf_fc_hwqp_process_pending_ls_rqsts() --\u003e spdk_nvmf_fc_handle_ls_rqst() --\u003e nvmf_fc_ls_process_cioc() --\u003e nvmf_fc_ls_add_conn_to_poller(IOQ connection)\n\nIO Queue teardown:\nspdk_nvmf_fc_hwqp_process_pending_ls_rqsts() --\u003e spdk_nvmf_fc_handle_ls_rqst() --\u003e nvmf_fc_ls_process_disc() --\u003e nvmf_fc_ls_disconnect_assoc() --\u003e nvmf_fc_delete_association() --\u003e foreach connection { spdk_nvmf_fc_poller_api_func(SPDK_NVMF_FC_POLLER_API_DEL_CONNECTION) }",
+      "parentUuid": "88086b73_f35d1912",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -190,6 +244,24 @@
       "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94a955b8_673616dc",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-05-22T20:40:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4fe12bb2_a3870c7e",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
