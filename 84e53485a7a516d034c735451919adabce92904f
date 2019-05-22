@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "904656bb_21fcb7f9",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-05-22T04:56:31Z",
+      "side": 1,
+      "message": "The sys.path also added path into PYTHONPATH env. I think it is more convenient since users don\u0027t need to input PYTHONPATH in command line.",
+      "parentUuid": "956e6dbc_eaa2ce79",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 24
+      },
+      "revId": "84e53485a7a516d034c735451919adabce92904f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c48a8f8c_6083b6fb",
         "filename": "scripts/perf/nvmf/run_nvmf.py",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-20T13:54:17Z",
       "side": 1,
       "message": "Why do we move this up? IMO not a neccessary change.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 20
+      },
+      "revId": "84e53485a7a516d034c735451919adabce92904f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82e1996b_5cbe979c",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-05-22T04:56:31Z",
+      "side": 1,
+      "message": "Setting sys.path is in the common.py. So we need to move this line before importing SPDK rpc module.",
+      "parentUuid": "c48a8f8c_6083b6fb",
       "range": {
         "startLine": 14,
         "startChar": 0,
@@ -87,6 +135,54 @@
         "startChar": 18,
         "endLine": 654,
         "endChar": 42
+      },
+      "revId": "84e53485a7a516d034c735451919adabce92904f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fe3e7ad_ce77f952",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-05-22T04:56:31Z",
+      "side": 1,
+      "message": "Ok, I will use it in next patch.",
+      "parentUuid": "ead38933_77dba725",
+      "range": {
+        "startLine": 654,
+        "startChar": 18,
+        "endLine": 654,
+        "endChar": 42
+      },
+      "revId": "84e53485a7a516d034c735451919adabce92904f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8880c21c_166c9e17",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-05-22T04:56:31Z",
+      "side": 1,
+      "message": "dirpath variable is already imported in run_nvmf.py file since \"from common import *\" imports everything.\nI think we need a custom location of config.json. And we also need t default value for the config.json location. this patch can set the default value and also get the location from command line.",
+      "parentUuid": "5e86a8a0_cef71e01",
+      "range": {
+        "startLine": 654,
+        "startChar": 3,
+        "endLine": 654,
+        "endChar": 15
       },
       "revId": "84e53485a7a516d034c735451919adabce92904f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
