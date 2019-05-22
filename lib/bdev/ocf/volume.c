@@ -56,6 +56,12 @@ vbdev_ocf_volume_open(ocf_volume_t volume, void *opts)
 		if (base == NULL || !base->attached) {
 			return -ENODEV;
 		}
+		/* We don't want to attach core device during cache load
+		 * because we want to get reference to it in a usual way */
+		if (base->parent->cfg.loadq && base->is_cache == false &&
+		    base->parent->cache_ctx->cache_attached == false) {
+			return -EPERM;
+		}
 	}
 
 	*priv = base;
