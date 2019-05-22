@@ -76,6 +76,24 @@ struct spdk_nvmf_transport_opts {
 	bool		no_srq;
 };
 
+/* Maximum number of registrants supported per namespace */
+#define SPDK_NVMF_MAX_NUM_REGISTRANTS		16
+
+struct spdk_nvmf_registrant_info {
+	uint64_t		rkey;
+	char			host_uuid[SPDK_UUID_STRING_LEN];
+};
+
+struct spdk_nvmf_reservation_info {
+	bool					ptpl_activated;
+	enum spdk_nvme_reservation_type		rtype;
+	uint64_t				crkey;
+	char					bdev_uuid[SPDK_UUID_STRING_LEN];
+	char					holder_uuid[SPDK_UUID_STRING_LEN];
+	uint32_t				num_regs;
+	struct spdk_nvmf_registrant_info	registrants[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+};
+
 /**
  * Construct an NVMe-oF target.
  *

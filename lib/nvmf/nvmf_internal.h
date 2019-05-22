@@ -112,9 +112,6 @@ struct spdk_nvmf_transport_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)			link;
 };
 
-/* Maximum number of registrants supported per namespace */
-#define SPDK_NVMF_MAX_NUM_REGISTRANTS		16
-
 struct spdk_nvmf_subsystem_pg_ns_info {
 	struct spdk_io_channel		*channel;
 	/* current reservation key, no reservation if the value is 0 */
