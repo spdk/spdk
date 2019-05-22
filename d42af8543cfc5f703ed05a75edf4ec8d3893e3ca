@@ -22,6 +22,30 @@
       "revId": "d42af8543cfc5f703ed05a75edf4ec8d3893e3ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7bf29f7b_628afcc7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2928,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-22T11:53:47Z",
+      "side": 1,
+      "message": "Maybe SNAPSHOT_INCOMPLETE?",
+      "parentUuid": "fc08fe14_9e51caab",
+      "range": {
+        "startLine": 2926,
+        "startChar": 0,
+        "endLine": 2928,
+        "endChar": 82
+      },
+      "revId": "d42af8543cfc5f703ed05a75edf4ec8d3893e3ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
