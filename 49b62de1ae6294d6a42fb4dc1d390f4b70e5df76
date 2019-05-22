@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51593b2e_c35c2365",
+        "filename": "test/bdev/bdevio/bdevio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-22T15:51:30Z",
+      "side": 1,
+      "message": "g_wait_for_tests",
+      "revId": "49b62de1ae6294d6a42fb4dc1d390f4b70e5df76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64545088_9b0a63a5",
+        "filename": "test/bdev/bdevio/bdevio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-22T15:51:30Z",
+      "side": 1,
+      "message": "I don\u0027t understand how this works.  If user passes -w, wait_for_tests gets set to true - but where does it get set to false again so that tests actually get run?\n\nI\u0027m thinking maybe this doesn\u0027t really work until you add the RPC to run the tests.  In that case, I think these patches should actually be merged together, since this patch by itself wouldn\u0027t work.  But maybe I\u0027m misunderstanding.",
+      "revId": "49b62de1ae6294d6a42fb4dc1d390f4b70e5df76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
