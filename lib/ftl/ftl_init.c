@@ -228,7 +228,7 @@ ftl_retrieve_punit_chunk_info(struct spdk_ftl_dev *dev, const struct ftl_punit *
 			      struct spdk_ocssd_chunk_information_entry *info)
 {
 	uint32_t i = 0;
-	unsigned int num_entries = PAGE_SIZE / sizeof(*info);
+	unsigned int num_entries = FTL_BLOCK_SIZE / sizeof(*info);
 	struct ftl_ppa chunk_ppa = punit->start_ppa;
 
 	for (i = 0; i < dev->geo.num_chk; i += num_entries, chunk_ppa.chk += num_entries) {
