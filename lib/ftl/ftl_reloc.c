@@ -441,7 +441,7 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_io *io,
 		.fn		= ftl_reloc_read_cb,
 	};
 
-	opts.data = spdk_dma_malloc(PAGE_SIZE * num_lbks, PAGE_SIZE, NULL);
+	opts.data = spdk_dma_malloc(FTL_BLOCK_SIZE * num_lbks, FTL_BLOCK_SIZE, NULL);
 	if (!opts.data) {
 		return -1;
 	}

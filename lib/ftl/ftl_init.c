@@ -220,7 +220,7 @@ ftl_retrieve_bbt(struct spdk_ftl_dev *dev, const struct ftl_punit *punit,
 		 struct spdk_ocssd_chunk_information_entry *info)
 {
 	uint32_t i = 0;
-	unsigned int num_entries = PAGE_SIZE / sizeof(*info);
+	unsigned int num_entries = FTL_BLOCK_SIZE / sizeof(*info);
 	uint64_t off = (punit->start_ppa.grp * dev->geo.num_pu + punit->start_ppa.pu) *
 		       dev->geo.num_chk;
 
