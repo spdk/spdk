@@ -928,6 +928,9 @@ _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	}
 	spdk_bdev_module_release_bdev(ns->bdev);
 	spdk_bdev_close(ns->desc);
+	if (ns->ptpl_file) {
+		free(ns->ptpl_file);
+	}
 	free(ns);
 
 	spdk_nvmf_subsystem_ns_changed(subsystem, nsid);
@@ -1007,7 +1010,8 @@ static struct spdk_bdev_module ns_bdev_module = {
 
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
-			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size)
+			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
+			   const char *ptpl_file)
 {
 	struct spdk_nvmf_ns_opts opts;
 	struct spdk_nvmf_ns *ns;
@@ -1103,6 +1107,10 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	subsystem->ns[opts.nsid - 1] = ns;
 	ns->nsid = opts.nsid;
 	TAILQ_INIT(&ns->registrants);
+
+	if (ptpl_file) {
+		ns->ptpl_file = strdup(ptpl_file);
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),

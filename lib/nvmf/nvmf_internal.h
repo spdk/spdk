@@ -217,6 +217,8 @@ struct spdk_nvmf_ns {
 	enum spdk_nvme_reservation_type rtype;
 	/* current reservation holder, only valid if reservation type can only have one holder */
 	struct spdk_nvmf_registrant *holder;
+	/* Persist Through Power Loss file which contains the persistent reservation */
+	char *ptpl_file;
 };
 
 struct spdk_nvmf_qpair {
