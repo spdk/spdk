@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07da470f_36873e60",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-22T18:12:57Z",
+      "side": 1,
+      "message": "I have this patch out for review:\nhttps://review.gerrithub.io/c/spdk/spdk/+/455283\n\nMaybe we can get that patch merged, and then the vhost tests could use that model instead?",
+      "revId": "5b3f3465b51a52eb847961433b9b47f285aac3f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
