@@ -895,7 +895,7 @@ nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 		ns_opts.uuid = ctx->ns_params.uuid;
 	}
 
-	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts));
+	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts), NULL);
 	if (ctx->ns_params.nsid == 0) {
 		SPDK_ERRLOG("Unable to add namespace\n");
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
