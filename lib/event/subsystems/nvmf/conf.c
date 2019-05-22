@@ -338,7 +338,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			}
 		}
 
-		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts)) == 0) {
+		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts), NULL) == 0) {
 			SPDK_ERRLOG("Unable to add namespace\n");
 			spdk_nvmf_subsystem_destroy(subsystem);
 			subsystem = NULL;
