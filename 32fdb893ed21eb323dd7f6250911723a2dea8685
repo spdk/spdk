@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "604c170c_227955af",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-22T08:16:09Z",
+      "side": 1,
+      "message": "this is 50% of the observed iops?",
+      "revId": "32fdb893ed21eb323dd7f6250911723a2dea8685",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4f6e3a7_08bb177b",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-22T08:16:09Z",
+      "side": 1,
+      "message": "this is 50% of the observed iops?",
+      "revId": "32fdb893ed21eb323dd7f6250911723a2dea8685",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
