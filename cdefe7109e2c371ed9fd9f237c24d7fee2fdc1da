@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "381bca7e_9a9ebc77",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1892,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-22T05:47:21Z",
+      "side": 1,
+      "message": "For each FC HBA,\nLLD knows WWNN shared by all ports of a device, and WWPNs which is unique to each port.\nFor each port, LLD calls nvmf_fc_adm_evnt_hw_port_init() by passing SPDK_FC_HW_PORT_INIT to admin API.\n\nEach FC port is described as a struct spdk_nvmf_fc_port.\nFC ports are registered into a global list g_spdk_nvmf_fc_port_list.\n\nEach FC port has a link service (LS) queue and multiple IO queues.\nThe LS queue is is registered into LLD as a special HWQP.\nThe HWQP of the LS queue almost corresponds to the port registered in the RDMA or TCP transport.\n\nIO queues are registered into LLD as HWQPs\n\nThe LS queue is affinitized into the master thread (this may match the thread of the acceptor poller.)\nIO queues are spread fairly among multiple threads.\n\nEach FC port holds multiple FC nports.\nFC nport holds multple FC remote ports.\n\nFC nport corresponds to NVMe-oF subsystem or iSCSI target.\nFC remote port corresponds to NVMe-oF initiator or iSCSI initiator.\n\n\nnvmf_fc_adm_hw_port_data_init(fc_port, args)\n{\n\tinitialize fc_port-\u003els_queue and register it into LLD.\n\tmultiple fc_port-\u003eio_queues and register them into LLD.\n\tinitialize nport list of fc_port.\n}\n\nnvmf_fc_adm_evnt_hw_port_init(api_data)\n{\n\talloc fc_port;\n\talloc fc_port-\u003eio_queues;\n\tnvmf_fc_adm_hw_port_data_init(fc_port, api_data);\n\tadd fc_port to the global list g_spdk_nvmf_fc_port_list.\n}\n\n\nIt will be helpful to understand if g_spdk_nvmf_fc_port_ist is in struct spdk_nvmf_fc_transport.",
+      "parentUuid": "3710dd12_8eb44ae6",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "88086b73_f35d1912",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 23
