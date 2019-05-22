@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2f0d8661_b5921142",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-22T14:36:20Z",
+      "side": 1,
+      "message": "It was duplicated for no reason, but that is for another patch, ack",
+      "parentUuid": "c0a1f1b0_00f2b3b3",
+      "range": {
+        "startLine": 172,
+        "startChar": 0,
+        "endLine": 172,
+        "endChar": 42
+      },
+      "revId": "694447c6071bda1204345258a6e19889c51e3a08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d99a2f7_8bf5a5b8",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-22T14:00:19Z",
       "side": 1,
       "message": "Why do we disregard the error now ?",
+      "range": {
+        "startLine": 255,
+        "startChar": 31,
+        "endLine": 255,
+        "endChar": 35
+      },
+      "revId": "694447c6071bda1204345258a6e19889c51e3a08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94037bbd_1554e5a3",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-22T14:36:20Z",
+      "side": 1,
+      "message": "Accident, will fix",
+      "parentUuid": "8d99a2f7_8bf5a5b8",
       "range": {
         "startLine": 255,
         "startChar": 31,
