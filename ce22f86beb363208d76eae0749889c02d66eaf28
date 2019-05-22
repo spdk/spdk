@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d4804fad_3806bd9d",
+        "filename": "lib/bdev/ocf/ctx.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-22T06:42:05Z",
+      "side": 1,
+      "message": "I would actually prefer to keep it here only, rather than in base, because it is a shared resource. I duplicated this reference in base structure to keep core base and cache base \"equal\". So, for example, in volume.c file I do the same thing no matter which base I get.\n\nClear solution would be to move base structure to cache_ctx, but that is a topic for another change.",
+      "parentUuid": "9df33af0_26b9b0f9",
+      "range": {
+        "startLine": 51,
+        "startChar": 30,
+        "endLine": 51,
+        "endChar": 43
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3fd461e1_fab5666f",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 31
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-14T13:23:42Z",
       "side": 1,
       "message": "I assume that the message sending here is done to prevent API calls to vbdev_ocf_delete() from any thread in custom app ? Right now its only performed from RPC which is basically the same as app init thread and cleaner_thread.\n\nIf one were to assume that vbdev_ocf_delete() is called from thread !\u003d cleaner_thread. Then how do we go back to original caller after put_cleaner_channel() ?\n\nOverall I\u0027m not sure if any of message passing is required when using any of provided frameworks - app init or rpc.",
+      "range": {
+        "startLine": 264,
+        "startChar": 1,
+        "endLine": 264,
+        "endChar": 92
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c910426_bf686e95",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-22T06:42:05Z",
+      "side": 1,
+      "message": "Ack, I will remove message passing, but we should add it back later, because as far as I know there could be a hotremove call from other thread than init+rpc (and I am not sure if there are more such). If we will be adding it back, we should implement retuning to manage thread through vbdev_ocf_mngt_ interface.",
+      "parentUuid": "3fd461e1_fab5666f",
       "range": {
         "startLine": 264,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "36222d65_3cfd9ff1",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-22T06:42:05Z",
+      "side": 1,
+      "message": "Yes, they do, that\u0027s why I added this branch",
+      "parentUuid": "c7fe212e_e46105a2",
+      "range": {
+        "startLine": 182,
+        "startChar": 7,
+        "endLine": 182,
+        "endChar": 30
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2891f5de_3cab2179",
         "filename": "lib/bdev/ocf/volume.c",
         "patchSetId": 31
@@ -82,6 +154,30 @@
       "writtenOn": "2019-05-14T13:23:42Z",
       "side": 1,
       "message": "This comment might be confusing. I think just specifying that iovs were not allocated, so it that it makes sense we are skipping free here.\n\n/* No iovs were allocated for flush requests */",
+      "range": {
+        "startLine": 183,
+        "startChar": 3,
+        "endLine": 183,
+        "endChar": 57
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9155b90f_b1446dae",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-22T06:42:05Z",
+      "side": 1,
+      "message": "Ack. Your version is more clear",
+      "parentUuid": "2891f5de_3cab2179",
       "range": {
         "startLine": 183,
         "startChar": 3,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "74621d02_7609c9de",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-22T06:42:05Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "23232bdd_9022344b",
+      "range": {
+        "startLine": 220,
+        "startChar": 0,
+        "endLine": 233,
+        "endChar": 17
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72f461d0_68c1266b",
         "filename": "lib/bdev/ocf/volume.c",
         "patchSetId": 31
@@ -128,6 +248,30 @@
       "writtenOn": "2019-05-14T13:23:42Z",
       "side": 1,
       "message": "Please help me understand the changes here.\nFrom what I gather, cctx-\u003emngt_queue was added in previous patch and any flush requests sent on that queue were always returning 0 via io-\u003eend(io, 0).\nThis patch adds a cleaner which as well submits flushes.\nNext patch adds explicit flushes in the shutdown path.\nYet this patch enables all of those besides adding cleaner.\n\nIs there anything blocking from adding patch before this one, that will just enable flushes on mngt_queue - doing so on cleaner_channel on cleaner_thread ? [probably adjusting naming as well]",
+      "range": {
+        "startLine": 246,
+        "startChar": 0,
+        "endLine": 249,
+        "endChar": 2
+      },
+      "revId": "ce22f86beb363208d76eae0749889c02d66eaf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0ea412c_18d2d065",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-22T06:42:05Z",
+      "side": 1,
+      "message": "You are right, ack",
+      "parentUuid": "72f461d0_68c1266b",
       "range": {
         "startLine": 246,
         "startChar": 0,
