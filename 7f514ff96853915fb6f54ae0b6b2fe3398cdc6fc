@@ -405,6 +405,30 @@
     },
     {
       "key": {
+        "uuid": "0f863965_f3ed3c12",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-22T07:04:02Z",
+      "side": 1,
+      "message": "No, I disagree. This patch intention is replacing ftl_io struct by ftl_move internal reloc struct. I don\u0027t want to introduce unnecessary logical changes here. Firstly in whole FTL code we are operating on ftl_io struct during completion callbacks and it was same here before my changes. Passing move object to each completion callback in reloc module make sense to keep those interfaces consistent. I also initialize move object here with breloc field so it completely make sense to pass it to future processing instead breloc object. Next patch is using move object in completion callback and this patch is only preparation for this.",
+      "parentUuid": "1a1c0714_141fd0cd",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 49
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "83a1f376_46da30d0",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -560,6 +584,30 @@
       "side": 1,
       "message": "I\u0027ve seen a lot of scan-build fixes that were just adding asserts (e.g. 26683005dd6aabf5a67c41d167e6109e5b8ae4e0, 04ce0e12544d6f8f1298c6cb7bb3eb335b70f4e9, etc.), so I think assert should be fine.",
       "parentUuid": "a2a4b095_876c4c65",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "928770a1_3beefccd",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-22T07:04:02Z",
+      "side": 1,
+      "message": "So please try to build this code with scan-build without debug enabled.",
+      "parentUuid": "e8c083ac_d5341719",
       "range": {
         "startLine": 230,
         "startChar": 0,
