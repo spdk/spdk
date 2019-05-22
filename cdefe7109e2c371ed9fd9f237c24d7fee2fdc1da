@@ -88,6 +88,24 @@
     },
     {
       "key": {
+        "uuid": "c1a0ed06_258342c9",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1917,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-22T07:31:07Z",
+      "side": 1,
+      "message": "Hi Anil,\nMy question is\n- if we assign FC connection to HWQP not when CASS but when CIOC, implementation of FC transport may become closer?\n\nBesides, I tried to explain the current implementation for Ben\u0027s question. Will you improve my bad explanation?\n \nCritical terms may be CASS (Create Association) and CIOC (Create I/O connection).\n\nCASS request is used to create a FC association.\n\nFC association is a relationship between an initiator remort port and a target nport.\nFC connection is an abstraction representing a qpair for an NVMe controller.\n\nA FC connection corresponding to the Admin Queue is created with simultaneously\nwith the creation of the FC association as part of CASS LS request.\n\nA FC connection corresponding to an I/O queue is created as part of processing CIOC.\n\n\nThe first NVMe-oF I/O operation issued on an FC connection is an NVMe-oF Connect command for the corresponding NVMe controller queue.\n\n\n\nstruct spdk_nvmf_fc_conn corresponds struct spdk_nvmf_rdma_qpair or spdk_nvmf_tcp_qpair.\n\n\nIn TCP transport, spdk_nvmf_tcp_port_accept is created in _spdk_nvmf_tcp_handle_connect and it is registered into NVMf poll group in its callback.\n\nOn the other hand, in FC transport,\n\nwhen creating a FC association by processing CASS LS request, spdk_nvmf_fc_conn pool of a FC association is created, and the spdk_nvmf_fc_conn for the admin queue is created by getting a conn from the pool, and\n\nwhen creating a FC connection by processing CIOC LS request, a spdk_nvmf_fc_conn for the IO queue is created by getting a conn from the pool.\n\n\nAll conns in the spdk_nvmf_fc_conn pool are assigned to a single HWQP at creation of the pool.\n\nHWQPs of a single FC port are assigned to cores when changing the FC port to online.",
+      "parentUuid": "88086b73_f35d1912",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "17856c4f_c02a44d7",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 23
