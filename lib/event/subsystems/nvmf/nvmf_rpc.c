@@ -1654,6 +1654,8 @@ rpc_nvmf_get_stats(struct spdk_io_channel_iter *i)
 	if (0 == spdk_nvmf_poll_group_get_stat(g_spdk_nvmf_tgt, &stat)) {
 		spdk_json_write_object_begin(ctx->w);
 		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(spdk_get_thread()));
+		spdk_json_write_named_uint32(ctx->w, "admin_qpairs", stat.admin_qpairs);
+		spdk_json_write_named_uint32(ctx->w, "io_qpairs", stat.io_qpairs);
 		spdk_json_write_object_end(ctx->w);
 	}
 
