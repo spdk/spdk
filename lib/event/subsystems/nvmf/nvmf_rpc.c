@@ -1670,6 +1670,7 @@ rpc_nvmf_get_stats(struct spdk_io_channel_iter *i)
 		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(spdk_get_thread()));
 		spdk_json_write_named_uint32(ctx->w, "admin_qpairs", stat.admin_qpairs);
 		spdk_json_write_named_uint32(ctx->w, "io_qpairs", stat.io_qpairs);
+		spdk_json_write_named_uint64(ctx->w, "pending_bdev_io", stat.pending_bdev_io);
 		spdk_json_write_object_end(ctx->w);
 	}
 

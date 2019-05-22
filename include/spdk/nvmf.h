@@ -81,6 +81,7 @@ struct spdk_nvmf_transport_opts {
 struct spdk_nvmf_poll_group_stat {
 	uint32_t admin_qpairs;
 	uint32_t io_qpairs;
+	uint64_t pending_bdev_io;
 };
 
 /**
