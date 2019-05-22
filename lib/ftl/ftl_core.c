@@ -1066,7 +1066,7 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	size_t			lbk_cnt;
 
 	while (io->iov_pos < io->iov_cnt) {
-		lbk_cnt = iov[io->iov_pos].iov_len / PAGE_SIZE;
+		lbk_cnt = iov[io->iov_pos].iov_len / FTL_BLOCK_SIZE;
 		assert(iov[io->iov_pos].iov_len > 0);
 		assert(lbk_cnt == dev->xfer_size);
 

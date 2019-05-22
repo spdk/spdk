@@ -314,7 +314,7 @@ ftl_anm_ctrlr_alloc(struct spdk_ftl_dev *dev)
 	}
 
 	ctrlr->log = spdk_dma_zmalloc(sizeof(*ctrlr->log) * FTL_ANM_LOG_ENTRIES,
-				      PAGE_SIZE, NULL);
+				      4096, NULL);
 	if (!ctrlr->log) {
 		goto free_ctrlr;
 	}
