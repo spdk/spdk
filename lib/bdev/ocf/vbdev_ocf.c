@@ -887,6 +887,7 @@ start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 	struct vbdev_ocf *vbdev = priv;
 
 	ocf_mngt_cache_unlock(cache);
+	vbdev->cache_ctx->cache_attached = true;
 
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
