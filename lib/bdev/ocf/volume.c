@@ -53,7 +53,7 @@ vbdev_ocf_volume_open(ocf_volume_t volume, void *opts)
 		base = opts;
 	} else {
 		base = vbdev_ocf_get_base_by_name(ocf_volume_get_uuid(volume)->data);
-		if (base == NULL) {
+		if (base == NULL || !base->attached) {
 			return -ENODEV;
 		}
 		/* We don't want to attach core device during cache load
