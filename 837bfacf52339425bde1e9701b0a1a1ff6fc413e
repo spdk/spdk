@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "68deaeee_9afca398",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-22T01:27:45Z",
+      "side": 1,
+      "message": "Thanks, will move it to scsi_lun_remove() function.",
+      "parentUuid": "eb67fbd6_8f57ac0f",
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab6b5501_6aa16100",
         "filename": "lib/scsi/scsi_internal.h",
         "patchSetId": 14
@@ -30,6 +48,30 @@
       "writtenOn": "2019-05-21T08:45:16Z",
       "side": 1,
       "message": "Please use a single space here and use tabs between spdk_scsi_port and *initiator_port",
+      "range": {
+        "startLine": 71,
+        "startChar": 8,
+        "endLine": 71,
+        "endChar": 12
+      },
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "395764ab_8b55a466",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-22T01:27:45Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "ab6b5501_6aa16100",
       "range": {
         "startLine": 71,
         "startChar": 8,
@@ -116,6 +158,30 @@
       "writtenOn": "2019-05-21T08:45:16Z",
       "side": 1,
       "message": "you may be able to write \"return spdk_scsi_pr_register_registrant\" without using rc here.",
+      "range": {
+        "startLine": 196,
+        "startChar": 2,
+        "endLine": 196,
+        "endChar": 6
+      },
+      "revId": "837bfacf52339425bde1e9701b0a1a1ff6fc413e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a25d991f_39b055f7",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-22T01:27:45Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "7697f1f8_fdbee19e",
       "range": {
         "startLine": 196,
         "startChar": 2,
