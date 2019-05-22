@@ -108,7 +108,7 @@ ftl_io_advance(struct ftl_io *io, size_t lbk_cnt)
 	if (io->iov_cnt != 0) {
 		while (lbk_left > 0) {
 			assert(io->iov_pos < io->iov_cnt);
-			iov_lbks = iov[io->iov_pos].iov_len / PAGE_SIZE;
+			iov_lbks = iov[io->iov_pos].iov_len / FTL_BLOCK_SIZE;
 
 			if (io->iov_off + lbk_left < iov_lbks) {
 				io->iov_off += lbk_left;
@@ -133,7 +133,7 @@ ftl_iovec_num_lbks(struct iovec *iov, size_t iov_cnt)
 	size_t lbks = 0, i = 0;
 
 	for (; i < iov_cnt; ++i) {
-		lbks += iov[i].iov_len / PAGE_SIZE;
+		lbks += iov[i].iov_len / FTL_BLOCK_SIZE;
 	}
 
 	return lbks;
@@ -143,17 +143,17 @@ void *
 ftl_io_iovec_addr(struct ftl_io *io)
 {
 	assert(io->iov_pos < io->iov_cnt);
-	assert(io->iov_off * PAGE_SIZE < ftl_io_iovec(io)[io->iov_pos].iov_len);
+	assert(io->iov_off * FTL_BLOCK_SIZE < ftl_io_iovec(io)[io->iov_pos].iov_len);
 
 	return (char *)ftl_io_iovec(io)[io->iov_pos].iov_base +
-	       io->iov_off * PAGE_SIZE;
+	       io->iov_off * FTL_BLOCK_SIZE;
 }
 
 size_t
 ftl_io_iovec_len_left(struct ftl_io *io)
 {
 	struct iovec *iov = ftl_io_iovec(io);
-	return iov[io->iov_pos].iov_len / PAGE_SIZE - io->iov_off;
+	return iov[io->iov_pos].iov_len / FTL_BLOCK_SIZE - io->iov_off;
 }
 
 static void
@@ -169,7 +169,7 @@ _ftl_io_init_iovec(struct ftl_io *io, const struct iovec *iov, size_t iov_cnt, s
 
 	if (lbk_cnt == 0) {
 		for (iov_off = 0; iov_off < iov_cnt; ++iov_off) {
-			io->lbk_cnt += iov[iov_off].iov_len / PAGE_SIZE;
+			io->lbk_cnt += iov[iov_off].iov_len / FTL_BLOCK_SIZE;
 		}
 	}
 }
@@ -240,11 +240,11 @@ ftl_io_shrink_iovec(struct ftl_io *io, size_t lbk_cnt)
 	assert(io->pos == 0 && io->iov_pos == 0 && io->iov_off == 0);
 
 	for (; iov_off < io->iov_cnt; ++iov_off) {
-		size_t num_iov = io->iov[iov_off].iov_len / PAGE_SIZE;
+		size_t num_iov = io->iov[iov_off].iov_len / FTL_BLOCK_SIZE;
 		size_t num_left = lbk_cnt - lbk_off;
 
 		if (num_iov >= num_left) {
-			io->iov[iov_off].iov_len = num_left * PAGE_SIZE;
+			io->iov[iov_off].iov_len = num_left * FTL_BLOCK_SIZE;
 			io->iov_cnt = iov_off + 1;
 			io->lbk_cnt = lbk_cnt;
 			break;
@@ -275,7 +275,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	struct spdk_ftl_dev *dev = opts->dev;
 	struct iovec iov = {
 		.iov_base = opts->data,
-		.iov_len  = opts->lbk_cnt * PAGE_SIZE
+		.iov_len  = opts->lbk_cnt * FTL_BLOCK_SIZE
 	};
 
 	if (!io) {
