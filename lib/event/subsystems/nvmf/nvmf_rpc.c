@@ -1663,6 +1663,8 @@ rpc_nvmf_get_stats_done(bool status, struct spdk_nvmf_stat *stat, void *ctx)
 		STAILQ_FOREACH(pg_stat, &stat->poll_groups, link) {
 			spdk_json_write_object_begin(w);
 			spdk_json_write_named_string(w, "name", pg_stat->name);
+			spdk_json_write_named_uint32(w, "admin_qpairs", pg_stat->admin_qpairs);
+			spdk_json_write_named_uint32(w, "io_qpairs", pg_stat->io_qpairs);
 			spdk_json_write_object_end(w);
 		}
 		spdk_json_write_array_end(w);
