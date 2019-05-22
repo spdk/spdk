@@ -25,6 +25,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 UPGRADE=false
 INSTALL=false
 CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,ocf"
+LIBRXE_INSTALL=true
 
 OSID=$(source /etc/os-release && echo $ID)
 PACKAGEMNG='undefined'
@@ -481,7 +482,14 @@ if $INSTALL; then
             sudo apt-get install -y libasan2
             sudo apt-get install -y libubsan0
         fi
-
+        if ! sudo apt-get install -y rdma-core; then
+            echo "Package rdma-core is avaliable at Ubuntu 18 [universe] repositorium" >&2
+            sudo apt-get install rdmacm-utils
+            sudo apt-get install libverbs-utils
+        else
+            LIBRXE_INSTALL=false
+            sudo apt-get install rdma-core
+        fi
         if ! sudo apt-get install -y libpmempool1; then
             echo "Package libpmempool1 is available at Ubuntu 18 [universe] repositorium" >&2
         fi
@@ -517,8 +525,6 @@ if $INSTALL; then
         flex \
         bison \
         libswitch-perl \
-        rdmacm-utils \
-        ibverbs-utils \
         gdisk \
         socat \
         sshfs \
@@ -537,7 +543,11 @@ fi
 
 sudo mkdir -p /usr/src
 
-install_rxe_cfg&
+if [ $LIBRXE_INSTALL = true ]; then
+    #Ubuntu18 integrates librxe to rdma-core, libibverbs-dev no longer ships infiniband/driver.h.
+    #Don't compile librxe on ubuntu, install package rdma-core instead.
+    install_rxe_cfg&
+fi
 install_iscsi_adm&
 install_rocksdb&
 install_fio&
