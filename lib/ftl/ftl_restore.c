@@ -35,6 +35,7 @@
 #include "spdk/ftl.h"
 #include "spdk/util.h"
 #include "spdk/likely.h"
+#include "spdk/string.h"
 
 #include "ftl_core.h"
 #include "ftl_band.h"
@@ -46,6 +47,8 @@ struct ftl_restore_band {
 	struct ftl_band			*band;
 
 	enum ftl_md_status		md_status;
+
+	STAILQ_ENTRY(ftl_restore_band)	stailq;
 };
 
 struct ftl_restore {
@@ -59,6 +62,12 @@ struct ftl_restore {
 
 	struct ftl_restore_band		*bands;
 
+	STAILQ_HEAD(, ftl_restore_band) pad_bands;
+
+	size_t				num_pad_bands;
+
+	int				pad_status;
+
 	void				*md_buf;
 
 	void				*lba_map;
@@ -68,6 +77,10 @@ struct ftl_restore {
 
 static int
 ftl_restore_tail_md(struct ftl_restore_band *rband);
+static void
+ftl_pad_chunk_cb(struct ftl_io *io, void *arg, int status);
+static void
+ftl_restore_pad_band(struct ftl_restore_band *rband);
 
 static void
 ftl_restore_free(struct ftl_restore *restore)
@@ -102,6 +115,8 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 	if (!restore->bands) {
 		goto error;
 	}
+
+	STAILQ_INIT(&restore->pad_bands);
 
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 		rband = &restore->bands[i];
@@ -360,25 +375,223 @@ ftl_restore_next_band(struct ftl_restore *restore)
 	return NULL;
 }
 
+static bool
+ftl_pad_chunk_pad_finish(struct ftl_restore_band *rband, bool direct_access)
+{
+	struct ftl_restore *restore = rband->parent;
+	size_t i, num_pad_chunks = 0;
+
+	if (spdk_unlikely(restore->pad_status && !restore->num_ios)) {
+		if (direct_access) {
+			/* In case of any errors found we want to clear direct access. */
+			/* Direct access bands have their own allocated md, which would be lost */
+			/* on restore complete otherwise. */
+			rband->band->state = FTL_BAND_STATE_CLOSED;
+			ftl_band_set_direct_access(rband->band, false);
+		}
+		ftl_restore_complete(restore, restore->pad_status);
+		return true;
+	}
+
+	for (i = 0; i < rband->band->num_chunks; ++i) {
+		if (rband->band->chunk_buf[i].state != FTL_CHUNK_STATE_CLOSED) {
+			num_pad_chunks++;
+		}
+	}
+
+	/* Finished all chunks in a band, check if all bands are done */
+	if (num_pad_chunks == 0) {
+		if (direct_access) {
+			rband->band->state = FTL_BAND_STATE_CLOSED;
+			ftl_band_set_direct_access(rband->band, false);
+		}
+		if (--restore->num_pad_bands == 0) {
+			ftl_restore_complete(restore, restore->pad_status);
+			return true;
+		} else {
+			/* Start off padding in the next band */
+			ftl_restore_pad_band(STAILQ_NEXT(rband, stailq));
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static struct ftl_io *
+ftl_restore_init_pad_io(struct ftl_restore_band *rband, void *buffer,
+			struct ftl_ppa ppa)
+{
+	struct ftl_band *band = rband->band;
+	struct spdk_ftl_dev *dev = band->dev;
+	int flags = FTL_IO_PAD | FTL_IO_INTERNAL | FTL_IO_PPA_MODE | FTL_IO_MD |
+		    FTL_IO_DIRECT_ACCESS;
+	struct ftl_io_init_opts opts = {
+		.dev		= dev,
+		.io		= NULL,
+		.rwb_batch	= NULL,
+		.band		= band,
+		.size		= sizeof(struct ftl_io),
+		.flags		= flags,
+		.type		= FTL_IO_WRITE,
+		.lbk_cnt	= dev->xfer_size,
+		.cb_fn		= ftl_pad_chunk_cb,
+		.cb_ctx		= rband,
+		.data		= buffer,
+		.parent		= NULL,
+	};
+	struct ftl_io *io;
+
+	io = ftl_io_init_internal(&opts);
+	if (spdk_unlikely(!io)) {
+		return NULL;
+	}
+
+	io->ppa = ppa;
+	rband->parent->num_ios++;
+
+	return io;
+}
+
+static void
+ftl_pad_chunk_cb(struct ftl_io *io, void *arg, int status)
+{
+	struct ftl_restore_band *rband = arg;
+	struct ftl_restore *restore = rband->parent;
+	struct ftl_band *band = io->band;
+	struct ftl_chunk *chunk;
+	struct ftl_io *new_io;
+
+	restore->num_ios--;
+	/* TODO check for next unit error vs early close error */
+	if (status) {
+		restore->pad_status = status;
+		goto end;
+	}
+
+	if (io->ppa.lbk + io->lbk_cnt == band->dev->geo.clba) {
+		chunk = ftl_band_chunk_from_ppa(band, io->ppa);
+		chunk->state = FTL_CHUNK_STATE_CLOSED;
+	} else {
+		struct ftl_ppa ppa = io->ppa;
+		ppa.lbk += io->lbk_cnt;
+		new_io = ftl_restore_init_pad_io(rband, io->iov[0].iov_base, ppa);
+		if (spdk_unlikely(!new_io)) {
+			restore->pad_status = -ENOMEM;
+			goto end;
+		}
+
+		ftl_io_write(new_io);
+		return;
+	}
+
+end:
+	spdk_dma_free(io->iov[0].iov_base);
+	ftl_pad_chunk_pad_finish(rband, true);
+}
+
+static void
+ftl_restore_pad_band(struct ftl_restore_band *rband)
+{
+	struct spdk_ocssd_chunk_information_entry info;
+	struct ftl_restore *restore = rband->parent;
+	struct ftl_band *band = rband->band;
+	struct spdk_ftl_dev *dev = band->dev;
+	void *buffer = NULL;
+	struct ftl_io *io;
+	struct ftl_ppa ppa;
+	size_t i;
+	int rc = 0;
+
+	/* Check if some chunks are not closed */
+	if (ftl_pad_chunk_pad_finish(rband, false)) {
+		/* If we're here, end meta wasn't recognized, but the whole band is written */
+		/* Assume the band was padded and ignore it */
+		return;
+	}
+
+	/* The LBA map was assigned from restore pool */
+	band->md.lba_map = NULL;
+	band->state = FTL_BAND_STATE_OPEN;
+	rc = ftl_band_set_direct_access(band, true);
+	if (rc) {
+		restore->pad_status = rc;
+		if (--restore->num_pad_bands == 0) {
+			ftl_restore_complete(restore, restore->pad_status);
+		}
+		return;
+	}
+
+	for (i = 0; i < band->num_chunks; ++i) {
+		if (band->chunk_buf[i].state == FTL_CHUNK_STATE_CLOSED) {
+			continue;
+		}
+
+		rc = ftl_retrieve_chunk_info(dev, band->chunk_buf[i].start_ppa, &info, 1);
+		if (spdk_unlikely(rc)) {
+			goto error;
+		}
+		ppa = band->chunk_buf[i].start_ppa;
+		ppa.lbk = info.wp;
+
+		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, sizeof(uint32_t), NULL);
+		if (spdk_unlikely(!buffer)) {
+			rc = -ENOMEM;
+			goto error;
+		}
+
+		io = ftl_restore_init_pad_io(rband, buffer, ppa);
+		if (spdk_unlikely(!io)) {
+			rc = -ENOMEM;
+			spdk_dma_free(buffer);
+			goto error;
+		}
+
+		ftl_io_write(io);
+	}
+
+	return;
+
+error:
+	restore->pad_status = rc;
+	ftl_pad_chunk_pad_finish(rband, true);
+}
+
+static void
+ftl_restore_pad_open_bands(void *ctx)
+{
+	struct ftl_restore *restore = ctx;
+
+	ftl_restore_pad_band(STAILQ_FIRST(&restore->pad_bands));
+}
+
 static void
 ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_restore_band *rband = ctx;
 	struct ftl_restore *restore = rband->parent;
+	struct spdk_ftl_dev *dev = rband->band->dev;
 
 	if (status) {
-		ftl_restore_complete(restore, status);
-		return;
+		SPDK_ERRLOG("%s while restoring tail md. Will attempt to pad band %u.\n",
+			    spdk_strerror(status), rband->band->id);
+		STAILQ_INSERT_TAIL(&restore->pad_bands, rband, stailq);
+		restore->num_pad_bands++;
 	}
 
-	if (ftl_restore_l2p(rband->band)) {
+	if (!status && ftl_restore_l2p(rband->band)) {
 		ftl_restore_complete(restore, -ENOTRECOVERABLE);
 		return;
 	}
 
 	rband = ftl_restore_next_band(restore);
 	if (!rband) {
-		ftl_restore_complete(restore, 0);
+		if (!STAILQ_EMPTY(&restore->pad_bands)) {
+			spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_restore_pad_open_bands,
+					     restore);
+		} else {
+			ftl_restore_complete(restore, status);
+		}
 		return;
 	}
 
