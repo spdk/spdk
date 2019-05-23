@@ -187,7 +187,7 @@ out:
 	return rc;
 }
 
-static int
+int
 ftl_retrieve_bbt_page(struct spdk_ftl_dev *dev, uint64_t offset,
 		      struct spdk_ocssd_chunk_information_entry *info,
 		      unsigned int num_entries)
