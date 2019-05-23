@@ -22,6 +22,30 @@
       "revId": "c5d278d8cb71652984016aabb70fbfa7c0b9847a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7419d24f_172c0050",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2801,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-23T12:17:44Z",
+      "side": 1,
+      "message": "There might be also other reasons why open failed. I would rather not remove it here especially that this open call is only to determine the state of another blob. The one that failed was / will be opened earlier / later on normal load path and this is the place where we should decide what to do with it.",
+      "parentUuid": "78aa28ee_74959793",
+      "range": {
+        "startLine": 2801,
+        "startChar": 0,
+        "endLine": 2801,
+        "endChar": 60
+      },
+      "revId": "c5d278d8cb71652984016aabb70fbfa7c0b9847a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }

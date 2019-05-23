@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ee49c076_eaae91c3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2696,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-23T12:17:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "47b5e35f_278c7f97",
+      "revId": "7197466e1e77ad8180ad29b6c77a9e9ab558a7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ec93e38_d536e7ad",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-22T20:22:04Z",
       "side": 1,
       "message": "Does closing the blob not automatically sync it?",
+      "revId": "7197466e1e77ad8180ad29b6c77a9e9ab558a7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c27172b7_13275575",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2782,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-23T12:17:44Z",
+      "side": 1,
+      "message": "Yeah, I can skip that sync.",
+      "parentUuid": "1ec93e38_d536e7ad",
       "revId": "7197466e1e77ad8180ad29b6c77a9e9ab558a7db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
