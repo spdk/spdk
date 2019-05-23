@@ -39,6 +39,24 @@
       "revId": "b1340c14e0f4ba2a865ffa0e6d148c768987bdc9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "adab8aa2_7716a75b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 24
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-23T11:02:26Z",
+      "side": 1,
+      "message": "No, because test pool might now have enough memory for starting OCF",
+      "parentUuid": "d4d94687_be852a12",
+      "revId": "b1340c14e0f4ba2a865ffa0e6d148c768987bdc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
