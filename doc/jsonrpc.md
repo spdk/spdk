@@ -3806,6 +3806,7 @@ bdev_name               | Required | string      | Name of bdev to expose as a n
 nguid                   | Optional | string      | 16-byte namespace globally unique identifier in hexadecimal (e.g. "ABCDEF0123456789ABCDEF0123456789")
 eui64                   | Optional | string      | 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789")
 uuid                    | Optional | string      | RFC 4122 UUID (e.g. "ceccf520-691e-4b46-9546-34af789907c5")
+ptpl_file               | Optional | string      | File path to save/restore persistent reservation information
 
 ### Example
 
@@ -3820,7 +3821,8 @@ Example request:
     "nqn": "nqn.2016-06.io.spdk:cnode1",
     "namespace": {
       "nsid": 3,
-      "bdev_name": "Nvme0n1"
+      "bdev_name": "Nvme0n1",
+      "ptpl_file": "/opt/Nvme0n1PR.cfg"
     }
   }
 }

@@ -208,7 +208,7 @@ def nvmf_subsystem_remove_listener(
     return client.call('nvmf_subsystem_remove_listener', params)
 
 
-def nvmf_subsystem_add_ns(client, nqn, bdev_name, nsid=None, nguid=None, eui64=None, uuid=None):
+def nvmf_subsystem_add_ns(client, nqn, bdev_name, ptpl_file=None, nsid=None, nguid=None, eui64=None, uuid=None):
     """Add a namespace to a subsystem.
 
     Args:
@@ -223,6 +223,9 @@ def nvmf_subsystem_add_ns(client, nqn, bdev_name, nsid=None, nguid=None, eui64=N
         The namespace ID
     """
     ns = {'bdev_name': bdev_name}
+
+    if ptpl_file:
+        ns['ptpl_file'] = ptpl_file
 
     if nsid:
         ns['nsid'] = nsid
