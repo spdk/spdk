@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9dbd79b3_f82947de",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-23T13:51:57Z",
+      "side": 1,
+      "message": "Just to be sure lets check all the cache modes",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 44
+      },
+      "revId": "04b35c5a83c301e7df2512c3d452566518343a6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
