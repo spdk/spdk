@@ -90,8 +90,16 @@ struct spdk_nvmf_stat {
 	STAILQ_HEAD(, spdk_nvmf_poll_group_stat) poll_groups;
 };
 
+struct spdk_nvmf_rdma_device_stat {
+	const char *name;
+	uint64_t polls;
+	uint64_t completions;
+	STAILQ_ENTRY(spdk_nvmf_rdma_device_stat) link;
+};
+
 struct spdk_nvmf_rdma_poll_group_stat {
 	char *name;
+	STAILQ_HEAD(, spdk_nvmf_rdma_device_stat) devices;
 	STAILQ_ENTRY(spdk_nvmf_rdma_poll_group_stat) link;
 };
 

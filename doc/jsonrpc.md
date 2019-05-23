@@ -4216,7 +4216,19 @@ Example response:
     "trtype": "RDMA",
     "poll_groups": [
       {
-        "name": "app_thread"
+        "name": "app_thread",
+        "devices": [
+          {
+            "name": "mlx5_1",
+            "polls": 1536729,
+            "completions": 0
+          },
+          {
+            "name": "mlx5_0",
+            "polls": 1536729,
+            "completions": 18667357
+          }
+        ]
       }
     ]
   }
