@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97ce4a01_28a47fdb",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-23T13:08:21Z",
+      "side": 1,
+      "message": "Let\u0027s use\n/*\n * ...\n */",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 22
+      },
+      "revId": "988d3d7ae803fab6937b26391f9dd4715b25e97a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ac0175d_c1832a64",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-23T13:08:21Z",
+      "side": 1,
+      "message": "Why do you do that? What happens with this pointer? Aren\u0027t we leaking it?",
+      "range": {
+        "startLine": 415,
+        "startChar": 10,
+        "endLine": 415,
+        "endChar": 24
+      },
+      "revId": "988d3d7ae803fab6937b26391f9dd4715b25e97a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9937592_86754309",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-23T13:08:21Z",
+      "side": 1,
+      "message": "Let\u0027s move this into under an if:\n\nif (spdk_likely(!wptr-\u003eexplicit_mode)) {\n ppa \u003d wptr-\u003eppa;\n} else {\n assert(io-\u003eflags \u0026 FTL_IO_EXPLICIT_PPA);\n assert(ppa.chk \u003d\u003d wptr-\u003eband-\u003eid);\n ppa \u003d io-\u003eppa;\n}",
+      "range": {
+        "startLine": 1079,
+        "startChar": 24,
+        "endLine": 1082,
+        "endChar": 35
+      },
+      "revId": "988d3d7ae803fab6937b26391f9dd4715b25e97a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c3c76ac_62546449",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1146,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-23T13:08:21Z",
+      "side": 1,
+      "message": "Can we move this inside ftl_wptr_advance?",
+      "range": {
+        "startLine": 1146,
+        "startChar": 7,
+        "endLine": 1146,
+        "endChar": 26
+      },
+      "revId": "988d3d7ae803fab6937b26391f9dd4715b25e97a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "acb949a6_b242d94f",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-23T13:08:21Z",
+      "side": 1,
+      "message": "Let\u0027s operate on bands instead of wptrs. I think it\u0027s best to keep wptr internal to ftl_core.",
+      "range": {
+        "startLine": 239,
+        "startChar": 5,
+        "endLine": 239,
+        "endChar": 20
+      },
+      "revId": "988d3d7ae803fab6937b26391f9dd4715b25e97a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d1d6540_b42b8c79",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-23T13:08:21Z",
+      "side": 1,
+      "message": "Perhaps \u0027direct\u0027 or \u0027direct-access\u0027 would be more fitting?",
+      "range": {
+        "startLine": 242,
+        "startChar": 8,
+        "endLine": 242,
+        "endChar": 16
+      },
+      "revId": "988d3d7ae803fab6937b26391f9dd4715b25e97a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b93db715_1c4b0292",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-23T13:08:21Z",
+      "side": 1,
+      "message": "Let\u0027s call this FTL_IO_DIRECT or FTL_IO_DIRECT_ACCESS.",
+      "range": {
+        "startLine": 75,
+        "startChar": 1,
+        "endLine": 75,
+        "endChar": 20
+      },
+      "revId": "988d3d7ae803fab6937b26391f9dd4715b25e97a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
