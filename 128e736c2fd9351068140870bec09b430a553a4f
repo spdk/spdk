@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1494f91_c30fb5fa",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 82
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-23T14:04:36Z",
+      "side": 1,
+      "message": "The test flag approach is changed right now on master. Please note that default for all tests is 0, rather than 1. I think this would be right way here too.",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 40
+      },
+      "revId": "128e736c2fd9351068140870bec09b430a553a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1beb1ebb_a78146fe",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 82
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-23T14:04:36Z",
+      "side": 1,
+      "message": "Please make it fail tests when SPDK_RUN_VPP was requested, but not available. Instead of silent failure.",
+      "range": {
+        "startLine": 141,
+        "startChar": 3,
+        "endLine": 141,
+        "endChar": 17
+      },
+      "revId": "128e736c2fd9351068140870bec09b430a553a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
