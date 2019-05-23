@@ -123,6 +123,8 @@ extern "C" {
 #define PCI_DEVICE_ID_VIRTIO_BLK_MODERN	0x1001
 #define PCI_DEVICE_ID_VIRTIO_SCSI_MODERN 0x1004
 
+#define PCI_DEVICE_ID_INTEL_VMD		0x201d
+
 #ifdef __cplusplus
 }
 #endif
