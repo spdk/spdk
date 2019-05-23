@@ -1619,12 +1619,19 @@ write_nvmf_transport_stats(struct spdk_json_write_ctx *w,
 				     spdk_nvme_transport_id_trtype_str(stat->trtype));
 	switch (stat->trtype) {
 	case SPDK_NVME_TRANSPORT_RDMA:
+		spdk_json_write_named_uint64(w, "pending_data_buffer", stat->rdma.pending_data_buffer);
 		spdk_json_write_named_array_begin(w, "devices");
 		for (i = 0; i < stat->rdma.num_devices; ++i) {
 			spdk_json_write_object_begin(w);
 			spdk_json_write_named_string(w, "name", stat->rdma.devices[i].name);
 			spdk_json_write_named_uint64(w, "polls", stat->rdma.devices[i].polls);
 			spdk_json_write_named_uint64(w, "completions", stat->rdma.devices[i].completions);
+			spdk_json_write_named_uint64(w, "pending_free_request",
+						     stat->rdma.devices[i].pending_free_request);
+			spdk_json_write_named_uint64(w, "pending_rdma_read",
+						     stat->rdma.devices[i].pending_rdma_read);
+			spdk_json_write_named_uint64(w, "pending_rdma_write",
+						     stat->rdma.devices[i].pending_rdma_write);
 			spdk_json_write_object_end(w);
 		}
 		spdk_json_write_array_end(w);
