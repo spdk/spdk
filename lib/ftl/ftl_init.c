@@ -90,6 +90,13 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	/* Number of interleaving units per ws_opt */
 	/* 1 for default and 3 for 3D TLC NAND */
 	.num_interleave_units = 1,
+	/* If band end metadata has issues, return error during restore */
+	/* Situation may arise in the following scenario:
+	   1. Dirty shutdown
+	   2. Restore (last band A is padded with data)
+	   3. Shutdown before band A has been erased
+	   4. Restore (end meta of band A is invalid) */
+	.return_md_restore_error = true,
 };
 
 static void ftl_dev_free_sync(struct spdk_ftl_dev *dev);
