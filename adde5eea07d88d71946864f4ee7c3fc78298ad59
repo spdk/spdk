@@ -34,6 +34,29 @@
       "revId": "adde5eea07d88d71946864f4ee7c3fc78298ad59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ead1eac0_48c46cd0",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1432,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-23T12:03:12Z",
+      "side": 1,
+      "message": "Since we always need to call metadata_probe twice, why not specify different callback on whether we provide uuids and their count or not ? This would result in having two different functions - one for allocation of uuids, other for vbdev_construct.\n\nI assume there is no function to check core number beforehand or for OCF to provide its own buffer allocated with uuids ?",
+      "range": {
+        "startLine": 1431,
+        "startChar": 0,
+        "endLine": 1432,
+        "endChar": 44
+      },
+      "revId": "adde5eea07d88d71946864f4ee7c3fc78298ad59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
