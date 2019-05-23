@@ -22,6 +22,30 @@
       "revId": "b86f8c372caa442cce563eb7bdcb11ecfce08fde",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12494a82_481efdc7",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-23T10:57:34Z",
+      "side": 1,
+      "message": "Ack, added comment. \nAnswer to both questions is \"yes\" actually, updater_run() should be run from chosen thread.",
+      "parentUuid": "6994f4bc_57665bff",
+      "range": {
+        "startLine": 462,
+        "startChar": 1,
+        "endLine": 462,
+        "endChar": 56
+      },
+      "revId": "b86f8c372caa442cce563eb7bdcb11ecfce08fde",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
