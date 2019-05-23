@@ -692,6 +692,30 @@
     },
     {
       "key": {
+        "uuid": "6a0392b2_e5f4f31c",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-23T06:27:09Z",
+      "side": 1,
+      "message": "I don\u0027t think it\u0027s a matter of preference. If SPDK chooses to run scan-build on debug config, then libftl should do the same. And adding code to release configuration only because scan-build complains about some false positive certainly doesn\u0027t seem like a good idea.",
+      "parentUuid": "ea3a8c56_e6547b33",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "7f514ff96853915fb6f54ae0b6b2fe3398cdc6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7de5d83d_a3335ebf",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
