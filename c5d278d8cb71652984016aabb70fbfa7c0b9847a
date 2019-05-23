@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78aa28ee_74959793",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2801,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-05-23T12:08:41Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you just spdk_bs_delete_blob in case of -EINVAL? (metatada corruption)",
+      "range": {
+        "startLine": 2801,
+        "startChar": 0,
+        "endLine": 2801,
+        "endChar": 60
+      },
+      "revId": "c5d278d8cb71652984016aabb70fbfa7c0b9847a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
