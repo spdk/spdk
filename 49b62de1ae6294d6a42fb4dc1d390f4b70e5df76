@@ -33,6 +33,24 @@
       "revId": "49b62de1ae6294d6a42fb4dc1d390f4b70e5df76",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95cd072b_4e713bc3",
+        "filename": "test/bdev/bdevio/bdevio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-23T08:01:05Z",
+      "side": 1,
+      "message": "Default if set to false, and -w is the only way to set it to true. By default the tests just run, since this part is skipped. Otherwise the only way to run tests is via RPC.\n\nThe patch for RPC is later in the series, so I\u0027ll merge those two together to make it more functionally coherent.",
+      "parentUuid": "64545088_9b0a63a5",
+      "revId": "49b62de1ae6294d6a42fb4dc1d390f4b70e5df76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
