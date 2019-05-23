@@ -567,7 +567,10 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 			}
 		}
 	} else {
-		/* If we're here, end meta wasn't recognized, but whole band is written - ignore band for now */
+		/* If we're here, end meta wasn't recognized, but whole band is written - return error or ignore band */
+		if (dev->conf.return_md_restore_error) {
+			__atomic_store_n(&rband->parent->pad_status, -ENOTRECOVERABLE, __ATOMIC_SEQ_CST);
+		}
 		if (__atomic_fetch_sub(&rband->parent->num_bands_to_pad, 1, __ATOMIC_SEQ_CST) == 1) {
 			ftl_restore_complete(rband->parent, __atomic_load_n(&rband->parent->pad_status, __ATOMIC_SEQ_CST));
 		}

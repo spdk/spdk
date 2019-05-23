@@ -89,6 +89,9 @@ struct spdk_ftl_conf {
 
 	/* Number of interleaving units per ws_opt */
 	size_t                                  num_interleave_units;
+
+	/* Return error when end meta inconsistency is found during restore */
+	bool					return_md_restore_error;
 };
 
 /* Range of parallel units (inclusive) */
