@@ -85,11 +85,18 @@ struct spdk_nvmf_poll_group_stat {
 	uint64_t pending_bdev_io;
 };
 
+struct spdk_nvmf_rdma_device_stat {
+	const char *name;
+	uint64_t polls;
+	uint64_t completions;
+};
+
 struct spdk_nvmf_transport_poll_group_stat {
 	spdk_nvme_transport_type_t trtype;
 	union {
 		struct {
-			int dummy;
+			uint64_t num_devices;
+			struct spdk_nvmf_rdma_device_stat *devices;
 		} rdma;
 	};
 };
