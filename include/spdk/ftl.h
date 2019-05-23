@@ -89,6 +89,9 @@ struct spdk_ftl_conf {
 
 	/* Number of interleaving units per ws_opt */
 	size_t                                  num_interleave_units;
+
+	/* Allow for partial recovery from open bands instead of returning error */
+	bool					allow_open_bands;
 };
 
 /* Range of parallel units (inclusive) */

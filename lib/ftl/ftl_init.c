@@ -90,6 +90,10 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	/* Number of interleaving units per ws_opt */
 	/* 1 for default and 3 for 3D TLC NAND */
 	.num_interleave_units = 1,
+	/* If clear ftl will return error when restoring after a dirty shutdown */
+	/* If set, last band will be padded, ftl will restore based only on closed bands - this */
+	/* will result in lost data after recovery. */
+	.allow_open_bands = false,
 };
 
 static void ftl_dev_free_sync(struct spdk_ftl_dev *dev);
