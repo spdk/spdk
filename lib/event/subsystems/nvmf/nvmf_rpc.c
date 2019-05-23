@@ -789,6 +789,7 @@ SPDK_RPC_REGISTER("nvmf_subsystem_remove_listener", spdk_rpc_nvmf_subsystem_remo
 
 struct spdk_nvmf_ns_params {
 	char *bdev_name;
+	char *ptpl_file;
 	uint32_t nsid;
 	char nguid[16];
 	char eui64[8];
@@ -804,6 +805,7 @@ struct rpc_namespaces {
 static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
 	{"nsid", offsetof(struct spdk_nvmf_ns_params, nsid), spdk_json_decode_uint32, true},
 	{"bdev_name", offsetof(struct spdk_nvmf_ns_params, bdev_name), spdk_json_decode_string},
+	{"ptpl_file", offsetof(struct spdk_nvmf_ns_params, ptpl_file), spdk_json_decode_string, true},
 	{"nguid", offsetof(struct spdk_nvmf_ns_params, nguid), decode_ns_nguid, true},
 	{"eui64", offsetof(struct spdk_nvmf_ns_params, eui64), decode_ns_eui64, true},
 	{"uuid", offsetof(struct spdk_nvmf_ns_params, uuid), decode_ns_uuid, true},
@@ -837,6 +839,7 @@ nvmf_rpc_ns_ctx_free(struct nvmf_rpc_ns_ctx *ctx)
 {
 	free(ctx->nqn);
 	free(ctx->ns_params.bdev_name);
+	free(ctx->ns_params.ptpl_file);
 	free(ctx);
 }
 
@@ -895,7 +898,8 @@ nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 		ns_opts.uuid = ctx->ns_params.uuid;
 	}
 
-	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts), NULL);
+	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts),
+			      ctx->ns_params.ptpl_file);
 	if (ctx->ns_params.nsid == 0) {
 		SPDK_ERRLOG("Unable to add namespace\n");
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,

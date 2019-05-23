@@ -12,6 +12,12 @@ A new file API `spdk_posix_file_load` was added to load file content into a data
 
 ### NVMe-oF Target
 
+Persistent reservation emulation has been added to the NVMe-oF target. Persistent reservation
+state is stored in a JSON file on the local filesystem between target restart. To support this,
+an optional parameter to the RPC method `nvmf_subsystem_add_ns` called `--ptpl-file` was added.
+This allows the user to specify which file to store the persistent reservation state in.  Note
+that this is done per namespace.
+
 The c2h success optimization under which a command capsule response is not sent
 for reads is turned on. A config knob was added to allow for enable/disable.
 
