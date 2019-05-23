@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4437eef_4300c3f5",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1338,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-23T01:47:25Z",
+      "side": 0,
+      "message": "unrelated change.",
+      "range": {
+        "startLine": 1338,
+        "startChar": 0,
+        "endLine": 1338,
+        "endChar": 0
+      },
+      "revId": "5b9a5d4a4f98b3afb50a0772de594b2133f39934",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
