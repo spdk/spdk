@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12cf6197_0b4b4f7c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 24
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-23T09:31:54Z",
+      "side": 1,
+      "message": "test/ocf",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 9
+      },
+      "revId": "b1340c14e0f4ba2a865ffa0e6d148c768987bdc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4d94687_be852a12",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 24
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-23T09:31:54Z",
+      "side": 1,
+      "message": "because we need persistent storage..?",
+      "revId": "b1340c14e0f4ba2a865ffa0e6d148c768987bdc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
