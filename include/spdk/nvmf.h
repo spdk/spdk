@@ -89,12 +89,16 @@ struct spdk_nvmf_rdma_device_stat {
 	const char *name;
 	uint64_t polls;
 	uint64_t completions;
+	uint64_t pending_free_request;
+	uint64_t pending_rdma_read;
+	uint64_t pending_rdma_write;
 };
 
 struct spdk_nvmf_transport_poll_group_stat {
 	spdk_nvme_transport_type_t trtype;
 	union {
 		struct {
+			uint64_t pending_data_buffer;
 			uint64_t num_devices;
 			struct spdk_nvmf_rdma_device_stat *devices;
 		} rdma;
