@@ -105,6 +105,16 @@ struct spdk_nvmf_reservation_info {
 int spdk_nvmf_ns_reservation_update(const char *file, struct spdk_nvmf_reservation_info *info);
 
 /**
+ * Load registrants and reservation information from a configuration file.
+ *
+ * \param file Path to the configuration file.
+ * \param info Registrants and reservation information which can be loaded.
+ *
+ * \return 0 on success, otherwise on failure.
+ */
+int spdk_nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info);
+
+/**
  * Construct an NVMe-oF target.
  *
  * \param max_subsystems the maximum number of subsystems allowed by the target.
