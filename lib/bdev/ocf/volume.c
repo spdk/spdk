@@ -47,11 +47,15 @@ static int
 vbdev_ocf_volume_open(ocf_volume_t volume, void *opts)
 {
 	struct vbdev_ocf_base **priv = ocf_volume_get_priv(volume);
-	struct vbdev_ocf_base *base = vbdev_ocf_get_base_by_name(ocf_volume_get_uuid(volume)->data);
+	struct vbdev_ocf_base *base;
 
-	if (base == NULL) {
-		assert(false);
-		return -EINVAL;
+	if (opts) {
+		base = opts;
+	} else {
+		base = vbdev_ocf_get_base_by_name(ocf_volume_get_uuid(volume)->data);
+		if (base == NULL) {
+			return -ENODEV;
+		}
 	}
 
 	*priv = base;
