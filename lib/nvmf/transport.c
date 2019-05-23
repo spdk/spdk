@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -334,4 +334,25 @@ spdk_nvmf_transport_qpair_set_sqsize(struct spdk_nvmf_qpair *qpair)
 	}
 
 	return 0;
+}
+
+void
+spdk_nvmf_tgt_transport_get_stat(struct spdk_nvmf_tgt *tgt,
+				 enum spdk_nvme_transport_type trtype,
+				 spdk_nvmf_tgt_transport_get_stat_done_fn done_cb,
+				 void *done_ctx)
+{
+	struct spdk_nvmf_transport *transport;
+	transport = spdk_nvmf_tgt_get_transport(tgt, trtype);
+	if (!transport) {
+		SPDK_ERRLOG("Transport type %d does not exist\n", trtype);
+		done_cb(false, NULL, done_ctx);
+		return;
+	}
+	if (!transport->ops->get_stat) {
+		SPDK_NOTICELOG("Transport type %d does not support statistics request\n", trtype);
+		done_cb(false, NULL, done_ctx);
+		return;
+	}
+	transport->ops->get_stat(tgt, done_cb, done_ctx);
 }
