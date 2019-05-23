@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -167,6 +167,13 @@ struct spdk_nvmf_transport_ops {
 	 * set the submission queue size of the queue pair
 	 */
 	int (*qpair_set_sqsize)(struct spdk_nvmf_qpair *qpair);
+
+	/*
+	 * Get transport statistics
+	 */
+	void (*get_stat)(struct spdk_nvmf_tgt *tgt,
+			 spdk_nvmf_tgt_transport_get_stat_done_fn done_cb,
+			 void *done_ctx);
 };
 
 int spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
