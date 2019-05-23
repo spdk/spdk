@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "baea6446_f2c9a44a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-23T11:15:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "824c721c_2725fd05",
+      "range": {
+        "startLine": 9,
+        "startChar": 19,
+        "endLine": 9,
+        "endChar": 27
+      },
+      "revId": "0a2921ccfb91765ad77fb8cdf23a89b73a6e8c5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "919ccb2b_c98ed385",
         "filename": "/COMMIT_MSG",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-05-23T09:32:07Z",
       "side": 1,
       "message": "on cleaner queue kick.",
+      "range": {
+        "startLine": 10,
+        "startChar": 38,
+        "endLine": 10,
+        "endChar": 50
+      },
+      "revId": "0a2921ccfb91765ad77fb8cdf23a89b73a6e8c5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de804aa1_696491e4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-23T11:15:11Z",
+      "side": 1,
+      "message": "I think \"when needed\" is more helpful, because cleaner kick does not necessary tell that",
+      "parentUuid": "919ccb2b_c98ed385",
       "range": {
         "startLine": 10,
         "startChar": 38,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b022a5d3_1d81c707",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-23T11:15:11Z",
+      "side": 1,
+      "message": "But it was blocking, even though it had a callback.\nI added another sentense, although I am not sure I got what\u0027s the issue here.",
+      "parentUuid": "d681cfdb_646eee0d",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 90
+      },
+      "revId": "0a2921ccfb91765ad77fb8cdf23a89b73a6e8c5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1eaf915_cdb9b4c4",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2019-05-23T09:32:07Z",
       "side": 1,
       "message": "Mention this changes effect as well in the commit message.",
+      "range": {
+        "startLine": 313,
+        "startChar": 0,
+        "endLine": 313,
+        "endChar": 65
+      },
+      "revId": "0a2921ccfb91765ad77fb8cdf23a89b73a6e8c5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a838ce0_5a743f31",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-23T11:15:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a1eaf915_cdb9b4c4",
       "range": {
         "startLine": 313,
         "startChar": 0,
