@@ -786,7 +786,7 @@ Currently, we support Write-Through and Pass-Through OCF cache modes.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name to use
-mode                    | Required | string      | OCF cache mode ('wt' or 'pt')
+mode                    | Required | string      | OCF cache mode ('wb' or 'wt' or 'pt')
 cache_bdev_name         | Required | string      | Name of underlying cache bdev
 core_bdev_name          | Required | string      | Name of underlying core bdev
 
