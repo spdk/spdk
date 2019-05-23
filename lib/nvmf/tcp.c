@@ -1360,7 +1360,6 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes = 0;
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
-	uint32_t iov_index;
 	bool ttag_offset_error = false;
 
 	h2c_data = &pdu->hdr.h2c_data;
@@ -1415,9 +1414,8 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	pdu->ctx = tcp_req;
-	iov_index = h2c_data->datao / ttransport->transport.opts.io_unit_size;
-	nvme_tcp_pdu_set_data(pdu, tcp_req->req.iov[iov_index].iov_base + (h2c_data->datao %
-			      ttransport->transport.opts.io_unit_size), h2c_data->datal);
+	nvme_tcp_pdu_set_data_buf(pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
+				  h2c_data->datao, h2c_data->datao + h2c_data->datal);
 	spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	return;
 
@@ -2214,13 +2212,9 @@ spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 {
 	struct nvme_tcp_pdu *rsp_pdu;
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data;
-	uint32_t plen, pdo, alignment, offset, iov_index;
+	uint32_t plen, pdo, alignment;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
-
-	/* always use the first iov_len, which is correct */
-	iov_index = tcp_req->c2h_data_offset / tcp_req->req.iov[0].iov_len;
-	offset = tcp_req->c2h_data_offset % tcp_req->req.iov[0].iov_len;
 
 	rsp_pdu = spdk_nvmf_tcp_pdu_get(tqpair);
 	assert(rsp_pdu != NULL);
@@ -2236,8 +2230,7 @@ spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	/* set the psh */
 	c2h_data->cccid = tcp_req->req.cmd->nvme_cmd.cid;
-	c2h_data->datal = spdk_min(NVMF_TCP_PDU_MAX_C2H_DATA_SIZE,
-				   (tcp_req->req.iov[iov_index].iov_len - offset));
+	c2h_data->datal = spdk_min(NVMF_TCP_PDU_MAX_C2H_DATA_SIZE, tcp_req->req.length);
 	c2h_data->datao = tcp_req->c2h_data_offset;
 
 	/* set the padding */
@@ -2260,10 +2253,11 @@ spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	c2h_data->common.plen = plen;
 
-	nvme_tcp_pdu_set_data(rsp_pdu, tcp_req->req.iov[iov_index].iov_base + offset, c2h_data->datal);
+	nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
+				  c2h_data->datao, c2h_data->datao + c2h_data->datal);
 
 	tcp_req->c2h_data_offset += c2h_data->datal;
-	if (iov_index == (tcp_req->req.iovcnt - 1) && (tcp_req->c2h_data_offset == tcp_req->req.length)) {
+	if (tcp_req->c2h_data_offset == tcp_req->req.length) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Last pdu for tcp_req=%p on tqpair=%p\n", tcp_req, tqpair);
 		c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
 		/* The linux kernel does not support this yet */

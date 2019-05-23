@@ -428,4 +428,36 @@ nvme_tcp_pdu_set_data(struct nvme_tcp_pdu *pdu, void *data, uint32_t data_len)
 	pdu->data_iovcnt = 1;
 }
 
+static void
+nvme_tcp_pdu_set_data_buf(struct nvme_tcp_pdu *pdu, struct iovec *iov, int iovcnt,
+			  uint32_t data_offset, uint32_t data_len)
+{
+	uint32_t i, remain_len, len;
+	struct _iov_ctx *ctx;
+
+	if (iovcnt == 1) {
+		nvme_tcp_pdu_set_data(pdu, (void *)((uint64_t)iov[0].iov_base + data_offset),
+				      data_len);
+	} else {
+		i = 0;
+		ctx = &pdu->iov_ctx;
+		assert(iovcnt <= NVME_TCP_MAX_SGL_DESCRIPTORS);
+		_iov_ctx_init(ctx, pdu->data_iov, iovcnt, data_offset);
+		remain_len = data_len;
+
+		while (remain_len > 0) {
+			assert(i < NVME_TCP_MAX_SGL_DESCRIPTORS);
+			len = spdk_min(remain_len, iov[i].iov_len);
+			remain_len -= len;
+			if (!_iov_ctx_set_iov(ctx, iov[i].iov_base, len)) {
+				break;
+			}
+			i++;
+		}
+
+		assert(remain_len == 0);
+		pdu->data_iovcnt = iovcnt;
+		pdu->data_len = data_len;
+	}
+}
 #endif /* SPDK_INTERNAL_NVME_TCP_H */
