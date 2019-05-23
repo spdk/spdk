@@ -1717,6 +1717,14 @@ write_nvmf_rdma_stat(struct spdk_json_write_ctx *w, void *stat)
 			spdk_json_write_named_string(w, "name", device_stat->name);
 			spdk_json_write_named_uint64(w, "polls", device_stat->polls);
 			spdk_json_write_named_uint64(w, "completions", device_stat->completions);
+			spdk_json_write_named_uint64(w, "pending_free_request",
+						     device_stat->pending_free_request);
+			spdk_json_write_named_uint64(w, "pending_data_buffer",
+						     device_stat->pending_data_buffer);
+			spdk_json_write_named_uint64(w, "pending_rdma_read",
+						     device_stat->pending_rdma_read);
+			spdk_json_write_named_uint64(w, "pending_rdma_write",
+						     device_stat->pending_rdma_write);
 			spdk_json_write_object_end(w);
 		}
 		spdk_json_write_array_end(w);

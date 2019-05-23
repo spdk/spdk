@@ -4221,12 +4221,20 @@ Example response:
           {
             "name": "mlx5_1",
             "polls": 1536729,
-            "completions": 0
+            "completions": 0,
+            "pending_free_request": 0,
+            "pending_data_buffer": 0,
+            "pending_rdma_read": 0,
+            "pending_rdma_write": 0
           },
           {
             "name": "mlx5_0",
             "polls": 1536729,
-            "completions": 18667357
+            "completions": 18667357,
+            "pending_free_request": 0,
+            "pending_data_buffer": 0,
+            "pending_rdma_read": 337602,
+            "pending_rdma_write": 0
           }
         ]
       }
