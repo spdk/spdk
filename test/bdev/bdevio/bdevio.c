@@ -39,6 +39,9 @@
 #include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk/event.h"
+#include "spdk/rpc.h"
+#include "spdk/util.h"
+#include "spdk/string.h"
 
 #include "CUnit/Basic.h"
 
@@ -52,6 +55,7 @@ pthread_cond_t g_test_cond;
 static uint32_t g_lcore_id_init;
 static uint32_t g_lcore_id_ut;
 static uint32_t g_lcore_id_io;
+static bool g_wait_for_tests = false;
 
 struct io_target {
 	struct spdk_bdev	*bdev;
@@ -71,6 +75,7 @@ struct bdevio_request {
 
 struct io_target *g_io_targets = NULL;
 struct io_target *g_current_io_target = NULL;
+static void rpc_perform_tests_cb(unsigned num_failures, struct spdk_jsonrpc_request *request);
 
 static void
 execute_spdk_function(spdk_event_fn fn, void *arg1, void *arg2)
@@ -956,18 +961,24 @@ static void
 __stop_init_thread(void *arg1, void *arg2)
 {
 	unsigned num_failures = (unsigned)(uintptr_t)arg1;
+	struct spdk_jsonrpc_request *request = arg2;
 
 	bdevio_cleanup_targets();
+	if (g_wait_for_tests) {
+		/* Do not stop the app yet, wait for another RPC */
+		rpc_perform_tests_cb(num_failures, request);
+		return;
+	}
 	spdk_app_stop(num_failures);
 }
 
 static void
-stop_init_thread(unsigned num_failures)
+stop_init_thread(unsigned num_failures, struct spdk_jsonrpc_request *request)
 {
 	struct spdk_event *event;
 
 	event = spdk_event_allocate(g_lcore_id_init, __stop_init_thread,
-				    (void *)(uintptr_t)num_failures, NULL);
+				    (void *)(uintptr_t)num_failures, request);
 	spdk_event_call(event);
 }
 
@@ -1050,13 +1061,14 @@ __setup_ut_on_single_target(struct io_target *target)
 static void
 __run_ut_thread(void *arg1, void *arg2)
 {
+	struct spdk_jsonrpc_request *request = arg2;
 	int rc = 0;
 	struct io_target *target;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		/* CUnit error, probably won't recover */
 		rc = CU_get_error();
-		stop_init_thread(-rc);
+		stop_init_thread(-rc, request);
 	}
 
 	target = g_io_targets;
@@ -1064,7 +1076,7 @@ __run_ut_thread(void *arg1, void *arg2)
 		rc = __setup_ut_on_single_target(target);
 		if (rc < 0) {
 			/* CUnit error, probably won't recover */
-			stop_init_thread(-rc);
+			stop_init_thread(-rc, request);
 		}
 		target = target->next;
 	}
@@ -1072,7 +1084,7 @@ __run_ut_thread(void *arg1, void *arg2)
 	CU_basic_run_tests();
 	CU_cleanup_registry();
 
-	stop_init_thread(CU_get_number_of_failures());
+	stop_init_thread(CU_get_number_of_failures(), request);
 }
 
 static void
@@ -1094,6 +1106,11 @@ test_main(void *arg1)
 		spdk_app_stop(-1);
 	}
 
+	if (g_wait_for_tests) {
+		/* Do not perform any tests until RPC is received */
+		return;
+	}
+
 	if (bdevio_construct_targets() < 0) {
 		spdk_app_stop(-1);
 		return;
@@ -1106,13 +1123,103 @@ test_main(void *arg1)
 static void
 bdevio_usage(void)
 {
+	printf(" -w                        start bdevio app and wait for RPC to start the tests\n");
 }
 
 static int
 bdevio_parse_arg(int ch, char *arg)
 {
+	switch (ch) {
+	case 'w':
+		g_wait_for_tests =  true;
+		break;
+	default:
+		return -EINVAL;
+	}
 	return 0;
 }
+
+struct rpc_perform_tests {
+	char *name;
+};
+
+static void
+free_rpc_perform_tests(struct rpc_perform_tests *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_perform_tests_decoders[] = {
+	{"name", offsetof(struct rpc_perform_tests, name), spdk_json_decode_string, true},
+};
+
+static void
+rpc_perform_tests_cb(unsigned num_failures, struct spdk_jsonrpc_request *request)
+{
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+	spdk_json_write_uint32(w, num_failures);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct rpc_perform_tests req = {NULL};
+	struct spdk_event *event;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (params && spdk_json_decode_object(params, rpc_perform_tests_decoders,
+					      SPDK_COUNTOF(rpc_perform_tests_decoders),
+					      &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto invalid;
+	}
+
+	if (req.name) {
+		bdev = spdk_bdev_get_by_name(req.name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("Bdev '%s' does not exist\n", req.name);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Bdev '%s' does not exist: %s",
+							     req.name, spdk_strerror(ENODEV));
+			goto invalid;
+		}
+		rc = bdevio_construct_target(bdev);
+		if (rc < 0) {
+			SPDK_ERRLOG("Could not construct target for bdev '%s'\n", spdk_bdev_get_name(bdev));
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Could not construct target for bdev '%s': %s",
+							     spdk_bdev_get_name(bdev), spdk_strerror(-rc));
+			goto invalid;
+		}
+	} else {
+		rc = bdevio_construct_targets();
+		if (rc < 0) {
+			SPDK_ERRLOG("Could not construct targets for all bdevs\n");
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							     "Could not construct targets for all bdevs: %s",
+							     spdk_strerror(-rc));
+			goto invalid;
+		}
+	}
+	free_rpc_perform_tests(&req);
+
+	event = spdk_event_allocate(g_lcore_id_ut, __run_ut_thread, NULL, request);
+	spdk_event_call(event);
+
+	return;
+
+invalid:
+	free_rpc_perform_tests(&req);
+}
+SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
 
 int
 main(int argc, char **argv)
@@ -1124,7 +1231,7 @@ main(int argc, char **argv)
 	opts.name = "bdevio";
 	opts.reactor_mask = "0x7";
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "w", NULL,
 				      bdevio_parse_arg, bdevio_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
