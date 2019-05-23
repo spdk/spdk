@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1b1f2ec_0e26549d",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1396,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-23T11:15:40Z",
+      "side": 1,
+      "message": "You might want to do the following for have less indents overall:\n\nif (ctx-\u003erefcnt \u003e 0) {\n  return;\n}",
+      "revId": "adde5eea07d88d71946864f4ee7c3fc78298ad59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
