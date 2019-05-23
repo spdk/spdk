@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -3642,6 +3642,80 @@ spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 	g_nvmf_hooks = *hooks;
 }
 
+struct nvmf_rdma_get_stat_ctx {
+	struct spdk_nvmf_rdma_stat stat;
+	spdk_nvmf_tgt_transport_get_stat_done_fn done_cb;
+	void *done_ctx;
+};
+
+static void
+nvmf_rdma_poll_group_get_stat_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvmf_rdma_get_stat_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_rdma_poll_group_stat *pg_stat, *tmp;
+
+	ctx->done_cb((status == 0) ? true : false, &ctx->stat, ctx->done_ctx);
+	STAILQ_FOREACH_SAFE(pg_stat, &ctx->stat.poll_groups, link, tmp) {
+		free(pg_stat->name);
+		free(pg_stat);
+	}
+	free(ctx);
+}
+
+static void
+nvmf_rdma_poll_group_get_stat(struct spdk_io_channel_iter *i)
+{
+	struct nvmf_rdma_get_stat_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);;
+	struct spdk_nvmf_transport_poll_group *tgroup;
+	struct spdk_nvmf_rdma_poll_group_stat *pg_stat;
+	int status = 0;
+
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		if (SPDK_NVME_TRANSPORT_RDMA == tgroup->transport->ops->type) {
+			pg_stat = calloc(1, sizeof(struct spdk_nvmf_rdma_poll_group_stat));
+			if (!pg_stat) {
+				status = 1;
+				break;
+			}
+			pg_stat->name = strdup(spdk_thread_get_name(spdk_get_thread()));
+			if (!pg_stat->name) {
+				free(pg_stat);
+				status = 1;
+				break;
+			}
+			STAILQ_INSERT_TAIL(&ctx->stat.poll_groups, pg_stat, link);
+			break;
+		}
+	}
+
+	spdk_for_each_channel_continue(i, status);
+}
+
+static void
+spdk_nvmf_rdma_get_stat(struct spdk_nvmf_tgt *tgt,
+			spdk_nvmf_tgt_transport_get_stat_done_fn done_cb,
+			void *done_ctx)
+{
+	struct nvmf_rdma_get_stat_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		done_cb(false, NULL, done_ctx);
+		return;
+	}
+	ctx->done_cb = done_cb;
+	ctx->done_ctx = done_ctx;
+	STAILQ_INIT(&ctx->stat.poll_groups);
+
+	spdk_for_each_channel(tgt,
+			      nvmf_rdma_poll_group_get_stat,
+			      ctx,
+			      nvmf_rdma_poll_group_get_stat_done);
+}
+
+
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.type = SPDK_NVME_TRANSPORT_RDMA,
 	.opts_init = spdk_nvmf_rdma_opts_init,
@@ -3667,6 +3741,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.qpair_get_local_trid = spdk_nvmf_rdma_qpair_get_local_trid,
 	.qpair_get_listen_trid = spdk_nvmf_rdma_qpair_get_listen_trid,
 
+	.get_stat = spdk_nvmf_rdma_get_stat,
 };
 
 SPDK_LOG_REGISTER_COMPONENT("rdma", SPDK_LOG_RDMA)
