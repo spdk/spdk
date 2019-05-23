@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4de75d37_0d7f0fae",
+        "filename": "test/bdev/bdevio/tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-23T07:18:00Z",
+      "side": 1,
+      "message": "There are longer lines in this file, no need to break it into two lines.",
+      "range": {
+        "startLine": 54,
+        "startChar": 8,
+        "endLine": 55,
+        "endChar": 54
+      },
+      "revId": "0dc46c6675047778aa056fdc53befe58e8c5fb72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78761dad_063d7840",
+        "filename": "test/bdev/bdevio/tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-23T07:18:00Z",
+      "side": 1,
+      "message": "I think this should be kept as single line as well.",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 72
+      },
+      "revId": "0dc46c6675047778aa056fdc53befe58e8c5fb72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a21fd231_11c31e58",
+        "filename": "test/bdev/bdevio/tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-23T07:18:00Z",
+      "side": 1,
+      "message": "print(ex) should suffice",
+      "range": {
+        "startLine": 66,
+        "startChar": 12,
+        "endLine": 67,
+        "endChar": 29
+      },
+      "revId": "0dc46c6675047778aa056fdc53befe58e8c5fb72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
