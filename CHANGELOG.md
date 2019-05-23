@@ -21,6 +21,8 @@ receive queue is predicated on hardware support when this flag is not used.
 
 Added infrastructure to retrieve global and per poll group NVMf statistics.
 
+Added infrastructure to retrieve NVMf transport statistics.
+
 ### notify
 
 The function `spdk_notify_get_types()` and `spdk_notify_get_events()` were
@@ -76,6 +78,8 @@ by the primary process.
 Added thread_get_stats RPC method to retrieve existing statistics.
 
 Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
+
+Added nvmf_transport_get_stats RPC method to retrieve NVMf transport specific statistics.
 
 ## v19.04:
 
