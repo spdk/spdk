@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "fcb3f3ae_75441413",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 817,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-23T10:10:51Z",
+      "side": 1,
+      "message": "it\u0027s already set at this point. Can we remove this line?",
+      "revId": "7a4c405001cd203e74196a5dc6d83b53e5e0935b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "787a42ee_9d6e8722",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 3
