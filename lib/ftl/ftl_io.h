@@ -70,6 +70,9 @@ enum ftl_io_flags {
 	FTL_IO_VECTOR_LBA	= (1 << 7),
 	/* Indicates that IO is being retried */
 	FTL_IO_RETRY		= (1 << 8),
+	/* Indicates that PPA should be taken from IO struct, */
+	/* not assigned by wptr, only works if wptr is also in direct mode */
+	FTL_IO_DIRECT_ACCESS	= (1 << 9),
 };
 
 enum ftl_io_type {
