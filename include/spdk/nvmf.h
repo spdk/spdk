@@ -85,6 +85,15 @@ struct spdk_nvmf_poll_group_stat {
 	uint64_t pending_bdev_io;
 };
 
+struct spdk_nvmf_transport_poll_group_stat {
+	spdk_nvme_transport_type_t trtype;
+	union {
+		struct {
+			int dummy;
+		} rdma;
+	};
+};
+
 /**
  * Construct an NVMe-oF target.
  *
@@ -865,6 +874,40 @@ int spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
  */
 void
 spdk_nvmf_tgt_transport_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
+
+
+/**
+ * \brief Get current transport poll group statistics.
+ *
+ * This function allocates memory for statistics and returns it
+ * in \p stat parameter. Caller must free this memory with
+ * spdk_nvmf_transport_poll_group_free_stat() when it is not needed
+ * anymore.
+ *
+ * \param tgt The NVMf target.
+ * \param transport The NVMf transport.
+ * \param stat Output parameter that will contain pointer to allocated statistics structure.
+ *
+ * \return 0 upon success.
+ * \return -ENOTSUP if transport does not support statistics.
+ * \return -EINVAL if any of parameters is NULL.
+ * \return -ENOENT if transport poll group is not found.
+ * \return -ENOMEM if memory allocation failed.
+ */
+int
+spdk_nvmf_transport_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
+					struct spdk_nvmf_transport *transport,
+					struct spdk_nvmf_transport_poll_group_stat **stat);
+
+/**
+ * Free statistics memory previously allocated with spdk_nvmf_transport_poll_group_get_stat().
+ *
+ * \param transport The NVMf transport.
+ * \param stat Pointer to transport poll group statistics structure.
+ */
+void
+spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
+		struct spdk_nvmf_transport_poll_group_stat *stat);
 
 #ifdef SPDK_CONFIG_RDMA
 /**

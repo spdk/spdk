@@ -1609,10 +1609,28 @@ rpc_nvmf_get_stats_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
+write_nvmf_transport_stats(struct spdk_json_write_ctx *w,
+			   struct spdk_nvmf_transport_poll_group_stat *stat)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "trtype",
+				     spdk_nvme_transport_id_trtype_str(stat->trtype));
+	switch (stat->trtype) {
+	case SPDK_NVME_TRANSPORT_RDMA:
+	default:
+		break;
+	}
+	spdk_json_write_object_end(w);
+}
+
+static void
 rpc_nvmf_get_stats(struct spdk_io_channel_iter *i)
 {
 	struct rpc_nvmf_get_stats_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_poll_group_stat stat;
+	struct spdk_nvmf_transport_poll_group_stat *trstat;
+	int rc;
 
 	if (0 == spdk_nvmf_poll_group_get_stat(g_spdk_nvmf_tgt, &stat)) {
 		spdk_json_write_object_begin(ctx->w);
@@ -1620,6 +1638,22 @@ rpc_nvmf_get_stats(struct spdk_io_channel_iter *i)
 		spdk_json_write_named_uint32(ctx->w, "admin_qpairs", stat.admin_qpairs);
 		spdk_json_write_named_uint32(ctx->w, "io_qpairs", stat.io_qpairs);
 		spdk_json_write_named_uint64(ctx->w, "pending_bdev_io", stat.pending_bdev_io);
+
+		spdk_json_write_named_array_begin(ctx->w, "transports");
+		transport = spdk_nvmf_transport_get_first(g_spdk_nvmf_tgt);
+		while (transport) {
+			rc = spdk_nvmf_transport_poll_group_get_stat(g_spdk_nvmf_tgt, transport, &trstat);
+			if (0 == rc) {
+				write_nvmf_transport_stats(ctx->w, trstat);
+				spdk_nvmf_transport_poll_group_free_stat(transport, trstat);
+			} else if (-ENOTSUP != rc) {
+				SPDK_ERRLOG("Failed to get poll group statistics for transport %s, errno %d\n",
+					    spdk_nvme_transport_id_trtype_str(spdk_nvmf_get_transport_type(transport)),
+					    rc);
+			}
+			transport = spdk_nvmf_transport_get_next(transport);
+		}
+		spdk_json_write_array_end(ctx->w);
 		spdk_json_write_object_end(ctx->w);
 	}
 

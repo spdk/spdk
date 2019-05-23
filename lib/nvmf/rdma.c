@@ -3631,6 +3631,40 @@ spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 	g_nvmf_hooks = *hooks;
 }
 
+static int
+spdk_nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
+				   struct spdk_nvmf_transport_poll_group_stat **stat)
+{
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	if (tgt == NULL || stat == NULL) {
+		return -EINVAL;
+	}
+
+	ch = spdk_get_io_channel(tgt);
+	group = spdk_io_channel_get_ctx(ch);;
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		if (SPDK_NVME_TRANSPORT_RDMA == tgroup->transport->ops->type) {
+			*stat = calloc(1, sizeof(struct spdk_nvmf_transport_poll_group_stat));
+			if (!*stat) {
+				SPDK_ERRLOG("Failed to allocate memory for NVMf RDMA statistics\n");
+				return -ENOMEM;
+			}
+			(*stat)->trtype = SPDK_NVME_TRANSPORT_RDMA;
+			return 0;
+		}
+	}
+	return -ENOENT;
+}
+
+static void
+spdk_nvmf_rdma_poll_group_free_stat(struct spdk_nvmf_transport_poll_group_stat *stat)
+{
+	free(stat);
+}
+
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.type = SPDK_NVME_TRANSPORT_RDMA,
 	.opts_init = spdk_nvmf_rdma_opts_init,
@@ -3656,6 +3690,8 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.qpair_get_local_trid = spdk_nvmf_rdma_qpair_get_local_trid,
 	.qpair_get_listen_trid = spdk_nvmf_rdma_qpair_get_listen_trid,
 
+	.poll_group_get_stat = spdk_nvmf_rdma_poll_group_get_stat,
+	.poll_group_free_stat = spdk_nvmf_rdma_poll_group_free_stat,
 };
 
 SPDK_LOG_REGISTER_COMPONENT("rdma", SPDK_LOG_RDMA)
