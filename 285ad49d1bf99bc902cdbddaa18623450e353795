@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20943342_4fd93454",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1016548
+      },
+      "writtenOn": "2019-05-23T23:40:37Z",
+      "side": 1,
+      "message": "spdk_nvmf_get_next_pg is now overloaded with both round robin and placement_id based selection of poll group. One alternate option is to introduce CONNECT_SCHED_PLACEMENT_ID  and move  spdk_nvmf_get_optimized_pg under it.",
+      "revId": "285ad49d1bf99bc902cdbddaa18623450e353795",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
