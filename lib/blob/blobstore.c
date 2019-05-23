@@ -2693,6 +2693,14 @@ _spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence
 }
 
 static void
+_spdk_blob_set_thin_provision(struct spdk_blob *blob)
+{
+	_spdk_blob_verify_md_op(blob);
+	blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+}
+
+static void
 _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = arg;
@@ -4121,14 +4129,6 @@ _spdk_blob_set_xattrs(struct spdk_blob *blob, const struct spdk_blob_xattr_opts 
 		}
 	}
 	return 0;
-}
-
-static void
-_spdk_blob_set_thin_provision(struct spdk_blob *blob)
-{
-	_spdk_blob_verify_md_op(blob);
-	blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
-	blob->state = SPDK_BLOB_STATE_DIRTY;
 }
 
 static void
