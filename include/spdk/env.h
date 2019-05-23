@@ -668,6 +668,13 @@ typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev)
 struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
 
 /**
+ * Get the VMD PCI driver object.
+ *
+ * \return PCI driver.
+ */
+struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
+
+/**
  * Get the I/OAT PCI driver object.
  *
  * \return PCI driver.
