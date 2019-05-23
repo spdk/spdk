@@ -46,6 +46,12 @@ struct ftl_restore_band {
 	struct ftl_band			*band;
 
 	enum ftl_md_status		md_status;
+
+	size_t				num_chunks_to_pad;
+
+	struct ftl_wptr			*wptr;
+
+	STAILQ_ENTRY(ftl_restore_band)	stailq;
 };
 
 struct ftl_restore {
@@ -59,6 +65,12 @@ struct ftl_restore {
 
 	struct ftl_restore_band		*bands;
 
+	STAILQ_HEAD(, ftl_restore_band) bands_to_pad;
+
+	size_t				num_bands_to_pad;
+
+	int				pad_status;
+
 	void				*md_buf;
 
 	void				*lba_map;
@@ -66,8 +78,16 @@ struct ftl_restore {
 	bool				l2p_phase;
 };
 
+struct ftl_pad_chunk_ctx {
+	struct ftl_io 			*io;
+	struct ftl_restore_band 	*rband;
+	void 				*buffer;
+};
+
 static int
 ftl_restore_tail_md(struct ftl_restore_band *rband);
+static void
+ftl_pad_chunk_cb(void *arg, int status);
 
 static void
 ftl_restore_free(struct ftl_restore *restore)
@@ -102,6 +122,8 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 	if (!restore->bands) {
 		goto error;
 	}
+
+	STAILQ_INIT(&restore->bands_to_pad);
 
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 		rband = &restore->bands[i];
@@ -362,6 +384,211 @@ ftl_restore_next_band(struct ftl_restore *restore)
 	return NULL;
 }
 
+static int
+ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, const struct ftl_chunk *chunk,
+		 struct spdk_ocssd_chunk_information_entry *info)
+{
+	uint64_t off = (chunk->start_ppa.grp * dev->geo.num_pu + chunk->start_ppa.pu) *
+		       dev->geo.num_chk + chunk->start_ppa.chk;
+	return ftl_retrieve_bbt_page(dev, off, info, 1);
+}
+
+static void
+ftl_pad_chunk_pad_finish(struct ftl_restore_band *rband)
+{
+	size_t num_bands_to_pad, num_chunks_to_pad;
+
+	num_chunks_to_pad = __atomic_fetch_sub(&rband->num_chunks_to_pad, 1, __ATOMIC_SEQ_CST);
+	// Finished all chunks in a band, check if all bands are done
+	if (num_chunks_to_pad == 1) {
+		num_bands_to_pad = __atomic_fetch_sub(&rband->parent->num_bands_to_pad, 1, __ATOMIC_SEQ_CST);
+		rband->band->state = FTL_BAND_STATE_CLOSED;
+		ftl_remove_wptr(rband->wptr);
+		if (num_bands_to_pad == 1) {
+			ftl_restore_complete(rband->parent, __atomic_load_n(&rband->parent->pad_status, __ATOMIC_SEQ_CST));
+		}
+	}
+}
+
+static struct ftl_pad_chunk_ctx *
+ftl_restore_init_pad_ctx(size_t buffer_size)
+{
+	struct ftl_pad_chunk_ctx *ctx = NULL;
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return NULL;
+	}
+
+	ctx->buffer = spdk_dma_zmalloc(buffer_size, FTL_BLOCK_SIZE, NULL);
+	if (!ctx->buffer) {
+		free(ctx);
+		return NULL;
+	}
+	return ctx;
+}
+
+static void
+ftl_restore_free_pad_ctx(struct ftl_pad_chunk_ctx * ctx)
+{
+	spdk_dma_free(ctx->buffer);
+	free(ctx);
+}
+
+static struct ftl_io *
+ftl_restore_init_pad_io(struct ftl_band *band, struct ftl_pad_chunk_ctx *ctx, struct ftl_ppa ppa)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	int flags = FTL_IO_PAD | FTL_IO_INTERNAL | FTL_IO_PPA_MODE | FTL_IO_MD | FTL_IO_EXPLICIT_PPA;
+	struct ftl_io_init_opts opts = {
+		.dev		= dev,
+		.io		= NULL,
+		.rwb_batch	= NULL,
+		.band		= band,
+		.size		= sizeof(struct ftl_io),
+		.flags		= flags,
+		.type		= FTL_IO_WRITE,
+		.iov_cnt	= 1,
+		.req_size	= dev->xfer_size,
+		.fn		= ftl_pad_chunk_cb,
+		.data		= ctx->buffer,
+		.parent		= NULL,
+	};
+	struct ftl_io *io = NULL;
+
+	io = ftl_io_init_internal(&opts);
+	if (!io) {
+		return NULL;
+	}
+
+	io->cb.ctx = ctx;
+	io->lbk_cnt = dev->xfer_size;
+	io->ppa = ppa;
+
+	return io;
+}
+
+static void
+ftl_pad_chunk_cb(void *arg, int status)
+{
+	struct ftl_pad_chunk_ctx *ctx = arg;
+	struct ftl_restore_band *rband = ctx->rband;
+	struct ftl_io *io = ctx->io;
+	struct ftl_band *band = io->band;
+	bool chunk_finished = false;
+	int rc;
+
+	// TODO check for next unit error vs early close error
+	if (!status) {
+		if (io->ppa.lbk + io->lbk_cnt == band->dev->geo.clba) {
+			chunk_finished = true;
+		} else {
+			struct ftl_ppa ppa = io->ppa;
+			ppa.lbk += ctx->io->lbk_cnt;
+			ctx->io = ftl_restore_init_pad_io(band, ctx, ppa);
+			if (!ctx->io) {
+				__atomic_store_n(&rband->parent->pad_status, -ENOMEM, __ATOMIC_SEQ_CST);
+				chunk_finished = true;
+				goto end;
+			}
+
+			rc = ftl_io_write(ctx->io);
+			if (rc) {
+				ftl_io_free(ctx->io);
+				__atomic_store_n(&rband->parent->pad_status, rc, __ATOMIC_SEQ_CST);
+				chunk_finished = true;
+			}
+		}
+	} else {
+		__atomic_store_n(&rband->parent->pad_status, status, __ATOMIC_SEQ_CST);
+		chunk_finished = true;
+	}
+
+end:
+	if (chunk_finished) {
+		ftl_restore_free_pad_ctx(ctx);
+		ftl_pad_chunk_pad_finish(rband);
+	}
+}
+
+static void
+ftl_restore_pad_band(struct ftl_restore_band *rband)
+{
+	struct spdk_ocssd_chunk_information_entry info;
+	struct ftl_band *band = rband->band;
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_pad_chunk_ctx *ctx;
+	struct ftl_io *io;
+	struct ftl_ppa ppa;
+	size_t i;
+	int rc = 0;
+
+	for (i = 0; i < band->num_chunks; ++i) {
+		if (band->chunk_buf[i].state != FTL_CHUNK_STATE_CLOSED) {
+			rband->num_chunks_to_pad++;
+		}
+	}
+
+	if (rband->num_chunks_to_pad) {
+		rband->wptr = ftl_add_explicit_wptr_to_band(dev, band);
+
+		for (i = 0; i < band->num_chunks; ++i) {
+			if (band->chunk_buf[i].state != FTL_CHUNK_STATE_CLOSED) {
+				rc = ftl_retrieve_chunk_info(dev, &band->chunk_buf[i], &info);
+				if (rc) {
+					goto error;
+				}
+				ppa = band->chunk_buf[i].start_ppa;
+				ppa.lbk += info.wp;
+
+				ctx = ftl_restore_init_pad_ctx(FTL_BLOCK_SIZE * dev->xfer_size);
+				if (!ctx) {
+					rc = -ENOMEM;
+					goto error;
+				}
+
+				io = ftl_restore_init_pad_io(band, ctx, ppa);
+				if (!io) {
+					rc = -ENOMEM;
+					goto ctx_allocated;
+				}
+
+				ctx->io = io;
+				ctx->rband = rband;
+				rc = ftl_io_write(io);
+				if (rc) {
+					goto io_allocated;
+				}
+			}
+		}
+	} else {
+		// If we're here, end meta wasn't recognized, but whole band is written - ignore band for now
+		if (__atomic_fetch_sub(&rband->parent->num_bands_to_pad, 1, __ATOMIC_SEQ_CST) == 1) {
+			ftl_restore_complete(rband->parent, __atomic_load_n(&rband->parent->pad_status, __ATOMIC_SEQ_CST));
+		}
+	}
+
+	return;
+
+io_allocated:
+	ftl_io_free(io);
+ctx_allocated:
+	ftl_restore_free_pad_ctx(ctx);
+error:
+	__atomic_store_n(&rband->parent->pad_status, rc, __ATOMIC_SEQ_CST);
+	ftl_pad_chunk_pad_finish(rband);
+	return;
+}
+
+static void
+ftl_restore_pad_open_bands(struct ftl_restore *restore)
+{
+	struct ftl_restore_band *rband;
+
+	STAILQ_FOREACH(rband, &restore->bands_to_pad, stailq) {
+		ftl_restore_pad_band(rband);
+	}
+}
+
 static void
 ftl_restore_tail_md_cb(void *ctx, int status)
 {
@@ -369,18 +596,24 @@ ftl_restore_tail_md_cb(void *ctx, int status)
 	struct ftl_restore *restore = rband->parent;
 
 	if (status) {
-		ftl_restore_complete(restore, status);
-		return;
+		SPDK_ERRLOG("Error %d while restoring tail md. Will attempt to pad band %u.\n",
+				    status, rband->band->id);
+		STAILQ_INSERT_TAIL(&restore->bands_to_pad, rband, stailq);
+		restore->num_bands_to_pad++;
 	}
 
-	if (ftl_restore_l2p(rband->band)) {
+	if (!status && ftl_restore_l2p(rband->band)) {
 		ftl_restore_complete(restore, -ENOTRECOVERABLE);
 		return;
 	}
 
 	rband = ftl_restore_next_band(restore);
 	if (!rband) {
-		ftl_restore_complete(restore, 0);
+		if (!STAILQ_EMPTY(&restore->bands_to_pad)) {
+			ftl_restore_pad_open_bands(restore);
+		} else {
+			ftl_restore_complete(restore, status);
+		}
 		return;
 	}
 
