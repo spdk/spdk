@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fd23702a_d76a6398",
+        "filename": "test/bdev/bdevio/tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-23T08:05:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4de75d37_0d7f0fae",
+      "range": {
+        "startLine": 54,
+        "startChar": 8,
+        "endLine": 55,
+        "endChar": 54
+      },
+      "revId": "0dc46c6675047778aa056fdc53befe58e8c5fb72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "78761dad_063d7840",
         "filename": "test/bdev/bdevio/tests.py",
         "patchSetId": 5
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "ad93ad10_fae0bece",
+        "filename": "test/bdev/bdevio/tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-23T08:05:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "78761dad_063d7840",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 72
+      },
+      "revId": "0dc46c6675047778aa056fdc53befe58e8c5fb72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a21fd231_11c31e58",
         "filename": "test/bdev/bdevio/tests.py",
         "patchSetId": 5
@@ -59,6 +107,30 @@
       "writtenOn": "2019-05-23T07:18:00Z",
       "side": 1,
       "message": "print(ex) should suffice",
+      "range": {
+        "startLine": 66,
+        "startChar": 12,
+        "endLine": 67,
+        "endChar": 29
+      },
+      "revId": "0dc46c6675047778aa056fdc53befe58e8c5fb72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a9de8cb_225cf142",
+        "filename": "test/bdev/bdevio/tests.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-23T08:05:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a21fd231_11c31e58",
       "range": {
         "startLine": 66,
         "startChar": 12,
