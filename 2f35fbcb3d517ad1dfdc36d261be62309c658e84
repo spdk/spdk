@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9ca50b0c_467088e7",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-23T17:23:08Z",
+      "side": 1,
+      "message": "Oh yeah, I can\u0027t believe I missed that one.",
+      "parentUuid": "8866c20b_a3aed34b",
+      "range": {
+        "startLine": 450,
+        "startChar": 39,
+        "endLine": 450,
+        "endChar": 40
+      },
+      "revId": "2f35fbcb3d517ad1dfdc36d261be62309c658e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e47068dc_c5355944",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 26
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "7ff01cc3_1e34d412",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-23T17:23:08Z",
+      "side": 1,
+      "message": "I will still leave the error check here. If strtol fails for some other reason (integer is too large, there are characters in the string, etc) it will return a negative value which I can\u0027t detect directly in the unsigned int g_seed_value.",
+      "parentUuid": "e47068dc_c5355944",
+      "range": {
+        "startLine": 465,
+        "startChar": 16,
+        "endLine": 465,
+        "endChar": 45
+      },
+      "revId": "2f35fbcb3d517ad1dfdc36d261be62309c658e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5e47377_4ddcc42a",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 26
@@ -59,6 +107,30 @@
       "writtenOn": "2019-05-17T07:47:21Z",
       "side": 1,
       "message": "Is this can be replaced by error_test?",
+      "range": {
+        "startLine": 470,
+        "startChar": 19,
+        "endLine": 470,
+        "endChar": 48
+      },
+      "revId": "2f35fbcb3d517ad1dfdc36d261be62309c658e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b6ed8f7_9f466a01",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-23T17:23:08Z",
+      "side": 1,
+      "message": "Not sure what you mean?",
+      "parentUuid": "d5e47377_4ddcc42a",
       "range": {
         "startLine": 470,
         "startChar": 19,
