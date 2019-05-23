@@ -236,6 +236,10 @@ size_t	ftl_lba_map_num_lbks(const struct spdk_ftl_dev *dev);
 size_t	ftl_head_md_num_lbks(const struct spdk_ftl_dev *dev);
 int	ftl_restore_md(struct spdk_ftl_dev *dev, ftl_restore_fn cb);
 int	ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb);
+void	ftl_remove_wptr(struct ftl_wptr *wptr);
+
+struct ftl_wptr *
+ftl_add_explicit_wptr_to_band(struct spdk_ftl_dev *dev, struct ftl_band *band);
 
 #define ftl_to_ppa(addr) \
 	(struct ftl_ppa) { .ppa = (uint64_t)(addr) }
