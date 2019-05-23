@@ -62,6 +62,10 @@ DEFINE_STUB(spdk_nvmf_ns_reservation_update,
 	    int,
 	    (const char *file, struct spdk_nvmf_reservation_info *info), 0);
 
+DEFINE_STUB(spdk_nvmf_ns_load_reservation,
+	    int,
+	    (const char *file, struct spdk_nvmf_reservation_info *info), 0);
+
 static void
 subsystem_ns_remove_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 {
