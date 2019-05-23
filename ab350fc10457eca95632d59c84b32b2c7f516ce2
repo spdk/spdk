@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69abf86d_7c38e934",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1016548
+      },
+      "writtenOn": "2019-05-23T23:41:42Z",
+      "side": 1,
+      "message": "placement_id (napi_id) depends on number of HW queues which can be even larger like 2k or 4k.",
+      "revId": "ab350fc10457eca95632d59c84b32b2c7f516ce2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e3aba8b_5508b358",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1016548
+      },
+      "writtenOn": "2019-05-23T23:41:42Z",
+      "side": 1,
+      "message": "Need to do mutex_unlock and return 0 here.",
+      "revId": "ab350fc10457eca95632d59c84b32b2c7f516ce2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6fe0020_73193d2c",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1016548
+      },
+      "writtenOn": "2019-05-23T23:41:42Z",
+      "side": 1,
+      "message": "need to set *group \u003d NULL; here since calling functions depend on the result.",
+      "revId": "ab350fc10457eca95632d59c84b32b2c7f516ce2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
