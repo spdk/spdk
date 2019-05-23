@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "552ddd3f_c76f6aa7",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-23T09:28:48Z",
+      "side": 1,
+      "message": "We don\u0027t really handle any previous failures here.",
+      "revId": "30e46fd2dbb730b75fc6729760937015c0c9519d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
