@@ -2543,6 +2543,7 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 
 	pthread_spin_lock(&file->lock);
 	if (file->append_pos <= file->length_flushed) {
+		SPDK_ERRLOG("append_pos == length_flushed for %s (%ju)\n", file->name, file->append_pos);
 		BLOBFS_TRACE(file, "done - no data to flush\n");
 		pthread_spin_unlock(&file->lock);
 		cb_fn(cb_arg, 0);
