@@ -1506,6 +1506,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.nvmf.nvmf_subsystem_add_ns(args.client,
                                        nqn=args.nqn,
                                        bdev_name=args.bdev_name,
+                                       ptpl_file=args.ptpl_file,
                                        nsid=args.nsid,
                                        nguid=args.nguid,
                                        eui64=args.eui64,
@@ -1514,6 +1515,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('bdev_name', help='The name of the bdev that will back this namespace')
+    p.add_argument('-p', '--ptpl_file', help='The persistent reservation configuration file path (optional)', type=str)
     p.add_argument('-n', '--nsid', help='The requested NSID (optional)', type=int)
     p.add_argument('-g', '--nguid', help='Namespace globally unique identifier (optional)')
     p.add_argument('-e', '--eui64', help='Namespace EUI-64 identifier (optional)')
