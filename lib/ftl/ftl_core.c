@@ -69,6 +69,12 @@ struct ftl_wptr {
 
 	/* List link */
 	LIST_ENTRY(ftl_wptr)		list_entry;
+
+	/*
+	 * If setup in direct mode, there will be no offset or band state update after IO.
+	 * The PPA is not assigned by wptr, and is instead taken directly from the request.
+	 */
+	bool				direct_mode;
 };
 
 struct ftl_flush {
@@ -410,6 +416,55 @@ ftl_wptr_init(struct ftl_band *band)
 }
 
 static int
+ftl_add_direct_wptr_to_band(struct spdk_ftl_dev *dev, struct ftl_band *band)
+{
+	struct ftl_wptr *wptr;
+
+	wptr = ftl_wptr_init(band);
+	if (!wptr) {
+		return -1;
+	}
+
+	wptr->direct_mode = true;
+	band->state = FTL_BAND_STATE_OPEN;
+
+	if (ftl_band_alloc_md(band)) {
+		ftl_wptr_free(wptr);
+		return -1;
+	}
+
+	LIST_INSERT_HEAD(&dev->wptr_list, wptr, list_entry);
+
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: direct band %u\n", band->id);
+	ftl_trace_write_band(dev, band);
+	return 0;
+}
+
+static void
+ftl_close_direct_band_wptr(struct ftl_band *band)
+{
+	struct ftl_wptr *wptr = ftl_wptr_from_band(band);
+
+	assert(wptr->direct_mode);
+
+	band->state = FTL_BAND_STATE_CLOSED;
+	ftl_band_release_md(band);
+
+	ftl_remove_wptr(wptr);
+}
+
+int
+ftl_band_set_direct_access(struct ftl_band *band, bool access)
+{
+	if (access) {
+		return ftl_add_direct_wptr_to_band(band->dev, band);
+	} else {
+		ftl_close_direct_band_wptr(band);
+		return 0;
+	}
+}
+
+static int
 ftl_add_wptr(struct spdk_ftl_dev *dev)
 {
 	struct ftl_band *band;
@@ -444,6 +499,10 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 	struct spdk_ftl_dev *dev = wptr->dev;
 	struct spdk_ftl_conf *conf = &dev->conf;
 	size_t next_thld;
+
+	if (spdk_unlikely(wptr->direct_mode)) {
+		return;
+	}
 
 	wptr->offset += xfer_size;
 	next_thld = (ftl_band_num_usable_lbks(band) * conf->band_thld) / 100;
@@ -1199,9 +1258,18 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 	struct spdk_ftl_dev	*dev = io->dev;
 	struct ftl_io		*child;
 	int			rc;
+	struct ftl_ppa		ppa;
+
+	if (spdk_likely(!wptr->direct_mode)) {
+		ppa = wptr->ppa;
+	} else {
+		assert(io->flags & FTL_IO_DIRECT_ACCESS);
+		assert(io->ppa.chk == wptr->band->id);
+		ppa = io->ppa;
+	}
 
 	/* Split IO to child requests and release chunk immediately after child is completed */
-	child = ftl_io_init_child_write(io, wptr->ppa, ftl_io_iovec_addr(io),
+	child = ftl_io_init_child_write(io, ppa, ftl_io_iovec_addr(io),
 					ftl_io_get_md(io), ftl_io_child_write_cb);
 	if (!child) {
 		return -EAGAIN;
@@ -1209,13 +1277,13 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 
 	rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
 					    ftl_io_iovec_addr(child), child->md,
-					    ftl_ppa_addr_pack(dev, wptr->ppa),
+					    ftl_ppa_addr_pack(dev, ppa),
 					    lbk_cnt, ftl_io_cmpl_cb, child, 0, 0, 0);
 	if (rc) {
 		ftl_io_fail(child, rc);
 		ftl_io_complete(child);
 		SPDK_ERRLOG("spdk_nvme_ns_cmd_write failed with status:%d, ppa:%lu\n",
-			    rc, wptr->ppa.ppa);
+			    rc, ppa.ppa);
 
 		return -EIO;
 	}
