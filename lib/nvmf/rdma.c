@@ -412,6 +412,10 @@ struct spdk_nvmf_rdma_qpair {
 struct spdk_nvmf_rdma_poller_stat {
 	uint64_t				completions;
 	uint64_t				polls;
+	uint64_t				pending_free_request;
+	uint64_t				pending_data_buffer;
+	uint64_t				pending_rdma_read;
+	uint64_t				pending_rdma_write;
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -1957,6 +1961,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (!rdma_req->req.data) {
 				/* No buffers available. */
+				rqpair->poller->stat.pending_data_buffer++;
 				break;
 			}
 
@@ -1984,6 +1989,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			if (rqpair->current_send_depth + rdma_req->num_outstanding_data_wr > rqpair->max_send_depth
 			    || rqpair->current_read_depth + rdma_req->num_outstanding_data_wr > rqpair->max_read_depth) {
 				/* We can only have so many WRs outstanding. we have to wait until some finish. */
+				rqpair->poller->stat.pending_rdma_read++;
 				break;
 			}
 
@@ -2038,6 +2044,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			    rqpair->max_send_depth) {
 				/* We can only have so many WRs outstanding. we have to wait until some finish.
 				 * +1 since each request has an additional wr in the resp. */
+				rqpair->poller->stat.pending_rdma_write++;
 				break;
 			}
 
@@ -2627,6 +2634,9 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
 			break;
 		}
+	}
+	if (!STAILQ_EMPTY(&resources->incoming_queue) && STAILQ_EMPTY(&resources->free_queue)) {
+		rqpair->poller->stat.pending_free_request++;
 	}
 }
 
@@ -3711,6 +3721,10 @@ nvmf_rdma_poll_group_get_stat(struct spdk_io_channel_iter *i)
 				device_stat->name = ibv_get_device_name(rpoller->device->context->device);
 				device_stat->polls = rpoller->stat.polls;
 				device_stat->completions = rpoller->stat.completions;
+				device_stat->pending_free_request = rpoller->stat.pending_free_request;
+				device_stat->pending_data_buffer = rpoller->stat.pending_data_buffer;
+				device_stat->pending_rdma_read = rpoller->stat.pending_rdma_read;
+				device_stat->pending_rdma_write = rpoller->stat.pending_rdma_write;
 				STAILQ_INSERT_TAIL(&pg_stat->devices, device_stat, link);
 			}
 			STAILQ_INSERT_TAIL(&ctx->stat.poll_groups, pg_stat, link);
