@@ -1902,6 +1902,11 @@ exit:
 
 		}
 	}
+	if (update_sgroup && ns->ptpl_activated) {
+		if (nvmf_ns_update_reservation_info(ns)) {
+			status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		}
+	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	req->rsp->nvme_cpl.status.sc = status;
 	return update_sgroup;
@@ -2002,6 +2007,11 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	}
 
 exit:
+	if (update_sgroup && ns->ptpl_activated) {
+		if (nvmf_ns_update_reservation_info(ns)) {
+			status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		}
+	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	req->rsp->nvme_cpl.status.sc = status;
 	return update_sgroup;
