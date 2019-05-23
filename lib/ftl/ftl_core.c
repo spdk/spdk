@@ -91,7 +91,6 @@ struct ftl_flush {
 	LIST_ENTRY(ftl_flush)		list_entry;
 };
 
-typedef int (*ftl_next_ppa_fn)(struct ftl_io *, struct ftl_ppa *);
 static void _ftl_read(void *);
 static void _ftl_write(void *);
 
@@ -736,61 +735,6 @@ ftl_add_to_retry_queue(struct ftl_io *io)
 }
 
 static int
-ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa)
-{
-	struct spdk_ftl_dev *dev = io->dev;
-	struct ftl_ppa ppa;
-	int rc = 0, lbk_cnt;
-
-	while (io->pos < io->lbk_cnt) {
-		/* We might hit the cache here, if so, skip the read */
-		lbk_cnt = rc = next_ppa(io, &ppa);
-
-		/* We might need to retry the read from scratch (e.g. */
-		/* because write was under way and completed before */
-		/* we could read it from rwb */
-		if (ftl_read_retry(rc)) {
-			continue;
-		}
-
-		/* We don't have to schedule the read, as it was read from cache */
-		if (ftl_read_canceled(rc)) {
-			ftl_io_advance(io, 1);
-			ftl_trace_completion(io->dev, io, rc ? FTL_TRACE_COMPLETION_INVALID :
-					     FTL_TRACE_COMPLETION_CACHE);
-			rc = 0;
-			continue;
-		}
-
-		assert(lbk_cnt > 0);
-
-		ftl_trace_submission(dev, io, ppa, lbk_cnt);
-		rc = spdk_nvme_ns_cmd_read(dev->ns, ftl_get_read_qpair(dev),
-					   ftl_io_iovec_addr(io),
-					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
-					   ftl_io_cmpl_cb, io, 0);
-		if (rc == -ENOMEM) {
-			ftl_add_to_retry_queue(io);
-			break;
-		} else if (rc) {
-			ftl_io_fail(io, rc);
-			break;
-		}
-
-		ftl_io_inc_req(io);
-		ftl_io_advance(io, lbk_cnt);
-	}
-
-	/* If we didn't have to read anything from the device, */
-	/* complete the request right away */
-	if (ftl_io_done(io)) {
-		ftl_io_complete(io);
-	}
-
-	return rc;
-}
-
-static int
 ftl_ppa_cache_read(struct ftl_io *io, uint64_t lba,
 		   struct ftl_ppa ppa, void *buf)
 {
@@ -853,6 +797,64 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa)
 	}
 
 	return i;
+}
+
+static int
+ftl_submit_read(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_ppa ppa;
+	int rc = 0, lbk_cnt;
+
+	while (io->pos < io->lbk_cnt) {
+		if (ftl_io_mode_ppa(io)) {
+			lbk_cnt = rc = ftl_ppa_read_next_ppa(io, &ppa);
+		} else {
+			lbk_cnt = rc = ftl_lba_read_next_ppa(io, &ppa);
+		}
+
+		/* We might need to retry the read from scratch (e.g. */
+		/* because write was under way and completed before */
+		/* we could read it from rwb */
+		if (ftl_read_retry(rc)) {
+			continue;
+		}
+
+		/* We don't have to schedule the read, as it was read from cache */
+		if (ftl_read_canceled(rc)) {
+			ftl_io_advance(io, 1);
+			ftl_trace_completion(io->dev, io, rc ? FTL_TRACE_COMPLETION_INVALID :
+					     FTL_TRACE_COMPLETION_CACHE);
+			rc = 0;
+			continue;
+		}
+
+		assert(lbk_cnt > 0);
+
+		ftl_trace_submission(dev, io, ppa, lbk_cnt);
+		rc = spdk_nvme_ns_cmd_read(dev->ns, ftl_get_read_qpair(dev),
+					   ftl_io_iovec_addr(io),
+					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
+					   ftl_io_cmpl_cb, io, 0);
+		if (rc == -ENOMEM) {
+			ftl_add_to_retry_queue(io);
+			break;
+		} else if (rc) {
+			ftl_io_fail(io, rc);
+			break;
+		}
+
+		ftl_io_inc_req(io);
+		ftl_io_advance(io, lbk_cnt);
+	}
+
+	/* If we didn't have to read anything from the device, */
+	/* complete the request right away */
+	if (ftl_io_done(io)) {
+		ftl_io_complete(io);
+	}
+
+	return rc;
 }
 
 static void
@@ -1663,16 +1665,9 @@ int
 ftl_io_read(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
-	ftl_next_ppa_fn	next_ppa;
 
 	if (ftl_check_read_thread(dev)) {
-		if (ftl_io_mode_ppa(io)) {
-			next_ppa = ftl_ppa_read_next_ppa;
-		} else {
-			next_ppa = ftl_lba_read_next_ppa;
-		}
-
-		return ftl_submit_read(io, next_ppa);
+		return ftl_submit_read(io);
 	}
 
 	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
