@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -334,4 +334,25 @@ spdk_nvmf_transport_qpair_set_sqsize(struct spdk_nvmf_qpair *qpair)
 	}
 
 	return 0;
+}
+
+int
+spdk_nvmf_transport_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
+					struct spdk_nvmf_transport *transport,
+					struct spdk_nvmf_transport_poll_group_stat **stat)
+{
+	if (transport->ops->poll_group_get_stat) {
+		return transport->ops->poll_group_get_stat(tgt, stat);
+	} else {
+		return -ENOTSUP;
+	}
+}
+
+void
+spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
+		struct spdk_nvmf_transport_poll_group_stat *stat)
+{
+	if (transport->ops->poll_group_free_stat) {
+		transport->ops->poll_group_free_stat(stat);
+	}
 }

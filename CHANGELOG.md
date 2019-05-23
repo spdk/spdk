@@ -60,6 +60,8 @@ updated the related rpc function nvmf_create_transport to make this
 configurable parameter available to users. The `dif_insert_or_strip` is relevant
 for TCP transport for now and used to configure the DIF strip and insert.
 
+Added infrastructure to retrieve NVMf transport statistics.
+
 ### notify
 
 The function `spdk_notify_get_types()` and `spdk_notify_get_events()` were
