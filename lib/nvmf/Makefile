@@ -39,6 +39,7 @@ C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
 
 C_SRCS-$(CONFIG_RDMA) += rdma.c
 LIBNAME = nvmf
+SPDK_DEP_LIBNAMES = event_nvmf
 LOCAL_SYS_LIBS = -luuid
 ifeq ($(CONFIG_RDMA),y)
 LOCAL_SYS_LIBS += -libverbs -lrdmacm
