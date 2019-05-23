@@ -409,6 +409,11 @@ struct spdk_nvmf_rdma_qpair {
 	bool					last_wqe_reached;
 };
 
+struct spdk_nvmf_rdma_poller_stat {
+	uint64_t				completions;
+	uint64_t				polls;
+};
+
 struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poll_group	*group;
@@ -424,6 +429,7 @@ struct spdk_nvmf_rdma_poller {
 	struct ibv_srq				*srq;
 
 	struct spdk_nvmf_rdma_resources		*resources;
+	struct spdk_nvmf_rdma_poller_stat	stat;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
 
@@ -3420,6 +3426,9 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 		return -1;
 	}
 
+	rpoller->stat.polls++;
+	rpoller->stat.completions += reaped;
+
 	for (i = 0; i < reaped; i++) {
 
 		rdma_wr = (struct spdk_nvmf_rdma_wr *)wc[i].wr_id;
@@ -3654,6 +3663,10 @@ spdk_nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_poll_group *group;
 	struct spdk_nvmf_transport_poll_group *tgroup;
+	struct spdk_nvmf_rdma_poll_group *rgroup;
+	struct spdk_nvmf_rdma_poller *rpoller;
+	struct spdk_nvmf_rdma_device_stat *device_stat;
+	uint64_t num_devices = 0;
 
 	if (tgt == NULL || stat == NULL) {
 		return -EINVAL;
@@ -3669,6 +3682,27 @@ spdk_nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 				return -ENOMEM;
 			}
 			(*stat)->trtype = SPDK_NVME_TRANSPORT_RDMA;
+
+			rgroup = SPDK_CONTAINEROF(tgroup, struct spdk_nvmf_rdma_poll_group, group);
+			/* Count devices to allocate enough memory */
+			TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+				++num_devices;
+			}
+			(*stat)->rdma.devices = calloc(num_devices, sizeof(struct spdk_nvmf_rdma_device_stat));
+			if (!(*stat)->rdma.devices) {
+				SPDK_ERRLOG("Failed to allocate NVMf RDMA devices statistics\n");
+				free(*stat);
+				return -ENOMEM;
+			}
+
+			(*stat)->rdma.num_devices = num_devices;
+			num_devices = 0;
+			TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+				device_stat = &(*stat)->rdma.devices[num_devices++];
+				device_stat->name = ibv_get_device_name(rpoller->device->context->device);
+				device_stat->polls = rpoller->stat.polls;
+				device_stat->completions = rpoller->stat.completions;
+			}
 			return 0;
 		}
 	}
@@ -3678,6 +3712,9 @@ spdk_nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 static void
 spdk_nvmf_rdma_poll_group_free_stat(struct spdk_nvmf_transport_poll_group_stat *stat)
 {
+	if (stat) {
+		free(stat->rdma.devices);
+	}
 	free(stat);
 }
 

@@ -4176,7 +4176,19 @@ Example response:
         "pending_bdev_io": 1721,
         "transports": [
           {
-            "trtype": "RDMA"
+            "trtype": "RDMA",
+            "devices": [
+              {
+                "name": "mlx5_1",
+                "polls": 1536729,
+                "completions": 0
+              },
+              {
+                "name": "mlx5_0",
+                "polls": 1536729,
+                "completions": 18667357
+              }
+            ]
           }
         ]
       }
