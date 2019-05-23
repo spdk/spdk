@@ -2,6 +2,11 @@
 
 ## v19.07: (Upcoming Release)
 
+### rpc
+
+Add an optional parameter `--ptpl-file` to RPC method `nvmf_subsystem_add_ns` which can
+be used to save/restore Namespace's persistent reservation information to/from it.
+
 ### blobfs
 
 Blobfs file asynchronous operations were added to public APIs.
