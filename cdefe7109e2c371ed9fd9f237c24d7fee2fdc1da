@@ -179,6 +179,24 @@
     },
     {
       "key": {
+        "uuid": "d729e1da_dad11687",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1892,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-23T00:34:20Z",
+      "side": 1,
+      "message": "My comment might not be good. What I\u0027m saying is not overwriting WWNN and WWPN of FC HBA, but that user collects WWNN and WWPN and configures each NVMf subsystem which WWPN/WWNN to listen.",
+      "parentUuid": "2067a0a6_0d7ae7ed",
+      "revId": "cdefe7109e2c371ed9fd9f237c24d7fee2fdc1da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88086b73_f35d1912",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 23
