@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6994f4bc_57665bff",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-23T09:18:03Z",
+      "side": 1,
+      "message": "Please add a comment here that msg passing here is done because ocf_metadata_updater_run() cannot be called within the cb for kick. \n\nJust to verify, is there requirement for ocf_metadata_updater_run() to be called on single md thread ? Do we receive kick cb from multiple threads ?\nIf both of those is a \"no\", then we could possibly just do spdk_get_thread() in kick instead of init, to simplify. Either way I don\u0027t think this is so important.",
+      "range": {
+        "startLine": 462,
+        "startChar": 1,
+        "endLine": 462,
+        "endChar": 56
+      },
+      "revId": "b86f8c372caa442cce563eb7bdcb11ecfce08fde",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
