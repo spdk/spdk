@@ -409,6 +409,11 @@ struct spdk_nvmf_rdma_qpair {
 	bool					last_wqe_reached;
 };
 
+struct spdk_nvmf_rdma_poller_stat {
+	uint64_t				completions;
+	uint64_t				polls;
+};
+
 struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poll_group	*group;
@@ -424,6 +429,7 @@ struct spdk_nvmf_rdma_poller {
 	struct ibv_srq				*srq;
 
 	struct spdk_nvmf_rdma_resources		*resources;
+	struct spdk_nvmf_rdma_poller_stat	stat;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
 
@@ -3415,6 +3421,9 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 		return -1;
 	}
 
+	rpoller->stat.polls++;
+	rpoller->stat.completions += reaped;
+
 	for (i = 0; i < reaped; i++) {
 
 		rdma_wr = (struct spdk_nvmf_rdma_wr *)wc[i].wr_id;
@@ -3652,11 +3661,15 @@ static void
 nvmf_rdma_poll_group_get_stat_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvmf_rdma_get_stat_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_nvmf_rdma_poll_group_stat *pg_stat, *tmp;
+	struct spdk_nvmf_rdma_poll_group_stat *pg_stat, *tmp_group;
+	struct spdk_nvmf_rdma_device_stat *device_stat, *tmp_device;
 
 	ctx->done_cb((status == 0) ? true : false, &ctx->stat, ctx->done_ctx);
-	STAILQ_FOREACH_SAFE(pg_stat, &ctx->stat.poll_groups, link, tmp) {
+	STAILQ_FOREACH_SAFE(pg_stat, &ctx->stat.poll_groups, link, tmp_group) {
 		free(pg_stat->name);
+		STAILQ_FOREACH_SAFE(device_stat, &pg_stat->devices, link, tmp_device) {
+			free(device_stat);
+		}
 		free(pg_stat);
 	}
 	free(ctx);
@@ -3669,7 +3682,10 @@ nvmf_rdma_poll_group_get_stat(struct spdk_io_channel_iter *i)
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);;
 	struct spdk_nvmf_transport_poll_group *tgroup;
-	struct spdk_nvmf_rdma_poll_group_stat *pg_stat;
+	struct spdk_nvmf_rdma_poll_group *rgroup;
+	struct spdk_nvmf_rdma_poller *rpoller;
+	struct spdk_nvmf_rdma_poll_group_stat *pg_stat = NULL;
+	struct spdk_nvmf_rdma_device_stat *device_stat, *tmp;
 	int status = 0;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
@@ -3677,19 +3693,43 @@ nvmf_rdma_poll_group_get_stat(struct spdk_io_channel_iter *i)
 			pg_stat = calloc(1, sizeof(struct spdk_nvmf_rdma_poll_group_stat));
 			if (!pg_stat) {
 				status = 1;
-				break;
+				goto exit;
 			}
 			pg_stat->name = strdup(spdk_thread_get_name(spdk_get_thread()));
 			if (!pg_stat->name) {
-				free(pg_stat);
 				status = 1;
-				break;
+				goto exit;
+			}
+			rgroup = SPDK_CONTAINEROF(tgroup, struct spdk_nvmf_rdma_poll_group, group);
+			STAILQ_INIT(&pg_stat->devices);
+			TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+				device_stat = calloc(1, sizeof(*device_stat));
+				if (!device_stat) {
+					status = 1;
+					goto exit;
+				}
+				device_stat->name = ibv_get_device_name(rpoller->device->context->device);
+				device_stat->polls = rpoller->stat.polls;
+				device_stat->completions = rpoller->stat.completions;
+				STAILQ_INSERT_TAIL(&pg_stat->devices, device_stat, link);
 			}
 			STAILQ_INSERT_TAIL(&ctx->stat.poll_groups, pg_stat, link);
 			break;
 		}
 	}
 
+exit:
+	if (status != 0) {
+		if (pg_stat) {
+			if (pg_stat->name) {
+				free(pg_stat->name);
+			}
+			STAILQ_FOREACH_SAFE(device_stat, &pg_stat->devices, link, tmp) {
+				free(device_stat);
+			}
+			free(pg_stat);
+		}
+	}
 	spdk_for_each_channel_continue(i, status);
 }
 
