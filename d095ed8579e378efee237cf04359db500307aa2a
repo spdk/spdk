@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a2dfcd93_3ce94767",
+        "filename": "doc/rpc_names.txt",
+        "patchSetId": 17
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-23T14:55:24Z",
+      "side": 1,
+      "message": "yep - I\u0027ll make it bdev_virtio_scsi_get_devices to match scsi_get_devices",
+      "parentUuid": "c40664bb_f0fd2957",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 25
+      },
+      "revId": "d095ed8579e378efee237cf04359db500307aa2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "64b89b62_59afb34d",
         "filename": "doc/rpc_names.txt",
         "patchSetId": 17
