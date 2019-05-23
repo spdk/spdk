@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-parse_common_script_args $@
-
 if [ -z "${DEPENDENCY_DIR}" ]; then
         echo DEPENDENCY_DIR not defined!
         exit 1

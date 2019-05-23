@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-parse_common_script_args $@
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
