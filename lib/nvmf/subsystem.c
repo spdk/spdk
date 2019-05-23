@@ -1008,12 +1008,16 @@ static struct spdk_bdev_module ns_bdev_module = {
 	.name	= "NVMe-oF Target",
 };
 
+static int
+nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
+
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
 			   const char *ptpl_file)
 {
 	struct spdk_nvmf_ns_opts opts;
+	struct spdk_nvmf_reservation_info info = {0};
 	struct spdk_nvmf_ns *ns;
 	int rc;
 
@@ -1109,6 +1113,16 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	TAILQ_INIT(&ns->registrants);
 
 	if (ptpl_file) {
+		rc = spdk_nvmf_ns_load_reservation(ptpl_file, &info);
+		if (!rc) {
+			rc = nvmf_ns_reservation_restore(ns, &info);
+			if (rc) {
+				SPDK_ERRLOG("Subsystem restore reservation failed\n");
+				spdk_bdev_close(ns->desc);
+				free(ns);
+				return 0;
+			}
+		}
 		ns->ptpl_file = strdup(ptpl_file);
 	}
 
@@ -1372,6 +1386,62 @@ nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
 	info.ptpl_activated = ns->ptpl_activated;
 
 	return spdk_nvmf_ns_reservation_update(ns->ptpl_file, &info);
+}
+
+static int
+nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info)
+{
+	uint32_t i;
+	struct spdk_nvmf_registrant *reg, *holder = NULL;
+	struct spdk_uuid bdev_uuid, holder_uuid;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "NSID %u, PTPL %u, Number of registrants %u\n",
+		      ns->nsid, info->ptpl_activated, info->num_regs);
+
+	/* it's not an error */
+	if (!info->ptpl_activated || !info->num_regs) {
+		return 0;
+	}
+
+	spdk_uuid_parse(&bdev_uuid, info->bdev_uuid);
+	if (spdk_uuid_compare(&bdev_uuid, spdk_bdev_get_uuid(ns->bdev))) {
+		SPDK_ERRLOG("Existing bdev UUID is not same with configuration file\n");
+		return -EINVAL;
+	}
+
+	ns->crkey = info->crkey;
+	ns->rtype = info->rtype;
+	ns->ptpl_activated = info->ptpl_activated;
+	spdk_uuid_parse(&holder_uuid, info->holder_uuid);
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Bdev UUID %s\n", info->bdev_uuid);
+	if (info->rtype) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Holder UUID %s, RTYPE %u, RKEY 0x%"PRIx64"\n",
+			      info->holder_uuid, info->rtype, info->crkey);
+	}
+
+	for (i = 0; i < info->num_regs; i++) {
+		reg = calloc(1, sizeof(*reg));
+		if (!reg) {
+			return -ENOMEM;
+		}
+		spdk_uuid_parse(&reg->hostid, info->registrants[i].host_uuid);
+		reg->rkey = info->registrants[i].rkey;
+		TAILQ_INSERT_TAIL(&ns->registrants, reg, link);
+		if (!spdk_uuid_compare(&holder_uuid, &reg->hostid)) {
+			holder = reg;
+		}
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Registrant RKEY 0x%"PRIx64", Host UUID %s\n",
+			      info->registrants[i].rkey, info->registrants[i].host_uuid);
+	}
+
+	if (nvmf_ns_reservation_all_registrants_type(ns)) {
+		ns->holder = TAILQ_FIRST(&ns->registrants);;
+	} else {
+		ns->holder = holder;
+	}
+
+	return 0;
 }
 
 static struct spdk_nvmf_registrant *
