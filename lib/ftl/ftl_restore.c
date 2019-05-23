@@ -573,10 +573,17 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 	struct spdk_ftl_dev *dev = rband->band->dev;
 
 	if (status) {
-		SPDK_ERRLOG("%s while restoring tail md. Will attempt to pad band %u.\n",
-			    spdk_strerror(status), rband->band->id);
-		STAILQ_INSERT_TAIL(&restore->pad_bands, rband, stailq);
-		restore->num_pad_bands++;
+		if (!dev->conf.allow_open_bands) {
+			SPDK_ERRLOG("%s while restoring tail md in band %u.\n",
+				    spdk_strerror(-status), rband->band->id);
+			ftl_restore_complete(restore, status);
+			return;
+		} else {
+			SPDK_ERRLOG("%s while restoring tail md. Will attempt to pad band %u.\n",
+				    spdk_strerror(-status), rband->band->id);
+			STAILQ_INSERT_TAIL(&restore->pad_bands, rband, stailq);
+			restore->num_pad_bands++;
+		}
 	}
 
 	if (!status && ftl_restore_l2p(rband->band)) {
