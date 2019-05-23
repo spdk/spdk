@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-parse_common_script_args $@
-
 iscsitestinit $1 $2
 
 timing_enter bdev_io_wait

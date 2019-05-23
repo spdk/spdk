@@ -189,6 +189,21 @@ if [ -z "$output_dir" ]; then
 	export output_dir
 fi
 
+TEST_MODE=
+for i in "$@"; do
+	case "$i" in
+		--iso)
+			TEST_MODE=iso
+			;;
+		--transport=*)
+			TEST_TRANSPORT="${i#*=}"
+			;;
+		--sock=*)
+			TEST_SOCK="${i#*=}"
+			;;
+	esac
+done
+
 function timing() {
 	direction="$1"
 	testname="$2"
@@ -234,23 +249,6 @@ function timing_finish() {
 			$output_dir/timing.txt \
 			>$output_dir/timing.svg
 	fi
-}
-
-function parse_common_script_args() {
-	TEST_MODE=
-	for i in "$@"; do
-		case "$i" in
-			--iso)
-				TEST_MODE=iso
-				;;
-			--transport=*)
-				TEST_TRANSPORT="${i#*=}"
-				;;
-			--sock=*)
-				TEST_SOCK="${i#*=}"
-				;;
-		esac
-	done
 }
 
 function create_test_list() {

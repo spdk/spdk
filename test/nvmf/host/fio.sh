@@ -6,8 +6,6 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/scripts/common.sh
 source $rootdir/test/nvmf/common.sh
 
-parse_common_script_args $@
-
 rpc_py="$rootdir/scripts/rpc.py"
 
 set -e

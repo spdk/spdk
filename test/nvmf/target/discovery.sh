@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-parse_common_script_args $@
-
 NULL_BDEV_SIZE=102400
 NULL_BLOCK_SIZE=512
 
