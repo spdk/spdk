@@ -270,11 +270,24 @@ struct spdk_bdev_channel {
 
 };
 
+struct spdk_bdev_callbacks {
+	bool old_format;
+	union {
+		struct {
+			spdk_bdev_remove_cb_t fn;
+		} remove;
+		struct {
+			spdk_bdev_event_cb_t fn;
+		} event;
+	};
+	void *ctx;
+};
+
+
 struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	struct spdk_thread		*thread;
-	spdk_bdev_remove_cb_t		remove_cb;
-	void				*remove_ctx;
+	struct spdk_bdev_callbacks	*callback;
 	bool				remove_scheduled;
 	bool				closed;
 	bool				write;
@@ -4150,13 +4163,20 @@ static void
 _remove_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
+	struct spdk_bdev_event event = {};
 
 	desc->remove_scheduled = false;
 
 	if (desc->closed) {
+		free(desc->callback);
 		free(desc);
 	} else {
-		desc->remove_cb(desc->remove_ctx);
+		if (desc->callback->old_format) {
+			desc->callback->remove.fn(desc->callback->ctx);
+		} else {
+			event.type = SPDK_BDEV_EVENT_REMOVE;
+			desc->callback->event.fn(event, NULL, desc->callback->ctx);
+		}
 	}
 }
 
@@ -4172,7 +4192,7 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
 		rc = -EBUSY;
-		if (desc->remove_cb) {
+		if (desc->callback->remove.fn || desc->callback->event.fn) {
 			/*
 			 * Defer invocation of the remove_cb to a separate message that will
 			 *  run later on its thread.  This ensures this context unwinds and
@@ -4239,9 +4259,9 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
-int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+static int
+_spdk_bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_callbacks *callbacks,
+		struct spdk_bdev_desc **_desc)
 {
 	struct spdk_bdev_desc *desc;
 	struct spdk_thread *thread;
@@ -4250,12 +4270,14 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	thread = spdk_get_thread();
 	if (!thread) {
 		SPDK_ERRLOG("Cannot open bdev from non-SPDK thread.\n");
+		free(callbacks);
 		return -ENOTSUP;
 	}
 
 	desc = calloc(1, sizeof(*desc));
 	if (desc == NULL) {
 		SPDK_ERRLOG("Failed to allocate memory for bdev descriptor\n");
+		free(callbacks);
 		return -ENOMEM;
 	}
 
@@ -4264,8 +4286,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 
 	desc->bdev = bdev;
 	desc->thread = thread;
-	desc->remove_cb = remove_cb;
-	desc->remove_ctx = remove_ctx;
+	desc->callback = callbacks;
 	desc->write = write;
 	*_desc = desc;
 
@@ -4275,6 +4296,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		SPDK_ERRLOG("Could not open %s - %s module already claimed it\n",
 			    bdev->name, bdev->internal.claim_module->name);
 		pthread_mutex_unlock(&bdev->internal.mutex);
+		free(callbacks);
 		free(desc);
 		*_desc = NULL;
 		return -EPERM;
@@ -4286,6 +4308,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		if (ctx == NULL) {
 			SPDK_ERRLOG("Failed to allocate memory for QoS context\n");
 			pthread_mutex_unlock(&bdev->internal.mutex);
+			free(callbacks);
 			free(desc);
 			*_desc = NULL;
 			return -ENOMEM;
@@ -4301,6 +4324,68 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
 	return 0;
+}
+
+int
+spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+{
+	struct spdk_bdev_callbacks *callback;
+
+	callback = calloc(1, sizeof(*callback));
+	if (callback == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for bdev callbacks\n");
+		return -ENOMEM;
+	}
+
+	callback->old_format = true;
+	callback->remove.fn = remove_cb;
+	callback->ctx = remove_ctx;
+	return _spdk_bdev_open(bdev, write, callback, _desc);
+}
+
+int
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		   void *event_ctx, struct spdk_bdev_desc **_desc)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_callbacks *callback;
+	int rc;
+
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+
+	if (bdev == NULL) {
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		return -EBUSY;
+	}
+
+	callback = calloc(1, sizeof(*callback));
+	if (callback == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for bdev callbacks\n");
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		return -ENOMEM;
+	}
+
+	callback->old_format = false;
+	callback->event.fn = event_cb;
+	callback->ctx = event_ctx;
+
+	rc = _spdk_bdev_open(bdev, write, callback, _desc);
+
+	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+
+	return rc;
 }
 
 void
@@ -4324,6 +4409,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	desc->closed = true;
 
 	if (!desc->remove_scheduled) {
+		free(desc->callback);
 		free(desc);
 	}
 
