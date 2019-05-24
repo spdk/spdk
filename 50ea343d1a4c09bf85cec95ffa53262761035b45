@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d413d829_6f73036f",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-24T08:11:30Z",
+      "side": 1,
+      "message": "will you write data_len \u003c sizeof(*param) ? (please see the line 604.)",
+      "range": {
+        "startLine": 611,
+        "startChar": 6,
+        "endLine": 611,
+        "endChar": 31
+      },
+      "revId": "50ea343d1a4c09bf85cec95ffa53262761035b45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
