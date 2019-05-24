@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d2ac3dd_d05727b0",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-05-24T10:48:16Z",
+      "side": 1,
+      "message": "Would be consistent to remove vm_dir here.",
+      "revId": "87fa5f82bb4937302722846196d6b0bf2258d3e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
