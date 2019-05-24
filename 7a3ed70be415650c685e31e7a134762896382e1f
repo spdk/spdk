@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abcb2a4d_2a31a321",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2082,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-24T08:49:16Z",
+      "side": 1,
+      "message": "I don\u0027t think this is the good place to call spdk_scsi_pr_check(). task-\u003elun is already verified in _scsi_lun_execute_task in lib/scsi/lun.c\n\nCan we call spdk_scsi_pr_check() in _scsi_lun_execute_task(), and passes lun and task like spdk_scsi_pr_check(lun, task) ?",
+      "range": {
+        "startLine": 2082,
+        "startChar": 6,
+        "endLine": 2082,
+        "endChar": 24
+      },
+      "revId": "7a3ed70be415650c685e31e7a134762896382e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
