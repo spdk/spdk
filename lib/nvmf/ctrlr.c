@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -568,7 +568,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if (spdk_nvmf_qpair_is_admin_queue(qpair)) {
+	if (cmd->qid == 0) {
 		if (cmd->sqsize >= transport->opts.max_aq_depth) {
 			SPDK_ERRLOG("Invalid SQSIZE for admin queue %u (min 1, max %u)\n",
 				    cmd->sqsize, transport->opts.max_aq_depth - 1);

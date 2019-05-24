@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -484,8 +484,23 @@ test_connect(void)
 	CU_ASSERT(qpair.ctrlr == NULL);
 	cmd.connect_cmd.sqsize = 31;
 
-	/* Invalid sqsize > max_queue_depth */
+	/* Invalid admin sqsize > max_aq_depth */
 	memset(&rsp, 0, sizeof(rsp));
+	cmd.connect_cmd.sqsize = 32;
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+	rc = spdk_nvmf_ctrlr_connect(&req);
+	poll_threads();
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
+	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.iattr == 0);
+	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.ipo == 44);
+	CU_ASSERT(qpair.ctrlr == NULL);
+	cmd.connect_cmd.sqsize = 31;
+
+	/* Invalid I/O sqsize > max_queue_depth */
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.connect_cmd.qid = 1;
 	cmd.connect_cmd.sqsize = 64;
 	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
 	rc = spdk_nvmf_ctrlr_connect(&req);
@@ -496,6 +511,7 @@ test_connect(void)
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.iattr == 0);
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.ipo == 44);
 	CU_ASSERT(qpair.ctrlr == NULL);
+	cmd.connect_cmd.qid = 0;
 	cmd.connect_cmd.sqsize = 31;
 
 	/* Invalid cntlid for admin queue */
@@ -519,6 +535,7 @@ test_connect(void)
 	memset(&rsp, 0, sizeof(rsp));
 	MOCK_SET(spdk_nvmf_subsystem_get_ctrlr, &ctrlr);
 	cmd.connect_cmd.qid = 1;
+	cmd.connect_cmd.sqsize = 63;
 	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
 	rc = spdk_nvmf_ctrlr_connect(&req);
 	poll_threads();
@@ -526,6 +543,7 @@ test_connect(void)
 	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
 	CU_ASSERT(qpair.ctrlr == &ctrlr);
 	qpair.ctrlr = NULL;
+	cmd.connect_cmd.sqsize = 31;
 
 	/* Non-existent controller */
 	memset(&rsp, 0, sizeof(rsp));
