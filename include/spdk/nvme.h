@@ -1553,6 +1553,15 @@ void *spdk_nvme_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t 
 void spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size);
 
 /**
+ * Get the transport ID for a given NVMe controller.
+ *
+ * \param ctrlr Controller to get the transport ID.
+ * \return Pointer to the controller's transport ID.
+ */
+const struct spdk_nvme_transport_id *spdk_nvme_ctrlr_get_transport_id(
+	struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the identify namespace data as defined by the NVMe specification.
  *
  * This function is thread safe and can be called at any point while the controller

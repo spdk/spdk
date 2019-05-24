@@ -24,6 +24,11 @@ The format of the data returned by the get_bdevs_iostat RPC has changed to
 make it easier to parse.  It now returns an object with a "ticks" object
 and "bdevs" array with the per-bdev statistics.
 
+### nvme
+
+Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
+previously attached controller.
+
 ## v19.04:
 
 ### nvme
