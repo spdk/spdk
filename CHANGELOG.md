@@ -86,6 +86,10 @@ DIF reference tag remapping is now supported for partition type virtual bdev
 modules. When using partition type virtual bdevs, block address space is
 remapped during I/O processing and DIF reference tag is remapped accordingly.
 
+A new spdk_bdev_open_ext function has been added and spdk_bdev_open function has been depreciated.
+The new open function introduces option to provide callback function that will be called by
+asynchronous event such as bdev removal.
+
 ### nvme
 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
