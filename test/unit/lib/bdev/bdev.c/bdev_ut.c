@@ -64,6 +64,8 @@ DEFINE_STUB(spdk_notify_type_register, struct spdk_notify_type *, (const char *t
 
 int g_status;
 int g_count;
+enum spdk_bdev_event_type g_event_type1;
+enum spdk_bdev_event_type g_event_type2;
 struct spdk_histogram_data *g_histogram;
 
 void
@@ -1975,6 +1977,58 @@ bdev_write_zeroes(void)
 	poll_threads();
 }
 
+static void
+bdev_open_cb1(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+
+	g_event_type1 = type;
+	spdk_bdev_close(desc);
+}
+
+static void
+bdev_open_cb2(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	struct spdk_bdev_desc *desc = *(struct spdk_bdev_desc **)event_ctx;
+
+	g_event_type2 = type;
+	spdk_bdev_close(desc);
+}
+
+static void
+bdev_open_ext(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc1 = NULL;
+	struct spdk_bdev_desc *desc2 = NULL;
+	int rc = 0;
+
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, NULL, NULL, &desc1);
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_open_cb1, &desc1, &desc1);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_open_cb2, &desc2, &desc2);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	g_event_type1 = 0xFF;
+	g_event_type2 = 0xFF;
+
+	/* Simulate hot-unplug by unregistering bdev */
+	spdk_bdev_unregister(bdev, NULL, NULL);
+	poll_threads();
+
+	/* Check if correct events have been triggered in event callback fn */
+	CU_ASSERT_EQUAL(g_event_type1, SPDK_BDEV_EVENT_REMOVE);
+	CU_ASSERT_EQUAL(g_event_type2, SPDK_BDEV_EVENT_REMOVE);
+
+	free_bdev(bdev);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2006,7 +2060,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_io_alignment_with_boundary", bdev_io_alignment_with_boundary) == NULL ||
 		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL ||
 		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL ||
-		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL
+		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL ||
+		CU_add_test(suite, "bdev_open_ext", bdev_open_ext) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
