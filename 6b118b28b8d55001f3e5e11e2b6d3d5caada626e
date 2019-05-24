@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abd73c67_e91f79b3",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-24T23:24:35Z",
+      "side": 1,
+      "message": "won\u0027t this line delete the qemu.pid file?  I don\u0027t think you need both lines",
+      "revId": "6b118b28b8d55001f3e5e11e2b6d3d5caada626e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
