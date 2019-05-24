@@ -16,6 +16,14 @@ a null name parameter and will return the only available target.
 The majority of the NVMe-oF RPCs now accept an optional tgt_name parameter. This will
 allow those RPCs to work with applications that create more than one target.
 
+### bdev
+
+A new spdk_bdev_open_ext function has been added and spdk_bdev_open function has been deprecated.
+The new open function introduces requirement to provide callback function that will be called by
+asynchronous event such as bdev removal. spdk_bdev_open_ext function takes bdev name as
+an argument instead of bdev structure to avoid a race condition that can happen when the bdev
+is being removed between a call to get its structure based on a name and actually openning it.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable
