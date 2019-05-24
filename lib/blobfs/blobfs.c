@@ -121,6 +121,7 @@ struct spdk_file {
 	bool                    is_deleted;
 	bool			open_for_writing;
 	uint64_t		length_flushed;
+	uint64_t		length_xattr;
 	uint64_t		append_pos;
 	uint64_t		seq_byte_count;
 	uint64_t		next_seq_offset;
@@ -212,9 +213,16 @@ struct spdk_fs_cb_args {
 			uint64_t		offset;
 		} readahead;
 		struct {
+			/* offset of the file when the sync request was made */
 			uint64_t			offset;
 			TAILQ_ENTRY(spdk_fs_request)	tailq;
 			bool				xattr_in_progress;
+			/* length written to the xattr for this file - this should
+			 * always be the same as the offset if only one thread is
+			 * writing to the file, but could differ if multiple threads
+			 * are appending
+			 */
+			uint64_t			length;
 		} sync;
 		struct {
 			uint32_t			num_clusters;
@@ -720,6 +728,7 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		f->blobid = spdk_blob_get_id(blob);
 		f->length = *length;
 		f->length_flushed = *length;
+		f->length_xattr = *length;
 		f->append_pos = *length;
 		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "added file %s length=%ju\n", f->name, f->length);
 	} else {
@@ -2024,6 +2033,7 @@ __file_cache_finish_sync(void *ctx, int bserrno)
 	sync_args = &sync_req->args;
 	file = sync_args->file;
 	pthread_spin_lock(&file->lock);
+	file->length_xattr = sync_args->op.sync.length;
 	assert(sync_args->op.sync.offset <= file->length_flushed);
 	spdk_trace_record(TRACE_BLOBFS_XATTR_END, 0, sync_args->op.sync.offset,
 			  0, file->trace_arg_name);
@@ -2055,6 +2065,7 @@ __check_sync_reqs(struct spdk_file *file)
 	if (sync_req != NULL && !sync_req->args.op.sync.xattr_in_progress) {
 		BLOBFS_TRACE(file, "set xattr length 0x%jx\n", file->length_flushed);
 		sync_req->args.op.sync.xattr_in_progress = true;
+		sync_req->args.op.sync.length = file->length_flushed;
 		spdk_blob_set_xattr(file->blob, "length", &file->length_flushed,
 				    sizeof(file->length_flushed));
 
@@ -2147,6 +2158,11 @@ __file_flush(void *ctx)
 	if (length == 0) {
 		free_fs_request(req);
 		pthread_spin_unlock(&file->lock);
+		/*
+		 * There is no data to flush, but we still need to check for any
+		 *  outstanding sync requests to make sure metadata gets updated.
+		 */
+		__check_sync_reqs(file);
 		return;
 	}
 	args->op.flush.length = length;
@@ -2542,8 +2558,8 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 	BLOBFS_TRACE(file, "offset=%jx\n", file->append_pos);
 
 	pthread_spin_lock(&file->lock);
-	if (file->append_pos <= file->length_flushed) {
-		BLOBFS_TRACE(file, "done - no data to flush\n");
+	if (file->append_pos <= file->length_xattr) {
+		BLOBFS_TRACE(file, "done - file already synced\n");
 		pthread_spin_unlock(&file->lock);
 		cb_fn(cb_arg, 0);
 		return;
