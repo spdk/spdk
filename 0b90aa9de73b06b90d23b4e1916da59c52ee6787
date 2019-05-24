@@ -1,0 +1,274 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb691806_459e8890",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "I think the code would get a lot simpler if we kept a segment bit array here instead of an offset + lba_cnt. It\u0027d also resolve reading the same stuff twice. When the user tries to read a chunk of LBA map, iterate through the segments and set bits for all segments that are not already read (pending / clear). During the reads completion go through all requests and clear those bits. If bit array is empty (keep track of the number of bits set in a separate variable), the request is complete. If we hit any read errors, fail all the requests that tried to read that segment.",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 0
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "831268b4_16a56518",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "What\u0027s going on with the types here? Why does this return an int now? You have to cast ftl_lba_num_lbks result to an int because of that and the result of this function is assigned to an uint64_t.",
+      "range": {
+        "startLine": 759,
+        "startChar": 1,
+        "endLine": 759,
+        "endChar": 11
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fa05c59_b68a26fd",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 763,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "Remove newline.",
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc2cd62e_de1533f0",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "Instead of doing that in each function, let\u0027s just do it once at the beginning and then operate on the segments.",
+      "range": {
+        "startLine": 902,
+        "startChar": 1,
+        "endLine": 902,
+        "endChar": 69
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "558ad59f_f95488d4",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 956,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "Aren\u0027t we leaking pending_reads if status !\u003d 0?",
+      "range": {
+        "startLine": 956,
+        "startChar": 6,
+        "endLine": 956,
+        "endChar": 12
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "401f2d31_04cdf186",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "Stuff like this really makes it hard to understand what\u0027s going on - you\u0027re passing a block offset / block count but return segment offset / count. Let\u0027s just convert the blocks to segments at the beginning and use that.",
+      "range": {
+        "startLine": 994,
+        "startChar": 64,
+        "endLine": 994,
+        "endChar": 87
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d29769e_bd00295e",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "I don\u0027t think this will work correctly for the following scenario (we\u0027re trying to reads 4 segments, P - pending, C - clear):\n[P][C][P][C]\n 0  1  2  3\nYou\u0027re going to read segment 2 twice.",
+      "range": {
+        "startLine": 993,
+        "startChar": 0,
+        "endLine": 1031,
+        "endChar": 1
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab90bc60_56aa1102",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "Let\u0027s change the way we schedule the reads. Let\u0027s go through all the segments from offset to offset + lba_cnt looking for contiguous clear segments sending out reads to each of them.",
+      "range": {
+        "startLine": 1052,
+        "startChar": 0,
+        "endLine": 1069,
+        "endChar": 35
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "677dfc9f_b101a6c3",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "Let\u0027s rename this to ftl_lba_map_request.",
+      "range": {
+        "startLine": 45,
+        "startChar": 7,
+        "endLine": 45,
+        "endChar": 31
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "879c06f5_713eb230",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "All of the band share the same segment size, so there\u0027s no point in keeping this information here. Also, it can be easily calculated, so I don\u0027t see a point in storing this in any variable.",
+      "range": {
+        "startLine": 111,
+        "startChar": 13,
+        "endLine": 111,
+        "endChar": 21
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39828db3_a209c789",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "Let\u0027s just call this \"segments\".",
+      "range": {
+        "startLine": 114,
+        "startChar": 14,
+        "endLine": 114,
+        "endChar": 27
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ff0fda5_3b626f89",
+        "filename": "lib/ftl/ftl_ppa.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "This is very specific to the LBA map stuff, I don\u0027t see a reason in having it here. Move it to ftl_band.c.",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 64
+      },
+      "revId": "0b90aa9de73b06b90d23b4e1916da59c52ee6787",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

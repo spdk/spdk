@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bca1fa0f_c9a116d4",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 835,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 0,
+      "message": "Why did you move this? Couldn\u0027t you just define ftl_lba_map_offset_from_ppa below?",
+      "range": {
+        "startLine": 828,
+        "startChar": 0,
+        "endLine": 835,
+        "endChar": 1
+      },
+      "revId": "b2de013b55c2b0b21c3a8b64da60e8c2ab7e065b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

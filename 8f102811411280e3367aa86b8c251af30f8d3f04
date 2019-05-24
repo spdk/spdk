@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6fbb49f7_17d587d7",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T09:30:38Z",
+      "side": 1,
+      "message": "Why does it return an int? ftl_xfer_offset_from_ppa returns size_t, you have to cast ftl_lba_map_num_lbks to int just to compare it and when you do use it you\u0027re assigning the result to an uint64_t. Either make it return size_t or uint64_t.",
+      "range": {
+        "startLine": 750,
+        "startChar": 1,
+        "endLine": 750,
+        "endChar": 5
+      },
+      "revId": "8f102811411280e3367aa86b8c251af30f8d3f04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
