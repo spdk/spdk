@@ -60,6 +60,19 @@ extern "C" {
  */
 #define SPDK_BDEV_BUF_SIZE_WITH_MD(x)	(((x) / 512) * (512 + 16))
 
+/** Event type registered while opening bdev */
+enum spdk_bdev_event_type {
+	SPDK_BDEV_EVENT_REMOVE,
+};
+
+/**
+ * \brief Block device event details.
+ */
+struct spdk_bdev_event {
+	enum spdk_bdev_event_type type; /* Type of the event */
+	/* TBD - add required stuctures for each event type */
+};
+
 /**
  * \brief SPDK block device.
  *
@@ -73,6 +86,16 @@ struct spdk_bdev;
  * \param remove_ctx Context for the removed block device.
  */
 typedef void (*spdk_bdev_remove_cb_t)(void *remove_ctx);
+
+/**
+ * Block device event callback.
+ *
+ * \param event Event details.
+ * \param bdev Block device that triggered event.
+ * \param event_ctx Context for the block device event.
+ */
+typedef void (*spdk_bdev_event_cb_t)(struct spdk_bdev_event event, struct spdk_bdev *bdev,
+				     void *event_ctx);
 
 /**
  * Block device I/O
@@ -271,6 +294,24 @@ struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
  */
 int spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 		   void *remove_ctx, struct spdk_bdev_desc **desc);
+
+/**
+ * Open a block device for I/O operations.
+ *
+ * \param bdev_name Block device name to open.
+ * \param write true is read/write access requested, false if read-only
+ * \param event_cb notification callback to be called when the bdev triggers
+ * one of predefined event like resize, hotplug, etc. This will always be
+ * called on the same thread that spdk_bdev_open() was called on. It can be
+ * NULL, in which case the upper layer won't be notified about the bdev
+ * event. In case of removal event the descriptor will have to be manually
+ * closed to make the bdev unregister proceed.
+ * \param event_ctx param for event_cb.
+ * \param desc output parameter for the descriptor when operation is successful
+ * \return 0 if operation is successful, suitable errno value otherwise
+ */
+int spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		       void *event_ctx, struct spdk_bdev_desc **desc);
 
 /**
  * Close a previously opened block device.
