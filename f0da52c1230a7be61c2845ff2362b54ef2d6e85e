@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c6dadfa_a6056540",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-24T23:29:33Z",
+      "side": 1,
+      "message": "This might be an over-optimization, but it might be good to add an assert or some kind of check to make sure the thread we are calling this from (tls_thread) is the same as the thread being passed in to us? Just to prevent people from doing dumb things like asking a random thread that hasn\u0027t been run for its tsc or even calling this function on a thread that hasn\u0027t ever been polled?",
+      "revId": "f0da52c1230a7be61c2845ff2362b54ef2d6e85e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
