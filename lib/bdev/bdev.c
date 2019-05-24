@@ -270,7 +270,9 @@ struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	struct spdk_thread		*thread;
 	spdk_bdev_remove_cb_t		remove_cb;
+	spdk_bdev_event_cb_t		event_cb;
 	void				*remove_ctx;
+	void				*event_ctx;
 	bool				remove_scheduled;
 	bool				closed;
 	bool				write;
@@ -3984,9 +3986,9 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
-int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+static int
+spdk_bdev_open_generic(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+		       void *remove_ctx, spdk_bdev_event_cb_t event_cb, void *event_ctx, struct spdk_bdev_desc **_desc)
 {
 	struct spdk_bdev_desc *desc;
 	struct spdk_thread *thread;
@@ -4011,6 +4013,8 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	desc->thread = thread;
 	desc->remove_cb = remove_cb;
 	desc->remove_ctx = remove_ctx;
+	desc->event_cb = event_cb;
+	desc->event_ctx = event_ctx;
 	desc->write = write;
 	*_desc = desc;
 
@@ -4046,6 +4050,20 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
 	return 0;
+}
+
+int
+spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+{
+	return spdk_bdev_open_generic(bdev, write, remove_cb, remove_ctx, NULL, NULL, _desc);
+}
+
+int
+spdk_bdev_open_with_events(struct spdk_bdev *bdev, bool write, spdk_bdev_event_cb_t event_cb,
+			   void *event_ctx, struct spdk_bdev_desc **_desc)
+{
+	return spdk_bdev_open_generic(bdev, write, NULL, NULL, event_cb, event_ctx, _desc);
 }
 
 void
