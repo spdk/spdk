@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14880889_66f67d05",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-24T08:41:47Z",
+      "side": 1,
+      "message": "if (all_regs || lun-\u003ereservation.holder \u003d\u003d reg) {\n  desc-\u003er_holder \u003d true;\n  desc-\u003etype \u003d lun-\u003ereservation.rtype;\n} else {\n  desc-\u003er_hodler \u003d false;\n  desc-\u003etype \u003d 0;\n}\n\nmay be simpler.",
+      "revId": "c2f907776ac692a4d248b59e52e7d15bd78ba1ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c38ca7a_4c675369",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-24T08:41:47Z",
+      "side": 1,
+      "message": "you may not have to change the line here.",
+      "range": {
+        "startLine": 704,
+        "startChar": 0,
+        "endLine": 704,
+        "endChar": 9
+      },
+      "revId": "c2f907776ac692a4d248b59e52e7d15bd78ba1ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
