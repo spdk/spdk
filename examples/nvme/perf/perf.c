@@ -627,6 +627,15 @@ static const struct ns_fn_table nvme_fn_table = {
 };
 
 static void
+build_nvme_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_ctrlr_data *cdata;
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+	snprintf(name, length, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
+}
+
+static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
@@ -709,7 +718,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		g_max_io_size_blocks = entry->io_size_blocks;
 	}
 
-	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
+	build_nvme_name(entry->name, sizeof(entry->name), ctrlr);
 
 	g_num_namespaces++;
 	entry->next = g_namespaces;
@@ -767,7 +776,6 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 {
 	struct spdk_nvme_ns *ns;
 	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
-	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	uint32_t nsid;
 
 	if (entry == NULL) {
@@ -782,7 +790,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 		exit(1);
 	}
 
-	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
+	build_nvme_name(entry->name, sizeof(entry->name), ctrlr);
 
 	entry->ctrlr = ctrlr;
 	entry->trtype = trid_entry->trid.trtype;
