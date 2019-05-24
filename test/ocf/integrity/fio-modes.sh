@@ -22,17 +22,14 @@ config="
 $nvme_cfg
 
 [Split]
-  Split Nvme0n1 8 101
+  Split Nvme0n1 8 105
 
 [OCF]
-  OCF PT_Nvme  pt Nvme0n1p0 Nvme0n1p1
   OCF WT_Nvme  wt Nvme0n1p2 Nvme0n1p3
-  OCF WB_Nvme0 wb Nvme0n1p4 Nvme0n1p5
-  OCF WB_Nvme1 wb Nvme0n1p6 Nvme0n1p7
 "
 echo "$config" > $curdir/modes.conf
 
-fio_verify --filename=PT_Nvme:WT_Nvme:WB_Nvme0:WB_Nvme1 --spdk_conf=$curdir/modes.conf
+fio_verify --filename=WT_Nvme --spdk_conf=$curdir/modes.conf
 
 trap - SIGINT SIGTERM EXIT
 cleanup
