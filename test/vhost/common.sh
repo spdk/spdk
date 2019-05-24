@@ -436,6 +436,7 @@ function vm_kill()
 	if /bin/kill $vm_pid; then
 		notice "process $vm_pid killed"
 		rm $vm_dir/qemu.pid
+		rm -rf $vm_dir
 	elif vm_is_running $1; then
 		error "Process $vm_pid NOT killed"
 		return 1
