@@ -401,8 +401,21 @@ function json_config_clear() {
 	# Check if config is clean.
 	# Global params can't be cleared so need to filter them out.
 	local config_filter="$rootdir/test/json_config/config_filter.py"
-	$rootdir/scripts/rpc.py -s "${app_socket[$1]}" save_config | \
-		$config_filter -method delete_global_parameters | $config_filter -method check_empty
+
+	# RPC's used to cleanup configuration (e.g. to delete split and nvme bdevs)
+	# complete immediately and they don't wait for the unregister callback.
+	# It causes that configuration may not be fully cleaned at this moment and
+	# we should to wait a while. (See github issue #789)
+	count=100
+	while [ $count -gt 0 ] ; do
+		$rootdir/scripts/rpc.py -s "${app_socket[$1]}" save_config | $config_filter -method delete_global_parameters | $config_filter -method check_empty && break
+		count=$(( $count -1 ))
+		sleep 0.1
+	done
+
+	if [ $count -eq 0 ] ; then
+		return 1
+	fi
 }
 
 on_error_exit() {
