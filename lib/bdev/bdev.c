@@ -269,8 +269,7 @@ struct spdk_bdev_channel {
 struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	struct spdk_thread		*thread;
-	spdk_bdev_remove_cb_t		remove_cb;
-	void				*remove_ctx;
+	spdk_bdev_callbacks		callback;
 	bool				remove_scheduled;
 	bool				closed;
 	bool				write;
@@ -4125,7 +4124,7 @@ _remove_notify(void *arg)
 	if (desc->closed) {
 		free(desc);
 	} else {
-		desc->remove_cb(desc->remove_ctx);
+		desc->callback.remove.cb(desc->callback.remove.ctx);
 	}
 }
 
@@ -4141,7 +4140,7 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
 		rc = -EBUSY;
-		if (desc->remove_cb) {
+		if (desc->callback.remove_cb && desc->callback.remove.cb) {
 			/*
 			 * Defer invocation of the remove_cb to a separate message that will
 			 *  run later on its thread.  This ensures this context unwinds and
@@ -4205,9 +4204,9 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
-int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+static int
+_spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_callbacks callbacks,
+		struct spdk_bdev_desc **_desc)
 {
 	struct spdk_bdev_desc *desc;
 	struct spdk_thread *thread;
@@ -4230,8 +4229,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 
 	desc->bdev = bdev;
 	desc->thread = thread;
-	desc->remove_cb = remove_cb;
-	desc->remove_ctx = remove_ctx;
+	desc->callback = callbacks;
 	desc->write = write;
 	*_desc = desc;
 
@@ -4267,6 +4265,49 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
 	return 0;
+}
+
+int
+spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+{
+	spdk_bdev_callbacks callback;
+
+	callback.remove_cb = true;
+	callback.remove.cb = remove_cb;
+	callback.remove.ctx = remove_ctx;
+	return _spdk_bdev_open(bdev, write, callback, _desc);
+}
+
+int
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		   void *event_ctx, struct spdk_bdev_desc **_desc)
+{
+	struct spdk_bdev *bdev;
+	spdk_bdev_callbacks callback;
+	int rc;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+
+	if (bdev == NULL) {
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		return -EBUSY;
+	}
+
+	callback.remove_cb = false;
+	callback.event.cb = event_cb;
+	callback.event.ctx = event_ctx;
+
+	rc = _spdk_bdev_open(bdev, write, callback, _desc);
+
+	pthread_mutex_unlock(&bdev->internal.mutex);
+
+	return rc;
 }
 
 void
