@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4355a350_1cb57268",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T13:07:05Z",
+      "side": 1,
+      "message": "Let\u0027s also note that the PPA is taken from the IO instead.",
+      "range": {
+        "startLine": 76,
+        "startChar": 3,
+        "endLine": 78,
+        "endChar": 20
+      },
+      "revId": "8492c0a0534b9db9664484f61f17827d78513629",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e24608c1_97745898",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T13:07:05Z",
+      "side": 1,
+      "message": "Let\u0027s add a newline between the declarations.",
+      "revId": "8492c0a0534b9db9664484f61f17827d78513629",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f1a7284_8e83b441",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T13:07:05Z",
+      "side": 1,
+      "message": "Move it to a separate line.",
+      "range": {
+        "startLine": 459,
+        "startChar": 0,
+        "endLine": 459,
+        "endChar": 3
+      },
+      "revId": "8492c0a0534b9db9664484f61f17827d78513629",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
