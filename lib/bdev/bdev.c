@@ -273,8 +273,14 @@ struct spdk_bdev_channel {
 struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	struct spdk_thread		*thread;
-	spdk_bdev_remove_cb_t		remove_cb;
-	void				*remove_ctx;
+	struct spdk_bdev_callbacks {
+		bool open_with_ext;
+		union {
+			spdk_bdev_remove_cb_t remove_fn;
+			spdk_bdev_event_cb_t event_fn;
+		};
+		void *ctx;
+	}				callback;
 	bool				remove_scheduled;
 	bool				closed;
 	bool				write;
@@ -4184,7 +4190,11 @@ _remove_notify(void *arg)
 	if (desc->closed) {
 		free(desc);
 	} else {
-		desc->remove_cb(desc->remove_ctx);
+		if (desc->callback.open_with_ext) {
+			desc->callback.event_fn(SPDK_BDEV_EVENT_REMOVE, desc->bdev, desc->callback.ctx);
+		} else {
+			desc->callback.remove_fn(desc->callback.ctx);
+		}
 	}
 }
 
@@ -4200,18 +4210,16 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
 		rc = -EBUSY;
-		if (desc->remove_cb) {
-			/*
-			 * Defer invocation of the remove_cb to a separate message that will
-			 *  run later on its thread.  This ensures this context unwinds and
-			 *  we don't recursively unregister this bdev again if the remove_cb
-			 *  immediately closes its descriptor.
-			 */
-			if (!desc->remove_scheduled) {
-				/* Avoid scheduling removal of the same descriptor multiple times. */
-				desc->remove_scheduled = true;
-				spdk_thread_send_msg(desc->thread, _remove_notify, desc);
-			}
+		/*
+		 * Defer invocation of the event_cb to a separate message that will
+		 *  run later on its thread.  This ensures this context unwinds and
+		 *  we don't recursively unregister this bdev again if the event_cb
+		 *  immediately closes its descriptor.
+		 */
+		if (!desc->remove_scheduled) {
+			/* Avoid scheduling removal of the same descriptor multiple times. */
+			desc->remove_scheduled = true;
+			spdk_thread_send_msg(desc->thread, _remove_notify, desc);
 		}
 	}
 
@@ -4343,8 +4351,9 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		remove_cb = _spdk_bdev_dummy_event_cb;
 	}
 
-	desc->remove_cb = remove_cb;
-	desc->remove_ctx = remove_ctx;
+	desc->callback.open_with_ext = false;
+	desc->callback.remove_fn = remove_cb;
+	desc->callback.ctx = remove_ctx;
 
 	*_desc = desc;
 
@@ -4353,6 +4362,53 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		free(desc);
 		*_desc = NULL;
 	}
+
+	return rc;
+}
+
+int
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		   void *event_ctx, struct spdk_bdev_desc **_desc)
+{
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (event_cb == NULL) {
+		SPDK_ERRLOG("Missing event callback function\n");
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+
+	if (bdev == NULL) {
+		SPDK_ERRLOG("Failed to find bdev with name: %s\n", bdev_name);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		return -EINVAL;
+	}
+
+	desc = calloc(1, sizeof(*desc));
+	if (desc == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for bdev descriptor\n");
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		return -ENOMEM;
+	}
+
+	desc->callback.open_with_ext = true;
+	desc->callback.event_fn = event_cb;
+	desc->callback.ctx = event_ctx;
+
+	*_desc = desc;
+
+	rc = _spdk_bdev_open(bdev, write, desc);
+	if (rc != 0) {
+		free(desc);
+		*_desc = NULL;
+	}
+
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
 	return rc;
 }

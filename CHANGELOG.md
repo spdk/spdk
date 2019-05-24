@@ -52,6 +52,10 @@ would expect the drive to see the slowest 1% of I/O report. For underlying drive
 significant latency, the latency values provided to the drive will be additive. This should be
 taken into account if trying to achieve an artificial latency on top of an nvme drive or aio device.
 
+A new spdk_bdev_open_ext function has been added and spdk_bdev_open function has been depreciated.
+The new open function introduces option to provide callback function that will be called by
+asynchronous event such as bdev removal.
+
 ### nvme
 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
