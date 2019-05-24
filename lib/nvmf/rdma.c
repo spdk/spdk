@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1487,12 +1487,13 @@ nvmf_request_alloc_wrs(struct spdk_nvmf_rdma_transport *rtransport,
 	for (i = 0; i < num_sgl_descriptors; i++) {
 		if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 			current_data_wr->wr.opcode = IBV_WR_RDMA_WRITE;
+			current_data_wr->wr.send_flags = 0;
 		} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 			current_data_wr->wr.opcode = IBV_WR_RDMA_READ;
+			current_data_wr->wr.send_flags = IBV_SEND_SIGNALED;
 		} else {
 			assert(false);
 		}
-		work_requests[i]->wr.send_flags = IBV_SEND_SIGNALED;
 		work_requests[i]->wr.sg_list = work_requests[i]->sgl;
 		work_requests[i]->wr.wr_id = rdma_req->data.wr.wr_id;
 		current_data_wr->wr.next = &work_requests[i]->wr;
@@ -1502,9 +1503,11 @@ nvmf_request_alloc_wrs(struct spdk_nvmf_rdma_transport *rtransport,
 	if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		current_data_wr->wr.opcode = IBV_WR_RDMA_WRITE;
 		current_data_wr->wr.next = &rdma_req->rsp.wr;
+		current_data_wr->wr.send_flags = 0;
 	} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 		current_data_wr->wr.opcode = IBV_WR_RDMA_READ;
 		current_data_wr->wr.next = NULL;
+		current_data_wr->wr.send_flags = IBV_SEND_SIGNALED;
 	}
 	return 0;
 }
@@ -1755,9 +1758,11 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 			rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
 			rdma_req->data.wr.next = &rdma_req->rsp.wr;
+			rdma_req->data.wr.send_flags &= ~IBV_SEND_SIGNALED;
 		} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 			rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
 			rdma_req->data.wr.next = NULL;
+			rdma_req->data.wr.send_flags |= IBV_SEND_SIGNALED;
 		}
 
 		/* set the number of outstanding data WRs for this request. */
@@ -3427,10 +3432,11 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
-			rqpair->current_send_depth--;
+			/* +1 for the response wr */
+			rqpair->current_send_depth -= rdma_req->num_outstanding_data_wr + 1;
+			rdma_req->num_outstanding_data_wr = 0;
 
 			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-			assert(rdma_req->num_outstanding_data_wr == 0);
 			break;
 		case RDMA_WR_TYPE_RECV:
 			/* rdma_recv->qpair will be invalid if using an SRQ.  In that case we have to get the qpair from the wc. */
@@ -3462,15 +3468,12 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair->current_send_depth--;
 			rdma_req->num_outstanding_data_wr--;
 			if (!wc[i].status) {
-				if (wc[i].opcode == IBV_WC_RDMA_READ) {
-					rqpair->current_read_depth--;
-					/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
-					if (rdma_req->num_outstanding_data_wr == 0) {
-						rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
-						spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-					}
-				} else {
-					assert(wc[i].opcode == IBV_WC_RDMA_WRITE);
+				assert(wc[i].opcode == IBV_WC_RDMA_READ);
+				rqpair->current_read_depth--;
+				/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
+				if (rdma_req->num_outstanding_data_wr == 0) {
+					rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
+					spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 				}
 			} else {
 				/* If the data transfer fails still force the queue into the error state,
