@@ -621,33 +621,33 @@ nvme_tcp_qpair_cmd_send_complete(void *cb_arg)
 
 static void
 nvme_tcp_pdu_set_data_buf(struct nvme_tcp_pdu *pdu,
-			  struct nvme_tcp_req *tcp_req,
-			  uint32_t data_len)
+			  struct iovec *iov, int iovcnt,
+			  uint32_t data_offset, uint32_t data_len)
 {
 	uint32_t i, remain_len, len;
 	struct _nvme_tcp_sgl *pdu_sgl;
 
-	if (tcp_req->iovcnt == 1) {
-		nvme_tcp_pdu_set_data(pdu, (void *)((uint64_t)tcp_req->iov[0].iov_base + tcp_req->datao), data_len);
+	if (iovcnt == 1) {
+		nvme_tcp_pdu_set_data(pdu, (void *)((uint64_t)iov[0].iov_base + data_offset), data_len);
 	} else {
 		i = 0;
 		pdu_sgl = &pdu->sgl;
-		assert(tcp_req->iovcnt <= NVME_TCP_MAX_SGL_DESCRIPTORS);
-		_nvme_tcp_sgl_init(pdu_sgl, pdu->data_iov, tcp_req->iovcnt, tcp_req->datao);
+		assert(iovcnt <= NVME_TCP_MAX_SGL_DESCRIPTORS);
+		_nvme_tcp_sgl_init(pdu_sgl, pdu->data_iov, iovcnt, data_offset);
 		remain_len = data_len;
 
 		while (remain_len > 0) {
 			assert(i < NVME_TCP_MAX_SGL_DESCRIPTORS);
-			len = spdk_min(remain_len, tcp_req->iov[i].iov_len);
+			len = spdk_min(remain_len, iov[i].iov_len);
 			remain_len -= len;
-			if (!_nvme_tcp_sgl_append(pdu_sgl, tcp_req->iov[i].iov_base, len)) {
+			if (!_nvme_tcp_sgl_append(pdu_sgl, iov[i].iov_base, len)) {
 				break;
 			}
 			i++;
 		}
 
 		assert(remain_len == 0);
-		pdu->data_iovcnt = tcp_req->iovcnt - pdu_sgl->iovcnt;
+		pdu->data_iovcnt = iovcnt - pdu_sgl->iovcnt;
 		pdu->data_len = data_len;
 	}
 }
@@ -702,7 +702,8 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 	}
 
 	tcp_req->datao = 0;
-	nvme_tcp_pdu_set_data_buf(pdu, tcp_req, tcp_req->req->payload_size);
+	nvme_tcp_pdu_set_data_buf(pdu, tcp_req->iov, tcp_req->iovcnt,
+				  0, tcp_req->req->payload_size);
 end:
 	capsule_cmd->common.plen = plen;
 	return nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_qpair_cmd_send_complete, NULL);
@@ -1235,7 +1236,8 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 
 	}
 
-	nvme_tcp_pdu_set_data_buf(pdu, tcp_req, c2h_data->datal);
+	nvme_tcp_pdu_set_data_buf(pdu, tcp_req->iov, tcp_req->iovcnt,
+				  c2h_data->datao, c2h_data->datal);
 	pdu->ctx = tcp_req;
 
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
@@ -1281,7 +1283,8 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	h2c_data->datao = tcp_req->datao;
 
 	h2c_data->datal = spdk_min(tcp_req->r2tl_remain, tqpair->maxh2cdata);
-	nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req, h2c_data->datal);
+	nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req->iov, tcp_req->iovcnt,
+				  h2c_data->datao, h2c_data->datal);
 	tcp_req->r2tl_remain -= h2c_data->datal;
 
 	if (tqpair->host_hdgst_enable) {
