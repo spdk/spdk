@@ -16,6 +16,24 @@
       "revId": "f0da52c1230a7be61c2845ff2362b54ef2d6e85e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c091a838_cc4d3a05",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-24T23:51:08Z",
+      "side": 1,
+      "message": "I think instead of adding the assert, I\u0027m just going to change this function to spdk_get_thread_ticks(void) - that avoids the problem altogether",
+      "parentUuid": "1c6dadfa_a6056540",
+      "revId": "f0da52c1230a7be61c2845ff2362b54ef2d6e85e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
