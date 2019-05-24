@@ -20,7 +20,7 @@ function check_qos_works_well() {
 	start_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 	start_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
 
-	$fio_py iscsi 1024 128 randread 5 1
+	$fio_py -p iscsi -i 1024 -d 128 -t randread -r 5
 
 	iostats=$($rpc_py get_bdevs_iostat -b $3)
 	end_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")

@@ -54,7 +54,7 @@ sleep 1
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 sleep 1
-$fio_py iscsi 512 1 read 60 1 &
+$fio_py -p iscsi -i 512 -d 1 -t read -r 60 &
 fiopid=$!
 echo "FIO pid: $fiopid"
 
