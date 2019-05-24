@@ -1801,21 +1801,24 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
 
     def call_rpc_func(args):
-        try:
-            args.func(args)
-            check_called_name(args.called_rpc_name)
-        except JSONRPCException as ex:
-            print("Exception:")
-            print(ex.message)
-            exit(1)
+        args.func(args)
+        check_called_name(args.called_rpc_name)
 
     def execute_script(parser, client, fd):
+        executed_rpc = ""
         for rpc_call in map(str.rstrip, fd):
             if not rpc_call.strip():
                 continue
+            executed_rpc = "\n".join([executed_rpc, rpc_call])
             args = parser.parse_args(shlex.split(rpc_call))
             args.client = client
-            call_rpc_func(args)
+            try:
+                call_rpc_func(args)
+            except JSONRPCException as ex:
+                print("Exception:")
+                print(executed_rpc.strip() + " <<<")
+                print(ex.message)
+                exit(1)
 
     args = parser.parse_args()
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
