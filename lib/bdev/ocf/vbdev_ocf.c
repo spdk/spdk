@@ -1526,7 +1526,7 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 	const char *bdev_name = spdk_bdev_get_name(bdev);
 	struct vbdev_ocf *vbdev;
 	struct metadata_probe_ctx *ctx;
-	bool created_from_config = false;
+	bool created_from_config = true;
 	int rc;
 
 	examine_start(bdev);
