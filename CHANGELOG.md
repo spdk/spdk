@@ -2,6 +2,12 @@
 
 ## v19.10: (Upcoming Release)
 
+### bdev
+
+A new spdk_bdev_open_ext function has been added and spdk_bdev_open function has been deprecated.
+The new open function introduces option to provide callback function that will be called by
+asynchronous event such as bdev removal.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable
