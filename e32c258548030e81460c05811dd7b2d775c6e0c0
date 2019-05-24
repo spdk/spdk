@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e40aa4b9_a2d94b36",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-24T23:15:47Z",
+      "side": 1,
+      "message": "this is ok, but it still requires more work for the reader; it would really be nice to make this easy and just show which commands were executed and point to the one that failed; can we do that by appending to a string in the execute_script loop in rpc.py?  then print it when we get an exception\n\nthis will require a preparatory patch to move where we catch the exception - currently we catch it in call_rpc_func and then immediately exit - we\u0027ll want to catch the exception instead where call_rpc_func is called",
+      "revId": "e32c258548030e81460c05811dd7b2d775c6e0c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
