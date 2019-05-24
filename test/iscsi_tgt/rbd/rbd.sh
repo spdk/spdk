@@ -54,8 +54,8 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 trap "iscsicleanup; killprocess $pid; rbd_cleanup; exit 1" SIGINT SIGTERM EXIT
 
-$fio_py iscsi 4096 1 randrw 1 1 verify
-$fio_py iscsi 131072 32 randrw 1 1 verify
+$fio_py -p iscsi -i 4096 -d 1 -t randrw -r 1 -v
+$fio_py -p iscsi -i 131072 -d 32 -t randrw -r 1 -v
 
 rm -f ./local-job0-0-verify.state
 

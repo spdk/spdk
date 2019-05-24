@@ -77,7 +77,7 @@ echo "Trace record pid: $record_pid"
 trap "iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
 
 echo "Running FIO"
-$fio_py iscsi 131072 32 randrw 1 1
+$fio_py -p iscsi -i 131072 -d 32 -t randrw -r 1
 
 iscsicleanup
 
