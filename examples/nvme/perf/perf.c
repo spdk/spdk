@@ -1163,6 +1163,7 @@ print_performance(void)
 	int ns_count;
 	struct worker_thread	*worker;
 	struct ns_worker_ctx	*ns_ctx;
+	uint32_t max_strlen;
 
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
@@ -1172,10 +1173,21 @@ print_performance(void)
 	max_latency_so_far = 0;
 	ns_count = 0;
 
+	max_strlen = 0;
+	worker = g_workers;
+	while (worker) {
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx) {
+			max_strlen = spdk_max(strlen(ns_ctx->entry->name), max_strlen);
+			ns_ctx = ns_ctx->next;
+		}
+		worker = worker->next;
+	}
+
 	printf("========================================================\n");
-	printf("%103s\n", "Latency(us)");
-	printf("%-55s: %10s %10s %10s %10s %10s\n",
-	       "Device Information", "IOPS", "MiB/s", "Average", "min", "max");
+	printf("%*s\n", max_strlen + 60, "Latency(us)");
+	printf("%-*s: %10s %10s %10s %10s %10s\n",
+	       max_strlen + 12, "Device Information", "IOPS", "MiB/s", "Average", "min", "max");
 
 	worker = g_workers;
 	while (worker) {
@@ -1195,8 +1207,8 @@ print_performance(void)
 					max_latency_so_far = max_latency;
 				}
 
-				printf("%-43.43s from core %u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
-				       ns_ctx->entry->name, worker->lcore,
+				printf("%-*.*s from core %u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
+				       max_strlen, max_strlen, ns_ctx->entry->name, worker->lcore,
 				       io_per_second, mb_per_second,
 				       average_latency, min_latency, max_latency);
 				total_io_per_second += io_per_second;
@@ -1213,8 +1225,8 @@ print_performance(void)
 	if (ns_count != 0 && total_io_completed) {
 		sum_ave_latency = ((double)total_io_tsc / total_io_completed) * 1000 * 1000 / g_tsc_rate;
 		printf("========================================================\n");
-		printf("%-55s: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
-		       "Total", total_io_per_second, total_mb_per_second,
+		printf("%-*s: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
+		       max_strlen + 12, "Total", total_io_per_second, total_mb_per_second,
 		       sum_ave_latency, min_latency_so_far, max_latency_so_far);
 		printf("\n");
 	}
