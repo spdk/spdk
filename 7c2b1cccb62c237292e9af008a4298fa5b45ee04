@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81a87711_95e3373a",
+        "filename": "lib/vhost/rte_vhost/rte_vhost.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-24T23:40:02Z",
+      "side": 1,
+      "message": "I don\u0027t see this change in DPDK master yet.  I\u0027m sure there\u0027s a good reason for adding it in the soon-to-be-deprecated internal SPDK copy, but I\u0027m not sure what it is.  I was thinking we wouldn\u0027t be adding anything to the SPDK internal copy.",
+      "revId": "7c2b1cccb62c237292e9af008a4298fa5b45ee04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
