@@ -61,6 +61,13 @@ extern "C" {
 #define SPDK_BDEV_BUF_SIZE_WITH_MD(x)	(((x) / 512) * (512 + 16))
 
 /**
+ * \brief SPDK block device.
+ *
+ * This is a virtual representation of a block device that is exported by the backend.
+ */
+struct spdk_bdev;
+
+/**
  * Block device remove callback.
  *
  * \param remove_ctx Context for the removed block device.
@@ -85,13 +92,6 @@ enum spdk_bdev_status {
 	SPDK_BDEV_STATUS_READY,
 	SPDK_BDEV_STATUS_REMOVING,
 };
-
-/**
- * \brief SPDK block device.
- *
- * This is a virtual representation of a block device that is exported by the backend.
- */
-struct spdk_bdev;
 
 /**
  * \brief Handle to an opened SPDK block device.
