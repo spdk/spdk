@@ -383,9 +383,8 @@ static int
 nvme_tcp_qpair_process_send_queue(struct nvme_tcp_qpair *tqpair)
 {
 	const int array_size = 32;
-	struct iovec	iovec_array[array_size];
-	struct iovec	*iov = iovec_array;
-	int iovec_cnt = 0;
+	struct iovec iovs[array_size];
+	int iovcnt = 0;
 	int bytes = 0;
 	uint32_t mapped_length;
 	struct nvme_tcp_pdu *pdu;
@@ -402,14 +401,14 @@ nvme_tcp_qpair_process_send_queue(struct nvme_tcp_qpair *tqpair)
 	 * Build up a list of iovecs for the first few PDUs in the
 	 *  tqpair 's send_queue.
 	 */
-	while (pdu != NULL && ((array_size - iovec_cnt) >= 3)) {
-		iovec_cnt += nvme_tcp_build_iovecs(&iovec_array[iovec_cnt], array_size - iovec_cnt,
-						   pdu, tqpair->host_hdgst_enable,
-						   tqpair->host_ddgst_enable, &mapped_length);
+	while (pdu != NULL && ((array_size - iovcnt) >= 3)) {
+		iovcnt += nvme_tcp_build_iovs(&iovs[iovcnt], array_size - iovcnt,
+					      pdu, tqpair->host_hdgst_enable,
+					      tqpair->host_ddgst_enable, &mapped_length);
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
 
-	bytes = spdk_sock_writev(tqpair->sock, iov, iovec_cnt);
+	bytes = spdk_sock_writev(tqpair->sock, iovs, iovcnt);
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "bytes=%d are out\n", bytes);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
