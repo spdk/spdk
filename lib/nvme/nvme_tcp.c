@@ -613,29 +613,29 @@ nvme_tcp_pdu_set_data_buf(struct nvme_tcp_pdu *pdu,
 			  uint32_t data_len)
 {
 	uint32_t i, remain_len, len;
-	struct _iov_ctx *ctx;
+	struct _nvme_tcp_sgl *pdu_sgl;
 
 	if (tcp_req->iovcnt == 1) {
 		nvme_tcp_pdu_set_data(pdu, (void *)((uint64_t)tcp_req->iov[0].iov_base + tcp_req->datao), data_len);
 	} else {
 		i = 0;
-		ctx = &pdu->iov_ctx;
+		pdu_sgl = &pdu->sgl;
 		assert(tcp_req->iovcnt <= NVME_TCP_MAX_SGL_DESCRIPTORS);
-		_iov_ctx_init(ctx, pdu->data_iov, tcp_req->iovcnt, tcp_req->datao);
+		_nvme_tcp_sgl_init(pdu_sgl, pdu->data_iov, tcp_req->iovcnt, tcp_req->datao);
 		remain_len = data_len;
 
 		while (remain_len > 0) {
 			assert(i < NVME_TCP_MAX_SGL_DESCRIPTORS);
 			len = spdk_min(remain_len, tcp_req->iov[i].iov_len);
 			remain_len -= len;
-			if (!_iov_ctx_set_iov(ctx, tcp_req->iov[i].iov_base, len)) {
+			if (!_nvme_tcp_sgl_append(pdu_sgl, tcp_req->iov[i].iov_base, len)) {
 				break;
 			}
 			i++;
 		}
 
 		assert(remain_len == 0);
-		pdu->data_iovcnt = tcp_req->iovcnt - ctx->iovcnt;
+		pdu->data_iovcnt = tcp_req->iovcnt - pdu_sgl->iovcnt;
 		pdu->data_len = data_len;
 	}
 }
