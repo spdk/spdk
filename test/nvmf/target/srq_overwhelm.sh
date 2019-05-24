@@ -39,7 +39,7 @@ done
 # working even at very high queue depths because the rdma qpair doesn't fail.
 # It is normal to see the initiator timeout and reconnect waiting for completions from an overwhelmmed target,
 # but the connection should come up and FIO should complete without errors.
-$rootdir/scripts/fio.py nvmf 1048576 128 read 10 13
+$rootdir/scripts/fio.py -p nvmf -i 1048576 -d 128 -t read -r 10 -n 13
 
 sync
 
