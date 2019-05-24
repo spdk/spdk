@@ -14,8 +14,8 @@ function node_login_fio_logout() {
 		iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT -o update -n node.conn[0].iscsi.$arg
 	done
 	iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
-	$fio_py iscsi 512 1 write 2 1
-	$fio_py iscsi 512 1 read 2 1
+	$fio_py -p iscsi -i 512 -d 1 -t write -r 2
+	$fio_py -p iscsi -i 512 -d 1 -t read -r 2
 	iscsiadm -m node --logout -p $TARGET_IP:$ISCSI_PORT
 	sleep 1
 }

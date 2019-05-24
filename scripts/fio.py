@@ -6,6 +6,7 @@ import sys
 import signal
 import os.path
 import time
+import argparse
 
 fio_template = """
 [global]
@@ -44,31 +45,12 @@ def interrupt_handler(signum, frame):
     sys.exit(0)
 
 
-def main():
-
+def main(io_size, protocol, queue_depth, test_type, runtime, num_jobs, verify):
     global fio
-    if (len(sys.argv) < 7):
-        print("usage:")
-        print("  " + sys.argv[0] + " <nvmf/iscsi> <io_size> <queue_depth> <test_type> <runtime> <num_jobs>")
-        print("advanced usage:")
-        print("If you want to run fio with verify, please add verify string after runtime.")
-        print("Currently fio.py only support write rw randwrite randrw with verify enabled.")
-        sys.exit(1)
 
-    app = str(sys.argv[1])
-    io_size = int(sys.argv[2])
-    queue_depth = int(sys.argv[3])
-    test_type = sys.argv[4]
-    runtime = sys.argv[5]
-    num_jobs = sys.argv[6]
-
-    verify = False
-    if len(sys.argv) > 7:
-        verify = True
-
-    if app == "nvmf":
+    if protocol == "nvmf":
         devices = get_nvmf_target_devices()
-    elif app == "iscsi":
+    elif protocol == "iscsi":
         devices = get_iscsi_target_devices()
 
     configure_devices(devices)
@@ -166,4 +148,17 @@ def configure_devices(devices):
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="fio.py")
+    parser.add_argument("-i", "--io-size", type=int, help="The desired I/O size in bytes.", required=True)
+    parser.add_argument("-p", "--protocol", type=str, help="The protocol we are testing against. One of iscsi or nvmf.", required=True)
+    parser.add_argument("-d", "--queue-depth", type=int, help="The desired queue depth for each job.", required=True)
+    parser.add_argument("-t", "--test-type", type=str, help="The fio I/O pattern to run. e.g. read, randwrite, randrw.", required=True)
+    parser.add_argument("-r", "--runtime", type=int, help="Time in seconds to run the workload.", required=True)
+    parser.add_argument("-n", "--num-jobs", type=int, help="The number of fio jobs to run in your workload. default 1.", default=1)
+    parser.add_argument("-v", "--verify", action="store_true", help="Supply this argument to verify the I/O.", default=False)
+    args = parser.parse_args()
+
+    if args.protocol.lower() != "nvmf" and args.protocol.lower() != "iscsi":
+        parser.error("Protocol must be one of the following: nvmf, iscsi.")
+
+    main(args.io_size, args.protocol, args.queue_depth, args.test_type, args.runtime, args.num_jobs, args.verify)
