@@ -4123,13 +4123,19 @@ static void
 _remove_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
+	struct spdk_bdev_event event = {};
 
 	desc->remove_scheduled = false;
 
 	if (desc->closed) {
 		free(desc);
 	} else {
-		desc->callback.remove.cb(desc->callback.remove.ctx);
+		if (desc->callback.remove_cb) {
+			desc->callback.remove.cb(desc->callback.remove.ctx);
+		} else {
+			event.type = SPDK_BDEV_EVENT_REMOVE;
+			desc->callback.event.cb(event, NULL, desc->callback.event.ctx);
+		}
 	}
 }
 
@@ -4145,7 +4151,7 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
 		rc = -EBUSY;
-		if (desc->callback.remove_cb && desc->callback.remove.cb) {
+		if (desc->callback.remove.cb || desc->callback.event.cb) {
 			/*
 			 * Defer invocation of the remove_cb to a separate message that will
 			 *  run later on its thread.  This ensures this context unwinds and
