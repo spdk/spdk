@@ -810,24 +810,18 @@ __blockdev_reset(void *arg1, void *arg2)
 }
 
 static void
-blockdev_reset(struct io_target *target)
+blockdev_test_reset(void)
 {
 	struct bdevio_request req;
+	struct io_target *target;
 
+	target = g_current_io_target;
 	req.target = target;
 
 	g_completion_success = false;
 
 	execute_spdk_function(__blockdev_reset, &req, NULL);
-}
 
-static void
-blockdev_test_reset(void)
-{
-	struct io_target	*target;
-
-	target = g_current_io_target;
-	blockdev_reset(target);
 	/* Workaround: NVMe-oF target doesn't support reset yet - so for now
 	 *  don't fail the test if it's an NVMe bdev.
 	 */
@@ -871,10 +865,13 @@ __blockdev_nvme_passthru(void *arg1, void *arg2)
 }
 
 static void
-blockdev_nvme_passthru_rw(struct io_target *target)
+blockdev_test_nvme_passthru_rw(void)
 {
 	struct bdevio_passthrough_request pt_req;
 	void *write_buf, *read_buf;
+	struct io_target *target;
+
+	target = g_current_io_target;
 
 	if (!spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_NVME_IO)) {
 		return;
@@ -914,18 +911,12 @@ blockdev_nvme_passthru_rw(struct io_target *target)
 }
 
 static void
-blockdev_test_nvme_passthru_rw(void)
-{
-	struct io_target	*target;
-
-	target = g_current_io_target;
-	blockdev_nvme_passthru_rw(target);
-}
-
-static void
-blockdev_nvme_passthru_vendor_specific(struct io_target *target)
+blockdev_test_nvme_passthru_vendor_specific(void)
 {
 	struct bdevio_passthrough_request pt_req;
+	struct io_target *target;
+
+	target = g_current_io_target;
 
 	if (!spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_NVME_IO)) {
 		return;
@@ -941,15 +932,6 @@ blockdev_nvme_passthru_vendor_specific(struct io_target *target)
 	execute_spdk_function(__blockdev_nvme_passthru, &pt_req, NULL);
 	CU_ASSERT(pt_req.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(pt_req.sc == SPDK_NVME_SC_INVALID_OPCODE);
-}
-
-static void
-blockdev_test_nvme_passthru_vendor_specific(void)
-{
-	struct io_target	*target;
-
-	target = g_current_io_target;
-	blockdev_nvme_passthru_vendor_specific(target);
 }
 
 static void
