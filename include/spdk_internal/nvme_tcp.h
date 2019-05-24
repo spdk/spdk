@@ -248,19 +248,19 @@ _nvme_tcp_sgl_append(struct _nvme_tcp_sgl *s, uint8_t *data, uint32_t data_len)
 }
 
 static int
-nvme_tcp_build_iovecs(struct iovec *iovec, int num_iovs, struct nvme_tcp_pdu *pdu,
-		      bool hdgst_enable, bool ddgst_enable, uint32_t *_mapped_length)
+nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
+		    bool hdgst_enable, bool ddgst_enable, uint32_t *_mapped_length)
 {
 	int enable_digest;
 	uint32_t hlen, plen, i;
 	struct _nvme_tcp_sgl *sgl;
 
-	if (num_iovs == 0) {
+	if (iovcnt == 0) {
 		return 0;
 	}
 
 	sgl = &pdu->sgl;
-	_nvme_tcp_sgl_init(sgl, iovec, num_iovs, pdu->writev_offset);
+	_nvme_tcp_sgl_init(sgl, iov, iovcnt, pdu->writev_offset);
 	hlen = pdu->hdr.common.hlen;
 	enable_digest = 1;
 	if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ ||
@@ -317,22 +317,22 @@ end:
 		assert(plen == pdu->hdr.common.plen);
 	}
 
-	return num_iovs - sgl->iovcnt;
+	return iovcnt - sgl->iovcnt;
 }
 
 static int
-nvme_tcp_build_payload_iovecs(struct iovec *iovec, int num_iovs, struct nvme_tcp_pdu *pdu,
-			      bool ddgst_enable, uint32_t *_mapped_length)
+nvme_tcp_build_payload_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
+			    bool ddgst_enable, uint32_t *_mapped_length)
 {
 	struct _nvme_tcp_sgl *sgl;
 	uint32_t i;
 
-	if (num_iovs == 0) {
+	if (iovcnt == 0) {
 		return 0;
 	}
 
 	sgl = &pdu->sgl;
-	_nvme_tcp_sgl_init(sgl, iovec, num_iovs, pdu->readv_offset);
+	_nvme_tcp_sgl_init(sgl, iov, iovcnt, pdu->readv_offset);
 
 	for (i = 0; i < pdu->data_iovcnt; i++) {
 		if (!_nvme_tcp_sgl_append(sgl, pdu->data_iov[i].iov_base, pdu->data_iov[i].iov_len)) {
@@ -349,7 +349,7 @@ end:
 	if (_mapped_length != NULL) {
 		*_mapped_length = sgl->total_size;
 	}
-	return num_iovs - sgl->iovcnt;
+	return iovcnt - sgl->iovcnt;
 }
 
 static int
@@ -426,15 +426,14 @@ nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 static int
 nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
 {
-	struct iovec iovec_array[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
-	struct iovec *iov = iovec_array;
-	int iovec_cnt;
+	struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
+	int iovcnt;
 
-	iovec_cnt = nvme_tcp_build_payload_iovecs(iovec_array, NVME_TCP_MAX_SGL_DESCRIPTORS + 1, pdu,
-			pdu->ddgst_enable, NULL);
-	assert(iovec_cnt >= 0);
+	iovcnt = nvme_tcp_build_payload_iovs(iov, NVME_TCP_MAX_SGL_DESCRIPTORS + 1, pdu,
+					     pdu->ddgst_enable, NULL);
+	assert(iovcnt >= 0);
 
-	return nvme_tcp_readv_data(sock, iov, iovec_cnt);
+	return nvme_tcp_readv_data(sock, iov, iovcnt);
 }
 
 static void
