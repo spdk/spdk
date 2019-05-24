@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53570a58_725cf32c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-24T09:16:22Z",
+      "side": 1,
+      "message": "Please change description here as well.",
+      "range": {
+        "startLine": 782,
+        "startChar": 0,
+        "endLine": 782,
+        "endChar": 69
+      },
+      "revId": "35765c4eebcf6898128a5d63e57e9f2521576b63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
