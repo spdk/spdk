@@ -2851,3 +2851,9 @@ spdk_nvme_ctrlr_get_flags(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return ctrlr->flags;
 }
+
+const struct spdk_nvme_transport_id *
+spdk_nvme_ctrlr_get_transport_id(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return &ctrlr->trid;
+}
