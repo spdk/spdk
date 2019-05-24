@@ -22,6 +22,29 @@
       "revId": "7a3ed70be415650c685e31e7a134762896382e1f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "209d4a93_d035c9c2",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-24T08:53:01Z",
+      "side": 1,
+      "message": "Can we extract this into small helper function for example bool spdk_scsi_pr_has_any_holder(lun) and call it first?",
+      "range": {
+        "startLine": 759,
+        "startChar": 0,
+        "endLine": 762,
+        "endChar": 2
+      },
+      "revId": "7a3ed70be415650c685e31e7a134762896382e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
