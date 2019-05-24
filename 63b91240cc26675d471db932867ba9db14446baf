@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc1c63ec_1651462d",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-24T22:55:07Z",
+      "side": 1,
+      "message": "was the extra indenting for struct spdk_scsi_dev required here?",
+      "revId": "63b91240cc26675d471db932867ba9db14446baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
