@@ -401,8 +401,16 @@ function json_config_clear() {
 	# Check if config is clean.
 	# Global params can't be cleared so need to filter them out.
 	local config_filter="$rootdir/test/json_config/config_filter.py"
-	$rootdir/scripts/rpc.py -s "${app_socket[$1]}" save_config | \
-		$config_filter -method delete_global_parameters | $config_filter -method check_empty
+
+	count=3
+	while [ ! $( $rootdir/scripts/rpc.py -s "${app_socket[$1]}" save_config | $config_filter -method delete_global_parameters | $config_filter -method check_empty) ] && [ $count > 1 ] ; do
+		count=$(( $count -1 ))
+		sleep 0.5
+	done
+
+	if [ count == 0 ] ; then
+		return 1
+	fi
 }
 
 on_error_exit() {
