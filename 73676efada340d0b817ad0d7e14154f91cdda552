@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cff6da1c_586488fc",
+        "filename": "test/vhost/fiotest/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-24T23:22:41Z",
+      "side": 1,
+      "message": "you don\u0027t even have to make these parse_common_script_args calls now - I implemented Darek\u0027s idea to just automatically look for these args when sourcing autotest_common.sh, and that patch has been merged",
+      "revId": "73676efada340d0b817ad0d7e14154f91cdda552",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
