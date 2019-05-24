@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "d5ed84be_f5010dac",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2042,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-24T07:58:02Z",
+      "side": 1,
+      "message": "If alloc_len is zero, data will be NULL. This is not secure, and data \u003d\u003d NULL is probable.\n\nSo as Paul suggests, will you fix this and other places in the patch series?\n\nOn the other hand, data_len is checked before accessing data in spdk_scsi_pr_in(), and this manner is good.",
+      "parentUuid": "6d77c155_c8c542a9",
+      "revId": "7b7596fc57380227e2d84e1355b11bca5cd5a6c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e51ca820_d6f44796",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 15
