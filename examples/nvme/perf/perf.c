@@ -629,10 +629,24 @@ static const struct ns_fn_table nvme_fn_table = {
 static void
 build_nvme_name(char *name, size_t length, struct spdk_nvme_ctrlr *ctrlr)
 {
-	const struct spdk_nvme_ctrlr_data *cdata;
+	const struct spdk_nvme_transport_id *trid;
 
-	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-	snprintf(name, length, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
+	trid = spdk_nvme_ctrlr_get_transport_id(ctrlr);
+
+	switch (trid->trtype) {
+	case SPDK_NVME_TRANSPORT_PCIE:
+		snprintf(name, length, "PCIE (%s)", trid->traddr);
+		break;
+	case SPDK_NVME_TRANSPORT_RDMA:
+		snprintf(name, length, "RDMA (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
+		break;
+	case SPDK_NVME_TRANSPORT_TCP:
+		snprintf(name, length, "TCP  (addr:%s subnqn:%s)", trid->traddr, trid->subnqn);
+		break;
+	default:
+		fprintf(stderr, "Unknown transport type %d\n", trid->trtype);
+		break;
+	}
 }
 
 static void
