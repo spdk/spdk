@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1594f0b_32bb7e54",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T10:33:23Z",
+      "side": 1,
+      "message": "Let\u0027s add a \u0027direct band\u0027, so that we can distinguish it from regular band selection.",
+      "range": {
+        "startLine": 426,
+        "startChar": 41,
+        "endLine": 426,
+        "endChar": 45
+      },
+      "revId": "c263baf3fb3bac42961259ea42d8c41c5dca5d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "032f3ce7_79d840f1",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T10:33:23Z",
+      "side": 1,
+      "message": "So is wptr \u003d\u003d NULL or !wptr-\u003edirect_mode possible here or not? If it\u0027s a bug then there\u0027s no need for this if, if it might happen, remove the assertion on  line 435\n\nAlso, if it\u0027s a bug, there\u0027s no need to checking if wptr !\u003d NULL in the assertion too.",
+      "range": {
+        "startLine": 440,
+        "startChar": 6,
+        "endLine": 440,
+        "endChar": 10
+      },
+      "revId": "c263baf3fb3bac42961259ea42d8c41c5dca5d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15c16447_bf8603f2",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T10:33:23Z",
+      "side": 1,
+      "message": "Add spdk_unlikely here, as this should happen very sporadically.",
+      "range": {
+        "startLine": 483,
+        "startChar": 5,
+        "endLine": 483,
+        "endChar": 22
+      },
+      "revId": "c263baf3fb3bac42961259ea42d8c41c5dca5d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12f24585_8ce7ee74",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-24T10:33:23Z",
+      "side": 1,
+      "message": "Let\u0027s merge these into ftl_band_set_direct_access(bool access).",
+      "range": {
+        "startLine": 239,
+        "startChar": 0,
+        "endLine": 241,
+        "endChar": 0
+      },
+      "revId": "c263baf3fb3bac42961259ea42d8c41c5dca5d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
