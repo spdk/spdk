@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "579d9fa5_1746743b",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-25T00:04:53Z",
+      "side": 1,
+      "message": "this line seems unrelated",
+      "revId": "831240091cb0077f761c6a5023ba3e6be0a5a71c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "09d6b387_0a958fe7",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 6
@@ -22,6 +39,23 @@
       "revId": "831240091cb0077f761c6a5023ba3e6be0a5a71c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7903641d_5f7b1df0",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1474,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-25T00:04:53Z",
+      "side": 1,
+      "message": "good catch - Paul, can you fix all of these in a separate patch?",
+      "revId": "831240091cb0077f761c6a5023ba3e6be0a5a71c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
