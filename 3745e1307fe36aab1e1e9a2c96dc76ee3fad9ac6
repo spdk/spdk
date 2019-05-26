@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdd9db6d_4e633b14",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-26T22:35:05Z",
+      "side": 1,
+      "message": "Do you plan to remove this? Please confirm previous exchange of comments with Jim. But it looks that this came from my previous wrong comment. Sorry for that.",
+      "range": {
+        "startLine": 714,
+        "startChar": 2,
+        "endLine": 714,
+        "endChar": 50
+      },
+      "revId": "3745e1307fe36aab1e1e9a2c96dc76ee3fad9ac6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
