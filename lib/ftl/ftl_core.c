@@ -196,9 +196,8 @@ ftl_md_write_fail(struct ftl_io *io, int status)
 }
 
 static void
-ftl_md_write_cb(void *arg, int status)
+ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 {
-	struct ftl_io *io = arg;
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	struct ftl_wptr *wptr;
@@ -861,7 +860,7 @@ ftl_complete_flush(struct ftl_flush *flush)
 	assert(flush->num_req == 0);
 	LIST_REMOVE(flush, list_entry);
 
-	flush->cb.fn(flush->cb.ctx, 0);
+	flush->cb.user_fn(flush->cb.ctx, 0);
 
 	spdk_bit_array_free(&flush->bmap);
 	free(flush);
@@ -1057,9 +1056,8 @@ ftl_write_fail(struct ftl_io *io, int status)
 }
 
 static void
-ftl_write_cb(void *arg, int status)
+ftl_write_cb(struct ftl_io *io, void *arg, int status)
 {
-	struct ftl_io *io = arg;
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_rwb_batch *batch = io->rwb_batch;
 	struct ftl_rwb_entry *entry;
@@ -1159,7 +1157,7 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry,
 
 static struct ftl_io *
 ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
-			void *data, void *md, spdk_ftl_fn cb)
+			void *data, void *md, ftl_io_fn cb)
 {
 	struct ftl_io *io;
 	struct spdk_ftl_dev *dev = parent->dev;
@@ -1174,7 +1172,7 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
 		.type		= FTL_IO_WRITE,
 		.iov_cnt	= 1,
 		.req_size	= dev->xfer_size,
-		.fn		= cb,
+		.cb.fn		= cb,
 		.data		= data,
 		.md		= md,
 	};
@@ -1190,10 +1188,9 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
 }
 
 static void
-ftl_io_child_write_cb(void *ctx, int status)
+ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_chunk *chunk;
-	struct ftl_io *io = ctx;
 
 	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
 	chunk->busy = false;
@@ -1743,7 +1740,7 @@ ftl_flush_init(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
 	}
 
 	flush->dev = dev;
-	flush->cb.fn = cb_fn;
+	flush->cb.user_fn = cb_fn;
 	flush->cb.ctx = cb_arg;
 
 	return flush;
