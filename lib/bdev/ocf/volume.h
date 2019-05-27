@@ -49,6 +49,7 @@ struct ocf_io_ctx {
 	int ref;
 	int rq_cnt;
 	int error;
+	bool iovs_allocated;
 };
 
 int vbdev_ocf_volume_init(void);
