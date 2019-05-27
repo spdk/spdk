@@ -313,7 +313,7 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 	len = io->bytes;
 	offset = io_ctx->offset;
 
-	if (offset) {
+	if (offset || len < io_ctx->data->iovs[0].iov_len) {
 		i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
 
 		if (i < 0) {
