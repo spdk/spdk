@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05df9e2d_8ed4cc87",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "What about any open blobs?",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c2e619d_504c4422",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "^",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ebc8bc0_8001b253",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "What is this? spdk_bs_get_page_size is already described as \"This is the write and read granularity of blobs.\"",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98b0d0f3_b22cb24e",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "What does it return for thin-provisioned blobs?",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bfc4497_2ef4156a",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "^",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03e1f723_aa5fa700",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "Is it going to be persistent already?",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05d1fd3d_d295246a",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "What is this?",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be03cfb9_f68cbc58",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "This looks wobbly. Could we allocate xattrs with DMA-able memory right from the start? There\u0027s not much point extending metadata if you can\u0027t write it to disk.",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60b049fe_1f11e7e4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2298,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "do we allow destroying I/O channels with outstanding requests?\n\nshould this code be removed?",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60cd1faa_090548a6",
+        "filename": "test/blobstore/blob_io_wait/blob_io_wait.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "Looks like we use only lvols here - we should move this test to test/lvol",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90311d3a_c67da14d",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T09:31:04Z",
+      "side": 0,
+      "message": "What are we even testing here? This needs some comments",
+      "revId": "920bb2b3c11e75d028573f9a09e5ed6dc732761e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
