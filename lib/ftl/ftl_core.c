@@ -79,7 +79,10 @@ struct ftl_flush {
 	size_t				num_req;
 
 	/* Callback */
-	struct ftl_cb			cb;
+	struct {
+		spdk_ftl_fn		fn;
+		void			*ctx;
+	} cb;
 
 	/* Batch bitmap */
 	struct spdk_bit_array		*bmap;
@@ -189,9 +192,8 @@ ftl_md_write_fail(struct ftl_io *io, int status)
 }
 
 static void
-ftl_md_write_cb(void *arg, int status)
+ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 {
-	struct ftl_io *io = arg;
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	struct ftl_wptr *wptr;
@@ -1055,9 +1057,8 @@ ftl_write_fail(struct ftl_io *io, int status)
 }
 
 static void
-ftl_write_cb(void *arg, int status)
+ftl_write_cb(struct ftl_io *io, void *arg, int status)
 {
-	struct ftl_io *io = arg;
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_rwb_batch *batch = io->rwb_batch;
 	struct ftl_rwb_entry *entry;
@@ -1157,7 +1158,7 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry,
 
 static struct ftl_io *
 ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
-			void *data, void *md, spdk_ftl_fn cb)
+			void *data, void *md, ftl_io_fn cb)
 {
 	struct ftl_io *io;
 	struct spdk_ftl_dev *dev = parent->dev;
@@ -1171,7 +1172,7 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
 		.flags		= 0,
 		.type		= FTL_IO_WRITE,
 		.lbk_cnt	= dev->xfer_size,
-		.fn		= cb,
+		.cb_fn		= cb,
 		.data		= data,
 		.md		= md,
 	};
@@ -1187,10 +1188,9 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
 }
 
 static void
-ftl_io_child_write_cb(void *ctx, int status)
+ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_chunk *chunk;
-	struct ftl_io *io = ctx;
 
 	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
 	chunk->busy = false;
