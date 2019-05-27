@@ -80,7 +80,7 @@ DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc 
 DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 0);
 
 struct ftl_io *
-ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
+ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_io_fn cb)
 {
 	struct ftl_io *io;
 
@@ -104,7 +104,7 @@ ftl_io_advance(struct ftl_io *io, size_t lbk_cnt)
 void
 ftl_io_complete(struct ftl_io *io)
 {
-	io->cb.fn(io, 0);
+	io->cb.fn(io, NULL, 0);
 	free(io);
 }
 
@@ -177,7 +177,7 @@ test_wptr(void)
 
 		/* Call the metadata completion cb to force band state change */
 		/* and removal of the actual wptr */
-		ftl_md_write_cb(&io, 0);
+		ftl_md_write_cb(&io, NULL, 0);
 		CU_ASSERT_EQUAL(band->state, FTL_BAND_STATE_CLOSED);
 		CU_ASSERT_TRUE(LIST_EMPTY(&dev->wptr_list));
 

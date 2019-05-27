@@ -236,7 +236,7 @@ out:
 }
 
 static void
-ftl_restore_head_cb(void *ctx, int status)
+ftl_restore_head_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_restore_band *rband = ctx;
 	struct ftl_restore *restore = rband->parent;
@@ -363,7 +363,7 @@ ftl_restore_next_band(struct ftl_restore *restore)
 }
 
 static void
-ftl_restore_tail_md_cb(void *ctx, int status)
+ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_restore_band *rband = ctx;
 	struct ftl_restore *restore = rband->parent;

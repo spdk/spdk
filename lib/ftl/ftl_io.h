@@ -48,6 +48,7 @@ struct ftl_io;
 struct ftl_md;
 
 typedef int (*ftl_md_pack_fn)(struct spdk_ftl_dev *, struct ftl_md *, void *);
+typedef void (*ftl_io_fn)(struct ftl_io *, void *, int);
 
 /* IO flags */
 enum ftl_io_flags {
@@ -78,6 +79,14 @@ enum ftl_io_type {
 	FTL_IO_READ,
 	FTL_IO_WRITE,
 	FTL_IO_ERASE,
+};
+
+struct ftl_cb {
+	/* Callback's function */
+	ftl_io_fn				fn;
+
+	/* Callback's context */
+	void					*ctx;
 };
 
 struct ftl_io_init_opts {
@@ -114,15 +123,7 @@ struct ftl_io_init_opts {
 	void                                    *md;
 
 	/* Callback */
-	spdk_ftl_fn				fn;
-};
-
-struct ftl_cb {
-	/* Callback function */
-	spdk_ftl_fn				fn;
-
-	/* Callback's context */
-	void					*ctx;
+	struct ftl_cb				cb;
 };
 
 struct ftl_io_channel {
@@ -191,6 +192,9 @@ struct ftl_io {
 	/* Completion callback */
 	struct ftl_cb				cb;
 
+	/* User callback function */
+	spdk_ftl_fn				user_fn;
+
 	/* Flags */
 	int					flags;
 
@@ -258,7 +262,7 @@ struct ftl_io *ftl_io_alloc_child(struct ftl_io *parent);
 void ftl_io_fail(struct ftl_io *io, int status);
 void ftl_io_free(struct ftl_io *io);
 struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
-void ftl_io_reinit(struct ftl_io *io, spdk_ftl_fn cb,
+void ftl_io_reinit(struct ftl_io *io, ftl_io_fn cb,
 		   void *ctx, int flags, int type);
 void ftl_io_clear(struct ftl_io *io);
 void ftl_io_inc_req(struct ftl_io *io);
@@ -271,8 +275,8 @@ size_t ftl_iovec_num_lbks(struct iovec *iov, size_t iov_cnt);
 void *ftl_io_iovec_addr(struct ftl_io *io);
 size_t ftl_io_iovec_len_left(struct ftl_io *io);
 struct ftl_io *ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
-			       struct ftl_rwb_batch *entry, spdk_ftl_fn cb);
-struct ftl_io *ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb);
+			       struct ftl_rwb_batch *entry, ftl_io_fn cb);
+struct ftl_io *ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_io_fn cb);
 struct ftl_io *ftl_io_user_init(struct spdk_io_channel *ioch, uint64_t lba, size_t lbk_cnt,
 				struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn,
 				void *cb_arg, int type);
