@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "6b441700_c3b13bee",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-27T08:44:39Z",
+      "side": 1,
+      "message": "the corresponding variable in nvmf_tcp_qpair is maxr2t, and struct ic_req is maxr2t. This is not related with your patch but will you be consistent with the term? maxr2t looks better to me.",
+      "range": {
+        "startLine": 89,
+        "startChar": 13,
+        "endLine": 89,
+        "endChar": 20
+      },
+      "revId": "847d8136f4c7af4f71532c254ef0146d9d9fb316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e63f4a23_bcca5b9a",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 3
