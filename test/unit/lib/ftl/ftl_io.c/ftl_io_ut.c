@@ -76,7 +76,7 @@ free_device(struct spdk_ftl_dev *dev)
 }
 
 static void
-setup_io(struct ftl_io *io, struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *ctx)
+setup_io(struct ftl_io *io, struct spdk_ftl_dev *dev, ftl_io_fn cb, void *ctx)
 {
 	io->dev = dev;
 	io->cb.fn = cb;
@@ -84,7 +84,7 @@ setup_io(struct ftl_io *io, struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *ctx)
 }
 
 static struct ftl_io *
-alloc_io(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *ctx)
+alloc_io(struct spdk_ftl_dev *dev, ftl_io_fn cb, void *ctx)
 {
 	struct ftl_io *io;
 
@@ -96,7 +96,7 @@ alloc_io(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *ctx)
 }
 
 static void
-io_complete_cb(void *ctx, int status)
+io_complete_cb(struct ftl_io *io, void *ctx, int status)
 {
 	*(int *)ctx = status;
 }
