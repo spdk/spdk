@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0aa4eadb_26ffd8c4",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-27T09:51:20Z",
+      "side": 1,
+      "message": "This function can return struct spdk_sock_group * instead of int - this will simplify code in later patches.",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 144,
+        "endChar": 3
+      },
+      "revId": "2e156914e02e9445eed8d203b199b85bfa068198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
