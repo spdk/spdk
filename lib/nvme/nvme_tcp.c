@@ -86,7 +86,7 @@ struct nvme_tcp_qpair {
 	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
 	uint32_t				maxh2cdata;
 
-	uint32_t				max_r2t;
+	uint32_t				maxr2t;
 
 	/* 0 based value, which is used to guide the padding */
 	uint8_t					cpda;
@@ -1331,9 +1331,9 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 		tcp_req->state = NVME_TCP_REQ_ACTIVE_R2T;
 		tcp_req->active_r2ts++;
 	} else {
-		if (tcp_req->active_r2ts >= tqpair->max_r2t) {
+		if (tcp_req->active_r2ts >= tqpair->maxr2t) {
 			fes = SPDK_NVME_TCP_TERM_REQ_FES_R2T_LIMIT_EXCEEDED;
-			SPDK_ERRLOG("Invalid R2T: it exceeds the R2T maixmal=%u for tqpair=%p\n", tqpair->max_r2t, tqpair);
+			SPDK_ERRLOG("Invalid R2T: it exceeds the R2T maixmal=%u for tqpair=%p\n", tqpair->maxr2t, tqpair);
 			goto end;
 		}
 	}
@@ -1714,7 +1714,7 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 		return -1;
 	}
 
-	tqpair->max_r2t = NVME_TCP_MAX_R2T_DEFAULT;
+	tqpair->maxr2t = NVME_TCP_MAX_R2T_DEFAULT;
 	rc = nvme_tcp_qpair_icreq_send(tqpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to connect the tqpair\n");
