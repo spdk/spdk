@@ -162,37 +162,11 @@ typedef struct vmd_adapter {
 
 
 /* TODO: Temporary stubs for Hot Plug interface */
-static inline vmd_pci_bus *
-vmd_is_dev_in_hotplug_path(vmd_pci_device *dev)
-{
-	return NULL;
-}
-
-static inline uint64_t
-vmd_hp_allocate_base_addr(struct vmd_hot_plug *hp, uint32_t size)
-{
-	assert(false);
-	return 0;
-}
-
-static inline void
-vmd_hp_enable_hotplug(struct vmd_hot_plug *hp)
-{
-
-}
-
-static inline struct vmd_hot_plug *
-vmd_new_hotplug(vmd_pci_bus *newBus, uint8_t reservedBuses)
-{
-	return NULL;
-}
-
-static inline uint8_t
-vmd_hp_get_next_bus_number(struct vmd_hot_plug *hp)
-{
-	assert(false);
-	return 0;
-}
+vmd_pci_bus *vmd_is_dev_in_hotplug_path(vmd_pci_device *dev);
+uint64_t vmd_hp_allocate_base_addr(struct vmd_hot_plug *hp, uint32_t size);
+void vmd_hp_enable_hotplug(struct vmd_hot_plug *hp);
+struct vmd_hot_plug *vmd_new_hotplug(vmd_pci_bus *newBus, uint8_t reservedBuses);
+uint8_t vmd_hp_get_next_bus_number(struct vmd_hot_plug *hp);
 
 /*
  * Pci interface
