@@ -236,7 +236,7 @@ out:
 }
 
 static void
-ftl_restore_head_cb(void *ctx, int status)
+ftl_restore_head_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_restore_band *rband = ctx;
 	struct ftl_restore *restore = rband->parent;
@@ -256,19 +256,17 @@ ftl_restore_head_md(struct ftl_restore *restore)
 {
 	struct spdk_ftl_dev *dev = restore->dev;
 	struct ftl_restore_band *rband;
-	struct ftl_cb cb;
 	char *head_buf = restore->md_buf;
 	unsigned int num_failed = 0, num_ios;
 	size_t i;
 
-	cb.fn = ftl_restore_head_cb;
 	restore->num_ios = ftl_dev_num_bands(dev);
 
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 		rband = &restore->bands[i];
-		cb.ctx = rband;
 
-		if (ftl_band_read_head_md(rband->band, &rband->band->md, head_buf, cb)) {
+		if (ftl_band_read_head_md(rband->band, &rband->band->md, head_buf,
+					  ftl_restore_head_cb, rband)) {
 			if (spdk_likely(rband->band->num_chunks)) {
 				SPDK_ERRLOG("Failed to read metadata on band %zu\n", i);
 
@@ -363,7 +361,7 @@ ftl_restore_next_band(struct ftl_restore *restore)
 }
 
 static void
-ftl_restore_tail_md_cb(void *ctx, int status)
+ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_restore_band *rband = ctx;
 	struct ftl_restore *restore = rband->parent;
@@ -392,14 +390,12 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 {
 	struct ftl_restore *restore = rband->parent;
 	struct ftl_band *band = rband->band;
-	struct ftl_cb cb = { .fn = ftl_restore_tail_md_cb,
-		       .ctx = rband
-	};
 
 	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
 	band->md.lba_map = restore->lba_map;
 
-	if (ftl_band_read_tail_md(band, &band->md, restore->md_buf, band->tail_md_ppa, cb)) {
+	if (ftl_band_read_tail_md(band, &band->md, restore->md_buf, band->tail_md_ppa,
+				  ftl_restore_tail_md_cb, rband)) {
 		SPDK_ERRLOG("Failed to send tail metadata read\n");
 		ftl_restore_complete(restore, -EIO);
 		return -EIO;

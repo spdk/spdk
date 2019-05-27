@@ -38,10 +38,10 @@
 #include "spdk/bit_array.h"
 #include "spdk/queue.h"
 
+#include "ftl_io.h"
 #include "ftl_ppa.h"
 
 struct spdk_ftl_dev;
-struct ftl_cb;
 
 enum ftl_chunk_state {
 	FTL_CHUNK_STATE_FREE,
@@ -180,13 +180,14 @@ struct ftl_band *ftl_band_from_ppa(struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 struct ftl_chunk *ftl_band_chunk_from_ppa(struct ftl_band *band, struct ftl_ppa);
 void		ftl_band_md_clear(struct ftl_md *md);
 int		ftl_band_read_tail_md(struct ftl_band *band, struct ftl_md *md,
-				      void *data, struct ftl_ppa, struct ftl_cb cb);
+				      void *data, struct ftl_ppa,
+				      ftl_io_fn cb_fn, void *cb_ctx);
 int		ftl_band_read_head_md(struct ftl_band *band, struct ftl_md *md,
-				      void *data, struct ftl_cb cb);
+				      void *data, ftl_io_fn cb_fn, void *cb_ctx);
 int		ftl_band_read_lba_map(struct ftl_band *band, struct ftl_md *md,
-				      size_t offset, size_t lba_cnt, struct ftl_cb cb);
-int		ftl_band_write_tail_md(struct ftl_band *band, spdk_ftl_fn cb);
-int		ftl_band_write_head_md(struct ftl_band *band, spdk_ftl_fn cb);
+				      size_t offset, size_t lba_cnt, ftl_io_fn cb_fn, void *cb_ctx);
+int		ftl_band_write_tail_md(struct ftl_band *band, ftl_io_fn cb);
+int		ftl_band_write_head_md(struct ftl_band *band, ftl_io_fn cb);
 struct ftl_ppa ftl_band_tail_md_ppa(struct ftl_band *band);
 struct ftl_ppa ftl_band_head_md_ppa(struct ftl_band *band);
 void		ftl_band_write_failed(struct ftl_band *band);

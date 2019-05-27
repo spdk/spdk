@@ -96,9 +96,9 @@ ftl_lba_map_num_lbks(const struct spdk_ftl_dev *dev)
 
 int
 ftl_band_read_lba_map(struct ftl_band *band, struct ftl_md *md,
-		      size_t offset, size_t lbk_cnt, struct ftl_cb cb)
+		      size_t offset, size_t lbk_cnt, ftl_io_fn fn, void *ctx)
 {
-	cb.fn(cb.ctx, 0);
+	fn(ctx, ctx, 0);
 	return 0;
 }
 
@@ -128,13 +128,13 @@ ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 void
 ftl_io_read(struct ftl_io *io)
 {
-	io->cb.fn(io->cb.ctx, 0);
+	io->cb_fn(io, io->cb_ctx, 0);
 }
 
 void
 ftl_io_write(struct ftl_io *io)
 {
-	io->cb.fn(io->cb.ctx, 0);
+	io->cb_fn(io, io->cb_ctx, 0);
 }
 
 struct ftl_io *
@@ -151,8 +151,8 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->dev = opts->dev;
 	io->band = opts->band;
 	io->flags = opts->flags;
-	io->cb.fn = opts->fn;
-	io->cb.ctx = io;
+	io->cb_fn = opts->cb_fn;
+	io->cb_ctx = io;
 	io->lbk_cnt = opts->lbk_cnt;
 	io->iov[0].iov_base = opts->data;
 	return io;
@@ -173,10 +173,10 @@ ftl_io_free(struct ftl_io *io)
 }
 
 void
-ftl_io_reinit(struct ftl_io *io, spdk_ftl_fn fn, void *ctx, int flags, int type)
+ftl_io_reinit(struct ftl_io *io, ftl_io_fn fn, void *ctx, int flags, int type)
 {
-	io->cb.fn = fn;
-	io->cb.ctx = ctx;
+	io->cb_fn = fn;
+	io->cb_ctx = ctx;
 	io->type = type;
 }
 
