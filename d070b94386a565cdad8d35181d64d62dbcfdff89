@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e205a92_d6201977",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-27T01:50:08Z",
+      "side": 1,
+      "message": "Also can we separate the code movement into another patch?",
+      "range": {
+        "startLine": 203,
+        "startChar": 0,
+        "endLine": 205,
+        "endChar": 1
+      },
+      "revId": "d070b94386a565cdad8d35181d64d62dbcfdff89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c8fbf38_dafd388d",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-27T01:50:08Z",
+      "side": 1,
+      "message": "use \u003e 0, will be more accurate",
+      "range": {
+        "startLine": 230,
+        "startChar": 18,
+        "endLine": 230,
+        "endChar": 20
+      },
+      "revId": "d070b94386a565cdad8d35181d64d62dbcfdff89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
