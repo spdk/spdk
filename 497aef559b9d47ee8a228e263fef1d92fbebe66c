@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "704a02e0_8ade8830",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-27T01:44:01Z",
+      "side": 1,
+      "message": "Since the three variable is only initialized once, so can \nset it when define the variables.\nFor example  struct nvme_tcp_pdu pdu \u003d {}.",
+      "range": {
+        "startLine": 391,
+        "startChar": 0,
+        "endLine": 393,
+        "endChar": 46
+      },
+      "revId": "497aef559b9d47ee8a228e263fef1d92fbebe66c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
