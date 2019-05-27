@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e63f4a23_bcca5b9a",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1334,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-27T06:21:12Z",
+      "side": 1,
+      "message": "Shouldn\u0027t here using the condition: tcp_req-\u003eactive_r2ts \u003e tqpair-\u003emax_r2t here ?",
+      "revId": "847d8136f4c7af4f71532c254ef0146d9d9fb316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
