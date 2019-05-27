@@ -22,6 +22,30 @@
       "revId": "2ff9905307b413440585659409db4afefdcd01de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4db30afd_5a9ea99a",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T12:38:34Z",
+      "side": 1,
+      "message": "Not really, note the \u0027u\u0027 - bdev_io-\u003eu.bdev not bdev_io-\u003ebdev.\n\nYeah, that makes sense, most of the references are using bdev-\u003ectxt, I\u0027ll change that.",
+      "parentUuid": "28cce962_b3b1ab71",
+      "range": {
+        "startLine": 397,
+        "startChar": 9,
+        "endLine": 397,
+        "endChar": 24
+      },
+      "revId": "2ff9905307b413440585659409db4afefdcd01de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
