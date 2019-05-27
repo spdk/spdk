@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df3d4e1a_588a1faa",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-27T09:35:24Z",
+      "side": 1,
+      "message": "Can we return placement_id as function return, not through argument? placement_id can have only positive values or 0 (as far as I was able to find the information about it), so we could just set it up to some error value in line 483 and return it. This will simplify code in next patch.",
+      "range": {
+        "startLine": 473,
+        "startChar": 63,
+        "endLine": 473,
+        "endChar": 75
+      },
+      "revId": "ec50000bb33035198fd8aab20a2407f691d53515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
