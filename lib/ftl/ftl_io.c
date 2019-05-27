@@ -205,7 +205,7 @@ ftl_io_shrink_iovec(struct ftl_io *io, char *buf, size_t iov_cnt, size_t req_siz
 
 static void
 ftl_io_init(struct ftl_io *io, struct spdk_ftl_dev *dev,
-	    spdk_ftl_fn fn, void *ctx, int flags, int type)
+	    ftl_io_fn fn, void *ctx, int flags, int type)
 {
 	io->flags |= flags | FTL_IO_INITIALIZED;
 	io->type = type;
@@ -236,7 +236,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	}
 
 	ftl_io_clear(io);
-	ftl_io_init(io, dev, opts->fn, io, opts->flags | FTL_IO_INTERNAL, opts->type);
+	ftl_io_init(io, dev, opts->cb.fn, opts->cb.ctx, opts->flags | FTL_IO_INTERNAL, opts->type);
 
 	io->rwb_batch = opts->rwb_batch;
 	io->band = opts->band;
@@ -254,7 +254,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 
 struct ftl_io *
 ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
-		struct ftl_rwb_batch *batch, spdk_ftl_fn cb)
+		struct ftl_rwb_batch *batch, ftl_io_fn cb)
 {
 	struct ftl_io_init_opts opts = {
 		.dev		= dev,
@@ -266,7 +266,7 @@ ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.type		= FTL_IO_WRITE,
 		.iov_cnt	= 1,
 		.req_size	= dev->xfer_size,
-		.fn		= cb,
+		.cb.fn		= cb,
 		.data		= ftl_rwb_batch_get_data(batch),
 		.md		= ftl_rwb_batch_get_md(batch),
 	};
@@ -275,7 +275,7 @@ ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 }
 
 struct ftl_io *
-ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
+ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_io_fn cb)
 {
 	struct ftl_io *io;
 	struct ftl_io_init_opts opts = {
@@ -288,7 +288,7 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
 		.type		= FTL_IO_ERASE,
 		.iov_cnt	= 0,
 		.req_size	= 1,
-		.fn		= cb,
+		.cb.fn		= cb,
 		.data		= NULL,
 		.md		= NULL,
 	};
@@ -303,6 +303,12 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
 	return io;
 }
 
+static void
+_ftl_user_cb(struct ftl_io *io, void *arg, int status)
+{
+	io->user_fn(arg, status);
+}
+
 void
 ftl_io_user_init(struct spdk_ftl_dev *dev, struct ftl_io *io, uint64_t lba, size_t lbk_cnt,
 		 struct iovec *iov, size_t iov_cnt,
@@ -312,11 +318,12 @@ ftl_io_user_init(struct spdk_ftl_dev *dev, struct ftl_io *io, uint64_t lba, size
 		return;
 	}
 
-	ftl_io_init(io, dev, cb_fn, cb_arg, 0, type);
+	ftl_io_init(io, dev, _ftl_user_cb, cb_arg, 0, type);
 
 	io->lba.single = lba;
 	io->lbk_cnt = lbk_cnt;
 	io->iov_cnt = iov_cnt;
+	io->user_fn = cb_fn;
 
 	if (iov_cnt > 1) {
 		io->iov.vector = iov;
@@ -343,6 +350,7 @@ _ftl_io_free(struct ftl_io *io)
 	}
 
 	ioch = spdk_io_channel_get_ctx(io->ioch);
+
 	spdk_mempool_put(ioch->io_pool, io);
 }
 
@@ -376,7 +384,7 @@ ftl_io_complete(struct ftl_io *io)
 
 	if (complete) {
 		if (io->cb.fn) {
-			io->cb.fn(io->cb.ctx, io->status);
+			io->cb.fn(io, io->cb.ctx, io->status);
 		}
 
 		if (parent && ftl_io_remove_child(io)) {
@@ -460,10 +468,10 @@ ftl_io_alloc(struct spdk_io_channel *ch)
 }
 
 void
-ftl_io_reinit(struct ftl_io *io, spdk_ftl_fn fn, void *ctx, int flags, int type)
+ftl_io_reinit(struct ftl_io *io, ftl_io_fn cb, void *ctx, int flags, int type)
 {
 	ftl_io_clear(io);
-	ftl_io_init(io, io->dev, fn, ctx, flags, type);
+	ftl_io_init(io, io->dev, cb, ctx, flags, type);
 }
 
 void
