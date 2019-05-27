@@ -73,6 +73,13 @@ spdk_scsi_pr_registrant_is_holder(struct spdk_scsi_lun *lun,
 	return (lun->reservation.holder == reg);
 }
 
+/* LUN holds a reservation or not */
+static inline bool
+spdk_scsi_pr_has_reservation(struct spdk_scsi_lun *lun)
+{
+	return !(lun->reservation.holder == NULL);
+}
+
 static int
 spdk_scsi_pr_register_registrant(struct spdk_scsi_lun *lun,
 				 struct spdk_scsi_port *initiator_port,
@@ -199,7 +206,7 @@ spdk_scsi_pr_out_reserve(struct spdk_scsi_task *task,
 	}
 
 	/* reservation holder already exists */
-	if (lun->reservation.holder) {
+	if (spdk_scsi_pr_has_reservation(lun)) {
 		if (rtype != lun->reservation.rtype) {
 			SPDK_ERRLOG("Reservation type doesn't match\n");
 			goto conflict;
@@ -313,7 +320,7 @@ spdk_scsi_pr_out_release(struct spdk_scsi_task *task,
 	}
 
 	/* no reservation holder */
-	if (!lun->reservation.holder) {
+	if (!spdk_scsi_pr_has_reservation(lun)) {
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "RELEASE: no reservation holder\n");
 		return 0;
 	}
@@ -429,7 +436,7 @@ spdk_scsi_pr_out_preempt(struct spdk_scsi_task *task,
 	}
 
 	/* no persistent reservation */
-	if (lun->reservation.holder == NULL) {
+	if (!spdk_scsi_pr_has_reservation(lun)) {
 		spdk_scsi_pr_remove_all_regs_by_key(lun, sa_rkey);
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: no persistent reservation\n");
 		goto exit;
@@ -598,7 +605,7 @@ spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
 	param = (struct spdk_scsi_pr_in_read_reservations_data *)(data);
 
 	to_be32(&param->header.pr_generation, lun->pr_generation);
-	if (lun->reservation.holder) {
+	if (spdk_scsi_pr_has_reservation(lun)) {
 		all_regs = spdk_scsi_pr_is_all_registrants_type(lun);
 		if (all_regs) {
 			to_be64(&param->rkey, 0);
@@ -742,7 +749,7 @@ spdk_scsi_pr_check(struct spdk_scsi_task *task)
 	bool dma_to_device = false;
 
 	/* no reservation holders */
-	if (lun->reservation.holder == NULL) {
+	if (!spdk_scsi_pr_has_reservation(lun)) {
 		return 0;
 	}
 
