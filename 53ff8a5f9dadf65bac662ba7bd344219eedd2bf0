@@ -1,0 +1,452 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4ae29f9_e8dae2aa",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Can you add comments explaining the fields here? Or at least segments / num_seg?",
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80b3fc11_b953c232",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Let\u0027s expand this to num_segments or num_pending.",
+      "range": {
+        "startLine": 94,
+        "startChar": 12,
+        "endLine": 94,
+        "endChar": 19
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f803d4b8_cd39df87",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Can we expand dev-\u003elba_pool to keep this at the end?",
+      "range": {
+        "startLine": 699,
+        "startChar": 21,
+        "endLine": 699,
+        "endChar": 27
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "017b6482_99981f46",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you use spdk_divide_round_up here?",
+      "range": {
+        "startLine": 699,
+        "startChar": 28,
+        "endLine": 699,
+        "endChar": 73
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ead9aaee_05e72b29",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "This should either be an unsigned or size_t.",
+      "range": {
+        "startLine": 883,
+        "startChar": 7,
+        "endLine": 883,
+        "endChar": 10
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ede5c3e_7f8e292e",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "seg_cnt -\u003e num_segments",
+      "range": {
+        "startLine": 884,
+        "startChar": 89,
+        "endLine": 884,
+        "endChar": 96
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e3b3839_e61587cf",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Let\u0027s call this ftl_lba_map_clear_segment.",
+      "range": {
+        "startLine": 884,
+        "startChar": 0,
+        "endLine": 884,
+        "endChar": 29
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f6abbc7_41be95ac",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Let\u0027s rename this to something more descriptive - num_done perhaps?",
+      "range": {
+        "startLine": 886,
+        "startChar": 11,
+        "endLine": 886,
+        "endChar": 14
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9289222_6f9ee99b",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Add a newline before. Also, an assertion checking we\u0027re not underflowing here would be nice as well.",
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50be568d_e7f8853e",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Perhaps ftl_lba_map_set_segment_state?",
+      "range": {
+        "startLine": 900,
+        "startChar": 0,
+        "endLine": 900,
+        "endChar": 25
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c30c79a_f474c12a",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "seg_cnt -\u003e num_segments?",
+      "range": {
+        "startLine": 900,
+        "startChar": 83,
+        "endLine": 900,
+        "endChar": 90
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d1da430_27fbb832",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 921,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Same here, let\u0027s name this num_done.",
+      "range": {
+        "startLine": 921,
+        "startChar": 8,
+        "endLine": 921,
+        "endChar": 11
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "132673fc_f503c127",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 989,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Let\u0027s use a mempool (single for each ftl_device) for these. That way the initialization would only need to be done once.",
+      "range": {
+        "startLine": 971,
+        "startChar": 0,
+        "endLine": 989,
+        "endChar": 16
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cde056d3_a2089935",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "This is only called once and is pretty trivial, let\u0027s inline it.",
+      "range": {
+        "startLine": 993,
+        "startChar": 0,
+        "endLine": 993,
+        "endChar": 25
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf9e8cb5_f6900ef5",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Let\u0027s make all of the interface use segment offset + number of segments instead of offset + max.",
+      "range": {
+        "startLine": 993,
+        "startChar": 77,
+        "endLine": 993,
+        "endChar": 84
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6378bbf9_1f317a20",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Let\u0027s call this num_read.",
+      "range": {
+        "startLine": 1011,
+        "startChar": 26,
+        "endLine": 1011,
+        "endChar": 38
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8eb078bf_d9d4a55b",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Let\u0027s use num_segments instead.",
+      "range": {
+        "startLine": 1020,
+        "startChar": 1,
+        "endLine": 1020,
+        "endChar": 8
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "641f1606_93fd963d",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you check if this isn\u0027t 0?",
+      "range": {
+        "startLine": 1041,
+        "startChar": 30,
+        "endLine": 1041,
+        "endChar": 42
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "036208a6_c864f974",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1061,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "There\u0027s only one place this label is used, let\u0027s move this there.",
+      "range": {
+        "startLine": 1060,
+        "startChar": 0,
+        "endLine": 1061,
+        "endChar": 35
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc104faa_64d8f183",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:19Z",
+      "side": 1,
+      "message": "in a single block.",
+      "range": {
+        "startLine": 43,
+        "startChar": 39,
+        "endLine": 43,
+        "endChar": 54
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
