@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5b8b272_23c2d514",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-27T09:06:58Z",
+      "side": 1,
+      "message": "Add \\param description",
+      "revId": "ef28b0095a99ae1ab54ad67b8f16edda61c3ec01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87ec3f97_a7d4c168",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-27T09:06:58Z",
+      "side": 1,
+      "message": "Add \\param description",
+      "revId": "ef28b0095a99ae1ab54ad67b8f16edda61c3ec01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
