@@ -256,15 +256,15 @@ ftl_io_shrink_iovec(struct ftl_io *io, size_t lbk_cnt)
 
 static void
 ftl_io_init(struct ftl_io *io, struct spdk_ftl_dev *dev,
-	    spdk_ftl_fn fn, void *ctx, int flags, int type)
+	    ftl_io_fn fn, void *ctx, int flags, int type)
 {
 	io->flags |= flags | FTL_IO_INITIALIZED;
 	io->type = type;
 	io->dev = dev;
 	io->lba.single = FTL_LBA_INVALID;
 	io->ppa.ppa = FTL_PPA_INVALID;
-	io->cb.fn = fn;
-	io->cb.ctx = ctx;
+	io->cb_fn = fn;
+	io->cb_ctx = ctx;
 	io->trace = ftl_trace_alloc_id(dev);
 }
 
@@ -291,7 +291,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	}
 
 	ftl_io_clear(io);
-	ftl_io_init(io, dev, opts->fn, io, opts->flags | FTL_IO_INTERNAL, opts->type);
+	ftl_io_init(io, dev, opts->cb_fn, opts->cb_ctx, opts->flags | FTL_IO_INTERNAL, opts->type);
 
 	io->rwb_batch = opts->rwb_batch;
 	io->band = opts->band;
@@ -309,7 +309,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 
 struct ftl_io *
 ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
-		struct ftl_rwb_batch *batch, spdk_ftl_fn cb)
+		struct ftl_rwb_batch *batch, ftl_io_fn cb)
 {
 	struct ftl_io_init_opts opts = {
 		.dev		= dev,
@@ -320,7 +320,7 @@ ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.flags		= 0,
 		.type		= FTL_IO_WRITE,
 		.lbk_cnt	= dev->xfer_size,
-		.fn		= cb,
+		.cb_fn		= cb,
 		.data		= ftl_rwb_batch_get_data(batch),
 		.md		= ftl_rwb_batch_get_md(batch),
 	};
@@ -329,7 +329,7 @@ ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 }
 
 struct ftl_io *
-ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
+ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_io_fn cb)
 {
 	struct ftl_io *io;
 	struct ftl_io_init_opts opts = {
@@ -341,7 +341,7 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
 		.flags		= FTL_IO_PPA_MODE,
 		.type		= FTL_IO_ERASE,
 		.lbk_cnt	= 1,
-		.fn		= cb,
+		.cb_fn		= cb,
 		.data		= NULL,
 		.md		= NULL,
 	};
@@ -356,9 +356,15 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
 	return io;
 }
 
+static void
+_ftl_user_cb(struct ftl_io *io, void *arg, int status)
+{
+	io->user_fn(arg, status);
+}
+
 struct ftl_io *
 ftl_io_user_init(struct spdk_io_channel *_ioch, uint64_t lba, size_t lbk_cnt, struct iovec *iov,
-		 size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg, int type)
+		 size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_ctx, int type)
 {
 	struct ftl_io_channel *ioch = spdk_io_channel_get_ctx(_ioch);
 	struct spdk_ftl_dev *dev = ioch->dev;
@@ -369,8 +375,9 @@ ftl_io_user_init(struct spdk_io_channel *_ioch, uint64_t lba, size_t lbk_cnt, st
 		return NULL;
 	}
 
-	ftl_io_init(io, dev, cb_fn, cb_arg, 0, type);
+	ftl_io_init(io, dev, _ftl_user_cb, cb_ctx, 0, type);
 	io->lba.single = lba;
+	io->user_fn = cb_fn;
 
 	if (ftl_io_init_iovec(io, iov, iov_cnt, lbk_cnt)) {
 		ftl_io_free(io);
@@ -425,8 +432,8 @@ ftl_io_complete(struct ftl_io *io)
 	pthread_spin_unlock(&io->lock);
 
 	if (complete) {
-		if (io->cb.fn) {
-			io->cb.fn(io->cb.ctx, io->status);
+		if (io->cb_fn) {
+			io->cb_fn(io, io->cb_ctx, io->status);
 		}
 
 		if (parent && ftl_io_remove_child(io)) {
@@ -511,10 +518,10 @@ ftl_io_alloc(struct spdk_io_channel *ch)
 }
 
 void
-ftl_io_reinit(struct ftl_io *io, spdk_ftl_fn fn, void *ctx, int flags, int type)
+ftl_io_reinit(struct ftl_io *io, ftl_io_fn cb, void *ctx, int flags, int type)
 {
 	ftl_io_clear(io);
-	ftl_io_init(io, io->dev, fn, ctx, flags, type);
+	ftl_io_init(io, io->dev, cb, ctx, flags, type);
 }
 
 void

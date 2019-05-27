@@ -163,13 +163,11 @@ _ftl_reloc_prep(struct ftl_band_reloc *breloc)
 }
 
 static void
-ftl_reloc_read_lba_map_cb(void *arg, int status)
+ftl_reloc_read_lba_map_cb(struct ftl_io *io, void *arg, int status)
 {
-	struct ftl_io *io = arg;
-	struct ftl_band_reloc *breloc = ftl_io_get_band_reloc(io);
+	struct ftl_band_reloc *breloc = arg;
 
 	assert(status == 0);
-	ftl_io_free(io);
 	_ftl_reloc_prep(breloc);
 }
 
@@ -178,18 +176,12 @@ ftl_reloc_read_lba_map(struct ftl_band_reloc *breloc)
 {
 	struct ftl_band *band = breloc->band;
 	struct spdk_ftl_dev *dev = band->dev;
-	struct ftl_io *io = ftl_io_alloc(dev->ioch);
-
-	io->dev = dev;
-	io->band = band;
-	io->cb.ctx = io;
-	io->cb.fn = ftl_reloc_read_lba_map_cb;
 
 	if (ftl_band_alloc_lba_map(band)) {
 		assert(false);
 	}
 
-	return ftl_band_read_lba_map(band, 0, ftl_num_band_lbks(dev), io->cb);
+	return ftl_band_read_lba_map(band, 0, ftl_num_band_lbks(dev), ftl_reloc_read_lba_map_cb, breloc);
 }
 
 static void
@@ -219,9 +211,8 @@ ftl_reloc_free_io(struct ftl_band_reloc *breloc, struct ftl_io *io)
 }
 
 static void
-ftl_reloc_write_cb(void *arg, int status)
+ftl_reloc_write_cb(struct ftl_io *io, void *arg, int status)
 {
-	struct ftl_io *io = arg;
 	struct ftl_ppa ppa = io->ppa;
 	struct ftl_band_reloc *breloc = ftl_io_get_band_reloc(io);
 	size_t i;
@@ -242,9 +233,8 @@ ftl_reloc_write_cb(void *arg, int status)
 }
 
 static void
-ftl_reloc_read_cb(void *arg, int status)
+ftl_reloc_read_cb(struct ftl_io *io, void *arg, int status)
 {
-	struct ftl_io *io = arg;
 	struct ftl_band_reloc *breloc = ftl_io_get_band_reloc(io);
 
 	/* TODO: We should handle fail on relocation read. We need to inform */
@@ -384,13 +374,13 @@ ftl_reloc_next_lbks(struct ftl_band_reloc *breloc, struct ftl_ppa *ppa)
 
 static void
 ftl_reloc_io_reinit(struct ftl_io *io, struct ftl_band_reloc *breloc,
-		    spdk_ftl_fn fn, enum ftl_io_type io_type, int flags)
+		    ftl_io_fn fn, enum ftl_io_type io_type, int flags)
 {
 	size_t i;
 	uint64_t lbkoff;
 	struct ftl_ppa ppa = io->ppa;
 
-	ftl_io_reinit(io, fn, io, flags | FTL_IO_INTERNAL, io_type);
+	ftl_io_reinit(io, fn, NULL, flags | FTL_IO_INTERNAL, io_type);
 
 	io->ppa = ppa;
 	io->band = breloc->band;
@@ -437,7 +427,7 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_io *io,
 		.flags		= FTL_IO_KEEP_ALIVE | FTL_IO_INTERNAL | FTL_IO_PPA_MODE,
 		.type		= FTL_IO_READ,
 		.lbk_cnt	= num_lbks,
-		.fn		= ftl_reloc_read_cb,
+		.cb_fn		= ftl_reloc_read_cb,
 	};
 
 	opts.data = spdk_dma_malloc(PAGE_SIZE * num_lbks, PAGE_SIZE, NULL);
