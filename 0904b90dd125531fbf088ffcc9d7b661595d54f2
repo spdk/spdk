@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12525ec5_f5f0cf5d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-27T07:38:25Z",
+      "side": 1,
+      "message": "Can we describe why OCF is doing this by default, how persistent metadata load is expected to work and why we don\u0027t want it?",
+      "range": {
+        "startLine": 11,
+        "startChar": 21,
+        "endLine": 11,
+        "endChar": 50
+      },
+      "revId": "0904b90dd125531fbf088ffcc9d7b661595d54f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
