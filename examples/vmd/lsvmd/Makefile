@@ -31,14 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += bdev blob ioat nvme sock vmd
+APP = lsvmd
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := lsvmd.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST = vmd log
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
