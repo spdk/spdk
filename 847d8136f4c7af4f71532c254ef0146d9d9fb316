@@ -16,6 +16,24 @@
       "revId": "847d8136f4c7af4f71532c254ef0146d9d9fb316",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14d9e42f_0ed60d0b",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-27T08:39:52Z",
+      "side": 1,
+      "message": "tqpair-\u003emax_r2t is not 0 based and this looks correct to me",
+      "parentUuid": "e63f4a23_bcca5b9a",
+      "revId": "847d8136f4c7af4f71532c254ef0146d9d9fb316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
