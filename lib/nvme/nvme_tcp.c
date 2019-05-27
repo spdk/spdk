@@ -54,7 +54,7 @@
 #define NVME_TCP_RW_BUFFER_SIZE 131072
 
 #define NVME_TCP_HPDA_DEFAULT			0
-#define NVME_TCP_MAX_R2T_DEFAULT		16
+#define NVME_TCP_MAX_R2T_DEFAULT		1
 #define NVME_TCP_PDU_H2C_MIN_DATA_SIZE		4096
 #define NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE	8192
 
@@ -86,8 +86,7 @@ struct nvme_tcp_qpair {
 	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
 	uint32_t				maxh2cdata;
 
-	int32_t					maxr2t;
-	int32_t					pending_r2t;
+	uint32_t				maxr2t;
 
 	/* 0 based value, which is used to guide the padding */
 	uint8_t					cpda;
@@ -108,6 +107,7 @@ struct nvme_tcp_req {
 	uint16_t				ttag;
 	uint32_t				datao;
 	uint32_t				r2tl_remain;
+	uint32_t				active_r2ts;
 	bool					in_capsule_data;
 	struct nvme_tcp_pdu			send_pdu;
 	struct iovec				iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
@@ -148,6 +148,7 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->req = NULL;
 	tcp_req->in_capsule_data = false;
 	tcp_req->r2tl_remain = 0;
+	tcp_req->active_r2ts = 0;
 	tcp_req->iovcnt = 0;
 	memset(&tcp_req->send_pdu, 0, sizeof(tcp_req->send_pdu));
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
@@ -1243,6 +1244,10 @@ nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 
 	if (tcp_req->r2tl_remain) {
 		spdk_nvme_tcp_send_h2c_data(tcp_req);
+	} else {
+		assert(tcp_req->active_r2ts > 0);
+		tcp_req->active_r2ts--;
+		tcp_req->state = NVME_TCP_REQ_ACTIVE;
 	}
 }
 
@@ -1293,9 +1298,6 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	h2c_data->common.plen = plen;
 	tcp_req->datao += h2c_data->datal;
 	if (!tcp_req->r2tl_remain) {
-		tqpair->pending_r2t--;
-		assert(tqpair->pending_r2t >= 0);
-		tcp_req->state = NVME_TCP_REQ_ACTIVE;
 		h2c_data->common.flags |= SPDK_NVME_TCP_H2C_DATA_FLAGS_LAST_PDU;
 	}
 
@@ -1326,14 +1328,16 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "r2t info: r2to=%u, r2tl=%u for tqpair=%p\n", r2t->r2to, r2t->r2tl,
 		      tqpair);
 
-	if (tcp_req->state != NVME_TCP_REQ_ACTIVE_R2T) {
-		if (tqpair->pending_r2t >= tqpair->maxr2t) {
-			fes = SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR;
-			SPDK_ERRLOG("Invalid R2T: it exceeds the R2T maixmal=%u for tqpair=%p\n", tqpair->maxr2t, tqpair);
-			goto end;
-		}
+	if (tcp_req->state == NVME_TCP_REQ_ACTIVE) {
+		assert(tcp_req->active_r2ts == 0);
 		tcp_req->state = NVME_TCP_REQ_ACTIVE_R2T;
-		tqpair->pending_r2t++;
+	}
+
+	tcp_req->active_r2ts++;
+	if (tcp_req->active_r2ts > tqpair->maxr2t) {
+		fes = SPDK_NVME_TCP_TERM_REQ_FES_R2T_LIMIT_EXCEEDED;
+		SPDK_ERRLOG("Invalid R2T: it exceeds the R2T maixmal=%u for tqpair=%p\n", tqpair->maxr2t, tqpair);
+		goto end;
 	}
 
 	if (tcp_req->datao != r2t->r2to) {
