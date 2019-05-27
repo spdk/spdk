@@ -57,6 +57,24 @@
       "revId": "847d8136f4c7af4f71532c254ef0146d9d9fb316",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a631971_57643827",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1334,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-27T10:25:14Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nAs stated by Shuhei, the code here is correct.",
+      "parentUuid": "14d9e42f_0ed60d0b",
+      "revId": "847d8136f4c7af4f71532c254ef0146d9d9fb316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
