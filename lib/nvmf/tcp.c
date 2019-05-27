@@ -185,6 +185,7 @@ struct spdk_nvmf_tcp_req  {
 	/*
 	 * next_expected_r2t_offset is used when we receive the h2c_data PDU.
 	 */
+	uint32_t				active_r2ts;
 	uint32_t				next_expected_r2t_offset;
 	uint32_t				r2tl_remain;
 
@@ -226,7 +227,6 @@ struct spdk_nvmf_tcp_qpair {
 	int32_t					state_cntr[TCP_REQUEST_NUM_STATES];
 
 	uint32_t				maxr2t;
-	uint32_t				pending_r2t;
 	TAILQ_HEAD(, spdk_nvmf_tcp_req)		queued_c2h_data_tcp_req;
 
 	uint8_t					cpda;
@@ -369,6 +369,7 @@ spdk_nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 	memset(&tcp_req->cmd, 0, sizeof(tcp_req->cmd));
 	memset(&tcp_req->rsp, 0, sizeof(tcp_req->rsp));
 	tcp_req->next_expected_r2t_offset = 0;
+	tcp_req->active_r2ts = 0;
 	tcp_req->r2tl_remain = 0;
 	tcp_req->c2h_data_offset = 0;
 	tcp_req->has_incapsule_data = false;
@@ -1518,19 +1519,13 @@ spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 }
 
 static void
-spdk_nvmf_tcp_handle_queued_r2t_req(struct spdk_nvmf_tcp_qpair *tqpair)
+spdk_nvmf_tcp_handle_r2t_req(struct spdk_nvmf_tcp_qpair *tqpair, struct spdk_nvmf_tcp_req *tcp_req)
 {
-	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
-
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T],
-			   state_link, req_tmp) {
-		if (tqpair->pending_r2t < tqpair->maxr2t) {
-			tqpair->pending_r2t++;
-			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-			spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
-		} else {
-			break;
-		}
+	assert(tcp_req->state == TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T);
+	if (tcp_req->active_r2ts < tqpair->maxr2t) {
+		tcp_req->active_r2ts++;
+		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+		spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
 	}
 }
 
@@ -1552,13 +1547,11 @@ spdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport
 
 	if (!tcp_req->r2tl_remain) {
 		if (tcp_req->next_expected_r2t_offset == tcp_req->req.length) {
-			assert(tqpair->pending_r2t > 0);
-			tqpair->pending_r2t--;
-			assert(tqpair->pending_r2t < tqpair->maxr2t);
+			assert(tcp_req->active_r2ts > 0);
+			tcp_req->active_r2ts--;
+			assert(tcp_req->active_r2ts == 0);
 			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
 			spdk_nvmf_tcp_req_process(ttransport, tcp_req);
-
-			spdk_nvmf_tcp_handle_queued_r2t_req(tqpair);
 		} else {
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Send r2t pdu for tcp_req=%p on tqpair=%p\n", tcp_req, tqpair);
 			spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
@@ -2360,7 +2353,7 @@ spdk_nvmf_tcp_pdu_set_buf_from_req(struct spdk_nvmf_tcp_qpair *tqpair,
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Will send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
 		tcp_req->next_expected_r2t_offset = 0;
 		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T);
-		spdk_nvmf_tcp_handle_queued_r2t_req(tqpair);
+		spdk_nvmf_tcp_handle_r2t_req(tqpair, tcp_req);
 	} else {
 		pdu = &tqpair->pdu_in_progress;
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Not need to send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req,
@@ -2560,7 +2553,6 @@ spdk_nvmf_tcp_qpair_process_pending(struct spdk_nvmf_tcp_transport *ttransport,
 		return;
 	}
 
-	spdk_nvmf_tcp_handle_queued_r2t_req(tqpair);
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->group->pending_data_buf_queue, link, req_tmp) {
 		if (spdk_nvmf_tcp_req_process(ttransport, tcp_req) == false) {
