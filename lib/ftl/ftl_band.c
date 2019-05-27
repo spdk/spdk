@@ -705,7 +705,7 @@ ftl_band_release_md(struct ftl_band *band)
 }
 
 static void
-ftl_read_md_cb(void *arg, int status)
+ftl_read_md_cb(struct ftl_io *io, void *arg, int status)
 {
 	struct ftl_md_io *md_io = arg;
 
@@ -717,7 +717,7 @@ ftl_read_md_cb(void *arg, int status)
 		status = FTL_MD_IO_FAILURE;
 	}
 
-	md_io->cb.fn(md_io->cb.ctx, status);
+	md_io->cb.fn(md_io->cb.ctx, md_io->cb.ctx, status);
 }
 
 static struct ftl_md_io *
@@ -736,7 +736,7 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data, str
 		.type		= FTL_IO_READ,
 		.iov_cnt	= spdk_divide_round_up(lbk_cnt, req_size),
 		.req_size	= req_size,
-		.fn		= ftl_read_md_cb,
+		.cb.fn		= ftl_read_md_cb,
 		.data		= data,
 	};
 
@@ -750,13 +750,14 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data, str
 	io->buf = data;
 	io->pack_fn = fn;
 	io->cb = *cb;
+	io->io.cb.ctx = io;
 
 	return io;
 }
 
 static struct ftl_io *
 ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
-		     void *data, size_t req_cnt, spdk_ftl_fn cb)
+		     void *data, size_t req_cnt, ftl_io_fn cb)
 {
 	struct ftl_io_init_opts opts = {
 		.dev		= dev,
@@ -768,7 +769,7 @@ ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.type		= FTL_IO_WRITE,
 		.iov_cnt	= req_cnt,
 		.req_size	= dev->xfer_size,
-		.fn		= cb,
+		.cb.fn		= cb,
 		.data		= data,
 		.md		= NULL,
 	};
@@ -778,7 +779,7 @@ ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
 
 static int
 ftl_band_write_md(struct ftl_band *band, void *data, size_t lbk_cnt,
-		  ftl_md_pack_fn md_fn, spdk_ftl_fn cb)
+		  ftl_md_pack_fn md_fn, ftl_io_fn cb)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_io *io;
@@ -810,14 +811,14 @@ ftl_band_md_clear(struct ftl_md *md)
 }
 
 int
-ftl_band_write_head_md(struct ftl_band *band, void *data, spdk_ftl_fn cb)
+ftl_band_write_head_md(struct ftl_band *band, void *data, ftl_io_fn cb)
 {
 	return ftl_band_write_md(band, data, ftl_head_md_num_lbks(band->dev),
 				 ftl_pack_head_md, cb);
 }
 
 int
-ftl_band_write_tail_md(struct ftl_band *band, void *data, spdk_ftl_fn cb)
+ftl_band_write_tail_md(struct ftl_band *band, void *data, ftl_io_fn cb)
 {
 	return ftl_band_write_md(band, data, ftl_tail_md_num_lbks(band->dev),
 				 ftl_pack_tail_md, cb);
@@ -913,9 +914,8 @@ ftl_erase_fail(struct ftl_io *io, int status)
 }
 
 static void
-ftl_band_erase_cb(void *ctx, int status)
+ftl_band_erase_cb(struct ftl_io *io, void *ctx, int status)
 {
-	struct ftl_io *io = ctx;
 	struct ftl_chunk *chunk;
 
 	if (spdk_unlikely(status)) {
