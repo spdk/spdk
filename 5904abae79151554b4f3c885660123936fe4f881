@@ -16,6 +16,24 @@
       "revId": "5904abae79151554b4f3c885660123936fe4f881",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f654b90_bc8e7b71",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 0,
+      "message": "No, the len refers to the length of the requested data buffer. We already make sure that buf is large enough to hold data + metadata + alignment in spdk_bdev_io_get_buf.",
+      "parentUuid": "617118f7_ce13af8a",
+      "revId": "5904abae79151554b4f3c885660123936fe4f881",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }

@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5fbd912b_e00ba833",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 1332,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Haha, fixed.",
+      "parentUuid": "c5fdc303_54abd766",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20df40f8_91e1a999",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 8
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f6e9e74e_20de6d0c",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "20df40f8_91e1a999",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d188c50f_9ffe81d0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -47,6 +83,24 @@
       "writtenOn": "2019-05-21T17:31:01Z",
       "side": 1,
       "message": "You can eliminate this forward declaration by rearranging the functions - that\u0027s how we normally do it where possible.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49bdfae3_f4357698",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "You\u0027re right, but this function is used pretty early in this file (inside _spdk_bdev_io_split_with_payload), so to move it up, I\u0027d have to move a lot more stuff up (spdk_bdev_io_valid_blocks, spdk_bdev_io_init, spdk_bdev_io_submit). It should be doable, but it\u0027d be a mess to review. Perhaps I could do that in a separate patch?",
+      "parentUuid": "d188c50f_9ffe81d0",
       "revId": "53f596aa1facd305ea9087672112472eb0a28057",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "06e34df2_f1be7bd8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "The alignment on line 559 refers to the buffer we got from the pool, while this checks if the user provided buffer is aligned. However, since I\u0027m changing the code only to allow setting metadata\u0027s buffer if data buffer needs to be set as well, this check is no longer needed (if we\u0027re here it means that the user buffer\u0027s either NULL or unaligned).",
+      "parentUuid": "846ce2cf_ef0de4cf",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "140f6e43_ca14765d",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -81,6 +153,24 @@
       "writtenOn": "2019-05-21T17:31:01Z",
       "side": 1,
       "message": "After aligning the buffer and reducing the length, the remaining data in the buffer should be for the md_buf. That buffer should also be aligned automatically (because you have an aligned buffer of blocks before it). I guess this could break if the block size is not a multiple of the alignment, but for separate metadata that shouldn\u0027t be allowed (blocks are a power of two with separate metadata).\n\nI think this should be as simple as grabbing a pointer to the start of the md_buf from within aligned_buf and calling spdk_bdev_io_set_md_buf - no need for the double buffer case.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecfff8a8_284675dc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 571,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Perhaps we could get rid of the double buffering and call spdk_bdev_io_set_md_buf only if bdev_io-\u003eu.bdev.md_buf \u003d\u003d NULL... I left it because I figured it might be useful if we ever want to support alignment checks on metadata.",
+      "parentUuid": "140f6e43_ca14765d",
       "revId": "53f596aa1facd305ea9087672112472eb0a28057",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "ceb188b4_2993c4ef",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "17290866_fed74ae4",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98bb4f56_f03e56be",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -115,6 +223,24 @@
       "writtenOn": "2019-05-21T17:31:01Z",
       "side": 1,
       "message": "I actually think it would be a serious error condition if the buffers were allocated but the metadata was not. So maybe instead of always calculating md_allocated/md_len here, you could do something like this:\n\nbuf_allocated \u003d ...\nif (spdk_bdev_md_is_separate(bdev)) {\n    if (buf_allocated) {\n        /* Check if md is properly allocated. Assert/blow up/return error if it is not. */\n    }\n    md_len \u003d num_blocks * bdev-\u003emd_len;\n} else if (buf_allocated) {\n    /* Buffers already present and aligned */\n    ....\n} else {\n    md_len \u003d 0;\n}\n\nThis also lets us avoid the division to calculate num_blocks for devices that don\u0027t support metadata, which is important for performance.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0184119_8eda5db4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "I\u0027ve resolved that a bit differently. If we\u0027re here, it means that we\u0027ve passed the _bdev_io_check_md_buf. That means if buf_allocated \u003d\u003d true, either md_buf !\u003d NULL or the IO comes from a regular (i.e. not _with_md) function. That means that we don\u0027t have to check the md_buf if buf_allocated \u003d\u003d true.\n\nAlso, I\u0027ve gotten rid of that division - it wasn\u0027t necessary, as bdev_io already has nnum_blocks (bdev_io-\u003eu.bdev.num_blocks).",
+      "parentUuid": "98bb4f56_f03e56be",
       "revId": "53f596aa1facd305ea9087672112472eb0a28057",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "8bda7716_7ee9489f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1627,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bcbd9772_1ab7579f",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a563ad2e_5e43986f",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -152,6 +296,24 @@
       "revId": "53f596aa1facd305ea9087672112472eb0a28057",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ae33634_3607d45e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2671,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a563ad2e_5e43986f",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -172,6 +334,24 @@
     },
     {
       "key": {
+        "uuid": "eee182d2_baaa2f15",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2683,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3fe281e_93ae3a85",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e730b19_0e0df0fb",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -183,6 +363,24 @@
       "writtenOn": "2019-05-21T17:31:01Z",
       "side": 1,
       "message": "This call should check if md_buf is NULL. If it is, fail here.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ec7bd58_3e737282",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2737,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "That would make it impossible to support calls with both buf \u003d NULL and md_buf \u003d\u003d NULL.",
+      "parentUuid": "4e730b19_0e0df0fb",
       "revId": "53f596aa1facd305ea9087672112472eb0a28057",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -206,6 +404,24 @@
     },
     {
       "key": {
+        "uuid": "864ccaaa_a9779984",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2755,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "41aed3c2_44b5ef9b",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "01c65b1f_b5dc7f14",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -217,6 +433,24 @@
       "writtenOn": "2019-05-21T17:31:01Z",
       "side": 1,
       "message": "Check that md_buf is not null.",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf1191cd_a264768c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2809,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Same as above - that would mean we don\u0027t support calls with buf \u003d\u003d NULL and md_buf \u003d\u003d NULL.",
+      "parentUuid": "01c65b1f_b5dc7f14",
       "revId": "53f596aa1facd305ea9087672112472eb0a28057",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -237,6 +471,24 @@
       "revId": "53f596aa1facd305ea9087672112472eb0a28057",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b71eec4f_b653a3f7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2871,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T14:10:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d0eafc14_c78dec1a",
+      "revId": "53f596aa1facd305ea9087672112472eb0a28057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
