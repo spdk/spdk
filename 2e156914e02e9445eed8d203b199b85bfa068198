@@ -46,6 +46,30 @@
       "revId": "2e156914e02e9445eed8d203b199b85bfa068198",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ca39ae1_d28b8e9f",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-27T11:41:53Z",
+      "side": 1,
+      "message": "OK, I understand the design now, thank you for explanation.",
+      "parentUuid": "3b1dbf96_bc49eaed",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 144,
+        "endChar": 3
+      },
+      "revId": "2e156914e02e9445eed8d203b199b85bfa068198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
