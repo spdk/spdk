@@ -46,6 +46,30 @@
       "revId": "ec50000bb33035198fd8aab20a2407f691d53515",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84daa5bb_06977453",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-27T10:47:33Z",
+      "side": 1,
+      "message": "I was actually thinking about returning negative value for en error, because 0 might be a special case as Jim mentioned before (and you also use -1 for different transportation types). I guess mixing types isn\u0027t the best way, but it complicates code later. I\u0027m OK with leaving this as it is right now.",
+      "parentUuid": "7179cd53_0c2cc6d1",
+      "range": {
+        "startLine": 473,
+        "startChar": 63,
+        "endLine": 473,
+        "endChar": 75
+      },
+      "revId": "ec50000bb33035198fd8aab20a2407f691d53515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
