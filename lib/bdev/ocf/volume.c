@@ -177,19 +177,8 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 		io_ctx->error |= 1;
 	}
 
-	if (io_ctx->offset && bdev_io != NULL) {
-		switch (bdev_io->type) {
-		case SPDK_BDEV_IO_TYPE_READ:
-		case SPDK_BDEV_IO_TYPE_WRITE:
-			env_free(bdev_io->u.bdev.iovs);
-			break;
-		case SPDK_BDEV_IO_TYPE_FLUSH:
-			/* No iovs were allocated for flush request */
-			break;
-		default:
-			assert(false);
-			break;
-		}
+	if (io_ctx->iovs_allocated && bdev_io != NULL) {
+		env_free(bdev_io->u.bdev.iovs);
 	}
 
 	if (io_ctx->error) {
@@ -313,7 +302,7 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 	len = io->bytes;
 	offset = io_ctx->offset;
 
-	if (offset) {
+	if (len < io_ctx->data->size) {
 		i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
 
 		if (i < 0) {
@@ -324,6 +313,7 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 
 		iovcnt = io_ctx->data->iovcnt - i;
 
+		io_ctx->iovs_allocated = true;
 		iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
 
 		if (!iovs) {
