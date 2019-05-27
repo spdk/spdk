@@ -70,9 +70,6 @@ enum spdk_nvmf_tcp_req_state {
 	/* The request is queued until a data buffer is available. */
 	TCP_REQUEST_STATE_NEED_BUFFER,
 
-	/* The request is pending on r2t slots */
-	TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T,
-
 	/* The request is currently transferring data from the host to the controller. */
 	TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
 
@@ -112,17 +109,16 @@ static const char *spdk_nvmf_tcp_term_req_fes_str[] = {
 #define TRACE_GROUP_NVMF_TCP				0x5
 #define TRACE_TCP_REQUEST_STATE_NEW					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x0)
 #define TRACE_TCP_REQUEST_STATE_NEED_BUFFER				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x1)
-#define TRACE_TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x2)
-#define TRACE_TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER		SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x3)
-#define TRACE_TCP_REQUEST_STATE_READY_TO_EXECUTE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x4)
-#define TRACE_TCP_REQUEST_STATE_EXECUTING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x5)
-#define TRACE_TCP_REQUEST_STATE_EXECUTED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x6)
-#define TRACE_TCP_REQUEST_STATE_READY_TO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x7)
-#define TRACE_TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST		SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x8)
-#define TRACE_TCP_REQUEST_STATE_COMPLETED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x9)
-#define TRACE_TCP_FLUSH_WRITEBUF_START					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xA)
-#define TRACE_TCP_FLUSH_WRITEBUF_DONE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xB)
-#define TRACE_TCP_READ_FROM_SOCKET_DONE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xC)
+#define TRACE_TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER		SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x2)
+#define TRACE_TCP_REQUEST_STATE_READY_TO_EXECUTE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x3)
+#define TRACE_TCP_REQUEST_STATE_EXECUTING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x4)
+#define TRACE_TCP_REQUEST_STATE_EXECUTED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x5)
+#define TRACE_TCP_REQUEST_STATE_READY_TO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x6)
+#define TRACE_TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST		SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x7)
+#define TRACE_TCP_REQUEST_STATE_COMPLETED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x8)
+#define TRACE_TCP_FLUSH_WRITEBUF_START					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0x9)
+#define TRACE_TCP_FLUSH_WRITEBUF_DONE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xA)
+#define TRACE_TCP_READ_FROM_SOCKET_DONE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xB)
 
 SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 {
@@ -132,9 +128,6 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 1, 1, "");
 	spdk_trace_register_description("TCP_REQ_NEED_BUFFER",
 					TRACE_TCP_REQUEST_STATE_NEED_BUFFER,
-					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0, 1, "");
-	spdk_trace_register_description("TCP_REQ_TX_PENDING_R2T",
-					TRACE_TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T,
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0, 1, "");
 	spdk_trace_register_description("TCP_REQ_TX_H_TO_C",
 					TRACE_TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
@@ -225,8 +218,6 @@ struct spdk_nvmf_tcp_qpair {
 	/* Number of requests in each state */
 	int32_t					state_cntr[TCP_REQUEST_NUM_STATES];
 
-	uint32_t				maxr2t;
-	uint32_t				pending_r2t;
 	TAILQ_HEAD(, spdk_nvmf_tcp_req)		queued_c2h_data_tcp_req;
 
 	uint8_t					cpda;
@@ -437,8 +428,6 @@ spdk_nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
 
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
-
-	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T);
 
 	/* Wipe the requests waiting for buffer from the global list */
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_NEED_BUFFER], state_link,
@@ -1518,23 +1507,6 @@ spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 }
 
 static void
-spdk_nvmf_tcp_handle_queued_r2t_req(struct spdk_nvmf_tcp_qpair *tqpair)
-{
-	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
-
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T],
-			   state_link, req_tmp) {
-		if (tqpair->pending_r2t < tqpair->maxr2t) {
-			tqpair->pending_r2t++;
-			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-			spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
-		} else {
-			break;
-		}
-	}
-}
-
-static void
 spdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport,
 				      struct spdk_nvmf_tcp_qpair *tqpair,
 				      struct nvme_tcp_pdu *pdu)
@@ -1552,13 +1524,8 @@ spdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport
 
 	if (!tcp_req->r2tl_remain) {
 		if (tcp_req->next_expected_r2t_offset == tcp_req->req.length) {
-			assert(tqpair->pending_r2t > 0);
-			tqpair->pending_r2t--;
-			assert(tqpair->pending_r2t < tqpair->maxr2t);
 			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
 			spdk_nvmf_tcp_req_process(ttransport, tcp_req);
-
-			spdk_nvmf_tcp_handle_queued_r2t_req(tqpair);
 		} else {
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Send r2t pdu for tcp_req=%p on tqpair=%p\n", tcp_req, tqpair);
 			spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
@@ -1689,8 +1656,7 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	/* MAXR2T is 0's based */
-	tqpair->maxr2t = ic_req->maxr2t + 1ull;
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "maxr2t =%u\n", tqpair->maxr2t);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "maxr2t =%u\n", (ic_req->maxr2t + 1u));
 
 	tqpair->host_hdgst_enable = ic_req->dgst.bits.hdgst_enable ? true : false;
 	tqpair->host_ddgst_enable = ic_req->dgst.bits.ddgst_enable ? true : false;
@@ -2359,8 +2325,8 @@ spdk_nvmf_tcp_pdu_set_buf_from_req(struct spdk_nvmf_tcp_qpair *tqpair,
 	if (tcp_req->data_from_pool) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Will send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
 		tcp_req->next_expected_r2t_offset = 0;
-		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T);
-		spdk_nvmf_tcp_handle_queued_r2t_req(tqpair);
+		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+		spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
 	} else {
 		pdu = &tqpair->pdu_in_progress;
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Not need to send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req,
@@ -2486,13 +2452,6 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
 			break;
-		case TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T:
-			spdk_trace_record(TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T, 0, 0,
-					  (uintptr_t)tcp_req, 0);
-			/* Some external code must kick a request into TCP_REQUEST_STATE_DATA_PENDING_R2T
-			 * to escape this state. */
-			break;
-
 		case TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER, 0, 0,
 					  (uintptr_t)tcp_req, 0);
@@ -2560,7 +2519,6 @@ spdk_nvmf_tcp_qpair_process_pending(struct spdk_nvmf_tcp_transport *ttransport,
 		return;
 	}
 
-	spdk_nvmf_tcp_handle_queued_r2t_req(tqpair);
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->group->pending_data_buf_queue, link, req_tmp) {
 		if (spdk_nvmf_tcp_req_process(ttransport, tcp_req) == false) {
