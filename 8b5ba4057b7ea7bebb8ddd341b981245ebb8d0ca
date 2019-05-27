@@ -1,0 +1,268 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "660b9d2d_ba802053",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "This name made a little bit of sense inside ftl_init, because it was only used to retrieve the bad blocks. But now that you\u0027re exposing it, let\u0027s rename it to something making more sense - ftl_retrieve_chunk_info perhaps?",
+      "range": {
+        "startLine": 252,
+        "startChar": 4,
+        "endLine": 252,
+        "endChar": 25
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec679e8c_1c88c41a",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "General comment: please keep the lines at 100 columns max.",
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01aa1f3e_c6c66741",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "num_chunks_to_pad - num_pad_chunks. Also, why do we need this variable? I think we need it so infrequently and there\u0027s not that many chunks in a band that we can check the state of each chunk to verify if we\u0027re done instead.",
+      "range": {
+        "startLine": 50,
+        "startChar": 11,
+        "endLine": 50,
+        "endChar": 28
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5124f58_2748b229",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "bands_to_pad -\u003e pad_bands?",
+      "range": {
+        "startLine": 66,
+        "startChar": 33,
+        "endLine": 66,
+        "endChar": 45
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "addf3806_26048a5d",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "num_bands_to_pad -\u003e num_pad_bands.",
+      "range": {
+        "startLine": 68,
+        "startChar": 11,
+        "endLine": 68,
+        "endChar": 27
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c6edaa5_d92c1194",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "Let\u0027s get rid of the _ctx - all of the restore structures serve the purpose of some kind of context. Is there any way we could get rid of this structure? I\u0027m not really a fan of creating a context structure for everything... ftl_io has a buffer field and a ftl_band field (you could retrieve the rband from band by iterating through the bands_to_pad list - it should be pretty samll).",
+      "range": {
+        "startLine": 79,
+        "startChar": 7,
+        "endLine": 79,
+        "endChar": 24
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70447384_28a484d8",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "Can we rearrange it, so that this forward declaration is not needed?",
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88f6469b_5cabbd23",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "I think this should be the interface we expose (as opposed to ftl_retrieve_bbt).",
+      "range": {
+        "startLine": 384,
+        "startChar": 0,
+        "endLine": 393,
+        "endChar": 0
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84df05c9_8b087ed5",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "Do we need the atomic operations here? The completions are thread-safe between each other, so we only have to worry about the submissions vs. completions. I think starting the padding on core thread (which is the one servicing the completions) would be a better solution.",
+      "range": {
+        "startLine": 399,
+        "startChar": 21,
+        "endLine": 399,
+        "endChar": 39
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88875ede_fd9867b5",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "Separate declarations with a newline.",
+      "range": {
+        "startLine": 413,
+        "startChar": 0,
+        "endLine": 414,
+        "endChar": 31
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88cbc636_e5f6914a",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "No point in initializing this.",
+      "range": {
+        "startLine": 453,
+        "startChar": 19,
+        "endLine": 453,
+        "endChar": 25
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af31fee0_c5fb9f23",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-27T07:17:46Z",
+      "side": 1,
+      "message": "I think it\u0027d be more readable if you swapped the condition on line 528 (rband-\u003enum_chunks_to_pad \u003d\u003d 0), do this and returned. That way we won\u0027t have to to all that code above under an if (thus gain 8 characters per each line :-)).",
+      "range": {
+        "startLine": 569,
+        "startChar": 3,
+        "endLine": 575,
+        "endChar": 0
+      },
+      "revId": "8b5ba4057b7ea7bebb8ddd341b981245ebb8d0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
