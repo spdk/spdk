@@ -22,6 +22,30 @@
       "revId": "2e156914e02e9445eed8d203b199b85bfa068198",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b1dbf96_bc49eaed",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-27T11:13:37Z",
+      "side": 1,
+      "message": "Hi Szwed,\n\nIn the original design, Jim also have some description for this:\n\nAdd new function “int spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)”.  Returns 0 if it the sock supports optimal placement, otherwise returns -1.  If the sock’s placement_id already has a sock_group * associated, write that pointer to *group.  Otherwise write NULL to *group.",
+      "parentUuid": "0aa4eadb_26ffd8c4",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 144,
+        "endChar": 3
+      },
+      "revId": "2e156914e02e9445eed8d203b199b85bfa068198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
