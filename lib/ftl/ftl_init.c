@@ -187,13 +187,15 @@ out:
 	return rc;
 }
 
-static int
-ftl_retrieve_bbt_page(struct spdk_ftl_dev *dev, uint64_t offset,
-		      struct spdk_ocssd_chunk_information_entry *info,
-		      unsigned int num_entries)
+int
+ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
+			struct spdk_ocssd_chunk_information_entry *info,
+			unsigned int num_entries)
 {
 	volatile struct ftl_admin_cmpl cmpl = {};
 	uint32_t nsid = spdk_nvme_ns_get_id(dev->ns);
+	uint64_t offset = (ppa.grp * dev->geo.num_pu + ppa.pu) *
+			  dev->geo.num_chk + ppa.chk;
 
 	if (spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_OCSSD_LOG_CHUNK_INFO, nsid,
 					     info, num_entries * sizeof(*info),
@@ -216,20 +218,19 @@ ftl_retrieve_bbt_page(struct spdk_ftl_dev *dev, uint64_t offset,
 }
 
 static int
-ftl_retrieve_bbt(struct spdk_ftl_dev *dev, const struct ftl_punit *punit,
-		 struct spdk_ocssd_chunk_information_entry *info)
+ftl_retrieve_punit_chunk_info(struct spdk_ftl_dev *dev, const struct ftl_punit *punit,
+			      struct spdk_ocssd_chunk_information_entry *info)
 {
 	uint32_t i = 0;
 	unsigned int num_entries = PAGE_SIZE / sizeof(*info);
-	uint64_t off = (punit->start_ppa.grp * dev->geo.num_pu + punit->start_ppa.pu) *
-		       dev->geo.num_chk;
+	struct ftl_ppa chunk_ppa = punit->start_ppa;
 
-	for (i = 0; i < dev->geo.num_chk; i += num_entries) {
+	for (i = 0; i < dev->geo.num_chk; i += num_entries, chunk_ppa.chk += num_entries) {
 		if (num_entries > dev->geo.num_chk - i) {
 			num_entries = dev->geo.num_chk - i;
 		}
 
-		if (ftl_retrieve_bbt_page(dev, off + i, &info[i], num_entries)) {
+		if (ftl_retrieve_chunk_info(dev, chunk_ppa, &info[i], num_entries)) {
 			return -1;
 		}
 	}
@@ -332,7 +333,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 	for (i = 0; i < ftl_dev_num_punits(dev); ++i) {
 		punit = &dev->punits[i];
 
-		rc = ftl_retrieve_bbt(dev, punit, info);
+		rc = ftl_retrieve_punit_chunk_info(dev, punit, info);
 		if (rc) {
 			SPDK_ERRLOG("Failed to retrieve bbt for @ppa: %s [%lu]\n",
 				    ftl_ppa2str(punit->start_ppa, buf, sizeof(buf)),
