@@ -474,6 +474,24 @@
     },
     {
       "key": {
+        "uuid": "77fef729_7b8bf4ed",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T19:28:47Z",
+      "side": 1,
+      "message": "The way the argparser works, it ends up creating a variable inside of the args object that starts with a number i.e. args.99_read_latency. Python follows the same rules as c in regards to starting a variable with a number so it breaks.",
+      "parentUuid": "61c54d9b_a1a953b9",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b0a8aed_4f5d5a9f",
         "filename": "test/json_config/clear_config.py",
         "patchSetId": 8
@@ -485,6 +503,24 @@
       "writtenOn": "2019-05-20T20:49:43Z",
       "side": 1,
       "message": "these names are inconsistent with associated names for other bdevs",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e59f474_b7268548",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T19:28:47Z",
+      "side": 1,
+      "message": "I figured I would pick names based off of the new naming convention you have a review out about. https://review.gerrithub.io/c/spdk/spdk/+/453036",
+      "parentUuid": "3b0a8aed_4f5d5a9f",
       "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
