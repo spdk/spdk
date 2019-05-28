@@ -85,6 +85,29 @@
       "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36fc8010_55dd4980",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T10:23:56Z",
+      "side": 1,
+      "message": "With the support of single r2t, we can indeed maintain three states for a request: free, active and active_r2t (\"active with r2t\").\n\nWhen we get an r2t we must be on the active state, so just check if (tcp_req-\u003estate \u003d\u003d active) and else err without any further checks!. If we\u0027re good (no err), move to state active_r2t.\n\nWhen we send the last pdu that relates to a given r2t, we move the state from active_r2t to active.",
+      "range": {
+        "startLine": 1330,
+        "startChar": 1,
+        "endLine": 1340,
+        "endChar": 2
+      },
+      "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
