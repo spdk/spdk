@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "9848bf2f_38603f0e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T17:35:49Z",
+      "side": 1,
+      "message": "I just realized Ziye already submitted a patch for the target side fix. So ignore this comment - I\u0027ll review that.",
+      "parentUuid": "ce530eb7_00fb4dbc",
+      "range": {
+        "startLine": 16,
+        "startChar": 35,
+        "endLine": 17,
+        "endChar": 67
+      },
+      "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6499e1a0_a1dcb0f1",
         "filename": "/COMMIT_MSG",
         "patchSetId": 4
