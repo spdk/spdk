@@ -1120,6 +1120,8 @@ int spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 int32_t spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions);
 
+int32_t spdk_nvme_qpair_process_completions_tsc(struct spdk_nvme_qpair *qpair,
+		uint32_t max_completions, uint64_t current_tsc);
 /**
  * Send the given admin command to the NVMe controller.
  *

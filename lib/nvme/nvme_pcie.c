@@ -2044,7 +2044,8 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 }
 
 int32_t
-nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions,
+				    uint64_t current_tsc)
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_tracker	*tr;
