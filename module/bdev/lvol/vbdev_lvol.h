@@ -56,6 +56,10 @@ int vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz
 		      bool thin_provisioned, enum lvol_clear_method clear_method,
 		      spdk_lvol_op_with_handle_complete cb_fn,
 		      void *cb_arg);
+int vbdev_lvol_create_with_uuid(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
+				bool thin_provisioned, enum lvol_clear_method clear_method,
+				const char *uuid, spdk_lvol_op_with_handle_complete cb_fn,
+				void *cb_arg);
 
 void vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
 				spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
