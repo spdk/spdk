@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6191f25_cd3d406d",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1183,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-28T12:46:06Z",
+      "side": 1,
+      "message": "You are testing here only scenario where timeout never happens. Please also add scenario for case where timeout actually happens. For that you can use delay bigger than 1 second in spdk_nvme_qpair_process_completions function and then test it with shorter time than 1 second and longer time than 1 second to get second case.",
+      "range": {
+        "startLine": 1181,
+        "startChar": 0,
+        "endLine": 1183,
+        "endChar": 20
+      },
+      "revId": "84d5624a2c57aab09abc5fa6fda13f4e9965f465",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "107849c7_20192c1d",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1189,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-28T12:46:06Z",
+      "side": 1,
+      "message": "You can also add cases where status.cpl !\u003d 0 and check if both functions return correctly.",
+      "revId": "84d5624a2c57aab09abc5fa6fda13f4e9965f465",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
