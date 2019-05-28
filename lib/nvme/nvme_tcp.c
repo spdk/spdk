@@ -406,7 +406,7 @@ nvme_tcp_qpair_process_send_queue(struct nvme_tcp_qpair *tqpair)
 		} else {
 			SPDK_ERRLOG("spdk_sock_writev() failed, errno %d: %s\n",
 				    errno, spdk_strerror(errno));
-			return -1;
+			return -errno;
 		}
 	}
 
@@ -1589,8 +1589,8 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	int rc;
 
 	rc = nvme_tcp_qpair_process_send_queue(tqpair);
-	if (rc) {
-		return 0;
+	if (rc < 0) {
+		return rc;
 	}
 
 	if (max_completions == 0) {
