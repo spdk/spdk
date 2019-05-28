@@ -403,7 +403,7 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	}
 }
 
-static bool
+static inline bool
 nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
 	if (!qpair->is_enabled && !qpair->ctrlr->is_resetting) {
