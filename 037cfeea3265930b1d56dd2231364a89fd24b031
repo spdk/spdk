@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f040d894_d8d4ae6a",
+        "filename": "lib/bdev/compress/Compression_bdev_module.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-28T22:54:11Z",
+      "side": 1,
+      "message": "Test case 1 has a patch outstanding for fio, bdevio and bdevperf - see https://review.gerrithub.io/c/spdk/spdk/+/455113",
+      "revId": "037cfeea3265930b1d56dd2231364a89fd24b031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ff71672_da5a279a",
+        "filename": "lib/bdev/compress/Compression_bdev_module.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-28T22:54:11Z",
+      "side": 1,
+      "message": "Was the intent to do this manually as a one time check or integrate into CI?",
+      "revId": "037cfeea3265930b1d56dd2231364a89fd24b031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
