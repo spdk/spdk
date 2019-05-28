@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c7c8973_d4aefeaa",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 86
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-28T08:40:42Z",
+      "side": 1,
+      "message": "Can this commit message be expanded, so at least basics are explained? Why we change from VCL to Session API and what are the key differences.",
+      "revId": "61368839ef0f0170fd2ca6167f7a92ad40573819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f17edc5_c7407ac4",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 86
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-28T08:40:42Z",
+      "side": 1,
+      "message": "Actually this should be named same as other flags here - \"SPDK_TEST_VPP\".",
+      "range": {
+        "startLine": 87,
+        "startChar": 4,
+        "endLine": 87,
+        "endChar": 16
+      },
+      "revId": "61368839ef0f0170fd2ca6167f7a92ad40573819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3dffe3f6_d8e8465c",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 86
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-28T08:40:42Z",
+      "side": 1,
+      "message": "Recently all checks around paths for dependencies moved to configure. When --with-vpp is present then check for including a header should be performed. Please see configure:480 for example of checking if PMDK include is working.\n\nThis part should be done in configure, can be a separate patch probably along with changes in this patch for mk/spdk.modules.mk.",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 31
+      },
+      "revId": "61368839ef0f0170fd2ca6167f7a92ad40573819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8eb7ed82_7113db0e",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 86
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-28T08:40:42Z",
+      "side": 1,
+      "message": "If above change is complete, this \u0027else\u0027 is not needed. Since configure will just fail with proper message.\nOn another note, we should avoid silently disabling tests when explicitly requested to run.",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 4
+      },
+      "revId": "61368839ef0f0170fd2ca6167f7a92ad40573819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
