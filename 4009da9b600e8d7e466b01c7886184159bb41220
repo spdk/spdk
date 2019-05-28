@@ -108,6 +108,30 @@
       "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e979ab7_753d07ea",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-28T11:31:00Z",
+      "side": 1,
+      "message": "As I stated, this is reserved for the multiple R2T support later.",
+      "parentUuid": "36fc8010_55dd4980",
+      "range": {
+        "startLine": 1330,
+        "startChar": 1,
+        "endLine": 1340,
+        "endChar": 2
+      },
+      "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
