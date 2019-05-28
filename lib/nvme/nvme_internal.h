@@ -867,6 +867,9 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 		return req;
 	}
 
+	__builtin_prefetch(req);
+	__builtin_prefetch(&req->retries);
+
 	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
 
 	/*
