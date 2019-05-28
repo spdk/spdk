@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f9b6e57_689ad994",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T13:53:20Z",
+      "side": 1,
+      "message": "It\u0027d be nice to extract this into a separate patch.",
+      "range": {
+        "startLine": 252,
+        "startChar": 0,
+        "endLine": 259,
+        "endChar": 0
+      },
+      "revId": "bc3793065f251b8c545e02a81dadec31e74b1a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
