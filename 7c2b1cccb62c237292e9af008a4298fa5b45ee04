@@ -16,6 +16,24 @@
       "revId": "7c2b1cccb62c237292e9af008a4298fa5b45ee04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1013f47c_dcc1c538",
+        "filename": "lib/vhost/rte_vhost/rte_vhost.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-28T10:38:44Z",
+      "side": 1,
+      "message": "Those DPDK changes are shaping up on our 19.02-test-vhost branch. They will be eventually submitted to the upstream DPDK.\n\nvirtio-vhost-user support requires some changes in SPDK around rte_vhost APIs - the controller creation RPCs can now either create unix domain sockets or connect to PCI devices. In order to keep the SPDK code simple and free of #ifdefs, we just \"mock\" the missing functionality here.\n\nI don\u0027t think this and other SPDK virtio-vhost-user patches need to be merged just yet. There\u0027s not much value of them being in the upstream without the actual virtio-vhost-user functionality being there as well.",
+      "parentUuid": "81a87711_95e3373a",
+      "revId": "7c2b1cccb62c237292e9af008a4298fa5b45ee04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
