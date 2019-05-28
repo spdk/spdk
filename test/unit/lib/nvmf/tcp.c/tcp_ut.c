@@ -540,6 +540,59 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 		     &tcp_req, state_link);
 }
 
+static void
+test_nvmf_tcp_incapsule_data_sgl(void)
+{
+	struct spdk_nvmf_tcp_transport ttransport = {};
+	struct spdk_nvmf_tcp_req tcp_req = {};
+	struct nvme_tcp_pdu pdu1 = {};
+	struct nvme_tcp_pdu pdu2 = {};
+	struct spdk_nvme_cmd *cmd;
+	struct spdk_nvme_sgl_descriptor *sgl;
+	int rc;
+
+	tcp_req.req.rsp = (union nvmf_c2h_msg *)&tcp_req.rsp;
+	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
+
+	ttransport.transport.opts.in_capsule_data_size = SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE;
+	ttransport.transport.opts.max_io_size = SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE;
+	ttransport.transport.opts.io_unit_size = SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE;
+
+	cmd = &tcp_req.req.cmd->nvme_cmd;
+	sgl = &cmd->dptr.sgl1;
+
+	tcp_req.buf = (void *)0xDEADBEEF;
+
+	sgl->generic.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	sgl->unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
+	sgl->address = 512;
+	sgl->unkeyed.length = 1024;
+
+	rc = spdk_nvmf_tcp_req_parse_sgl(&ttransport, &tcp_req);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT((uint64_t)tcp_req.req.data == 0xDEADBEEF + 512);
+	CU_ASSERT(tcp_req.data_from_pool == false);
+	CU_ASSERT(tcp_req.req.offset == 512);
+	CU_ASSERT(tcp_req.req.length == 1024);
+	CU_ASSERT((uint64_t)tcp_req.req.iov[0].iov_base == 0xDEADBEEF);
+	CU_ASSERT((uint64_t)tcp_req.req.iov[0].iov_len == SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE);
+	CU_ASSERT(tcp_req.req.iovcnt == 1);
+
+	/* Test compatibility between nvme_tcp_pdu_set_data() and nvme_tcp_pdu_set_data() */
+	nvme_tcp_pdu_set_data_buf(&pdu1, tcp_req.req.iov, tcp_req.req.iovcnt,
+				  tcp_req.req.offset, tcp_req.req.length);
+
+	nvme_tcp_pdu_set_data(&pdu2, tcp_req.req.data, tcp_req.req.length);
+
+	CU_ASSERT((uint64_t)pdu1.data_iov[0].iov_base == 0xDEADBEEF + 512);
+	CU_ASSERT(pdu1.data_iov[0].iov_len == 1024);
+	CU_ASSERT(pdu1.data_iovcnt == 1);
+	CU_ASSERT((uint64_t)pdu2.data_iov[0].iov_base == 0xDEADBEEF + 512);
+	CU_ASSERT(pdu2.data_iov[0].iov_len == 1024);
+	CU_ASSERT(pdu2.data_iovcnt == 1);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -560,7 +613,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "nvmf_tcp_destroy", test_nvmf_tcp_destroy) == NULL ||
 		CU_add_test(suite, "nvmf_tcp_poll_group_create", test_nvmf_tcp_poll_group_create) == NULL ||
 		CU_add_test(suite, "nvmf_tcp_send_c2h_data", test_nvmf_tcp_send_c2h_data) == NULL ||
-		CU_add_test(suite, "nvmf_tcp_h2c_data_hdr_handle", test_nvmf_tcp_h2c_data_hdr_handle) == NULL
+		CU_add_test(suite, "nvmf_tcp_h2c_data_hdr_handle", test_nvmf_tcp_h2c_data_hdr_handle) == NULL ||
+		CU_add_test(suite, "nvmf_tcp_incapsule_data_sgl", test_nvmf_tcp_incapsule_data_sgl) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

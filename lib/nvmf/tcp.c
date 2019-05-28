@@ -2180,21 +2180,22 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 			rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
 			return -1;
 		}
-		max_len -= (uint32_t)offset;
 
-		if (sgl->unkeyed.length > max_len) {
-			SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
-				    sgl->unkeyed.length, max_len);
+		if (sgl->unkeyed.length + (uint32_t)offset > max_len) {
+			SPDK_ERRLOG("In-capsule offset 0x%x plus data length 0x%x exceeds"
+				    " capsule length 0x%x\n",
+				    (uint32_t)offset, sgl->unkeyed.length, max_len);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
 		}
 
 		tcp_req->req.data = tcp_req->buf + offset;
 		tcp_req->data_from_pool = false;
+		tcp_req->req.offset = offset;
 		tcp_req->req.length = sgl->unkeyed.length;
 
-		tcp_req->req.iov[0].iov_base = tcp_req->req.data;
-		tcp_req->req.iov[0].iov_len = tcp_req->req.length;
+		tcp_req->req.iov[0].iov_base = tcp_req->buf;
+		tcp_req->req.iov[0].iov_len = max_len;
 		tcp_req->req.iovcnt = 1;
 
 		return 0;
@@ -2359,7 +2360,8 @@ spdk_nvmf_tcp_pdu_set_buf_from_req(struct spdk_nvmf_tcp_qpair *tqpair,
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Not need to send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req,
 			      tqpair);
 		/* No need to send r2t, contained in the capsuled data */
-		nvme_tcp_pdu_set_data(pdu, tcp_req->req.data, tcp_req->req.length);
+		nvme_tcp_pdu_set_data_buf(pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
+					  tcp_req->req.offset, tcp_req->req.length);
 		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 	}
