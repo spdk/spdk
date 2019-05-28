@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93205e43_a136e83f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T08:28:35Z",
+      "side": 1,
+      "message": "nvme/tcp: Properly deal with supporting single r2t",
+      "range": {
+        "startLine": 7,
+        "startChar": 10,
+        "endLine": 7,
+        "endChar": 51
+      },
+      "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84b885b4_db0476cc",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T08:28:35Z",
+      "side": 1,
+      "message": "supporting only one r2t is not only due to that, we have global ttag on the request and maybe more. I would just say that the implementation supports one r2t and we cleanup the code to do the right advertising to the target in the icreq and avoid attempts to deal with multiple rt2s.",
+      "range": {
+        "startLine": 15,
+        "startChar": 33,
+        "endLine": 16,
+        "endChar": 34
+      },
+      "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9371a994_fd0fc034",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T08:28:35Z",
+      "side": 1,
+      "message": "Aren\u0027t we terribly slowing down the spdk target with this patch? \n\nIt seems [1] that the target maintains a per connection global counter of rt2s which is maxes out on the quantity provided by the initiator. \n\nSo if we patch the initiator to send maxr2t \u003d 0 we will only have one inflight rt2 sent by the target - am I wrong? \n\nIf this is correct, what we need to do is patch where the target hard codes their value to be (say) 16, and ignore what they get in the icreq from the initiator. The initiator to advertize 0 and not the currently sent value (16). \n\nNext you can have follow up patch/es to change the target side to manage their r2t per req and not per connection.\n\n\n[1] spdk.git]# git grep -p maxr2t lib/nvmf/tcp.c\nlib/nvmf/tcp.c\u003dstruct spdk_nvmf_tcp_qpair {\nlib/nvmf/tcp.c: uint32_t                                maxr2t;\nlib/nvmf/tcp.c\u003dspdk_nvmf_tcp_handle_queued_r2t_req(struct spdk_nvmf_tcp_qpair *tqpair)\nlib/nvmf/tcp.c:         if (tqpair-\u003epending_r2t \u003c tqpair-\u003emaxr2t) {\nlib/nvmf/tcp.c\u003dspdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport,\nlib/nvmf/tcp.c:                 assert(tqpair-\u003epending_r2t \u003c tqpair-\u003emaxr2t);\nlib/nvmf/tcp.c\u003dspdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,\nlib/nvmf/tcp.c: tqpair-\u003emaxr2t \u003d ic_req-\u003emaxr2t + 1ull;\nlib/nvmf/tcp.c: SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, \"maxr2t \u003d%u\\n\", tqpair-\u003emaxr2t);",
+      "range": {
+        "startLine": 16,
+        "startChar": 35,
+        "endLine": 17,
+        "endChar": 67
+      },
+      "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
