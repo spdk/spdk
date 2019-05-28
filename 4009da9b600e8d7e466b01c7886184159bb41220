@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "ce530eb7_00fb4dbc",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T17:32:51Z",
+      "side": 1,
+      "message": "I think we need to first fix the target side here, then go back and fix the initiator. Or - do you have patches that fix the target to make maxr2t a per-command value? The target should allow one r2t per command maximum by default (so if the initiator reports 16, it still sends just 1). That\u0027s just to keep this simple while we make it correct. We can deal with \u003e1 r2t per command later, if it makes any different for performance.",
+      "parentUuid": "9371a994_fd0fc034",
+      "range": {
+        "startLine": 16,
+        "startChar": 35,
+        "endLine": 17,
+        "endChar": 67
+      },
+      "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6499e1a0_a1dcb0f1",
         "filename": "/COMMIT_MSG",
         "patchSetId": 4
@@ -123,6 +147,30 @@
       "side": 1,
       "message": "As I stated, this is reserved for the multiple R2T support later.",
       "parentUuid": "36fc8010_55dd4980",
+      "range": {
+        "startLine": 1330,
+        "startChar": 1,
+        "endLine": 1340,
+        "endChar": 2
+      },
+      "revId": "4009da9b600e8d7e466b01c7886184159bb41220",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2297205_eb6d8ebe",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T17:32:51Z",
+      "side": 1,
+      "message": "I\u0027m not convinced that more than one r2t per command is ever going to be necessary from a performance perspective. We may never actually add support for it, because I think it adds considerable complexity for little, if any, value. I\u0027d prefer to simplify the code here to only allow for a single r2t per command, in which case we know that the state is ACTIVE (not ACTIVE_R2T) at this point.",
+      "parentUuid": "1e979ab7_753d07ea",
       "range": {
         "startLine": 1330,
         "startChar": 1,
