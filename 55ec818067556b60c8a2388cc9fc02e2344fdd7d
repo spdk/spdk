@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7880bdd9_cf41ec49",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 5308,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T14:33:36Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this third step actually delete the snapshot? Where is that call? To delete a blob, it has to be closed first too.\n\nCould you get away with setting the xattr on the snapshot, then closing it (which syncs), syncing the clone, then deleting the snapshot?",
+      "revId": "55ec818067556b60c8a2388cc9fc02e2344fdd7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b168541_f31f30b8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 5323,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T14:33:36Z",
+      "side": 1,
+      "message": "Roll back snapshot/clone hierarchy modifications",
+      "revId": "55ec818067556b60c8a2388cc9fc02e2344fdd7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5725f375_dcde8b5f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 5365,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T14:33:36Z",
+      "side": 1,
+      "message": "Roll back the modifications to the snapshot/clone hierarchy",
+      "revId": "55ec818067556b60c8a2388cc9fc02e2344fdd7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "309dffb6_e876b764",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 5398,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T14:33:36Z",
+      "side": 1,
+      "message": "If this fails, do we correctly roll back the modifications to the snapshot/clone hierarchy that were made in the previous function?",
+      "revId": "55ec818067556b60c8a2388cc9fc02e2344fdd7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4de60980_9318ee11",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 5446,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T14:33:36Z",
+      "side": 1,
+      "message": "Related to my other comments - this is problematic because you need to undo it on failure. The best approach may be to delay this update until the metadata has all been written with the update and you\u0027re ready to unfreeze.",
+      "revId": "55ec818067556b60c8a2388cc9fc02e2344fdd7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
