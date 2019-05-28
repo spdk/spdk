@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "007480d5_d0e4ca25",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b4ae29f9_e8dae2aa",
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80b3fc11_b953c232",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -39,6 +57,30 @@
       "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3471f541_f009eddd",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "80b3fc11_b953c232",
+      "range": {
+        "startLine": 94,
+        "startChar": 12,
+        "endLine": 94,
+        "endChar": 19
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -88,6 +130,54 @@
     },
     {
       "key": {
+        "uuid": "370be46c_c21fb87e",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "017b6482_99981f46",
+      "range": {
+        "startLine": 699,
+        "startChar": 28,
+        "endLine": 699,
+        "endChar": 73
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7425844_0fa2450f",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "I don\u0027t like idea to make some pointer arithmetic here. I think there was plan to remove this lba_pool at some point.",
+      "parentUuid": "f803d4b8_cd39df87",
+      "range": {
+        "startLine": 699,
+        "startChar": 21,
+        "endLine": 699,
+        "endChar": 27
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ead9aaee_05e72b29",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -108,6 +198,30 @@
       "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "615ee1c6_7931ff91",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ead9aaee_05e72b29",
+      "range": {
+        "startLine": 883,
+        "startChar": 7,
+        "endLine": 883,
+        "endChar": 10
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -157,6 +271,54 @@
     },
     {
       "key": {
+        "uuid": "e803c726_64556614",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ede5c3e_7f8e292e",
+      "range": {
+        "startLine": 884,
+        "startChar": 89,
+        "endLine": 884,
+        "endChar": 96
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7449f507_09b3b838",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "lba_map_clear segment will suggest that we are operating on lba map-\u003esegments object which is not case here.",
+      "parentUuid": "4e3b3839_e61587cf",
+      "range": {
+        "startLine": 884,
+        "startChar": 0,
+        "endLine": 884,
+        "endChar": 29
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4f6abbc7_41be95ac",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "dcf9735c_d21e39c1",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f6abbc7_41be95ac",
+      "range": {
+        "startLine": 886,
+        "startChar": 11,
+        "endLine": 886,
+        "endChar": 14
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9289222_6f9ee99b",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -194,6 +380,24 @@
       "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7af0cd58_c4ce94c1",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c9289222_6f9ee99b",
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -243,6 +447,54 @@
     },
     {
       "key": {
+        "uuid": "1c39ab0f_608e06e7",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "I think this name is already too long.",
+      "parentUuid": "50be568d_e7f8853e",
+      "range": {
+        "startLine": 900,
+        "startChar": 0,
+        "endLine": 900,
+        "endChar": 25
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "218690e4_03bfe347",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4c30c79a_f474c12a",
+      "range": {
+        "startLine": 900,
+        "startChar": 83,
+        "endLine": 900,
+        "endChar": 90
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d1da430_27fbb832",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -266,6 +518,30 @@
     },
     {
       "key": {
+        "uuid": "b2f0d707_71b4f2d0",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 921,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d1da430_27fbb832",
+      "range": {
+        "startLine": 921,
+        "startChar": 8,
+        "endLine": 921,
+        "endChar": 11
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "132673fc_f503c127",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -277,6 +553,30 @@
       "writtenOn": "2019-05-27T14:10:19Z",
       "side": 1,
       "message": "Let\u0027s use a mempool (single for each ftl_device) for these. That way the initialization would only need to be done once.",
+      "range": {
+        "startLine": 971,
+        "startChar": 0,
+        "endLine": 989,
+        "endChar": 16
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6eb5c012_b017f3cf",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 989,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "This could be done as a improvement. This patch is already too big.",
+      "parentUuid": "132673fc_f503c127",
       "range": {
         "startLine": 971,
         "startChar": 0,
@@ -335,6 +635,54 @@
     },
     {
       "key": {
+        "uuid": "da8453be_85a01f00",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf9e8cb5_f6900ef5",
+      "range": {
+        "startLine": 993,
+        "startChar": 77,
+        "endLine": 993,
+        "endChar": 84
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebdad0ba_d7ca0384",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "I prefer to do this in separate function. Nested \"for\" in while loop is not good idea.",
+      "parentUuid": "cde056d3_a2089935",
+      "range": {
+        "startLine": 993,
+        "startChar": 0,
+        "endLine": 993,
+        "endChar": 25
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6378bbf9_1f317a20",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -355,6 +703,30 @@
       "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79207aa5_aadbca51",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6378bbf9_1f317a20",
+      "range": {
+        "startLine": 1011,
+        "startChar": 26,
+        "endLine": 1011,
+        "endChar": 38
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -381,6 +753,30 @@
     },
     {
       "key": {
+        "uuid": "89875f65_b15800d8",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8eb078bf_d9d4a55b",
+      "range": {
+        "startLine": 1020,
+        "startChar": 1,
+        "endLine": 1020,
+        "endChar": 8
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "641f1606_93fd963d",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -392,6 +788,30 @@
       "writtenOn": "2019-05-27T14:10:19Z",
       "side": 1,
       "message": "Shouldn\u0027t you check if this isn\u0027t 0?",
+      "range": {
+        "startLine": 1041,
+        "startChar": 30,
+        "endLine": 1041,
+        "endChar": 42
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13e7e932_7b1b5503",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "We need to have at leat one clear segment at this point.",
+      "parentUuid": "641f1606_93fd963d",
       "range": {
         "startLine": 1041,
         "startChar": 30,
@@ -427,6 +847,30 @@
     },
     {
       "key": {
+        "uuid": "a8db9b65_eb3af429",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1061,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "036208a6_c864f974",
+      "range": {
+        "startLine": 1060,
+        "startChar": 0,
+        "endLine": 1061,
+        "endChar": 35
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc104faa_64d8f183",
         "filename": "lib/ftl/ftl_band.h",
         "patchSetId": 26
@@ -447,6 +891,30 @@
       "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce00cabd_ff101b4e",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-28T06:57:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bc104faa_64d8f183",
+      "range": {
+        "startLine": 43,
+        "startChar": 39,
+        "endLine": 43,
+        "endChar": 54
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
