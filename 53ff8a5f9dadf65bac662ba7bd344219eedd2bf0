@@ -178,6 +178,30 @@
     },
     {
       "key": {
+        "uuid": "6974254d_9a3c90f6",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T07:48:27Z",
+      "side": 1,
+      "message": "What\u0027s wrong with simple lba_map-\u003esegments \u003d lba_map-\u003emap + LBA_MAP_SIZE? It\u0027s way better than having to allocate memory for each request to read the map.",
+      "parentUuid": "e7425844_0fa2450f",
+      "range": {
+        "startLine": 699,
+        "startChar": 21,
+        "endLine": 699,
+        "endChar": 27
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ead9aaee_05e72b29",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -307,6 +331,30 @@
       "side": 1,
       "message": "lba_map_clear segment will suggest that we are operating on lba map-\u003esegments object which is not case here.",
       "parentUuid": "4e3b3839_e61587cf",
+      "range": {
+        "startLine": 884,
+        "startChar": 0,
+        "endLine": 884,
+        "endChar": 29
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00baf5e5_603c058d",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T07:48:27Z",
+      "side": 1,
+      "message": "Then let\u0027s rename it to ftl_lba_map_request_segment_done?",
+      "parentUuid": "7449f507_09b3b838",
       "range": {
         "startLine": 884,
         "startChar": 0,
@@ -495,6 +543,30 @@
     },
     {
       "key": {
+        "uuid": "b0f508e3_9b65eeb9",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T07:48:27Z",
+      "side": 1,
+      "message": "There\u0027s only a couple of places this is called, so I think we can manage with a bit longer name (3 3-letter abbreviations in the 5 3-letter words are really not easy to read).",
+      "parentUuid": "1c39ab0f_608e06e7",
+      "range": {
+        "startLine": 900,
+        "startChar": 0,
+        "endLine": 900,
+        "endChar": 25
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0d1da430_27fbb832",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -589,6 +661,30 @@
     },
     {
       "key": {
+        "uuid": "4eb2aee1_4dceff11",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 989,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T07:48:27Z",
+      "side": 1,
+      "message": "No, this should be done right away. The number of LOC will be the same, but you won\u0027t be adding memory allocations for each LBA map request.",
+      "parentUuid": "6eb5c012_b017f3cf",
+      "range": {
+        "startLine": 971,
+        "startChar": 0,
+        "endLine": 989,
+        "endChar": 16
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cde056d3_a2089935",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -671,6 +767,30 @@
       "side": 1,
       "message": "I prefer to do this in separate function. Nested \"for\" in while loop is not good idea.",
       "parentUuid": "cde056d3_a2089935",
+      "range": {
+        "startLine": 993,
+        "startChar": 0,
+        "endLine": 993,
+        "endChar": 25
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f996d3a_6c368cba",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T07:48:27Z",
+      "side": 1,
+      "message": "Actually it\u0027d make it easier to understand what\u0027s going on if the loop was there. If you want to split ftl_band_read_lba_map I think it\u0027d make more sense to extract the part of the while loop on lines 1037-1046.",
+      "parentUuid": "ebdad0ba_d7ca0384",
       "range": {
         "startLine": 993,
         "startChar": 0,
@@ -821,6 +941,30 @@
       "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae179447_31a9b687",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T07:48:27Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "13e7e932_7b1b5503",
+      "range": {
+        "startLine": 1041,
+        "startChar": 30,
+        "endLine": 1041,
+        "endChar": 42
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
