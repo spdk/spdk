@@ -16,6 +16,24 @@
       "revId": "02821b717b8c66dbf9122d8f45e6d362d27b4f6c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2ad0ffc_643d8312",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T07:50:18Z",
+      "side": 1,
+      "message": "What\u0027s the point of checking this during each loop iteration if it doesn\u0027t change?",
+      "parentUuid": "55cf9f45_634157ce",
+      "revId": "02821b717b8c66dbf9122d8f45e6d362d27b4f6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
