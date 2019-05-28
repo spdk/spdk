@@ -3519,7 +3519,6 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		shared_resource->io_outstanding--;
 
 		if (spdk_unlikely(status == SPDK_BDEV_IO_STATUS_NOMEM)) {
-			assert(shared_resource->io_outstanding > 0);
 			TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, internal.link);
 			/*
 			 * Wait for some of the outstanding I/O to complete before we
