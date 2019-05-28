@@ -16,6 +16,24 @@
       "revId": "7f09133112dbf7562c9f4aa67704dc1cbe8b7579",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "808c0972_70187010",
+        "filename": "test/iscsi_tgt/rbd/rbd.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T16:33:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4e9c214_29aea5e2",
+      "revId": "7f09133112dbf7562c9f4aa67704dc1cbe8b7579",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
