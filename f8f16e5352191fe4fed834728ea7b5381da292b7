@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3f2ec47_75d7ddb2",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T14:10:12Z",
+      "side": 1,
+      "message": "Remove",
+      "revId": "f8f16e5352191fe4fed834728ea7b5381da292b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87208ccc_51ba622d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T14:10:12Z",
+      "side": 1,
+      "message": "The bdev layer should be entirely unchanged by this patch.",
+      "revId": "f8f16e5352191fe4fed834728ea7b5381da292b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d053bd67_35179fcb",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T14:10:12Z",
+      "side": 1,
+      "message": "You can do this increment inside spdk_nvmf_request_exec instead.",
+      "revId": "f8f16e5352191fe4fed834728ea7b5381da292b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7f1b214_ca90c1fd",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1135,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-28T14:10:12Z",
+      "side": 1,
+      "message": "You can do this decrement in spdk_nvmf_request_complete instead.",
+      "revId": "f8f16e5352191fe4fed834728ea7b5381da292b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
