@@ -1589,8 +1589,8 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	int rc;
 
 	rc = nvme_tcp_qpair_process_send_queue(tqpair);
-	if (rc) {
-		return 0;
+	if (rc < 0) {
+		return -1;
 	}
 
 	if (max_completions == 0) {
