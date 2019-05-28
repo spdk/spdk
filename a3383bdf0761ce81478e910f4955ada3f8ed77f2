@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5c759ca_d08d36c6",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 578,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-05-28T10:43:14Z",
+      "side": 1,
+      "message": "Should be\n\n  (count + 1)",
+      "range": {
+        "startLine": 578,
+        "startChar": 7,
+        "endLine": 578,
+        "endChar": 12
+      },
+      "revId": "a3383bdf0761ce81478e910f4955ada3f8ed77f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
