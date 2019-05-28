@@ -16,6 +16,24 @@
       "revId": "4669cc9a42fddcbe83613b20fb3d1f3aa3bdc0a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74fd1772_bc628c89",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1709,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-28T18:08:18Z",
+      "side": 1,
+      "message": "Yeah - I thought about that but you\u0027d have to add it in both the RESET path and the \"unknown\" path.  I figured it was just as good to leave it where it was now.",
+      "parentUuid": "c6f1edee_eb1fdde1",
+      "revId": "4669cc9a42fddcbe83613b20fb3d1f3aa3bdc0a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
