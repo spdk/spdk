@@ -119,77 +119,17 @@ vbdev_ocf_volume_io_put(struct ocf_io *io)
 	}
 }
 
-static int
-get_starting_vec(struct iovec *iovs, int iovcnt, int *offset)
-{
-	int i;
-	size_t off;
-
-	off = *offset;
-
-	for (i = 0; i < iovcnt; i++) {
-		if (off < iovs[i].iov_len) {
-			*offset = off;
-			return i;
-		}
-		off -= iovs[i].iov_len;
-	}
-
-	return -1;
-}
-
-static void
-initialize_cpy_vector(struct iovec *cpy_vec, int cpy_vec_len, struct iovec *orig_vec,
-		      int orig_vec_len,
-		      size_t offset, size_t bytes)
-{
-	void *curr_base;
-	int len, i;
-
-	i = 0;
-
-	while (bytes > 0) {
-		curr_base = orig_vec[i].iov_base + offset;
-		len = MIN(bytes, orig_vec[i].iov_len - offset);
-
-		cpy_vec[i].iov_base = curr_base;
-		cpy_vec[i].iov_len = len;
-
-		bytes -= len;
-		offset = 0;
-		i++;
-	}
-}
-
 static void
 vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *opaque)
 {
-	struct ocf_io *io;
-	struct ocf_io_ctx *io_ctx;
+	struct ocf_io *io = opaque;
+	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);;
 
 	assert(opaque);
-
-	io = opaque;
-	io_ctx = ocf_get_io_ctx(io);
 	assert(io_ctx != NULL);
 
 	if (!success) {
 		io_ctx->error |= 1;
-	}
-
-	if (io_ctx->offset && bdev_io != NULL) {
-		switch (bdev_io->type) {
-		case SPDK_BDEV_IO_TYPE_READ:
-		case SPDK_BDEV_IO_TYPE_WRITE:
-			env_free(bdev_io->u.bdev.iovs);
-			break;
-		case SPDK_BDEV_IO_TYPE_FLUSH:
-			/* No iovs were allocated for flush request */
-			break;
-		default:
-			assert(false);
-			break;
-		}
 	}
 
 	if (io_ctx->error) {
@@ -293,7 +233,7 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 	struct vbdev_ocf_base *base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	struct iovec *iovs;
-	int iovcnt, status = 0, i, offset;
+	int iovcnt, status = 0, offset;
 	uint64_t addr, len;
 
 	if (io->flags == OCF_WRITE_FLUSH) {
@@ -314,26 +254,14 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 	offset = io_ctx->offset;
 
 	if (offset || len < io_ctx->data->iovs[0].iov_len) {
-		i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
-
-		if (i < 0) {
-			SPDK_ERRLOG("offset bigger than data size\n");
-			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-			return;
+		if (io->dir == OCF_READ) {
+			status = spdk_bdev_read(base->desc, io_ctx->ch,
+						io_ctx->data->iovs[0].iov_base + offset, addr, len, vbdev_ocf_volume_submit_io_cb, io);
+		} else if (io->dir == OCF_WRITE) {
+			status = spdk_bdev_write(base->desc, io_ctx->ch,
+						 io_ctx->data->iovs[0].iov_base + offset, addr, len, vbdev_ocf_volume_submit_io_cb, io);
 		}
-
-		iovcnt = io_ctx->data->iovcnt - i;
-
-		iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
-
-		if (!iovs) {
-			SPDK_ERRLOG("allocation failed\n");
-			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-			return;
-		}
-
-		initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
-				      iovcnt, offset, len);
+		goto end;
 	} else {
 		iovs = io_ctx->data->iovs;
 		iovcnt = io_ctx->data->iovcnt;
@@ -347,6 +275,7 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 					  iovs, iovcnt, addr, len, vbdev_ocf_volume_submit_io_cb, io);
 	}
 
+end:
 	if (status) {
 		/* TODO [ENOMEM]: implement ENOMEM handling when submitting IO to base device */
 
