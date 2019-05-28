@@ -416,6 +416,21 @@ function waitfornbd() {
 	return 1
 }
 
+function waitforbdev() {
+	local bdev_name=$1
+	local i
+
+	for ((i=1; i<=20; i++)); do
+		if ! $rpc_py get_bdevs | jq -r '.[] .name' | grep -qw $bdev_name; then
+			sleep 0.1
+		else
+			return 0
+		fi
+	done
+
+	return 1
+}
+
 function killprocess() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
