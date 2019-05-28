@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08aaf587_70468cba",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T12:26:27Z",
+      "side": 1,
+      "message": "\"dot\" is typo, you wanted to say \"not\"\n\nsee some more edits I suggested to the change-log",
+      "range": {
+        "startLine": 10,
+        "startChar": 37,
+        "endLine": 10,
+        "endChar": 40
+      },
+      "revId": "7fd019d595614c0f37548609c78c6c2d78f2ed6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
