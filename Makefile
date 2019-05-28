@@ -63,10 +63,12 @@ endif
 
 ifeq ($(CONFIG_IPSEC_MB),y)
 LIB += ipsecbuild
+DPDK_DEPS += ipsecbuild
 endif
 
 ifeq ($(CONFIG_ISAL),y)
 LIB += isalbuild
+DPDK_DEPS += isalbuild
 endif
 
 all: $(DIRS-y)
@@ -78,9 +80,7 @@ install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
 
 ifneq ($(SKIP_DPDK_BUILD),1)
-ifeq ($(CONFIG_ISAL),y)
-dpdkbuild: isalbuild
-endif
+dpdkbuild: $(DPDK_DEPS)
 endif
 
 shared_lib: lib
