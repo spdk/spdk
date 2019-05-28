@@ -1485,3 +1485,28 @@ vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev)
 }
 
 SPDK_LOG_REGISTER_COMPONENT(vbdev_lvol)
+
+int
+vbdev_lvol_create_with_uuid(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
+			    bool thin_provision, enum lvol_clear_method clear_method,
+			    const char *uuid, spdk_lvol_op_with_handle_complete cb_fn,
+			    void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	rc = spdk_lvol_create_with_uuid(lvs, name, sz, thin_provision, clear_method,
+					uuid, _vbdev_lvol_create_cb, req);
+	if (rc != 0) {
+		free(req);
+	}
+
+	return rc;
+}

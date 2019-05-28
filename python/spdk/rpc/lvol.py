@@ -213,3 +213,28 @@ def bdev_lvol_get_lvstores(client, uuid=None, lvs_name=None):
     if lvs_name:
         params['lvs_name'] = lvs_name
     return client.call('bdev_lvol_get_lvstores', params)
+
+
+def construct_ms_lvol_bdev(client, lvol_name, size, thin_provision=False, uuid=None, lvs_name=None, clear_method=None):
+    """Create a logical volume on a logical volume store.
+
+    Args:
+        lvol_name: name of logical volume to create
+        size: desired size of logical volume in bytes (will be rounded up to a multiple of cluster size)
+        thin_provision: True to enable thin provisioning
+        uuid: UUID of logical volume bdev to create (optional)
+        lvs_name: name of logical volume store to create logical volume on (optional)
+
+    Returns:
+        Name of created logical volume block device.
+    """
+    params = {'lvol_name': lvol_name, 'size': size}
+    if thin_provision:
+        params['thin_provision'] = thin_provision
+    if uuid:
+        params['uuid'] = uuid
+    if lvs_name:
+        params['lvs_name'] = lvs_name
+    if clear_method:
+        params['clear_method'] = clear_method
+    return client.call('construct_ms_lvol_bdev', params)

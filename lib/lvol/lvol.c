@@ -1021,8 +1021,19 @@ lvs_verify_lvol_name(struct spdk_lvol_store *lvs, const char *name)
 
 int
 spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		 bool thin_provision, enum lvol_clear_method clear_method, spdk_lvol_op_with_handle_complete cb_fn,
+		 bool thin_provision, enum lvol_clear_method clear_method,
+		 spdk_lvol_op_with_handle_complete cb_fn,
 		 void *cb_arg)
+{
+	return spdk_lvol_create_with_uuid(lvs, name, sz, thin_provision,
+					  clear_method, NULL, cb_fn, cb_arg);
+}
+
+int
+spdk_lvol_create_with_uuid(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
+			   bool thin_provision, enum lvol_clear_method clear_method,
+			   const char *uuid, spdk_lvol_op_with_handle_complete cb_fn,
+			   void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
 	struct spdk_blob_store *bs;
@@ -1058,13 +1069,20 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
 		return -ENOMEM;
 	}
+	if (!uuid) {
+		spdk_uuid_generate(&lvol->uuid);
+	} else if (spdk_uuid_parse(&lvol->uuid, uuid) != 0) {
+		free(req);
+		free(lvol);
+		SPDK_ERRLOG("Invalid lvol uuid provided\n");
+		return -EINVAL;
+	}
 	lvol->lvol_store = lvs;
 	num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	lvol->thin_provision = thin_provision;
 	lvol->clear_method = (enum blob_clear_method)clear_method;
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->pending_lvols, lvol, link);
-	spdk_uuid_generate(&lvol->uuid);
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 	req->lvol = lvol;
 
