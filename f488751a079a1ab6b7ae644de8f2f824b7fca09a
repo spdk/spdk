@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e03badb_bd73687d",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-28T09:27:02Z",
+      "side": 1,
+      "message": "just for consistency - rcp_py line above is quoted. Can we quote path in rpc_sock as well?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 34
+      },
+      "revId": "f488751a079a1ab6b7ae644de8f2f824b7fca09a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b413c7e_31d6e16c",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-05-28T09:27:02Z",
+      "side": 1,
+      "message": "Trap should be set just after starting the app, before waitforlisten.",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 58
+      },
+      "revId": "f488751a079a1ab6b7ae644de8f2f824b7fca09a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
