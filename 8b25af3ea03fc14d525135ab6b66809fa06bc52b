@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "594114f9_2603d984",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c00d7b26_899a447f",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97ea2542_91e3c0a6",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 8
@@ -33,6 +51,24 @@
       "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66b6186d_68caffc5",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "97ea2542_91e3c0a6",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "06d0954b_5902daed",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a7a7159e_90f27bdb",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e5645d9_31d9a466",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 8
@@ -67,6 +121,24 @@
       "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d996e1f9_0d3bfaf1",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e5645d9_31d9a466",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "417637b3_b155fe37",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d8ebb83f_94966404",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b8ed6a4d_0528317b",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 8
@@ -101,6 +191,24 @@
       "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60105326_c668bb84",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8ed6a4d_0528317b",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "a0081e8e_094230a9",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e6001be3_795e9dfa",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6de1b12f_c60d47af",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 8
@@ -135,6 +261,24 @@
       "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fec6d6da_3b23247d",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6de1b12f_c60d47af",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "4e5977e6_d2ef9236",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c04c3978_b9794847",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e54a4914_da99777a",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 8
@@ -169,6 +331,24 @@
       "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a1e7495_f5e92ff0",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e54a4914_da99777a",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "54d88447_c3a1e3ed",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9ba1720e_f6b5cade",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b9a622e1_f0465200",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 8
@@ -206,6 +404,24 @@
     },
     {
       "key": {
+        "uuid": "93d45d89_78c8f650",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done - I also removed a few others you didn\u0027t point out. Looking through other vbdev modules (gpt, lvol), we don\u0027t use noticelog at all in those. I don\u0027t see much use for pretty much all of the noticelogs that I was printing in anything other than debugging or showing examples of code flow.",
+      "parentUuid": "b9a622e1_f0465200",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4eb3f223_ecec3521",
         "filename": "lib/bdev/delay/vbdev_delay.c",
         "patchSetId": 8
@@ -220,6 +436,24 @@
       "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "544d3e4d_3cf27e8a",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-28T17:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4eb3f223_ecec3521",
+      "revId": "8b25af3ea03fc14d525135ab6b66809fa06bc52b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
