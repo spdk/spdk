@@ -431,6 +431,18 @@ void spdk_mempool_put_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count
 size_t spdk_mempool_count(const struct spdk_mempool *pool);
 
 /**
+ * Iterate through all elements of the pool and call a function on each one.
+ *
+ * \param mp Memory pool to iterate on.
+ * \param obj_cb Function to call on each element.
+ * \param obj_cb_arg Opaque pointer passed to the callback function.
+ *
+ * \return Number of elements iterated.
+ */
+uint32_t spdk_mempool_obj_iter(struct spdk_mempool *mp, spdk_mempool_obj_cb_t obj_cb,
+			       void *obj_cb_arg);
+
+/**
  * Get the number of dedicated CPU cores utilized by this env abstraction.
  *
  * \return the number of dedicated CPU cores.

@@ -288,6 +288,14 @@ spdk_mempool_count(const struct spdk_mempool *pool)
 	return rte_mempool_avail_count((struct rte_mempool *)pool);
 }
 
+uint32_t
+spdk_mempool_obj_iter(struct spdk_mempool *mp, spdk_mempool_obj_cb_t obj_cb,
+		      void *obj_cb_arg)
+{
+	return rte_mempool_obj_iter((struct rte_mempool *)mp, (rte_mempool_obj_cb_t *)obj_cb,
+				    obj_cb_arg);
+}
+
 bool
 spdk_process_is_primary(void)
 {
