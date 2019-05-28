@@ -2083,44 +2083,46 @@ static int
 spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 			    struct spdk_nvmf_tcp_req *tcp_req)
 {
+	struct spdk_nvmf_request		*req = &tcp_req->req;
 	void					*buf = NULL;
 	uint32_t				length = tcp_req->req.length;
 	uint32_t				i = 0;
+	struct spdk_nvmf_transport		*transport = &ttransport->transport;
 	struct spdk_nvmf_tcp_qpair		*tqpair;
 	struct spdk_nvmf_transport_poll_group	*group;
 
 	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
 
-	tcp_req->req.iovcnt = 0;
+	req->iovcnt = 0;
 	while (length) {
 		if (!(STAILQ_EMPTY(&group->buf_cache))) {
 			group->buf_cache_count--;
 			buf = STAILQ_FIRST(&group->buf_cache);
 			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
 		} else {
-			buf = spdk_mempool_get(ttransport->transport.data_buf_pool);
+			buf = spdk_mempool_get(transport->data_buf_pool);
 			if (!buf) {
 				goto nomem;
 			}
 		}
 
-		tcp_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
-							~NVMF_DATA_BUFFER_MASK);
-		tcp_req->req.iov[i].iov_len  = spdk_min(length, ttransport->transport.opts.io_unit_size);
-		tcp_req->req.iovcnt++;
+		req->iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
+						~NVMF_DATA_BUFFER_MASK);
+		req->iov[i].iov_len  = spdk_min(length, transport->opts.io_unit_size);
+		req->iovcnt++;
 		tcp_req->buffers[i] = buf;
-		length -= tcp_req->req.iov[i].iov_len;
+		length -= req->iov[i].iov_len;
 		i++;
 	}
 
-	assert(tcp_req->req.iovcnt < SPDK_NVMF_MAX_SGL_ENTRIES);
+	assert(req->iovcnt < SPDK_NVMF_MAX_SGL_ENTRIES);
 	tcp_req->data_from_pool = true;
 	return 0;
 
 nomem:
-	spdk_nvmf_tcp_request_free_buffers(tcp_req, group, &ttransport->transport);
-	tcp_req->req.iovcnt = 0;
+	spdk_nvmf_tcp_request_free_buffers(tcp_req, group, transport);
+	req->iovcnt = 0;
 	return -ENOMEM;
 }
 
@@ -2128,25 +2130,27 @@ static int
 spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 			    struct spdk_nvmf_tcp_req *tcp_req)
 {
+	struct spdk_nvmf_request		*req = &tcp_req->req;
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
+	struct spdk_nvmf_transport		*transport = &ttransport->transport;
 
-	cmd = &tcp_req->req.cmd->nvme_cmd;
-	rsp = &tcp_req->req.rsp->nvme_cpl;
+	cmd = &req->cmd->nvme_cmd;
+	rsp = &req->rsp->nvme_cpl;
 	sgl = &cmd->dptr.sgl1;
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK &&
 	    sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_TRANSPORT) {
-		if (sgl->unkeyed.length > ttransport->transport.opts.max_io_size) {
+		if (sgl->unkeyed.length > transport->opts.max_io_size) {
 			SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
-				    sgl->unkeyed.length, ttransport->transport.opts.max_io_size);
+				    sgl->unkeyed.length, transport->opts.max_io_size);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
 		}
 
 		/* fill request length and populate iovs */
-		tcp_req->req.length = sgl->unkeyed.length;
+		req->length = sgl->unkeyed.length;
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Data requested length= 0x%x\n",
 			      sgl->unkeyed.length);
@@ -2158,18 +2162,17 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		}
 
 		/* backward compatible */
-		tcp_req->req.data = tcp_req->req.iov[0].iov_base;
+		req->data = req->iov[0].iov_base;
 
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p took %d buffer/s from central pool, and data=%p\n",
-			      tcp_req,
-			      tcp_req->req.iovcnt, tcp_req->req.data);
+			      tcp_req, req->iovcnt, req->data);
 
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 		uint64_t offset = sgl->address;
-		uint32_t max_len = ttransport->transport.opts.in_capsule_data_size;
+		uint32_t max_len = transport->opts.in_capsule_data_size;
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 			      offset, sgl->unkeyed.length);
@@ -2189,13 +2192,13 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 			return -1;
 		}
 
-		tcp_req->req.data = tcp_req->buf + offset;
+		req->data = tcp_req->buf + offset;
 		tcp_req->data_from_pool = false;
-		tcp_req->req.length = sgl->unkeyed.length;
+		req->length = sgl->unkeyed.length;
 
-		tcp_req->req.iov[0].iov_base = tcp_req->req.data;
-		tcp_req->req.iov[0].iov_len = tcp_req->req.length;
-		tcp_req->req.iovcnt = 1;
+		req->iov[0].iov_base = req->data;
+		req->iov[0].iov_len = req->length;
+		req->iovcnt = 1;
 
 		return 0;
 	}
