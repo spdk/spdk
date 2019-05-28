@@ -2048,9 +2048,12 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_tracker	*tr;
-	struct spdk_nvme_cpl	*cpl;
+	struct spdk_nvme_cpl	*cpl, *next_cpl;
 	uint32_t		 num_completions = 0;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+	uint16_t		 next_cq_head;
+	uint8_t			 next_phase;
+	bool			 next_is_valid = false;
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -2068,9 +2071,23 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	while (1) {
 		cpl = &pqpair->cpl[pqpair->cq_head];
 
-		if (cpl->status.p != pqpair->flags.phase) {
+		if (!next_is_valid && cpl->status.p != pqpair->flags.phase) {
 			break;
 		}
+
+		if (spdk_likely(pqpair->cq_head + 1 != pqpair->num_entries)) {
+			next_cq_head = pqpair->cq_head + 1;
+			next_phase = pqpair->flags.phase;
+		} else {
+			next_cq_head = 0;
+			next_phase = !pqpair->flags.phase;
+		}
+		next_cpl = &pqpair->cpl[next_cq_head];
+		next_is_valid = (next_cpl->status.p == next_phase);
+		if (next_is_valid) {
+			__builtin_prefetch(&pqpair->tr[next_cpl->cid]);
+		}
+
 #ifdef __PPC64__
 		/*
 		 * This memory barrier prevents reordering of:
@@ -2098,7 +2115,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			assert(0);
 		}
 
-		if (++num_completions == max_completions) {
+		if (++num_completions == max_completions || !next_is_valid) {
 			break;
 		}
 	}
