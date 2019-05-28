@@ -1,0 +1,199 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e4fb810_3f3edf13",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T12:47:43Z",
+      "side": 1,
+      "message": "Let\u0027s call this state _STATE_MD_READ.",
+      "range": {
+        "startLine": 52,
+        "startChar": 1,
+        "endLine": 52,
+        "endChar": 34
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5800bb15_1cd8b382",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T12:47:43Z",
+      "side": 1,
+      "message": "Let\u0027s shorten the names - FTL_RELOC_MOVE_STATE_* -\u003e FTL_RELOC_STATE_*.",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 28
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d386251_04db7e99",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T12:47:43Z",
+      "side": 1,
+      "message": "The change replacing the two queues + callbacks with one queue + states should be a separate patch.",
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd755e87_c5c34934",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T12:47:43Z",
+      "side": 1,
+      "message": "Can this be checked first?",
+      "range": {
+        "startLine": 180,
+        "startChar": 1,
+        "endLine": 180,
+        "endChar": 21
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7785c6cb_1fdbf634",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T12:47:43Z",
+      "side": 1,
+      "message": "Perhaps we can call it ftl_reloc_process_moves?",
+      "range": {
+        "startLine": 509,
+        "startChar": 0,
+        "endLine": 509,
+        "endChar": 28
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f1ca950_166332b7",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T12:47:43Z",
+      "side": 1,
+      "message": "What are we doing in case breloc-\u003enum_inflight \u003e 0 here?",
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20b1d9bb_9095ac5c",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T12:47:43Z",
+      "side": 1,
+      "message": "Why start at 1?",
+      "range": {
+        "startLine": 356,
+        "startChar": 10,
+        "endLine": 356,
+        "endChar": 11
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f0dc6fb_4c32c2f7",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T12:47:43Z",
+      "side": 1,
+      "message": "Why do we need to free it now? Shouldn\u0027t it be taken care of by cleanup_reloc?",
+      "range": {
+        "startLine": 370,
+        "startChar": 1,
+        "endLine": 370,
+        "endChar": 18
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf6f8622_e3ad310a",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-28T12:47:43Z",
+      "side": 1,
+      "message": "Why do we need this call now? Shouldn\u0027t ftl_reloc_add take care of everything? I haven\u0027t seen any changes outside of ftl_reloc in this patch, so why do we need this now?",
+      "range": {
+        "startLine": 397,
+        "startChar": 1,
+        "endLine": 397,
+        "endChar": 27
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
