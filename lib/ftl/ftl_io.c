@@ -398,7 +398,7 @@ ftl_io_get_md(const struct ftl_io *io)
 		return NULL;
 	}
 
-	return (char *)io->md + io->pos * FTL_BLOCK_SIZE;
+	return (char *)io->md + io->pos * io->dev->md_size;
 }
 
 struct ftl_io *
