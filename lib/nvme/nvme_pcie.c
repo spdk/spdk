@@ -1695,7 +1695,7 @@ nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tr
  *
  * *prp_index will be updated to account for the number of PRP entries used.
  */
-static int
+static inline int
 nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *virt_addr, size_t len,
 			  uint32_t page_size)
 {
