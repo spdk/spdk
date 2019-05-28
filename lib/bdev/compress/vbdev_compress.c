@@ -53,7 +53,7 @@
 
 /* TODO: valdiate these are good starting values */
 #define NUM_MAX_XFORMS 16
-#define NUM_MAX_INFLIGHT_OPS 64
+#define NUM_MAX_INFLIGHT_OPS 128
 #define DEFAULT_WINDOW_SIZE 15
 #define MAX_MBUFS_PER_OP 16
 #define CHUNK_SIZE (1024 * 16)
