@@ -174,6 +174,7 @@ SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 
 struct spdk_nvmf_request {
 	struct spdk_nvmf_qpair		*qpair;
+	uint32_t			offset;
 	uint32_t			length;
 	enum spdk_nvme_data_transfer	xfer;
 	void				*data;
