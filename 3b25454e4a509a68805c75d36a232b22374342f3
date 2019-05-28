@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "787c230b_f5c0fd71",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T08:38:20Z",
+      "side": 1,
+      "message": "nvme/tcp: Properly handle send pdu failure",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 65
+      },
+      "revId": "3b25454e4a509a68805c75d36a232b22374342f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83adc272_eacf8d10",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T08:38:20Z",
+      "side": 1,
+      "message": "nvme_tcp_qpair_process_send_queue",
+      "range": {
+        "startLine": 9,
+        "startChar": 35,
+        "endLine": 9,
+        "endChar": 53
+      },
+      "revId": "3b25454e4a509a68805c75d36a232b22374342f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c292d2ad_e6b3b8a4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T08:38:20Z",
+      "side": 1,
+      "message": "not",
+      "range": {
+        "startLine": 10,
+        "startChar": 24,
+        "endLine": 10,
+        "endChar": 28
+      },
+      "revId": "3b25454e4a509a68805c75d36a232b22374342f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd5f05c5_4ad2f1f2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T08:38:20Z",
+      "side": 1,
+      "message": "This is wrong, we should only bail out when there\u0027s a failure in sending out the pdu.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 64
+      },
+      "revId": "3b25454e4a509a68805c75d36a232b22374342f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64458501_28d1daa3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T08:38:20Z",
+      "side": 1,
+      "message": "add here:\n\nReported-by: Or Gerlitz \u003cogerlitz@mellanox.com\u003e",
+      "revId": "3b25454e4a509a68805c75d36a232b22374342f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ec760b2_9d8836b2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-28T08:38:20Z",
+      "side": 1,
+      "message": "Fixes: e956be96eb63 (\"nvme: Add the NVMe over fabrics TCP/IP transport support\")",
+      "revId": "3b25454e4a509a68805c75d36a232b22374342f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
