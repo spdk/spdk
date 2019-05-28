@@ -41,10 +41,10 @@
  * Each sgl is either iterated or created at a time.
  */
 struct _dif_sgl {
-	/* Current iovec in the iteration or iteration */
+	/* Current iovec in the iteration or creation */
 	struct iovec *iov;
 
-	/* Remaining count of iovecs in the iteration or iteration. */
+	/* Remaining count of iovecs in the iteration or creation. */
 	int iovcnt;
 
 	/* Current offset in the iovec */
