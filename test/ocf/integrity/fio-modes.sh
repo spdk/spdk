@@ -22,13 +22,13 @@ config="
 $nvme_cfg
 
 [Split]
-  Split Nvme0n1 8 101
+  Split Nvme0n1 16 101
 
 [OCF]
-  OCF PT_Nvme  pt Nvme0n1p0 Nvme0n1p1
-  OCF WT_Nvme  wt Nvme0n1p2 Nvme0n1p3
-  OCF WB_Nvme0 wb Nvme0n1p4 Nvme0n1p5
-  OCF WB_Nvme1 wb Nvme0n1p6 Nvme0n1p7
+  OCF PT_Nvme  pt Nvme0n1p0 Nvme0n1p2
+  OCF WT_Nvme  wt Nvme0n1p4 Nvme0n1p6
+  OCF WB_Nvme0 wb Nvme0n1p8 Nvme0n1p10
+  OCF WB_Nvme1 wb Nvme0n1p12 Nvme0n1p14
 "
 echo "$config" > $curdir/modes.conf
 
