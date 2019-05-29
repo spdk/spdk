@@ -494,6 +494,18 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc
 		return -1;
 	}
 
+	if (!spdk_bdev_is_md_separate(bdev)) {
+		SPDK_ERRLOG("Bdev %s doesn't support separate metadata buffer IO\n",
+			    spdk_bdev_get_name(bdev));
+		return -1;
+	}
+
+	if (spdk_bdev_get_md_size(bdev) < sizeof(uint64_t)) {
+		SPDK_ERRLOG("Bdev's %s metadata is too small (%"PRIu32")\n",
+			    spdk_bdev_get_name(bdev), spdk_bdev_get_md_size(bdev));
+		return -1;
+	}
+
 	/* The cache needs to be capable of storing at least two full bands. This requirement comes
 	 * from the fact that cache works as a protection against power loss, so before the data
 	 * inside the cache can be overwritten, the band it's stored on has to be closed.
