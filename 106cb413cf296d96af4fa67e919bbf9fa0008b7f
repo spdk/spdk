@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "deccc577_3b29b2b0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:59:58Z",
+      "side": 1,
+      "message": "Please elaborate.",
+      "range": {
+        "startLine": 14,
+        "startChar": 22,
+        "endLine": 14,
+        "endChar": 38
+      },
+      "revId": "106cb413cf296d96af4fa67e919bbf9fa0008b7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9feb11ef_5e945198",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:59:58Z",
+      "side": 1,
+      "message": "Please wrap the lines in the commit msg after 80 characters.",
+      "revId": "106cb413cf296d96af4fa67e919bbf9fa0008b7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "879182a0_5ce240ea",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:59:58Z",
+      "side": 1,
+      "message": "This deserves a separate patch.",
+      "revId": "106cb413cf296d96af4fa67e919bbf9fa0008b7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "171be0f3_e325e594",
+        "filename": "lib/bdev/ocf/volume.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:59:58Z",
+      "side": 1,
+      "message": "This name isn\u0027t really descriptive. Can we rename it to something like `iovs_allocated`?",
+      "range": {
+        "startLine": 52,
+        "startChar": 6,
+        "endLine": 52,
+        "endChar": 11
+      },
+      "revId": "106cb413cf296d96af4fa67e919bbf9fa0008b7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
