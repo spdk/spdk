@@ -96,6 +96,12 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	 * will result in lost data after recovery.
 	 */
 	.allow_open_bands = false,
+	.nv_cache = {
+		/* Maximum number of concurrent requests */
+		.max_request_cnt = 2048,
+		/* Maximum number of blocks per request */
+		.max_request_size = 16,
+	}
 };
 
 static void ftl_dev_free_sync(struct spdk_ftl_dev *dev);
@@ -470,6 +476,10 @@ static int
 ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc)
 {
 	struct spdk_bdev *bdev;
+	struct spdk_ftl_conf *conf = &dev->conf;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	char pool_name[128];
+	int rc;
 
 	if (!bdev_desc) {
 		return 0;
@@ -494,14 +504,29 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc
 		return -1;
 	}
 
-	if (pthread_spin_init(&dev->nv_cache.lock, PTHREAD_PROCESS_PRIVATE)) {
+	rc = snprintf(pool_name, sizeof(pool_name), "ftl-nvpool-%p", dev);
+	if (rc < 0 || rc >= 128) {
+		return -1;
+	}
+
+	nv_cache->md_pool = spdk_mempool_create(pool_name, conf->nv_cache.max_request_cnt,
+						spdk_bdev_get_md_size(bdev) *
+						conf->nv_cache.max_request_size,
+						SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+						SPDK_ENV_SOCKET_ID_ANY);
+	if (!nv_cache->md_pool) {
+		SPDK_ERRLOG("Failed to initialize non-volatile cache metadata pool\n");
+		return -1;
+	}
+
+	if (pthread_spin_init(&nv_cache->lock, PTHREAD_PROCESS_PRIVATE)) {
 		SPDK_ERRLOG("Failed to initialize cache lock\n");
 		return -1;
 	}
 
-	dev->nv_cache.bdev_desc = bdev_desc;
-	dev->nv_cache.current_addr = 0;
-	dev->nv_cache.num_available = spdk_bdev_get_num_blocks(bdev);
+	nv_cache->bdev_desc = bdev_desc;
+	nv_cache->current_addr = 0;
+	nv_cache->num_available = spdk_bdev_get_num_blocks(bdev);
 
 	return 0;
 }
@@ -1093,6 +1118,7 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	}
 
 	spdk_mempool_free(dev->lba_pool);
+	spdk_mempool_free(dev->nv_cache.md_pool);
 	if (dev->lba_request_pool) {
 		spdk_mempool_obj_iter(dev->lba_request_pool, ftl_lba_map_request_dtor, NULL);
 	}

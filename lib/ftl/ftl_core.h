@@ -110,6 +110,8 @@ struct ftl_nv_cache {
 	uint64_t				current_addr;
 	/* Number of available blocks left */
 	uint64_t				num_available;
+	/* Metadata pool */
+	struct spdk_mempool			*md_pool;
 	/* Cache lock */
 	pthread_spinlock_t			lock;
 };
