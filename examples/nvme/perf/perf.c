@@ -97,6 +97,15 @@ struct ns_entry {
 	enum spdk_nvme_pi_type	pi_type;
 	uint32_t		io_flags;
 	char			name[1024];
+	uint64_t		io_completed;
+	uint64_t		total_tsc;
+	uint64_t		min_tsc;
+	uint64_t		max_tsc;
+	uint64_t		current_queue_depth;
+	uint64_t		offset_in_ios;
+	bool			is_draining;
+	struct spdk_histogram_data	*histogram;
+
 };
 
 static const double g_latency_cutoffs[] = {
@@ -120,14 +129,6 @@ static const double g_latency_cutoffs[] = {
 
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
-	uint64_t		io_completed;
-	uint64_t		total_tsc;
-	uint64_t		min_tsc;
-	uint64_t		max_tsc;
-	uint64_t		current_queue_depth;
-	uint64_t		offset_in_ios;
-	bool			is_draining;
-
 	union {
 		struct {
 			int			num_qpairs;
@@ -144,8 +145,6 @@ struct ns_worker_ctx {
 	} u;
 
 	struct ns_worker_ctx	*next;
-
-	struct spdk_histogram_data	*histogram;
 };
 
 struct perf_task {
@@ -382,7 +381,7 @@ register_aio_file(const char *path)
 		g_io_align = blklen;
 	}
 
-	entry = malloc(sizeof(struct ns_entry));
+	entry = calloc(1, sizeof(struct ns_entry));
 	if (entry == NULL) {
 		close(fd);
 		perror("aio ns_entry malloc");
@@ -746,6 +745,8 @@ unregister_namespaces(void)
 
 	while (entry) {
 		struct ns_entry *next = entry->next;
+
+		spdk_histogram_data_free(entry->histogram);
 		free(entry);
 		entry = next;
 	}
@@ -870,9 +871,9 @@ submit_single_io(struct perf_task *task)
 	if (g_is_random) {
 		offset_in_ios = rand_r(&seed) % entry->size_in_ios;
 	} else {
-		offset_in_ios = ns_ctx->offset_in_ios++;
-		if (ns_ctx->offset_in_ios == entry->size_in_ios) {
-			ns_ctx->offset_in_ios = 0;
+		offset_in_ios = entry->offset_in_ios++;
+		if (entry->offset_in_ios == entry->size_in_ios) {
+			entry->offset_in_ios = 0;
 		}
 	}
 
@@ -890,7 +891,7 @@ submit_single_io(struct perf_task *task)
 	if (spdk_unlikely(rc != 0)) {
 		fprintf(stderr, "starting I/O failed\n");
 	} else {
-		ns_ctx->current_queue_depth++;
+		entry->current_queue_depth++;
 	}
 }
 
@@ -903,18 +904,18 @@ task_complete(struct perf_task *task)
 
 	ns_ctx = task->ns_ctx;
 	entry = ns_ctx->entry;
-	ns_ctx->current_queue_depth--;
-	ns_ctx->io_completed++;
+	entry->current_queue_depth--;
+	entry->io_completed++;
 	tsc_diff = spdk_get_ticks() - task->submit_tsc;
-	ns_ctx->total_tsc += tsc_diff;
-	if (spdk_unlikely(ns_ctx->min_tsc > tsc_diff)) {
-		ns_ctx->min_tsc = tsc_diff;
+	entry->total_tsc += tsc_diff;
+	if (spdk_unlikely(entry->min_tsc > tsc_diff)) {
+		entry->min_tsc = tsc_diff;
 	}
-	if (spdk_unlikely(ns_ctx->max_tsc < tsc_diff)) {
-		ns_ctx->max_tsc = tsc_diff;
+	if (spdk_unlikely(entry->max_tsc < tsc_diff)) {
+		entry->max_tsc = tsc_diff;
 	}
 	if (spdk_unlikely(g_latency_sw_tracking_level > 0)) {
-		spdk_histogram_data_tally(ns_ctx->histogram, tsc_diff);
+		spdk_histogram_data_tally(entry->histogram, tsc_diff);
 	}
 
 	if (spdk_unlikely(entry->md_size > 0)) {
@@ -928,7 +929,7 @@ task_complete(struct perf_task *task)
 	 * to complete.  In this case, do not submit a new I/O to replace
 	 * the one just completed.
 	 */
-	if (spdk_unlikely(ns_ctx->is_draining)) {
+	if (spdk_unlikely(entry->is_draining)) {
 		spdk_dma_free(task->iov.iov_base);
 		spdk_dma_free(task->md_iov.iov_base);
 		free(task);
@@ -1004,6 +1005,7 @@ work_fn(void *arg)
 	uint64_t tsc_end;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
+	struct ns_entry *entry;
 	uint32_t unfinished_ns_ctx;
 
 	printf("Starting thread on core %u\n", worker->lcore);
@@ -1049,14 +1051,15 @@ work_fn(void *arg)
 		unfinished_ns_ctx = 0;
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx != NULL) {
+			entry = ns_ctx->entry;
 			/* first time will enter into this if case */
-			if (!ns_ctx->is_draining) {
-				ns_ctx->is_draining = true;
+			if (!entry->is_draining) {
+				entry->is_draining = true;
 			}
 
-			if (ns_ctx->current_queue_depth > 0) {
+			if (entry->current_queue_depth > 0) {
 				check_io(ns_ctx);
-				if (ns_ctx->current_queue_depth == 0) {
+				if (entry->current_queue_depth == 0) {
 					cleanup_ns_worker_ctx(ns_ctx);
 				} else {
 					unfinished_ns_ctx++;
@@ -1165,6 +1168,7 @@ print_performance(void)
 	int ns_count;
 	struct worker_thread	*worker;
 	struct ns_worker_ctx	*ns_ctx;
+	struct ns_entry		*entry;
 	uint32_t max_strlen;
 
 	total_io_per_second = 0;
@@ -1195,16 +1199,17 @@ print_performance(void)
 	while (worker) {
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx) {
-			if (ns_ctx->io_completed != 0) {
-				io_per_second = (double)ns_ctx->io_completed / g_time_in_sec;
+			entry = ns_ctx->entry;
+			if (entry->io_completed != 0) {
+				io_per_second = (double)entry->io_completed / g_time_in_sec;
 				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
-				average_latency = ((double)ns_ctx->total_tsc / ns_ctx->io_completed) * 1000 * 1000 / g_tsc_rate;
-				min_latency = (double)ns_ctx->min_tsc * 1000 * 1000 / g_tsc_rate;
+				average_latency = ((double)entry->total_tsc / entry->io_completed) * 1000 * 1000 / g_tsc_rate;
+				min_latency = (double)entry->min_tsc * 1000 * 1000 / g_tsc_rate;
 				if (min_latency < min_latency_so_far) {
 					min_latency_so_far = min_latency;
 				}
 
-				max_latency = (double)ns_ctx->max_tsc * 1000 * 1000 / g_tsc_rate;
+				max_latency = (double)entry->max_tsc * 1000 * 1000 / g_tsc_rate;
 				if (max_latency > max_latency_so_far) {
 					max_latency_so_far = max_latency;
 				}
@@ -1215,8 +1220,8 @@ print_performance(void)
 				       average_latency, min_latency, max_latency);
 				total_io_per_second += io_per_second;
 				total_mb_per_second += mb_per_second;
-				total_io_completed += ns_ctx->io_completed;
-				total_io_tsc += ns_ctx->total_tsc;
+				total_io_completed += entry->io_completed;
+				total_io_tsc += entry->total_tsc;
 				ns_count++;
 			}
 			ns_ctx = ns_ctx->next;
@@ -1243,10 +1248,11 @@ print_performance(void)
 		while (ns_ctx) {
 			const double *cutoff = g_latency_cutoffs;
 
-			printf("Summary latency data for %-43.43s from core %u:\n", ns_ctx->entry->name, worker->lcore);
+			entry = ns_ctx->entry;
+			printf("Summary latency data for %-43.43s from core %u:\n", entry->name, worker->lcore);
 			printf("=================================================================================\n");
 
-			spdk_histogram_data_iterate(ns_ctx->histogram, check_cutoff, &cutoff);
+			spdk_histogram_data_iterate(entry->histogram, check_cutoff, &cutoff);
 
 			printf("\n");
 			ns_ctx = ns_ctx->next;
@@ -1262,11 +1268,13 @@ print_performance(void)
 	while (worker) {
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx) {
-			printf("Latency histogram for %-43.43s from core %u:\n", ns_ctx->entry->name, worker->lcore);
+			entry = ns_ctx->entry;
+
+			printf("Latency histogram for %-43.43s from core %u:\n", entry->name, worker->lcore);
 			printf("==============================================================================\n");
 			printf("       Range in us     Cumulative    IO count\n");
 
-			spdk_histogram_data_iterate(ns_ctx->histogram, print_bucket, NULL);
+			spdk_histogram_data_iterate(entry->histogram, print_bucket, NULL);
 			printf("\n");
 			ns_ctx = ns_ctx->next;
 		}
@@ -1761,7 +1769,7 @@ unregister_workers(void)
 
 		while (ns_ctx) {
 			struct ns_worker_ctx *next_ns_ctx = ns_ctx->next;
-			spdk_histogram_data_free(ns_ctx->histogram);
+
 			free(ns_ctx);
 			ns_ctx = next_ns_ctx;
 		}
@@ -1905,10 +1913,10 @@ associate_workers_with_ns(void)
 		}
 
 		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
-		ns_ctx->min_tsc = UINT64_MAX;
+		entry->min_tsc = UINT64_MAX;
 		ns_ctx->entry = entry;
 		ns_ctx->next = worker->ns_ctx;
-		ns_ctx->histogram = spdk_histogram_data_alloc();
+		entry->histogram = spdk_histogram_data_alloc();
 		worker->ns_ctx = ns_ctx;
 
 		worker = worker->next;
