@@ -110,6 +110,8 @@ struct ftl_nv_cache {
 	uint64_t				current_addr;
 	/* Number of available blocks left */
 	uint64_t				num_available;
+	/* Maximum number of blocks */
+	uint64_t				num_data_blocks;
 	/* Metadata pool */
 	struct spdk_mempool			*md_pool;
 	/* Cache lock */
@@ -233,6 +235,17 @@ struct spdk_ftl_dev {
 	/* Devices' list */
 	STAILQ_ENTRY(spdk_ftl_dev)		stailq;
 };
+
+struct ftl_nv_cache_header {
+	/* Version of the header */
+	uint32_t				version;
+	/* UUID of the FTL device */
+	struct spdk_uuid			uuid;
+	/* Size of the non-volatile cache (in blocks) */
+	uint64_t				size;
+	/* Checksum of the header, needs to be last element */
+	uint32_t				checksum;
+} __attribute__((packed));
 
 typedef void (*ftl_restore_fn)(struct spdk_ftl_dev *, struct ftl_restore *, int);
 
@@ -461,5 +474,8 @@ ftl_vld_map_size(const struct spdk_ftl_dev *dev)
 {
 	return (size_t)spdk_divide_round_up(ftl_num_band_lbks(dev), CHAR_BIT);
 }
+
+#define FTL_NV_CACHE_HEADER_VERSION	1
+#define FTL_NV_CACHE_DATA_OFFSET	1
 
 #endif /* FTL_CORE_H */

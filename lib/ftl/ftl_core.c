@@ -203,7 +203,6 @@ ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	struct ftl_wptr *wptr;
-	struct spdk_bdev *bdev;
 
 	wptr = ftl_wptr_from_band(io->band);
 
@@ -215,13 +214,11 @@ ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 	ftl_band_set_next_state(io->band);
 	if (io->band->state == FTL_BAND_STATE_CLOSED) {
 		if (nv_cache->bdev_desc) {
-			bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-
 			pthread_spin_lock(&nv_cache->lock);
 			nv_cache->num_available += ftl_band_user_lbks(io->band);
 
-			if (spdk_unlikely(nv_cache->num_available > spdk_bdev_get_num_blocks(bdev))) {
-				nv_cache->num_available = spdk_bdev_get_num_blocks(bdev);
+			if (spdk_unlikely(nv_cache->num_available > nv_cache->num_data_blocks)) {
+				nv_cache->num_available = nv_cache->num_data_blocks;
 			}
 			pthread_spin_unlock(&nv_cache->lock);
 		}
@@ -976,7 +973,7 @@ ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks)
 	nv_cache->num_available -= *num_lbks;
 
 	if (nv_cache->current_addr == spdk_bdev_get_num_blocks(bdev)) {
-		nv_cache->current_addr = 0;
+		nv_cache->current_addr = FTL_NV_CACHE_DATA_OFFSET;
 	}
 out:
 	pthread_spin_unlock(&nv_cache->lock);
