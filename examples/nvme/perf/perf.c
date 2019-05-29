@@ -46,6 +46,7 @@
 #include "spdk/dif.h"
 #include "spdk/util.h"
 #include "spdk/log.h"
+#include "spdk/likely.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -548,8 +549,7 @@ nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
 	struct spdk_dif_error err_blk = {};
 	int rc;
 
-	if (!task->is_read || entry->md_size == 0 ||
-	    (entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
+	if (!task->is_read || (entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
 		return;
 	}
 
@@ -917,8 +917,10 @@ task_complete(struct perf_task *task)
 		spdk_histogram_data_tally(ns_ctx->histogram, tsc_diff);
 	}
 
-	/* add application level verification for end-to-end data protection */
-	entry->fn_table->verify_io(task, entry);
+	if (spdk_unlikely(entry->md_size > 0)) {
+		/* add application level verification for end-to-end data protection */
+		entry->fn_table->verify_io(task, entry);
+	}
 
 	/*
 	 * is_draining indicates when time has expired for the test run
