@@ -78,10 +78,15 @@ struct ns_entry {
 		struct {
 			struct spdk_nvme_ctrlr	*ctrlr;
 			struct spdk_nvme_ns	*ns;
+			int			num_qpairs;
+			struct spdk_nvme_qpair	**qpair;
+			int			last_qpair;
 		} nvme;
 #if HAVE_LIBAIO
 		struct {
 			int			fd;
+			struct io_event		*events;
+			io_context_t		ctx;
 		} aio;
 #endif
 	} u;
@@ -129,21 +134,6 @@ static const double g_latency_cutoffs[] = {
 
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
-	union {
-		struct {
-			int			num_qpairs;
-			struct spdk_nvme_qpair	**qpair;
-			int			last_qpair;
-		} nvme;
-
-#if HAVE_LIBAIO
-		struct {
-			struct io_event		*events;
-			io_context_t		ctx;
-		} aio;
-#endif
-	} u;
-
 	struct ns_worker_ctx	*next;
 };
 
@@ -269,10 +259,10 @@ aio_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	      struct ns_entry *entry, uint64_t offset_in_ios)
 {
 	if (task->is_read) {
-		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD,
+		return aio_submit(entry->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD,
 				  &task->iov, offset_in_ios, task);
 	} else {
-		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE,
+		return aio_submit(entry->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE,
 				  &task->iov, offset_in_ios, task);
 	}
 }
@@ -280,20 +270,21 @@ aio_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 static void
 aio_check_io(struct ns_worker_ctx *ns_ctx)
 {
+	struct ns_entry *entry = ns_ctx->entry;
 	int count, i;
 	struct timespec timeout;
 
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
 
-	count = io_getevents(ns_ctx->u.aio.ctx, 1, g_queue_depth, ns_ctx->u.aio.events, &timeout);
+	count = io_getevents(entry->u.aio.ctx, 1, g_queue_depth, entry->u.aio.events, &timeout);
 	if (count < 0) {
 		fprintf(stderr, "io_getevents error\n");
 		exit(1);
 	}
 
 	for (i = 0; i < count; i++) {
-		task_complete(ns_ctx->u.aio.events[i].data);
+		task_complete(entry->u.aio.events[i].data);
 	}
 }
 
@@ -305,13 +296,15 @@ aio_verify_io(struct perf_task *task, struct ns_entry *entry)
 static int
 aio_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
-	ns_ctx->u.aio.events = calloc(g_queue_depth, sizeof(struct io_event));
-	if (!ns_ctx->u.aio.events) {
+	struct ns_entry *entry = ns_ctx->entry;
+
+	entry->u.aio.events = calloc(g_queue_depth, sizeof(struct io_event));
+	if (!entry->u.aio.events) {
 		return -1;
 	}
-	ns_ctx->u.aio.ctx = 0;
-	if (io_setup(g_queue_depth, &ns_ctx->u.aio.ctx) < 0) {
-		free(ns_ctx->u.aio.events);
+	entry->u.aio.ctx = 0;
+	if (io_setup(g_queue_depth, &entry->u.aio.ctx) < 0) {
+		free(entry->u.aio.events);
 		perror("io_setup");
 		return -1;
 	}
@@ -321,8 +314,10 @@ aio_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 static void
 aio_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
-	io_destroy(ns_ctx->u.aio.ctx);
-	free(ns_ctx->u.aio.events);
+	struct ns_entry *entry = ns_ctx->entry;
+
+	io_destroy(entry->u.aio.ctx);
+	free(entry->u.aio.events);
 }
 
 static const struct ns_fn_table aio_fn_table = {
@@ -474,10 +469,10 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		}
 	}
 
-	qp_num = ns_ctx->u.nvme.last_qpair;
-	ns_ctx->u.nvme.last_qpair++;
-	if (ns_ctx->u.nvme.last_qpair == ns_ctx->u.nvme.num_qpairs) {
-		ns_ctx->u.nvme.last_qpair = 0;
+	qp_num = entry->u.nvme.last_qpair;
+	entry->u.nvme.last_qpair++;
+	if (entry->u.nvme.last_qpair == entry->u.nvme.num_qpairs) {
+		entry->u.nvme.last_qpair = 0;
 	}
 
 	if (mode != DIF_MODE_NONE) {
@@ -492,7 +487,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	}
 
 	if (task->is_read) {
-		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
+		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, entry->u.nvme.qpair[qp_num],
 						     task->iov.iov_base, task->md_iov.iov_base,
 						     lba,
 						     entry->io_size_blocks, io_complete,
@@ -519,7 +514,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			break;
 		}
 
-		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
+		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, entry->u.nvme.qpair[qp_num],
 						      task->iov.iov_base, task->md_iov.iov_base,
 						      lba,
 						      entry->io_size_blocks, io_complete,
@@ -531,10 +526,11 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 static void
 nvme_check_io(struct ns_worker_ctx *ns_ctx)
 {
+	struct ns_entry *entry = ns_ctx->entry;
 	int i, rc;
 
-	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
-		rc = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair[i], g_max_completions);
+	for (i = 0; i < entry->u.nvme.num_qpairs; i++) {
+		rc = spdk_nvme_qpair_process_completions(entry->u.nvme.qpair[i], g_max_completions);
 		if (rc < 0) {
 			fprintf(stderr, "NVMe io qpair process completion error\n");
 			exit(1);
@@ -580,9 +576,9 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	struct ns_entry *entry = ns_ctx->entry;
 	int i;
 
-	ns_ctx->u.nvme.num_qpairs = g_nr_io_queues_per_ns;
-	ns_ctx->u.nvme.qpair = calloc(ns_ctx->u.nvme.num_qpairs, sizeof(struct spdk_nvme_qpair *));
-	if (!ns_ctx->u.nvme.qpair) {
+	entry->u.nvme.num_qpairs = g_nr_io_queues_per_ns;
+	entry->u.nvme.qpair = calloc(entry->u.nvme.num_qpairs, sizeof(struct spdk_nvme_qpair *));
+	if (!entry->u.nvme.qpair) {
 		return -1;
 	}
 
@@ -592,10 +588,10 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	}
 	opts.delay_pcie_doorbell = true;
 
-	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
-		ns_ctx->u.nvme.qpair[i] = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
-					  sizeof(opts));
-		if (!ns_ctx->u.nvme.qpair[i]) {
+	for (i = 0; i < entry->u.nvme.num_qpairs; i++) {
+		entry->u.nvme.qpair[i] = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
+					 sizeof(opts));
+		if (!entry->u.nvme.qpair[i]) {
 			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
 			return -1;
 		}
@@ -607,13 +603,14 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 static void
 nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
+	struct ns_entry *entry = ns_ctx->entry;
 	int i;
 
-	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
-		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair[i]);
+	for (i = 0; i < entry->u.nvme.num_qpairs; i++) {
+		spdk_nvme_ctrlr_free_io_qpair(entry->u.nvme.qpair[i]);
 	}
 
-	free(ns_ctx->u.nvme.qpair);
+	free(entry->u.nvme.qpair);
 }
 
 static const struct ns_fn_table nvme_fn_table = {
