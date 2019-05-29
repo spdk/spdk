@@ -887,7 +887,7 @@ submit_single_io(struct perf_task *task)
 
 	rc = entry->fn_table->submit_io(task, ns_ctx, entry, offset_in_ios);
 
-	if (rc != 0) {
+	if (spdk_unlikely(rc != 0)) {
 		fprintf(stderr, "starting I/O failed\n");
 	} else {
 		ns_ctx->current_queue_depth++;
@@ -907,13 +907,13 @@ task_complete(struct perf_task *task)
 	ns_ctx->io_completed++;
 	tsc_diff = spdk_get_ticks() - task->submit_tsc;
 	ns_ctx->total_tsc += tsc_diff;
-	if (ns_ctx->min_tsc > tsc_diff) {
+	if (spdk_unlikely(ns_ctx->min_tsc > tsc_diff)) {
 		ns_ctx->min_tsc = tsc_diff;
 	}
-	if (ns_ctx->max_tsc < tsc_diff) {
+	if (spdk_unlikely(ns_ctx->max_tsc < tsc_diff)) {
 		ns_ctx->max_tsc = tsc_diff;
 	}
-	if (g_latency_sw_tracking_level > 0) {
+	if (spdk_unlikely(g_latency_sw_tracking_level > 0)) {
 		spdk_histogram_data_tally(ns_ctx->histogram, tsc_diff);
 	}
 
@@ -928,7 +928,7 @@ task_complete(struct perf_task *task)
 	 * to complete.  In this case, do not submit a new I/O to replace
 	 * the one just completed.
 	 */
-	if (ns_ctx->is_draining) {
+	if (spdk_unlikely(ns_ctx->is_draining)) {
 		spdk_dma_free(task->iov.iov_base);
 		spdk_dma_free(task->md_iov.iov_base);
 		free(task);
@@ -942,7 +942,7 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct perf_task *task = ctx;
 
-	if (spdk_nvme_cpl_is_error(cpl)) {
+	if (spdk_unlikely(spdk_nvme_cpl_is_error(cpl))) {
 		fprintf(stderr, "%s completed with error (sct=%d, sc=%d)\n",
 			task->is_read ? "Read" : "Write",
 			cpl->status.sct, cpl->status.sc);
