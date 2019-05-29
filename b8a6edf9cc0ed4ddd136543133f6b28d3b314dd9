@@ -22,6 +22,30 @@
       "revId": "b8a6edf9cc0ed4ddd136543133f6b28d3b314dd9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6731efd7_862e4001",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-29T08:39:41Z",
+      "side": 1,
+      "message": "This patch is to share code between initiator and target.\nThe next patch addresses and fixes the bug. After the next patch tests the fix.\n\nI separated UT code to reduce the size of each patch to follow easier. Of course I can merge two if needed.\n\nI updated the whole commit message, and hope you will find some improvement.",
+      "parentUuid": "6d8dbe33_3e51c49a",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 20
+      },
+      "revId": "b8a6edf9cc0ed4ddd136543133f6b28d3b314dd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
