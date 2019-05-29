@@ -1,0 +1,192 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4512a803_f4f68d90",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "This branch is never hit",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22b5d788_ff24d61c",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "This branch is never hit.",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d68ce872_702ab4e2",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "This is never hit.",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad07b8fc_4b466836",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we return 1 here?. Quoting spdk_pci_enumerate() docs:\n\n\u003e  * The return code can be as follows:\n\u003e  *  -1 - device was not attached, the enumeration is stopped\n\u003e  *   0 - device attached successfully, enumeration continues\n\u003e  *   1 - device was not attached, enumeration continues",
+      "range": {
+        "startLine": 108,
+        "startChar": 2,
+        "endLine": 108,
+        "endChar": 12
+      },
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d4a2738_792610cf",
+        "filename": "lib/vmd/vmd_spec.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "It\u0027s only used inside vmdpci.h, I think we can move it there.",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45dcdf3e_7f11eb3d",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "Does it pass the astyle?",
+      "range": {
+        "startLine": 196,
+        "startChar": 72,
+        "endLine": 196,
+        "endChar": 78
+      },
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "576957df_81db6d79",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "We already have spdk_pci_device_get_serial_number()\n\nI\u0027m guessing we don\u0027t need this code here.",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec73b9ba_6e53001c",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 768,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "Probably unneeded duplicate.",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0f746ed_a9226923",
+        "filename": "lib/vmd/vmdpci.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "I guess we don\u0027t want this typedef. It just doesn\u0027t match the SPDK coding style.",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dda874b2_61926c17",
+        "filename": "lib/vmd/vmdpci.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:56:04Z",
+      "side": 1,
+      "message": "unused?",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 21
+      },
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
