@@ -46,6 +46,30 @@
       "revId": "4a204ebf980c12c095e1746efa5c932e4f2fb2b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e1f42f7_a581c503",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-29T11:53:37Z",
+      "side": 1,
+      "message": "I think we should \n\n(1) consider performance improvement vs code complexity\n(2) be able to test the patch with open source target\n\nboth will be possible when if/when there\u0027s proposed spdk target patch to support multiple r2t, I would vote to skip this patch for now and get back to it when we have a target patch.",
+      "parentUuid": "a8161d74_89057db9",
+      "range": {
+        "startLine": 7,
+        "startChar": 9,
+        "endLine": 7,
+        "endChar": 39
+      },
+      "revId": "4a204ebf980c12c095e1746efa5c932e4f2fb2b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
