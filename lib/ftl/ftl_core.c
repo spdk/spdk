@@ -1643,6 +1643,7 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->lbk_size = FTL_BLOCK_SIZE;
 	attrs->range = dev->range;
 	attrs->cache_bdev_desc = dev->nv_cache.bdev_desc;
+	attrs->allow_open_bands = dev->conf.allow_open_bands;
 }
 
 static void

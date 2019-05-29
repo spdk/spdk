@@ -141,6 +141,8 @@ struct spdk_ftl_attrs {
 	size_t					lbk_size;
 	/* Write buffer cache */
 	struct spdk_bdev_desc			*cache_bdev_desc;
+	/* Allow partial recovery after dirty shutdown */
+	bool					allow_open_bands;
 };
 
 struct ftl_module_init_opts {
