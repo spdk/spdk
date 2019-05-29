@@ -1637,6 +1637,7 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->lbk_size = FTL_BLOCK_SIZE;
 	attrs->range = dev->range;
 	attrs->cache_bdev_desc = dev->nv_cache.bdev_desc;
+	attrs->restore_error = dev->conf.return_md_restore_error;
 }
 
 static void

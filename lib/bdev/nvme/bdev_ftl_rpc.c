@@ -46,6 +46,7 @@ struct rpc_construct_ftl {
 	char *punits;
 	char *uuid;
 	char *cache_bdev;
+	bool restore_error;
 };
 
 static void
@@ -66,6 +67,7 @@ static const struct spdk_json_object_decoder rpc_construct_ftl_decoders[] = {
 	{"punits", offsetof(struct rpc_construct_ftl, punits), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_construct_ftl, uuid), spdk_json_decode_string, true},
 	{"cache", offsetof(struct rpc_construct_ftl, cache_bdev), spdk_json_decode_string, true},
+	{"restore_error", offsetof(struct rpc_construct_ftl, restore_error), spdk_json_decode_bool, true},
 };
 
 #define FTL_RANGE_MAX_LENGTH 32
@@ -123,6 +125,7 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 	opts.name = req.name;
 	opts.mode = SPDK_FTL_MODE_CREATE;
 	opts.cache_bdev = req.cache_bdev;
+	opts.restore_error = req.restore_error;
 
 	/* Parse trtype */
 	rc = spdk_nvme_transport_id_parse_trtype(&opts.trid.trtype, req.trtype);
