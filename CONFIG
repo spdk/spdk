@@ -94,7 +94,7 @@ CONFIG_RBD=n
 
 # Build vhost library.
 CONFIG_VHOST=y
-CONFIG_VHOST_INTERNAL_LIB=y
+CONFIG_VHOST_INTERNAL_LIB=n
 
 # Build vhost initiator (Virtio) driver.
 CONFIG_VIRTIO=y
