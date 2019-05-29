@@ -1426,7 +1426,8 @@ set_md_interleave_iovs_test(void)
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
-					     read_base, 4096 * 4, &mapped_len, &ctx);
+					     read_base, 4096 * 4 - read_base,
+					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 3072 + 4096 * 3);
 	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 1024, 3072) == true);
@@ -1441,7 +1442,8 @@ set_md_interleave_iovs_test(void)
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
-					     read_base, 4096 * 4, &mapped_len, &ctx);
+					     read_base, 4096 * 4 - read_base,
+					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 1 + 4096 * 3);
 	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 4095, 1) == true);
@@ -1456,7 +1458,8 @@ set_md_interleave_iovs_test(void)
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
-					     read_base, 4096 * 4, &mapped_len, &ctx);
+					     read_base, 4096 * 4 - read_base,
+					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(mapped_len == 3584);
 	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + (4096 + 128) * 3 + 512, 3584) == true);
@@ -1541,7 +1544,8 @@ set_md_interleave_iovs_split_test(void)
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
-					     read_base, 512 * 4, &mapped_len, &ctx);
+					     read_base, 512 * 4 - read_base,
+					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 8);
 	CU_ASSERT(mapped_len == 384 + 512 * 3);
 	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base + 128, 384) == true);
@@ -1560,7 +1564,8 @@ set_md_interleave_iovs_split_test(void)
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
-					     read_base, 512 * 4, &mapped_len, &ctx);
+					     read_base, 512 * 4 - read_base,
+					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 8);
 	CU_ASSERT(mapped_len == 1 + 512 * 3);
 	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base + 511, 1) == true);
@@ -1579,7 +1584,8 @@ set_md_interleave_iovs_split_test(void)
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
-					     read_base, 512 * 4, &mapped_len, &ctx);
+					     read_base, 512 * 4 - read_base,
+					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 2);
 	CU_ASSERT(mapped_len == 384);
 	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[5].iov_base + 3 + 128, 172) == true);
