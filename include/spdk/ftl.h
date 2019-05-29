@@ -92,6 +92,13 @@ struct spdk_ftl_conf {
 
 	/* Allow for partial recovery from open bands instead of returning error */
 	bool					allow_open_bands;
+
+	struct {
+		/* Maximum number of concurrent requests */
+		size_t				max_request_cnt;
+		/* Maximum number of blocks per one request */
+		size_t				max_request_size;
+	} nv_cache;
 };
 
 /* Range of parallel units (inclusive) */
