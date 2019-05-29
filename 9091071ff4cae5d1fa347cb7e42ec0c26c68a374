@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e46c5a0_8286565e",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T22:47:21Z",
+      "side": 1,
+      "message": "this should be construct_crypto_bdev",
+      "revId": "9091071ff4cae5d1fa347cb7e42ec0c26c68a374",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd0fb8d8_7181b09b",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T22:47:21Z",
+      "side": 1,
+      "message": "delete_crypto_bdev not destroy_raid_bdev\n\nZiye,\n\nI\u0027m concerned about these being missed.  It means this was not tested at all, even on your local system.\n\nCould you please run this through the test pool once with RUN_NIGHTLY set to 1 at the top of this script only?  Make sure it passes.  Then remove that line and push it again.\n\nThanks,\n\n-Jim",
+      "revId": "9091071ff4cae5d1fa347cb7e42ec0c26c68a374",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
