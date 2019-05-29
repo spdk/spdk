@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4f38464d_a835fec0",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-29T06:53:50Z",
+      "side": 1,
+      "message": "Thanks for your review. I think you are correct. Fixed.",
+      "parentUuid": "b648ba01_c6e2229e",
+      "range": {
+        "startLine": 651,
+        "startChar": 1,
+        "endLine": 651,
+        "endChar": 32
+      },
+      "revId": "a3f9b84786c932df7045513e3c2a93b9334b1146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "062cebb5_9f6982ce",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 2
@@ -36,6 +60,24 @@
       "writtenOn": "2019-05-28T07:12:56Z",
       "side": 1,
       "message": "ditto.",
+      "revId": "a3f9b84786c932df7045513e3c2a93b9334b1146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc045bd9_f36af1a5",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-29T06:53:50Z",
+      "side": 1,
+      "message": "fixed.",
+      "parentUuid": "062cebb5_9f6982ce",
       "revId": "a3f9b84786c932df7045513e3c2a93b9334b1146",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true

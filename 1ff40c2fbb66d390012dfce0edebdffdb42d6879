@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30c14c4b_d67637bc",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1429,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-29T06:53:50Z",
+      "side": 1,
+      "message": "number of tokens",
+      "revId": "1ff40c2fbb66d390012dfce0edebdffdb42d6879",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00891d9a_8056c283",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1848,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-29T06:53:50Z",
+      "side": 1,
+      "message": "delete new line",
+      "revId": "1ff40c2fbb66d390012dfce0edebdffdb42d6879",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
