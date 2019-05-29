@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b44e2a5f_555babbe",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-29T02:39:57Z",
+      "side": 1,
+      "message": "We may be able to remove this.",
+      "range": {
+        "startLine": 89,
+        "startChar": 1,
+        "endLine": 89,
+        "endChar": 20
+      },
+      "revId": "242f05c18c0d9922109c3356aa905bd0b405991d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88caa750_5e624350",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-29T02:39:57Z",
+      "side": 1,
+      "message": "We may be able to remove this.",
+      "range": {
+        "startLine": 110,
+        "startChar": 1,
+        "endLine": 110,
+        "endChar": 25
+      },
+      "revId": "242f05c18c0d9922109c3356aa905bd0b405991d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10dc3728_7a481ddd",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-29T02:39:57Z",
+      "side": 1,
+      "message": "We may be able to remove this.",
+      "range": {
+        "startLine": 151,
+        "startChar": 1,
+        "endLine": 152,
+        "endChar": 0
+      },
+      "revId": "242f05c18c0d9922109c3356aa905bd0b405991d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66ad4be2_78201326",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1298,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-29T02:39:57Z",
+      "side": 1,
+      "message": "Or may suggest this check may be replaced by assert(tcp_req-\u003estate \u003d\u003d NVME_TCP_REQ_ACTIVE_R2T).",
+      "range": {
+        "startLine": 1297,
+        "startChar": 2,
+        "endLine": 1298,
+        "endChar": 25
+      },
+      "revId": "242f05c18c0d9922109c3356aa905bd0b405991d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "430191a2_d292bf9b",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-29T02:39:57Z",
+      "side": 1,
+      "message": "Or may suggest this if check can be removed.",
+      "range": {
+        "startLine": 1335,
+        "startChar": 2,
+        "endLine": 1335,
+        "endChar": 47
+      },
+      "revId": "242f05c18c0d9922109c3356aa905bd0b405991d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88eab777_0b1dea01",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-29T02:39:57Z",
+      "side": 1,
+      "message": "Only a single R2T is supported?",
+      "range": {
+        "startLine": 1337,
+        "startChar": 29,
+        "endLine": 1337,
+        "endChar": 99
+      },
+      "revId": "242f05c18c0d9922109c3356aa905bd0b405991d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
