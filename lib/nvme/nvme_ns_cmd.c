@@ -33,7 +33,8 @@
 
 #include "nvme_internal.h"
 
-static struct nvme_request *_nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+static inline struct nvme_request *_nvme_ns_cmd_rw(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
 		const struct nvme_payload *payload, uint32_t payload_offset, uint32_t md_offset,
 		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
 		void *cb_arg, uint32_t opc, uint32_t io_flags,
@@ -435,7 +436,7 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 	return req;
 }
 
-static struct nvme_request *
+static inline struct nvme_request *
 _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		const struct nvme_payload *payload, uint32_t payload_offset, uint32_t md_offset,
 		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t opc,
