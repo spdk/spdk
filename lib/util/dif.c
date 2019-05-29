@@ -33,6 +33,7 @@
 
 #include "spdk/dif.h"
 #include "spdk/crc16.h"
+#include "spdk/crc32.h"
 #include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
@@ -1495,5 +1496,110 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 					   offset, read_len, ctx);
 	} else {
 		return dif_generate_stream_split(iovs, iovcnt, offset, read_len, ctx);
+	}
+}
+
+static int
+dif_update_crc32c(uint8_t *buf, uint32_t buf_len,
+		  uint32_t data_offset, uint32_t data_len,
+		  uint32_t *_crc32c,  const struct spdk_dif_ctx *ctx)
+{
+	uint32_t crc32c;
+	uint32_t data_block_size, offset_blocks, head_unalign, num_md, len;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	crc32c = *_crc32c;
+
+	offset_blocks = data_offset / data_block_size;
+	head_unalign = data_offset % data_block_size;
+	num_md = (head_unalign + data_len) / data_block_size;
+
+	if (buf_len < data_offset + data_len + num_md * ctx->md_size) {
+		SPDK_ERRLOG("Buffer size was not enough to have data and metadata.\n");
+		return -EINVAL;
+	}
+
+	buf += offset_blocks * ctx->block_size + head_unalign;
+
+	while (data_len != 0) {
+		len = _to_next_boundary(data_offset, data_block_size);
+		len = spdk_min(len, data_len);
+
+		crc32c = spdk_crc32c_update(buf, len, crc32c);
+
+		data_len -= len;
+		data_offset += len;
+		buf += len + ctx->md_size;
+	}
+
+	*_crc32c = crc32c;
+	return 0;
+}
+
+static int
+dif_update_crc32c_split(struct iovec *iovs, int iovcnt,
+			uint32_t data_offset, uint32_t data_len,
+			uint32_t *_crc32c, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t crc32c;
+	uint32_t data_block_size, offset_blocks, head_unalign, num_md, len, buf_len;
+	uint8_t *buf;
+	struct _dif_sgl sgl;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	crc32c = *_crc32c;
+
+	_dif_sgl_init(&sgl, iovs, iovcnt);
+
+	offset_blocks = data_offset / data_block_size;
+	head_unalign = data_offset % data_block_size;
+	num_md = (head_unalign + data_len) / data_block_size;
+
+	if (!_dif_sgl_is_valid(&sgl, data_offset + data_len + num_md * ctx->md_size)) {
+		SPDK_ERRLOG("Buffer size was not enough to have data and metadata.\n");
+		return -EINVAL;
+	}
+
+	_dif_sgl_advance(&sgl, offset_blocks * ctx->block_size + head_unalign);
+
+	while (data_len != 0) {
+		len = _to_next_boundary(data_offset, data_block_size);
+		len = spdk_min(len, data_len);
+
+		while (len != 0) {
+			_dif_sgl_get_buf(&sgl, (void *)&buf, &buf_len);
+			buf_len = spdk_min(buf_len, len);
+
+			crc32c = spdk_crc32c_update(buf, buf_len, crc32c);
+
+			_dif_sgl_advance(&sgl, buf_len);
+			len -= buf_len;
+			data_len -= buf_len;
+			data_offset += buf_len;
+		}
+		_dif_sgl_advance(&sgl, ctx->md_size);
+	}
+
+	*_crc32c = crc32c;
+	return 0;
+}
+
+int
+spdk_dif_update_crc32c(struct iovec *iovs, int iovcnt,
+		       uint32_t data_offset, uint32_t data_len,
+		       uint32_t *_crc32c, const struct spdk_dif_ctx *ctx)
+{
+	if (iovs == NULL || iovcnt == 0 || _crc32c == NULL) {
+		return -EINVAL;
+	}
+
+	if (iovcnt == 1) {
+		return dif_update_crc32c(iovs[0].iov_base, iovs[0].iov_len,
+					 data_offset, data_len, _crc32c, ctx);
+	} else {
+		return dif_update_crc32c_split(iovs, iovcnt, data_offset, data_len,
+					       _crc32c, ctx);
 	}
 }
