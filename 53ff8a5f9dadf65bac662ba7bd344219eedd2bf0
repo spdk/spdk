@@ -367,6 +367,30 @@
     },
     {
       "key": {
+        "uuid": "0ae2fa0b_5faa1846",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-29T07:10:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "00baf5e5_603c058d",
+      "range": {
+        "startLine": 884,
+        "startChar": 0,
+        "endLine": 884,
+        "endChar": 29
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f6abbc7_41be95ac",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -685,6 +709,30 @@
     },
     {
       "key": {
+        "uuid": "d03bc532_5be3e4d1",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 989,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-29T07:10:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4eb2aee1_4dceff11",
+      "range": {
+        "startLine": 971,
+        "startChar": 0,
+        "endLine": 989,
+        "endChar": 16
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cde056d3_a2089935",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -791,6 +839,30 @@
       "side": 1,
       "message": "Actually it\u0027d make it easier to understand what\u0027s going on if the loop was there. If you want to split ftl_band_read_lba_map I think it\u0027d make more sense to extract the part of the while loop on lines 1037-1046.",
       "parentUuid": "ebdad0ba_d7ca0384",
+      "range": {
+        "startLine": 993,
+        "startChar": 0,
+        "endLine": 993,
+        "endChar": 25
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d78c74b0_80c94462",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-29T07:10:36Z",
+      "side": 1,
+      "message": "I change the name to ftl_lba_map_num_segments_to_read - I wnat to have ftl_band_read_md in this main loop",
+      "parentUuid": "7f996d3a_6c368cba",
       "range": {
         "startLine": 993,
         "startChar": 0,
