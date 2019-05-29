@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "bb1b3a72_097427da",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 5308,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-29T07:23:31Z",
+      "side": 1,
+      "message": "I guess my brain does not work correctly this early in the morning. First part of my comment is correct. \"I can skip this sync here and just close it\" - please disregard this part. As I wrote in the first part - there is no sense in closing snapshot, so this flow is correct.",
+      "parentUuid": "293ebec7_2719a874",
+      "revId": "55ec818067556b60c8a2388cc9fc02e2344fdd7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b168541_f31f30b8",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 48
