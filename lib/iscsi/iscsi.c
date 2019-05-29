@@ -302,9 +302,19 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	uint32_t data_len = DGET24(pdu->bhs.data_segment_len);
 	uint32_t crc32c;
 	uint32_t mod;
+	struct iovec iov;
+	uint32_t num_blocks;
 
 	crc32c = SPDK_CRC32C_INITIAL;
-	crc32c = spdk_crc32c_update(pdu->data, data_len, crc32c);
+	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+		crc32c = spdk_crc32c_update(pdu->data, data_len, crc32c);
+	} else {
+		iov.iov_base = pdu->data_buf;
+		iov.iov_len = pdu->data_buf_len;
+		num_blocks = pdu->data_buf_len / pdu->dif_ctx.block_size;
+
+		spdk_dif_update_crc32c(&iov, 1, num_blocks, &crc32c, &pdu->dif_ctx);
+	}
 
 	mod = data_len % ISCSI_ALIGNMENT;
 	if (mod != 0) {
