@@ -1,0 +1,124 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01e8539e_c41feadc",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:03:53Z",
+      "side": 1,
+      "message": "This looks unnecessary",
+      "range": {
+        "startLine": 35,
+        "startChar": 9,
+        "endLine": 35,
+        "endChar": 22
+      },
+      "revId": "437be29e1b27ca493dea45a5f5c7eb252795df81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4dc3db3_c2ee1616",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:03:53Z",
+      "side": 1,
+      "message": "PCI address",
+      "range": {
+        "startLine": 49,
+        "startChar": 35,
+        "endLine": 49,
+        "endChar": 57
+      },
+      "revId": "437be29e1b27ca493dea45a5f5c7eb252795df81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffdc96ab_c629dd2f",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:03:53Z",
+      "side": 1,
+      "message": "SPDK_ERRLOG?",
+      "revId": "437be29e1b27ca493dea45a5f5c7eb252795df81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b9652a8_cc3755ee",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:03:53Z",
+      "side": 1,
+      "message": "SPDK_INFOLOG",
+      "revId": "437be29e1b27ca493dea45a5f5c7eb252795df81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "873d2331_68fd6a8c",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:03:53Z",
+      "side": 1,
+      "message": "Can we remove this comment? It doesn\u0027t seem useful.",
+      "revId": "437be29e1b27ca493dea45a5f5c7eb252795df81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bec19b47_c6b30190",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T17:03:53Z",
+      "side": 1,
+      "message": "Dead assignment, you could do `return rc;` below.",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 3
+      },
+      "revId": "437be29e1b27ca493dea45a5f5c7eb252795df81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
