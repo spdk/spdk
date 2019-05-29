@@ -358,6 +358,30 @@ if [ -z "${CONFIG[ENV]}" ]; then
 			CONFIG[DPDK_DIR]="${rootdir}/dpdk/build"
 			echo "Using default DPDK in ${CONFIG[DPDK_DIR]}"
 		fi
+
+		if [[ "${CONFIG[VHOST]}" = "y" ]] && [[ "${CONFIG[VHOST_INTERNAL_LIB]}" = "n" ]]; then
+			# We lookup "common_linux" file to check if DPDK version is >= 19.05.
+			# "common_linux" is available since exactly DPDK 19.05 - it was renamed
+			# from "common_linuxapp".
+			if [ ! -f "$rootdir"/dpdk/config/common_linux ]; then
+				echo "Notice: Using internal, legacy rte_vhost library due to DPDK" \
+				     "version < 19.05"
+				CONFIG[VHOST_INTERNAL_LIB]=y
+			fi
+		fi
+	else
+		if [[ "${CONFIG[VHOST]}" = "y" ]] && [[ "${CONFIG[VHOST_INTERNAL_LIB]}" = "n" ]]; then
+			# DPDK must be already built, so we can simply try to use the new rte_vhost.
+			# It has a number of internal dependencies though, so don't try to link the
+			# program, just compile it
+			if ! echo -e '#include <rte_vhost.h>\n' \
+				'int main(void) { return rte_vhost_extern_callback_register(0, NULL, NULL); }\n' \
+				| $BUILD_CMD -c -Wno-deprecated-declarations -I"${CONFIG[DPDK_DIR]}/include" -; then
+				echo "Notice: DPDK's rte_vhost not found or version < 19.05, using internal," \
+				     "legacy rte_vhost library."
+				CONFIG[VHOST_INTERNAL_LIB]=y
+			fi
+		fi
 	fi
 else
 	if [ -n "${CONFIG[DPDK_DIR]}" ]; then
