@@ -1683,6 +1683,112 @@ dif_generate_stream_test(void)
 	_iov_free_buf(&iov);
 }
 
+#define UT_CRC32C_XOR	0xffffffffUL
+
+static void
+update_crc32c_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct iovec iovs[4];
+	uint32_t crc32c1, crc32c2;
+	int i, rc;
+
+	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK, 0, 0, 0, 0);
+	CU_ASSERT(rc == 0);
+
+	/* Compare multiple computations and a computation for a single iovec case.
+	 */
+	_iov_alloc_buf(&iovs[0], (512 + 8) * 10);
+
+	rc = ut_data_pattern_generate(&iovs[0], 1, 512 + 8, 8, 10);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iovs[0], 1, 10, &ctx);
+	CU_ASSERT(rc == 0);
+
+	crc32c1 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(&iovs[0], 1, 0, 512 * 4, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_update_crc32c(&iovs[0], 1, 512 * 4, 512 * 3, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_update_crc32c(&iovs[0], 1, 512 * (4 + 3), 512 * 2, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_update_crc32c(&iovs[0], 1, 512 * (4 + 3 + 2), 512, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	crc32c2 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(&iovs[0], 1, 0, 512 * 10, &crc32c2, &ctx);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(crc32c1 == crc32c2);
+
+	_iov_free_buf(&iovs[0]);
+
+	/* Compare multiple computations and a computation for multiple iovecs case.
+	 */
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], (512 + 8) * (i + 1));
+	}
+
+	rc = ut_data_pattern_generate(iovs, 4, 512 + 8, 8, 10);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(iovs, 4, 10, &ctx);
+	CU_ASSERT(rc == 0);
+
+	crc32c1 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 4, 0, 512 * 4, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_update_crc32c(iovs, 4, 512 * 4, 512 * 3, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_update_crc32c(iovs, 4, 512 * (4 + 3), 512 * 2, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_update_crc32c(iovs, 4, 512 * (4 + 3 + 2), 512, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	crc32c2 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 4, 0, 512 * 10, &crc32c2, &ctx);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(crc32c1 == crc32c2);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+
+	/* Compare extend LBA payload and LBA payload for multiple iovecs case.
+	 */
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], 512 * (i + 1));
+	}
+
+	rc = ut_data_pattern_generate(iovs, 4, 512, 0, 10);
+	CU_ASSERT(rc == 0);
+
+	crc32c2 = UT_CRC32C_XOR;
+
+	for (i = 0; i < 4; i++) {
+		crc32c2 = spdk_crc32c_update(iovs[i].iov_base, iovs[i].iov_len, crc32c2);
+	}
+
+	CU_ASSERT(crc32c1 == crc32c2);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1770,7 +1876,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "set_md_interleave_iovs_test", set_md_interleave_iovs_test) == NULL ||
 		CU_add_test(suite, "set_md_interleave_iovs_split_test",
 			    set_md_interleave_iovs_split_test) == NULL ||
-		CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test) == NULL
+		CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test) == NULL ||
+		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
