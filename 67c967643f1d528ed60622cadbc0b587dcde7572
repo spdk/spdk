@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b1b0474a_efb495b9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-29T23:46:18Z",
+      "side": 1,
+      "message": "Policy change enables to remove has_bounce flag?\n\nif (bdev_io-\u003einternal.orig_iovcnt \u003e 0) {\n\t(snip)\n\tif (bdev_io-\u003einternal.orig_md_buf !\u003d NULL) {\n\t\t(snip)\n\t}\n\tspdk_bdev_io_put_buf(bdev_io);\n}",
+      "revId": "67c967643f1d528ed60622cadbc0b587dcde7572",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3cf6160a_669a1679",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 10
