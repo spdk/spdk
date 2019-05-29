@@ -1677,6 +1677,99 @@ dif_generate_stream_test(void)
 	_iov_free_buf(&iov);
 }
 
+#define UT_CRC32C_XOR	0xffffffffUL
+
+static void
+update_crc32c_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct iovec iovs[7];
+	uint32_t crc32c1, crc32c2, crc32c3, crc32c4;
+	uint32_t dif_flags;
+	int i, rc;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
+			       dif_flags, 0, 0, 0, 0);
+	CU_ASSERT(rc == 0);
+
+	/* data[0][255:0] */
+	_iov_alloc_buf(&iovs[0], 256);
+
+	/* data[0][511:256], md[0][0] */
+	_iov_alloc_buf(&iovs[1], 256 + 1);
+
+	/* md[0][4:1] */
+	_iov_alloc_buf(&iovs[2], 4);
+
+	/* md[0][7:5], data[1][122:0] */
+	_iov_alloc_buf(&iovs[3], 3 + 123);
+
+	/* data[1][511:123], md[1][5:0] */
+	_iov_alloc_buf(&iovs[4], 399 + 6);
+
+	/* md[1][7:6], data[2][511:0], md[2][7:0], data[3][431:0] */
+	_iov_alloc_buf(&iovs[5], 2 + 512 + 8 + 432);
+
+	/* data[3][511:432], md[3][7:0] */
+	_iov_alloc_buf(&iovs[6], 80 + 8);
+
+	rc = ut_data_pattern_generate(iovs, 7, 512 + 8, 8, 4);
+	CU_ASSERT(rc == 0);
+
+	crc32c1 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 7, 4, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	/* Test if DIF doesn't affect CRC for split case. */
+	rc = spdk_dif_generate(iovs, 7, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	crc32c2 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 7, 4, &crc32c2, &ctx);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(crc32c1 == crc32c2);
+
+	for (i = 0; i < 7; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+
+	/* Test if CRC is same regardless of splitting. */
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], 512 + 8);
+	}
+
+	rc = ut_data_pattern_generate(iovs, 4, 512 + 8, 8, 4);
+	CU_ASSERT(rc == 0);
+
+	crc32c3 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 4, 4, &crc32c3, &ctx);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(crc32c1 == crc32c3);
+
+	/* Test if DIF doesn't affect CRC for non-split case. */
+	rc = spdk_dif_generate(iovs, 4, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	crc32c4 = UT_CRC32C_XOR;
+
+	rc = spdk_dif_update_crc32c(iovs, 4, 4, &crc32c4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(crc32c1 == crc32c4);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1764,7 +1857,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "set_md_interleave_iovs_test", set_md_interleave_iovs_test) == NULL ||
 		CU_add_test(suite, "set_md_interleave_iovs_split_test",
 			    set_md_interleave_iovs_split_test) == NULL ||
-		CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test) == NULL
+		CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test) == NULL ||
+		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
