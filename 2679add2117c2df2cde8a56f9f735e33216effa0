@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "464c21fc_65da721d",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-29T20:09:25Z",
+      "side": 1,
+      "message": "If nvme_list has to be MAX_VMD_TARGET elements in size, MAX_VMD_TARGET needs to be defined in the public API. Also, I don\u0027t think the comment here can be right - this can\u0027t work if the buffer isn\u0027t a known size. So this shouldn\u0027t say \"of up to MAX_VMD_TARGET\" but rather \"exactly MAX_VMD_TARGET\".",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06e98b8f_e33b2204",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-29T20:09:25Z",
+      "side": 1,
+      "message": "This is declaring a global named vmd_container, which I think is a mistake.",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4512a803_f4f68d90",
         "filename": "lib/vmd/vmd.c",
         "patchSetId": 8
@@ -70,6 +104,57 @@
         "endLine": 108,
         "endChar": 12
       },
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e080635_11254eb8",
+        "filename": "lib/vmd/vmd_spec.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-29T20:09:25Z",
+      "side": 1,
+      "message": "SUPPPORT -\u003e SUPPORT. Also, does this do anything?",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3a2d453_82ff0d30",
+        "filename": "lib/vmd/vmd_spec.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-29T20:09:25Z",
+      "side": 1,
+      "message": "In SPDK, we don\u0027t automatically typedef our structs.",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7abb1dc_c1353f18",
+        "filename": "lib/vmd/vmd_spec.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-29T20:09:25Z",
+      "side": 1,
+      "message": "When defining spec-defined structures, we always follow them with an SPDK_STATIC_ASSERT() to ensure they are the correct size.",
       "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
