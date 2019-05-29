@@ -300,4 +300,20 @@ int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 int spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			     uint32_t offset, uint32_t read_len,
 			     const struct spdk_dif_ctx *ctx);
+
+/**
+ * Calculate CRC-32C checksum for extended LBA payload.
+ *
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param data_offset Offset to start calculating CRC-32C.
+ * \param data_len Length of data to calculate CRC-32C.
+ * \param crc32c Initial and updated CRC-32C value.
+ * \param ctx DIF context.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_update_crc32c(struct iovec *iovs, int iovcnt,
+			   uint32_t data_offset, uint32_t data_len,
+			   uint32_t *crc32c, const struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
