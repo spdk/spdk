@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "293ebec7_2719a874",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 5308,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-29T07:12:23Z",
+      "side": 1,
+      "message": "We delete snapshot in ctx-\u003ecb_fn call (which is _spdk_bs_delete_blob_finish function), in _spdk_delete_snapshot_cleanup_finish function. Normally, to remove blob, we open it during delete flow. As we already did it and this is still the delete flow we just have to finish it. There is no point to closing it and calling delete blob again.\nI can skip this sync here and just close it (I will update the patch with this change), but we still have to update cluster map in line 5299, because if we wan\u0027t do this we will free clusters  during removal that clone is using right now (I\u0027ve noticed that I forgot to remove line 5333 which is useless at this point).",
+      "parentUuid": "7880bdd9_cf41ec49",
+      "revId": "55ec818067556b60c8a2388cc9fc02e2344fdd7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b168541_f31f30b8",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 48
@@ -84,6 +102,24 @@
       "revId": "55ec818067556b60c8a2388cc9fc02e2344fdd7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07a852fc_7961751a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 5446,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-29T07:12:23Z",
+      "side": 1,
+      "message": "Good point. I\u0027ll do as you suggested.",
+      "parentUuid": "4de60980_9318ee11",
+      "revId": "55ec818067556b60c8a2388cc9fc02e2344fdd7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
