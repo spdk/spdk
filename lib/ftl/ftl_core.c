@@ -949,9 +949,10 @@ ftl_process_flush(struct spdk_ftl_dev *dev, struct ftl_rwb_batch *batch)
 }
 
 static uint64_t
-ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks)
+ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks, void **md_buf)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 	uint64_t num_available, cache_size, cache_addr = FTL_LBA_INVALID;
 
 	cache_size = spdk_bdev_get_num_blocks(bdev);
@@ -961,7 +962,14 @@ ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks)
 		goto out;
 	}
 
+	*md_buf = spdk_mempool_get(nv_cache->md_pool);
+	if (!*md_buf) {
+		goto out;
+	}
+
 	num_available = spdk_min(nv_cache->num_available, *num_lbks);
+	num_available = spdk_min(num_available, dev->conf.nv_cache.max_request_cnt);
+
 	if (spdk_unlikely(nv_cache->current_addr + num_available > cache_size)) {
 		*num_lbks = cache_size - nv_cache->current_addr;
 	} else {
@@ -998,6 +1006,7 @@ static void
 ftl_nv_cache_submit_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct ftl_io *io = cb_arg;
+	struct ftl_nv_cache *nv_cache = &io->dev->nv_cache;
 
 	if (spdk_unlikely(!success)) {
 		SPDK_ERRLOG("Non-volatile cache write failed at %"PRIx64"\n", io->ppa.ppa);
@@ -1006,6 +1015,7 @@ ftl_nv_cache_submit_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	ftl_io_dec_req(io);
 	if (ftl_io_done(io)) {
+		spdk_mempool_put(nv_cache->md_pool, io->md);
 		ftl_io_complete(io);
 	}
 
@@ -1018,21 +1028,23 @@ ftl_submit_nv_cache(void *ctx)
 	struct ftl_io *io = ctx;
 	struct spdk_ftl_dev *dev = io->dev;
 	struct spdk_thread *thread;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	struct ftl_io_channel *ioch;
 	int rc;
 
 	ioch = spdk_io_channel_get_ctx(io->ioch);
 	thread = spdk_io_channel_get_thread(io->ioch);
 
-	rc = spdk_bdev_write_blocks(dev->nv_cache.bdev_desc, ioch->cache_ioch,
-				    ftl_io_iovec_addr(io), io->ppa.ppa, io->lbk_cnt,
-				    ftl_nv_cache_submit_cb, io);
+	rc = spdk_bdev_write_blocks_with_md(nv_cache->bdev_desc, ioch->cache_ioch,
+					    ftl_io_iovec_addr(io), io->md, io->ppa.ppa,
+					    io->lbk_cnt, ftl_nv_cache_submit_cb, io);
 	if (rc == -ENOMEM) {
 		spdk_thread_send_msg(thread, ftl_submit_nv_cache, io);
 		return;
 	} else if (rc) {
 		SPDK_ERRLOG("Write to persistent cache failed: %s (%"PRIu64", %"PRIu64")\n",
 			    spdk_strerror(-rc), io->ppa.ppa, io->lbk_cnt);
+		spdk_mempool_put(nv_cache->md_pool, io->md);
 		io->status = -EIO;
 		ftl_io_complete(io);
 		return;
@@ -1040,6 +1052,19 @@ ftl_submit_nv_cache(void *ctx)
 
 	ftl_io_advance(io, io->lbk_cnt);
 	ftl_io_inc_req(io);
+}
+
+static void
+ftl_nv_cache_fill_md(struct ftl_nv_cache *nv_cache, struct ftl_io *io)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+	void *md_buf = io->md;
+	size_t lbk_off;
+
+	for (lbk_off = 0; lbk_off < io->lbk_cnt; ++lbk_off) {
+		*(uint64_t *)md_buf = ftl_io_get_lba(io, lbk_off);
+		md_buf = (char *)md_buf + spdk_bdev_get_md_size(bdev);
+	}
 }
 
 static void
@@ -1062,7 +1087,7 @@ _ftl_write_nv_cache(void *ctx)
 		}
 
 		/* Reserve area on the write buffer cache */
-		child->ppa.ppa = ftl_reserve_nv_cache(&dev->nv_cache, &num_lbks);
+		child->ppa.ppa = ftl_reserve_nv_cache(&dev->nv_cache, &num_lbks, &child->md);
 		if (child->ppa.ppa == FTL_LBA_INVALID) {
 			ftl_io_free(child);
 			spdk_thread_send_msg(thread, _ftl_write_nv_cache, io);
@@ -1074,6 +1099,7 @@ _ftl_write_nv_cache(void *ctx)
 			ftl_io_shrink_iovec(child, num_lbks);
 		}
 
+		ftl_nv_cache_fill_md(&dev->nv_cache, child);
 		ftl_submit_nv_cache(child);
 	}
 
