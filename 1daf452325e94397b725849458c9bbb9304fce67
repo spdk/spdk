@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e72f0757_8b90c128",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-29T23:55:31Z",
+      "side": 1,
+      "message": "8 byte DIF field in metadata will be overwritten by DIF generation when DIF check is enabled in the target bdev.\nIn this case, verification of metadata is usable only if the size of metadata is more than 8 byte and verification should be done for the part other than DIF field.\n\nSo we should at least enable verification of metadata only when DIF check is disabled in the target bdev.\n\nBut I think excluding metadata from verification in bdevperf layer will be reasonable for now because metadata field is checked by enabling DIF check in the target bdev.",
+      "range": {
+        "startLine": 138,
+        "startChar": 2,
+        "endLine": 138,
+        "endChar": 32
+      },
+      "revId": "1daf452325e94397b725849458c9bbb9304fce67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
