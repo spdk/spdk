@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53e1ed91_19eb70b1",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T21:17:31Z",
+      "side": 1,
+      "message": "should this be grep -qw instead of -qi?  I think you want a case sensitive search.\n\nYou also want to match on the extra bdev name - for example, if you called \"waitforbdev lvol0\" this would match lvol0 but also comp_lvol0.  -w will do that.  I\u0027m not sure if the $ after bdev_name was meant to just search at the end of the line, but I think you an remove that if you\u0027re using -w.",
+      "revId": "956d5bcb5e4a299b8071943054311e62b44646d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
