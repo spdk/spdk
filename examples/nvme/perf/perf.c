@@ -72,6 +72,7 @@ struct ns_fn_table;
 
 struct ns_entry {
 	enum entry_type		type;
+	uint32_t		io_flags;
 	const struct ns_fn_table	*fn_table;
 
 	union {
@@ -79,38 +80,37 @@ struct ns_entry {
 			struct spdk_nvme_ctrlr	*ctrlr;
 			struct spdk_nvme_ns	*ns;
 			int			num_qpairs;
-			struct spdk_nvme_qpair	**qpair;
 			int			last_qpair;
+			struct spdk_nvme_qpair	**qpair;
 		} nvme;
 #if HAVE_LIBAIO
 		struct {
-			int			fd;
 			struct io_event		*events;
 			io_context_t		ctx;
+			int			fd;
 		} aio;
 #endif
 	} u;
 
-	struct ns_entry		*next;
 	struct ns_entry		*worker_next;
 	uint32_t		io_size_blocks;
-	uint32_t		num_io_requests;
+	enum spdk_nvme_pi_type	pi_type;
 	uint64_t		size_in_ios;
-	uint32_t		block_size;
 	uint32_t		md_size;
 	bool			md_interleave;
 	bool			pi_loc;
-	enum spdk_nvme_pi_type	pi_type;
-	uint32_t		io_flags;
-	char			name[1024];
+	bool			is_draining;
 	uint64_t		io_completed;
 	uint64_t		total_tsc;
 	uint64_t		min_tsc;
 	uint64_t		max_tsc;
 	uint64_t		current_queue_depth;
 	uint64_t		offset_in_ios;
-	bool			is_draining;
+	uint32_t		num_io_requests;
+	uint32_t		block_size;
 	struct spdk_histogram_data	*histogram;
+	struct ns_entry		*next;
+	char			name[1024];
 };
 
 static const double g_latency_cutoffs[] = {
@@ -322,8 +322,7 @@ static int
 register_aio_file(const char *path)
 {
 	struct ns_entry *entry;
-
-	int flags, fd;
+	int flags, fd, rc;
 	uint64_t size;
 	uint32_t blklen;
 
@@ -365,8 +364,8 @@ register_aio_file(const char *path)
 		g_io_align = blklen;
 	}
 
-	entry = malloc(sizeof(struct ns_entry));
-	if (entry == NULL) {
+	rc = posix_memalign((void **)&entry, 64, sizeof(struct ns_entry));
+	if (rc != 0) {
 		close(fd);
 		perror("aio ns_entry malloc");
 		return -1;
@@ -638,6 +637,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	uint32_t max_xfer_size, entries, sector_size;
 	uint64_t ns_size;
 	struct spdk_nvme_io_qpair_opts opts;
+	int rc;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
@@ -680,8 +680,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	 */
 	entries += 1;
 
-	entry = calloc(1, sizeof(struct ns_entry));
-	if (entry == NULL) {
+	rc = posix_memalign((void **)&entry, 64, sizeof(struct ns_entry));
+	if (rc != 0) {
 		perror("ns_entry malloc");
 		exit(1);
 	}
