@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5989e8a8_0e446516",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T18:19:43Z",
+      "side": 1,
+      "message": "You can move this outside of the `if (len \u003c io_ctx-\u003edata-\u003esize)` check and get rid of the hacky goto. But let\u0027s not block the functional persistent metadata patches on this, please rebase this on top of persistent metadata.",
+      "range": {
+        "startLine": 306,
+        "startChar": 2,
+        "endLine": 315,
+        "endChar": 4
+      },
+      "revId": "f30912479c850c47db24dd51d3095dff12039f77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
