@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38f1deb6_1f23b3f9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T21:09:41Z",
+      "side": 1,
+      "message": "This NOTE probably belongs as a GerritHub comment, not in the git commit.",
+      "revId": "0519fe784fa7280ecdc4eecd33c25c68244a9e49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba935356_cc3b521f",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T21:09:41Z",
+      "side": 1,
+      "message": "dependencies",
+      "revId": "0519fe784fa7280ecdc4eecd33c25c68244a9e49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d130c70f_1f4c2138",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T21:09:41Z",
+      "side": 1,
+      "message": "dependencies",
+      "revId": "0519fe784fa7280ecdc4eecd33c25c68244a9e49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c0ff776_c6240c0a",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T21:09:41Z",
+      "side": 1,
+      "message": "dependencies",
+      "revId": "0519fe784fa7280ecdc4eecd33c25c68244a9e49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
