@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "424044f9_414723d1",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1792,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T21:45:21Z",
+      "side": 1,
+      "message": "Looks good!  Could you change this one line to:\n\nprint(executed_rpc.strip() + \" \u003c\u003c\u003c\")\n\nJust to make it extra clear that this is the line from the script that failed.",
+      "revId": "0d85c210fe9cdf3aeda5ae3908b99da72ade1b85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
