@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42b623fc_815419e4",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1472,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T23:20:26Z",
+      "side": 1,
+      "message": "Hi Ziye,\n\nI\u0027m still not sure what issue this is fixing.  What is the problem if the is_deleted flag is set multiple times?  This does not need to be optimized since deleting files is a rare occurrence.  Since overall this adds more code, I think the current code is sufficient and simpler.\n\n-Jim",
+      "revId": "8414956616597960dc5ce726646aca150d9b6ebb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
