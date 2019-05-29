@@ -141,6 +141,8 @@ struct spdk_ftl_attrs {
 	size_t					lbk_size;
 	/* Write buffer cache */
 	struct spdk_bdev_desc			*cache_bdev_desc;
+	/* Return error after dirty shutdown recovery */
+	bool					restore_error;
 };
 
 struct ftl_module_init_opts {
