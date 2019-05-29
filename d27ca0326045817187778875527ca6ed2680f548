@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01ff2cb3_954cd4e5",
+        "filename": "test/nvmf/target/nvmf_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-29T23:38:33Z",
+      "side": 1,
+      "message": "If you are checking this in the common script, you can remove the check in this test entirely.",
+      "revId": "d27ca0326045817187778875527ca6ed2680f548",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
