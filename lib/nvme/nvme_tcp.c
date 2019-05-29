@@ -54,7 +54,7 @@
 #define NVME_TCP_RW_BUFFER_SIZE 131072
 
 #define NVME_TCP_HPDA_DEFAULT			0
-#define NVME_TCP_MAX_R2T_DEFAULT		1
+#define NVME_TCP_MAX_R2T_DEFAULT		16
 #define NVME_TCP_PDU_H2C_MIN_DATA_SIZE		4096
 #define NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE	8192
 
@@ -100,14 +100,23 @@ enum nvme_tcp_req_state {
 	NVME_TCP_REQ_ACTIVE_R2T,
 };
 
+struct tcp_req_r2t_info {
+	uint16_t				ttag;
+	uint32_t				r2tl_remain;
+	uint32_t				r2to;
+	bool					in_use;
+};
+
 struct nvme_tcp_req {
 	struct nvme_request			*req;
 	enum nvme_tcp_req_state			state;
 	uint16_t				cid;
 	uint16_t				ttag;
 	uint32_t				datao;
-	uint32_t				r2tl_remain;
+	uint32_t				next_expected_r2to;
+	uint32_t				current_r2t_slot;
 	uint32_t				active_r2ts;
+	struct tcp_req_r2t_info			r2t_info[NVME_TCP_MAX_R2T_DEFAULT];
 	bool					in_capsule_data;
 	struct nvme_tcp_pdu			send_pdu;
 	struct iovec				iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
@@ -144,10 +153,12 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	assert(tcp_req->state == NVME_TCP_REQ_FREE);
 	tcp_req->state = NVME_TCP_REQ_ACTIVE;
 	TAILQ_REMOVE(&tqpair->free_reqs, tcp_req, link);
+	tcp_req->next_expected_r2to = 0;
+	tcp_req->current_r2t_slot = -1;
+	memset(tcp_req->r2t_info, 0, sizeof(tcp_req->r2t_info));
 	tcp_req->datao = 0;
 	tcp_req->req = NULL;
 	tcp_req->in_capsule_data = false;
-	tcp_req->r2tl_remain = 0;
 	tcp_req->active_r2ts = 0;
 	tcp_req->iovcnt = 0;
 	memset(&tcp_req->send_pdu, 0, sizeof(tcp_req->send_pdu));
@@ -1246,19 +1257,72 @@ end:
 	return;
 }
 
+static inline int
+nvme_tcp_req_find_free_r2t_slot(struct nvme_tcp_req *tcp_req)
+{
+	int i;
+
+	for (i = 0; i < NVME_TCP_MAX_R2T_DEFAULT; i++) {
+		if (!tcp_req->r2t_info[i].in_use) {
+			tcp_req->r2t_info[i].in_use = true;
+			return i;
+		}
+	}
+
+	/* Code should never go to here */
+	assert(true);
+	return -1;
+}
+
+static inline int
+nvme_tcp_req_find_active_r2t_slot(struct nvme_tcp_req *tcp_req)
+{
+	int i;
+
+	for (i = 0; i < NVME_TCP_MAX_R2T_DEFAULT; i++) {
+		if (tcp_req->r2t_info[i].in_use &&
+		    (tcp_req->r2t_info[i].r2to == tcp_req->datao)) {
+			return i;
+		}
+	}
+
+	/* Code should never go to here */
+	assert(true);
+	return -1;
+}
+
+static inline void
+nvme_tcp_req_cleanup_active_r2t_slot(struct nvme_tcp_req *tcp_req)
+{
+	int r2t_slot = tcp_req->current_r2t_slot;
+
+	if ((r2t_slot < 0) || (r2t_slot >= NVME_TCP_MAX_R2T_DEFAULT)) {
+		return;
+	}
+
+	tcp_req->r2t_info[r2t_slot].in_use = false;
+	tcp_req->current_r2t_slot = -1;
+}
+
 static void
 nvme_tcp_qpair_h2c_data_send_complete(void *cb_arg)
 {
 	struct nvme_tcp_req *tcp_req = cb_arg;
+	int r2t_slot = tcp_req->current_r2t_slot;
 
 	assert(tcp_req != NULL);
-
-	if (tcp_req->r2tl_remain) {
+	if (tcp_req->r2t_info[r2t_slot].r2tl_remain) {
 		spdk_nvme_tcp_send_h2c_data(tcp_req);
 	} else {
 		assert(tcp_req->active_r2ts > 0);
 		tcp_req->active_r2ts--;
-		tcp_req->state = NVME_TCP_REQ_ACTIVE;
+		nvme_tcp_req_cleanup_active_r2t_slot(tcp_req);
+		if (tcp_req->active_r2ts) {
+			tcp_req->current_r2t_slot = nvme_tcp_req_find_active_r2t_slot(tcp_req);
+			spdk_nvme_tcp_send_h2c_data(tcp_req);
+		} else {
+			tcp_req->state = NVME_TCP_REQ_ACTIVE;
+		}
 	}
 }
 
@@ -1269,6 +1333,9 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	struct nvme_tcp_pdu *rsp_pdu;
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 	uint32_t plen, pdo, alignment;
+	int r2t_slot = tcp_req->current_r2t_slot;
+
+	assert(r2t_slot > 0 && r2t_slot < NVME_TCP_MAX_R2T_DEFAULT);
 
 	rsp_pdu = &tcp_req->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
@@ -1277,12 +1344,12 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	h2c_data->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_DATA;
 	plen = h2c_data->common.hlen = sizeof(*h2c_data);
 	h2c_data->cccid = tcp_req->cid;
-	h2c_data->ttag = tcp_req->ttag;
+	h2c_data->ttag = tcp_req->r2t_info[r2t_slot].ttag;
 	h2c_data->datao = tcp_req->datao;
-
-	h2c_data->datal = spdk_min(tcp_req->r2tl_remain, tqpair->maxh2cdata);
+	assert(tcp_req->datao >= tcp_req->r2t_info[r2t_slot].r2to);
+	h2c_data->datal = spdk_min(tcp_req->r2t_info[r2t_slot].r2tl_remain, tqpair->maxh2cdata);
 	nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req, h2c_data->datal);
-	tcp_req->r2tl_remain -= h2c_data->datal;
+	tcp_req->r2t_info[r2t_slot].r2tl_remain -= h2c_data->datal;
 
 	if (tqpair->host_hdgst_enable) {
 		h2c_data->common.flags |= SPDK_NVME_TCP_CH_FLAGS_HDGSTF;
@@ -1308,7 +1375,7 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 
 	h2c_data->common.plen = plen;
 	tcp_req->datao += h2c_data->datal;
-	if (!tcp_req->r2tl_remain) {
+	if (!tcp_req->r2t_info[r2t_slot].r2tl_remain) {
 		h2c_data->common.flags |= SPDK_NVME_TCP_H2C_DATA_FLAGS_LAST_PDU;
 	}
 
@@ -1325,6 +1392,7 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 	struct spdk_nvme_tcp_r2t_hdr *r2t = &pdu->hdr.r2t;
 	uint32_t cid, error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
+	int r2t_slot;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
 	cid = r2t->cccid;
@@ -1351,7 +1419,7 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 		goto end;
 	}
 
-	if (tcp_req->datao != r2t->r2to) {
+	if (tcp_req->next_expected_r2to != r2t->r2to) {
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 		error_offset = offsetof(struct spdk_nvme_tcp_r2t_hdr, r2to);
 		goto end;
@@ -1367,10 +1435,23 @@ nvme_tcp_r2t_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 
 	}
 
-	tcp_req->ttag = r2t->ttag;
-	tcp_req->r2tl_remain = r2t->r2tl;
+	tcp_req->next_expected_r2to += r2t->r2tl;
+	r2t_slot = nvme_tcp_req_find_free_r2t_slot(tcp_req);
+
+	tcp_req->r2t_info[r2t_slot].ttag = r2t->ttag;
+	tcp_req->r2t_info[r2t_slot].r2tl_remain = r2t->r2tl;
+	tcp_req->r2t_info[r2t_slot].r2to = r2t->r2to;
+
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 
+	/* Currently we only have one send out pdu for req, so need to make sure
+	 * the send_out pdu can be used.
+	 */
+	if (tcp_req->active_r2ts > 1) {
+		return;
+	}
+
+	tcp_req->current_r2t_slot = r2t_slot;
 	spdk_nvme_tcp_send_h2c_data(tcp_req);
 	return;
 
