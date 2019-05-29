@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62d992a1_128eb545",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-29T16:30:25Z",
+      "side": 1,
+      "message": "I\u0027m not sure if we need to bind VMD on BSD, but it\u0027s actually not a big deal because there are no other VMD drivers on BSD.",
+      "revId": "685443a8394a054c5e5e5db71a2767ca559fae68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
