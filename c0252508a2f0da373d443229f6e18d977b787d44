@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d5aed8f_e320a5cb",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T23:45:31Z",
+      "side": 1,
+      "message": "is this global just so you can avoid having to allocate one every time you need to pick a poll group?\n\nthat kind of sucks - it would be nice to be able to just put one of these on the stack so we don\u0027t have to do this global variable nonsense\n\nwhat if instead we just put the struct spdk_cpuset definition in the header file?  and maybe add an spdk_cpuset_init() function which takes an spdK_cpuset * and memsets it to zero (to match the calloc when you do an spdk_cpuset_alloc)",
+      "revId": "c0252508a2f0da373d443229f6e18d977b787d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42a63f31_7045c583",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T23:45:31Z",
+      "side": 1,
+      "message": "TAILQ_FOREACH is fine here - you aren\u0027t removing any poll groups in this loop",
+      "revId": "c0252508a2f0da373d443229f6e18d977b787d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c08b1ef0_412fde36",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T23:45:31Z",
+      "side": 1,
+      "message": "I\u0027m not sure I follow this comment.  Should this be an assert instead?",
+      "revId": "c0252508a2f0da373d443229f6e18d977b787d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
