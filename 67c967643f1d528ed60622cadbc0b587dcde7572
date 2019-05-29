@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cf6160a_669a1679",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2657,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-29T22:55:56Z",
+      "side": 1,
+      "message": "You can get crazy and do return is_buf_allocated(iovs) \u003d\u003d (md_buf !\u003d NULL). But don\u0027t spin another version of the patch just for that.",
+      "revId": "67c967643f1d528ed60622cadbc0b587dcde7572",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
