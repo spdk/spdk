@@ -2320,7 +2320,8 @@ spdk_nvmf_tcp_pdu_set_buf_from_req(struct spdk_nvmf_tcp_qpair *tqpair,
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Not need to send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req,
 			      tqpair);
 		/* No need to send r2t, contained in the capsuled data */
-		nvme_tcp_pdu_set_data(pdu, tcp_req->req.data, tcp_req->req.length);
+		nvme_tcp_pdu_set_data_buf(pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
+					  0, tcp_req->req.length);
 		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 	}
