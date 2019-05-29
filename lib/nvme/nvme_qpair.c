@@ -497,6 +497,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	for (i = 0; i < num_requests; i++) {
 		struct nvme_request *req = qpair->req_buf + i * req_size_padded;
 
+		req->qpair = qpair;
 		STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
 	}
 
