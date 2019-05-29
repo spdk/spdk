@@ -623,13 +623,12 @@ test_nvme_allocate_request(void)
 	req = nvme_allocate_request(&qpair, &payload, payload_struct_size,
 				    cb_fn, cb_arg);
 
-	/* all the req elements should now match the passed in paramters */
+	/* all the req elements should now match the passed in parameters */
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
 	CU_ASSERT(memcmp(&req->payload, &payload, payload_struct_size) == 0);
 	CU_ASSERT(req->payload_size == payload_struct_size);
-	CU_ASSERT(req->qpair == &qpair);
 	CU_ASSERT(req->pid == getpid());
 }
 
