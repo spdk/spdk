@@ -200,6 +200,32 @@ _nvme_tcp_sgl_init(struct _nvme_tcp_sgl *s, struct iovec *iov, int iovcnt,
 	s->total_size = 0;
 }
 
+static inline void
+_nvme_tcp_sgl_advance(struct _nvme_tcp_sgl *s, uint32_t step)
+{
+	s->iov_offset += step;
+	while (s->iovcnt > 0) {
+		if (s->iov_offset < s->iov->iov_len) {
+			break;
+		}
+
+		s->iov_offset -= s->iov->iov_len;
+		s->iov++;
+		s->iovcnt--;
+	}
+}
+
+static inline void
+_nvme_tcp_sgl_get_buf(struct _nvme_tcp_sgl *s, void **_buf, uint32_t *_buf_len)
+{
+	if (_buf != NULL) {
+		*_buf = s->iov->iov_base + s->iov_offset;
+	}
+	if (_buf_len != NULL) {
+		*_buf_len = s->iov->iov_len - s->iov_offset;
+	}
+}
+
 static inline bool
 _nvme_tcp_sgl_append(struct _nvme_tcp_sgl *s, uint8_t *data, uint32_t data_len)
 {
@@ -417,6 +443,46 @@ nvme_tcp_pdu_set_data(struct nvme_tcp_pdu *pdu, void *data, uint32_t data_len)
 	pdu->data_iov[0].iov_base = data;
 	pdu->data_iov[0].iov_len = pdu->data_len = data_len;
 	pdu->data_iovcnt = 1;
+}
+
+static void
+nvme_tcp_pdu_set_data_buf(struct nvme_tcp_pdu *pdu,
+			  struct iovec *iov, int iovcnt,
+			  uint32_t data_offset, uint32_t data_len)
+{
+	uint32_t remain_len, len;
+	uint8_t *buf;
+	struct _nvme_tcp_sgl *pdu_sgl, buf_sgl;
+
+	if (iovcnt == 1) {
+		nvme_tcp_pdu_set_data(pdu, (void *)((uint64_t)iov[0].iov_base + data_offset), data_len);
+	} else {
+		pdu_sgl = &pdu->sgl;
+
+		_nvme_tcp_sgl_init(pdu_sgl, pdu->data_iov, NVME_TCP_MAX_SGL_DESCRIPTORS, 0);
+		_nvme_tcp_sgl_init(&buf_sgl, iov, iovcnt, 0);
+
+		_nvme_tcp_sgl_advance(&buf_sgl, data_offset);
+		remain_len = data_len;
+
+		while (remain_len > 0) {
+			_nvme_tcp_sgl_get_buf(&buf_sgl, (void *)&buf, &len);
+			len = spdk_min(len, remain_len);
+
+			_nvme_tcp_sgl_advance(&buf_sgl, len);
+			remain_len -= len;
+
+			if (!_nvme_tcp_sgl_append(pdu_sgl, buf, len)) {
+				break;
+			}
+		}
+
+		assert(remain_len == 0);
+		assert(pdu_sgl->total_size == data_len);
+
+		pdu->data_iovcnt = NVME_TCP_MAX_SGL_DESCRIPTORS - pdu_sgl->iovcnt;
+		pdu->data_len = data_len;
+	}
 }
 
 #endif /* SPDK_INTERNAL_NVME_TCP_H */
