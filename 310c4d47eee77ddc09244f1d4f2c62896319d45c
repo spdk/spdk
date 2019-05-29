@@ -22,6 +22,30 @@
       "revId": "310c4d47eee77ddc09244f1d4f2c62896319d45c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01cf3772_8deec618",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-29T07:52:56Z",
+      "side": 1,
+      "message": "Just wanted to say that other than the change log needs to be re-written, the patch LGTM - I will +1 it once you fix the change log.",
+      "parentUuid": "74b6a1de_f7e50432",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 0
+      },
+      "revId": "310c4d47eee77ddc09244f1d4f2c62896319d45c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
