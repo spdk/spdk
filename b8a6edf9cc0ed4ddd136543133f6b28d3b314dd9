@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d8dbe33_3e51c49a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-29T07:57:59Z",
+      "side": 1,
+      "message": "are we fixing a bug here or this is something to restructure or share code? if this is a bug, can you explain what is the bug and how to trigger it?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 20
+      },
+      "revId": "b8a6edf9cc0ed4ddd136543133f6b28d3b314dd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
