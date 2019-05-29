@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a5636ea_e0bb8877",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1593,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-29T12:33:23Z",
+      "side": 1,
+      "message": "I think that better option would be to return rc instead of -1, but first we would need to change line 409 to return \u0027-errno\u0027.",
+      "range": {
+        "startLine": 1593,
+        "startChar": 9,
+        "endLine": 1593,
+        "endChar": 11
+      },
+      "revId": "621faa6fc49e3733dee1eb37dedc8fdf1d176526",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
