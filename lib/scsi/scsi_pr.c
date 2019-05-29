@@ -581,7 +581,7 @@ spdk_scsi_pr_in_read_keys(struct spdk_scsi_task *task, uint8_t *data,
 		to_be64(&keys->rkeys[count], reg->rkey);
 		count++;
 	}
-	to_be32(&keys->header.addiontal_len, count * 8);
+	to_be32(&keys->header.additional_len, count * 8);
 
 	return (sizeof(keys->header) + count * 8);
 }
@@ -605,7 +605,7 @@ spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
 		} else {
 			to_be64(&param->rkey, lun->reservation.crkey);
 		}
-		to_be32(&param->header.addiontal_len, 16);
+		to_be32(&param->header.additional_len, 16);
 		param->scope = SPDK_SCSI_PR_LU_SCOPE;
 		param->type = lun->reservation.rtype;
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "READ RESERVATIONS with valid reservation\n");
@@ -613,7 +613,7 @@ spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
 	}
 
 	/* no reservation */
-	to_be32(&param->header.addiontal_len, 0);
+	to_be32(&param->header.additional_len, 0);
 	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "READ RESERVATIONS no reservation\n");
 	return sizeof(param->header);
 }

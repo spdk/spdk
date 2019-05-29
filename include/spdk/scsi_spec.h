@@ -548,7 +548,7 @@ enum spdk_scsi_pr_type_code {
 struct spdk_scsi_pr_in_read_header {
 	/* persistent reservation generation */
 	uint32_t pr_generation;
-	uint32_t addiontal_len;
+	uint32_t additional_len;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_pr_in_read_header) == 8, "Incorrect size");
 
