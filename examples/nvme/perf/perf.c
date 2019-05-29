@@ -92,6 +92,7 @@ struct ns_entry {
 	} u;
 
 	struct ns_entry		*next;
+	struct ns_entry		*worker_next;
 	uint32_t		io_size_blocks;
 	uint32_t		num_io_requests;
 	uint64_t		size_in_ios;
@@ -110,7 +111,6 @@ struct ns_entry {
 	uint64_t		offset_in_ios;
 	bool			is_draining;
 	struct spdk_histogram_data	*histogram;
-
 };
 
 static const double g_latency_cutoffs[] = {
@@ -132,13 +132,8 @@ static const double g_latency_cutoffs[] = {
 	-1,
 };
 
-struct ns_worker_ctx {
-	struct ns_entry		*entry;
-	struct ns_worker_ctx	*next;
-};
-
 struct perf_task {
-	struct ns_worker_ctx	*ns_ctx;
+	struct ns_entry		*entry;
 	struct iovec		iov;
 	struct iovec		md_iov;
 	uint64_t		submit_tsc;
@@ -150,7 +145,7 @@ struct perf_task {
 };
 
 struct worker_thread {
-	struct ns_worker_ctx	*ns_ctx;
+	struct ns_entry		*entry;
 	struct worker_thread	*next;
 	unsigned		lcore;
 };
@@ -158,16 +153,16 @@ struct worker_thread {
 struct ns_fn_table {
 	void	(*setup_payload)(struct perf_task *task, uint8_t pattern);
 
-	int	(*submit_io)(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
-			     struct ns_entry *entry, uint64_t offset_in_ios);
+	int	(*submit_io)(struct perf_task *task, struct ns_entry *entry,
+			     uint64_t offset_in_ios);
 
-	void	(*check_io)(struct ns_worker_ctx *ns_ctx);
+	void	(*check_io)(struct ns_entry *entry);
 
 	void	(*verify_io)(struct perf_task *task, struct ns_entry *entry);
 
-	int	(*init_ns_worker_ctx)(struct ns_worker_ctx *ns_ctx);
+	int	(*init_ns_entry)(struct ns_entry *entry);
 
-	void	(*cleanup_ns_worker_ctx)(struct ns_worker_ctx *ns_ctx);
+	void	(*cleanup_ns_entry)(struct ns_entry *entry);
 };
 
 static int g_outstanding_commands;
@@ -255,8 +250,7 @@ aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd
 }
 
 static int
-aio_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
-	      struct ns_entry *entry, uint64_t offset_in_ios)
+aio_submit_io(struct perf_task *task, struct ns_entry *entry, uint64_t offset_in_ios)
 {
 	if (task->is_read) {
 		return aio_submit(entry->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD,
@@ -268,9 +262,8 @@ aio_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 }
 
 static void
-aio_check_io(struct ns_worker_ctx *ns_ctx)
+aio_check_io(struct ns_entry *entry)
 {
-	struct ns_entry *entry = ns_ctx->entry;
 	int count, i;
 	struct timespec timeout;
 
@@ -294,10 +287,8 @@ aio_verify_io(struct perf_task *task, struct ns_entry *entry)
 }
 
 static int
-aio_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+aio_init_ns_entry(struct ns_entry *entry)
 {
-	struct ns_entry *entry = ns_ctx->entry;
-
 	entry->u.aio.events = calloc(g_queue_depth, sizeof(struct io_event));
 	if (!entry->u.aio.events) {
 		return -1;
@@ -312,10 +303,8 @@ aio_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 }
 
 static void
-aio_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+aio_cleanup_ns_entry(struct ns_entry *entry)
 {
-	struct ns_entry *entry = ns_ctx->entry;
-
 	io_destroy(entry->u.aio.ctx);
 	free(entry->u.aio.events);
 }
@@ -325,8 +314,8 @@ static const struct ns_fn_table aio_fn_table = {
 	.submit_io		= aio_submit_io,
 	.check_io		= aio_check_io,
 	.verify_io		= aio_verify_io,
-	.init_ns_worker_ctx	= aio_init_ns_worker_ctx,
-	.cleanup_ns_worker_ctx	= aio_cleanup_ns_worker_ctx,
+	.init_ns_entry		= aio_init_ns_entry,
+	.cleanup_ns_entry	= aio_cleanup_ns_entry,
 };
 
 static int
@@ -446,8 +435,7 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 }
 
 static int
-nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
-	       struct ns_entry *entry, uint64_t offset_in_ios)
+nvme_submit_io(struct perf_task *task, struct ns_entry *entry, uint64_t offset_in_ios)
 {
 	uint64_t lba;
 	int rc;
@@ -524,9 +512,8 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 }
 
 static void
-nvme_check_io(struct ns_worker_ctx *ns_ctx)
+nvme_check_io(struct ns_entry *entry)
 {
-	struct ns_entry *entry = ns_ctx->entry;
 	int i, rc;
 
 	for (i = 0; i < entry->u.nvme.num_qpairs; i++) {
@@ -570,10 +557,9 @@ nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
  *  For now, give each namespace/thread combination its own queue.
  */
 static int
-nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+nvme_init_ns_entry(struct ns_entry *entry)
 {
 	struct spdk_nvme_io_qpair_opts opts;
-	struct ns_entry *entry = ns_ctx->entry;
 	int i;
 
 	entry->u.nvme.num_qpairs = g_nr_io_queues_per_ns;
@@ -601,9 +587,8 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 }
 
 static void
-nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+nvme_cleanup_ns_entry(struct ns_entry *entry)
 {
-	struct ns_entry *entry = ns_ctx->entry;
 	int i;
 
 	for (i = 0; i < entry->u.nvme.num_qpairs; i++) {
@@ -618,8 +603,8 @@ static const struct ns_fn_table nvme_fn_table = {
 	.submit_io		= nvme_submit_io,
 	.check_io		= nvme_check_io,
 	.verify_io		= nvme_verify_io,
-	.init_ns_worker_ctx	= nvme_init_ns_worker_ctx,
-	.cleanup_ns_worker_ctx	= nvme_cleanup_ns_worker_ctx,
+	.init_ns_entry		= nvme_init_ns_entry,
+	.cleanup_ns_entry	= nvme_cleanup_ns_entry,
 };
 
 static void
@@ -862,8 +847,7 @@ submit_single_io(struct perf_task *task)
 {
 	uint64_t		offset_in_ios;
 	int			rc;
-	struct ns_worker_ctx	*ns_ctx = task->ns_ctx;
-	struct ns_entry		*entry = ns_ctx->entry;
+	struct ns_entry		*entry = task->entry;
 
 	if (g_is_random) {
 		offset_in_ios = rand_r(&seed) % entry->size_in_ios;
@@ -883,7 +867,7 @@ submit_single_io(struct perf_task *task)
 		task->is_read = false;
 	}
 
-	rc = entry->fn_table->submit_io(task, ns_ctx, entry, offset_in_ios);
+	rc = entry->fn_table->submit_io(task, entry, offset_in_ios);
 
 	if (spdk_unlikely(rc != 0)) {
 		fprintf(stderr, "starting I/O failed\n");
@@ -895,12 +879,10 @@ submit_single_io(struct perf_task *task)
 static void
 task_complete(struct perf_task *task)
 {
-	struct ns_worker_ctx	*ns_ctx;
 	uint64_t		tsc_diff;
 	struct ns_entry		*entry;
 
-	ns_ctx = task->ns_ctx;
-	entry = ns_ctx->entry;
+	entry = task->entry;
 	entry->current_queue_depth--;
 	entry->io_completed++;
 	tsc_diff = spdk_get_ticks() - task->submit_tsc;
@@ -950,13 +932,13 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-check_io(struct ns_worker_ctx *ns_ctx)
+check_io(struct ns_entry *entry)
 {
-	ns_ctx->entry->fn_table->check_io(ns_ctx);
+	entry->fn_table->check_io(entry);
 }
 
 static struct perf_task *
-allocate_task(struct ns_worker_ctx *ns_ctx, int queue_depth)
+allocate_task(struct ns_entry *entry, int queue_depth)
 {
 	struct perf_task *task;
 
@@ -966,34 +948,34 @@ allocate_task(struct ns_worker_ctx *ns_ctx, int queue_depth)
 		exit(1);
 	}
 
-	ns_ctx->entry->fn_table->setup_payload(task, queue_depth % 8 + 1);
+	entry->fn_table->setup_payload(task, queue_depth % 8 + 1);
 
-	task->ns_ctx = ns_ctx;
+	task->entry = entry;
 
 	return task;
 }
 
 static void
-submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
+submit_io(struct ns_entry *entry, int queue_depth)
 {
 	struct perf_task *task;
 
 	while (queue_depth-- > 0) {
-		task = allocate_task(ns_ctx, queue_depth);
+		task = allocate_task(entry, queue_depth);
 		submit_single_io(task);
 	}
 }
 
 static int
-init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+init_ns_entry(struct ns_entry *entry)
 {
-	return ns_ctx->entry->fn_table->init_ns_worker_ctx(ns_ctx);
+	return entry->fn_table->init_ns_entry(entry);
 }
 
 static void
-cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+cleanup_ns_entry(struct ns_entry *entry)
 {
-	ns_ctx->entry->fn_table->cleanup_ns_worker_ctx(ns_ctx);
+	entry->fn_table->cleanup_ns_entry(entry);
 }
 
 static int
@@ -1001,29 +983,28 @@ work_fn(void *arg)
 {
 	uint64_t tsc_end;
 	struct worker_thread *worker = (struct worker_thread *)arg;
-	struct ns_worker_ctx *ns_ctx = NULL;
 	struct ns_entry *entry;
-	uint32_t unfinished_ns_ctx;
+	uint32_t unfinished_entry;
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
 	/* Allocate queue pairs for each namespace. */
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
-		if (init_ns_worker_ctx(ns_ctx) != 0) {
-			printf("ERROR: init_ns_worker_ctx() failed\n");
+	entry = worker->entry;
+	while (entry != NULL) {
+		if (init_ns_entry(entry) != 0) {
+			printf("ERROR: init_ns_entry() failed\n");
 			return 1;
 		}
-		ns_ctx = ns_ctx->next;
+		entry = entry->worker_next;
 	}
 
 	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
-		submit_io(ns_ctx, g_queue_depth);
-		ns_ctx = ns_ctx->next;
+	entry = worker->entry;
+	while (entry != NULL) {
+		submit_io(entry, g_queue_depth);
+		entry = entry->worker_next;
 	}
 
 	while (1) {
@@ -1032,10 +1013,10 @@ work_fn(void *arg)
 		 * I/O will be submitted in the io_complete callback
 		 * to replace each I/O that is completed.
 		 */
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx != NULL) {
-			check_io(ns_ctx);
-			ns_ctx = ns_ctx->next;
+		entry = worker->entry;
+		while (entry != NULL) {
+			check_io(entry);
+			entry = entry->worker_next;
 		}
 
 		if (spdk_get_ticks() > tsc_end) {
@@ -1043,28 +1024,27 @@ work_fn(void *arg)
 		}
 	}
 
-	/* drain the io of each ns_ctx in round robin to make the fairness */
+	/* drain the io of each entry in round robin to make the fairness */
 	do {
-		unfinished_ns_ctx = 0;
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx != NULL) {
-			entry = ns_ctx->entry;
+		unfinished_entry = 0;
+		entry = worker->entry;
+		while (entry != NULL) {
 			/* first time will enter into this if case */
 			if (!entry->is_draining) {
 				entry->is_draining = true;
 			}
 
 			if (entry->current_queue_depth > 0) {
-				check_io(ns_ctx);
+				check_io(entry);
 				if (entry->current_queue_depth == 0) {
-					cleanup_ns_worker_ctx(ns_ctx);
+					cleanup_ns_entry(entry);
 				} else {
-					unfinished_ns_ctx++;
+					unfinished_entry++;
 				}
 			}
-			ns_ctx = ns_ctx->next;
+			entry = entry->worker_next;
 		}
-	} while (unfinished_ns_ctx > 0);
+	} while (unfinished_entry > 0);
 
 	return 0;
 }
@@ -1164,7 +1144,6 @@ print_performance(void)
 	double total_io_per_second, total_mb_per_second;
 	int ns_count;
 	struct worker_thread	*worker;
-	struct ns_worker_ctx	*ns_ctx;
 	struct ns_entry		*entry;
 	uint32_t max_strlen;
 
@@ -1179,10 +1158,10 @@ print_performance(void)
 	max_strlen = 0;
 	worker = g_workers;
 	while (worker) {
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx) {
-			max_strlen = spdk_max(strlen(ns_ctx->entry->name), max_strlen);
-			ns_ctx = ns_ctx->next;
+		entry = worker->entry;
+		while (entry) {
+			max_strlen = spdk_max(strlen(entry->name), max_strlen);
+			entry = entry->worker_next;
 		}
 		worker = worker->next;
 	}
@@ -1194,9 +1173,8 @@ print_performance(void)
 
 	worker = g_workers;
 	while (worker) {
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx) {
-			entry = ns_ctx->entry;
+		entry = worker->entry;
+		while (entry) {
 			if (entry->io_completed != 0) {
 				io_per_second = (double)entry->io_completed / g_time_in_sec;
 				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
@@ -1212,7 +1190,7 @@ print_performance(void)
 				}
 
 				printf("%-*.*s from core %u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
-				       max_strlen, max_strlen, ns_ctx->entry->name, worker->lcore,
+				       max_strlen, max_strlen, entry->name, worker->lcore,
 				       io_per_second, mb_per_second,
 				       average_latency, min_latency, max_latency);
 				total_io_per_second += io_per_second;
@@ -1221,7 +1199,7 @@ print_performance(void)
 				total_io_tsc += entry->total_tsc;
 				ns_count++;
 			}
-			ns_ctx = ns_ctx->next;
+			entry = entry->worker_next;
 		}
 		worker = worker->next;
 	}
@@ -1241,18 +1219,17 @@ print_performance(void)
 
 	worker = g_workers;
 	while (worker) {
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx) {
+		entry = worker->entry;
+		while (entry) {
 			const double *cutoff = g_latency_cutoffs;
 
-			entry = ns_ctx->entry;
 			printf("Summary latency data for %-43.43s from core %u:\n", entry->name, worker->lcore);
 			printf("=================================================================================\n");
 
 			spdk_histogram_data_iterate(entry->histogram, check_cutoff, &cutoff);
 
 			printf("\n");
-			ns_ctx = ns_ctx->next;
+			entry = entry->worker_next;
 		}
 		worker = worker->next;
 	}
@@ -1263,17 +1240,15 @@ print_performance(void)
 
 	worker = g_workers;
 	while (worker) {
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx) {
-			entry = ns_ctx->entry;
-
+		entry = worker->entry;
+		while (entry) {
 			printf("Latency histogram for %-43.43s from core %u:\n", entry->name, worker->lcore);
 			printf("==============================================================================\n");
 			printf("       Range in us     Cumulative    IO count\n");
 
 			spdk_histogram_data_iterate(entry->histogram, print_bucket, NULL);
 			printf("\n");
-			ns_ctx = ns_ctx->next;
+			entry = entry->worker_next;
 		}
 		worker = worker->next;
 	}
@@ -1762,14 +1737,6 @@ unregister_workers(void)
 	/* Free namespace context and worker thread */
 	while (worker) {
 		struct worker_thread *next_worker = worker->next;
-		struct ns_worker_ctx *ns_ctx = worker->ns_ctx;
-
-		while (ns_ctx) {
-			struct ns_worker_ctx *next_ns_ctx = ns_ctx->next;
-
-			free(ns_ctx);
-			ns_ctx = next_ns_ctx;
-		}
 
 		free(worker);
 		worker = next_worker;
@@ -1894,7 +1861,6 @@ associate_workers_with_ns(void)
 {
 	struct ns_entry		*entry = g_namespaces;
 	struct worker_thread	*worker = g_workers;
-	struct ns_worker_ctx	*ns_ctx;
 	int			i, count;
 
 	count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
@@ -1904,17 +1870,11 @@ associate_workers_with_ns(void)
 			break;
 		}
 
-		ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
-		if (!ns_ctx) {
-			return -1;
-		}
-
 		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
 		entry->min_tsc = UINT64_MAX;
-		ns_ctx->entry = entry;
-		ns_ctx->next = worker->ns_ctx;
+		entry->worker_next = worker->entry;
 		entry->histogram = spdk_histogram_data_alloc();
-		worker->ns_ctx = ns_ctx;
+		worker->entry = entry;
 
 		worker = worker->next;
 		if (worker == NULL) {
