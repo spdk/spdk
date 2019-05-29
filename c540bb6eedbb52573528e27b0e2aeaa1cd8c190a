@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "663a238f_569b5b73",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-29T21:26:51Z",
+      "side": 1,
+      "message": "Can you find out what size of NVMe SSDs we have on the physical systems?  The metadata file for a 4TB SSD would be pretty big - 10GB or so.  Even a 1TB SSD will create a 2.5GB metadata file.  I\u0027m just wondering if we should pick something smaller here so we don\u0027t create such big /tmp files in the test.\n\nMaybe create an lvolstore, and don\u0027t unmap the clusters?  then just create a smaller logical volume on it to put the compression on.\n\nYou may want to add some extra timing_enter/exit calls in here too.  This test took 48 seconds which seems like a lot.",
+      "revId": "c540bb6eedbb52573528e27b0e2aeaa1cd8c190a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
