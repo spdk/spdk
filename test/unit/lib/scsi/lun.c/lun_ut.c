@@ -49,11 +49,6 @@ struct spdk_bdev {
 	int x;
 };
 
-/* Unit test poller mockup */
-struct spdk_poller {
-	int y;
-};
-
 SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
 
 struct spdk_scsi_globals g_spdk_scsi;
