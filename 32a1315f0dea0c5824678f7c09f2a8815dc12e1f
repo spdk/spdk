@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81388bfa_cab74e23",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-29T07:47:38Z",
+      "side": 1,
+      "message": "nvmf/tcp: Properly support single r2t\n\nAccording to the spec maxr2t is the maximum number of outstanding R2T PDUs for a command at any point in time on the connection.\n\nNote that by the spec, the target may max on single r2t (which is the minimum possible), it doesn\u0027t have to use multiple r2ts even if the initiator supports that.\n\nThe current target driver implementation supports single r2t. \n\n[ here explain in few words the change] the text you provided \n\"Eliminate the wrong code to restrict the number of R2T PDU numbers. And we implement maxr2t\u003d1 in the target\" is cryptic, you need to explain in few words the new logic.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 0
+      },
+      "revId": "32a1315f0dea0c5824678f7c09f2a8815dc12e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

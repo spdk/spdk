@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6881320_d753d8ae",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2563,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-29T07:47:38Z",
+      "side": 0,
+      "message": "before this change, as part of the polling code, we went over all the reqs (command) whose state was \"pending for r2t\" and sent rt2. What we do now instead and why it is correct, please explain, I am failing to get that from the code. Best if you spare 1-2 sentences on that in the change log.",
+      "range": {
+        "startLine": 2563,
+        "startChar": 1,
+        "endLine": 2563,
+        "endChar": 45
+      },
+      "revId": "d395c7f4dfb1d9b9f809a1c28e7c0024086987df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
