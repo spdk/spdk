@@ -63,15 +63,18 @@ _dif_sgl_init(struct _dif_sgl *s, struct iovec *iovs, int iovcnt)
 	s->total_size = 0;
 }
 
-static inline void
+static void
 _dif_sgl_advance(struct _dif_sgl *s, uint32_t step)
 {
 	s->iov_offset += step;
-	if (s->iov_offset == s->iov->iov_len) {
+	while (s->iovcnt != 0) {
+		if (s->iov_offset < s->iov->iov_len) {
+			break;
+		}
+
+		s->iov_offset -= s->iov->iov_len;
 		s->iov++;
-		assert(s->iovcnt > 0);
 		s->iovcnt--;
-		s->iov_offset = 0;
 	}
 }
 
@@ -86,20 +89,6 @@ _dif_sgl_get_buf(struct _dif_sgl *s, void **_buf, uint32_t *_buf_len)
 	}
 }
 
-static void
-_dif_sgl_fast_forward(struct _dif_sgl *s, uint32_t offset)
-{
-	s->iov_offset += offset;
-	while (s->iovcnt != 0) {
-		if (s->iov_offset < s->iov->iov_len) {
-			break;
-		}
-
-		s->iov_offset -= s->iov->iov_len;
-		s->iov++;
-		s->iovcnt--;
-	}
-}
 
 static inline bool
 _dif_sgl_append(struct _dif_sgl *s, uint8_t *data, uint32_t data_len)
@@ -878,7 +867,7 @@ _dif_inject_error(struct _dif_sgl *sgl,
 	uint32_t offset_in_block, buf_len;
 	void *buf;
 
-	_dif_sgl_fast_forward(sgl, block_size * inject_offset_blocks);
+	_dif_sgl_advance(sgl, block_size * inject_offset_blocks);
 
 	offset_in_block = 0;
 
@@ -1361,10 +1350,10 @@ dif_set_md_interleave_iovs_split(struct iovec *iovs, int iovcnt,
 	offset_blocks = data_offset / data_block_size;
 	head_unalign = data_offset % data_block_size;
 
-	_dif_sgl_fast_forward(&buf_sgl, offset_blocks * ctx->block_size);
+	_dif_sgl_advance(&buf_sgl, offset_blocks * ctx->block_size);
 
 	while (offset_blocks < num_blocks) {
-		_dif_sgl_fast_forward(&buf_sgl, head_unalign);
+		_dif_sgl_advance(&buf_sgl, head_unalign);
 
 		remaining = data_block_size - head_unalign;
 		while (remaining != 0) {
@@ -1377,7 +1366,7 @@ dif_set_md_interleave_iovs_split(struct iovec *iovs, int iovcnt,
 			_dif_sgl_advance(&buf_sgl, buf_len);
 			remaining -= buf_len;
 		}
-		_dif_sgl_fast_forward(&buf_sgl, ctx->md_size);
+		_dif_sgl_advance(&buf_sgl, ctx->md_size);
 		offset_blocks++;
 
 		head_unalign = 0;
@@ -1483,7 +1472,7 @@ dif_generate_stream_split(struct iovec *iovs, int iovcnt,
 		return -ERANGE;
 	}
 
-	_dif_sgl_fast_forward(&sgl, offset);
+	_dif_sgl_advance(&sgl, offset);
 
 	for (i = 0; i < num_blocks; i++) {
 		_dif_generate_split(&sgl, offset_blocks + i, ctx);
