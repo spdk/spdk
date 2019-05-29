@@ -303,27 +303,40 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 	offset = io_ctx->offset;
 
 	if (len < io_ctx->data->size) {
-		i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
+		if (io_ctx->data->iovcnt == 1) {
+			if (io->dir == OCF_READ) {
+				status = spdk_bdev_read(base->desc, io_ctx->ch,
+							io_ctx->data->iovs[0].iov_base + offset, addr, len,
+							vbdev_ocf_volume_submit_io_cb, io);
+			} else if (io->dir == OCF_WRITE) {
+				status = spdk_bdev_write(base->desc, io_ctx->ch,
+							 io_ctx->data->iovs[0].iov_base + offset, addr, len,
+							 vbdev_ocf_volume_submit_io_cb, io);
+			}
+			goto end;
+		} else {
+			i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
 
-		if (i < 0) {
-			SPDK_ERRLOG("offset bigger than data size\n");
-			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-			return;
+			if (i < 0) {
+				SPDK_ERRLOG("offset bigger than data size\n");
+				vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+				return;
+			}
+
+			iovcnt = io_ctx->data->iovcnt - i;
+
+			io_ctx->iovs_allocated = true;
+			iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
+
+			if (!iovs) {
+				SPDK_ERRLOG("allocation failed\n");
+				vbdev_ocf_volume_submit_io_cb(NULL, false, io);
+				return;
+			}
+
+			initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
+					      iovcnt, offset, len);
 		}
-
-		iovcnt = io_ctx->data->iovcnt - i;
-
-		io_ctx->iovs_allocated = true;
-		iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
-
-		if (!iovs) {
-			SPDK_ERRLOG("allocation failed\n");
-			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
-			return;
-		}
-
-		initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
-				      iovcnt, offset, len);
 	} else {
 		iovs = io_ctx->data->iovs;
 		iovcnt = io_ctx->data->iovcnt;
@@ -337,6 +350,7 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 					  iovs, iovcnt, addr, len, vbdev_ocf_volume_submit_io_cb, io);
 	}
 
+end:
 	if (status) {
 		/* TODO [ENOMEM]: implement ENOMEM handling when submitting IO to base device */
 
