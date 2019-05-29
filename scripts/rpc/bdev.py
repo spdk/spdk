@@ -586,7 +586,7 @@ def destruct_split_vbdev(client, base_bdev):
     return client.call('destruct_split_vbdev', params)
 
 
-def construct_ftl_bdev(client, name, trtype, traddr, punits, uuid=None, cache=None):
+def construct_ftl_bdev(client, name, trtype, traddr, punits, power_loss_recovery, uuid=None, cache=None):
     """Construct FTL bdev
 
     Args:
@@ -596,11 +596,13 @@ def construct_ftl_bdev(client, name, trtype, traddr, punits, uuid=None, cache=No
         punit: parallel unit range
         uuid: UUID of the device
         cache: name of the write buffer bdev
+        power_loss_recovery: allow for partial restore after dirty shutdown
     """
     params = {'name': name,
               'trtype': trtype,
               'traddr': traddr,
-              'punits': punits}
+              'punits': punits,
+              'power_loss_recovery': power_loss_recovery}
     if uuid:
         params['uuid'] = uuid
     if cache:
