@@ -37,6 +37,9 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 #include "spdk/ftl.h"
+#include "spdk/likely.h"
+#include "spdk/string.h"
+
 #include "ftl_core.h"
 #include "ftl_anm.h"
 #include "ftl_io.h"
@@ -508,9 +511,10 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc
 
 	/* The cache needs to be capable of storing at least two full bands. This requirement comes
 	 * from the fact that cache works as a protection against power loss, so before the data
-	 * inside the cache can be overwritten, the band it's stored on has to be closed.
+	 * inside the cache can be overwritten, the band it's stored on has to be closed. Plus one
+	 * extra block is needed to store the header.
 	 */
-	if (spdk_bdev_get_num_blocks(bdev) < ftl_num_band_lbks(dev) * 2) {
+	if (spdk_bdev_get_num_blocks(bdev) < ftl_num_band_lbks(dev) * 2 + 1) {
 		SPDK_ERRLOG("Insufficient number of blocks for write buffer cache(%"PRIu64"\n",
 			    spdk_bdev_get_num_blocks(bdev));
 		return -1;
@@ -537,8 +541,9 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc
 	}
 
 	nv_cache->bdev_desc = bdev_desc;
-	nv_cache->current_addr = 0;
-	nv_cache->num_available = spdk_bdev_get_num_blocks(bdev);
+	nv_cache->current_addr = FTL_NV_CACHE_DATA_OFFSET;
+	nv_cache->num_data_blocks = spdk_bdev_get_num_blocks(bdev) - 1;
+	nv_cache->num_available = nv_cache->num_data_blocks;
 
 	return 0;
 }
@@ -788,35 +793,6 @@ ftl_init_complete(struct spdk_ftl_dev *dev)
 	dev->init_arg = NULL;
 }
 
-static int
-ftl_setup_initial_state(struct spdk_ftl_dev *dev)
-{
-	struct spdk_ftl_conf *conf = &dev->conf;
-	size_t i;
-
-	spdk_uuid_generate(&dev->uuid);
-
-	dev->num_lbas = 0;
-	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
-		dev->num_lbas += ftl_band_num_usable_lbks(&dev->bands[i]);
-	}
-
-	dev->num_lbas = (dev->num_lbas * (100 - conf->lba_rsvd)) / 100;
-
-	if (ftl_dev_l2p_alloc(dev)) {
-		SPDK_ERRLOG("Unable to init l2p table\n");
-		return -1;
-	}
-
-	if (ftl_init_bands_state(dev)) {
-		SPDK_ERRLOG("Unable to finish the initialization\n");
-		return -1;
-	}
-
-	ftl_init_complete(dev);
-	return 0;
-}
-
 struct ftl_init_fail_ctx {
 	spdk_ftl_init_fn	cb;
 	void			*arg;
@@ -850,6 +826,113 @@ ftl_init_fail(struct spdk_ftl_dev *dev)
 		SPDK_ERRLOG("Unable to free the device\n");
 		assert(0);
 	}
+}
+
+static void
+ftl_write_nv_cache_md_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_ftl_dev *dev = cb_arg;
+	struct iovec *iovs = NULL;
+	int iov_cnt = 0;
+
+	spdk_bdev_io_get_iovec(bdev_io, &iovs, &iov_cnt);
+	spdk_dma_free(iovs[0].iov_base);
+	spdk_bdev_free_io(bdev_io);
+
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Writing non-volatile cache's metadata header failed\n");
+		ftl_init_fail(dev);
+		return;
+	}
+
+	ftl_init_complete(dev);
+}
+
+static void
+ftl_clear_nv_cache_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_ftl_dev *dev = cb_arg;
+	struct spdk_bdev *bdev;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	struct ftl_io_channel *ioch;
+	struct ftl_nv_cache_header *hdr;
+
+	spdk_bdev_free_io(bdev_io);
+
+	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Unable to clear the non-volatile cache bdev\n");
+		ftl_init_fail(dev);
+		return;
+	}
+
+	assert(sizeof(*hdr) <= spdk_bdev_get_block_size(bdev));
+	hdr = spdk_dma_zmalloc(spdk_bdev_get_block_size(bdev), spdk_bdev_get_buf_align(bdev), NULL);
+	if (spdk_unlikely(!hdr)) {
+		SPDK_ERRLOG("Memory allocation failure\n");
+		ftl_init_fail(dev);
+		return;
+	}
+
+	hdr->uuid = dev->uuid;
+	hdr->size = spdk_bdev_get_num_blocks(bdev);
+
+	if (spdk_bdev_write_blocks(nv_cache->bdev_desc, ioch->cache_ioch, hdr, 0, 1,
+				   ftl_write_nv_cache_md_cb, dev)) {
+		SPDK_ERRLOG("Unable to write non-volatile cache metadata header\n");
+		spdk_dma_free(hdr);
+		ftl_init_fail(dev);
+	}
+}
+
+static int
+ftl_setup_initial_state(struct spdk_ftl_dev *dev)
+{
+	struct spdk_ftl_conf *conf = &dev->conf;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	struct spdk_bdev *bdev;
+	struct ftl_io_channel *ioch;
+	size_t i;
+	int rc;
+
+	spdk_uuid_generate(&dev->uuid);
+
+	dev->num_lbas = 0;
+	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
+		dev->num_lbas += ftl_band_num_usable_lbks(&dev->bands[i]);
+	}
+
+	dev->num_lbas = (dev->num_lbas * (100 - conf->lba_rsvd)) / 100;
+
+	if (ftl_dev_l2p_alloc(dev)) {
+		SPDK_ERRLOG("Unable to init l2p table\n");
+		return -1;
+	}
+
+	if (ftl_init_bands_state(dev)) {
+		SPDK_ERRLOG("Unable to finish the initialization\n");
+		return -1;
+	}
+
+	if (!nv_cache->bdev_desc) {
+		ftl_init_complete(dev);
+	} else {
+		ioch = spdk_io_channel_get_ctx(dev->ioch);
+		bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+
+		rc = spdk_bdev_write_zeroes_blocks(nv_cache->bdev_desc, ioch->cache_ioch,
+						   1, spdk_bdev_get_num_blocks(bdev) - 1,
+						   ftl_clear_nv_cache_cb, dev);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to clear the non-volatile cache bdev: %s\n",
+				    spdk_strerror(-rc));
+			return -1;
+		}
+	}
+
+	return 0;
 }
 
 static void
