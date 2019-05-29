@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d1bf6306_457212e3",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1408,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-29T06:54:28Z",
+      "side": 1,
+      "message": "Thanks Changpeng for your review. This struct will be useful when we need to support single user mode. However, not used for now.Deleted.",
+      "parentUuid": "cf31ef38_451eeb27",
+      "revId": "4073498864ef9bdb9690c2a9833dce8a5c021294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ca1f84e1_ff3c40e2",
         "filename": "lib/nvme/nvme_opal_internal.h",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-28T06:50:15Z",
       "side": 1,
       "message": "How about mode_signle_user or single_user_mode?",
+      "revId": "4073498864ef9bdb9690c2a9833dce8a5c021294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a8913b8_a04ec2ef",
+        "filename": "lib/nvme/nvme_opal_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-05-29T06:54:28Z",
+      "side": 1,
+      "message": "This struct will be deleted for now. Thanks.",
+      "parentUuid": "ca1f84e1_ff3c40e2",
       "revId": "4073498864ef9bdb9690c2a9833dce8a5c021294",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
