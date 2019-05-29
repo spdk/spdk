@@ -64,6 +64,8 @@ struct ftl_bdev_init_opts {
 	uint32_t				mode;
 	/* UUID if device is restored from SSD */
 	struct spdk_uuid			uuid;
+	/* Return error on restore after dirty shutdown */
+	bool					restore_error;
 };
 
 typedef void (*ftl_bdev_init_fn)(const struct ftl_bdev_info *, void *, int);
