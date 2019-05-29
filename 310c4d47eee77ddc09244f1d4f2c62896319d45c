@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74b6a1de_f7e50432",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-29T07:39:44Z",
+      "side": 1,
+      "message": "here is a revised change log, please use it:\n\nnvme/tcp: Properly deal with supporting single r2t\n\nAccording to the spec maxr2t is the maximum number of outstanding R2T PDUs for a command at any point in time on the connection.\n\nThe current host driver implementation supports one r2t. \n\nCleanup the code to do the right advertising to the target in the icreq and avoid attempts to deal with multiple rt2s.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 0
+      },
+      "revId": "310c4d47eee77ddc09244f1d4f2c62896319d45c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
