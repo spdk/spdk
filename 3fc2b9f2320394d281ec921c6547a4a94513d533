@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd28814c_b2749b5e",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-29T09:05:10Z",
+      "side": 1,
+      "message": "Why are we saying the chunk was finished in case of errors?",
+      "range": {
+        "startLine": 453,
+        "startChar": 4,
+        "endLine": 453,
+        "endChar": 26
+      },
+      "revId": "3fc2b9f2320394d281ec921c6547a4a94513d533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fe7f8ba_7f1b76cf",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-29T09:05:10Z",
+      "side": 1,
+      "message": "You\u0027re doing the same thing in ftl_pad_chunk_pad_finish. Let\u0027s make it return a bool (num_pad_chunks \u003d\u003d 0 \u0026\u0026 num_pad_bands \u003d\u003d 0) and use it here.",
+      "range": {
+        "startLine": 491,
+        "startChar": 0,
+        "endLine": 504,
+        "endChar": 0
+      },
+      "revId": "3fc2b9f2320394d281ec921c6547a4a94513d533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9392e253_7b554066",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-29T09:05:10Z",
+      "side": 1,
+      "message": "Can we check the opposite + continue?",
+      "range": {
+        "startLine": 517,
+        "startChar": 0,
+        "endLine": 517,
+        "endChar": 59
+      },
+      "revId": "3fc2b9f2320394d281ec921c6547a4a94513d533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81b07afc_e60f95b7",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-29T09:05:10Z",
+      "side": 1,
+      "message": "Let\u0027s add spdk_unlikely() around all these error cases.",
+      "range": {
+        "startLine": 519,
+        "startChar": 7,
+        "endLine": 519,
+        "endChar": 9
+      },
+      "revId": "3fc2b9f2320394d281ec921c6547a4a94513d533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd612db9_888abe71",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-29T09:05:10Z",
+      "side": 1,
+      "message": "Do we need the alignment?",
+      "range": {
+        "startLine": 525,
+        "startChar": 62,
+        "endLine": 525,
+        "endChar": 76
+      },
+      "revId": "3fc2b9f2320394d281ec921c6547a4a94513d533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
