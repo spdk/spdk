@@ -1298,7 +1298,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                traddr=args.traddr,
                                                punits=args.punits,
                                                uuid=args.uuid,
-                                               cache=args.cache))
+                                               cache=args.cache,
+                                               power_loss_recovery=args.power_loss_recovery))
 
     p = subparsers.add_parser('construct_ftl_bdev',
                               help='Add FTL bdev')
@@ -1312,6 +1313,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
                    'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)')
     p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache (optional)')
+    p.add_argument('-p', '--power-loss-recovery', help='Restoring after dirty shutdown without cache will'
+                   ' result in partial data recovery, instead of error', action='store_true')
     p.set_defaults(func=construct_ftl_bdev)
 
     def delete_ftl_bdev(args):
