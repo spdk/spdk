@@ -859,7 +859,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 
 static __thread unsigned int seed = 0;
 
-static void
+static inline void
 submit_single_io(struct perf_task *task)
 {
 	uint64_t		offset_in_ios;
