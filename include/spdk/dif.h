@@ -164,6 +164,20 @@ int spdk_dif_verify(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 		    const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk);
 
 /**
+ * Calculate CRC-32C checksum for extended LBA payload.
+ *
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param num_blocks Number of blocks of the payload.
+ * \param crc32c Initial and updated CRC-32C value.
+ * \param ctx DIF context.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_update_crc32c(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
+			   uint32_t *crc32c, const struct spdk_dif_ctx *ctx);
+
+/**
  * Copy data and generate DIF for extended LBA payload.
  *
  * \param iovs iovec array describing the LBA payload.

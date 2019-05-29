@@ -33,6 +33,7 @@
 
 #include "spdk/dif.h"
 #include "spdk/crc16.h"
+#include "spdk/crc32.h"
 #include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
@@ -595,6 +596,90 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	} else {
 		return dif_verify_split(&sgl, num_blocks, ctx, err_blk);
 	}
+}
+
+static uint32_t
+dif_update_crc32c(struct _dif_sgl *sgl, uint32_t num_blocks,
+		  uint32_t crc32c,  const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset_blocks;
+	void *buf;
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		_dif_sgl_get_buf(sgl, &buf, NULL);
+
+		crc32c = spdk_crc32c_update(buf, ctx->block_size - ctx->md_size, crc32c);
+
+		_dif_sgl_advance(sgl, ctx->block_size);
+	}
+
+	return crc32c;
+}
+
+static uint32_t
+_dif_update_crc32c_split(struct _dif_sgl *sgl, uint32_t crc32c,
+			 const struct spdk_dif_ctx *ctx)
+{
+	uint32_t data_block_size, offset_in_block, buf_len;
+	void *buf;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+	offset_in_block = 0;
+
+	while (offset_in_block < ctx->block_size) {
+		_dif_sgl_get_buf(sgl, &buf, &buf_len);
+
+		if (offset_in_block < data_block_size) {
+			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
+			crc32c = spdk_crc32c_update(buf, buf_len, crc32c);
+		} else {
+			buf_len = spdk_min(buf_len, ctx->block_size - offset_in_block);
+		}
+
+		_dif_sgl_advance(sgl, buf_len);
+		offset_in_block += buf_len;
+	}
+
+	return crc32c;
+}
+
+static uint32_t
+dif_update_crc32c_split(struct _dif_sgl *sgl, uint32_t num_blocks,
+			uint32_t crc32c, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset_blocks;
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		crc32c = _dif_update_crc32c_split(sgl, crc32c, ctx);
+	}
+
+	return crc32c;
+}
+
+int
+spdk_dif_update_crc32c(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
+		       uint32_t *_crc32c, const struct spdk_dif_ctx *ctx)
+{
+	struct _dif_sgl sgl;
+
+	if (_crc32c == NULL) {
+		return -EINVAL;
+	}
+
+	_dif_sgl_init(&sgl, iovs, iovcnt);
+
+	if (!_dif_sgl_is_valid(&sgl, ctx->block_size * num_blocks)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+		return -EINVAL;
+	}
+
+	if (_dif_sgl_is_bytes_multiple(&sgl, ctx->block_size)) {
+		*_crc32c = dif_update_crc32c(&sgl, num_blocks, *_crc32c, ctx);
+	} else {
+		*_crc32c = dif_update_crc32c_split(&sgl, num_blocks, *_crc32c, ctx);
+	}
+
+	return 0;
 }
 
 static void
