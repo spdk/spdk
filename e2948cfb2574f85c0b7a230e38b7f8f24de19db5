@@ -16,6 +16,24 @@
       "revId": "e2948cfb2574f85c0b7a230e38b7f8f24de19db5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e03867b_2efeb24b",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 890,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-30T22:01:36Z",
+      "side": 1,
+      "message": "By default, compilers have to pick a \"likely\" path when they generate branch condition assembly. The most common algorithm is to pick that the condition is true as the \"likely\" path (but sometimes compilers do other things), so switching around the if statement like you are saying here may produce slightly better code for some compilers.\n\nHowever, spdk_unlikely explicitly flags to the compiler which path to pick. It will make the compiler generate the optimal assembly no matter what its internal algorithm is, and no matter what order we write the condition in. So generally it\u0027s a more robust choice over the long term.",
+      "parentUuid": "ba745f89_e6a40e2e",
+      "revId": "e2948cfb2574f85c0b7a230e38b7f8f24de19db5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
