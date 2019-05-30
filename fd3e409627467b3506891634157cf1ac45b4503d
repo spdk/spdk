@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c146847b_60d19764",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 19
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-30T09:31:23Z",
+      "side": 1,
+      "message": "outdated, to be removed.",
+      "revId": "fd3e409627467b3506891634157cf1ac45b4503d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41560fe1_5a90adc0",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-30T09:31:23Z",
+      "side": 1,
+      "message": "This could be simplified to do just a single iteration over band-\u003echunks, but it\u0027s not a big deal.",
+      "range": {
+        "startLine": 891,
+        "startChar": 1,
+        "endLine": 891,
+        "endChar": 8
+      },
+      "revId": "fd3e409627467b3506891634157cf1ac45b4503d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
