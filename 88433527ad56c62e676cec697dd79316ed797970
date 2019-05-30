@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a69a1a55_7caeaf09",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-05-30T10:08:48Z",
+      "side": 1,
+      "message": "\"-k\" reports error. Key length may be 16/24/32, so suggest \"-k 0123456789123456\".",
+      "range": {
+        "startLine": 96,
+        "startChar": 78,
+        "endLine": 96,
+        "endChar": 84
+      },
+      "revId": "88433527ad56c62e676cec697dd79316ed797970",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e381fa3_7fb78b29",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-05-30T10:08:48Z",
+      "side": 1,
+      "message": "When crypto0 is created, iscsi Target4 reports cannot find bdev \u0027crypto0\u0027.I\u0027m not sure if it\u0027s a bug?",
+      "range": {
+        "startLine": 97,
+        "startChar": 32,
+        "endLine": 97,
+        "endChar": 65
+      },
+      "revId": "88433527ad56c62e676cec697dd79316ed797970",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
