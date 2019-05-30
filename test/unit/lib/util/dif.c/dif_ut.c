@@ -1637,13 +1637,13 @@ dif_generate_stream_test(void)
 
 	_iov_alloc_buf(&iov, (512 + 8) * 5);
 
-	rc = ut_data_pattern_generate(&iov, 1, 512, 8, 5);
+	rc = ut_data_pattern_generate(&iov, 1, 512 + 8, 8, 5);
 	CU_ASSERT(rc == 0);
 
 	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
-	rc = spdk_dif_ctx_init(&ctx, 512, 8, true, false, SPDK_DIF_TYPE1, dif_flags,
+	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1, dif_flags,
 			       22, 0xFFFF, 0x22, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
@@ -1671,7 +1671,7 @@ dif_generate_stream_test(void)
 	rc = spdk_dif_verify(&iov, 1, 5, &ctx, &err_blk);
 	CU_ASSERT(rc == 0);
 
-	rc = ut_data_pattern_verify(&iov, 1, 512, 8, 5);
+	rc = ut_data_pattern_verify(&iov, 1, 512 + 8, 8, 5);
 	CU_ASSERT(rc == 0);
 
 	_iov_free_buf(&iov);
