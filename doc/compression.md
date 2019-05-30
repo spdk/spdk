@@ -88,6 +88,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
 
 ### Initial Creation
 
+```
                   +--------------------+
   Backing Device  |                    |
                   +--------------------+
@@ -103,6 +104,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
               +---+---+---+---+
   Logical Map | X | X | X | X |
               +---+---+---+---+
+```
 
 ### Write 16KB at Offset 32KB
 
@@ -121,6 +123,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
   store the 16KB of data.
 * Write the chunk map index to entry 2 in the logical map.
 
+```
                   +--------------------+
   Backing Device  |01                  |
                   +--------------------+
@@ -136,6 +139,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
               +---+---+---+---+
   Logical Map | X | X | 0 | X |
               +---+---+---+---+
+```
 
 ### Write 4KB at Offset 8KB
 
@@ -153,6 +157,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
 * Write (2, X, X, X) to the chunk map.
 * Write the chunk map index to entry 0 in the logical map.
 
+```
                   +--------------------+
   Backing Device  |012                 |
                   +--------------------+
@@ -168,6 +173,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
               +---+---+---+---+
   Logical Map | 1 | X | 0 | X |
               +---+---+---+---+
+```
 
 ### Read 16KB at Offset 16KB
 
@@ -199,6 +205,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
 * Free chunk map 1 back to the free chunk map list.
 * Free backing IO unit 2 back to the free backing IO unit list.
 
+```
                   +--------------------+
   Backing Device  |01 34               |
                   +--------------------+
@@ -214,6 +221,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
               +---+---+---+---+
   Logical Map | 2 | X | 0 | X |
               +---+---+---+---+
+```
 
 ### Operations that span across multiple chunks
 
