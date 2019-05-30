@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "626a22c7_9ab5440c",
+        "filename": "test/unit/lib/scsi/scsi_pr.c/scsi_pr_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-30T00:48:29Z",
+      "side": 1,
+      "message": "Nice.",
+      "parentUuid": "3206f5c7_88c125f5",
+      "range": {
+        "startLine": 107,
+        "startChar": 11,
+        "endLine": 107,
+        "endChar": 33
+      },
+      "revId": "16022c61e85e53db9ec6b381e7d5a660e65f074c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c9d26297_24202c21",
         "filename": "test/unit/lib/scsi/scsi_pr.c/scsi_pr_ut.c",
         "patchSetId": 12
@@ -36,6 +60,24 @@
       "writtenOn": "2019-05-30T00:30:42Z",
       "side": 1,
       "message": "unnecessary empty line.",
+      "revId": "16022c61e85e53db9ec6b381e7d5a660e65f074c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "644701c9_65dd88d8",
+        "filename": "test/unit/lib/scsi/scsi_pr.c/scsi_pr_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-30T00:48:29Z",
+      "side": 1,
+      "message": "OK.",
+      "parentUuid": "c9d26297_24202c21",
       "revId": "16022c61e85e53db9ec6b381e7d5a660e65f074c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
