@@ -755,6 +755,24 @@ function fio_config_add_job()
 	echo "filename=$filename" >> $config_file
 }
 
+function fio_bdev()
+{
+	# Setup fio binary cmd line
+	local fio_dir="/usr/src/fio"
+	local bdev_plugin="$rootdir/examples/bdev/fio_plugin/fio_plugin"
+
+	LD_PRELOAD="$bdev_plugin" "$fio_dir"/fio "$@"
+}
+
+function fio_nvme()
+{
+	# Setup fio binary cmd line
+	local fio_dir="/usr/src/fio"
+	local nvme_plugin="$rootdir/examples/nvme/fio_plugin/fio_plugin"
+
+	LD_PRELOAD="$nvme_plugin" "$fio_dir"/fio "$@"
+}
+
 function get_lvs_free_mb()
 {
 	local lvs_uuid=$1
