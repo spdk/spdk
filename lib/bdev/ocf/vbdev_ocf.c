@@ -840,7 +840,10 @@ finish_register(struct vbdev_ocf *vbdev)
 	/* Copy properties of the base bdev */
 	vbdev->exp_bdev.blocklen = vbdev->core.bdev->blocklen;
 	vbdev->exp_bdev.write_cache = vbdev->core.bdev->write_cache;
-	vbdev->exp_bdev.required_alignment = vbdev->core.bdev->required_alignment;
+	vbdev->exp_bdev.required_alignment = spdk_max(vbdev->core.bdev->required_alignment,
+					     vbdev->cache.bdev->required_alignment);
+	vbdev->exp_bdev.split_on_optimal_io_boundary = true;
+	vbdev->exp_bdev.optimal_io_boundary = ocf_cache_line_size_4;
 
 	vbdev->exp_bdev.name = vbdev->name;
 	vbdev->exp_bdev.product_name = "SPDK OCF";
