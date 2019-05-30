@@ -541,6 +541,12 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc
 		return -1;
 	}
 
+	nv_cache->dma_buf = spdk_dma_zmalloc(FTL_BLOCK_SIZE, spdk_bdev_get_buf_align(bdev), NULL);
+	if (!nv_cache->dma_buf) {
+		SPDK_ERRLOG("Memory allocation failure\n");
+		return -1;
+	}
+
 	if (pthread_spin_init(&nv_cache->lock, PTHREAD_PROCESS_PRIVATE)) {
 		SPDK_ERRLOG("Failed to initialize cache lock\n");
 		return -1;
@@ -550,6 +556,7 @@ ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc
 	nv_cache->current_addr = FTL_NV_CACHE_DATA_OFFSET;
 	nv_cache->num_data_blocks = spdk_bdev_get_num_blocks(bdev) - 1;
 	nv_cache->num_available = nv_cache->num_data_blocks;
+	nv_cache->ready = false;
 
 	return 0;
 }
@@ -851,6 +858,7 @@ ftl_write_nv_cache_md_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 		return;
 	}
 
+	dev->nv_cache.ready = true;
 	ftl_init_complete(dev);
 }
 
@@ -1217,6 +1225,8 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 			spdk_bit_array_free(&dev->bands[i].lba_map.vld);
 		}
 	}
+
+	spdk_dma_free(dev->nv_cache.dma_buf);
 
 	spdk_mempool_free(dev->lba_pool);
 	spdk_mempool_free(dev->nv_cache.md_pool);
