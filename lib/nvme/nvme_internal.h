@@ -881,6 +881,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	 *  if the request is split.
 	 */
 	memset(req, 0, offsetof(struct nvme_request, payload_size));
+	req->submit_tick = 0;
 
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
