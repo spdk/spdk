@@ -69,6 +69,12 @@
 #define NUM_MBUFS		512
 #define POOL_CACHE_SIZE		256
 
+static struct spdk_bdev_compress_opts g_opts = {
+	.auto_select = true,
+	.only_qat = false,
+	.only_isal = false,
+};
+
 /* Global list of available compression devices. */
 struct compress_dev {
 	struct rte_compressdev_info	cdev_info;	/* includes device friendly name */
@@ -146,6 +152,8 @@ static struct rte_mempool *g_mbuf_mp = NULL;			/* mbuf mempool */
 static struct rte_mempool *g_comp_op_mp = NULL;			/* comp operations, must be rte* mempool */
 static struct rte_mbuf_ext_shared_info g_shinfo = {};		/* used by DPDK mbuf macros */
 bool g_qat_available = false;
+bool g_isal_available = false;
+
 /* Create shrared (between all ops per PMD) compress xforms. */
 static struct rte_comp_xform g_comp_xform = (struct rte_comp_xform)
 {
@@ -283,6 +291,9 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 
 	if (strcmp(device->cdev_info.driver_name, QAT_PMD) == 0) {
 		g_qat_available = true;
+	}
+	if (strcmp(device->cdev_info.driver_name, ISAL_PMD) == 0) {
+		g_isal_available = true;
 	}
 
 	return 0;
@@ -1101,6 +1112,26 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 	return meta_ctx;
 }
 
+static void
+_set_pmd(struct vbdev_compress *comp_dev)
+{
+	comp_dev->drv_name = "None";
+	if (g_opts.auto_select) {
+		if (g_qat_available) {
+			comp_dev->drv_name = QAT_PMD;
+		} else {
+			comp_dev->drv_name = ISAL_PMD;
+		}
+	} else if (g_opts.only_qat && g_qat_available) {
+		comp_dev->drv_name = QAT_PMD;
+	} else if (g_opts.only_isal) {
+		comp_dev->drv_name = ISAL_PMD;
+	} else {
+		SPDK_ERRLOG("Requested PMD is not available.\n");
+	}
+	SPDK_NOTICELOG("PMD being used: %s\n", comp_dev->drv_name);
+}
+
 /* Call reducelib to initialize a new volume */
 static void
 vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path)
@@ -1113,11 +1144,7 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path)
 		return;
 	}
 
-	if (g_qat_available == true) {
-		meta_ctx->drv_name = QAT_PMD;
-	} else {
-		meta_ctx->drv_name = ISAL_PMD;
-	}
+	_set_pmd(meta_ctx);
 
 	rc = spdk_bdev_open(meta_ctx->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
 			    meta_ctx->base_bdev, &meta_ctx->base_desc);
@@ -1312,12 +1339,6 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 		goto error_bdev_name;
 	}
 
-	if (g_qat_available == true) {
-		comp_bdev->drv_name = QAT_PMD;
-	} else {
-		comp_bdev->drv_name = ISAL_PMD;
-	}
-
 	/* Note: some of the fields below will change in the future - for example,
 	 * blockcnt specifically will not match (the compressed volume size will
 	 * be slightly less than the base bdev size)
@@ -1441,11 +1462,7 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 		return;
 	}
 
-	if (g_qat_available == true) {
-		meta_ctx->drv_name = QAT_PMD;
-	} else {
-		meta_ctx->drv_name = ISAL_PMD;
-	}
+	_set_pmd(meta_ctx);
 
 	/* Update information following volume load. */
 	meta_ctx->vol = vol;
@@ -1486,6 +1503,14 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 
 	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
 	spdk_reduce_vol_load(&meta_ctx->backing_dev, vbdev_reduce_load_cb, meta_ctx);
+}
+
+int
+spdk_bdev_compress_set_opts(const struct spdk_bdev_compress_opts *opts)
+{
+	g_opts = *opts;
+
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_compress", SPDK_LOG_VBDEV_COMPRESS)
