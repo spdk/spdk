@@ -112,8 +112,12 @@ struct ftl_nv_cache {
 	uint64_t				num_available;
 	/* Maximum number of blocks */
 	uint64_t				num_data_blocks;
+	/* Indicates that the data can be written to the cache */
+	bool					ready;
 	/* Metadata pool */
 	struct spdk_mempool			*md_pool;
+	/* DMA buffer for writing the header */
+	void					*dma_buf;
 	/* Cache lock */
 	pthread_spinlock_t			lock;
 };
