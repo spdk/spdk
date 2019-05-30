@@ -154,6 +154,13 @@ if __name__ == "__main__":
     p.add_argument('name', help='compress bdev name')
     p.set_defaults(func=delete_compress_bdev)
 
+    def set_compress_pmd(args):
+        rpc.bdev.set_compress_pmd(args.client,
+                                  pmd=args.pmd)
+    p = subparsers.add_parser('set_compress_pmd', help='Set pmd option for a compress disk')
+    p.add_argument('-p', '--pmd', type=int, help='0 = auto-select, 1= QAT only, 2 = ISAL only')
+    p.set_defaults(func=set_compress_pmd)
+
     def construct_crypto_bdev(args):
         print_string(rpc.bdev.construct_crypto_bdev(args.client,
                                                     base_bdev_name=args.base_bdev_name,
