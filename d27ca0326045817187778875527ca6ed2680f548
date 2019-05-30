@@ -16,6 +16,24 @@
       "revId": "d27ca0326045817187778875527ca6ed2680f548",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1755e0c_ef4f2def",
+        "filename": "test/nvmf/target/nvmf_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-30T01:07:22Z",
+      "side": 1,
+      "message": "hi seth, thanks for your reviewing.\nquestion: nvmf test stop in VM, don\u0027t want it to exit 1. how to fix it?\n1. qemu checking in nvmf_vhost.sh, and your echo log notices that \"It may be a VM. Skipping nvmf_vhost test\".\n   we should consider about this script running on a VM, test will continue will exit 0. before this we don\u0027t have $QENU_PERFIX.\n2. add qemu cheching in common.sh , it\u0027s useful for vhost tests that don\u0027t related to nvmf_vhost.\nhope you reply,\nthanks!",
+      "parentUuid": "01ff2cb3_954cd4e5",
+      "revId": "d27ca0326045817187778875527ca6ed2680f548",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
