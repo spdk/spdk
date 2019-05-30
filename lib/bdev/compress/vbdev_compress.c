@@ -64,17 +64,16 @@
 #define DEV_LBA_SZ 512
 #define DEV_BACKING_IO_SZ (4 * 1024)
 
-/* To add support for new device types, follow the examples of the following...
- * Note that the string names are defined by the DPDK PMD in question so be
- * sure to use the exact names.
- */
-#define MAX_NUM_DRV_TYPES 1
 #define ISAL_PMD "compress_isal"
-/* TODO: #define QAT_PMD "tbd" */
-const char *g_drv_names[MAX_NUM_DRV_TYPES] = { ISAL_PMD };
-
+#define QAT_PMD "compress_qat"
 #define NUM_MBUFS		512
 #define POOL_CACHE_SIZE		256
+
+static struct spdk_bdev_compress_opts g_opts = {
+	.auto_select = true,
+	.prefer_qat = false,
+	.prefer_isal = false,
+};
 
 /* Global list of available compression devices. */
 struct compress_dev {
@@ -152,6 +151,7 @@ struct comp_bdev_io {
 static struct rte_mempool *g_mbuf_mp = NULL;			/* mbuf mempool */
 static struct rte_mempool *g_comp_op_mp = NULL;			/* comp operations, must be rte* mempool */
 static struct rte_mbuf_ext_shared_info g_shinfo = {};		/* used by DPDK mbuf macros */
+bool g_qat_available = false;
 /* Create shrared (between all ops per PMD) compress xforms. */
 static struct rte_comp_xform g_comp_xform = (struct rte_comp_xform)
 {
@@ -287,6 +287,10 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 
 	TAILQ_INSERT_TAIL(&g_compress_devs, device, link);
 
+	if (strcmp(device->cdev_info.driver_name, QAT_PMD) == 0) {
+		g_qat_available = true;
+	}
+
 	return 0;
 
 err:
@@ -351,6 +355,9 @@ vbdev_init_compress_drivers(void)
 		if (rc != 0) {
 			goto error_create_compress_devs;
 		}
+	}
+	if (g_qat_available == true) {
+		SPDK_NOTICELOG("initialized virtual PMD %s\n", QAT_PMD);
 	}
 
 	g_shinfo.free_cb = shinfo_free_cb;
@@ -1100,9 +1107,25 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 	return meta_ctx;
 }
 
+static void
+_set_pmd(struct vbdev_compress *comp_dev) {
+	if (g_opts.auto_select) {
+		if (g_qat_available) {
+			comp_dev->drv_name = QAT_PMD;
+		} else {
+			comp_dev->drv_name = ISAL_PMD;
+		}
+	} else if (g_opts.prefer_qat && g_qat_available) {
+		comp_dev->drv_name = QAT_PMD;
+	} else {
+		comp_dev->drv_name = ISAL_PMD;
+	}
+	SPDK_NOTICELOG("PMD being used: %s\n", comp_dev->drv_name);
+}
+
 /* Call reducelib to initialize a new volume */
 static void
-vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, const char *comp_pmd)
+vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path)
 {
 	struct vbdev_compress *meta_ctx;
 	int rc;
@@ -1111,6 +1134,8 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, const char *comp_
 	if (meta_ctx == NULL) {
 		return;
 	}
+
+	_set_pmd(meta_ctx);
 
 	rc = spdk_bdev_open(meta_ctx->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
 			    meta_ctx->base_bdev, &meta_ctx->base_desc);
@@ -1121,10 +1146,6 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, const char *comp_
 	}
 	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
 
-	/* TODO: we'll want to pass name and compression parms to this
-	 * function so they can be persisted.  We'll need to retrieve them
-	 * in load.
-	 */
 	spdk_reduce_vol_init(&meta_ctx->params, &meta_ctx->backing_dev,
 			     pm_path,
 			     vbdev_reduce_init_cb,
@@ -1224,7 +1245,7 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 
 /* RPC entry point for compression vbdev creation. */
 int
-create_compress_bdev(const char *bdev_name, const char *pm_path, const char *comp_pmd)
+create_compress_bdev(const char *bdev_name, const char *pm_path)
 {
 	struct spdk_bdev *bdev;
 
@@ -1233,7 +1254,7 @@ create_compress_bdev(const char *bdev_name, const char *pm_path, const char *com
 		return -ENODEV;
 	}
 
-	vbdev_init_reduce(bdev, pm_path, comp_pmd);
+	vbdev_init_reduce(bdev, pm_path);
 	return 0;
 }
 
@@ -1309,11 +1330,6 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 		goto error_bdev_name;
 	}
 
-	/* TODO: need to persist either PMD name or ALGO and a bunch of
-	 * other parms to reduce via init and read them back in the load path.
-	 */
-	comp_bdev->drv_name = ISAL_PMD;
-
 	/* Note: some of the fields below will change in the future - for example,
 	 * blockcnt specifically will not match (the compressed volume size will
 	 * be slightly less than the base bdev size)
@@ -1321,8 +1337,15 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 	comp_bdev->comp_bdev.product_name = COMP_BDEV_NAME;
 	comp_bdev->comp_bdev.write_cache = comp_bdev->base_bdev->write_cache;
 
-	comp_bdev->comp_bdev.required_alignment = comp_bdev->base_bdev->required_alignment;
-
+	if (strcmp(comp_bdev->drv_name, QAT_PMD) == 0) {
+		comp_bdev->comp_bdev.required_alignment =
+			spdk_max(spdk_u32log2(comp_bdev->base_bdev->blocklen),
+				 comp_bdev->base_bdev->required_alignment);
+		SPDK_NOTICELOG("QAT in use: Required alignment set to %u\n",
+			       comp_bdev->comp_bdev.required_alignment);
+	} else {
+		comp_bdev->comp_bdev.required_alignment = comp_bdev->base_bdev->required_alignment;
+	}
 	comp_bdev->comp_bdev.optimal_io_boundary =
 		comp_bdev->params.chunk_size / comp_bdev->params.logical_block_size;
 
@@ -1430,6 +1453,8 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 		return;
 	}
 
+	_set_pmd(meta_ctx);
+
 	/* Update information following volume load. */
 	meta_ctx->vol = vol;
 	memcpy(&meta_ctx->params, spdk_reduce_vol_get_params(vol),
@@ -1469,6 +1494,20 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 
 	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
 	spdk_reduce_vol_load(&meta_ctx->backing_dev, vbdev_reduce_load_cb, meta_ctx);
+}
+
+void
+spdk_bdev_compress_get_opts(struct spdk_bdev_compress_opts *opts)
+{
+	*opts = g_opts;
+}
+
+int
+spdk_bdev_compress_set_opts(const struct spdk_bdev_compress_opts *opts)
+{
+	g_opts = *opts;
+
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_compress", SPDK_LOG_VBDEV_COMPRESS)
