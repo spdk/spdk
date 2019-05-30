@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ffd63af_f836d638",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-30T06:17:33Z",
+      "side": 1,
+      "message": "I don\u0027t think we need the alignment here at all, but for now let\u0027s use FTL_BLOCK_SIZE here as well.",
+      "range": {
+        "startLine": 451,
+        "startChar": 56,
+        "endLine": 451,
+        "endChar": 60
+      },
+      "revId": "a28e479d40c798c53229db42cfb92d44ac79b702",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
