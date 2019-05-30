@@ -45,10 +45,9 @@ typedef void (*spdk_delete_compress_complete)(void *cb_arg, int bdeverrno);
  *
  * \param bdev_name Bdev on which compression bdev will be created.
  * \param pm_path Path to persistent memory.
- * \param comp_pmd Compression PMD name.
  * \return 0 on success, other on failure.
  */
-int create_compress_bdev(const char *bdev_name, const char *pm_path, const char *comp_pmd);
+int create_compress_bdev(const char *bdev_name, const char *pm_path);
 
 /**
  * Delete compress bdev.

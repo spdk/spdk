@@ -84,7 +84,7 @@ endif
 DPDK_FRAMEWORK=n
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_FRAMEWORK=y
-DPDK_LIB_LIST += rte_pmd_aesni_mb rte_pmd_qat rte_reorder
+DPDK_LIB_LIST += rte_pmd_aesni_mb rte_reorder
 endif
 
 ifeq ($(CONFIG_REDUCE),y)
@@ -93,7 +93,7 @@ DPDK_LIB_LIST += rte_pmd_isal_comp
 endif
 
 ifeq ($(DPDK_FRAMEWORK),y)
-DPDK_LIB_LIST += rte_cryptodev rte_compressdev rte_bus_vdev
+DPDK_LIB_LIST += rte_pmd_qat rte_cryptodev rte_compressdev rte_bus_vdev
 endif
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
