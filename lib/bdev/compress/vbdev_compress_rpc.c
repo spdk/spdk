@@ -37,6 +37,56 @@
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 
+struct rpc_set_compress_pmd {
+	enum compress_pmd pmd;
+};
+
+static const struct spdk_json_object_decoder rpc_compress_pmd_decoder[] = {
+	{"pmd", offsetof(struct rpc_set_compress_pmd, pmd), spdk_json_decode_int32},
+};
+
+static void
+spdk_rpc_set_compress_pmd(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_set_compress_pmd req;
+	struct spdk_json_write_ctx *w;
+	int rc, jerr = 0;
+
+	if (spdk_json_decode_object(params, rpc_compress_pmd_decoder,
+				    SPDK_COUNTOF(rpc_compress_pmd_decoder),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		jerr = SPDK_JSONRPC_ERROR_PARSE_ERROR;
+		goto invalid;
+	}
+
+	if (req.pmd >= COMPRESS_PMD_MAX) {
+		rc = -EINVAL;
+		jerr = SPDK_JSONRPC_ERROR_INVALID_PARAMS;
+		goto invalid;
+	}
+
+	rc = set_compress_pmd(&req.pmd);
+	if (rc) {
+		rc = -EINVAL;
+		jerr = SPDK_JSONRPC_ERROR_INTERNAL_ERROR;
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w != NULL) {
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	}
+
+	return;
+invalid:
+	spdk_jsonrpc_send_error_response(request, jerr, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("set_compress_pmd", spdk_rpc_set_compress_pmd, SPDK_RPC_RUNTIME)
+
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_compress {
 	char *base_bdev_name;
