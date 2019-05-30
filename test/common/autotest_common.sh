@@ -54,7 +54,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_LVOL=0}; export SPDK_TEST_LVOL
 : ${SPDK_TEST_JSON=0}; export SPDK_TEST_JSON
 : ${SPDK_TEST_REDUCE=0}; export SPDK_TEST_REDUCE
-: ${SPDK_RUN_ASAN=0}; export SPDK_RUN_ASAN
+: ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=0}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=0}; export SPDK_RUN_INSTALLED_DPDK
 : ${SPDK_TEST_CRYPTO=0}; export SPDK_TEST_CRYPTO
@@ -87,9 +87,16 @@ echo "leak:spdk_fs_alloc_thread_ctx" >> "$asan_suppresion_file"
 # Suppress known leaks in fio project
 echo "leak:/usr/src/fio/parse.c" >> "$asan_suppresion_file"
 echo "leak:/usr/src/fio/iolog.c" >> "$asan_suppresion_file"
+echo "leak:/usr/src/fio/init.c" >> "$asan_suppresion_file"
 
 # Suppress leaks in libiscsi
 echo "leak:libiscsi.so" >> "$asan_suppresion_file"
+
+# Suppress leaks in nvme-cli
+echo "leak:*/nvme-cli/nvme.c" >> "$asan_suppresion_file"
+
+# Suppress leaks Ubuntu 16 ASAN ?
+echo "leak:__strdup" >> "$asan_suppresion_file"
 
 export LSAN_OPTIONS=suppressions="$asan_suppresion_file"
 
@@ -190,9 +197,8 @@ if [ $SPDK_RUN_UBSAN -eq 1 ]; then
 	config_params+=' --enable-ubsan'
 fi
 
-if [ $SPDK_RUN_ASAN -eq 1 ]; then
-	config_params+=' --enable-asan'
-fi
+export SPDK_RUN_ASAN=1
+config_params+=' --enable-asan'
 
 if [ "$(uname -s)" = "Linux" ]; then
 	config_params+=' --enable-coverage'
