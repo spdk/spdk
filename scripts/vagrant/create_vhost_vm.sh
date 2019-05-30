@@ -13,6 +13,7 @@ SPDK_DIR="$( cd "${DIR}/../../" && pwd )"
 USE_SSH_DIR=""
 MOVE_TO_DEFAULT_DIR=false
 INSTALL_DEPS=false
+INSTALL_DEVSTACK=false
 
 # The command line help
 display_help() {
@@ -25,6 +26,8 @@ display_help() {
 	echo "                              for setting up SSH key pair on VM"
 	echo "  --install-deps              Install SPDK build dependencies on VM. Needed by some of the"
 	echo "                              vhost and vhost initiator tests. Default: false."
+	echo "  --install-devstack          Install devstack on VM"
+	echo "                              Default: false."
 	echo "  --move-to-default-dir           Move generated files to default directories used by vhost test scripts."
 	echo "                              Default: false."
 	echo "  --http-proxy                Default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
@@ -41,6 +44,7 @@ while getopts ":h-:" opt; do
 			use-ssh-dir=*) USE_SSH_DIR="${OPTARG#*=}" ;;
 			move-to-default-dir) MOVE_TO_DEFAULT_DIR=true ;;
 			install-deps) INSTALL_DEPS=true ;;
+			install-devstack) INSTALL_DEVSTACK=true ;;
 			http-proxy=*)
 				http_proxy=$OPTARG
 				https_proxy=$http_proxy
@@ -67,7 +71,14 @@ done
 export SPDK_DIR
 export SPDK_VAGRANT_HTTP_PROXY
 export INSTALL_DEPS
+export INSTALL_DEVSTACK
+IMAGE_NAME="vhost_vm_image.qcow2"
 
+if $INSTALL_DEVSTACK; then
+	export SPDK_VAGRANT_VMRAM=8192
+	export SPDK_VAGRANT_VMCPU=10
+	IMAGE_NAME="openstack_vm_image.qcow2"
+fi
 
 shift "$((OPTIND-1))"   # Discard the options and sentinel --
 SPDK_VAGRANT_DISTRO="$@"
@@ -109,18 +120,20 @@ if [ ! -z "${http_proxy}" ]; then
 		vagrant plugin install vagrant-proxyconf
 	fi
 fi
+
 VBoxManage setproperty machinefolder "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}"
 vagrant up
 vagrant halt
 VBoxManage setproperty machinefolder default
 
 # Convert Vbox .vmkd image to qcow2
+
 vmdk_img=$(find ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO} -name "*.vmdk")
-qemu-img convert -f vmdk -O qcow2 ${vmdk_img} ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/vhost_vm_image.qcow2
+qemu-img convert -f vmdk -O qcow2 ${vmdk_img} ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/$IMAGE_NAME
 
 if $MOVE_TO_DEFAULT_DIR; then
 	sudo mkdir -p /home/sys_sgsw
-	sudo mv -f ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/vhost_vm_image.qcow2 /home/sys_sgsw/vhost_vm_image.qcow2
+	sudo mv -f ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/$IMAGE_NAME /home/sys_sgsw/$IMAGE_NAME
 	sudo mv -f ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/ssh_keys/spdk_vhost_id_rsa* ~/.ssh/
 fi
 
