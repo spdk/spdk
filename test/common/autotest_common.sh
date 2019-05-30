@@ -69,6 +69,15 @@ export RUN_NIGHTLY_FAILING
 export ASAN_OPTIONS=new_delete_type_mismatch=0
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
+# Export LeakSanitizer suppression file in order to prevent known
+# leaks in external executables or libraries from showing up.
+asan_suppresion_file="/var/tmp/asan_suppresion_file"
+rm -rf "$asan_suppresion_file"
+# Suppress known leaks in fio project
+echo "leak:/usr/src/fio/" > "$asan_suppresion_file"
+echo "leak:/usr/src/fio/" >> "$asan_suppresion_file"
+export LSAN_OPTIONS=suppressions="$asan_suppresion_file"
+
 export DEFAULT_RPC_ADDR="/var/tmp/spdk.sock"
 
 if [ -z "$DEPENDENCY_DIR" ]; then
@@ -158,8 +167,12 @@ if [ -d /usr/src/fio ]; then
 	fio_dir="/usr/src/fio"
 	bdev_plugin="$rootdir/examples/bdev/fio_plugin/fio_plugin"
 	nvme_plugin="$rootdir/examples/nvme/fio_plugin/fio_plugin"
-	export fio_bdev="eval LD_PRELOAD="$bdev_plugin" "$fio_dir"/fio"
-	export fio_nvme="eval LD_PRELOAD="$nvme_plugin" "$fio_dir"/fio"
+
+	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
+	asan_lib=$(ldd $bdev_plugin | grep libasan | awk '{print $3}')
+
+	export fio_bdev="eval LD_PRELOAD=\""$asan_lib" "$bdev_plugin"\" "$fio_dir"/fio"
+	export fio_nvme="eval LD_PRELOAD=\""$asan_lib" "$nvme_plugin"\" "$fio_dir"/fio"
 fi
 
 if [ -d ${DEPENDENCY_DIR}/vtune_codes ]; then
@@ -771,6 +784,8 @@ function autotest_cleanup()
 			modprobe -r uio_pci_generic
 		fi
 	fi
+
+	rm -rf "$asan_suppresion_file"
 }
 
 function freebsd_update_contigmem_mod()
