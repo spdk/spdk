@@ -136,13 +136,11 @@ if __name__ == "__main__":
     def construct_compress_bdev(args):
         print(rpc.bdev.construct_compress_bdev(args.client,
                                                base_bdev_name=args.base_bdev_name,
-                                               pm_path=args.pm_path,
-                                               comp_pmd=args.comp_pmd))
+                                               pm_path=args.pm_path))
     p = subparsers.add_parser('construct_compress_bdev',
                               help='Add a compress vbdev')
     p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
     p.add_argument('-p', '--pm_path', help="Path to persistent memory")
-    p.add_argument('-d', '--comp_pmd', help="Name of the compression device driver")
     p.set_defaults(func=construct_compress_bdev)
 
     def delete_compress_bdev(args):
@@ -152,6 +150,17 @@ if __name__ == "__main__":
     p = subparsers.add_parser('delete_compress_bdev', help='Delete a compress disk')
     p.add_argument('name', help='compress bdev name')
     p.set_defaults(func=delete_compress_bdev)
+
+    def set_bdev_compress_options(args):
+        rpc.bdev.set_bdev_compress_options(args.client,
+                                           auto_select=args.auto_select,
+                                           only_qat=args.only_qat,
+                                           only_isal=args.only_isal)
+    p = subparsers.add_parser('set_bdev_compress_options', help='Set options for a compress disk')
+    p.add_argument('-a', '--auto_select', default=False, action='store_true', help='use QAT if available if not ISAL')
+    p.add_argument('-q', '--only_qat', default=False, action='store_true', help='use QAT or nothing')
+    p.add_argument('-i', '--only_isal', default=False, action='store_true', help='use ISAL or nothing')
+    p.set_defaults(func=set_bdev_compress_options)
 
     def construct_crypto_bdev(args):
         print(rpc.bdev.construct_crypto_bdev(args.client,
