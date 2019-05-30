@@ -67,6 +67,8 @@ done
 export SPDK_DIR
 export SPDK_VAGRANT_HTTP_PROXY
 export INSTALL_DEPS
+export SPDK_VAGRANT_VMRAM=8192
+export SPDK_VAGRANT_VMCPU=10
 
 shift "$((OPTIND-1))"   # Discard the options and sentinel --
 SPDK_VAGRANT_DISTRO="$@"
@@ -86,7 +88,7 @@ case "$SPDK_VAGRANT_DISTRO" in
 esac
 
 mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}"
-cp ${DIR}/Vagrantfile_vhost_vm ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/Vagrantfile
+cp ${DIR}/Vagrantfile_openstack_vm ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/Vagrantfile
 
 # Copy or generate SSH keys to the VM
 mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/ssh_keys"
@@ -115,11 +117,11 @@ VBoxManage setproperty machinefolder default
 
 # Convert Vbox .vmkd image to qcow2
 vmdk_img=$(find ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO} -name "*.vmdk")
-qemu-img convert -f vmdk -O qcow2 ${vmdk_img} ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/vhost_vm_image.qcow2
+qemu-img convert -f vmdk -O qcow2 ${vmdk_img} ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/openstack_vm_image.qcow2
 
 if $MOVE_TO_DEFAULT_DIR; then
-	sudo mkdir -p /home/sys_sgsw
-	sudo mv -f ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/vhost_vm_image.qcow2 /home/sys_sgsw/vhost_vm_image.qcow2
+	sudo mkdir -p /home/sys_sgci
+	sudo mv -f ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/openstack_vm_image.qcow2 /home/sys_sgci/openstack_vm_image.qcow2
 	sudo mv -f ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}/ssh_keys/spdk_vhost_id_rsa* ~/.ssh/
 fi
 
