@@ -16,6 +16,24 @@
       "revId": "e1b2800600c0ef84e14bfb39c8aed311c8e9c441",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d27e73ad_44a98676",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T16:56:28Z",
+      "side": 1,
+      "message": "agreed - that would be more consistent with the exit(rc) just above",
+      "parentUuid": "619146dd_e394cc1a",
+      "revId": "e1b2800600c0ef84e14bfb39c8aed311c8e9c441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
