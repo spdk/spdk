@@ -274,6 +274,10 @@ main(int argc, char **argv)
 				      hello_bdev_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
+	if (opts.config_file == NULL) {
+		SPDK_ERRLOG("configfile must be specified using -c <conffile> e.g. -c bdev.conf\n");
+		return 1;
+	}
 	hello_context.bdev_name = g_bdev_name;
 
 	/*
