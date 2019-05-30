@@ -112,7 +112,7 @@ bdevs_name=$(echo $bdevs | jq -r '.name')
 nbd_function_test $testdir/bdev.conf "$bdevs_name"
 timing_exit nbd
 
-if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
+if [ -d /usr/src/fio ]; then
 	timing_enter fio
 
 	timing_enter fio_rw_verify
