@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "42b8730b_f28f4f76",
+        "filename": "test/app/fuzz/nvme_fuzz/Makefile",
+        "patchSetId": 34
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:36:55Z",
+      "side": 1,
+      "message": "I think you need to add $(SOCK_MODULES_LIST) too (and include mk/spdk.modules.mk)\n\notherwise you won\u0027t get the sock_posix library linked in, which means name-tcp won\u0027t work",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52709836_06ae66ee",
+        "filename": "test/app/fuzz/nvme_fuzz/README.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:36:55Z",
+      "side": 1,
+      "message": "these last 3 lines need to be reworded I think",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6efe9159_04418e91",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:36:55Z",
+      "side": 1,
+      "message": "this is so nasty to do this if (rc) check over and over again :)\n\nwhat if instead you just did these straight through, but did rc +\u003d?  then at the end if rc \u003e 0, cleanup\n\nI think if a write_named_uint32 fails, that\u0027s a pretty catastrophic issue, so I think simplifying the code at the expense of trying to return gracefully is better",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e7c4f68_f266e63f",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:36:55Z",
+      "side": 1,
+      "message": "do we need this \"i\" variable?",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9ccefa09_c839294d",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 34
@@ -22,6 +90,57 @@
       "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb3dc01b_ecdee723",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:36:55Z",
+      "side": 1,
+      "message": "can we remove the -p 4?  we\u0027ve removed them from other test scripts recently",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e87b7d29_e566fc78",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:36:55Z",
+      "side": 1,
+      "message": "maybe pick a bigger time value for nightly tests?",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67bb1954_72fd8ab5",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:36:55Z",
+      "side": 1,
+      "message": "we should pick a seed so that every test runs with the same seed (to avoid unexpected intermittent failures)",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
