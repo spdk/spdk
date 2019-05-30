@@ -16,6 +16,24 @@
       "revId": "e0cd22dfc6c5a95a4c28aad71f12bacc6f03f5f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "979df695_25f8d841",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-30T06:25:22Z",
+      "side": 1,
+      "message": "spdk_mempool_create_ctor only works when creating the mempool. After that, if you wanted to call a function on each element you\u0027d have to get them all, call the function and put them back. Wojtek Malikowski wanted to store objects on the pool that require freeing resources during deinitialization, so spdk_mempool_obj_iter would be very helpful for that purpose.\n\nIs there some reason we don\u0027t want to pull all the mempool definitions from DPDK? They seem quite useful.",
+      "parentUuid": "d7b50714_9f487c3c",
+      "revId": "e0cd22dfc6c5a95a4c28aad71f12bacc6f03f5f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
