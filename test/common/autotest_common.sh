@@ -54,7 +54,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_LVOL=0}; export SPDK_TEST_LVOL
 : ${SPDK_TEST_JSON=0}; export SPDK_TEST_JSON
 : ${SPDK_TEST_REDUCE=0}; export SPDK_TEST_REDUCE
-: ${SPDK_RUN_ASAN=0}; export SPDK_RUN_ASAN
+: ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=0}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=0}; export SPDK_RUN_INSTALLED_DPDK
 : ${SPDK_TEST_CRYPTO=0}; export SPDK_TEST_CRYPTO
@@ -187,9 +187,8 @@ if [ $SPDK_RUN_UBSAN -eq 1 ]; then
 	config_params+=' --enable-ubsan'
 fi
 
-if [ $SPDK_RUN_ASAN -eq 1 ]; then
-	config_params+=' --enable-asan'
-fi
+export SPDK_RUN_ASAN=1
+config_params+=' --enable-asan'
 
 if [ "$(uname -s)" = "Linux" ]; then
 	config_params+=' --enable-coverage'
