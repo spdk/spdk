@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "df9dbbaf_2c85b366",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-05-30T11:15:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd28814c_b2749b5e",
+      "range": {
+        "startLine": 453,
+        "startChar": 4,
+        "endLine": 453,
+        "endChar": 26
+      },
+      "revId": "3fc2b9f2320394d281ec921c6547a4a94513d533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4fe7f8ba_7f1b76cf",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 5
@@ -177,6 +201,30 @@
       "writtenOn": "2019-05-29T09:05:10Z",
       "side": 1,
       "message": "Do we need the alignment?",
+      "range": {
+        "startLine": 525,
+        "startChar": 62,
+        "endLine": 525,
+        "endChar": 76
+      },
+      "revId": "3fc2b9f2320394d281ec921c6547a4a94513d533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dec38318_579d1a07",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-05-30T11:15:30Z",
+      "side": 1,
+      "message": "Seems like this alignment was used for the md_buf in restore as well as rwb/band?",
+      "parentUuid": "dd612db9_888abe71",
       "range": {
         "startLine": 525,
         "startChar": 62,
