@@ -40,6 +40,17 @@ def delete_compress_bdev(client, name):
     return client.call('delete_compress_bdev', params)
 
 
+def set_compress_pmd(client, pmd):
+    """Set pmd options for the bdev compress.
+
+    Args:
+        pmd: 0 = auto-select, 1 = QAT, 2 = ISAL
+    """
+    params = {'pmd': pmd}
+
+    return client.call('set_compress_pmd', params)
+
+
 def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
     """Construct a crypto virtual block device.
 
