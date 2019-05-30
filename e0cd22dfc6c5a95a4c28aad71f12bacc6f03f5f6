@@ -34,6 +34,24 @@
       "revId": "e0cd22dfc6c5a95a4c28aad71f12bacc6f03f5f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bf1a5e5_3421eb16",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-30T09:39:49Z",
+      "side": 1,
+      "message": "We want to keep the env API at the very minimum. After all, there are already other (non-DPDK) env implementations that need to keep up.\n\nThe one we\u0027re introducing here, however, makes sense to me. It solves a basic problem - if we allocate some per-element memory in the create_ctor() callback, how do we free it?",
+      "parentUuid": "979df695_25f8d841",
+      "revId": "e0cd22dfc6c5a95a4c28aad71f12bacc6f03f5f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
