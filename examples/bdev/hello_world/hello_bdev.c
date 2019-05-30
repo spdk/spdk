@@ -267,12 +267,16 @@ main(int argc, char **argv)
 	 * ./hello_bdev -c bdev.conf -b Malloc0
 	 * To use passthru bdev PT0 run with params
 	 * ./hello_bdev -c bdev.conf -b PT0
-	 * If none of the parameters are provide the application will use the
-	 * default parameters(-c bdev.conf -b Malloc0).
+	 * If the bdev name is not specified,
+	 * then Malloc0 is used by default
 	 */
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "b:", NULL, hello_bdev_parse_arg,
 				      hello_bdev_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
+	}
+	if (opts.config_file == NULL) {
+		SPDK_ERRLOG("configfile must be specified using -c <conffile> e.g. -c bdev.conf\n");
+		exit(1);
 	}
 	hello_context.bdev_name = g_bdev_name;
 
