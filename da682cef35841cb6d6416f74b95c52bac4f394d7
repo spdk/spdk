@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "30d443bd_c1d4bbe9",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-30T00:28:39Z",
+      "side": 1,
+      "message": "Thanks, I will add a patch to fix typos.",
+      "parentUuid": "04034c00_fb35ab4d",
+      "revId": "da682cef35841cb6d6416f74b95c52bac4f394d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "616854df_5f655a44",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 19
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-29T20:57:21Z",
       "side": 1,
       "message": "we should use 1 instead of \"true\"\n\nI know that this basically works, but this data members aren\u0027t bools so we shouldn\u0027t write bool values to them.",
+      "revId": "da682cef35841cb6d6416f74b95c52bac4f394d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "290a33d8_19d531bb",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-30T00:28:39Z",
+      "side": 1,
+      "message": "OK.",
+      "parentUuid": "616854df_5f655a44",
       "revId": "da682cef35841cb6d6416f74b95c52bac4f394d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
