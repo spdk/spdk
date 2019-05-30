@@ -58,9 +58,7 @@ run_test suite test/nvmf/host/perf.sh $TEST_ARGS --transport=tcp
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
 run_test suite test/nvmf/host/aer.sh $TEST_ARGS
-if [ $SPDK_RUN_ASAN -eq 0 ]; then
-    run_test suite test/nvmf/host/fio.sh $TEST_ARGS
-fi
+run_test suite test/nvmf/host/fio.sh $TEST_ARGS
 
 timing_exit host
 
