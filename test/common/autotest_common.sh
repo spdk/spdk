@@ -84,6 +84,10 @@ sudo rm -rf "$asan_suppresion_file"
 # LSAN_OPTIONS.
 echo "leak:spdk_fs_alloc_thread_ctx" >> "$asan_suppresion_file"
 
+# Suppress known leaks in fio project
+echo "leak:/usr/src/fio/parse.c" >> "$asan_suppresion_file"
+echo "leak:/usr/src/fio/iolog.c" >> "$asan_suppresion_file"
+
 export LSAN_OPTIONS=suppressions="$asan_suppresion_file"
 
 export DEFAULT_RPC_ADDR="/var/tmp/spdk.sock"
@@ -774,7 +778,10 @@ function fio_bdev()
 	local fio_dir="/usr/src/fio"
 	local bdev_plugin="$rootdir/examples/bdev/fio_plugin/fio_plugin"
 
-	LD_PRELOAD="$bdev_plugin" "$fio_dir"/fio "$@"
+	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
+	local asan_lib=$(ldd $bdev_plugin | grep libasan | awk '{print $3}')
+
+	LD_PRELOAD=""$asan_lib" "$bdev_plugin"" "$fio_dir"/fio "$@"
 }
 
 function fio_nvme()
@@ -783,7 +790,10 @@ function fio_nvme()
 	local fio_dir="/usr/src/fio"
 	local nvme_plugin="$rootdir/examples/nvme/fio_plugin/fio_plugin"
 
-	LD_PRELOAD="$nvme_plugin" "$fio_dir"/fio "$@"
+	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
+	asan_lib=$(ldd $nvme_plugin | grep libasan | awk '{print $3}')
+
+	LD_PRELOAD=""$asan_lib" "$nvme_plugin"" "$fio_dir"/fio "$@"
 }
 
 function get_lvs_free_mb()

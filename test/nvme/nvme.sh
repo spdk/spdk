@@ -162,8 +162,7 @@ if [ `uname` = Linux ]; then
 	kill_stub
 fi
 
-if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
-	# Only test when ASAN is not enabled. If ASAN is enabled, we cannot test.
+if [ -d /usr/src/fio ]; then
 	timing_enter fio_plugin
 	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 	for bdf in $(iter_pci_class_code 01 08 02); do
