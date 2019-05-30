@@ -40,6 +40,19 @@ def delete_compress_bdev(client, name):
     return client.call('delete_compress_bdev', params)
 
 
+def set_bdev_compress_options(client, auto_select, only_qat, only_isal):
+    """Set options for the bdev compress. This is startup command.
+
+    Args:
+        auto_select: If QAT is detected it will be used
+        only_qat: Use only QAT, if not found error will occur
+        only_isal: Use only ISAL, if not found error will occur
+    """
+    params = {'auto_select': auto_select, 'only_qat': only_qat, 'only_isal': only_isal}
+
+    return client.call('set_bdev_compress_options', params)
+
+
 def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
     """Construct a crypto virtual block device.
 
