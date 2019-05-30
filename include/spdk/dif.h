@@ -302,6 +302,23 @@ int spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			     const struct spdk_dif_ctx *ctx);
 
 /**
+ * Verify DIF for newly written part of the extended LBA payload.
+ *
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param data_offset Offset to the newly written part of the extended LBA payload.
+ * \param data_len Length of the newly written part of the extended LBA payload.
+ * \param ctx DIF context.
+ * \param err_blk Error information of the block in which DIF error is found.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_verify_stream(struct iovec *iovs, int iovcnt,
+			   uint32_t data_offset, uint32_t data_len,
+			   const struct spdk_dif_ctx *ctx,
+			   struct spdk_dif_error *err_blk);
+
+/**
  * Calculate CRC-32C checksum for extended LBA payload.
  *
  * \param iovs iovec array describing the extended LBA payload.
