@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2955e1e_c55886ca",
+        "filename": "test/blobfs/rocksdb/rocksdb.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-30T10:01:29Z",
+      "side": 1,
+      "message": "You should move this to autotest_common.sh, otherwise your LSAN_OPTIONS might get overridden.",
+      "range": {
+        "startLine": 20,
+        "startChar": 22,
+        "endLine": 20,
+        "endChar": 65
+      },
+      "revId": "504e95d7afe124346b87a7063c3d3397070ce849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
