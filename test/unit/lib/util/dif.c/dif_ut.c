@@ -1677,6 +1677,88 @@ dif_generate_stream_test(void)
 	_iov_free_buf(&iov);
 }
 
+static void
+dif_verify_stream_test(void)
+{
+	struct iovec iovs[4];
+	struct spdk_dif_ctx ctx;
+	struct spdk_dif_error err_blk;
+	uint32_t dif_flags;
+	int rc, i;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1, dif_flags,
+			       22, 0xFFFF, 0x22, 0);
+	CU_ASSERT(rc == 0);
+
+	/* a single iovec case. */
+	_iov_alloc_buf(&iovs[0], (512 + 8) * 5);
+
+	rc = ut_data_pattern_generate(&iovs[0], 1, 512 + 8, 8, 5);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iovs[0], 1, 5, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(&iovs[0], 1, 0, 511, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(&iovs[0], 1, 511, 1, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(&iovs[0], 1, 512, 256, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(&iovs[0], 1, 768, 512, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(&iovs[0], 1, 1280, 1024, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(&iovs[0], 1, 2304, 256, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(&iovs[0], 1, 2560, 512, &ctx, &err_blk);
+	CU_ASSERT(rc == -ERANGE);
+
+	rc = ut_data_pattern_verify(&iovs[0], 1, 512 + 8, 8, 5);
+	CU_ASSERT(rc == 0);
+
+	_iov_free_buf(&iovs[0]);
+
+	/* multiple iovecs case */
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], (512 + 8) * (i + 1));
+	}
+
+	rc = ut_data_pattern_generate(iovs, 4, 512 + 8, 8, 10);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(iovs, 4, 10, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(iovs, 4, 0, 512 * 4, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(iovs, 4, 512 * 4, 512 * 3, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(iovs, 4, 512 * (4 + 3), 512 * 2, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_stream(iovs, 4, 512 * (4 + 3 + 2), 512, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = ut_data_pattern_verify(iovs, 4, 512 + 8, 8, 10);
+	CU_ASSERT(rc == 0);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
 #define UT_CRC32C_XOR	0xffffffffUL
 
 static void
@@ -1871,6 +1953,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "set_md_interleave_iovs_split_test",
 			    set_md_interleave_iovs_split_test) == NULL ||
 		CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test) == NULL ||
+		CU_add_test(suite, "dif_verify_stream_test", dif_verify_stream_test) == NULL ||
 		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL
 	) {
 		CU_cleanup_registry();
