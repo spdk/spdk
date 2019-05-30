@@ -38,6 +38,15 @@
 
 #include "spdk/bdev.h"
 
+enum compress_pmd {
+	COMPRESS_PMD_AUTO = 0,
+	COMPRESS_PMD_QAT_ONLY,
+	COMPRESS_PMD_ISAL_ONLY,
+};
+#define MAX_PMD_OPTION COMPRESS_PMD_ISAL_ONLY
+
+int set_compress_pmd(enum compress_pmd *opts);
+
 typedef void (*spdk_delete_compress_complete)(void *cb_arg, int bdeverrno);
 
 /**
