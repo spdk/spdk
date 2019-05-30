@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94728d44_f1e22921",
+        "filename": "test/unit/lib/scsi/scsi_pr.c/scsi_pr_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-30T06:18:31Z",
+      "side": 1,
+      "message": "Please change all iqn to spdk like one in this function. ;-)",
+      "range": {
+        "startLine": 110,
+        "startChar": 12,
+        "endLine": 110,
+        "endChar": 34
+      },
+      "revId": "585ba0f64b1148f8988227452e28dccafdee597c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
