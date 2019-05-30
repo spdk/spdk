@@ -38,6 +38,15 @@
 
 #include "spdk/bdev.h"
 
+struct spdk_bdev_compress_opts {
+	bool auto_select;
+	bool only_qat;
+	bool only_isal;
+};
+
+void spdk_bdev_compress_get_opts(struct spdk_bdev_compress_opts *opts);
+int spdk_bdev_compress_set_opts(const struct spdk_bdev_compress_opts *opts);
+
 typedef void (*spdk_delete_compress_complete)(void *cb_arg, int bdeverrno);
 
 /**
