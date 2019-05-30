@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "527c373e_d1e17af7",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T23:07:55Z",
+      "side": 1,
+      "message": "Let\u0027s say something like:\n\nBy default, vaddr is set to NULL meaning SPDK will allocate the memory to be used.\n\nAnd also say that if vaddr is NULL then paddr must be set to 0.",
+      "revId": "a32342fdccd13937c3d15b2e6fbbcceb6dd97f78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "895441be_03486380",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T23:07:55Z",
+      "side": 1,
+      "message": "Let\u0027s take out line 964.  There are actually other use cases for this besides this kind of device testing.",
+      "revId": "a32342fdccd13937c3d15b2e6fbbcceb6dd97f78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "825e3b1d_64462409",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 979,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T23:07:55Z",
+      "side": 1,
+      "message": "let\u0027s group the sq members together and the cq members together",
+      "revId": "a32342fdccd13937c3d15b2e6fbbcceb6dd97f78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55d392be_4933bb2c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T23:07:55Z",
+      "side": 1,
+      "message": "let\u0027s order these exactly as they are listed in the opts structure definition",
+      "revId": "a32342fdccd13937c3d15b2e6fbbcceb6dd97f78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91487dee_7eef218d",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1446,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T23:07:55Z",
+      "side": 1,
+      "message": "How about:\n\nWe check sq_vaddr and cq_vaddr to see if the user specified the memory buffers when creating the I/O queue.  If the user specified them, we cannot free that memory.",
+      "revId": "a32342fdccd13937c3d15b2e6fbbcceb6dd97f78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
