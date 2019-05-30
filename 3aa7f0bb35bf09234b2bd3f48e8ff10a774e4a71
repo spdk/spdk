@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ac6bd9c_8582d377",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-30T10:58:19Z",
+      "side": 1,
+      "message": "Thanks for the patch!\n\nThe commit message needs to be in the following format:\n\u003cmodule\u003e: \u003cshort description\u003e (whole line up to 72 characters)\n\u003cempty line\u003e\n\u003clong description\u003e (up to ~80 characters per line)\n\ne.g.:\nexamples/hello_bdev: fail if no config provided\n\nThe hello_bdev example does not work without configfile, hence\ndisplaying appropriate error when config file is not specified\n\nD.",
+      "revId": "3aa7f0bb35bf09234b2bd3f48e8ff10a774e4a71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
