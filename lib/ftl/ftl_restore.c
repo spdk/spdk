@@ -36,6 +36,7 @@
 #include "spdk/util.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
+#include "spdk/crc32.h"
 
 #include "ftl_core.h"
 #include "ftl_band.h"
@@ -373,6 +374,91 @@ ftl_restore_next_band(struct ftl_restore *restore)
 	return NULL;
 }
 
+static void
+ftl_nv_cache_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_restore *restore = cb_arg;
+	struct spdk_ftl_dev *dev = restore->dev;
+	struct spdk_bdev *bdev;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	struct ftl_nv_cache_header *hdr;
+	struct iovec *iov = NULL;
+	int rc = 0, iov_cnt = 0;
+	uint32_t checksum;
+
+	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+	spdk_bdev_io_get_iovec(bdev_io, &iov, &iov_cnt);
+	hdr = iov[0].iov_base;
+
+	if (!success) {
+		SPDK_ERRLOG("Unable to read non-volatile cache metadata header\n");
+		rc = -ENOTRECOVERABLE;
+		goto out;
+	}
+
+	checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
+	if (checksum != hdr->checksum) {
+		SPDK_ERRLOG("Invalid header checksum (found: %"PRIu32", expected: %"PRIu32")\n",
+			    checksum, hdr->checksum);
+		rc = -ENOTRECOVERABLE;
+		goto out;
+	}
+
+	if (hdr->version != FTL_NV_CACHE_HEADER_VERSION) {
+		SPDK_ERRLOG("Invalid header version (found: %"PRIu32", expected: %"PRIu32")\n",
+			    hdr->version, FTL_NV_CACHE_HEADER_VERSION);
+		rc = -ENOTRECOVERABLE;
+		goto out;
+	}
+
+	if (hdr->size != spdk_bdev_get_num_blocks(bdev)) {
+		SPDK_ERRLOG("Unexpected size of the non-volatile cache bdev (%"PRIu64", expected: %"
+			    PRIu64")\n", hdr->size, spdk_bdev_get_num_blocks(bdev));
+		rc = -ENOTRECOVERABLE;
+		goto out;
+	}
+
+	if (spdk_uuid_compare(&hdr->uuid, &dev->uuid)) {
+		SPDK_ERRLOG("Invalid device UUID\n");
+		rc = -ENOTRECOVERABLE;
+		goto out;
+	}
+out:
+	ftl_restore_complete(restore, rc);
+	spdk_bdev_free_io(bdev_io);
+	spdk_dma_free(hdr);
+}
+
+static void
+ftl_restore_nv_cache(struct ftl_restore *restore)
+{
+	struct spdk_ftl_dev *dev = restore->dev;
+	struct spdk_bdev *bdev;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	struct ftl_io_channel *ioch;
+	void *buf;
+	int rc;
+
+	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+
+	buf = spdk_dma_zmalloc(spdk_bdev_get_block_size(bdev), spdk_bdev_get_buf_align(bdev), NULL);
+	if (spdk_unlikely(!buf)) {
+		SPDK_ERRLOG("Memory allocation failure\n");
+		ftl_restore_complete(restore, -ENOMEM);
+		return;
+	}
+
+	rc = spdk_bdev_read_blocks(nv_cache->bdev_desc, ioch->cache_ioch, buf, 0, 1,
+				   ftl_nv_cache_header_cb, restore);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Failed to read non-volatile cache metadata header: %s\n",
+			    spdk_strerror(-rc));
+		ftl_restore_complete(restore, rc);
+		spdk_dma_free(buf);
+	}
+}
+
 static bool
 ftl_pad_chunk_pad_finish(struct ftl_restore_band *rband, bool direct_access)
 {
@@ -515,7 +601,11 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 	if (rc) {
 		restore->pad_status = rc;
 		if (--restore->num_pad_bands == 0) {
-			ftl_restore_complete(restore, restore->pad_status);
+			if (dev->nv_cache.bdev_desc) {
+				ftl_restore_nv_cache(restore);
+			} else {
+				ftl_restore_complete(restore, restore->pad_status);
+			}
 		}
 		return;
 	}
@@ -575,7 +665,7 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_restore_band *rband = ctx;
 	struct ftl_restore *restore = rband->parent;
-	struct spdk_ftl_dev *dev = rband->band->dev;
+	struct spdk_ftl_dev *dev = restore->dev;
 
 	if (status) {
 		if (!dev->conf.allow_open_bands) {
@@ -608,9 +698,12 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 		if (!STAILQ_EMPTY(&restore->pad_bands)) {
 			spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_restore_pad_open_bands,
 					     restore);
+		} else if (dev->nv_cache.bdev_desc) {
+			ftl_restore_nv_cache(restore);
 		} else {
-			ftl_restore_complete(restore, status);
+			ftl_restore_complete(restore, 0);
 		}
+
 		return;
 	}
 
