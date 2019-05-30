@@ -945,6 +945,50 @@ ftl_process_flush(struct spdk_ftl_dev *dev, struct ftl_rwb_batch *batch)
 	}
 }
 
+static void
+ftl_nv_cache_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_nv_cache *nv_cache = cb_arg;
+
+	if (!success) {
+		SPDK_ERRLOG("Unable to write non-volatile cache metadata header\n");
+		/* TODO: go into read-only mode */
+		assert(0);
+	}
+
+	pthread_spin_lock(&nv_cache->lock);
+	nv_cache->ready = true;
+	pthread_spin_unlock(&nv_cache->lock);
+
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+ftl_nv_cache_wrap_cb(void *ctx)
+{
+	struct spdk_ftl_dev *dev = ctx;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	struct ftl_nv_cache_header *hdr = nv_cache->dma_buf;
+	struct ftl_io_channel *ioch;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+
+	hdr->uuid = dev->uuid;
+	hdr->size = spdk_bdev_get_num_blocks(bdev);
+
+	rc = spdk_bdev_write_blocks(nv_cache->bdev_desc, ioch->cache_ioch, hdr, 0, 1,
+				    ftl_nv_cache_header_cb, nv_cache);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Unable to write non-volatile cache metadata header: %s\n",
+			    spdk_strerror(-rc));
+		/* TODO: go into read-only mode */
+		assert(0);
+	}
+}
+
 static uint64_t
 ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks, void **md_buf)
 {
@@ -955,7 +999,7 @@ ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks, void **md_
 	cache_size = spdk_bdev_get_num_blocks(bdev);
 
 	pthread_spin_lock(&nv_cache->lock);
-	if (spdk_unlikely(nv_cache->num_available == 0)) {
+	if (spdk_unlikely(nv_cache->num_available == 0 || !nv_cache->ready)) {
 		goto out;
 	}
 
@@ -979,6 +1023,8 @@ ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks, void **md_
 
 	if (nv_cache->current_addr == spdk_bdev_get_num_blocks(bdev)) {
 		nv_cache->current_addr = 1;
+		nv_cache->ready = false;
+		spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_nv_cache_wrap_cb, dev);
 	}
 out:
 	pthread_spin_unlock(&nv_cache->lock);

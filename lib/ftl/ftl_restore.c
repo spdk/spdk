@@ -408,6 +408,10 @@ ftl_nv_cache_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		rc = -ENOTRECOVERABLE;
 		goto out;
 	}
+
+	pthread_spin_lock(&nv_cache->lock);
+	nv_cache->ready = true;
+	pthread_spin_unlock(&nv_cache->lock);
 out:
 	ftl_restore_complete(restore, rc);
 	spdk_bdev_free_io(bdev_io);
