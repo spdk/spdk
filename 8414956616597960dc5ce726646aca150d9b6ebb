@@ -16,6 +16,24 @@
       "revId": "8414956616597960dc5ce726646aca150d9b6ebb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7001d898_ea842af2",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1472,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-05-30T06:42:13Z",
+      "side": 1,
+      "message": "Hi Jim,\nThe purpose is to prevent the multiple times\u0027s delete attribute sync. If it is rare, let me abandon this patch.",
+      "parentUuid": "42b623fc_815419e4",
+      "revId": "8414956616597960dc5ce726646aca150d9b6ebb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
