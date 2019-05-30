@@ -15,18 +15,17 @@ def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
     return client.call('set_bdev_options', params)
 
 
-def construct_compress_bdev(client, base_bdev_name, pm_path, comp_pmd):
+def construct_compress_bdev(client, base_bdev_name, pm_path):
     """Construct a compress virtual block device.
 
     Args:
         base_bdev_name: name of the underlying base bdev
         pm_path: path to persistent memory
-        comp_pmd: name of of the DPDK compression driver to use
 
     Returns:
         Name of created virtual block device.
     """
-    params = {'base_bdev_name': base_bdev_name, 'pm_path': pm_path, 'comp_pmd': comp_pmd}
+    params = {'base_bdev_name': base_bdev_name, 'pm_path': pm_path}
 
     return client.call('construct_compress_bdev', params)
 
@@ -39,6 +38,19 @@ def delete_compress_bdev(client, name):
     """
     params = {'name': name}
     return client.call('delete_compress_bdev', params)
+
+
+def set_bdev_compress_options(client, auto_select, only_qat, only_isal):
+    """Set options for the bdev compress. This is startup command.
+
+    Args:
+        auto_select: If QAT is detected it will be used
+        only_qat: Use only QAT, if not found error will occur
+        only_isal: Use only ISAL, if not found error will occur
+    """
+    params = {'auto_select': auto_select, 'only_qat': only_qat, 'only_isal': only_isal}
+
+    return client.call('set_bdev_compress_options', params)
 
 
 def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
