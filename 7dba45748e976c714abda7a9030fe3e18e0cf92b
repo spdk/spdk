@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7459483c_deb13a3a",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:10:31Z",
+      "side": 1,
+      "message": "Hi Chunyang,\n\nHow do we know that the device really supports Opal?  And if it does, how do we know that the operations performed as expected?\n\nThis seems to execute the Opal code when the SSD supports Opal, but I\u0027m not sure that it\u0027s really testing to make sure what it is doing is correct.\n\nIs nvme_manage sufficient for the kinds of testing that we want to do to ensure that your opal code is correct?\n\nThanks,\n\n-Jim",
+      "revId": "7dba45748e976c714abda7a9030fe3e18e0cf92b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
