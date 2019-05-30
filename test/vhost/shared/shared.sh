@@ -7,12 +7,10 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
-FIO_PATH="/usr/src/fio"
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 function run_spdk_fio() {
-	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_PATH/fio --ioengine=spdk_bdev \
+	fio_bdev --ioengine=spdk_bdev \
 	"$rootdir/test/vhost/common/fio_jobs/default_initiator.job" --runtime=10 --rw=randrw \
 	--spdk_mem=1024 --spdk_single_seg=1 --spdk_conf=$testdir/bdev.conf "$@"
 }
