@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ac777c3_e56eb026",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T17:10:36Z",
+      "side": 1,
+      "message": "this change is fine, but would you mind moving it after the req-\u003epid assignment?  it just looks a bit weird to have this assignment right after the memset, then an empty line and then the rest of the assignments",
+      "revId": "72e18ae94eeeb4f8a1752449f29045dd5bdf41f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
