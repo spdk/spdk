@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9dc97ef_e62f9af9",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T20:22:54Z",
+      "side": 1,
+      "message": "I think it would be more precise to say that these fields allow specifying the memory buffers for the submission and/or completion queues.\n\nAnd I\u0027m thinking we should have the user pass the length of the buffers too.  It allows the driver to do some sanity checks that the buffers provided are big enough based on the io_queue_size parameter.",
+      "revId": "4dbb88c39bc035be4f96727f72cad5d0aa448455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0776822a_684336f4",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T20:22:54Z",
+      "side": 1,
+      "message": "I\u0027d like to allow users to pass the vaddr but not the paddr.  Let\u0027s document that here too.",
+      "revId": "4dbb88c39bc035be4f96727f72cad5d0aa448455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95de0d62_b04d0a3f",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 963,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T20:22:54Z",
+      "side": 1,
+      "message": "\"satisfy potential performance issues\" - let\u0027s remove this, it\u0027s the kind of statement that\u0027s going to raise a lot more questions than it\u0027s worth\n\nI\u0027m not exactly sure what kind of performance issues this would help resolve.",
+      "revId": "4dbb88c39bc035be4f96727f72cad5d0aa448455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d4cd4b9_ecadb6f5",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 974,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T20:22:54Z",
+      "side": 1,
+      "message": "please add initialization of these members to spdk_nvme_ctrlr_get_default_io_qpair_opts() in lib/nvme/nvme_ctrlr.c\n\nthat function memsets the opts structure, which implicitly sets these values to NULL, but I\u0027d rather have something explicit there to eliminate any confusion",
+      "revId": "4dbb88c39bc035be4f96727f72cad5d0aa448455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9af687c7_a10f2de1",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1053,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T20:22:54Z",
+      "side": 1,
+      "message": "I think this would be a bit simpler if we did it like:\n\nif (sq_vaddr) {\n  pqpair-\u003ecmd \u003d sqvaddr;\n} else {\n  pqpair-\u003ecmd \u003d spdk_zmalloc()\n  /* and error checking */\n}\n\nif (sq_paddr) {\n  assert(sq_vaddr !\u003d NULL);\n  pqpair-\u003ecmd_bus_addr \u003d sq_paddr;\n} else {\n  pqpair-\u003ecmd_bus_addr \u003d spdk_vtophys(pqpair-\u003ecmd, NULL);\n  /* and error checking */\n}",
+      "revId": "4dbb88c39bc035be4f96727f72cad5d0aa448455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "994e5fac_152d45e3",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1081,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T20:22:54Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "4dbb88c39bc035be4f96727f72cad5d0aa448455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c53dadcf_d0d7a31e",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1449,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T20:22:54Z",
+      "side": 1,
+      "message": "let\u0027s add comments here explaining why we\u0027re checking the sq_vaddr/cq_vaddr",
+      "revId": "4dbb88c39bc035be4f96727f72cad5d0aa448455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df2c58a2_ace130b1",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1651,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T20:22:54Z",
+      "side": 1,
+      "message": "would this be simpler if we just passed the opts structure itself?  adminq creation could just pass NULL",
+      "revId": "4dbb88c39bc035be4f96727f72cad5d0aa448455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
