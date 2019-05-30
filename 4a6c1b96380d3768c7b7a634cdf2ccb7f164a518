@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2ccd8c3_7c816945",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:23:09Z",
+      "side": 1,
+      "message": "Let\u0027s remove this last sentence.  There might be confusion on what is meant by \"set a larger limit\".  I think this means set a larger limit than the write limit, but it doesn\u0027t indicate how much larger.  Just removing it is fine.  Recommendations should be made separately from the CHANGELOG.",
+      "revId": "4a6c1b96380d3768c7b7a634cdf2ccb7f164a518",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "559b8e07_0919b0ea",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1326,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T22:23:09Z",
+      "side": 1,
+      "message": "we don\u0027t want each function to have to do all of these checks - this is not scalable if we add more types of limits in the future - for examples, further below, we have a very generic check currently on the queue_io return value, but now it has to do special checks for certain types\n\ninstead, let\u0027s add an io_type_mask to the spdk_bdev_qos_limit structure\n\nin _spdk_bdev_qos_set_ops, set this mask according to the limit type; for rw, it would be SPDK_BDEV_IO_TYPE_READ | SPDK_BDEV_IO_TYPE_WRITE\n\nthen in _spdk_bdev_qos_io_submit, check if the bdev_io\u0027s type is in the mask, if it isn\u0027t just continue the loop",
+      "revId": "4a6c1b96380d3768c7b7a634cdf2ccb7f164a518",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
