@@ -1488,6 +1488,101 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 }
 
 static int
+dif_verify_stream(uint8_t *buf, uint32_t buf_len,
+		  uint32_t data_offset, uint32_t data_len,
+		  const struct spdk_dif_ctx *ctx,
+		  struct spdk_dif_error *err_blk)
+{
+	uint32_t data_block_size, offset_blocks, num_blocks, i;
+	uint16_t guard = 0;
+	int rc;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	offset_blocks = data_offset / data_block_size;
+	data_len += data_offset % data_block_size;
+
+	data_offset = offset_blocks * ctx->block_size;
+	num_blocks = data_len / data_block_size;
+
+	if (data_offset + num_blocks * ctx->block_size > buf_len) {
+		return -ERANGE;
+	}
+
+	buf += data_offset;
+
+	for (i = 0; i < num_blocks; i++) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif(ctx->guard_seed, buf, ctx->guard_interval);
+		}
+
+		rc = _dif_verify(buf + ctx->guard_interval, guard, offset_blocks, ctx, err_blk);
+		if (rc != 0) {
+			return rc;
+		}
+
+		buf += ctx->block_size;
+	}
+
+	return 0;
+}
+
+static int
+dif_verify_stream_split(struct iovec *iovs, int iovcnt,
+			uint32_t data_offset, uint32_t data_len,
+			const struct spdk_dif_ctx *ctx,
+			struct spdk_dif_error *err_blk)
+{
+	uint32_t data_block_size, offset_blocks, num_blocks, i;
+	struct _dif_sgl sgl;
+	int rc;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	offset_blocks = data_offset / data_block_size;
+	data_len += data_offset % data_block_size;
+
+	data_offset = offset_blocks * ctx->block_size;
+	num_blocks = data_len / data_block_size;
+
+	_dif_sgl_init(&sgl, iovs, iovcnt);
+
+	if (!_dif_sgl_is_valid(&sgl, data_offset + num_blocks * ctx->block_size)) {
+		return -ERANGE;
+	}
+
+	_dif_sgl_advance(&sgl, data_offset);
+
+	for (i = 0; i < num_blocks; i++) {
+		rc = _dif_verify_split(&sgl, offset_blocks + i, ctx, err_blk);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_dif_verify_stream(struct iovec *iovs, int iovcnt,
+		       uint32_t data_offset, uint32_t data_len,
+		       const struct spdk_dif_ctx *ctx,
+		       struct spdk_dif_error *err_blk)
+{
+	if (iovs == NULL || iovcnt == 0) {
+		return -EINVAL;
+	}
+
+	if (iovcnt == 1) {
+		return dif_verify_stream(iovs[0].iov_base, iovs[0].iov_len,
+					 data_offset, data_len, ctx, err_blk);
+	} else {
+		return dif_verify_stream_split(iovs, iovcnt, data_offset, data_len,
+					       ctx, err_blk);
+	}
+}
+
+static int
 dif_update_crc32c(uint8_t *buf, uint32_t buf_len,
 		  uint32_t data_offset, uint32_t data_len,
 		  uint32_t *_crc32c,  const struct spdk_dif_ctx *ctx)
