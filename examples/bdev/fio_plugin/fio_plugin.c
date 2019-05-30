@@ -604,6 +604,9 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		return FIO_Q_COMPLETED;
 	}
 
+	assert((io_u->offset & (4095)) == 0);
+	assert((io_u->xfer_buflen & (4095)) == 0);
+
 	switch (io_u->ddir) {
 	case DDIR_READ:
 		rc = spdk_bdev_read(target->desc, target->ch,
