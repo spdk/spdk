@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64c81868_0bab06df",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-05-30T17:44:01Z",
+      "side": 1,
+      "message": "I would suggest changing this to talk more about the usage. Something like\n\nBegin iterating over enumerated PCI device by calling this function to get the first PCI device. If there no PCI devices enumerated, return NULL.",
+      "range": {
+        "startLine": 712,
+        "startChar": 3,
+        "endLine": 712,
+        "endChar": 34
+      },
+      "revId": "bbb2330e2b58990203ae5a8f26ad92bdf517657f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7590e13b_c769b8ec",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-05-30T17:44:01Z",
+      "side": 1,
+      "message": "Small nit on this one. How about rewording to include the following \"a pointer to a PCI device\"",
+      "range": {
+        "startLine": 714,
+        "startChar": 11,
+        "endLine": 714,
+        "endChar": 21
+      },
+      "revId": "bbb2330e2b58990203ae5a8f26ad92bdf517657f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fe5aeb8_d0af76d1",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-05-30T17:44:01Z",
+      "side": 1,
+      "message": "I would suggest changing this to\n\n\"Continue iterating over enumerated PCI devices. If no additional PCI devices, return NULL\"",
+      "range": {
+        "startLine": 719,
+        "startChar": 3,
+        "endLine": 719,
+        "endChar": 34
+      },
+      "revId": "bbb2330e2b58990203ae5a8f26ad92bdf517657f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed3c39a9_8da55fcc",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-05-30T17:44:01Z",
+      "side": 1,
+      "message": "How about changing this to \"Previous PCI device returned from \\ref spdk_pci_get_first_device or \\ref spdk_pci_get_next_device\"",
+      "range": {
+        "startLine": 721,
+        "startChar": 15,
+        "endLine": 721,
+        "endChar": 34
+      },
+      "revId": "bbb2330e2b58990203ae5a8f26ad92bdf517657f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fcde825_5c1bbe8b",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-05-30T17:44:01Z",
+      "side": 1,
+      "message": "I would suggest changing this one to \"a pointer to the next PCI device\"",
+      "range": {
+        "startLine": 723,
+        "startChar": 11,
+        "endLine": 723,
+        "endChar": 26
+      },
+      "revId": "bbb2330e2b58990203ae5a8f26ad92bdf517657f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
