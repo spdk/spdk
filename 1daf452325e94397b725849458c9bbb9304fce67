@@ -46,6 +46,30 @@
       "revId": "1daf452325e94397b725849458c9bbb9304fce67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35696cd0_109620f9",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-30T08:17:47Z",
+      "side": 1,
+      "message": "Hi Konrad, thank you for your comment including the background. OK let\u0027s keep the metadata verification. But I think we should relate md_check with existence of separate metadata.",
+      "parentUuid": "8bb5ed17_c3eae741",
+      "range": {
+        "startLine": 138,
+        "startChar": 2,
+        "endLine": 138,
+        "endChar": 32
+      },
+      "revId": "1daf452325e94397b725849458c9bbb9304fce67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
