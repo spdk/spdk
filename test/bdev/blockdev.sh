@@ -149,6 +149,9 @@ if [ -d /usr/src/fio ]; then
 	timing_exit fio_trim
 	report_test_completion "bdev_fio"
 	timing_exit fio
+else
+	echo "FIO not available"
+	exit 1
 fi
 
 # Create conf file for bdevperf with gpt

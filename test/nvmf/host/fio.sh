@@ -12,7 +12,7 @@ nvmftestinit
 
 if [ ! -d /usr/src/fio ]; then
 	echo "FIO not available"
-	exit 0
+	exit 1
 fi
 
 timing_enter fio
