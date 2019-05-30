@@ -37,11 +37,65 @@
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 
+static const struct spdk_json_object_decoder rpc_bdev_compress_options_decoders[] = {
+	{"auto_select", offsetof(struct spdk_bdev_compress_opts, auto_select), spdk_json_decode_bool, true},
+	{"prefer_qat", offsetof(struct spdk_bdev_compress_opts, prefer_qat), spdk_json_decode_bool, false},
+	{"prefer_isal", offsetof(struct spdk_bdev_compress_opts, prefer_isal), spdk_json_decode_bool, false},
+};
+
+static void
+spdk_rpc_set_bdev_compress_options(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
+{
+	struct spdk_bdev_compress_opts opts;
+	struct spdk_json_write_ctx *w;
+	int rc, jerr = 0;
+
+	spdk_bdev_compress_get_opts(&opts);
+	if (params && spdk_json_decode_object(params, rpc_bdev_compress_options_decoders,
+					      SPDK_COUNTOF(rpc_bdev_compress_options_decoders),
+					      &opts)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		jerr = SPDK_JSONRPC_ERROR_PARSE_ERROR;
+		goto invalid;
+	}
+
+	if ((opts.auto_select == true) && (opts.prefer_qat || opts.prefer_isal)) {
+		jerr = SPDK_JSONRPC_ERROR_INVALID_REQUEST;
+	} else if ((opts.prefer_qat == true) && (opts.auto_select || opts.prefer_isal)) {
+		jerr = SPDK_JSONRPC_ERROR_INVALID_REQUEST;
+	} else if ((opts.prefer_isal == true) && (opts.auto_select || opts.prefer_qat)) {
+		jerr = SPDK_JSONRPC_ERROR_INVALID_REQUEST;
+	}
+	if (jerr) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_bdev_compress_set_opts(&opts);
+	if (rc) {
+		rc = -EINVAL;
+		jerr = SPDK_JSONRPC_ERROR_INTERNAL_ERROR;
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w != NULL) {
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	}
+
+	return;
+invalid:
+	spdk_jsonrpc_send_error_response(request, jerr, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("set_bdev_compress_options", spdk_rpc_set_bdev_compress_options, SPDK_RPC_STARTUP)
+
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_compress {
 	char *base_bdev_name;
 	char *pm_path;
-	char *comp_pmd;
 };
 
 /* Free the allocated memory resource after the RPC handling. */
@@ -50,14 +104,12 @@ free_rpc_construct_compress(struct rpc_construct_compress *r)
 {
 	free(r->base_bdev_name);
 	free(r->pm_path);
-	free(r->comp_pmd);
 }
 
 /* Structure to decode the input parameters for this RPC method. */
 static const struct spdk_json_object_decoder rpc_construct_compress_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_compress, base_bdev_name), spdk_json_decode_string},
 	{"pm_path", offsetof(struct rpc_construct_compress, pm_path), spdk_json_decode_string},
-	{"comp_pmd", offsetof(struct rpc_construct_compress, comp_pmd), spdk_json_decode_string},
 };
 
 /* Decode the parameters for this RPC method and properly construct the compress
@@ -79,7 +131,7 @@ spdk_rpc_construct_compress_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = create_compress_bdev(req.base_bdev_name, req.pm_path, req.comp_pmd);
+	rc = create_compress_bdev(req.base_bdev_name, req.pm_path);
 	if (rc != 0) {
 		goto invalid;
 	}
