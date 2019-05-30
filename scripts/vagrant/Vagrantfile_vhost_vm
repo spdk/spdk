@@ -41,6 +41,7 @@ Vagrant.configure(2) do |config|
   ssh_key_dir=(ENV['SPDK_VAGRANT_SSH_KEY'])
   spdk_dir=(ENV['SPDK_DIR'] || "none")
   install_deps=(ENV['INSTALL_DEPS'] || "false")
+  install_devstack=(ENV['INSTALL_DEVSTACK'] || "false")
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
@@ -107,5 +108,24 @@ Vagrant.configure(2) do |config|
   # Copy in the user's tools if they exists
   if File.directory?(File.expand_path("~/vagrant_tools"))
     config.vm.synced_folder "~/vagrant_tools", "/home/vagrant/tools", type: "rsync", rsync__auto: false
+  end
+
+  if install_devstack.include? "true"
+    config.proxy.no_proxy = "localhost,127.0.0.1,10.0.2.15"
+    #config.vm.network "forwarded_port", guest: 80, host: 12000
+    config.vm.provision "shell", inline: 'sudo useradd -s /bin/bash -d /opt/stack -m stack | echo "stack ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/stack'
+    config.vm.provision "shell", inline: 'sudo su - stack bash -c "git clone -b stable/stein https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack"'
+    config.vm.provision "file", source: "#{spdk_dir}/scripts/vagrant/local.conf", destination: "/home/vagrant/local.conf"
+    config.vm.provision "shell", inline: 'sudo su - stack bash -c "cp /home/vagrant/local.conf /opt/stack/devstack"'
+    config.vm.provision "shell", inline: 'sudo su - stack bash -c "cd /opt/stack/devstack; ./stack.sh"'
+
+    # Install spdk packages
+    config.vm.provision "shell", inline: 'sudo apt-get install -y libnuma-dev libaio-dev libcunit1 libcunit1-dev librdmacm1 librdmacm-dev rdmacm-utils'
+
+    # Install needed drivers and tools
+    config.vm.provision "shell", inline: 'sudo apt-get install -y libibverbs1 libibverbs-dev ibverbs-utils rdma-core'
+
+    config.vm.provision "shell", inline: 'sudo rxe_cfg add eth0'
+    config.vm.provision "shell", inline: 'sudo rxe_cfg start'
   end
 end
