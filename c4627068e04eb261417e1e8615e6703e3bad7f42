@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e193e870_b40c52c6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T15:58:48Z",
+      "side": 1,
+      "message": "agree with Paul - this is the exact same one-line description as the original patch\n\nsomething like:\n\nnvme: add spdk_nvme_ctrlr_get_registers implementation\n\nwould be fine",
+      "revId": "c4627068e04eb261417e1e8615e6703e3bad7f42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
