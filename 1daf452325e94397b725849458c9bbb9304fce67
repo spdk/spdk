@@ -70,6 +70,30 @@
       "revId": "1daf452325e94397b725849458c9bbb9304fce67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98c21d66_3a750a20",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-30T10:56:44Z",
+      "side": 1,
+      "message": "Yeah, it was my mistake, I haven\u0027t check it against a bdev with separate metadata disabled.",
+      "parentUuid": "35696cd0_109620f9",
+      "range": {
+        "startLine": 138,
+        "startChar": 2,
+        "endLine": 138,
+        "endChar": 32
+      },
+      "revId": "1daf452325e94397b725849458c9bbb9304fce67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
