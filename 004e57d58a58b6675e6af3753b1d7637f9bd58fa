@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07de9116_07e2bb68",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 989,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T00:13:16Z",
+      "side": 1,
+      "message": "I\u0027m thinking we can simplify the API a lot by just adding two new void * to spdk_nvme_io_qpair_opts for the sq_mem and cq_mem.  By default, they are NULL.  If user wants to specify their own memory, they just set those variables in the io_qpair_opts.\n\nThen we don\u0027t need a new public API at all.  You also won\u0027t need to modify the transport API or nvme_ctrlr.c, since the opts already gets passed to the transports.",
+      "revId": "004e57d58a58b6675e6af3753b1d7637f9bd58fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f889d14_ec6305b6",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T00:13:16Z",
+      "side": 1,
+      "message": "do we need to pass the physical addresses here?  SPDK already has spdk_vtophys to do the translation\n\nalso are there any assumptions that the queues are physically contiguous?  I\u0027m looking at nvme_pcie.c right now and am concerned since spdk_zmalloc doesn\u0027t guarantee physically contiguity - that\u0027s not really your problem, but it\u0027s another reason why I think we want SPDK to do the translation since it can make sure the addresses are physically contiguous",
+      "revId": "004e57d58a58b6675e6af3753b1d7637f9bd58fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f4f884f_ea789837",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-05-30T00:13:16Z",
+      "side": 1,
+      "message": "squeue \u003d\u003e sq\ncqueue \u003d\u003e cq\n\nthat\u0027s more consistent with the rest of the code\n\nbut actually if you take my comment on using io_qpair_opts to pass the data, then you don\u0027t need these flags at all - just check if the opts values are NULL and if so then you know that the transport allocated the memory so it needs to free it",
+      "revId": "004e57d58a58b6675e6af3753b1d7637f9bd58fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
