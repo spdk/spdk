@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93dbd8ce_7935535f",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1299,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-30T02:59:09Z",
+      "side": 1,
+      "message": "Do the buf_len need to cover data_offset here?",
+      "range": {
+        "startLine": 1299,
+        "startChar": 14,
+        "endLine": 1299,
+        "endChar": 26
+      },
+      "revId": "4f1a40a9403c1cd5acf3390a527c51f736aecb90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7246af12_b6ded9b1",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1351,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-30T02:59:09Z",
+      "side": 1,
+      "message": "same here, why the buf length need to cover data_offset?",
+      "revId": "4f1a40a9403c1cd5acf3390a527c51f736aecb90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
