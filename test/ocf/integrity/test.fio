@@ -1,15 +1,17 @@
 [global]
 thread=1
-group_reporting=1
 direct=1
 norandommap=1
 time_based=1
 do_verify=1
-verify=md5
+verify_fatal=1
+verify_dump=1
+verify=crc32c
 verify_backlog=1024
+random_distribution=normal
 iodepth=128
 bs=4K
-runtime=10
+runtime=999999
 
 size=20%
 
