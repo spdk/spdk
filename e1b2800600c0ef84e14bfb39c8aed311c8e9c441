@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "619146dd_e394cc1a",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-05-30T14:35:30Z",
+      "side": 1,
+      "message": "not that it matters much but for consistency maybe exit(-1) here instead?",
+      "revId": "e1b2800600c0ef84e14bfb39c8aed311c8e9c441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
