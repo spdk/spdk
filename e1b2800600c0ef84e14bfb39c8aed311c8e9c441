@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aed9a117_5c4fd69f",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1016582
+      },
+      "writtenOn": "2019-05-30T17:23:33Z",
+      "side": 1,
+      "message": "changed the comment to be in accordance with the new change",
+      "parentUuid": "35f5b9ba_e182b7be",
+      "range": {
+        "startLine": 270,
+        "startChar": 1,
+        "endLine": 271,
+        "endChar": 48
+      },
+      "revId": "e1b2800600c0ef84e14bfb39c8aed311c8e9c441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "619146dd_e394cc1a",
         "filename": "examples/bdev/hello_world/hello_bdev.c",
         "patchSetId": 2
@@ -57,6 +81,24 @@
       "revId": "e1b2800600c0ef84e14bfb39c8aed311c8e9c441",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27a75fd3_2c187f82",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1016582
+      },
+      "writtenOn": "2019-05-30T17:23:33Z",
+      "side": 1,
+      "message": "made it exit(1), didnt use a -ve value since other parts of the code dont use it",
+      "parentUuid": "d27e73ad_44a98676",
+      "revId": "e1b2800600c0ef84e14bfb39c8aed311c8e9c441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
