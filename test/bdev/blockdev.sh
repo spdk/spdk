@@ -151,7 +151,10 @@ if [ -d /usr/src/fio ]; then
 	timing_exit fio
 else
 	echo "FIO not available"
-	exit 1
+	# FreeBSD does not have fio at this time, will fix it
+	if [ "$(uname -s)" = "Linux" ]; then
+		exit 1
+	fi
 fi
 
 # Create conf file for bdevperf with gpt
