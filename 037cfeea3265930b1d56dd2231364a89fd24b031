@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "221dc2bc_6597e25b",
+        "filename": "lib/bdev/compress/Compression_bdev_module.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-05-30T15:09:48Z",
+      "side": 1,
+      "message": "Ok, I will add a note in next patch.",
+      "parentUuid": "f040d894_d8d4ae6a",
+      "revId": "037cfeea3265930b1d56dd2231364a89fd24b031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9ff71672_da5a279a",
         "filename": "lib/bdev/compress/Compression_bdev_module.md",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-28T22:54:11Z",
       "side": 1,
       "message": "Was the intent to do this manually as a one time check or integrate into CI?",
+      "revId": "037cfeea3265930b1d56dd2231364a89fd24b031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47debd8b_10c68fb2",
+        "filename": "lib/bdev/compress/Compression_bdev_module.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-05-30T15:09:48Z",
+      "side": 1,
+      "message": "I think we can add this case into CI. So you suggest to add this case?",
+      "parentUuid": "9ff71672_da5a279a",
       "revId": "037cfeea3265930b1d56dd2231364a89fd24b031",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
