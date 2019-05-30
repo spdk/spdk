@@ -37,6 +37,64 @@
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 
+static const struct spdk_json_object_decoder rpc_bdev_compress_options_decoders[] = {
+	{"auto_select", offsetof(struct spdk_bdev_compress_opts, auto_select), spdk_json_decode_bool, true},
+	{"only_qat", offsetof(struct spdk_bdev_compress_opts, only_qat), spdk_json_decode_bool, false},
+	{"only_isal", offsetof(struct spdk_bdev_compress_opts, only_isal), spdk_json_decode_bool, false},
+};
+
+static void
+spdk_rpc_set_bdev_compress_options(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
+{
+	struct spdk_bdev_compress_opts opts;
+	struct spdk_json_write_ctx *w;
+	int rc, jerr = 0;
+
+	if (params && spdk_json_decode_object(params, rpc_bdev_compress_options_decoders,
+					      SPDK_COUNTOF(rpc_bdev_compress_options_decoders),
+					      &opts)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		jerr = SPDK_JSONRPC_ERROR_PARSE_ERROR;
+		goto invalid;
+	}
+
+	if ((opts.auto_select == false) && (opts.only_qat == false) && (opts.only_isal == false)) {
+		opts.auto_select = true;
+	}
+
+	if ((opts.auto_select == true) && (opts.only_qat || opts.only_isal)) {
+		jerr = SPDK_JSONRPC_ERROR_INVALID_REQUEST;
+	} else if ((opts.only_qat == true) && (opts.auto_select || opts.only_isal)) {
+		jerr = SPDK_JSONRPC_ERROR_INVALID_REQUEST;
+	} else if ((opts.only_isal == true) && (opts.auto_select || opts.only_qat)) {
+		jerr = SPDK_JSONRPC_ERROR_INVALID_REQUEST;
+	}
+	if (jerr) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_bdev_compress_set_opts(&opts);
+	if (rc) {
+		rc = -EINVAL;
+		jerr = SPDK_JSONRPC_ERROR_INTERNAL_ERROR;
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w != NULL) {
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	}
+
+	return;
+invalid:
+	spdk_jsonrpc_send_error_response(request, jerr, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("set_bdev_compress_options", spdk_rpc_set_bdev_compress_options, SPDK_RPC_RUNTIME)
+
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_compress {
 	char *base_bdev_name;
