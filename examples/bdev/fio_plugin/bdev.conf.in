@@ -1,3 +1,4 @@
 [Malloc]
   NumberOfLuns 1
-  LunSizeInMB 128
+  LunSizeInMB 11
+  BlockSize 512
