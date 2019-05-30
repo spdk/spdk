@@ -22,6 +22,30 @@
       "revId": "504e95d7afe124346b87a7063c3d3397070ce849",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b5ee4b5_5d89dd30",
+        "filename": "test/blobfs/rocksdb/rocksdb.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-05-30T14:21:24Z",
+      "side": 1,
+      "message": "Thanks for catching that.\nYou are right that LSAN_OPTIONS will get overwritten as soon as run_step() is ran. In this script fio is not used and any other script sources autotest_common.sh. At this time it works out.\n\nYet since at some point we might move to sourcing autotest_common.sh just once, I\u0027ll make the change you are suggesting.",
+      "parentUuid": "d2955e1e_c55886ca",
+      "range": {
+        "startLine": 20,
+        "startChar": 22,
+        "endLine": 20,
+        "endChar": 65
+      },
+      "revId": "504e95d7afe124346b87a7063c3d3397070ce849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
