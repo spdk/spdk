@@ -22,6 +22,30 @@
       "revId": "1daf452325e94397b725849458c9bbb9304fce67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bb5ed17_c3eae741",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-30T08:02:53Z",
+      "side": 1,
+      "message": "I would like to keep the metadata verification in, as some of our testing environments (e.g.  QEMU) don\u0027t support DIF/DIX verification, but do support metadata.\n\nAnyway, you\u0027re correct, the DIF/DIX part would get overwritten. I\u0027ve added a check to do the verification only if DIF/DIX is disabled.",
+      "parentUuid": "e72f0757_8b90c128",
+      "range": {
+        "startLine": 138,
+        "startChar": 2,
+        "endLine": 138,
+        "endChar": 32
+      },
+      "revId": "1daf452325e94397b725849458c9bbb9304fce67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
