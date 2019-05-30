@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "543eeb5e_f0a9ed49",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-30T22:28:48Z",
+      "side": 1,
+      "message": "sticking these into a struct may make the code clearer",
+      "revId": "06d53e616afd5952cfca3a46903b34d805f7b388",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e9d832b_892c7903",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-30T22:28:48Z",
+      "side": 1,
+      "message": "treshold -\u003ethreshold",
+      "revId": "06d53e616afd5952cfca3a46903b34d805f7b388",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
