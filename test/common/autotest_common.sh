@@ -51,7 +51,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_LVOL=0}; export SPDK_TEST_LVOL
 : ${SPDK_TEST_JSON=0}; export SPDK_TEST_JSON
 : ${SPDK_TEST_REDUCE=0}; export SPDK_TEST_REDUCE
-: ${SPDK_RUN_ASAN=0}; export SPDK_RUN_ASAN
+: ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=0}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=0}; export SPDK_RUN_INSTALLED_DPDK
 : ${SPDK_TEST_CRYPTO=0}; export SPDK_TEST_CRYPTO
@@ -67,7 +67,12 @@ export PYTHONPATH=$PYTHONPATH:$rootdir/scripts
 
 # Export flag to skip the known bug that exists in librados
 # Bug is reported on ceph bug tracker with number 24078
-export ASAN_OPTIONS=new_delete_type_mismatch=0
+aasan_suppression_file="/var/tmp/aasan_suppression_file"
+sudo rm -rf "$aasan_suppression_file"
+sudo touch "$aasan_suppression_file"
+echo "interceptor_via_fun:list_ctrl" >> "$aasan_suppression_file"
+#export ASAN_OPTIONS="new_delete_type_mismatch=0:suppressions="$aasan_suppression_file""
+export ASAN_OPTIONS=suppressions="$aasan_suppression_file"
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
 # Export LeakSanitizer option to use suppression file in order to prevent false positives
@@ -188,7 +193,9 @@ if [ $SPDK_RUN_UBSAN -eq 1 ]; then
 	config_params+=' --enable-ubsan'
 fi
 
-if [ $SPDK_RUN_ASAN -eq 1 ]; then
+export SPDK_RUN_ASAN=1
+# Only enable ASAN on Linux based systems
+if [ "$(uname -s)" = "Linux" ]; then
 	config_params+=' --enable-asan'
 fi
 

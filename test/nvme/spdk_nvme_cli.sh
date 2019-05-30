@@ -33,8 +33,13 @@ ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
 bdfs=$(iter_pci_class_code 01 08 02)
 bdf=$(echo $bdfs|awk '{ print $1 }')
 
+
 cd $spdk_nvme_cli
-make clean && make -j$(nproc) LDFLAGS="$(make -s -C $spdk_nvme_cli/spdk ldflags)"
+echo "fun:list_ctrl" > $spdk_nvme_cli/temp.supp
+echo "fun:handle_plugin" >> $spdk_nvme_cli/temp.supp
+echo "src:nvme.c" >> $spdk_nvme_cli/temp.supp
+echo "src:plugin.c" >> $spdk_nvme_cli/temp.supp
+make clean && ASAN_OPTIONS=suppressions=$spdk_nvme_cli/temp.supp make -j$(nproc) LDFLAGS="$(make -s -C $spdk_nvme_cli/spdk ldflags)"
 sed -i 's/spdk=0/spdk=1/g' spdk.conf
 sed -i 's/shm_id=.*/shm_id=0/g' spdk.conf
 ./nvme list
