@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7b77927_53b572aa",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-30T23:30:40Z",
+      "side": 1,
+      "message": "this should be data_block_size. data_block_size can be set by the following up front.\n\nif (md_buf \u003d\u003d NULL) {\n  data_block_size \u003d block_size - md_size;\n} else {\n  data_block_size \u003d block_size;\n}",
+      "range": {
+        "startLine": 137,
+        "startChar": 20,
+        "endLine": 137,
+        "endChar": 30
+      },
+      "revId": "f1d1e1804acf339a12d6c8d1d1f66fe859079786",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fad4e2f5_5ab40688",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-05-30T23:30:40Z",
+      "side": 1,
+      "message": "generate_data is good except for data_block_size. So verify_data should follow generate_data?\n\nWill you check the following?\n\nstatic bool\nverify_data(wr_buf, wr_buf_len, rd_buf, rd_buf_len, wr_md_buf, rd_md_buf,\n\t    md_size, num_blocks)\n{\n\tint offset_blocks \u003d 0;\n\n\tif (wr_buf_len \u003c num_blocks * block_size || rd_buf_len \u003c num_blocks * block_size) {\n\t\treturn false;\n\t}\n\n\tif ((wr_md_buf !\u003d NULL) !\u003d (rd_md_buf !\u003d NULL)) {\n\t\treturn false;\n\t}\n\n\tif (wr_md_buf \u003d\u003d NULL) {\n\t\twr_md_buf \u003d (char *)wr_buf + block_size - md_size;\n\t\trd_md_buf \u003d (char *)rd_buf + block_size - md_size;\n\t\tdata_block_size \u003d block_size - md_size;\n\t\tmd_offset \u003d block_size;\n\t} else {\n\t\tdata_block_size \u003d block_size;\n\t\tmd_offset \u003d md_size;\n\t}\n\n\twhile (offset_blocks \u003c num_blocks) {\n\t\tif (memcmp(wr_buf, rd_buf, data_block_size) !\u003d 0) {\n\t\t\treturn false;\n\t\t}\n\n\t\twr_buf +\u003d block_size;\n\t\trd_buf +\u003d block_size;\n\n\t\tif (md_check) {\n\t\t\tif (memcmp(wr_md_buf, rd_md_buf, md_size) !\u003d 0) {\n\t\t\t\treturn false;\n\t\t\t}\n\t\t\twr_md_buf +\u003d md_offset;\n\t\t\trd_md_buf +\u003d md_offset;\n\t\t}\n\n\t\toffset_blocks++;\n\t}\n\n\treturn true;\n}",
+      "range": {
+        "startLine": 146,
+        "startChar": 0,
+        "endLine": 146,
+        "endChar": 11
+      },
+      "revId": "f1d1e1804acf339a12d6c8d1d1f66fe859079786",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
