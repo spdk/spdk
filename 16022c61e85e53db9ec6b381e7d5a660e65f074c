@@ -107,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "430ef994_6c5cb2f4",
+        "filename": "test/unit/lib/scsi/scsi_pr.c/scsi_pr_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-30T00:52:12Z",
+      "side": 1,
+      "message": "good catch.",
+      "parentUuid": "a3d086b7_4026f9ed",
+      "range": {
+        "startLine": 284,
+        "startChar": 1,
+        "endLine": 286,
+        "endChar": 54
+      },
+      "revId": "16022c61e85e53db9ec6b381e7d5a660e65f074c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7ada8da2_aa974956",
         "filename": "test/unit/lib/scsi/scsi_pr.c/scsi_pr_ut.c",
         "patchSetId": 12
@@ -118,6 +142,30 @@
       "writtenOn": "2019-05-30T00:43:58Z",
       "side": 1,
       "message": "These checks should be moved to the line between 359 and 360?",
+      "range": {
+        "startLine": 362,
+        "startChar": 0,
+        "endLine": 365,
+        "endChar": 0
+      },
+      "revId": "16022c61e85e53db9ec6b381e7d5a660e65f074c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "348a2d8b_321fcf46",
+        "filename": "test/unit/lib/scsi/scsi_pr.c/scsi_pr_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-05-30T00:52:12Z",
+      "side": 1,
+      "message": "yeah.",
+      "parentUuid": "7ada8da2_aa974956",
       "range": {
         "startLine": 362,
         "startChar": 0,
