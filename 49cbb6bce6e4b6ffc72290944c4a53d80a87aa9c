@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4cd5f5d9_40f313eb",
+        "filename": "test/bdev/bdevio/bdevio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-30T04:23:20Z",
+      "side": 1,
+      "message": "we should eventually refactor bdevio to use spdk_threads, but that\u0027s fine for now.",
+      "range": {
+        "startLine": 980,
+        "startChar": 9,
+        "endLine": 980,
+        "endChar": 28
+      },
+      "revId": "49cbb6bce6e4b6ffc72290944c4a53d80a87aa9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
