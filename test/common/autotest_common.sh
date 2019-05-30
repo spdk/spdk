@@ -153,6 +153,13 @@ fi
 
 if [ -d /usr/src/fio ]; then
 	config_params+=' --with-fio=/usr/src/fio'
+
+	# Setup fio binary cmd line
+	fio_dir="/usr/src/fio"
+	bdev_plugin="$rootdir/examples/bdev/fio_plugin/fio_plugin"
+	nvme_plugin="$rootdir/examples/nvme/fio_plugin/fio_plugin"
+	export fio_bdev="eval LD_PRELOAD="$bdev_plugin" "$fio_dir"/fio"
+	export fio_nvme="eval LD_PRELOAD="$nvme_plugin" "$fio_dir"/fio"
 fi
 
 if [ -d ${DEPENDENCY_DIR}/vtune_codes ]; then
