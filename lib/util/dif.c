@@ -1502,7 +1502,7 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 
 static int
 dif_generate_stream(uint8_t *buf, uint32_t buf_len,
-		    uint32_t offset, uint32_t read_len,
+		    uint32_t data_offset, uint32_t data_len,
 		    const struct spdk_dif_ctx *ctx)
 {
 	uint32_t data_block_size, offset_blocks, num_blocks, i;
@@ -1510,17 +1510,17 @@ dif_generate_stream(uint8_t *buf, uint32_t buf_len,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	offset_blocks = offset / data_block_size;
-	read_len += offset % data_block_size;
+	offset_blocks = data_offset / data_block_size;
+	data_len += data_offset % data_block_size;
 
-	offset = offset_blocks * ctx->block_size;
-	num_blocks = read_len / data_block_size;
+	data_offset = offset_blocks * ctx->block_size;
+	num_blocks = data_len / data_block_size;
 
-	if (offset + num_blocks * ctx->block_size > buf_len) {
+	if (data_offset + num_blocks * ctx->block_size > buf_len) {
 		return -ERANGE;
 	}
 
-	buf += offset;
+	buf += data_offset;
 
 	for (i = 0; i < num_blocks; i++) {
 		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
@@ -1537,7 +1537,7 @@ dif_generate_stream(uint8_t *buf, uint32_t buf_len,
 
 static int
 dif_generate_stream_split(struct iovec *iovs, int iovcnt,
-			  uint32_t offset, uint32_t read_len,
+			  uint32_t data_offset, uint32_t data_len,
 			  const struct spdk_dif_ctx *ctx)
 {
 	uint32_t data_block_size, offset_blocks, num_blocks, i;
@@ -1545,19 +1545,19 @@ dif_generate_stream_split(struct iovec *iovs, int iovcnt,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	offset_blocks = offset / data_block_size;
-	read_len += offset % data_block_size;
+	offset_blocks = data_offset / data_block_size;
+	data_len += data_offset % data_block_size;
 
-	offset = offset_blocks * ctx->block_size;
-	num_blocks = read_len / data_block_size;
+	data_offset = offset_blocks * ctx->block_size;
+	num_blocks = data_len / data_block_size;
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 
-	if (!_dif_sgl_is_valid(&sgl, offset + num_blocks * ctx->block_size)) {
+	if (!_dif_sgl_is_valid(&sgl, data_offset + num_blocks * ctx->block_size)) {
 		return -ERANGE;
 	}
 
-	_dif_sgl_advance(&sgl, offset);
+	_dif_sgl_advance(&sgl, data_offset);
 
 	for (i = 0; i < num_blocks; i++) {
 		_dif_generate_split(&sgl, offset_blocks + i, ctx);
@@ -1568,7 +1568,7 @@ dif_generate_stream_split(struct iovec *iovs, int iovcnt,
 
 int
 spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
-			 uint32_t offset, uint32_t read_len,
+			 uint32_t data_offset, uint32_t data_len,
 			 const struct spdk_dif_ctx *ctx)
 {
 	if (iovs == NULL || iovcnt == 0) {
@@ -1577,8 +1577,8 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 
 	if (iovcnt == 1) {
 		return dif_generate_stream(iovs[0].iov_base, iovs[0].iov_len,
-					   offset, read_len, ctx);
+					   data_offset, data_len, ctx);
 	} else {
-		return dif_generate_stream_split(iovs, iovcnt, offset, read_len, ctx);
+		return dif_generate_stream_split(iovs, iovcnt, data_offset, data_len, ctx);
 	}
 }

@@ -305,13 +305,13 @@ int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
  *
  * \param iovs iovec array describing the extended LBA payload.
  * \param iovcnt Number of elements in the iovec array.
- * \param offset Offset to the newly read data in the extended LBA payload.
- * \param read_len Length of the newly read data in the extended LBA payload.
+ * \param data_offset Offset to the newly read data in the extended LBA payload.
+ * \param data_len Length of the newly read data in the extended LBA payload.
  * \param ctx DIF context.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
-			     uint32_t offset, uint32_t read_len,
+			     uint32_t data_offset, uint32_t data_len,
 			     const struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
