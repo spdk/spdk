@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8213f966_ab1f7cb1",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-30T11:17:33Z",
+      "side": 1,
+      "message": "Lba map read is exactly what is happening during this state so I think this name is correct.",
+      "parentUuid": "3e4fb810_3f3edf13",
+      "range": {
+        "startLine": 52,
+        "startChar": 1,
+        "endLine": 52,
+        "endChar": 34
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5800bb15_1cd8b382",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 19
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "6c928532_5bbfe184",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-30T11:17:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5800bb15_1cd8b382",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 28
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6d386251_04db7e99",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 19
@@ -59,6 +107,24 @@
       "writtenOn": "2019-05-28T12:47:43Z",
       "side": 1,
       "message": "The change replacing the two queues + callbacks with one queue + states should be a separate patch.",
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc618e42_533fd31b",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-30T11:17:33Z",
+      "side": 1,
+      "message": "Those changes cannot be splited easilly - We were reading whole lba_map at reloc prep and now this is part of one of the states.",
+      "parentUuid": "6d386251_04db7e99",
       "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "285dced8_95297e74",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-30T11:17:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dd755e87_c5c34934",
+      "range": {
+        "startLine": 180,
+        "startChar": 1,
+        "endLine": 180,
+        "endChar": 21
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7785c6cb_1fdbf634",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 19
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "e37bb76f_82de9fb9",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-30T11:17:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7785c6cb_1fdbf634",
+      "range": {
+        "startLine": 509,
+        "startChar": 0,
+        "endLine": 509,
+        "endChar": 28
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f1ca950_166332b7",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 19
@@ -128,6 +242,24 @@
     },
     {
       "key": {
+        "uuid": "6724bfca_9fd717f7",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-30T11:17:33Z",
+      "side": 1,
+      "message": "Those infilight operations will be handled by core module.",
+      "parentUuid": "0f1ca950_166332b7",
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "20b1d9bb_9095ac5c",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 19
@@ -139,6 +271,30 @@
       "writtenOn": "2019-05-28T12:47:43Z",
       "side": 1,
       "message": "Why start at 1?",
+      "range": {
+        "startLine": 356,
+        "startChar": 10,
+        "endLine": 356,
+        "endChar": 11
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aaaa6495_b176949a",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-30T11:17:33Z",
+      "side": 1,
+      "message": "To count num_lbk \u003d ftl_num_band_lbks(dev) - (i * num_moves);",
+      "parentUuid": "20b1d9bb_9095ac5c",
       "range": {
         "startLine": 356,
         "startChar": 10,
@@ -174,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "afc00de2_b08fa224",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-30T11:17:33Z",
+      "side": 1,
+      "message": "I\u0027m not calling ftl_reloc anymore so I need make proper denitialization.",
+      "parentUuid": "7f0dc6fb_4c32c2f7",
+      "range": {
+        "startLine": 370,
+        "startChar": 1,
+        "endLine": 370,
+        "endChar": 18
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cf6f8622_e3ad310a",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 19
@@ -185,6 +365,30 @@
       "writtenOn": "2019-05-28T12:47:43Z",
       "side": 1,
       "message": "Why do we need this call now? Shouldn\u0027t ftl_reloc_add take care of everything? I haven\u0027t seen any changes outside of ftl_reloc in this patch, so why do we need this now?",
+      "range": {
+        "startLine": 397,
+        "startChar": 1,
+        "endLine": 397,
+        "endChar": 27
+      },
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e77592c8_6e01626f",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-30T11:17:33Z",
+      "side": 1,
+      "message": "I\u0027m not calling ftl_reloc anymore so I need make proper initialization.",
+      "parentUuid": "cf6f8622_e3ad310a",
       "range": {
         "startLine": 397,
         "startChar": 1,
