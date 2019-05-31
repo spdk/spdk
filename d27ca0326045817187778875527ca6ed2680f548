@@ -34,6 +34,24 @@
       "revId": "d27ca0326045817187778875527ca6ed2680f548",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d350e4a8_1a12e53f",
+        "filename": "test/nvmf/target/nvmf_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-05-31T01:21:17Z",
+      "side": 1,
+      "message": "************************************\nSTART TEST SUITE test/nvmf/target/nvmf_vhost.sh\n************************************\n 17:41:34       # xtrace_enable\n 17:41:34       # test/nvmf/target/nvmf_vhost.sh\n  17:41:34      # xtrace_enable\n 17:41:34       # source /home/vagrant/master/build-20190529173446/spdk/test/nvmf/target/../../../test/nvmf/common.sh\n  17:41:34      # NVMF_PORT\u003d4420\n  17:41:34      # NVMF_IP_PREFIX\u003d192.168.100\n  17:41:34      # NVMF_IP_LEAST_ADDR\u003d8\n  17:41:34      # NVMF_TCP_IP_ADDRESS\u003d127.0.0.1\n  17:41:34      # : 0\n  17:41:34      # export NVMF_APP_SHM_ID\n  17:41:34      # : ./app/nvmf_tgt/nvmf_tgt -i 0 -e 0xFFFF\n  17:41:34      # export NVMF_APP\n  17:41:34      # have_pci_nics\u003d0\n 17:41:34       # \u0027[\u0027 \u0027!\u0027 -d /usr/local/qemu/spdk-3.0.0 \u0027]\u0027\n 17:41:34       # echo \u0027qemu not installed on this machine. It may be a VM. Skipping nvmf_vhost test.\u0027\nqemu not installed on this machine. It may be a VM. Skipping nvmf_vhost test.\n 17:41:34       # exit 0\n\nreal    0m0.100s\nuser    0m0.053s\nsys     0m0.056s\n 17:41:34       # xtrace_disable\n 17:41:34       # PREV_BASH_OPTS\u003dehxBE\n 17:41:34       # set +x\n************************************\nEND TEST SUITE test/nvmf/target/nvmf_vhost.sh\n************************************",
+      "parentUuid": "a1755e0c_ef4f2def",
+      "revId": "d27ca0326045817187778875527ca6ed2680f548",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
