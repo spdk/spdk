@@ -44,10 +44,17 @@
 struct vmd_hot_plug;
 struct vmd_adapter;
 struct vmd_pci_device;
+struct vmd_pci_bus;
 
-typedef struct vmd_pci_bus {
+struct pci_bars {
+	uint64_t vaddr;
+	uint64_t start;
+	uint32_t size;
+};
+
+struct vmd_pci_bus {
 	struct vmd_adapter *vmd;
-	struct vmd_pci_bus *parent;		/* parent bus that this bus is attached to(primary bus. */
+	struct vmd_pci_bus *parent;	/* parent bus that this bus is attached to(primary bus. */
 	struct vmd_pci_device *self;		/* Pci device that describes this bus(bar, bus numbers, etc */
 
 	uint32_t  domain           : 8;
@@ -63,22 +70,22 @@ typedef struct vmd_pci_bus {
 
 	struct vmd_pci_device *dev_list;     /* list of pci end device attached to this bus */
 	struct vmd_pci_bus *next;            /* link for all buses found during scan */
-} vmd_pci_bus;
+};
 
-typedef struct vmd_pci_device {
+struct vmd_pci_device {
 	struct spdk_pci_device pci;
 	struct pci_bars bar[6];
 
 	struct vmd_pci_device *parent_bridge, *next;
-	vmd_pci_bus *bus, *parent;
-	vmd_pci_bus *bus_object;  /* bus tracks pci bus associated with this dev if type 1 dev. */
-	vmd_pci_bus *subordinate;
-	volatile pci_header *header;
-	volatile pci_express_cap *pcie_cap;
-	volatile pci_msix_capability *msix_cap;
-	volatile pci_msi_cap *msi_cap;
-	volatile serial_number_capability *sn_cap;
-	volatile pci_msix_table_entry *msix_table;
+	struct vmd_pci_bus *bus, *parent;
+	struct vmd_pci_bus *bus_object;  /* bus tracks pci bus associated with this dev if type 1 dev. */
+	struct vmd_pci_bus *subordinate;
+	volatile struct pci_header *header;
+	volatile struct pci_express_cap *pcie_cap;
+	volatile struct pci_msix_capability *msix_cap;
+	volatile struct pci_msi_cap *msi_cap;
+	volatile struct serial_number_capability *sn_cap;
+	volatile struct pci_msix_table_entry *msix_table;
 
 	uint32_t  class;
 	uint16_t  vid;
@@ -95,7 +102,7 @@ typedef struct vmd_pci_device {
 	uint32_t  target         : 16;
 
 	struct vmd_hot_plug *hp;
-} vmd_pci_device;
+};
 
 
 /*
@@ -108,23 +115,23 @@ struct pci_mem_mgr {
 	uint64_t addr;
 };
 
-typedef struct vmd_hot_plug {
+struct vmd_hot_plug {
 	uint32_t count  : 12;
 	uint32_t reserved_bus_count : 4;
 	uint32_t max_hotplug_bus_number : 8;
 	uint32_t next_bus_number : 8;
 	uint32_t addr_size;
 	uint64_t physical_addr;
-	express_slot_status_register slot_status;
+	union express_slot_status_register slot_status;
 	struct pci_mem_mgr mem[ADDR_ELEM_COUNT];
 	uint8_t bus_numbers[RESERVED_HOTPLUG_BUSES];
-	vmd_pci_bus *bus;
-} vmd_hot_plug;
+	struct vmd_pci_bus *bus;
+};
 
 /*
  * The VMD adapter
  */
-typedef struct vmd_adapter {
+struct vmd_adapter {
 	struct spdk_pci_device pci;
 	uint32_t domain;
 	/* physical and virtual VMD bars */
@@ -132,9 +139,9 @@ typedef struct vmd_adapter {
 	uint64_t membar, membar_size;
 	uint64_t msixbar, msixbar_size;
 	volatile uint8_t *cfg_vaddr;
-	volatile uint8_t  *mem_vaddr;
-	volatile uint8_t  *msix_vaddr;
-	volatile struct _pci_misx_table_entry *msix_table;
+	volatile uint8_t *mem_vaddr;
+	volatile uint8_t *msix_vaddr;
+	volatile struct pci_msix_table_entry *msix_table;
 	uint32_t bar_sizes[6];
 
 	uint64_t physical_addr;
@@ -157,12 +164,11 @@ typedef struct vmd_adapter {
 	struct vmd_pci_bus vmd_bus, *bus_list;
 
 	struct event_fifo *hp_queue;
-
-} vmd_adapter;
+};
 
 /* TODO: Temporary stubs for Hot Plug interface */
-static inline vmd_pci_bus *
-vmd_is_dev_in_hotplug_path(vmd_pci_device *dev)
+static inline struct vmd_pci_bus *
+vmd_is_dev_in_hotplug_path(struct vmd_pci_device *dev)
 {
 	return NULL;
 }
@@ -181,7 +187,7 @@ vmd_hp_enable_hotplug(struct vmd_hot_plug *hp)
 }
 
 static inline struct vmd_hot_plug *
-vmd_new_hotplug(vmd_pci_bus *newBus, uint8_t reservedBuses)
+vmd_new_hotplug(struct vmd_pci_bus *newBus, uint8_t reservedBuses)
 {
 	return NULL;
 }

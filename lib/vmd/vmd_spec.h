@@ -116,19 +116,19 @@
 
 #define BAR_SIZE (1 << 20)
 
-typedef struct _enhanced_capability_hdr {
+struct pci_enhanced_capability_header {
 	uint16_t capability_id;
 	uint16_t version: 4;
 	uint16_t next: 12;
-} pci_enhanced_capability_header;
+};
 
-typedef struct _SerialNumberCapability {
-	pci_enhanced_capability_header hdr;
+struct serial_number_capability {
+	struct pci_enhanced_capability_header hdr;
 	uint32_t sn_low;
 	uint32_t sn_hi;
-} serial_number_capability;
+};
 
-typedef struct _PciHeaderCommon {
+struct pci_header_common {
 	uint16_t  vendor_id;
 	uint16_t  device_id;
 	uint16_t  command;
@@ -144,9 +144,9 @@ typedef struct _PciHeaderCommon {
 	uint8_t   int_line;
 	uint8_t   int_pin;
 	uint8_t   rsvd62[2];
-} pci_header_common;
+};
 
-typedef struct _PciTypeZeroHeader {
+struct pci_header_zero {
 	uint16_t  vendor_id;
 	uint16_t  device_id;
 	uint16_t  command;
@@ -167,9 +167,9 @@ typedef struct _PciTypeZeroHeader {
 	uint8_t   int_pin;
 	uint8_t   min_gnt;
 	uint8_t   max_lat;
-} pci_header_zero;
+};
 
-typedef struct _PciTypeOneHeader {
+struct pci_header_one {
 	uint16_t  vendor_id;
 	uint16_t  device_id;
 	uint16_t  command;
@@ -201,13 +201,12 @@ typedef struct _PciTypeOneHeader {
 	uint8_t   int_line;
 	uint8_t   int_pin;
 	uint16_t  bridge_control;
-} pci_header_one;
+};
 
-
-typedef struct _PciCapHdr {
+struct pci_capabilities_header {
 	uint8_t   capability_id;
 	uint8_t   next;
-} pci_capabilities_header;
+};
 
 /*
  * MSI capability structure for msi interrupt vectors
@@ -216,8 +215,8 @@ typedef struct _PciCapHdr {
 #define MSIX_ENTRY_VECTOR_CTRL_MASKBIT 1
 #define PORT_INT_VECTOR  0;
 #define CLEAR_MSIX_DESTINATION_ID 0xfff00fff
-struct PCI_MSI_CAPABILITY {
-	pci_capabilities_header header;
+struct pci_msi_cap {
+	struct pci_capabilities_header header;
 	union _MsiControl {
 		uint16_t as_uint16_t;
 		struct _PCI_MSI_MESSAGE_CONTROL {
@@ -249,9 +248,8 @@ struct PCI_MSI_CAPABILITY {
 		} option64_bit;
 	};
 };
-typedef struct PCI_MSI_CAPABILITY pci_msi_cap;
 
-typedef struct PcixTablePointer {
+struct pcix_table_pointer {
 	union {
 		struct {
 			uint32_t BaseIndexRegister : 3;
@@ -259,10 +257,10 @@ typedef struct PcixTablePointer {
 		} TableBIR;
 		uint32_t  TableOffset;
 	};
-} pcix_table_pointer;
+};
 
-typedef struct _PciMsixCapability {
-	struct _PciCapHdr header;
+struct pci_msix_capability {
+	struct pci_capabilities_header header;
 	union _MsixControl {
 		uint16_t as_uint16_t;
 		struct msg_ctrl {
@@ -273,34 +271,43 @@ typedef struct _PciMsixCapability {
 		} bit;
 	} message_control;
 
-	pcix_table_pointer message_table;
-	pcix_table_pointer   pba_table;
-} pci_msix_capability;
+	struct pcix_table_pointer message_table;
+	struct pcix_table_pointer   pba_table;
+};
 
-typedef struct _pci_misx_table_entry {
+struct pci_msix_table_entry {
 	volatile uint32_t  message_addr_lo;
 	volatile uint32_t  message_addr_hi;
 	volatile uint32_t  message_data;
 	volatile uint32_t  vector_control;
-} pci_msix_table_entry;
+};
 
 /*
  * Pci express capability
  */
 enum PciExpressCapabilities {
-	LegacyEndpoint       = 0x1,				/* 0001b Legacy PCI Express Endpoint            */
-	ExpressEndpoint      = 0x0,				/* 0000b PCI Express Endpoint                   */
-	RootComplexRootPort  = 0x4,				/* 0100b Root Port of PCI Express Root Complex* */
-	SwitchUpstreamPort   = 0x5,				/* 0101b Upstream Port of PCI Express Switch*   */
-	SwitchDownStreamPort = 0x6,				/* 0110b Downstream Port of PCI Express Switch* */
-	ExpressToPciBridge   = 0x7,				/* 0111b PCI Express to PCI/PCI-X Bridge*       */
-	PciToExpressBridge   = 0x8,				/* 1000b PCI/PCI-X to PCI Express Bridge*       */
-	RCIntegratedEndpoint = 0x9,				/* 1001b Root Complex Integrated Endpoint       */
-	RootComplexEventCollector = 0xa,                    /* 1010b Root Complex Event Collector           */
+	/* 0001b Legacy PCI Express Endpoint            */
+	LegacyEndpoint       = 0x1,
+	/* 0000b PCI Express Endpoint                   */
+	ExpressEndpoint      = 0x0,
+	/* 0100b Root Port of PCI Express Root Complex* */
+	RootComplexRootPort  = 0x4,
+	/* 0101b Upstream Port of PCI Express Switch*   */
+	SwitchUpstreamPort   = 0x5,
+	/* 0110b Downstream Port of PCI Express Switch* */
+	SwitchDownStreamPort = 0x6,
+	/* 0111b PCI Express to PCI/PCI-X Bridge*       */
+	ExpressToPciBridge   = 0x7,
+	/* 1000b PCI/PCI-X to PCI Express Bridge*       */
+	PciToExpressBridge   = 0x8,
+	/* 1001b Root Complex Integrated Endpoint       */
+	RCIntegratedEndpoint = 0x9,
+	/* 1010b Root Complex Event Collector           */
+	RootComplexEventCollector = 0xa,
 	InvalidCapability = 0xff
 };
 
-typedef union _EXPRESS_CAPABILITIES_REGISTER {
+union express_capability_register {
 	struct {
 		uint16_t capability_version : 4;
 		uint16_t device_type : 4;
@@ -309,116 +316,9 @@ typedef union _EXPRESS_CAPABILITIES_REGISTER {
 		uint16_t rsv : 2;
 	} bit_field;
 	uint16_t as_uint16_t;
-} express_capability_register;
+};
 
-typedef union _EXPRESS_DEVICE_CAPABILITIES_REGISTER {
-	struct {
-		uint32_t max_payload_size_supported : 3;
-		uint32_t phantom_functions_supported : 2;
-		uint32_t extended_tag_supported : 1;
-		uint32_t L0s_acceptable_latency : 3;
-		uint32_t L1_acceptable_latency : 3;
-		uint32_t undefined : 3;
-		uint32_t role_based_error_reporting : 1;
-		uint32_t rsvd1 : 2;
-		uint32_t captured_slot_power_limit : 8;
-		uint32_t captured_slot_power_limit_scale : 2;
-		uint32_t rsvd2 : 4;
-	} bit_field;
-	uint32_t as_uint32_t;
-} express_device_capability_register;
-
-/*
- * The low 3 bits of the PCI Express device control register dictate whether
- * a device that implements AER routes error messages to the root complex.
- * This mask is used when programming the AER bits in the device control
- * register.
- */
-#define EXPRESS_AER_DEVICE_CONTROL_MASK 0x07;
-typedef union _EXPRESS_DEVICE_CONTROL_REGISTER {
-	struct {
-		uint16_t correctable_error_enable : 1;
-		uint16_t non_fatal_error_enable : 1;
-		uint16_t fatal_error_enable : 1;
-		uint16_t unsupported_request_error_enable : 1;
-		uint16_t enable_relaxed_order : 1;
-		uint16_t max_payload_size : 3;
-		uint16_t extended_tag_enable : 1;
-		uint16_t phantom_functions_enable : 1;
-		uint16_t aux_power_enable : 1;
-		uint16_t no_snoop_enable : 1;
-		uint16_t max_read_request_size : 3;
-		uint16_t bridge_config_retry_enable : 1;
-	} bit_field;
-	uint16_t as_uint16_t;;
-} express_device_control_register;
-
-/*
- * The low 4 bits of the PCI Express device status register hold AER device
- * status. This mask is used when programming the AER bits in the device status
- * register.
- */
-#define EXPRESS_AER_DEVICE_STATUS_MASK 0x0F;
-typedef union _EXPRESS_DEVICE_STATUS_REGISTER {
-	struct {
-		uint16_t CorrectableErrorDetected : 1;
-		uint16_t NonFatalErrorDetected : 1;
-		uint16_t FatalErrorDetected : 1;
-		uint16_t UnsupportedRequestDetected : 1;
-		uint16_t AuxPowerDetected : 1;
-		uint16_t TransactionsPending : 1;
-		uint16_t Rsvd : 10;
-	} bit_field;
-	uint16_t Asuint16_t;
-} express_device_status_register;
-
-typedef union _EXPRESS_LINK_CAPABILITIES_REGISTER {
-	struct {
-		uint32_t MaximumLinkSpeed : 4;
-		uint32_t MaximumLinkWidth : 6;
-		uint32_t ActiveStatePMSupport : 2;
-		uint32_t L0sExitLatency : 3;
-		uint32_t L1ExitLatency : 3;
-		uint32_t ClockPowerManagement : 1;
-		uint32_t SurpriseDownErrorReportingCapable : 1;
-		uint32_t DataLinkLayerActiveReportingCapable : 1;
-		uint32_t LinkBandwidthNotificationCapability : 1;
-		uint32_t AspmOptionalityCompliance : 1;
-		uint32_t Rsvd : 1;
-		uint32_t PortNumber : 8;
-	} bit_field;
-	uint32_t Asuint32_t;
-} express_link_capability_register;
-
-typedef union _EXPRESS_LINK_CONTROL_REGISTER {
-	struct {
-		uint16_t ActiveStatePMControl : 2;
-		uint16_t Rsvd1 : 1;
-		uint16_t ReadCompletionBoundary : 1;
-		uint16_t LinkDisable : 1;
-		uint16_t RetrainLink : 1;
-		uint16_t CommonClockConfig : 1;
-		uint16_t ExtendedSynch : 1;
-		uint16_t EnableClockPowerManagement : 1;
-		uint16_t Rsvd2 : 7;
-	} bit_field;
-	uint16_t Asuint16_t;
-} express_link_control_register;
-
-typedef union _EXPRESS_LINK_STATUS_REGISTER {
-	struct {
-		uint16_t LinkSpeed : 4;
-		uint16_t LinkWidth : 6;
-		uint16_t Undefined : 1;
-		uint16_t LinkTraining : 1;
-		uint16_t SlotClockConfig : 1;
-		uint16_t DataLinkLayerActive : 1;
-		uint16_t Rsvd : 2;
-	} bitField;
-	uint16_t Asuint16_t;
-} express_link_status_register;
-
-typedef union _EXPRESS_SLOT_CAPABILITIES_REGISTER {
+union express_slot_capabilities_register {
 	struct {
 		uint32_t attention_button_present : 1;
 		uint32_t power_controller_present : 1;
@@ -434,9 +334,9 @@ typedef union _EXPRESS_SLOT_CAPABILITIES_REGISTER {
 		uint32_t physical_slot_number : 13;
 	} bit_field;
 	uint32_t as_uint32_t;
-} express_slot_capabiliies_register;
+};
 
-typedef union _EXPRESS_SLOT_CONTROL_REGISTER {
+union express_slot_control_register {
 	struct {
 		uint16_t attention_button_enable : 1;
 		uint16_t power_fault_detect_enable : 1;
@@ -452,9 +352,9 @@ typedef union _EXPRESS_SLOT_CONTROL_REGISTER {
 		uint16_t Rsvd : 3;
 	} bit_field;
 	uint16_t as_uint16_t;
-} express_slot_control_register;
+};
 
-typedef union _EXPRESS_SLOT_STATUS_REGISTER {
+union express_slot_status_register {
 	struct {
 		uint16_t attention_button_pressed : 1;
 		uint16_t power_fault_detected : 1;
@@ -468,9 +368,9 @@ typedef union _EXPRESS_SLOT_STATUS_REGISTER {
 		uint16_t rsvd : 7;
 	} bit_field;
 	uint16_t as_uint16_t;
-} express_slot_status_register;
+};
 
-typedef union _EXPRESS_ROOT_CONTROL_REGISTER {
+union express_root_control_register {
 	struct {
 		uint16_t CorrectableSerrEnable : 1;
 		uint16_t NonFatalSerrEnable : 1;
@@ -482,52 +382,45 @@ typedef union _EXPRESS_ROOT_CONTROL_REGISTER {
 	uint16_t as_uint16_t;
 } express_root_control_register;
 
-
-typedef struct _PciExpressCap {
-	uint8_t   capid;
-	uint8_t   next_cap;
-	express_capability_register  express_cap_register;
-	uint32_t  device_cap;
-	uint16_t  device_control;
-	uint16_t  device_status;
-	uint32_t  link_cap;
-	uint16_t  link_control;
-	uint16_t  link_status;
-	express_slot_capabiliies_register slot_cap;
-	express_slot_control_register slot_control;
-	express_slot_status_register  slot_status;
+struct pci_express_cap {
+	uint8_t capid;
+	uint8_t next_cap;
+	union express_capability_register express_cap_register;
+	uint32_t device_cap;
+	uint16_t device_control;
+	uint16_t device_status;
+	uint32_t link_cap;
+	uint16_t link_control;
+	uint16_t link_status;
+	union express_slot_capabilities_register slot_cap;
+	union express_slot_control_register slot_control;
+	union express_slot_status_register slot_status;
 	uint32_t root_status;
 	uint32_t deviceCap2;
-	uint16_t  deviceControl2;
-	uint16_t  deviceStatus2;
-	uint32_t	linkCap2;
-	uint16_t  linkControl2;
-	uint16_t  linkStatus2;
-	uint32_t	slotCap2;
-	uint16_t  slotControl2;
-	uint16_t  slotStatus2;
-} pci_express_cap;
+	uint16_t deviceControl2;
+	uint16_t deviceStatus2;
+	uint32_t linkCap2;
+	uint16_t linkControl2;
+	uint16_t linkStatus2;
+	uint32_t slotCap2;
+	uint16_t slotControl2;
+	uint16_t slotStatus2;
+};
 
-typedef struct _PciMsixCap {
+struct pci_msix_cap {
 	uint8_t   cap_idd;
 	uint8_t   next_cap;
-	uint16_t	msg_control_reg;
-	uint32_t	msix_table_offset;
-	uint32_t	pba_offset;
-} pci_msix_cap;
+	uint16_t  msg_control_reg;
+	uint32_t  msix_table_offset;
+	uint32_t  pba_offset;
+};
 
-typedef struct _PciHeader {
+struct pci_header {
 	union {
-		pci_header_common common;
-		pci_header_zero zero;
-		pci_header_one one;
+		struct pci_header_common common;
+		struct pci_header_zero zero;
+		struct pci_header_one one;
 	};
-} pci_header;
-
-struct pci_bars {
-	uint64_t vaddr;
-	uint64_t start;
-	uint32_t size;
 };
 
 #endif /* VMD_SPEC_H */
