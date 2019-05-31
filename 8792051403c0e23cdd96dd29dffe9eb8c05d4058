@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e48d0861_ca81b186",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T17:57:49Z",
+      "side": 1,
+      "message": "There\u0027s only one r2t on the target, so these 3 values can just be deleted.",
+      "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7694be85_5aa1a318",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T17:57:49Z",
+      "side": 1,
+      "message": "maxr2t is 1. Remove this value.",
+      "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21dcbbf3_383d69f5",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1523,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T17:57:49Z",
+      "side": 1,
+      "message": "This function is now only called from one place and can be written as this:\n\nspdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);\nspdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);\n\nSo I think you can just copy those two lines into the one place where this is called and eliminate this function.",
+      "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63eb3246_5affcf05",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1547,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T17:57:49Z",
+      "side": 1,
+      "message": "Since there\u0027s now only one r2t, isn\u0027t this function just this:\n\nspdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);\nspdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);\nspdk_nvmf_tcp_req_process(ttransport, tcp_req);",
+      "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
