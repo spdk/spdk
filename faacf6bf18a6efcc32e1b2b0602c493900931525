@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc623ba3_4a325cab",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T13:07:55Z",
+      "side": 1,
+      "message": "Can either of these fail? If so, I think we should add \"|| true\" to the ones that can fail make sure all commands are executed.",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 18
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d0c24ab_8b8728ac",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T13:07:55Z",
+      "side": 1,
+      "message": "Let\u0027s move this down, before this file is actually used.",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 64
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65f8fd5b_9c852698",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T13:07:55Z",
+      "side": 1,
+      "message": "Perhaps we could calculate some kind of checksum (md5?) on all of the blocks we expect to be persistent? Checking only the first 4K seems a bit too shallow to me. I know we can\u0027t check the full band (we don\u0027t know the size of the metadata), but I think checking first (n-1) chunks worth of data should be fine.",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 51
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40f86bf0_a530ff4d",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T13:07:55Z",
+      "side": 1,
+      "message": "Is there a way the process can be dead here? If so, shouldn\u0027t that be considered an error?",
+      "range": {
+        "startLine": 63,
+        "startChar": 3,
+        "endLine": 63,
+        "endChar": 18
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "726030c5_c6b59fa0",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T13:07:55Z",
+      "side": 1,
+      "message": "Remove this.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 8
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27affd07_a75346ac",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T13:07:55Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you set the config actually allowing the initialization to continue if unclosed bands are found?",
+      "range": {
+        "startLine": 74,
+        "startChar": 22,
+        "endLine": 74,
+        "endChar": 46
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea97eecb_96906d48",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T13:07:55Z",
+      "side": 1,
+      "message": "ocssd -\u003e ftl",
+      "range": {
+        "startLine": 84,
+        "startChar": 23,
+        "endLine": 84,
+        "endChar": 28
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
