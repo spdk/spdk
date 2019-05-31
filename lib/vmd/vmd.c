@@ -58,7 +58,7 @@ struct vmd_container {
 	/* can target specific vmd or all vmd when null */
 	struct spdk_pci_addr *vmd_target_addr;
 	vmd_adapter vmd[MAX_VMD_SUPPORTED];
-} vmd_container;
+};
 
 static struct vmd_container g_vmd_container;
 static int g_end_device_count;
@@ -572,17 +572,7 @@ vmd_bus_update_bridge_info(vmd_pci_device *bridge)
 static bool
 vmd_is_supported_device(vmd_pci_device *dev)
 {
-	bool isSupported = false;
-
-	if (dev && dev->header
-	    && (dev->class == PCI_CLASS_STORAGE_EXPRESS)
-#ifndef SUPPORT_ALL_SSDS
-	    && (dev->header->common.vendor_id == 0x8086)
-#endif
-	   ) {
-		isSupported = true;
-	}
-	return isSupported;
+	return dev->class == PCI_CLASS_STORAGE_EXPRESS;
 }
 
 static void
