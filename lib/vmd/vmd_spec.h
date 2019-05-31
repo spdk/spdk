@@ -36,8 +36,6 @@
 #define VMD_SPEC_H
 
 #define MAX_VMD_SUPPORTED 48  /* max number of vmd controllers in a system - */
-/* up to 6 per cpu */
-#define MAX_VMD_TARGET  24
 #define VMD_DOMAIN_START 0x201D
 
 #define PCI_INVALID_VENDORID 0xFFFF
