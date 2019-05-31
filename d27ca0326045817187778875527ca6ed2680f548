@@ -52,6 +52,24 @@
       "revId": "d27ca0326045817187778875527ca6ed2680f548",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5b1b060_ae87b166",
+        "filename": "test/nvmf/target/nvmf_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T23:05:49Z",
+      "side": 1,
+      "message": "Oh I see now. Yeah. I wanted to exit 0 because many of the VMs in the test pool that run nvmf tests don\u0027t have qemu installed so I don\u0027t want this to affect their ability to run the rest of the nvmf test suite.\nI think this might be O.K. as is. I don\u0027t like the duplicated code, but I can\u0027t see a better way around it for the time being.",
+      "parentUuid": "d350e4a8_1a12e53f",
+      "revId": "d27ca0326045817187778875527ca6ed2680f548",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
