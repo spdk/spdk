@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e88cbb41_e43e434d",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T16:46:35Z",
+      "side": 1,
+      "message": "I don\u0027t think the general_counter is going to end up being useful in tests and it\u0027s adding quite a bit of complexity. I\u0027d recommend you remove the general one.",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b4edb65_ab8477a8",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T16:46:35Z",
+      "side": 1,
+      "message": "static",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9a58b99_e0ad4168",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T16:46:35Z",
+      "side": 1,
+      "message": "static",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff6079af_24ea0cba",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T16:46:35Z",
+      "side": 1,
+      "message": "static",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e8d9023_904eaa4b",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T16:46:35Z",
+      "side": 1,
+      "message": "No need for forward declarations",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a040d27_9081c93f",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T16:46:35Z",
+      "side": 1,
+      "message": "Extra whitespace",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbaf4302_584be6b4",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T16:46:35Z",
+      "side": 1,
+      "message": "Is this supposed to reset everything? How do you just reset the counters?\n\nI think this shouldn\u0027t zero out g_power_failure_thresholds. If the user wants to change the thresholds they can call the function below.",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cede797f_b01176a8",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T16:46:35Z",
+      "side": 1,
+      "message": "call this dev_set_power_failure_thresholds",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
