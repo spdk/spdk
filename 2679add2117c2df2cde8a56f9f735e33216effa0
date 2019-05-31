@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7870a35c_43763c46",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-31T13:56:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "464c21fc_65da721d",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "06e98b8f_e33b2204",
         "filename": "lib/vmd/vmd.c",
         "patchSetId": 8
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "2aa65a80_664e1a86",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-31T13:56:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4512a803_f4f68d90",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22b5d788_ff24d61c",
         "filename": "lib/vmd/vmd.c",
         "patchSetId": 8
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "0b61d252_5e51e948",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-31T13:56:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "22b5d788_ff24d61c",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d68ce872_702ab4e2",
         "filename": "lib/vmd/vmd.c",
         "patchSetId": 8
@@ -84,6 +138,24 @@
       "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6ebdee5_4cc1d8fb",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-31T13:56:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d68ce872_702ab4e2",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -124,6 +196,24 @@
       "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60d34ef4_ae95ace8",
+        "filename": "lib/vmd/vmd_spec.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-31T13:56:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3e080635_11254eb8",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -201,6 +291,30 @@
     },
     {
       "key": {
+        "uuid": "9b8231c4_4482de59",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-31T13:56:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "45dcdf3e_7f11eb3d",
+      "range": {
+        "startLine": 196,
+        "startChar": 72,
+        "endLine": 196,
+        "endChar": 78
+      },
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "576957df_81db6d79",
         "filename": "lib/vmd/vmdpci.c",
         "patchSetId": 8
@@ -232,6 +346,24 @@
       "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "242a768c_c7661ce1",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 768,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-05-31T13:56:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec73b9ba_6e53001c",
+      "revId": "2679add2117c2df2cde8a56f9f735e33216effa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
