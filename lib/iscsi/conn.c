@@ -1458,11 +1458,6 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 		break;
 	}
 
-	if (lcore >= spdk_env_get_core_count()) {
-		SPDK_ERRLOG("Unable to schedule connection on allowed CPU core. Scheduling on first core instead.\n");
-		lcore = spdk_env_get_first_core();
-	}
-
 	target = conn->sess->target;
 	pthread_mutex_lock(&target->mutex);
 	target->num_active_conns++;
