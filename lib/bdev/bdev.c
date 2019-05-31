@@ -1806,7 +1806,7 @@ static void
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
-	struct spdk_thread *thread = spdk_io_channel_get_thread(bdev_io->internal.ch->channel);
+	struct spdk_thread *thread = spdk_bdev_io_get_thread(bdev_io);
 
 	assert(thread != NULL);
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
@@ -3613,7 +3613,7 @@ _spdk_bdev_io_complete(void *ctx)
 		 * Defer completion to avoid potential infinite recursion if the
 		 * user's completion callback issues a new I/O.
 		 */
-		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->internal.ch->channel),
+		spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io),
 				     _spdk_bdev_io_complete, bdev_io);
 		return;
 	}
@@ -3668,7 +3668,7 @@ _spdk_bdev_io_complete(void *ctx)
 #endif
 
 	assert(bdev_io->internal.cb != NULL);
-	assert(spdk_get_thread() == spdk_io_channel_get_thread(bdev_io->internal.ch->channel));
+	assert(spdk_get_thread() == spdk_bdev_io_get_thread(bdev_io));
 
 	bdev_io->internal.cb(bdev_io, bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
 			     bdev_io->internal.caller_ctx);
@@ -4526,7 +4526,7 @@ _spdk_bdev_disable_qos_done(void *cb_arg)
 			bdev_io->internal.io_submit_ch = NULL;
 		}
 
-		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->internal.ch->channel),
+		spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io),
 				     _spdk_bdev_io_submit, bdev_io);
 	}
 
