@@ -121,6 +121,23 @@
     },
     {
       "key": {
+        "uuid": "fddf7c9b_fef9048b",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T17:04:22Z",
+      "side": 1,
+      "message": "static",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cede797f_b01176a8",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 14
@@ -132,6 +149,23 @@
       "writtenOn": "2019-05-31T16:46:35Z",
       "side": 1,
       "message": "call this dev_set_power_failure_thresholds",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74813adc_9fd3afa0",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T17:04:22Z",
+      "side": 1,
+      "message": "static",
       "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
