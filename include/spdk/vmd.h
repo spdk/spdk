@@ -47,6 +47,9 @@ extern "C" {
 #include "spdk/config.h"
 #include "spdk/env.h"
 
+/* Maximum VMD devices - up to 6 per cpu */
+#define MAX_VMD_TARGET  24
+
 /*
  * Takes an input VMD D-BDF, probes it and attaches to it. The resulting vmd
  * adapter is placed in a vmd container. If input BDF is NULL, then all VMD
@@ -62,7 +65,7 @@ int spdk_vmd_probe(struct spdk_pci_addr *vmd_bdf);
  * Returns a list of nvme devices found on the given vmd pci BDF.
  *
  * \param vmd_addr pci BDF of the vmd device to return end device list
- * \param nvme_list buffer of up to MAX_VMD_TARGET to return spdk_pci_device array.
+ * \param nvme_list buffer of exactly MAX_VMD_TARGET to return spdk_pci_device array.
  *
  * \return Returns count of nvme device attached to input VMD.
  */
