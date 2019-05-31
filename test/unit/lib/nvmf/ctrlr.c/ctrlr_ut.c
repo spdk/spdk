@@ -877,6 +877,47 @@ test_identify_ns(void)
 	CU_ASSERT(spdk_mem_all_zero(&nsdata, sizeof(nsdata)));
 }
 
+static void
+test_set_get_features(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_qpair admin_qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem, .admin_qpair = &admin_qpair };
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_ns ns[3];
+	struct spdk_nvmf_ns *ns_arr[3] = {&ns[0], NULL, &ns[2]};;
+	struct spdk_nvmf_request req;
+	int rc;
+
+	subsystem.ns = ns_arr;
+	subsystem.max_nsid = SPDK_COUNTOF(ns_arr);
+	admin_qpair.ctrlr = &ctrlr;
+	req.qpair = &admin_qpair;
+	cmd.nvme_cmd.nsid = 1;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+
+	/* Set SPDK_NVME_FEAT_HOST_RESERVE_PERSIST feature */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.nvme_cmd.cdw11 = 0x1u;
+	ns[0].ptpl_file = "testcfg";
+	rc = spdk_nvmf_ctrlr_set_features_reservation_persistence(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_FEATURE_ID_NOT_SAVEABLE);
+	CU_ASSERT(ns[0].ptpl_activated == true);
+
+	/* Get SPDK_NVME_FEAT_HOST_RESERVE_PERSIST feature */
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	cmd.nvme_cmd.cdw10 = SPDK_NVME_FEAT_HOST_RESERVE_PERSIST;
+	rc = spdk_nvmf_ctrlr_get_features_reservation_persistence(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(rsp.nvme_cpl.cdw0 == 1);
+}
+
 /*
  * Reservation Unit Test Configuration
  *       --------             --------    --------
@@ -1182,7 +1223,9 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "reservation_exclusive_access_regs_only_and_all_regs",
 			    test_reservation_exclusive_access_regs_only_and_all_regs) == NULL ||
 		CU_add_test(suite, "reservation_notification_log_page",
-			    test_reservation_notification_log_page) == NULL
+			    test_reservation_notification_log_page) == NULL ||
+		CU_add_test(suite, "set_get_features",
+			    test_set_get_features) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
