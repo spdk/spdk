@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b6fd46c_25fb721e",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T19:19:45Z",
+      "side": 1,
+      "message": "spdk_for_each_thread is going to call this function in each thread in serial - without overlap. Given that, you can actually build the partial response directly here. If you do these lines in spdk_rpc_thread_get_stats() up front:\n\nctx-\u003ew \u003d spdk_jsonrpc_begin_result(ctx-\u003erequest);\nspdk_json_write_object_begin(w);\nspdk_json_write_named_uint64(w, \"tick_rate\", spdk_get_ticks_hz());\nspdk_json_write_name_array_begin(w, \"threads\");\n\nspdk_for_each_thread(...);\n\nThen, inside of rpc_thread_get_stats you can do this:\n\nstruct spdk_thread_stats stats;\nspdk_thread_get_stats(\u0026stats);\nspdk_json_write_object_begin(ctx-\u003ew);\nspdk_json_write_named_string(ctx-\u003ew, \"name\", spdk_thread_get_name(spdk_get_thread()));\nspdk_json_write_named_uint64(ctx-\u003ew, \"busy\", stats.busy_tsc);\nspdk_json_write_named_uint64(ctx-\u003ew, \"idle\", stats.idle_tsc);\nspdk_json_write_object_end(ctx-\u003ew);\n\nand finally in rpc_thread_get_stats_done(void *arg) you can finish it off with this:\n\nspdk_json_write_array_end(ctx-\u003ew);\nspdk_json_write_object_end(ctx-\u003ew);\nspdk_jsonrpc_end_result(ctx-\u003erequest, ctx-\u003ew);\n\nThen you don\u0027t need the stat_entry struct at all and a bunch of memory allocations go away.\n\nSorry for not seeing this in earlier reviews.",
+      "revId": "b68d95d525a0f02f4cba9c8cadb74d3ead584e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
