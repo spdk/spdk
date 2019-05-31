@@ -11,20 +11,29 @@ iscsitestinit $1 $2
 
 function run_fio() {
 	local bdev_name=$1
+	$rpc_py set_bdev_qd_sampling_period $bdev_name 1
 	local iostats=$($rpc_py get_bdevs_iostat -b $bdev_name)
 	local run_time=5
 
 	local start_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 	local start_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
+	local start_io_time=$(jq -r '.bdevs[0].io_time' <<< "$iostats")
 
 	$fio_py -p iscsi -i 1024 -d 128 -t randread -r $run_time
 
 	iostats=$($rpc_py get_bdevs_iostat -b $bdev_name)
 	local end_io_count=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
 	local end_bytes_read=$(jq -r '.bdevs[0].bytes_read' <<< "$iostats")
+	local end_io_time=$(jq -r '.bdevs[0].io_time' <<< "$iostats")
+
+	$rpc_py set_bdev_qd_sampling_period $bdev_name 0
 
 	IOPS_RESULT=$(((end_io_count-start_io_count)/$run_time))
 	BANDWIDTH_RESULT=$(((end_bytes_read-start_bytes_read)/$run_time))
+
+	# Measure disk utilization by comparing the time spent on io
+	local run_time_us=$(($run_time * 1000000))
+	DISK_UTIL_PERCENT=$(((end_io_time-start_io_time)*100/$run_time_us))
 }
 
 function verify_qos_limits() {
@@ -83,6 +92,8 @@ trap "iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTER
 # Run FIO without any QOS limits to determine the raw performance
 run_fio Malloc0
 
+# Check if disk utilization reached at least 50%
+[ "$DISK_UTIL_PERC" -gt "50" ]
 # Set IOPS/bandwidth limit to 50% of the actual unrestrained performance.
 IOPS_LIMIT=$(($IOPS_RESULT/2))
 BANDWIDTH_LIMIT=$(($BANDWIDTH_RESULT/2))
