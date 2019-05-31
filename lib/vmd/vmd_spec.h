@@ -35,8 +35,6 @@
 #ifndef VMD_SPEC_H
 #define VMD_SPEC_H
 
-#define SUPPPORT_ALL_SSDS
-
 #define MAX_VMD_SUPPORTED 48  /* max number of vmd controllers in a system - */
 /* up to 6 per cpu */
 #define MAX_VMD_TARGET  24
