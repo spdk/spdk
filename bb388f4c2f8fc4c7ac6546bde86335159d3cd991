@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "054044d3_41cdf767",
+        "filename": "test/app/fuzz/nvme_fuzz/Makefile",
+        "patchSetId": 34
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:59Z",
+      "side": 1,
+      "message": "Done. Thanks for the reminder about testing against TCP as well.",
+      "parentUuid": "42b8730b_f28f4f76",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52709836_06ae66ee",
         "filename": "test/app/fuzz/nvme_fuzz/README.md",
         "patchSetId": 34
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e1ba0396_df94edf6",
+        "filename": "test/app/fuzz/nvme_fuzz/README.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52709836_06ae66ee",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6efe9159_04418e91",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 34
@@ -47,6 +83,24 @@
       "writtenOn": "2019-05-30T22:36:55Z",
       "side": 1,
       "message": "this is so nasty to do this if (rc) check over and over again :)\n\nwhat if instead you just did these straight through, but did rc +\u003d?  then at the end if rc \u003e 0, cleanup\n\nI think if a write_named_uint32 fails, that\u0027s a pretty catastrophic issue, so I think simplifying the code at the expense of trying to return gracefully is better",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa7641fd_2094af46",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:59Z",
+      "side": 1,
+      "message": "Good point. We don\u0027t actually check these return values anywhere else in the code base. Which I guess makes sense. We end up doing the same thing whether the json ops fail or not. Saves about 50 lines of code too!",
+      "parentUuid": "6efe9159_04418e91",
       "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "41168318_338454a5",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:59Z",
+      "side": 1,
+      "message": "Nope, that is vestigial from an earlier patch. Thanks!",
+      "parentUuid": "0e7c4f68_f266e63f",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ccefa09_c839294d",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 34
@@ -81,6 +153,30 @@
       "writtenOn": "2019-05-27T07:11:22Z",
       "side": 1,
       "message": "Reply Patch Set 26, Line 470:\nI thought this can be \"g_seed_value \u003d error_test;\".But it doesn\u0027t matter. The result is the same.",
+      "range": {
+        "startLine": 923,
+        "startChar": 3,
+        "endLine": 923,
+        "endChar": 39
+      },
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e5077b2_3b592a6c",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:59Z",
+      "side": 1,
+      "message": "Ah, that\u0027s true. An unsigned int and an int64 should hold the same number of positive values.",
+      "parentUuid": "9ccefa09_c839294d",
       "range": {
         "startLine": 923,
         "startChar": 3,
@@ -110,6 +206,24 @@
     },
     {
       "key": {
+        "uuid": "c22575fc_75c8ba04",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cb3dc01b_ecdee723",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e87b7d29_e566fc78",
         "filename": "test/nvmf/target/fuzz.sh",
         "patchSetId": 34
@@ -121,6 +235,24 @@
       "writtenOn": "2019-05-30T22:36:55Z",
       "side": 1,
       "message": "maybe pick a bigger time value for nightly tests?",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4580b6a4_872c3a82",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:59Z",
+      "side": 1,
+      "message": "Done. Also, I moved this test under the nightly flag in the nvmf.sh script per your earlier suggestion.",
+      "parentUuid": "e87b7d29_e566fc78",
       "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -141,6 +273,24 @@
       "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e764d208_fca0d68e",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67bb1954_72fd8ab5",
+      "revId": "bb388f4c2f8fc4c7ac6546bde86335159d3cd991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
