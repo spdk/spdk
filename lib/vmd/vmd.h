@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef VMD_PCI_H
-#define VMD_PCI_H
+#ifndef VMD_H
+#define VMD_H
 
 #include "spdk/stdinc.h"
 #include "spdk/vmd.h"
@@ -160,7 +160,6 @@ typedef struct vmd_adapter {
 
 } vmd_adapter;
 
-
 /* TODO: Temporary stubs for Hot Plug interface */
 static inline vmd_pci_bus *
 vmd_is_dev_in_hotplug_path(vmd_pci_device *dev)
@@ -194,11 +193,4 @@ vmd_hp_get_next_bus_number(struct vmd_hot_plug *hp)
 	return 0;
 }
 
-/*
- * Pci interface
- */
-bool    vmd_is_supported_device(vmd_pci_device *dev);
-uint8_t vmd_scan_pcibus(vmd_pci_bus *bus);
-void    vmd_dev_init(vmd_pci_device *dev);
-
-#endif /* VMD_PCI_H */
+#endif /* VMD_H */
