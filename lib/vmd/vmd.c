@@ -134,7 +134,7 @@ vmd_allocate_base_addr(vmd_adapter *vmd, vmd_pci_device *dev, uint32_t size)
 		vmd->current_addr_size -= size;
 	}
 
-	printf("%s: allocated(size) %lx (%x)\n", __func__, base_address, size);
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "allocated(size) %lx (%x)\n", base_address, size);
 
 	return base_address;
 }
@@ -351,8 +351,9 @@ vmd_alloc_dev(vmd_pci_bus *bus, uint32_t devfn)
 		return NULL;
 	}
 
-	printf("    *** PCI DEVICE FOUND : %04x:%04x ***\n",
-	       header->common.vendor_id, header->common.device_id);
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "PCI device found: %04x:%04x ***\n",
+		      header->common.vendor_id, header->common.device_id);
+
 	if ((dev = calloc(1, sizeof(vmd_pci_device))) == NULL) {
 		return NULL;
 	}
@@ -724,7 +725,7 @@ vmd_scan_single_bus(vmd_pci_bus *bus, vmd_pci_device *parent_bridge)
 					vmd->nvme_count++;
 				}
 			} else {
-				printf("%s: Removing failed device: %p\n", __func__, new_dev);
+				SPDK_DEBUGLOG(SPDK_LOG_VMD, "Removing failed device:%p\n", new_dev);
 				vmd_pcibus_remove_device(bus, new_dev);
 				if (dev_cnt) {
 					dev_cnt--;
@@ -747,28 +748,30 @@ vmd_print_pci_info(vmd_pci_device *dev)
 	}
 
 	if (dev->pcie_cap != NULL) {
-		printf("PCI DEVICE: [%04X:%04X] type(%x) : %s\n",
-		       dev->header->common.vendor_id, dev->header->common.device_id,
-		       dev->pcie_cap->express_cap_register.bit_field.device_type,
-		       device_type[dev->pcie_cap->express_cap_register.bit_field.device_type]);
+		SPDK_INFOLOG(SPDK_LOG_VMD, "PCI DEVICE: [%04X:%04X] type(%x) : %s\n",
+			     dev->header->common.vendor_id, dev->header->common.device_id,
+			     dev->pcie_cap->express_cap_register.bit_field.device_type,
+			     device_type[dev->pcie_cap->express_cap_register.bit_field.device_type]);
 	} else {
-		printf("PCI DEVICE: [%04X:%04X]\n", dev->header->common.vendor_id, dev->header->common.device_id);
+		SPDK_INFOLOG(SPDK_LOG_VMD, "PCI DEVICE: [%04X:%04X]\n",
+			     dev->header->common.vendor_id, dev->header->common.device_id);
 	}
 
-	printf("        DOMAIN:BDF: %04x:%02x:%02x:%x\n", dev->pci.addr.domain,
-	       dev->pci.addr.bus, dev->pci.addr.dev, dev->pci.addr.func);
+	SPDK_INFOLOG(SPDK_LOG_VMD, "\tDOMAIN:BDF: %04x:%02x:%02x:%x\n", dev->pci.addr.domain,
+		     dev->pci.addr.bus, dev->pci.addr.dev, dev->pci.addr.func);
 
 	if (!(dev->header_type & PCI_HEADER_TYPE_BRIDGE) && dev->bus) {
-		printf("        base addr: %x : %p\n", dev->header->zero.BAR[0], (void *)dev->bar[0].vaddr);
+		SPDK_INFOLOG(SPDK_LOG_VMD, "\tbase addr: %x : %p\n",
+			     dev->header->zero.BAR[0], (void *)dev->bar[0].vaddr);
 	}
 
 	if ((dev->header_type & PCI_HEADER_TYPE_BRIDGE)) {
-		printf("        Primary = %d, Secondary = %d, Subordinate = %d\n",
-		       dev->header->one.primary, dev->header->one.secondary, dev->header->one.subordinate);
+		SPDK_INFOLOG(SPDK_LOG_VMD, "\tPrimary = %d, Secondary = %d, Subordinate = %d\n",
+			     dev->header->one.primary, dev->header->one.secondary, dev->header->one.subordinate);
 		if (dev->pcie_cap && dev->pcie_cap->express_cap_register.bit_field.slot_implemented) {
-			printf("        Slot implemented on this device.\n");
+			SPDK_INFOLOG(SPDK_LOG_VMD, "\tSlot implemented on this device.\n");
 			if (dev->pcie_cap->slot_cap.bit_field.hotplug_capable) {
-				printf("Device has HOT-PLUG capable slot.\n");
+				SPDK_INFOLOG(SPDK_LOG_VMD, "Device has HOT-PLUG capable slot.\n");
 			}
 		}
 	}
@@ -776,11 +779,10 @@ vmd_print_pci_info(vmd_pci_device *dev)
 	if (dev->sn_cap != NULL) {
 		uint8_t *snLow = (uint8_t *)&dev->sn_cap->sn_low;
 		uint8_t *snHi = (uint8_t *)&dev->sn_cap->sn_hi;
-		printf("        SN: %02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x\n",
-		       snHi[3], snHi[2], snHi[1], snHi[0], snLow[3], snLow[2], snLow[1], snLow[0]);
-	}
 
-	printf("\n");
+		SPDK_INFOLOG(SPDK_LOG_VMD, "\tSN: %02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x\n",
+			     snHi[3], snHi[2], snHi[1], snHi[0], snLow[3], snLow[2], snLow[1], snLow[0]);
+	}
 }
 
 static void
@@ -788,10 +790,10 @@ vmd_pci_print(vmd_pci_bus *bus_list)
 {
 	vmd_pci_bus *bus = bus_list;
 
-	printf("\n ...PCIE devices attached to VMD %04x:%02x:%02x:%x...\n",
-	       bus_list->vmd->pci.addr.domain, bus_list->vmd->pci.addr.bus,
-	       bus_list->vmd->pci.addr.dev, bus_list->vmd->pci.addr.func);
-	printf("----------------------------------------------\n");
+	SPDK_INFOLOG(SPDK_LOG_VMD, "\n ...PCIE devices attached to VMD %04x:%02x:%02x:%x...\n",
+		     bus_list->vmd->pci.addr.domain, bus_list->vmd->pci.addr.bus,
+		     bus_list->vmd->pci.addr.dev, bus_list->vmd->pci.addr.func);
+	SPDK_INFOLOG(SPDK_LOG_VMD, "----------------------------------------------\n");
 
 	while (bus != NULL) {
 		vmd_print_pci_info(bus->self);
@@ -818,9 +820,12 @@ vmd_scan_pcibus(vmd_pci_bus *bus)
 	vmd_add_bus_to_list(bus->vmd, new_bus);
 	bus->vmd->next_bus_number = bus->bus_number + 1;
 	dev_cnt = vmd_scan_single_bus(new_bus, NULL);
-	printf(" **** VMD scan found %d devices\n", dev_cnt);
-	printf("      VMD scan found %d END DEVICES\n", g_end_device_count);
+
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "\tVMD scan found %d devices\n", dev_cnt);
+	SPDK_DEBUGLOG(SPDK_LOG_VMD, "\tVMD scan found %d END DEVICES\n", g_end_device_count);
+
 	vmd_pci_print(bus->vmd->bus_list);
+
 	return (uint8_t)dev_cnt;
 }
 
