@@ -39,6 +39,10 @@ timing_enter restore
 run_test suite $testdir/restore.sh $device
 timing_exit restore
 
+timing_enter dirty_shutdown
+run_test suite $testdir/dirty_shutdown.sh $device
+timing_exit dirty_shutdown
+
 timing_enter json
 run_test suite $testdir/json.sh $device
 timing_exit json
