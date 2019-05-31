@@ -22,6 +22,30 @@
       "revId": "f30912479c850c47db24dd51d3095dff12039f77",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18221ee5_ab33467a",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-05-31T07:45:48Z",
+      "side": 1,
+      "message": "Result would be different if I move this outside.\nThis improvement is believed to be connected with fails on persistent metadata patches so it should be before them. Unless we find that it is not connected.",
+      "parentUuid": "5989e8a8_0e446516",
+      "range": {
+        "startLine": 306,
+        "startChar": 2,
+        "endLine": 315,
+        "endChar": 4
+      },
+      "revId": "f30912479c850c47db24dd51d3095dff12039f77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
