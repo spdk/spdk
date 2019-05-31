@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c813216c_0447a486",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2384,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T18:24:24Z",
+      "side": 1,
+      "message": "This needs to move up to spdk_nvmf_request_exec - we need to also block admin and fabrics commands while paused.",
+      "revId": "e7ad6a551c4f8226029f12bcca1fa501a8551d98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b1135de_94b1d3cc",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2487,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T18:24:24Z",
+      "side": 1,
+      "message": "What does this comment mean? The ctrlr and the group and the sgroup can\u0027t be NULL if we\u0027re getting a completion unless there is a bug in the code somewhere (or the unit tests aren\u0027t properly mocking things). I\u0027d prefer to fix up the unit tests and change these to asserts.",
+      "revId": "e7ad6a551c4f8226029f12bcca1fa501a8551d98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26bfc022_fcec347e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2494,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T18:24:24Z",
+      "side": 1,
+      "message": "The counts should apply to fabrics and admin commands as well, so you shouldn\u0027t need this check.",
+      "revId": "e7ad6a551c4f8226029f12bcca1fa501a8551d98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
