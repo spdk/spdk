@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "44ee745b_ba0a5228",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "80ca473e_67c7b83d",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b802f2aa_d53eeba8",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-17T21:38:50Z",
       "side": 1,
       "message": "This fuzz_io_ctx doesn\u0027t need to be a global. You can allocate one and pass a pointer around to it. This will be useful if you want to have multiple threads fuzzing at once in the future.",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "770aa526_63031575",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:53Z",
+      "side": 1,
+      "message": "Totally reworked the fuzzer to use the event framework and multiple threads.",
+      "parentUuid": "b802f2aa_d53eeba8",
       "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "fce84428_b8bc6934",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "343546e9_0a86e7fb",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37a35868_ca901db3",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 6
@@ -64,6 +118,24 @@
       "writtenOn": "2019-05-17T21:38:50Z",
       "side": 1,
       "message": "consider using a mempool with more than one of these buffers.",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c8e7079_75c56299",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:53Z",
+      "side": 1,
+      "message": "Since we aren\u0027t really reading the values that are being written into this buffer, I figured we could just use it as a sort of communal buffer. If an I/O does succeed and actually writes to it that\u0027s fine, but we don\u0027t need a unique one for each request.\nI did think that it could be useful to allocate a really large buffer and randomize the length of the buffer that we provide between 0 and the buffers max size.\nIs there another reason we would want to have a unique buffer for each request?",
+      "parentUuid": "37a35868_ca901db3",
       "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "0ba52c9b_5062ff41",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "06d90481_0e7cc958",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "630a4144_f660ece8",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 6
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "00f36ab0_4040ad69",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "630a4144_f660ece8",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "658ddc12_222edbae",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 6
@@ -118,6 +226,24 @@
       "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "515d7d43_bd5f05ad",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-05-31T22:56:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "658ddc12_222edbae",
+      "revId": "210ea63e439d8c01d14f9cbc6090ec645d1f08f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
