@@ -639,6 +639,7 @@ _iscsi_sgl_append_with_md(struct _iscsi_sgl *s,
 		s->iov_offset = 0;
 		assert(s->iovcnt >= rc);
 		s->iovcnt -= rc;
+		s->iov += rc;
 
 		if (s->iovcnt == 0) {
 			return false;
