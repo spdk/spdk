@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acfe993e_47f0471d",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T19:04:32Z",
+      "side": 1,
+      "message": "I\u0027m going to make some suggestions for the data structure here, but this all hinges on what the uniqueness rules are for the placement_ids. Let\u0027s first get clarity on that. If the placement_ids are globally unique, then I suggest the data structure for this map would be better as the following:\n\nstruct spdk_sock_placement_id_entry {\n    int placement_id;\n    struct spdk_sock_group *group;\n    STAILQ_ENTRY(spdk_sock_placement_id_entry) link;\n};\n\nstatic STAILQ_HEAD(, spdk_sock_placement_id_entry) g_placement_ids \u003d STAILQ_HEAD_INITIALIZER(g_placement_ids);\n\nYou can then add a sock group to the table with this:\n\nstatic int\nspdk_sock_map_placement_id_to_group(uint32_t placement_id, struct spdk_sock_group *group)\n{\n    struct spdk_sock_placement_id_entry *entry;\n\n#if DEBUG\n    pthread_mutex_lock(\u0026g_map_table_mutex);\n    STAILQ_FOREACH(entry, \u0026g_placement_ids, link) {\n        if (placement_id \u003d\u003d entry-\u003eplacement_id) {\n            pthread_mutex_unlock(\u0026g_map_table_mutex);\n            return -EINVAL; // Can\u0027t assign a placement_id to two different groups\n        }\n    }\n    pthread_mutex_unlock(\u0026g_map_table_mutex);\n#endif\n\n    entry \u003d calloc(1, sizeof(*entry));\n    if (!entry) {\n        return -ENOMEM;\n    }\n\n    entry-\u003eplacement_id \u003d placement_id;\n    entry-\u003egroup \u003d group;\n\n    pthread_mutex_lock(\u0026g_map_table_mutex);\n    STAILQ_INSERT_TAIL(\u0026g_placement_ids, entry, link);\n    pthread_mutex_unlock(\u0026g_map_table_mutex);\n\n    return 0;\n}\n\nThe other operations are all similar loops over the STAILQ. This avoids using fixed size arrays and only allocates as much memory as is required.",
+      "revId": "f84683fe5e37dd5a4a1a7a2dbf8aa35df056a21a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd8200c7_e4bfbbcf",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T19:04:32Z",
+      "side": 1,
+      "message": "So one thing I don\u0027t understand just yet is whether \"placement_ids\" are globally unique, or just unique within a given NIC. I think this code assumes they are globally unique on the removal path (doesn\u0027t check ref) and the find path here.\n\nCan we get some clarity on what the rules are for placement_ids when using multiple NICs?",
+      "revId": "f84683fe5e37dd5a4a1a7a2dbf8aa35df056a21a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "025c59c3_178a1019",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T19:04:32Z",
+      "side": 1,
+      "message": "I don\u0027t think this needs to be an assert. If the user wants to assign sockets to non-optimal sock groups, they should be allowed to do that.",
+      "revId": "f84683fe5e37dd5a4a1a7a2dbf8aa35df056a21a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "604b111a_3c4eb173",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-05-31T19:04:32Z",
+      "side": 1,
+      "message": "You have a function to remove the sock_group from the map, so you can just call that instead. If it doesn\u0027t find a match, oh well.",
+      "revId": "f84683fe5e37dd5a4a1a7a2dbf8aa35df056a21a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
