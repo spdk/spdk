@@ -667,7 +667,7 @@ _complete_other_io(void *arg)
 
 /* scheduled for submission on reduce thread */
 static void
-_spdk_bdev_io_submit(void *arg)
+_comp_bdev_io_submit(void *arg)
 {
 	struct spdk_bdev_io *bdev_io = arg;
 	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
@@ -733,9 +733,9 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 
 	/* Send this request to the reduce_thread if that's not what we're on. */
 	if (spdk_io_channel_get_thread(ch) != comp_bdev->reduce_thread) {
-		spdk_thread_send_msg(comp_bdev->reduce_thread, _spdk_bdev_io_submit, bdev_io);
+		spdk_thread_send_msg(comp_bdev->reduce_thread, _comp_bdev_io_submit, bdev_io);
 	} else {
-		_spdk_bdev_io_submit(bdev_io);
+		_comp_bdev_io_submit(bdev_io);
 	}
 }
 
