@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14b3ce98_0d775517",
+        "filename": "lib/bdev/delay/vbdev_delay_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-05-31T14:37:21Z",
+      "side": 1,
+      "message": "that\u0027s a nop",
+      "range": {
+        "startLine": 101,
+        "startChar": 1,
+        "endLine": 101,
+        "endChar": 7
+      },
+      "revId": "96dbddb21618877607e4665306f7c6ed2d89edf2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
