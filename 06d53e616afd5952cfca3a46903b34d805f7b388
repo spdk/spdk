@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0e0c1dac_e10e9920",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-31T07:53:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "543eeb5e_f0a9ed49",
+      "revId": "06d53e616afd5952cfca3a46903b34d805f7b388",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e9d832b_892c7903",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 13
@@ -33,6 +51,24 @@
       "revId": "06d53e616afd5952cfca3a46903b34d805f7b388",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52cf2ce4_21077838",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-05-31T07:53:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2e9d832b_892c7903",
+      "revId": "06d53e616afd5952cfca3a46903b34d805f7b388",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
