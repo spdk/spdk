@@ -7,7 +7,7 @@ packet processing graph (see [What is VPP?](https://wiki.fd.io/view/VPP/What_is_
 Detailed instructions for **simplified steps 1-3** below, can be found on
 VPP [Quick Start Guide](https://wiki.fd.io/view/VPP).
 
-*SPDK supports VPP version 18.01.1.*
+*SPDK supports VPP version 19.01.1.*
 
 #  1. Building VPP (optional) {#vpp_build}
 
@@ -16,7 +16,21 @@ VPP [Quick Start Guide](https://wiki.fd.io/view/VPP).
 Clone and checkout VPP
 ~~~
 git clone https://gerrit.fd.io/r/vpp && cd vpp
-git checkout v18.01.1
+git checkout v19.01.1
+git cherry-pick 97dcf5bd26ca6de580943f5d39681f0144782c3d
+git cherry-pick f5dc9fbf814865b31b52b20f5bf959e9ff818b25
+~~~
+
+NOTE: Cherry-picks are required for better integration with SPDK. They are
+already merged to VPP 19.04.
+
+NOTE: We have noticed that VPP tries to close connections to the non existing,
+already closed applications, after timeout. It causes intermittent VPP application
+segfaults when few instances of VPP clients connects and disconnects several times.
+The following workaround for this issue helps to create more stable environment
+for VPP v19.01.1. This issue should be solved in the next release of VPP.
+~~~
+git apply test/common/config/patch/vpp/workaround-dont-notify-transport-closing.patch
 ~~~
 
 Install VPP build dependencies
@@ -39,16 +53,6 @@ Packages can be found in `vpp/build-root/` directory.
 For more in depth instructions please see Building section in
 [VPP documentation](https://wiki.fd.io/view/VPP/Pulling,_Building,_Running,_Hacking_and_Pushing_VPP_Code#Building)
 
-*Please note: VPP 18.01.1 does not support OpenSSL 1.1. It is suggested to install a compatibility package
-for compilation time.*
-~~~
-sudo dnf install -y --allowerasing compat-openssl10-devel
-~~~
-*Then reinstall latest OpenSSL devel package:*
-~~~
-sudo dnf install -y --allowerasing openssl-devel
-~~~
-
 # 2. Installing VPP {#vpp_install}
 
 Packages can be installed from a distribution repository or built in previous step.
@@ -70,11 +74,65 @@ sudo systemctl start vpp
 
 Alternatively, use `vpp` binary directly
 ~~~
-sudo vpp unix {cli-listen /run/vpp/cli.sock}
+sudo vpp unix {cli-listen /run/vpp/cli.sock} session { evt_qs_memfd_seg } socksvr { socket-name /run/vpp-api.sock }
 ~~~
 
-A usefull tool is `vppctl`, that allows to control running VPP instance.
-Either by entering VPP configuration prompt
+# 4. Configure VPP {#vpp_config}
+
+VPP can be configured using a VPP startup file and the `vppctl` command; By default, the VPP startup file is `/etc/vpp/startup.conf`, however, you can pass any file with the `-c` vpp command argument.
+
+## Startup configuration
+
+Some key values from iSCSI point of view includes:
+
+CPU section (`cpu`):
+- `main-core <lcore>` -- logical CPU core used for main thread.
+- `corelist-workers <lcore list>` -- logical CPU cores where worker threads are running.
+
+DPDK section (`dpdk`):
+- `num-rx-queues <num>` -- number of receive queues.
+- `num-tx-queues <num>` -- number of transmit queues.
+- `dev <PCI address>` -- whitelisted device.
+- `num-mbufs` -- numbers of allocated buffers. For the most of our scenarios this
+parameter requires to be increased over default value.
+
+Session section (`session`):
+- `evt_qs_memfd_seg` -- uses a memfd segment for event queues. This is required for SPDK.
+
+Socket server session (`socksvr`):
+- `socket-name <path>` -- configure API socket filename (curently SPDK uses default path `/run/vpp-api.sock`).
+
+Plugins section (`plugins`):
+- `plugin <plugin name> { [enable|disable] }` -- enable or disable VPP plugin.
+
+### Example:
+
+~~~
+unix {
+	nodaemon
+	cli-listen /run/vpp/cli.sock
+}
+cpu {
+	main-core 1
+}
+dpdk {
+	num-mbufs 128000
+}
+session {
+	evt_qs_memfd_seg
+}
+socksvr {
+	socket-name /run/vpp-api.sock
+}
+plugins {
+	plugin default { disable }
+	plugin dpdk_plugin.so { enable }
+}
+~~~
+
+## vppctl command tool
+
+The `vppctl` command tool allows users to control VPP at runtime via a command prompt
 ~~~
 sudo vppctl
 ~~~
@@ -83,6 +141,59 @@ Or, by sending single command directly. For example to display interfaces within
 ~~~
 sudo vppctl show interface
 ~~~
+
+Useful commands:
+
+- `show interface` -- show interfaces settings, state and some basic statistics.
+- `show interface address` -- show interfaces state and assigned addresses.
+
+- `set interface ip address <VPP interface> <Address>` -- set interfaces IP address.
+- `set interface state <VPP interface> [up|down]` -- bring interface up or down.
+
+- `show errors` -- show error counts.
+
+## Example: Configure two interfaces to be available via VPP
+
+We want to configure two DPDK ports with PCI addresses 0000:09:00.1 and 0000:0b:00.1
+to be used as portals 10.0.0.1/24 and 10.10.0.1/24.
+
+In the VPP startup file (e.g. `/etc/vpp/startup.conf`), whitelist the interfaces
+by specifying PCI addresses in section dpdk:
+~~~
+	dev 0000:09:00.1
+	dev 0000:0b:00.1
+~~~
+
+Bind PCI NICs to UIO driver (`igb_uio` or `uio_pci_generic`).
+
+Restart vpp and use vppctl tool to verify interfaces.
+~~~
+$ vppctl show interface
+              Name               Idx    State  MTU (L3/IP4/IP6/MPLS)     Counter          Count
+
+FortyGigabitEthernet9/0/1         1     down         9000/0/0/0
+FortyGigabitEthernetb/0/1         2     down         9000/0/0/0
+~~~
+
+Set appropriate addresses and bring interfaces up:
+~~~
+$ vppctl set interface ip address FortyGigabitEthernet9/0/1 10.0.0.1/24
+$ vppctl set interface state FortyGigabitEthernet9/0/1 up
+$ vppctl set interface ip address FortyGigabitEthernetb/0/1 10.10.0.1/24
+$ vppctl set interface state FortyGigabitEthernetb/0/1 up
+~~~
+
+Verify configuration:
+~~~
+$ vppctl show interface address
+FortyGigabitEthernet9/0/1 (up):
+  L3 10.0.0.1/24
+FortyGigabitEthernetb/0/1 (up):
+  L3 10.10.0.1/24
+~~~
+
+Now, both interfaces are ready to use. To verify conectivity you can ping
+10.0.0.1 and 10.10.0.1 addresses from another machine.
 
 ## Example: Tap interfaces on single host
 
@@ -110,7 +221,7 @@ To verify connectivity
     ping 10.0.0.1
 ~~~
 
-# 4. Building SPDK with VPP {#vpp_built_into_spdk}
+# 5. Building SPDK with VPP {#vpp_built_into_spdk}
 
 Support for VPP can be built into SPDK by using configuration option.
 ~~~
@@ -120,15 +231,10 @@ configure --with-vpp
 Alternatively, directory with built libraries can be pointed at
 and will be used for compilation instead of installed packages.
 ~~~
-configure --with-vpp=/path/to/vpp/repo/build-root/rpmbuild/vpp-18.01.1.0/build-root/install-vpp-native/vpp
-~~~
-
-Alternatively, in Debian/Ubuntu system, the vpp path is different.
-~~~
 configure --with-vpp=/path/to/vpp/repo/build-root/install-vpp-native/vpp
 ~~~
 
-# 5. Running SPDK with VPP {#vpp_running_with_spdk}
+# 6. Running SPDK with VPP {#vpp_running_with_spdk}
 
 VPP application has to be started before SPDK application, in order to enable
 usage of network interfaces. For example, if you use SPDK iSCSI target or
