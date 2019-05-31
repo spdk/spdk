@@ -66,26 +66,21 @@ static int g_end_device_count;
 static bool
 vmd_is_valid_cfg_addr(vmd_pci_bus *bus, uint64_t addr)
 {
-	if (bus == NULL || !addr || bus->vmd == NULL) {
-		return false;
-	}
-
 	return addr >= (uint64_t)bus->vmd->cfg_vaddr &&
 	       addr < bus->vmd->cfgbar_size + (uint64_t)bus->vmd->cfg_vaddr;
 }
 
 static void
-vmd_align_base_addrs(vmd_adapter *vmd, vmd_pci_device *dev, uint32_t alignment)
+vmd_align_base_addrs(vmd_adapter *vmd, uint32_t alignment)
 {
+	uint32_t pad;
 	/*
 	 *  Device is not in hot plug path, align the base address remaining from membar 1.
 	 */
-	if (vmd) {
-		if (vmd->physical_addr & (alignment - 1)) {
-			uint32_t pad = alignment - (vmd->physical_addr & (alignment - 1));
-			vmd->physical_addr += pad;
-			vmd->current_addr_size -= pad;
-		}
+	if (vmd->physical_addr & (alignment - 1)) {
+		pad = alignment - (vmd->physical_addr & (alignment - 1));
+		vmd->physical_addr += pad;
+		vmd->current_addr_size -= pad;
 	}
 }
 
@@ -187,7 +182,7 @@ vmd_assign_base_addrs(vmd_pci_device *dev)
 		return 0;
 	}
 
-	vmd_align_base_addrs(vmd, vmd->is_hotplug_scan ? dev : NULL, ONE_MB);
+	vmd_align_base_addrs(vmd, ONE_MB);
 
 	for (int i = 0; i < last; i++) {
 		bar_value = dev->header->zero.BAR[i];
@@ -254,10 +249,6 @@ vmd_get_device_capabilities(vmd_pci_device *dev)
 	volatile uint8_t *config_space;
 	uint8_t capabilities_offset;
 	pci_capabilities_header *capabilities_hdr;
-
-	if (!dev) {
-		return;
-	}
 
 	config_space = (volatile uint8_t *)dev->header;
 	if ((dev->header->common.status  & PCI_CAPABILITIES_LIST) == 0) {
@@ -337,10 +328,6 @@ vmd_alloc_dev(vmd_pci_bus *bus, uint32_t devfn)
 	uint8_t header_type;
 	uint32_t rev_class;
 
-	if (bus == NULL || bus->vmd == NULL) {
-		return dev;
-	}
-
 	header = (pci_header * volatile)(bus->vmd->cfg_vaddr +
 					 CONFIG_OFFSET_ADDR(bus->bus_number, devfn, 0, 0));
 	if (!vmd_is_valid_cfg_addr(bus, (uint64_t)header)) {
@@ -354,7 +341,8 @@ vmd_alloc_dev(vmd_pci_bus *bus, uint32_t devfn)
 	SPDK_DEBUGLOG(SPDK_LOG_VMD, "PCI device found: %04x:%04x ***\n",
 		      header->common.vendor_id, header->common.device_id);
 
-	if ((dev = calloc(1, sizeof(vmd_pci_device))) == NULL) {
+	dev = calloc(1, sizeof(vmd_pci_device));
+	if (!dev) {
 		return NULL;
 	}
 
@@ -390,10 +378,6 @@ static void
 vmd_add_bus_to_list(vmd_adapter *vmd, vmd_pci_bus *bus)
 {
 	vmd_pci_bus *blist;
-
-	if (!bus || !vmd) {
-		return;
-	}
 
 	blist = vmd->bus_list;
 	bus->next = NULL;
@@ -431,11 +415,8 @@ vmd_pcibus_remove_device(vmd_pci_bus *bus, vmd_pci_device *device)
 static bool
 vmd_bus_add_device(vmd_pci_bus *bus, vmd_pci_device *device)
 {
-	if (!bus || !device) {
-		return 0;
-	}
-
 	vmd_pci_device *next_dev = bus->dev_list;
+
 	device->next = NULL;
 	if (next_dev == NULL) {
 		bus->dev_list = device;
@@ -455,14 +436,12 @@ static vmd_pci_bus *
 vmd_create_new_bus(vmd_pci_bus *parent, vmd_pci_device *bridge, uint8_t bus_number)
 {
 	vmd_pci_bus *new_bus;
-	if (!parent) {
-		return NULL;
-	}
 
 	new_bus = (vmd_pci_bus *)calloc(1, sizeof(vmd_pci_bus));
 	if (!new_bus) {
 		return NULL;
 	}
+
 	new_bus->parent = parent;
 	new_bus->domain = parent->domain;
 	new_bus->bus_number = bus_number;
@@ -524,10 +503,6 @@ vmd_enable_msix(vmd_pci_device *dev)
 {
 	volatile uint16_t control;
 
-	if (!(dev && dev->msix_cap)) {
-		return;
-	}
-
 	control = dev->msix_cap->message_control.as_uint16_t | (1 << 14);
 	dev->msix_cap->message_control.as_uint16_t = control;
 	control = dev->msix_cap->message_control.as_uint16_t;
@@ -542,10 +517,6 @@ static void
 vmd_disable_msix(vmd_pci_device *dev)
 {
 	volatile uint16_t control;
-
-	if (!(dev && dev->msix_cap)) {
-		return;
-	}
 
 	control = dev->msix_cap->message_control.as_uint16_t | (1 << 14);
 	dev->msix_cap->message_control.as_uint16_t = control;
@@ -656,10 +627,6 @@ vmd_scan_single_bus(vmd_pci_bus *bus, vmd_pci_device *parent_bridge)
 	express_slot_capabiliies_register slot_cap;
 	uint8_t new_bus_num;
 
-	if (bus == NULL) {
-		return 0;
-	}
-
 	for (device_number = 0; device_number < 32; device_number++) {
 		new_dev = vmd_alloc_dev(bus, device_number);
 		if (new_dev == NULL) {
@@ -740,10 +707,7 @@ vmd_scan_single_bus(vmd_pci_bus *bus, vmd_pci_device *parent_bridge)
 static void
 vmd_print_pci_info(vmd_pci_device *dev)
 {
-	if (dev == NULL) {
-		return;
-	}
-	if (dev->header == NULL) {
+	if (!dev) {
 		return;
 	}
 
@@ -812,10 +776,6 @@ vmd_scan_pcibus(vmd_pci_bus *bus)
 	vmd_pci_bus *new_bus = bus;
 	int dev_cnt;
 
-	if (bus == NULL || bus->vmd == NULL) {
-		return 0;
-	}
-
 	g_end_device_count = 0;
 	vmd_add_bus_to_list(bus->vmd, new_bus);
 	bus->vmd->next_bus_number = bus->bus_number + 1;
@@ -833,10 +793,6 @@ vmd_scan_pcibus(vmd_pci_bus *bus)
 static int
 vmd_map_bars(vmd_adapter *vmd, struct spdk_pci_device *dev)
 {
-	if (!(vmd && dev)) {
-		return -1;
-	}
-
 	int rc = spdk_pci_device_map_bar(dev, 0, (void **)&vmd->cfg_vaddr,
 					 &vmd->cfgbar, &vmd->cfgbar_size);
 	if (rc == 0) {
@@ -859,10 +815,6 @@ vmd_map_bars(vmd_adapter *vmd, struct spdk_pci_device *dev)
 static int
 vmd_enumerate_devices(vmd_adapter *vmd)
 {
-	if (vmd == NULL) {
-		return -1;
-	}
-
 	vmd->vmd_bus.vmd = vmd;
 	vmd->vmd_bus.secondary_bus = vmd->vmd_bus.subordinate_bus = 0;
 	vmd->vmd_bus.primary_bus = vmd->vmd_bus.bus_number = 0;
@@ -878,10 +830,6 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	char bdf[32] = {0};
 	struct vmd_container *vmd_c = ctx;
 	size_t i;
-
-	if (!(pci_dev && ctx)) {
-		return -1;
-	}
 
 	/*
 	 * If vmd target addr is NULL, then all spdk returned devices are consumed
