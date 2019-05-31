@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "236f9d1c_e54c2ca2",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 898,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T08:28:00Z",
+      "side": 1,
+      "message": "Please add an assertion before this verifying that request-\u003enum_pending \u003e\u003d num_done.",
+      "range": {
+        "startLine": 897,
+        "startChar": 1,
+        "endLine": 898,
+        "endChar": 0
+      },
+      "revId": "9d4b48c04e5c131ef13340316ed6284a86ad5326",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "93037c8c_d9c3ca3c",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T08:28:00Z",
+      "side": 1,
+      "message": "Let\u0027s rename this as well (to num_segments).",
+      "range": {
+        "startLine": 922,
+        "startChar": 15,
+        "endLine": 922,
+        "endChar": 22
+      },
+      "revId": "9d4b48c04e5c131ef13340316ed6284a86ad5326",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4986d11f_7447d4f7",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T08:28:00Z",
+      "side": 1,
+      "message": "Same here, let\u0027s stick to num_segments.",
+      "range": {
+        "startLine": 973,
+        "startChar": 71,
+        "endLine": 973,
+        "endChar": 78
+      },
+      "revId": "9d4b48c04e5c131ef13340316ed6284a86ad5326",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c3f986e_703bf9ce",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T08:28:00Z",
+      "side": 1,
+      "message": "Can you move this down where it\u0027s needed?",
+      "range": {
+        "startLine": 519,
+        "startChar": 0,
+        "endLine": 519,
+        "endChar": 24
+      },
+      "revId": "9d4b48c04e5c131ef13340316ed6284a86ad5326",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26def45c_227a0a1e",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T08:28:00Z",
+      "side": 1,
+      "message": "Let\u0027s call this \"ftl-lbareq-%p\", with device pointer as the parameter.",
+      "range": {
+        "startLine": 551,
+        "startChar": 66,
+        "endLine": 551,
+        "endChar": 84
+      },
+      "revId": "9d4b48c04e5c131ef13340316ed6284a86ad5326",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3947ce33_3c6d32e9",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T08:28:00Z",
+      "side": 1,
+      "message": "What\u0027s going on with the formatting here?",
+      "range": {
+        "startLine": 556,
+        "startChar": 0,
+        "endLine": 563,
+        "endChar": 9
+      },
+      "revId": "9d4b48c04e5c131ef13340316ed6284a86ad5326",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dec1bc9d_95a4dfd2",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T08:28:00Z",
+      "side": 1,
+      "message": "LBA map pools",
+      "range": {
+        "startLine": 987,
+        "startChar": 30,
+        "endLine": 987,
+        "endChar": 35
+      },
+      "revId": "9d4b48c04e5c131ef13340316ed6284a86ad5326",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2c65090_63770dfe",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 1059,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-05-31T08:28:00Z",
+      "side": 1,
+      "message": "What\u0027s the point of this function? Just inline it.",
+      "range": {
+        "startLine": 1053,
+        "startChar": 0,
+        "endLine": 1059,
+        "endChar": 0
+      },
+      "revId": "9d4b48c04e5c131ef13340316ed6284a86ad5326",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
