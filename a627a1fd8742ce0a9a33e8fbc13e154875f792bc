@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a7d38e7_bae96170",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-05-31T08:51:34Z",
+      "side": 1,
+      "message": "see https://review.gerrithub.io/c/spdk/spdk/+/455750/8//COMMIT_MSG#19\n\nthe Reported-by: tag is still lost, also would be good if you have Fixes: tag",
+      "revId": "a627a1fd8742ce0a9a33e8fbc13e154875f792bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
