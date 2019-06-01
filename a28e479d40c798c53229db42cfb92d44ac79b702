@@ -22,6 +22,30 @@
       "revId": "a28e479d40c798c53229db42cfb92d44ac79b702",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2b64b00_be1145d7",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1015600
+      },
+      "writtenOn": "2019-06-01T14:56:38Z",
+      "side": 1,
+      "message": "Thanks for comments. Yeah I‘m always wondering why the alignment is set as 4096 or FTL_BLOCK_SIZE here. Should it be the cache line size?",
+      "parentUuid": "6ffd63af_f836d638",
+      "range": {
+        "startLine": 451,
+        "startChar": 56,
+        "endLine": 451,
+        "endChar": 60
+      },
+      "revId": "a28e479d40c798c53229db42cfb92d44ac79b702",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
