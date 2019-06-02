@@ -126,6 +126,28 @@ ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
  */
 ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
+
+/**
+ * Write message to the given socket using the message header struct
+ *
+ * \param sock Socket to write to.
+ * \param msg message header containing I/O vector.
+ * \param flags various directives to the socket provider.
+ *
+ * \return the length of written message on success, -1 on failure.
+ */
+ssize_t spdk_sock_sendmsg(struct spdk_sock *sock, struct msghdr *msg, int flags);
+
+/**
+ * Return the flags which are set for the socket
+ *
+ * \param sock Socket to write to.
+ *
+ * \return the flags which are enabled for the socket.
+ */
+#define ZERO_COPY_TX_ENABLED (1 << 0)
+uint32_t spdk_sock_get_flags(struct spdk_sock *sock);
+
 /**
  * Read message from the given socket to the I/O vector array.
  *

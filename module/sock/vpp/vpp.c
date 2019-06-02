@@ -962,6 +962,17 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	return total;
 }
 
+static ssize_t
+spdk_vpp_sock_sendmsg(struct spdk_sock *_sock, struct iovec *iov, int iovcnt, int flags)
+{
+	if (flags) {
+		errno = -EOPNOTSUPP
+		return -1;
+	}
+
+	return spdk_vpp_sock_write(_sock, iov, iovcnt);
+}
+
 static int
 spdk_vpp_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
@@ -1442,6 +1453,7 @@ static struct spdk_net_impl g_vpp_net_impl = {
 	.recv		= spdk_vpp_sock_recv,
 	.readv		= spdk_vpp_sock_readv,
 	.writev		= spdk_vpp_sock_writev,
+	.sendmsg	= spdk_vpp_sock_sendmsg,
 	.set_recvlowat	= spdk_vpp_sock_set_recvlowat,
 	.set_recvbuf	= spdk_vpp_sock_set_recvbuf,
 	.set_sendbuf	= spdk_vpp_sock_set_sendbuf,

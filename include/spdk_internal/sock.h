@@ -50,6 +50,7 @@ extern "C" {
 
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;
+	uint32_t		        flags;
 	spdk_sock_cb			cb_fn;
 	void				*cb_arg;
 	struct spdk_sock_group_impl	*group_impl;
@@ -79,6 +80,7 @@ struct spdk_net_impl {
 	ssize_t (*recv)(struct spdk_sock *sock, void *buf, size_t len);
 	ssize_t (*readv)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 	ssize_t (*writev)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
+	ssize_t (*sendmsg)(struct spdk_sock *sock, struct msghdr *msg, int flags);
 
 	int (*set_recvlowat)(struct spdk_sock *sock, int nbytes);
 	int (*set_recvbuf)(struct spdk_sock *sock, int sz);

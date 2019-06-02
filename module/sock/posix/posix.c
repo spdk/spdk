@@ -35,6 +35,10 @@
 
 #if defined(__linux__)
 #include <sys/epoll.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <linux/errqueue.h>
+#include <error.h>
 #elif defined(__FreeBSD__)
 #include <sys/event.h>
 #endif
@@ -47,6 +51,10 @@
 #define PORTNUMLEN 32
 #define SO_RCVBUF_SIZE (2 * 1024 * 1024)
 #define SO_SNDBUF_SIZE (2 * 1024 * 1024)
+
+#ifndef SO_ZEROCOPY
+#define SO_ZEROCOPY		60
+#endif
 
 struct spdk_posix_sock {
 	struct spdk_sock	base;
@@ -241,9 +249,10 @@ spdk_posix_sock_create(const char *ip, int port, enum spdk_posix_sock_create_typ
 	char portnum[PORTNUMLEN];
 	char *p;
 	struct addrinfo hints, *res, *res0;
+	int val_len, rc;
 	int fd, flag;
-	int val = 1;
-	int rc;
+	int get_val, val = 1;
+	bool zero_copy = true;
 
 	if (ip == NULL) {
 		return NULL;
@@ -291,6 +300,16 @@ retry:
 			/* error */
 			continue;
 		}
+
+		get_val = -1;
+		val_len = sizeof val;
+		rc = getsockopt(fd, SOL_SOCKET, SO_ZEROCOPY, &get_val, &val_len);
+		if (!rc) {
+			rc = setsockopt(fd, SOL_SOCKET, SO_ZEROCOPY, &val, sizeof val);
+			if (rc)
+				zero_copy = false;
+		} else
+			zero_copy = false;
 
 		if (res->ai_family == AF_INET6) {
 			rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
@@ -363,6 +382,9 @@ retry:
 		close(fd);
 		return NULL;
 	}
+
+	if (zero_copy)
+		sock->base.flags = ZERO_COPY_TX_ENABLED;
 
 	return &sock->base;
 }
@@ -454,6 +476,14 @@ spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 
 	return writev(sock->fd, iov, iovcnt);
+}
+
+static ssize_t
+spdk_posix_sock_sendmsg(struct spdk_sock *_sock, struct msghdr *msg, int flags)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
+	return sendmsg(sock->fd, msg, flags);
 }
 
 static int
@@ -705,6 +735,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.recv		= spdk_posix_sock_recv,
 	.readv		= spdk_posix_sock_readv,
 	.writev		= spdk_posix_sock_writev,
+	.sendmsg	= spdk_posix_sock_sendmsg,
 	.set_recvlowat	= spdk_posix_sock_set_recvlowat,
 	.set_recvbuf	= spdk_posix_sock_set_recvbuf,
 	.set_sendbuf	= spdk_posix_sock_set_sendbuf,
