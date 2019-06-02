@@ -272,6 +272,24 @@ spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return sock->net_impl->writev(sock, iov, iovcnt);
 }
 
+ssize_t
+spdk_sock_sendmsg(struct spdk_sock *sock, struct msghdr *msg, int flags)
+{
+	return sock->net_impl->sendmsg(sock, msg, flags);
+}
+
+int
+spdk_sock_get_zc_notifications(struct spdk_sock *sock, uint32_t *low, uint32_t *high)
+{
+	return sock->net_impl->get_zc_notifications(sock, low, high);
+}
+
+uint32_t
+spdk_sock_get_flags(struct spdk_sock *sock)
+{
+	return sock->flags;
+}
+
 int
 spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 {
