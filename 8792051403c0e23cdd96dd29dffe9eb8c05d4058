@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "4083b2e7_042dd208",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-02T09:15:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7694be85_5aa1a318",
+      "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "21dcbbf3_383d69f5",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 5
@@ -65,6 +83,24 @@
       "writtenOn": "2019-05-31T17:57:49Z",
       "side": 1,
       "message": "This function is now only called from one place and can be written as this:\n\nspdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);\nspdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);\n\nSo I think you can just copy those two lines into the one place where this is called and eliminate this function.",
+      "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a9399e0_e5eb60d3",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1523,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-02T09:15:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "21dcbbf3_383d69f5",
       "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
