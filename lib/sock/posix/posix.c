@@ -35,6 +35,10 @@
 
 #if defined(__linux__)
 #include <sys/epoll.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <linux/errqueue.h>
+#include <error.h>
 #elif defined(__FreeBSD__)
 #include <sys/event.h>
 #endif
@@ -45,6 +49,18 @@
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
+
+#ifndef SO_ZEROCOPY
+#define SO_ZEROCOPY		60
+#endif
+
+#ifndef SO_EE_ORIGIN_ZEROCOPY
+#define SO_EE_ORIGIN_ZEROCOPY     5
+#endif
+
+#ifndef SO_EE_CODE_ZEROCOPY_COPIED
+#define SO_EE_CODE_ZEROCOPY_COPIED        1
+#endif
 
 struct spdk_posix_sock {
 	struct spdk_sock	base;
@@ -172,9 +188,10 @@ spdk_posix_sock_create(const char *ip, int port, enum spdk_posix_sock_create_typ
 	char portnum[PORTNUMLEN];
 	char *p;
 	struct addrinfo hints, *res, *res0;
+	int val_len, rc;
 	int fd, flag;
-	int val = 1;
-	int rc;
+	int get_val, val = 1;
+	bool zero_copy = true;
 
 	if (ip == NULL) {
 		return NULL;
@@ -222,6 +239,16 @@ retry:
 			/* error */
 			continue;
 		}
+
+		get_val = -1;
+		val_len = sizeof val;
+		rc = getsockopt(fd, SOL_SOCKET, SO_ZEROCOPY, &get_val, &val_len);
+		if (!rc) {
+			rc = setsockopt(fd, SOL_SOCKET, SO_ZEROCOPY, &val, sizeof val);
+			if (rc)
+				zero_copy = false;
+		} else
+			zero_copy = false;
 
 		if (res->ai_family == AF_INET6) {
 			rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
@@ -296,6 +323,8 @@ retry:
 	}
 
 	sock->fd = fd;
+	if (zero_copy)
+		sock->base.flags = ZERO_COPY_TX_ENABLED;
 	return &sock->base;
 }
 
@@ -386,6 +415,66 @@ spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 
 	return writev(sock->fd, iov, iovcnt);
+}
+
+static ssize_t
+spdk_posix_sock_sendmsg(struct spdk_sock *_sock, struct msghdr *msg, int flags)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
+	return sendmsg(sock->fd, msg, flags);
+}
+
+static int
+spdk_posix_sock_get_zc_notifications(struct spdk_sock *_sock, u_int32_t *low, uint32_t *high)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	struct sock_extended_err *serr;
+	struct msghdr msg = {};
+	struct cmsghdr *cm;
+	char control[100]; /* FIXME 100 bytes is enough? too much? */
+	int ret;
+
+	msg.msg_control = control;
+	msg.msg_controllen = sizeof(control);
+
+	ret = recvmsg(sock->fd, &msg, MSG_ERRQUEUE);
+	if (ret == -1 && errno == EAGAIN)
+		goto out_err;
+	if (ret == -1)
+		error(1, errno, "recvmsg notification"); /* FIXME - this does exit() - see more below */
+
+	if (msg.msg_flags & MSG_CTRUNC)
+		error(1, errno, "recvmsg notification: truncated");
+
+	cm = CMSG_FIRSTHDR(&msg);
+	if (!cm)
+		error(1, 0, "cmsg: no cmsg");
+
+	if (!((cm->cmsg_level == SOL_IP && cm->cmsg_type == IP_RECVERR) ||
+	      (cm->cmsg_level == SOL_IPV6 && cm->cmsg_type == IPV6_RECVERR))) {
+		error(0, 0, "serr: wrong type: %d.%d", cm->cmsg_level, cm->cmsg_type);
+		goto out_err;
+	}
+
+	serr = (void *)CMSG_DATA(cm);
+
+	if (serr->ee_origin != SO_EE_ORIGIN_ZEROCOPY)
+		error(1, 0, "serr: wrong origin: %u", serr->ee_origin);
+
+	if (serr->ee_errno != 0)
+		error(1, 0, "serr: wrong error code: %u", serr->ee_errno);
+
+	if(serr->ee_code & SO_EE_CODE_ZEROCOPY_COPIED)
+		error(0, 0, "serr: !zerocopy: lo %u hi %u", serr->ee_info, serr->ee_data);
+
+	*low = (uint32_t)serr->ee_info;
+	*high = (uint32_t)serr->ee_data;
+
+	return 0;
+
+out_err:
+	return -1;
 }
 
 static int
@@ -633,6 +722,8 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.recv		= spdk_posix_sock_recv,
 	.readv		= spdk_posix_sock_readv,
 	.writev		= spdk_posix_sock_writev,
+	.sendmsg	= spdk_posix_sock_sendmsg,
+	.get_zc_notifications = spdk_posix_sock_get_zc_notifications,
 	.set_recvlowat	= spdk_posix_sock_set_recvlowat,
 	.set_recvbuf	= spdk_posix_sock_set_recvbuf,
 	.set_sendbuf	= spdk_posix_sock_set_sendbuf,

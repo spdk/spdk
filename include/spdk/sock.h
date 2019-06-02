@@ -126,6 +126,15 @@ ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
  */
 ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
+
+/* FIXME - documentation for the new entries */
+ssize_t spdk_sock_sendmsg(struct spdk_sock *sock, struct msghdr *msg, int flags);
+
+int spdk_sock_get_zc_notifications(struct spdk_sock *sock, uint32_t *low, uint32_t *high);
+
+#define ZERO_COPY_TX_ENABLED (1 << 0)
+uint32_t spdk_sock_get_flags(struct spdk_sock *sock);
+
 /**
  * Read message from the given socket to the I/O vector array.
  *
