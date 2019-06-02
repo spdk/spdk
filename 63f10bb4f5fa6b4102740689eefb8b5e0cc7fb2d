@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42285d46_b97f1353",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-02T10:59:52Z",
+      "side": 1,
+      "message": "nit - \"active\" appears twice, remove one of them..",
+      "range": {
+        "startLine": 19,
+        "startChar": 60,
+        "endLine": 20,
+        "endChar": 6
+      },
+      "revId": "63f10bb4f5fa6b4102740689eefb8b5e0cc7fb2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fefc73fb_135790cd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-02T10:59:52Z",
+      "side": 1,
+      "message": "nit - typo - should be \"value\"",
+      "range": {
+        "startLine": 23,
+        "startChar": 36,
+        "endLine": 23,
+        "endChar": 41
+      },
+      "revId": "63f10bb4f5fa6b4102740689eefb8b5e0cc7fb2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
