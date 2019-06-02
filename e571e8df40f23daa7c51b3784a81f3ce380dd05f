@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d33ef3e_f1628b7f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-02T11:13:30Z",
+      "side": 1,
+      "message": "The patch LGTM - however, best if we can re-write the patch title and change log, e.g as below (and if you don\u0027t pick on that, still you have a typo here \"Previsouly\" should be \"Previously\"):\n\nnvme/tcp: Properly handle send pdu failure\n\nCurrently, if the return value of the handler that processes the send queue (nvme_tcp_qpair_process_send_queue) isn\u0027t zero, we immediately return and not attempt to receive any pdus. This is wrong, we should only bail out when there\u0027s a send failure (the return value is negative), fix that.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 65
+      },
+      "revId": "e571e8df40f23daa7c51b3784a81f3ce380dd05f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
