@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "882c9103_1ce07577",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-02T09:12:55Z",
+      "side": 1,
+      "message": "The next_expected_r2t_offset and r2tl_remain cannot be removed. \nReason: According to the protocol, the initiator can send multiple H2C pdus. So if the initiator sends many, we should use the two variables.",
+      "parentUuid": "e48d0861_ca81b186",
+      "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7694be85_5aa1a318",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 5
@@ -64,6 +82,24 @@
       "writtenOn": "2019-05-31T17:57:49Z",
       "side": 1,
       "message": "Since there\u0027s now only one r2t, isn\u0027t this function just this:\n\nspdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);\nspdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);\nspdk_nvmf_tcp_req_process(ttransport, tcp_req);",
+      "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99899ac0_7b22d276",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1547,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-02T09:12:55Z",
+      "side": 1,
+      "message": "There can be multiple H2C PDUs respond one R2T PDU. So we should say that one H2C PDU can return the full length of the requested data.",
+      "parentUuid": "63eb3246_5affcf05",
       "revId": "8792051403c0e23cdd96dd29dffe9eb8c05d4058",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
