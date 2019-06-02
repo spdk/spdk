@@ -46,6 +46,30 @@
       "revId": "e571e8df40f23daa7c51b3784a81f3ce380dd05f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dce3cf9a_df46b628",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-02T12:21:14Z",
+      "side": 1,
+      "message": "Hi Ziye, I understand that you prefer to keep your wording for the change log, I did my -1 just for the typo not the phrasing. I will leave it to the maintainer to see if he wants any further changes on that respect.",
+      "parentUuid": "55eb8e13_3c1e95d6",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 65
+      },
+      "revId": "e571e8df40f23daa7c51b3784a81f3ce380dd05f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
