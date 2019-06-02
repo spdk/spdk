@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b2fc95e_8ba8a644",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 10
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-02T11:01:17Z",
+      "side": 1,
+      "message": "see https://review.gerrithub.io/c/spdk/spdk/+/455750/9//COMMIT_MSG#17",
+      "revId": "655a59a14e1f3863cf859617205b1dbf44681506",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
