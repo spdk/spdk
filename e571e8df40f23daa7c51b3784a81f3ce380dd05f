@@ -22,6 +22,30 @@
       "revId": "e571e8df40f23daa7c51b3784a81f3ce380dd05f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55eb8e13_3c1e95d6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-02T11:58:29Z",
+      "side": 1,
+      "message": "Hi Or,\n\nAs I stated, I can change the typo. Thanks for pointing this. However, I would like to use my own commit message and would accept some of your ideas. \n\nHowever I would not like to use all your suggested commit message, which does not make sense to me for the open source development. Thanks for the understanding.",
+      "parentUuid": "6d33ef3e_f1628b7f",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 65
+      },
+      "revId": "e571e8df40f23daa7c51b3784a81f3ce380dd05f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
