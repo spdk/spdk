@@ -271,9 +271,6 @@ does nothing more than demonstrate the very basic API. Although Blobstore is opt
 a RAM disk (malloc) back-end so that it can be executed easily in any development environment. The malloc back-end
 is a `bdev` module thus this example uses not only the SPDK Framework but the `bdev` layer as well.
 
-* **Hello NVME Blob**: `hello_nvme_blob.c` is the non-bdev version of `hello_blob.c` and simply shows how an
-application can directly integrate Blobstore with the SPDK NVMe driver without using the `bdev` layer at all.
-
 * **CLI**: The `blobcli.c` example is command line utility intended to not only serve as example code but as a test
 and development tool for Blobstore itself. It is also a simple single threaded application that relies on both the
 SPDK Framework and the `bdev` layer but offers multiple modes of operation to accomplish some real-world tasks. In
