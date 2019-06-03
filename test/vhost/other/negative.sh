@@ -69,7 +69,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	spdk_vhost_run --json-path=$testdir
+	vhost_run --json-path=$testdir
 	notice ""
 
 	rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"

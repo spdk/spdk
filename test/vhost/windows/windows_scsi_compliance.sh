@@ -45,8 +45,8 @@ trap "rm -f $aio_file; rm -rf $testdir/results; error_exit" SIGINT SIGTERM ERR
 mkdir -p $testdir/results
 dd if=/dev/zero of=$aio_file bs=1M count=512
 
-timing_enter spdk_vhost_run
-spdk_vhost_run
+timing_enter vhost_run
+vhost_run
 $rpc_py set_bdev_nvme_hotplug -e
 $rpc_py construct_malloc_bdev 256 4096 -b Malloc0
 $rpc_py construct_aio_bdev $aio_file Aio0 512
@@ -56,7 +56,7 @@ $rpc_py add_vhost_scsi_lun naa.vhost.1 0 Nvme0n1
 $rpc_py add_vhost_scsi_lun naa.vhost.1 1 Malloc0
 # TODO: Currently there is bug for aio device. Disable this test
 # $rpc_py add_vhost_scsi_lun naa.vhost.1 2 Aio0
-timing_exit spdk_vhost_run
+timing_exit vhost_run
 
 timing_enter start_vm
 vm_setup --force=1 --disk-type=spdk_vhost_scsi --os=$WINDOWS_IMG --disks=vhost --memory=4096

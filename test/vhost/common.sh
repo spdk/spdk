@@ -103,7 +103,7 @@ function spdk_vhost_list_all()
 	fi
 }
 
-function spdk_vhost_run()
+function vhost_run()
 {
 	local param
 	local vhost_num=0

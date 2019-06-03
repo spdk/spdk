@@ -62,7 +62,7 @@ notice "==============="
 notice ""
 notice "running SPDK"
 notice ""
-spdk_vhost_run
+vhost_run
 $rpc_py set_bdev_nvme_hotplug -e
 $rpc_py construct_split_vbdev Nvme0n1 16
 $rpc_py construct_malloc_bdev 128 512 -b Malloc
