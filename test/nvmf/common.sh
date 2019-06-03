@@ -157,6 +157,10 @@ function nvmfcleanup()
 
 function nvmftestinit()
 {
+	if [ -z $TEST_TRANSPORT ]; then
+		echo "transport not specified - use --transport= to specify"
+		return 1
+	fi
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
 		rdma_device_init
