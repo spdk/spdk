@@ -46,8 +46,6 @@ struct rte_comp_op g_comp_op[2];
 struct vbdev_compress g_comp_bdev;
 struct comp_device_qp g_device_qp;
 struct compress_dev g_device;
-struct rte_comp_xform g_comp_xform;
-struct rte_comp_xform g_decomp_xform;
 static struct rte_mbuf *g_src_mbufs[2];
 static struct rte_mbuf *g_dst_mbufs[2];
 static struct rte_mbuf g_expected_src_mbufs[2];

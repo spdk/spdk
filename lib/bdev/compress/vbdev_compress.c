@@ -147,6 +147,29 @@ static struct rte_mempool *g_comp_op_mp = NULL;			/* comp operations, must be rt
 static struct rte_mbuf_ext_shared_info g_shinfo = {};		/* used by DPDK mbuf macros */
 static bool g_qat_available = false;
 
+/* Create shrared (between all ops per PMD) compress xforms. */
+static struct rte_comp_xform g_comp_xform = (struct rte_comp_xform) {
+	.type = RTE_COMP_COMPRESS,
+	.compress = {
+		.algo = RTE_COMP_ALGO_DEFLATE,
+		.deflate.huffman = RTE_COMP_HUFFMAN_DEFAULT,
+		.level = RTE_COMP_LEVEL_MAX,
+		.window_size = DEFAULT_WINDOW_SIZE,
+		.chksum = RTE_COMP_CHECKSUM_NONE,
+		.hash_algo = RTE_COMP_HASH_ALGO_NONE
+	}
+};
+/* Create shrared (between all ops per PMD) decompress xforms. */
+static struct rte_comp_xform g_decomp_xform = (struct rte_comp_xform) {
+	.type = RTE_COMP_DECOMPRESS,
+	.decompress = {
+		.algo = RTE_COMP_ALGO_DEFLATE,
+		.chksum = RTE_COMP_CHECKSUM_NONE,
+		.window_size = DEFAULT_WINDOW_SIZE,
+		.hash_algo = RTE_COMP_HASH_ALGO_NONE
+	}
+};
+
 static void vbdev_compress_examine(struct spdk_bdev *bdev);
 static void vbdev_compress_claim(struct vbdev_compress *comp_bdev);
 static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
@@ -170,8 +193,6 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 	struct compress_dev *device;
 	uint16_t q_pairs = num_lcores;
 	uint8_t cdev_id;
-	struct rte_comp_xform comp_xform = {};
-	struct rte_comp_xform decomp_xform = {};
 	int rc, i;
 	struct comp_device_qp *dev_qp;
 	struct comp_device_qp *tmp_qp;
@@ -228,23 +249,7 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 		goto err;
 	}
 
-	/* TODO: if later on all elements remain static, move these
-	 * xform structs to static globals.
-	 */
-
-	/* Create shrared (between all ops per PMD) compress xforms. */
-	comp_xform = (struct rte_comp_xform) {
-		.type = RTE_COMP_COMPRESS,
-		.compress = {
-			.algo = RTE_COMP_ALGO_DEFLATE,
-			.deflate.huffman = RTE_COMP_HUFFMAN_DEFAULT,
-			.level = RTE_COMP_LEVEL_MAX,
-			.window_size = DEFAULT_WINDOW_SIZE,
-			.chksum = RTE_COMP_CHECKSUM_NONE,
-			.hash_algo = RTE_COMP_HASH_ALGO_NONE
-		}
-	};
-	rc = rte_compressdev_private_xform_create(cdev_id, &comp_xform,
+	rc = rte_compressdev_private_xform_create(cdev_id, &g_comp_xform,
 			&device->comp_xform);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to create private comp xform device %u: error %d\n",
@@ -252,19 +257,7 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 		goto err;
 	}
 
-	/* Create shrared (between all ops per PMD) decompress xforms. *
-	 * also TODO make this global static if everything stays like this
-	 */
-	decomp_xform = (struct rte_comp_xform) {
-		.type = RTE_COMP_DECOMPRESS,
-		.decompress = {
-			.algo = RTE_COMP_ALGO_DEFLATE,
-			.chksum = RTE_COMP_CHECKSUM_NONE,
-			.window_size = DEFAULT_WINDOW_SIZE,
-			.hash_algo = RTE_COMP_HASH_ALGO_NONE
-		}
-	};
-	rc = rte_compressdev_private_xform_create(cdev_id, &decomp_xform,
+	rc = rte_compressdev_private_xform_create(cdev_id, &g_decomp_xform,
 			&device->decomp_xform);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create private decomp xform device %u: error %d\n",
@@ -668,7 +661,7 @@ _complete_other_io(void *arg)
 
 /* scheduled for submission on reduce thread */
 static void
-_spdk_bdev_io_submit(void *arg)
+_comp_bdev_io_submit(void *arg)
 {
 	struct spdk_bdev_io *bdev_io = arg;
 	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
@@ -734,9 +727,9 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 
 	/* Send this request to the reduce_thread if that's not what we're on. */
 	if (spdk_io_channel_get_thread(ch) != comp_bdev->reduce_thread) {
-		spdk_thread_send_msg(comp_bdev->reduce_thread, _spdk_bdev_io_submit, bdev_io);
+		spdk_thread_send_msg(comp_bdev->reduce_thread, _comp_bdev_io_submit, bdev_io);
 	} else {
-		_spdk_bdev_io_submit(bdev_io);
+		_comp_bdev_io_submit(bdev_io);
 	}
 }
 
