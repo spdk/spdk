@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad3814b6_c4ca0262",
+        "filename": "test/nvmf/nvmf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-03T22:59:14Z",
+      "side": 1,
+      "message": "Just out of curiosity, do you have plans for additional arguments (other than transport type) going forward, or is this more preemptive?",
+      "revId": "a8245bf08235005be399d4b06bfdfdab2fe209e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
