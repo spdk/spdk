@@ -409,6 +409,12 @@ ftl_nv_cache_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		goto out;
 	}
 
+	if (!ftl_nv_cache_phase_is_valid(hdr->phase)) {
+		SPDK_ERRLOG("Invalid phase of the non-volatile cache (%u)\n", hdr->phase);
+		rc = -ENOTRECOVERABLE;
+		goto out;
+	}
+
 	pthread_spin_lock(&nv_cache->lock);
 	nv_cache->ready = true;
 	pthread_spin_unlock(&nv_cache->lock);
