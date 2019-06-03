@@ -152,7 +152,7 @@ parser.add_argument('-d', '--max-disks', default=0, type=int,
                     each virtual machine gets it's own bdev to work on.")
 parser.add_argument('-v', '--vm-count', default=1, type=int,
                     help="How many VMs to run in test. Default: 1")
-parser.add_argument('-i', '--vm-image', default="/home/sys_sgsw/vhost_vm_image.qcow2",
+parser.add_argument('-i', '--vm-image', default="$HOME/vhost_vm_image.qcow2",
                     type=str, help="VM image to use for running VMs.")
 
 subparsers = parser.add_subparsers()

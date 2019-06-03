@@ -15,7 +15,6 @@ NVMF_RPC="$rootdir/scripts/rpc.py -s $NVMF_SOCK"
 VHOST_SOCK="/tmp/vhost_rpc.sock"
 VHOST_APP="$rootdir/app/vhost/vhost -p 0 -r $VHOST_SOCK -u"
 VHOST_RPC="$rootdir/scripts/rpc.py -s $VHOST_SOCK"
-vm_image="/home/sys_sgsw/vhost_vm_image.qcow2"
 
 if [ ! -d $QEMU_PREFIX ]; then
 	echo "qemu not installed on this machine. It may be a VM. Skipping nvmf_vhost test."
@@ -61,7 +60,7 @@ $VHOST_RPC construct_vhost_scsi_controller naa.VhostScsi0.3
 $VHOST_RPC add_vhost_scsi_lun naa.VhostScsi0.3 0 "Nvme0n1"
 
 # start qemu based VM.
-vm_setup --os="$vm_image" --disk-type=spdk_vhost_scsi --disks="VhostScsi0"  --force=3 --vhost-num=3
+vm_setup --os="$VM_IMAGE" --disk-type=spdk_vhost_scsi --disks="VhostScsi0"  --force=3 --vhost-num=3
 
 vm_run 3
 
