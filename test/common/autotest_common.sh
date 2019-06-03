@@ -73,6 +73,19 @@ export PYTHONPATH=$PYTHONPATH:$rootdir/scripts
 export ASAN_OPTIONS=new_delete_type_mismatch=0
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
+# Export LeakSanitizer option to use suppression file in order to prevent false positives
+# and known leaks in external executables or libraries from showing up.
+asan_suppresion_file="/var/tmp/asan_suppresion_file"
+sudo rm -rf "$asan_suppresion_file"
+
+# ASAN has some bugs around thread_local variables.  We have a destructor in place
+# to free the thread contexts, but ASAN complains about the leak before those
+# destructors have a chance to run.  So suppress this one specific leak using
+# LSAN_OPTIONS.
+echo "leak:spdk_fs_alloc_thread_ctx" >> "$asan_suppresion_file"
+
+export LSAN_OPTIONS=suppressions="$asan_suppresion_file"
+
 export DEFAULT_RPC_ADDR="/var/tmp/spdk.sock"
 
 if [ -z "$DEPENDENCY_DIR" ]; then
@@ -808,6 +821,7 @@ function autotest_cleanup()
 			modprobe -r uio_pci_generic
 		fi
 	fi
+	rm -rf "$asan_suppresion_file"
 }
 
 function freebsd_update_contigmem_mod()
