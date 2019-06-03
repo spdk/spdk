@@ -11,7 +11,6 @@ PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 FIO_PATH="/usr/src/fio"
 virtio_bdevs=""
 virtio_with_unmap=""
-os_image="/home/sys_sgsw/vhost_vm_image.qcow2"
 #different linux distributions have different versions of targetcli that have different names for ramdisk option
 targetcli_rd_name=""
 kernel_vhost_disk="naa.5012345678901234"
@@ -22,7 +21,6 @@ function usage()
 	echo "Script for running vhost initiator tests."
 	echo "Usage: $(basename $1) [-h|--help] [--fiobin=PATH]"
 	echo "-h, --help            Print help and exit"
-	echo "    --vm_image=PATH   Path to VM image used in these tests [default=$os_image]"
 	echo "    --fiopath=PATH    Path to fio directory on host [default=$FIO_PATH]"
 }
 
@@ -32,7 +30,6 @@ while getopts 'h-:' optchar; do
 		case "$OPTARG" in
 			help) usage $0 && exit 0 ;;
 			fiopath=*) FIO_PATH="${OPTARG#*=}" ;;
-			vm_image=*) os_image="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
 		esac
 		;;
@@ -142,7 +139,7 @@ timing_exit create_kernel_vhost
 
 timing_enter setup_vm
 vm_no="0"
-vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image \
+vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$VM_IMAGE \
  --disks="Nvme0n1_scsi0:Malloc0:Malloc1:$kernel_vhost_disk,kernel_vhost:Virtio0,virtio:\
  Nvme0n1_blk0,spdk_vhost_blk:Nvme0n1_blk1,spdk_vhost_blk" \
  --queue_num=8 --memory=6144
