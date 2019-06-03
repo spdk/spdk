@@ -107,7 +107,6 @@ function spdk_vhost_run()
 {
 	local param
 	local vhost_num=0
-	local vhost_conf_path=""
 	local memory=1024
 
 	for param in "$@"; do
@@ -116,7 +115,6 @@ function spdk_vhost_run()
 				vhost_num="${param#*=}"
 				assert_number "$vhost_num"
 				;;
-			--conf-path=*) local vhost_conf_path="${param#*=}" ;;
 			--json-path=*) local vhost_json_path="${param#*=}" ;;
 			--memory=*) local memory=${param#*=} ;;
 			--no-pci*) local no_pci="-u" ;;
@@ -132,8 +130,6 @@ function spdk_vhost_run()
 	local vhost_log_file="$vhost_dir/vhost.log"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 	local vhost_socket="$vhost_dir/usvhost"
-	local vhost_conf_template="$vhost_conf_path/vhost.conf.in"
-	local vhost_conf_file="$vhost_conf_path/vhost.conf"
 	notice "starting vhost app in background"
 	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill $vhost_num
 	[[ -d $vhost_dir ]] && rm -f $vhost_dir/*
@@ -156,11 +152,6 @@ function spdk_vhost_run()
 	fi
 
 	local cmd="$vhost_app -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock $no_pci"
-	if [[ -n "$vhost_conf_path" ]]; then
-		cp $vhost_conf_template $vhost_conf_file
-		$rootdir/scripts/gen_nvme.sh >> $vhost_conf_file
-		cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock $no_pci"
-	fi
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
@@ -174,7 +165,7 @@ function spdk_vhost_run()
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
 	#do not generate nvmes if pci access is disabled
-	if [[ -z "$vhost_conf_path" ]] && [[ -z "$no_pci" ]]; then
+	if [[ -z "$no_pci" ]]; then
 		$rootdir/scripts/gen_nvme.sh "--json" | $rootdir/scripts/rpc.py\
 		 -s $vhost_dir/rpc.sock load_subsystem_config
 	fi
@@ -185,8 +176,6 @@ function spdk_vhost_run()
 
 	notice "vhost started - pid=$vhost_pid"
 	timing_exit vhost_start
-
-	rm -f $vhost_conf_file
 }
 
 function spdk_vhost_kill()
