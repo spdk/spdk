@@ -32,7 +32,22 @@ function vhosttestinit()
 {
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
-		# TODO: Test for VM image in correct spot
+
+		# Look for the VM image
+		if [[ ! -f $VM_IMAGE ]]; then
+			echo "VM image not found at $VM_IMAGE"
+			echo "Download? [yn]"
+			read download
+			if [ "$download" = "y" ]; then
+				curl https://dqtibwqq6s6ux.cloudfront.net/download/test_resources/vhost_vm_image.tar.gz | tar xz -C $(eval echo ~$(logname))
+			fi
+		fi
+	fi
+
+	# Look for the VM image
+	if [[ ! -f $VM_IMAGE ]]; then
+		error "VM image not found at $VM_IMAGE"
+		exit 1
 	fi
 }
 
