@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "566940f0_ff15e990",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-03T02:52:40Z",
+      "side": 1,
+      "message": "There are many hardware queues in a NIC. So if different sockets are bounded into a single hardware queue, then they can have the same placement_id.",
+      "parentUuid": "bd8200c7_e4bfbbcf",
+      "revId": "f84683fe5e37dd5a4a1a7a2dbf8aa35df056a21a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "025c59c3_178a1019",
         "filename": "lib/sock/sock.c",
         "patchSetId": 13
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "dcf5e938_08fea8d7",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-03T02:52:40Z",
+      "side": 1,
+      "message": "This is need to make sure the searched _group is equal to group. Since this spdk_sock_group_add_sock is used to add sock into group. If the placement_id is already associate a group, the returned _group must equal to group. Otherwise, it means that our allocation is wrong.",
+      "parentUuid": "025c59c3_178a1019",
+      "revId": "f84683fe5e37dd5a4a1a7a2dbf8aa35df056a21a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "604b111a_3c4eb173",
         "filename": "lib/sock/sock.c",
         "patchSetId": 13
@@ -64,6 +100,24 @@
       "writtenOn": "2019-05-31T19:04:32Z",
       "side": 1,
       "message": "You have a function to remove the sock_group from the map, so you can just call that instead. If it doesn\u0027t find a match, oh well.",
+      "revId": "f84683fe5e37dd5a4a1a7a2dbf8aa35df056a21a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a711024_d240e087",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-03T02:52:40Z",
+      "side": 1,
+      "message": "This is not exactly right. The sock_group number is limited. So there will be many different placement_ids are mapping to the same sock_group. So we can not do this way.",
+      "parentUuid": "604b111a_3c4eb173",
       "revId": "f84683fe5e37dd5a4a1a7a2dbf8aa35df056a21a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
