@@ -51,15 +51,11 @@ extern "C" {
 #define MAX_VMD_TARGET  24
 
 /*
- * Takes an input VMD D-BDF, probes it and attaches to it. The resulting vmd
- * adapter is placed in a vmd container. If input BDF is NULL, then all VMD
- * probed is consumed in the application VMD container list.
+ * Enumerate VMD devices and hook them into the spdk pci subsystem
  *
- * \param vmd_bdf VMD BDF
- *
- * \return number of VMD devices available in the system
+ * \return 0 on success, -1 on failure
  */
-int spdk_vmd_probe(struct spdk_pci_addr *vmd_bdf);
+int spdk_vmd_init(void);
 
 /*
  * Returns a list of nvme devices found on the given vmd pci BDF.
