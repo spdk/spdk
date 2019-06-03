@@ -22,22 +22,15 @@ if [ ! -d $QEMU_PREFIX ]; then
 	exit 0
 fi
 
-nvmftestinit $1
-
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
-
 timing_enter nvmf_vhost
+nvmftestinit
+
 # Start Apps
 $NVMF_APP -r $NVMF_SOCK &
 nvmfpid=$!
 waitforlisten $nvmfpid $NVMF_SOCK
 
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 mkdir -p "$(get_vhost_dir 3)"
 
@@ -45,7 +38,7 @@ $VHOST_APP -S "$(get_vhost_dir 3)" &
 vhostpid=$!
 waitforlisten $vhostpid $NVMF_SOCK
 
-trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; killprocess $vhostpid nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $vhostpid nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 # Configure NVMF tgt on host machine
 malloc_bdev="$($NVMF_RPC construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
@@ -76,6 +69,5 @@ trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
 killprocess $vhostpid
-killprocess $nvmfpid
-nvmftestfini $1
+nvmftestfini
 timing_exit nvmf_vhost
