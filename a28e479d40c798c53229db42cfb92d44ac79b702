@@ -46,6 +46,30 @@
       "revId": "a28e479d40c798c53229db42cfb92d44ac79b702",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "101a299e_aba810c2",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-03T06:38:03Z",
+      "side": 1,
+      "message": "Yeah, I think the alignment should be either set to 0 (no alignment) or cache line (to make it cache-friendly). Let\u0027s leave it like that for now. We need to go over all of the allocations and check if the alignment makes sense (there\u0027s lots of other places the alignment could be reduced).",
+      "parentUuid": "c2b64b00_be1145d7",
+      "range": {
+        "startLine": 451,
+        "startChar": 56,
+        "endLine": 451,
+        "endChar": 60
+      },
+      "revId": "a28e479d40c798c53229db42cfb92d44ac79b702",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
