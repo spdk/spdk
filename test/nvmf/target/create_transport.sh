@@ -22,7 +22,7 @@ nvmftestinit
 nvmfappstart "-m 0xF"
 
 # Use nvmf_create_transport call to create transport
-$rpc_py nvmf_create_transport -t rdma -u 8192
+$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
 
 null_bdevs="$($rpc_py construct_null_bdev Null0 $NULL_BDEV_SIZE $NULL_BLOCK_SIZE) "
 null_bdevs+="$($rpc_py construct_null_bdev Null1 $NULL_BDEV_SIZE $NULL_BLOCK_SIZE)"
@@ -31,9 +31,9 @@ $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 for null_bdev in $null_bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $null_bdev
 done
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-nvme discover -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+nvme discover -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 echo "Perform nvmf subsystem discovery via RPC"
 $rpc_py get_nvmf_subsystems

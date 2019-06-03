@@ -201,6 +201,7 @@ if [ -z "$output_dir" ]; then
 fi
 
 TEST_MODE=
+TEST_TRANSPORT=rdma
 for i in "$@"; do
 	case "$i" in
 		--iso)
