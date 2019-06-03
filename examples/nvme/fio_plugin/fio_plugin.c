@@ -907,6 +907,7 @@ static void spdk_fio_cleanup(struct thread_data *td)
 		fio_qpair = fio_qpair_tmp;
 	}
 
+	free(fio_thread->iocq);
 	free(fio_thread);
 
 	pthread_mutex_lock(&g_mutex);
