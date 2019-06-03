@@ -14,8 +14,6 @@ set -e
 
 nvmftestinit
 
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 TYPES="TCP"
 if [ -z $NVMF_FIRST_TARGET_IP ]; then
 	echo "no RDMA NIC for nvmf test, will only test TCP/IP transport"

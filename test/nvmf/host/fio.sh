@@ -12,13 +12,6 @@ set -e
 
 nvmftestinit
 
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
-
 if [ ! -d /usr/src/fio ]; then
 	echo "FIO not available"
 	exit 0

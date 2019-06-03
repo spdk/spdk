@@ -8,13 +8,6 @@ source $rootdir/test/nvmf/common.sh
 set -e
 nvmftestinit
 
-RDMA_IP_LIST=$(get_available_rdma_ips)
-NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-if [ -z $NVMF_FIRST_TARGET_IP ]; then
-	echo "no NIC for nvmf test"
-	exit 0
-fi
-
 timing_enter identify_kernel_nvmf_tgt
 
 subsystemname=nqn.2016-06.io.spdk:testnqn
