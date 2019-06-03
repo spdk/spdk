@@ -45,6 +45,30 @@
       "revId": "7f15cc708b9fcc61048f12c20ab74f9292df1051",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61284807_6caf4687",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1239,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-03T07:54:49Z",
+      "side": 1,
+      "message": "W will remove this assert.",
+      "parentUuid": "9e4c80de_bf27efe2",
+      "range": {
+        "startLine": 1239,
+        "startChar": 2,
+        "endLine": 1239,
+        "endChar": 39
+      },
+      "revId": "7f15cc708b9fcc61048f12c20ab74f9292df1051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
