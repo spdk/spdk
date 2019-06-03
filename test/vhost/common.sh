@@ -1,5 +1,6 @@
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
+: ${VM_IMAGE="$HOME/vhost_vm_image.qcow2")}
 
 TEST_DIR=$(readlink -f $rootdir/..)
 

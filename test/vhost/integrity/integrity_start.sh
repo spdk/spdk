@@ -78,7 +78,7 @@ fi
 
 # Set up and run VM
 setup_cmd="vm_setup --disk-type=$ctrl_type --force=0"
-setup_cmd+=" --os=/home/sys_sgsw/vhost_vm_image.qcow2"
+setup_cmd+=" --os=$VM_IMAGE"
 setup_cmd+=" --disks=Nvme0n1"
 $setup_cmd
 
