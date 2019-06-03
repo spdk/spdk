@@ -73,7 +73,7 @@ dos2unix $testdir/results/WIN_SCSI_*.log
 notice "Kill vm 1"
 vm_kill "$vm_num"
 notice "Kill spdk"
-spdk_vhost_kill
+vhost_kill
 notice "Remove $aio_file"
 rm -f $aio_file
 

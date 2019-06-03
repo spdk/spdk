@@ -132,6 +132,6 @@ blk_ro_tc1
 
 $rpc_py delete_nvme_controller Nvme0
 
-spdk_vhost_kill
+vhost_kill
 
 vhosttestfini

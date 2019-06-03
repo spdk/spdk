@@ -131,7 +131,7 @@ function vhost_run()
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 	local vhost_socket="$vhost_dir/usvhost"
 	notice "starting vhost app in background"
-	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill $vhost_num
+	[[ -r "$vhost_pid_file" ]] && vhost_kill $vhost_num
 	[[ -d $vhost_dir ]] && rm -f $vhost_dir/*
 	mkdir -p $vhost_dir
 
@@ -178,7 +178,7 @@ function vhost_run()
 	timing_exit vhost_start
 }
 
-function spdk_vhost_kill()
+function vhost_kill()
 {
 	local rc=0
 	local vhost_num=0
@@ -1141,7 +1141,7 @@ function at_app_exit()
 	notice "killing vhost app"
 
 	for vhost_num in $(vhost_list_all); do
-		spdk_vhost_kill $vhost_num
+		vhost_kill $vhost_num
 	done
 
 	notice "EXIT DONE"
