@@ -55,8 +55,6 @@ static unsigned char *device_type[] = {
  */
 struct vmd_container {
 	uint32_t count;
-	/* can target specific vmd or all vmd when null */
-	struct spdk_pci_addr *vmd_target_addr;
 	struct vmd_adapter vmd[MAX_VMD_SUPPORTED];
 };
 
@@ -832,14 +830,6 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct vmd_container *vmd_c = ctx;
 	size_t i;
 
-	/*
-	 * If vmd target addr is NULL, then all spdk returned devices are consumed
-	 */
-	if (vmd_c->vmd_target_addr &&
-	    spdk_pci_addr_compare(&pci_dev->addr, vmd_c->vmd_target_addr)) {
-		return -1;
-	}
-
 	spdk_pci_device_cfg_read32(pci_dev, &cmd_reg, 4);
 	cmd_reg |= 0x6;                      /* PCI bus master/memory enable. */
 	spdk_pci_device_cfg_write32(pci_dev, cmd_reg, 4);
@@ -908,13 +898,9 @@ spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *
 }
 
 int
-spdk_vmd_probe(struct spdk_pci_addr *vmd_bdf)
+spdk_vmd_init(void)
 {
-	g_vmd_container.vmd_target_addr = vmd_bdf;
-	spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
-	g_vmd_container.vmd_target_addr = NULL;
-
-	return g_vmd_container.count;
+	return spdk_pci_enumerate(spdk_pci_vmd_get_driver(), vmd_enum_cb, &g_vmd_container);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vmd", SPDK_LOG_VMD)

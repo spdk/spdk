@@ -77,9 +77,8 @@ parse_args(int argc, char **argv)
 int main(int argc, char **argv)
 {
 	struct spdk_env_opts opts;
-	size_t vmd_cnt;
-
 	int rc = parse_args(argc, argv);
+
 	if (rc != 0) {
 		return rc;
 	}
@@ -93,9 +92,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	vmd_cnt = spdk_vmd_probe(&probe_addr);
+	rc = spdk_vmd_init();
 
-	if (vmd_cnt == 0) {
+	if (rc) {
 		SPDK_ERRLOG("No VMD Controllers found\n");
 	}
 
