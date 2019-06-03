@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "23c46274_b9a3586d",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-06-03T07:41:47Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "84d5fb6f_4a8fb9ed",
+      "range": {
+        "startLine": 24,
+        "startChar": 13,
+        "endLine": 24,
+        "endChar": 17
+      },
+      "revId": "bdcd24654ee268c23758a326dd86e158e63a3fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e646e7f_f03d7c4a",
         "filename": "doc/vpp_integration.md",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-03T05:13:06Z",
       "side": 1,
       "message": "should we remove this line? The dev will not be binded to DPDK if this line in config file.",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 7
+      },
+      "revId": "bdcd24654ee268c23758a326dd86e158e63a3fef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42301afe_61b5f675",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-06-03T07:41:47Z",
+      "side": 1,
+      "message": "Yes, you\u0027re right. Thanks.",
+      "parentUuid": "6e646e7f_f03d7c4a",
       "range": {
         "startLine": 110,
         "startChar": 0,
