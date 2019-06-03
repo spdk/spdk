@@ -114,6 +114,22 @@ find_iscsi_connection_by_id(int cid)
 	}
 }
 
+static void
+_iscsi_conns_cleanup(void)
+{
+	if (g_conns_array != MAP_FAILED) {
+		munmap(g_conns_array, sizeof(struct spdk_iscsi_conn) *
+		       MAX_ISCSI_CONNECTIONS);
+		g_conns_array = MAP_FAILED;
+	}
+
+	if (g_conns_array_fd >= 0) {
+		close(g_conns_array_fd);
+		g_conns_array_fd = -1;
+		shm_unlink(g_shm_name);
+	}
+}
+
 int spdk_initialize_iscsi_conns(void)
 {
 	size_t conns_size = sizeof(struct spdk_iscsi_conn) * MAX_ISCSI_CONNECTIONS;
@@ -149,16 +165,7 @@ int spdk_initialize_iscsi_conns(void)
 	return 0;
 
 err:
-	if (g_conns_array != MAP_FAILED) {
-		munmap(g_conns_array, conns_size);
-		g_conns_array = MAP_FAILED;
-	}
-
-	if (g_conns_array_fd >= 0) {
-		close(g_conns_array_fd);
-		g_conns_array_fd = -1;
-		shm_unlink(g_shm_name);
-	}
+	_iscsi_conns_cleanup();
 
 	return -1;
 }
@@ -553,22 +560,9 @@ spdk_iscsi_get_active_conns(struct spdk_iscsi_tgt_node *target)
 }
 
 static void
-iscsi_conns_cleanup(void)
-{
-	munmap(g_conns_array, sizeof(struct spdk_iscsi_conn) *
-	       MAX_ISCSI_CONNECTIONS);
-	g_conns_array = MAP_FAILED;
-	shm_unlink(g_shm_name);
-	if (g_conns_array_fd >= 0) {
-		close(g_conns_array_fd);
-		g_conns_array_fd = -1;
-	}
-}
-
-static void
 iscsi_conn_check_shutdown_cb(void *arg1)
 {
-	iscsi_conns_cleanup();
+	_iscsi_conns_cleanup();
 	spdk_shutdown_iscsi_conns_done();
 }
 
