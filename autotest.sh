@@ -207,7 +207,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_NVMF -eq 1 ]; then
-		run_test suite ./test/nvmf/nvmf.sh
+		run_test suite ./test/nvmf/nvmf.sh --transport=rdma
 		run_test suite ./test/spdkcli/nvmf.sh
 	fi
 
