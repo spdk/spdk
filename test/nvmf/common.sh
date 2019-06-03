@@ -186,7 +186,12 @@ function nvmfappstart()
 	nvmfpid=$!
 	trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 	waitforlisten $nvmfpid
-	modprobe nvme-$TEST_TRANSPORT
+	# currently we run the host/perf test for TCP even on systems without kernel nvme-tcp
+	#  support; that's fine since the host/perf test uses the SPDK initiator
+	# maybe later we will enforce modprobe to succeed once we have systems in the test pool
+	#  with nvme-tcp kernel support - but until then let this pass so we can still run the
+	#  host/perf test with the tcp transport
+	modprobe nvme-$TEST_TRANSPORT || true
 	timing_exit start_nvmf_tgt
 }
 
