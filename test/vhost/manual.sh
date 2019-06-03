@@ -5,7 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-DEFAULT_VM_IMAGE="/home/sys_sgsw/vhost_vm_image.qcow2"
 CENTOS_VM_IMAGE="/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
 DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
 CENTOS_FIO_BIN="/home/sys_sgsw/fio_ubuntu_bak"
@@ -22,7 +21,7 @@ case $1 in
 		echo "  -h |--help                           prints this message"
 		echo ""
 		echo "Environment:"
-		echo "  VM_IMAGE        path to QCOW2 VM image used during test (default: $DEFAULT_VM_IMAGE)"
+		echo "  VM_IMAGE        path to QCOW2 VM image used during test (default: $HOME/vhost_vm_image.qcow2)"
 		echo ""
 		echo "Tests are performed only on Linux machine. For other OS no action is performed."
 		echo ""
@@ -38,7 +37,6 @@ if [[ $(uname -s) != Linux ]]; then
 	exit 0
 fi
 
-: ${VM_IMAGE="$DEFAULT_VM_IMAGE"}
 : ${FIO_BIN="$DEFAULT_FIO_BIN"}
 
 if [[ ! -r "${VM_IMAGE}" ]]; then

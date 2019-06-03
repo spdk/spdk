@@ -7,7 +7,6 @@ source $rootdir/test/vhost/common.sh
 
 vm_count=1
 vm_memory=2048
-vm_image="/home/sys_sgsw/vhost_vm_image.qcow2"
 vm_sar_enable=false
 vm_sar_delay="0"
 vm_sar_interval="1"
@@ -46,7 +45,7 @@ function usage()
 	echo "    --vm-memory=INT         Amount of RAM memory (in MB) to pass to a single VM."
 	echo "                            Default: 2048 MB"
 	echo "    --vm-image=PATH         OS image to use for running the VMs."
-	echo "                            Default: /home/sys_sgsw/vhost_vm_image.qcow2"
+	echo "                            Default: \$HOME/vhost_vm_image.qcow2"
 	echo "    --vm-sar-enable         Measure CPU utilization on VM using sar."
 	echo "    --vm-sar-delay=INT      Wait for X seconds before sarting SAR measurement on VMs. Default: 0."
 	echo "    --vm-sar-interval=INT   Interval (seconds) argument for SAR. Default: 1s."
@@ -117,7 +116,7 @@ while getopts 'xh-:' optchar; do
 			fio-iterations=*) fio_iterations="${OPTARG#*=}" ;;
 			vm-count=*) vm_count="${OPTARG#*=}" ;;
 			vm-memory=*) vm_memory="${OPTARG#*=}" ;;
-			vm-image=*) vm_image="${OPTARG#*=}" ;;
+			vm-image=*) VM_IMAGE="${OPTARG#*=}" ;;
 			vm-sar-enable) vm_sar_enable=true ;;
 			vm-sar-delay=*) vm_sar_delay="${OPTARG#*=}" ;;
 			vm-sar-interval=*) vm_sar_interval="${OPTARG#*=}" ;;
@@ -282,7 +281,7 @@ for (( i=0; i<$vm_count; i++)); do
 	vm="vm_$i"
 
 	setup_cmd="vm_setup --disk-type=$ctrl_type --force=$i --memory=$vm_memory"
-	setup_cmd+=" --os=$vm_image"
+	setup_cmd+=" --os=$VM_IMAGE"
 
 	if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
 		$rpc_py construct_vhost_scsi_controller naa.0.$i
