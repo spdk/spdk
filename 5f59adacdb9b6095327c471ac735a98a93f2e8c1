@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "730b66df_2fc04b76",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 974,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-03T15:48:15Z",
+      "side": 1,
+      "message": "small nit (which I would have ignored if I didn\u0027t have any other comments on this patch)\n\nthis newline can be removed - typically we put the comment for the member just before the member itself with no newline in between",
+      "revId": "5f59adacdb9b6095327c471ac735a98a93f2e8c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ed316ae_95bc5e07",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-03T15:48:15Z",
+      "side": 1,
+      "message": "I think sq_paddr and cq_paddr can just be local variables in nvme_pcie_qpair_construct.  We only need to save the vaddrs in the qpair (to know at the end whether we need to free them or not).",
+      "revId": "5f59adacdb9b6095327c471ac735a98a93f2e8c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
