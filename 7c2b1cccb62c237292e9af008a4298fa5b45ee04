@@ -34,6 +34,29 @@
       "revId": "7c2b1cccb62c237292e9af008a4298fa5b45ee04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "175b14ed_01521a53",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-03T11:37:33Z",
+      "side": 1,
+      "message": "Actually this can\u0027t be even merged just yet as it will break the build with upstream, external rte_vhost. We must hold off with merging this patch for now, but the other in the series are good to go. I rebased them on top of master (upon approval from Nikos:)",
+      "range": {
+        "startLine": 727,
+        "startChar": 18,
+        "endLine": 727,
+        "endChar": 49
+      },
+      "revId": "7c2b1cccb62c237292e9af008a4298fa5b45ee04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
