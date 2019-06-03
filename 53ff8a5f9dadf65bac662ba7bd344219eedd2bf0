@@ -899,6 +899,30 @@
     },
     {
       "key": {
+        "uuid": "c0d3e9c6_da39c781",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-03T08:52:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a5929b32_0cbb16f8",
+      "range": {
+        "startLine": 993,
+        "startChar": 0,
+        "endLine": 993,
+        "endChar": 25
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6378bbf9_1f317a20",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 26
@@ -1181,6 +1205,30 @@
     },
     {
       "key": {
+        "uuid": "e6b05658_0a62ea71",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-03T08:52:21Z",
+      "side": 1,
+      "message": "This is some old patchset.",
+      "parentUuid": "a5a934c7_b9da151a",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 45
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "50b6e99d_9af687d7",
         "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
         "patchSetId": 26
@@ -1192,6 +1240,30 @@
       "writtenOn": "2019-05-31T08:28:00Z",
       "side": 1,
       "message": "This should be replaced with something else. Tracking of the cached/pending/clear segments should be tested for sure.",
+      "range": {
+        "startLine": 369,
+        "startChar": 0,
+        "endLine": 369,
+        "endChar": 22
+      },
+      "revId": "53ff8a5f9dadf65bac662ba7bd344219eedd2bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78746005_b314ea41",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-03T08:52:21Z",
+      "side": 1,
+      "message": "This is some old patchset.",
+      "parentUuid": "50b6e99d_9af687d7",
       "range": {
         "startLine": 369,
         "startChar": 0,
