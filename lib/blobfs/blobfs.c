@@ -120,7 +120,7 @@ struct spdk_file {
 	uint64_t		length;
 	bool                    is_deleted;
 	bool			open_for_writing;
-	uint64_t		length_flushed;
+	volatile uint64_t	length_flushed;
 	uint64_t		length_xattr;
 	uint64_t		append_pos;
 	uint64_t		seq_byte_count;
@@ -2076,7 +2076,7 @@ __check_sync_reqs(struct spdk_file *file)
 		BLOBFS_TRACE(file, "set xattr length 0x%jx\n", file->length_flushed);
 		sync_req->args.op.sync.xattr_in_progress = true;
 		sync_req->args.op.sync.length = file->length_flushed;
-		spdk_blob_set_xattr(file->blob, "length", &file->length_flushed,
+		spdk_blob_set_xattr(file->blob, "length", (const void *)&file->length_flushed,
 				    sizeof(file->length_flushed));
 
 		pthread_spin_unlock(&file->lock);
