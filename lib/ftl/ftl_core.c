@@ -1230,14 +1230,11 @@ static int
 ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
-	struct iovec		*iov = ftl_io_iovec(io);
 	int			rc = 0;
 
 	assert(io->lbk_cnt % dev->xfer_size == 0);
 
 	while (io->iov_pos < io->iov_cnt) {
-		assert(iov[io->iov_pos].iov_len > 0);
-
 		/* There are no guarantees of the order of completion of NVMe IO submission queue */
 		/* so wait until chunk is not busy before submitting another write */
 		if (wptr->chunk->busy) {
