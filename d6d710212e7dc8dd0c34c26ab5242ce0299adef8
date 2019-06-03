@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ffa4280_b23a4bab",
+        "filename": "test/nvmf/host/bdevperf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-03T19:53:11Z",
+      "side": 0,
+      "message": "Doesn\u0027t have to be in this patch, but this looks a lot like the definition of nvmfappstart from common.sh. I think you could reorder line 33 and then replace this whole block with that function.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 22
+      },
+      "revId": "d6d710212e7dc8dd0c34c26ab5242ce0299adef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
