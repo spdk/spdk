@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fd48808_a9e67df4",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-06-03T08:26:12Z",
+      "side": 1,
+      "message": "Verified, no error reports. But I have two suggestions.\n1.Even in nightly test, I still think 120 seconds is too long. And, the size of generated \"nvmf_fuzz_tgt_output.txt\" is more than 1G, unable to open view. See if 30-60 seconds is appropriate？",
+      "range": {
+        "startLine": 32,
+        "startChar": 74,
+        "endLine": 32,
+        "endChar": 81
+      },
+      "revId": "ed52ecffe7a71b0ff3124f8d1c69815ddc9afb82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9639b77f_921b6091",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-06-03T08:26:12Z",
+      "side": 1,
+      "message": "2.This txt file will be overwrite by the one in next line.So I suggest \"nvmf_fuzz_logs1.txt\" here and \"nvmf_fuzz_logs2.txt\" in next line.",
+      "range": {
+        "startLine": 32,
+        "startChar": 127,
+        "endLine": 32,
+        "endChar": 157
+      },
+      "revId": "ed52ecffe7a71b0ff3124f8d1c69815ddc9afb82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
