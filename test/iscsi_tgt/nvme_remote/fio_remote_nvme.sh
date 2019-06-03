@@ -16,8 +16,6 @@ iscsitestinit $1 $2
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio.py"
 
-NVMF_PORT=4420
-
 # Namespaces are NOT used here on purpose. Rxe_cfg utilility used for NVMf tests do not support namespaces.
 TARGET_IP=127.0.0.1
 INITIATOR_IP=127.0.0.1
@@ -71,7 +69,7 @@ $rpc_py nvmf_create_transport -t RDMA -u 8192
 echo "NVMf target has started."
 bdevs=$($rpc_py construct_malloc_bdev 64 512)
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 for bdev in $bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 done

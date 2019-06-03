@@ -32,17 +32,17 @@ timing_exit start_nvmf_tgt
 $rpc_py construct_malloc_bdev 64 512 -b Malloc1
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 
 # Test fio_plugin as host with malloc backend
 LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 \
-traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
+traddr=$NVMF_FIRST_TARGET_IP trsvcid=$NVMF_PORT ns=1"
 
 # second test mocking multiple SGL elements
 LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/mock_sgl_config.fio --filename="trtype=RDMA adrfam=IPv4 \
-traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
+traddr=$NVMF_FIRST_TARGET_IP trsvcid=$NVMF_PORT ns=1"
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -54,9 +54,9 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	$rpc_py construct_lvol_bdev -l lvs_0 lbd_0 $free_mb
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode2 -a -s SPDK00000000000001
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 lvs_0/lbd_0
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 \
-	traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
+	traddr=$NVMF_FIRST_TARGET_IP trsvcid=$NVMF_PORT ns=1"
 	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2
 
 	# Test fio_plugin as host with nvme lvol nested backend
@@ -65,9 +65,9 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	$rpc_py construct_lvol_bdev -l lvs_n_0 lbd_nest_0 $free_mb
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode3 -a -s SPDK00000000000001
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode3 lvs_n_0/lbd_nest_0
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode3 -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode3 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 \
-	traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
+	traddr=$NVMF_FIRST_TARGET_IP trsvcid=$NVMF_PORT ns=1"
 	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode3
 
 	sync

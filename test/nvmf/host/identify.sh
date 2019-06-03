@@ -32,7 +32,7 @@ $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0 \
 	--nguid "ABCDEF0123456789ABCDEF0123456789" \
 	--eui64 "ABCDEF0123456789"
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 $rpc_py get_nvmf_subsystems
 
