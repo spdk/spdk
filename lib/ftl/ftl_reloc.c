@@ -612,13 +612,15 @@ ftl_band_reloc_init(struct ftl_reloc *reloc, struct ftl_band_reloc *breloc,
 static void
 ftl_band_reloc_free(struct ftl_band_reloc *breloc)
 {
-	struct ftl_reloc *reloc = breloc->parent;
+	struct ftl_reloc *reloc;
 	struct ftl_io *io;
 	size_t i, num_ios;
 
 	if (!breloc) {
 		return;
 	}
+
+	reloc = breloc->parent;
 
 	if (breloc->active) {
 		num_ios = spdk_ring_dequeue(breloc->write_queue, (void **)reloc->io, reloc->max_qdepth);
