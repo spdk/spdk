@@ -283,6 +283,6 @@ $rpc_py get_bdevs
 $rpc_py get_vhost_controllers
 
 notice "Shutting down SPDK vhost app..."
-spdk_vhost_kill
+vhost_kill
 
 vhosttestfini

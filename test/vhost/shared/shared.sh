@@ -31,6 +31,6 @@ run_fio_pid=$!
 sleep 1
 run_spdk_fio --size=50% --offset=50% --filename=VirtioBlk0
 wait $run_fio_pid
-spdk_vhost_kill
+vhost_kill
 
 vhosttestfini

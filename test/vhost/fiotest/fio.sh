@@ -254,7 +254,7 @@ if ! $no_shutdown; then
 	fi
 	notice "Testing done -> shutting down"
 	notice "killing vhost app"
-	spdk_vhost_kill
+	vhost_kill
 
 	notice "EXIT DONE"
 	notice "==============="

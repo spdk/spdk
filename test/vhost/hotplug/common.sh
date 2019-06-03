@@ -181,7 +181,7 @@ function reboot_all_and_prepare() {
 
 function post_test_case() {
     vm_shutdown_all
-    spdk_vhost_kill
+    vhost_kill
 }
 
 function on_error_exit() {

@@ -20,7 +20,7 @@ function host_2_cleanup_vhost()
 	$rpc remove_vhost_controller $target_vm_ctrl
 
 	notice "Shutting down vhost app"
-	spdk_vhost_kill 1
+	vhost_kill 1
 	sleep 1
 }
 

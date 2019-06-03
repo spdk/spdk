@@ -99,6 +99,6 @@ clean_lvol_cfg
 $rpc_py delete_nvme_controller Nvme0
 
 notice "Shutting down SPDK vhost app..."
-spdk_vhost_kill
+vhost_kill
 
 vhosttestfini

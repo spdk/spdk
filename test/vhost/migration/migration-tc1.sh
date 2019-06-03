@@ -115,7 +115,7 @@ function migration_tc1()
 	migration_tc1_clean_vhost_config
 
 	notice "killing vhost app"
-	spdk_vhost_kill
+	vhost_kill
 
 	notice "Migration TC1 SUCCESS"
 }
