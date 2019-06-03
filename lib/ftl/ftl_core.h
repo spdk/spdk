@@ -112,6 +112,13 @@ struct ftl_nv_cache {
 	uint64_t				num_available;
 	/* Maximum number of blocks */
 	uint64_t				num_data_blocks;
+	/*
+	 * Phase of the current cycle of writes. Each time whole cache area is filled, the phase is
+	 * advanced. Current phase is saved in every IO's metadata, as well as in the header saved
+	 * in the first sector. By looking at the phase of each block, it's possible to find the
+	 * oldest block and replay the order of the writes when recovering the data from the cache.
+	 */
+	unsigned int				phase;
 	/* Indicates that the data can be written to the cache */
 	bool					ready;
 	/* Metadata pool */
@@ -247,6 +254,8 @@ struct ftl_nv_cache_header {
 	uint64_t				size;
 	/* Version of the header */
 	uint32_t				version;
+	/* Current phase */
+	uint8_t					phase;
 	/* Checksum of the header, needs to be last element */
 	uint32_t				checksum;
 } __attribute__((packed));
@@ -479,7 +488,31 @@ ftl_vld_map_size(const struct spdk_ftl_dev *dev)
 	return (size_t)spdk_divide_round_up(ftl_num_band_lbks(dev), CHAR_BIT);
 }
 
-#define FTL_NV_CACHE_HEADER_VERSION	1
-#define FTL_NV_CACHE_DATA_OFFSET	1
+#define FTL_NV_CACHE_HEADER_VERSION	(1)
+#define FTL_NV_CACHE_DATA_OFFSET	(1)
+#define FTL_NV_CACHE_PHASE_OFFSET	(62)
+#define FTL_NV_CACHE_PHASE_MASK		(3ULL << FTL_NV_CACHE_PHASE_OFFSET)
+
+static inline bool
+ftl_nv_cache_phase_is_valid(unsigned int phase)
+{
+	return phase > 0 && phase <= 3;
+}
+
+static inline unsigned int
+ftl_nv_cache_next_phase(unsigned int current)
+{
+	static const unsigned int phases[] = { 0, 2, 3, 1 };
+	assert(ftl_nv_cache_phase_is_valid(current));
+	return phases[current];
+}
+
+static inline uint64_t
+ftl_nv_cache_pack_lba(uint64_t lba, unsigned int phase)
+{
+	assert(ftl_nv_cache_phase_is_valid(phase));
+	return (lba & ~FTL_NV_CACHE_PHASE_MASK) | ((uint64_t)phase << FTL_NV_CACHE_PHASE_OFFSET);
+}
+
 
 #endif /* FTL_CORE_H */

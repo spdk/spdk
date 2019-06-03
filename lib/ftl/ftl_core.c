@@ -980,6 +980,7 @@ ftl_nv_cache_wrap(void *ctx)
 	hdr->uuid = dev->uuid;
 	hdr->size = spdk_bdev_get_num_blocks(bdev);
 	hdr->version = FTL_NV_CACHE_HEADER_VERSION;
+	hdr->phase = (uint8_t)nv_cache->phase;
 	hdr->checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
 
 	rc = spdk_bdev_write_blocks(nv_cache->bdev_desc, ioch->cache_ioch, hdr, 0, 1,
@@ -993,7 +994,7 @@ ftl_nv_cache_wrap(void *ctx)
 }
 
 static uint64_t
-ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks)
+ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks, unsigned int *phase)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
@@ -1018,9 +1019,11 @@ ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks)
 	cache_addr = nv_cache->current_addr;
 	nv_cache->current_addr += *num_lbks;
 	nv_cache->num_available -= *num_lbks;
+	*phase = nv_cache->phase;
 
 	if (nv_cache->current_addr == spdk_bdev_get_num_blocks(bdev)) {
 		nv_cache->current_addr = FTL_NV_CACHE_DATA_OFFSET;
+		nv_cache->phase = ftl_nv_cache_next_phase(nv_cache->phase);
 		nv_cache->ready = false;
 		spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_nv_cache_wrap, dev);
 	}
@@ -1096,15 +1099,19 @@ ftl_submit_nv_cache(void *ctx)
 }
 
 static void
-ftl_nv_cache_fill_md(struct ftl_nv_cache *nv_cache, struct ftl_io *io)
+ftl_nv_cache_fill_md(struct ftl_io *io, unsigned int phase)
 {
-	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+	struct spdk_bdev *bdev;
+	struct ftl_nv_cache *nv_cache = &io->dev->nv_cache;
+	uint64_t lbk_off, lba;
 	void *md_buf = io->md;
-	size_t lbk_off;
+
+	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 
 	for (lbk_off = 0; lbk_off < io->lbk_cnt; ++lbk_off) {
-		*(uint64_t *)md_buf = ftl_io_get_lba(io, lbk_off);
-		md_buf = (char *)md_buf + spdk_bdev_get_md_size(bdev);
+		lba = ftl_nv_cache_pack_lba(ftl_io_get_lba(io, lbk_off), phase);
+		memcpy(md_buf, &lba, sizeof(lba));
+		md_buf += spdk_bdev_get_md_size(bdev);
 	}
 }
 
@@ -1114,6 +1121,7 @@ _ftl_write_nv_cache(void *ctx)
 	struct ftl_io *child, *io = ctx;
 	struct spdk_ftl_dev *dev = io->dev;
 	struct spdk_thread *thread;
+	unsigned int phase;
 	uint64_t num_lbks;
 
 	thread = spdk_io_channel_get_thread(io->ioch);
@@ -1135,7 +1143,7 @@ _ftl_write_nv_cache(void *ctx)
 		}
 
 		/* Reserve area on the write buffer cache */
-		child->ppa.ppa = ftl_reserve_nv_cache(&dev->nv_cache, &num_lbks);
+		child->ppa.ppa = ftl_reserve_nv_cache(&dev->nv_cache, &num_lbks, &phase);
 		if (child->ppa.ppa == FTL_LBA_INVALID) {
 			spdk_mempool_put(dev->nv_cache.md_pool, child->md);
 			ftl_io_free(child);
@@ -1148,7 +1156,7 @@ _ftl_write_nv_cache(void *ctx)
 			ftl_io_shrink_iovec(child, num_lbks);
 		}
 
-		ftl_nv_cache_fill_md(&dev->nv_cache, child);
+		ftl_nv_cache_fill_md(child, phase);
 		ftl_submit_nv_cache(child);
 	}
 

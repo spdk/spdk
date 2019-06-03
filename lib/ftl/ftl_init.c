@@ -895,6 +895,7 @@ ftl_clear_nv_cache_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	hdr->uuid = dev->uuid;
 	hdr->size = spdk_bdev_get_num_blocks(bdev);
 	hdr->version = FTL_NV_CACHE_HEADER_VERSION;
+	hdr->phase = dev->nv_cache.phase = 1;
 	hdr->checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
 
 	if (spdk_bdev_write_blocks(nv_cache->bdev_desc, ioch->cache_ioch, hdr, 0, 1,
