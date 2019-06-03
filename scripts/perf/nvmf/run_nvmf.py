@@ -310,13 +310,13 @@ runtime={run_time}
         if run_num:
             for i in range(1, run_num + 1):
                 output_filename = job_name + "_run_" + str(i) + "_" + self.name + ".json"
-                cmd = "sudo /usr/src/fio/fio %s --output-format=json --output=%s" % (fio_config_file, output_filename)
+                cmd = "sudo %s %s --output-format=json --output=%s" % (self.fio_dir, fio_config_file, output_filename)
                 output, error = self.remote_call(cmd)
                 self.log_print(output)
                 self.log_print(error)
         else:
             output_filename = job_name + "_" + self.name + ".json"
-            cmd = "sudo /usr/src/fio/fio %s --output-format=json --output=%s" % (fio_config_file, output_filename)
+            cmd = "sudo %s %s --output-format=json --output=%s" % (self.fio_dir, fio_config_file, output_filename)
             output, error = self.remote_call(cmd)
             self.log_print(output)
             self.log_print(error)
@@ -608,8 +608,11 @@ class SPDKInitiator(Initiator):
         self.remote_call("unzip -qo /tmp/spdk_drop.zip -d %s" % self.spdk_dir)
 
         self.log_print("Sources unpacked")
-        self.remote_call("cd %s; git submodule update --init; ./configure --with-rdma --with-fio=/usr/src/fio;"
-                         "make clean; make -j$(($(nproc)*2))" % self.spdk_dir)
+        output, error = self.remote_call("which fio")
+        self.fio_dir = output.strip()
+        self.log_print("Using fio directory %s" % self.fio_dir)
+        self.remote_call("cd %s; git submodule update --init; ./configure --with-rdma --with-fio=%s;"
+                         "make clean; make -j$(($(nproc)*2))" % (self.spdk_dir, self.fio_dir))
 
         self.log_print("SPDK built")
         self.remote_call("sudo %s/scripts/setup.sh" % self.spdk_dir)
