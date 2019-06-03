@@ -43,35 +43,35 @@
 
 struct ftl_restore_band {
 	struct ftl_restore		*parent;
-
+	/* Associated band */
 	struct ftl_band			*band;
-
+	/* Status of retrieving this band's metadata */
 	enum ftl_md_status		md_status;
-
+	/* Padded queue link  */
 	STAILQ_ENTRY(ftl_restore_band)	stailq;
 };
 
 struct ftl_restore {
 	struct spdk_ftl_dev		*dev;
-
+	/* Completion callback (called for each phase of the restoration) */
 	ftl_restore_fn			cb;
-
+	/* Number of inflight IOs */
 	unsigned int			num_ios;
-
+	/* Current band number (index in the below bands array) */
 	unsigned int			current;
-
+	/* Array of bands */
 	struct ftl_restore_band		*bands;
-
+	/* Queue of bands to be padded (due to unsafe shutdown) */
 	STAILQ_HEAD(, ftl_restore_band) pad_bands;
-
+	/* Number of yet to be padded bands */
 	size_t				num_pad_bands;
-
+	/* Status of the padding */
 	int				pad_status;
-
+	/* Metadata buffer */
 	void				*md_buf;
-
+	/* LBA map buffer */
 	void				*lba_map;
-
+	/* Indicates we're in the final phase of the restoration */
 	bool				l2p_phase;
 };
 
