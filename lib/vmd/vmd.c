@@ -583,15 +583,92 @@ vmd_is_supported_device(struct vmd_pci_device *dev)
 	return dev->class == PCI_CLASS_STORAGE_EXPRESS;
 }
 
+static int
+vmd_dev_map_bar(struct spdk_pci_device *pci_dev, uint32_t bar,
+		void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
+{
+	struct vmd_pci_device *dev = SPDK_CONTAINEROF(pci_dev, struct vmd_pci_device, pci);
+
+	*size = dev->bar[bar].size;
+	*phys_addr = dev->bar[bar].start;
+	*mapped_addr = (void *)dev->bar[bar].vaddr;
+
+	return 0;
+}
+
+static int
+vmd_dev_unmap_bar(struct spdk_pci_device *_dev, uint32_t bar, void *addr)
+{
+	return 0;
+}
+
+static int
+vmd_dev_cfg_read(struct spdk_pci_device *_dev, void *value, uint32_t len,
+		 uint32_t offset)
+{
+	struct vmd_pci_device *dev = SPDK_CONTAINEROF(_dev, struct vmd_pci_device, pci);
+	volatile uint8_t *src = (volatile uint8_t *)dev->header;
+	uint8_t *dst = value;
+	size_t i;
+
+	if (len + offset > PCI_MAX_CFG_SIZE) {
+		return -1;
+	}
+
+	for (i = 0; i < len; ++i) {
+		dst[i] = src[offset + i];
+	}
+
+	return 0;
+}
+
+static int
+vmd_dev_cfg_write(struct spdk_pci_device *_dev,  void *value,
+		  uint32_t len, uint32_t offset)
+{
+	struct vmd_pci_device *dev = SPDK_CONTAINEROF(_dev, struct vmd_pci_device, pci);
+	volatile uint8_t *dst = (volatile uint8_t *)dev->header;
+	uint8_t *src = value;
+	size_t i;
+
+	if ((len + offset) > PCI_MAX_CFG_SIZE) {
+		return -1;
+	}
+
+	for (i = 0; i < len; ++i) {
+		dst[offset + i] = src[i];
+	}
+
+	return 0;
+}
+
+static void
+vmd_dev_detach(struct spdk_pci_device *dev)
+{
+	return;
+}
+
 static void
 vmd_dev_init(struct vmd_pci_device *dev)
 {
 	uint8_t bdf[32];
 
-	/* TODO: Initialize device */
+	dev->pci.addr.domain = dev->bus->vmd->domain;
+	dev->pci.addr.bus = dev->bus->bus_number;
+	dev->pci.addr.dev = dev->devfn;
+	dev->pci.addr.func = 0;
+	dev->pci.id.vendor_id = dev->header->common.vendor_id;
+	dev->pci.id.device_id = dev->header->common.device_id;
+	dev->pci.map_bar = vmd_dev_map_bar;
+	dev->pci.unmap_bar = vmd_dev_unmap_bar;
+	dev->pci.cfg_read = vmd_dev_cfg_read;
+	dev->pci.cfg_write = vmd_dev_cfg_write;
+	dev->pci.detach = vmd_dev_detach;
+
 	if (vmd_is_supported_device(dev)) {
 		spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
 		SPDK_DEBUGLOG(SPDK_LOG_VMD, "Initalizing NVMe device at %s\n", bdf);
+		spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
 	}
 }
 
