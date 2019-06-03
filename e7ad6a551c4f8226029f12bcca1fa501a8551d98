@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bfa2d53c_4da7d470",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2384,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-06-03T06:20:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c813216c_0447a486",
+      "revId": "e7ad6a551c4f8226029f12bcca1fa501a8551d98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2b1135de_94b1d3cc",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-31T18:24:24Z",
       "side": 1,
       "message": "What does this comment mean? The ctrlr and the group and the sgroup can\u0027t be NULL if we\u0027re getting a completion unless there is a bug in the code somewhere (or the unit tests aren\u0027t properly mocking things). I\u0027d prefer to fix up the unit tests and change these to asserts.",
+      "revId": "e7ad6a551c4f8226029f12bcca1fa501a8551d98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e8b17f2_1ed2dc12",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2487,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-06-03T06:20:55Z",
+      "side": 1,
+      "message": "Yeah, some unit tests don\u0027t set the sgroup correctly.",
+      "parentUuid": "2b1135de_94b1d3cc",
       "revId": "e7ad6a551c4f8226029f12bcca1fa501a8551d98",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "e7ad6a551c4f8226029f12bcca1fa501a8551d98",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fbf15e2_f887ef18",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2494,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-06-03T06:20:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "26bfc022_fcec347e",
+      "revId": "e7ad6a551c4f8226029f12bcca1fa501a8551d98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
