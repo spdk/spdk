@@ -1230,7 +1230,7 @@ static int
 ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
-	struct iovec		*iov = ftl_io_iovec(io);
+	struct iovec		*iov __attribute__((unused)) = ftl_io_iovec(io);
 	int			rc = 0;
 
 	assert(io->lbk_cnt % dev->xfer_size == 0);
