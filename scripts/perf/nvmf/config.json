@@ -17,6 +17,7 @@
     "nic_ips": ["192.0.1.1"],
     "mode": "spdk",
     "nvmecli_dir": "/path/to/nvmecli"
+    "fio_dir": "/path/to/fio binary"
   },
   "initiator2": {
     "ip": "10.0.0.2",
