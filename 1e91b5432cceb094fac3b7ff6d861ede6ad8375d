@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a527bcc3_2e247f6f",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "I think we still need general one, because w/o it we won\u0027t catch some flows where we could trigger power failure. Let me explain on below example. We have flow where we have such operations in this particular order (but it is not obvious when looking at the code):\n\nread\nread\nread\nwrite\nwrite\nread\nread\nwrite\n\nWith general counter, we set to fail after 4th IO operation, and test will fail after 1st write. With read and write counters we set both to fail after 4th operation of its kind. With that the fail will be after 4th read and we won\u0027t catch errors paths between 1st write and 4th read. In such case we can test that error paths, but we will have to get the read/write flow before writing the test, to get know which values to set to read threshold and write threshold. It will also succeed on last write, which is not fully power failure scenario. \n\nSo the only easy way to make sure that power failure will be triggered at particular \"time\" is to use general counter. The other counters are here to simulate some other cases than power failure (like only write errors, where read is still working).",
+      "parentUuid": "e88cbb41_e43e434d",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b4edb65_ab8477a8",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 14
@@ -33,6 +51,24 @@
       "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8af84d6_affd6e25",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6b4edb65_ab8477a8",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "dc70bd33_4a92be7c",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c9a58b99_e0ad4168",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff6079af_24ea0cba",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 14
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "a92d2036_efcacdf6",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ff6079af_24ea0cba",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e8d9023_904eaa4b",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 14
@@ -81,6 +153,24 @@
       "writtenOn": "2019-05-31T16:46:35Z",
       "side": 1,
       "message": "No need for forward declarations",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d80ffd0_3f6f698f",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "See comment below.",
+      "parentUuid": "4e8d9023_904eaa4b",
       "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "9a384779_9169f7a4",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6a040d27_9081c93f",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbaf4302_584be6b4",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 14
@@ -115,6 +223,24 @@
       "writtenOn": "2019-05-31T16:46:35Z",
       "side": 1,
       "message": "Is this supposed to reset everything? How do you just reset the counters?\n\nI think this shouldn\u0027t zero out g_power_failure_thresholds. If the user wants to change the thresholds they can call the function below.",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b8d143e_6daf3fed",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "This will be used to disable power failure after one iteration of test ended (see next patch in series). I would need to call 2 functions (with your suggestion) to disable it. I can add another function that would only reset counters, but wouldn\u0027t disable power failure mechanism (won\u0027t clear threshold) - something like dev_reset_power_failure_counters(). What do you think?",
+      "parentUuid": "cbaf4302_584be6b4",
       "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "9d0f6ed2_262d22fa",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "It would trigger \"unused\" warning. Even in the next patch where it is used, because it is also included in blobfs_async_ut.c but not used there.",
+      "parentUuid": "fddf7c9b_fef9048b",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cede797f_b01176a8",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 14
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "7f6f6625_33464aa8",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cede797f_b01176a8",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74813adc_9fd3afa0",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 14
@@ -166,6 +328,24 @@
       "writtenOn": "2019-05-31T17:04:22Z",
       "side": 1,
       "message": "static",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fad6ca0_c158c79f",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-03T08:20:39Z",
+      "side": 1,
+      "message": "See previous comment.",
+      "parentUuid": "74813adc_9fd3afa0",
       "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
