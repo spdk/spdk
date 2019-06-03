@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8facad62_44af50a6",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 768,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-03T03:24:20Z",
+      "side": 1,
+      "message": "INFOLOG will prefix each line with filename, line no, and \"INFO\" string. I\u0027m not sure we want that, although I don\u0027t see any other way to move forward. This seems fine for now.",
+      "revId": "1399172e77ce62c33d094f681419d903fe830671",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
