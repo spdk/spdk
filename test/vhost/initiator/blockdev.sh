@@ -115,9 +115,9 @@ function create_bdev_config()
 	 | join(":")' <<< $vbdevs)
 }
 
-timing_enter spdk_vhost_run
-spdk_vhost_run
-timing_exit spdk_vhost_run
+timing_enter vhost_run
+vhost_run
+timing_exit vhost_run
 
 timing_enter create_bdev_config
 create_bdev_config

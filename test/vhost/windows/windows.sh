@@ -62,11 +62,11 @@ vm_kill_all
 # Violating this rule doesn't cause any issues for SPDK vhost,
 # but triggers an assert, so we can only run Windows VMs with non-debug SPDK builds.
 notice "running SPDK vhost"
-spdk_vhost_run
+vhost_run
 notice "..."
 
 # Prepare bdevs for later vhost controllers use
-# Nvme bdev is automatically constructed during spdk_vhost_run
+# Nvme bdev is automatically constructed during vhost_run
 # by using scripts/gen_nvme.sh. No need to add it manually.
 # Using various sizes to better identify bdevs if no name in BLK
 # is available
