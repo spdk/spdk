@@ -43,13 +43,13 @@ trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $vhostpid nvmftestfini; exi
 # Configure NVMF tgt on host machine
 malloc_bdev="$($NVMF_RPC construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
-$NVMF_RPC nvmf_create_transport -t RDMA -u 8192 -p 4
+$NVMF_RPC nvmf_create_transport -t $TEST_TRANSPORT -u 8192 -p 4
 $NVMF_RPC nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 $NVMF_RPC nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$malloc_bdev"
-$NVMF_RPC nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$NVMF_RPC nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # Configure VHost on host machine
-$VHOST_RPC construct_nvme_bdev -b Nvme0 -t rdma -f ipv4 -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
+$VHOST_RPC construct_nvme_bdev -b Nvme0 -t $TEST_TRANSPORT -f ipv4 -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
 $VHOST_RPC construct_vhost_scsi_controller naa.VhostScsi0.3
 $VHOST_RPC add_vhost_scsi_lun naa.VhostScsi0.3 0 "Nvme0n1"
 

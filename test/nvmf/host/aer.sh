@@ -20,7 +20,7 @@ nvmfpid=$!
 trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
-$rpc_py nvmf_create_transport -t RDMA -u 8192
+$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
 timing_exit start_nvmf_tgt
 
 modprobe -v nvme-rdma
@@ -28,7 +28,7 @@ modprobe -v nvme-rdma
 $rpc_py construct_malloc_bdev 64 512 --name Malloc0
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -m 2
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
-$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 $rpc_py get_nvmf_subsystems
 
@@ -37,7 +37,7 @@ $rpc_py get_nvmf_subsystems
 #though so currently the test is disabled.
 
 #$rootdir/test/nvme/aer/aer -r "\
-#        trtype:RDMA \
+#        trtype:$TEST_TRANSPORT \
 #        adrfam:IPv4 \
 #        traddr:$NVMF_FIRST_TARGET_IP \
 #        trsvcid:$NVMF_PORT \
@@ -48,7 +48,7 @@ rm -f $AER_TOUCH_FILE
 
 # Namespace Attribute Notice Tests
 $rootdir/test/nvme/aer/aer -r "\
-        trtype:RDMA \
+        trtype:$TEST_TRANSPORT \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \

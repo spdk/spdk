@@ -23,14 +23,14 @@ fi
 nvmfappstart "-m 0xF"
 
 # create the rdma transport with an intentionally small SRQ depth
-$rpc_py nvmf_create_transport -t rdma -u 8192 -s 1024
+$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192 -s 1024
 
 for i in $(seq 0 5); do
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK00000000000001
 	$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -i 16
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -i 16
 	waitforblk "nvme${i}n1"
 done
 

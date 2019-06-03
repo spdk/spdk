@@ -40,7 +40,7 @@ timing_enter shutdown
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t rdma -u 8192
+$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
 
 num_subsystems=10
 # SoftRoce does not have enough queues available for
@@ -61,9 +61,9 @@ do
 	echo construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i >> $testdir/rpcs.txt
 	echo nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i >> $testdir/rpcs.txt
 	echo nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i >> $testdir/rpcs.txt
-	echo nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT >> $testdir/rpcs.txt
+	echo nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT >> $testdir/rpcs.txt
 
-	echo "  TransportID \"trtype:rdma adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT hostaddr:$NVMF_FIRST_TARGET_IP\" Nvme$i" >> $testdir/bdevperf.conf
+	echo "  TransportID \"trtype:$TEST_TRANSPORT adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode$i traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT hostaddr:$NVMF_FIRST_TARGET_IP\" Nvme$i" >> $testdir/bdevperf.conf
 done
 $rpc_py < $testdir/rpcs.txt
 timing_exit create_subsystems
