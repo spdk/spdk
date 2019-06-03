@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e90ee2c_c88169cb",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1233,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-03T07:42:25Z",
+      "side": 1,
+      "message": "Let\u0027s get rid of this variable altogether.",
+      "range": {
+        "startLine": 1233,
+        "startChar": 0,
+        "endLine": 1233,
+        "endChar": 63
+      },
+      "revId": "7f15cc708b9fcc61048f12c20ab74f9292df1051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e4c80de_bf27efe2",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1239,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-03T07:42:25Z",
+      "side": 1,
+      "message": "Or better yet, let\u0027s get rid of this assertion (or move it to the point where the iovec is actually used).",
+      "range": {
+        "startLine": 1239,
+        "startChar": 2,
+        "endLine": 1239,
+        "endChar": 39
+      },
+      "revId": "7f15cc708b9fcc61048f12c20ab74f9292df1051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
