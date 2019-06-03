@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f6d6faf_c47ae2e9",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1554,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-03T04:41:07Z",
+      "side": 0,
+      "message": "We still need this judgement. Since after send one r2t and get the response, we may still need send another. The reason is that the r2t length requested is restricted by: tqpair-\u003emaxh2cdata.",
+      "range": {
+        "startLine": 1554,
+        "startChar": 5,
+        "endLine": 1554,
+        "endChar": 65
+      },
+      "revId": "ce31ec390b63595fd49e39c1b01978ab474146d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
