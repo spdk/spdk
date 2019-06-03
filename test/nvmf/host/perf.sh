@@ -49,14 +49,14 @@ function test_perf()
 	for bdev in $bdevs; do
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 	done
-	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TYPE -a $NVMF_TARGET_IP -s 4420
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TYPE -a $NVMF_TARGET_IP -s $NVMF_PORT
 
 	# Test multi-process access to local NVMe device
 	if [ -n "$local_nvme_trid" ]; then
 		$rootdir/examples/nvme/perf/perf -i $NVMF_APP_SHM_ID -q 32 -o 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
 	fi
 
-	$rootdir/examples/nvme/perf/perf -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TYPE adrfam:IPv4 traddr:$NVMF_TARGET_IP trsvcid:4420"
+	$rootdir/examples/nvme/perf/perf -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TYPE adrfam:IPv4 traddr:$NVMF_TARGET_IP trsvcid:$NVMF_PORT"
 	sync
 	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
@@ -75,13 +75,13 @@ function test_perf()
 			for bdev in $lb_nested_guid; do
 				$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 			done
-			$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TYPE -a $NVMF_TARGET_IP -s 4420
+			$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TYPE -a $NVMF_TARGET_IP -s $NVMF_PORT
 			# Test perf as host with different io_size and qd_depth in nightly
 			qd_depth=("1" "128")
 			io_size=("512" "131072")
 			for qd in ${qd_depth[@]}; do
 				for o in ${io_size[@]}; do
-					$rootdir/examples/nvme/perf/perf -q $qd -o $o -w randrw -M 50 -t 10 -r "trtype:$TYPE adrfam:IPv4 traddr:$NVMF_TARGET_IP trsvcid:4420"
+					$rootdir/examples/nvme/perf/perf -q $qd -o $o -w randrw -M 50 -t 10 -r "trtype:$TYPE adrfam:IPv4 traddr:$NVMF_TARGET_IP trsvcid:$NVMF_PORT"
 				done
 			done
 
