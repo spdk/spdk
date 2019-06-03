@@ -141,7 +141,7 @@ function nvmfcleanup()
 	sync
 	set +e
 	for i in {1..20}; do
-		modprobe -v -r nvme-rdma nvme-fabrics
+		modprobe -v -r nvme-$TEST_TRANSPORT nvme-fabrics
 		if [ $? -eq 0 ]; then
 			set -e
 			return
@@ -152,7 +152,7 @@ function nvmfcleanup()
 
 	# So far unable to remove the kernel modules. Try
 	# one more time and let it fail.
-	modprobe -v -r nvme-rdma nvme-fabrics
+	modprobe -v -r nvme-$TEST_TRANSPORT nvme-fabrics
 }
 
 function nvmftestinit()
@@ -163,13 +163,19 @@ function nvmftestinit()
 	fi
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
-		rdma_device_init
+		if [ "$TEST_TRANSPORT" == "rdma" ]; then
+			rdma_device_init
+		fi
 	fi
-	RDMA_IP_LIST=$(get_available_rdma_ips)
-	NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-	if [ -z $NVMF_FIRST_TARGET_IP ]; then
-		echo "no NIC for nvmf test"
-		exit 0
+	if [ "$TEST_TRANSPORT" == "rdma" ]; then
+		RDMA_IP_LIST=$(get_available_rdma_ips)
+		NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
+		if [ -z $NVMF_FIRST_TARGET_IP ]; then
+			echo "no NIC for nvmf test"
+			exit 0
+		fi
+	elif [ "$TEST_TRANSPORT" == "tcp" ]; then
+		NVMF_FIRST_TARGET_IP=127.0.0.1
 	fi
 }
 
@@ -180,7 +186,7 @@ function nvmfappstart()
 	nvmfpid=$!
 	trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 	waitforlisten $nvmfpid
-	modprobe nvme-rdma
+	modprobe nvme-$TEST_TRANSPORT
 	timing_exit start_nvmf_tgt
 }
 
@@ -189,7 +195,9 @@ function nvmftestfini()
 	killprocess $nvmfpid
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh reset
-		rdma_device_init
+		if [ "$TEST_TRANSPORT" == "rdma" ]; then
+			rdma_device_init
+		fi
 	fi
 }
 
