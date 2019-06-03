@@ -233,6 +233,18 @@ function vhost_kill()
 	return $rc
 }
 
+function vhost_rpc
+{
+	local vhost_num=0
+	if [[ ! -z "$1" ]]; then
+		vhost_num=$1
+		assert_number "$vhost_num"
+	fi
+	shift
+
+	$rootdir/scripts/rpc.py -s $(get_vhost_dir $vhost_num)/rpc.sock $@
+}
+
 ###
 # Mgmt functions
 ###
