@@ -9,21 +9,11 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
-nvmftestinit
-
 timing_enter aer
-timing_enter start_nvmf_tgt
+nvmftestinit
+nvmfappstart "-m 0xF"
 
-$NVMF_APP -m 0xF &
-nvmfpid=$!
-
-trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
-
-waitforlisten $nvmfpid
 $rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
-timing_exit start_nvmf_tgt
-
-modprobe -v nvme-rdma
 
 $rpc_py construct_malloc_bdev 64 512 --name Malloc0
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -m 2
@@ -31,17 +21,6 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 $rpc_py get_nvmf_subsystems
-
-# TODO: this aer test tries to invoke an AER completion by setting the temperature
-#threshold to a very low value.  This does not work with emulated controllers
-#though so currently the test is disabled.
-
-#$rootdir/test/nvme/aer/aer -r "\
-#        trtype:$TEST_TRANSPORT \
-#        adrfam:IPv4 \
-#        traddr:$NVMF_FIRST_TARGET_IP \
-#        trsvcid:$NVMF_PORT \
-#        subnqn:nqn.2014-08.org.nvmexpress.discovery"
 
 AER_TOUCH_FILE=/tmp/aer_touch_file
 rm -f $AER_TOUCH_FILE
@@ -70,7 +49,6 @@ $rpc_py delete_malloc_bdev Malloc1
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
-
 
 nvmfcleanup
 nvmftestfini
