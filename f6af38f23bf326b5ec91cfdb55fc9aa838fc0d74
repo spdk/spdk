@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "543b2f9a_a5d17b73",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-03T15:35:49Z",
+      "side": 1,
+      "message": "Hi Ziye,\n\nI would prefer to not modify the library to make the test work.  I\u0027d like to try to modify the test instead.\n\nCould we do something like this in the unit test:\n\nvolatile uint64_t *length_flushed;\n\n/* length_flushed is modified by a different thread in this unit\n *. test.  So we need to dereference it as a volatile to ensure\n *. the value is always re-read.\n */\nlength_flushed \u003d \u0026file-\u003elength_flushed;\nwhile (*length_flushed !\u003d buf-\u003elength) {}\n\n-Jim",
+      "revId": "f6af38f23bf326b5ec91cfdb55fc9aa838fc0d74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
