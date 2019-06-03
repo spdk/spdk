@@ -82,5 +82,5 @@ int main(int argc, char **argv)
 		SPDK_ERRLOG("No VMD Controllers found\n");
 	}
 
-	return 0;
+	return rc;
 }
