@@ -149,6 +149,24 @@
     },
     {
       "key": {
+        "uuid": "9cf0951f_0e1f52fb",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-03T09:14:21Z",
+      "side": 1,
+      "message": "I prefer to not spliting it.",
+      "parentUuid": "d156ee51_e17bc4c3",
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd755e87_c5c34934",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 19
@@ -290,6 +308,24 @@
       "side": 1,
       "message": "Which in turn will call callbacks on an object that was just freed, correct? It doesn\u0027t seem right.",
       "parentUuid": "6724bfca_9fd717f7",
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a70d99d2_37032bc9",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-03T09:14:21Z",
+      "side": 1,
+      "message": "There won\u0027t be any inflight IO at this point.",
+      "parentUuid": "8c70b32f_eb84b95d",
       "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
