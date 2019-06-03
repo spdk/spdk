@@ -237,6 +237,7 @@ file_length(void)
 	int rc;
 	char *buf;
 	uint64_t buf_length;
+	volatile uint64_t *length_flushed;
 	struct spdk_fs_thread_ctx *channel;
 	struct spdk_file_stat stat = {0};
 
@@ -259,8 +260,13 @@ file_length(void)
 
 	/* Spin until all of the data has been flushed to the SSD.  There's been no
 	 * sync operation yet, so the xattr on the file is still 0.
+	 *
+	 * length_flushed: This variable is modified by a different thread in this unit
+	 * test. So we need to dereference it as a volatile to ensure the value is always
+	 * re-read.
 	 */
-	while (g_file->length_flushed != buf_length) {}
+	length_flushed = &g_file->length_flushed;
+	while (*length_flushed != buf_length) {}
 
 	/* Close the file.  This causes an implicit sync which should write the
 	 * length_flushed value as the "length" xattr on the file.
