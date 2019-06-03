@@ -67,6 +67,19 @@ fi
 : ${SPDK_TEST_OCF=1}; export SPDK_TEST_OCF
 : ${SPDK_TEST_FTL_EXTENDED=0}; export SPDK_TEST_FTL_EXTENDED
 
+# Export LeakSanitizer option to use suppression file in order to prevent false positives
+# and known leaks in external executables or libraries from showing up.
+asan_suppression_file="/var/tmp/asan_suppression_file"
+sudo rm -f "$asan_suppression_file"
+
+# ASAN has some bugs around thread_local variables.  We have a destructor in place
+# to free the thread contexts, but ASAN complains about the leak before those
+# destructors have a chance to run.  So suppress this one specific leak using
+# LSAN_OPTIONS.
+echo "leak:spdk_fs_alloc_thread_ctx" >> "$asan_suppression_file"
+
+export LSAN_OPTIONS=suppressions="$asan_suppression_file"
+
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
 else
@@ -788,6 +801,7 @@ function autotest_cleanup()
 			modprobe -r uio_pci_generic
 		fi
 	fi
+	rm -f "$asan_suppression_file"
 }
 
 function freebsd_update_contigmem_mod()
