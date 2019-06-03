@@ -91,7 +91,7 @@ function get_vhost_dir()
 	echo "$TEST_DIR/vhost${vhost_num}"
 }
 
-function spdk_vhost_list_all()
+function vhost_list_all()
 {
 	shopt -s nullglob
 	local vhost_list="$(echo $TEST_DIR/vhost[0-9]*)"
@@ -1117,7 +1117,7 @@ function at_app_exit()
 	# Kill vhost application
 	notice "killing vhost app"
 
-	for vhost_num in $(spdk_vhost_list_all); do
+	for vhost_num in $(vhost_list_all); do
 		spdk_vhost_kill $vhost_num
 	done
 
