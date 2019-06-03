@@ -141,7 +141,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 
 	notice "Testing done -> shutting down"
 	notice "killing vhost app"
-	spdk_vhost_kill
+	vhost_kill
 
 	notice "EXIT DONE"
 	notice "==============="

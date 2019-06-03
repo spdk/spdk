@@ -388,7 +388,7 @@ else
 	else
 		cleanup_lvol_cfg
 	fi
-	spdk_vhost_kill
+	vhost_kill
 fi
 
 if [[ -n "$kernel_cpus" ]]; then

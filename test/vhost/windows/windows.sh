@@ -133,6 +133,6 @@ notice "Shutting down Windows VM..."
 vm_kill $vm_num
 
 notice "Shutting down SPDK vhost app..."
-spdk_vhost_kill
+vhost_kill
 
 rm -f $aio_file

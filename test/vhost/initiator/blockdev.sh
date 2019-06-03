@@ -202,8 +202,8 @@ timing_exit remove_kernel_vhost
 
 $RPC_PY delete_nvme_controller Nvme0
 
-timing_enter spdk_vhost_kill
-spdk_vhost_kill
-timing_exit spdk_vhost_kill
+timing_enter vhost_kill
+vhost_kill
+timing_exit vhost_kill
 
 vhosttestfini

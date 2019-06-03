@@ -52,8 +52,8 @@ function migration_tc2_cleanup_vhost_config()
 	$rpc_1 remove_vhost_controller $target_vm_ctrlr
 
 	notice "killing vhost app"
-	spdk_vhost_kill 0
-	spdk_vhost_kill 1
+	vhost_kill 0
+	vhost_kill 1
 
 	unset -v incoming_vm target_vm incoming_vm_ctrlr target_vm_ctrlr
 	unset -v rpc_0 rpc_1

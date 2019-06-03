@@ -86,7 +86,7 @@ function host1_cleanup_vhost()
 	$rpc_0 remove_vhost_controller $incoming_vm_ctrlr
 
 	notice "Shutting down vhost app"
-	spdk_vhost_kill 0
+	vhost_kill 0
 
 	host1_cleanup_nvmf
 }
