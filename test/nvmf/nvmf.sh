@@ -13,39 +13,41 @@ timing_enter nvmf_tgt
 
 trap "exit 1" SIGINT SIGTERM EXIT
 
-run_test suite test/nvmf/target/filesystem.sh
-run_test suite test/nvmf/target/discovery.sh
-run_test suite test/nvmf/target/connect_disconnect.sh
+TEST_ARGS=
+
+run_test suite test/nvmf/target/filesystem.sh $TEST_ARGS
+run_test suite test/nvmf/target/discovery.sh $TEST_ARGS
+run_test suite test/nvmf/target/connect_disconnect.sh $TEST_ARGS
 if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
-	run_test suite test/nvmf/target/nvme_cli.sh
+	run_test suite test/nvmf/target/nvme_cli.sh $TEST_ARGS
 fi
-run_test suite test/nvmf/target/nvmf_lvol.sh
+run_test suite test/nvmf/target/nvmf_lvol.sh $TEST_ARGS
 #TODO: disabled due to intermittent failures. Need to triage.
-# run_test suite test/nvmf/target/srq_overwhelm.sh
-run_test suite test/nvmf/target/nvmf_vhost.sh
-run_test suite test/nvmf/target/shutdown.sh
-run_test suite test/nvmf/target/bdev_io_wait.sh
-run_test suite test/nvmf/target/create_transport.sh
+# run_test suite test/nvmf/target/srq_overwhelm.sh $TEST_ARGS
+run_test suite test/nvmf/target/nvmf_vhost.sh $TEST_ARGS
+run_test suite test/nvmf/target/shutdown.sh $TEST_ARGS
+run_test suite test/nvmf/target/bdev_io_wait.sh $TEST_ARGS
+run_test suite test/nvmf/target/create_transport.sh $TEST_ARGS
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test suite test/nvmf/target/multiconnection.sh
+	run_test suite test/nvmf/target/multiconnection.sh $TEST_ARGS
 fi
 
-run_test suite test/nvmf/target/nmic.sh
-run_test suite test/nvmf/target/rpc.sh
-run_test suite test/nvmf/target/fio.sh
-run_test suite test/nvmf/target/bdevio.sh
+run_test suite test/nvmf/target/nmic.sh $TEST_ARGS
+run_test suite test/nvmf/target/rpc.sh $TEST_ARGS
+run_test suite test/nvmf/target/fio.sh $TEST_ARGS
+run_test suite test/nvmf/target/bdevio.sh $TEST_ARGS
 
 timing_enter host
 
-run_test suite test/nvmf/host/bdevperf.sh
-run_test suite test/nvmf/host/identify.sh
-run_test suite test/nvmf/host/perf.sh
+run_test suite test/nvmf/host/bdevperf.sh $TEST_ARGS
+run_test suite test/nvmf/host/identify.sh $TEST_ARGS
+run_test suite test/nvmf/host/perf.sh $TEST_ARGS
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
-#run_test test/nvmf/host/identify_kernel_nvmf.sh
-run_test suite test/nvmf/host/aer.sh
+#run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
+run_test suite test/nvmf/host/aer.sh $TEST_ARGS
 if [ $SPDK_RUN_ASAN -eq 0 ]; then
-    run_test suite test/nvmf/host/fio.sh
+    run_test suite test/nvmf/host/fio.sh $TEST_ARGS
 fi
 
 timing_exit host
