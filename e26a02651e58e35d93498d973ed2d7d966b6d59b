@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a74627c_13f82d48",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 6263,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-03T19:21:44Z",
+      "side": 1,
+      "message": "Right now you have this test really doing two separate things, one of which is testing what happens when you delete the snapshot (line 6268) and some of the reads fail. That\u0027s testing for disk failures, not power loss. It\u0027s a good test, but there\u0027s no reason to do that test in conjunction with the unload/reload blobstore part to confirm the blob is still here. It was only a read that failed, so of course the blob is still there. I\u0027d change this to use the write threshold only.",
+      "revId": "e26a02651e58e35d93498d973ed2d7d966b6d59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b8c7ad2_e9396e75",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 6278,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-03T19:21:44Z",
+      "side": 1,
+      "message": "Wait doesn\u0027t this leak the memory of the original blobstore stored in \u0027bs\u0027? I think you need to still shut it down at the end of the test. You could potentially shut it down right here since all writes will be blocked anyway.",
+      "revId": "e26a02651e58e35d93498d973ed2d7d966b6d59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
