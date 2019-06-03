@@ -247,7 +247,7 @@ if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 else
 	# Run vhost process and prepare split vbdevs or lvol bdevs
 	notice "running SPDK vhost"
-	spdk_vhost_run
+	vhost_run
 	notice "..."
 
 	if [[ $use_split == true ]]; then

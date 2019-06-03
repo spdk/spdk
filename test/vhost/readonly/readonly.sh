@@ -123,7 +123,7 @@ function blk_ro_tc1()
 	vm_shutdown_all
 }
 
-spdk_vhost_run
+vhost_run
 if [[ -z $x ]]; then
 	set +x
 fi
