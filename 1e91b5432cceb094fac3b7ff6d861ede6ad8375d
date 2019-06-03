@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "a8430538_e02111d6",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-03T19:23:00Z",
+      "side": 1,
+      "message": "I\u0027m not sure I\u0027m following along entirely. When you\u0027re writing a test, you\u0027re testing for a specific thing typically. For example, you could be testing that the writes that occur during deleting a snapshot are atomic with regard to power loss. In that case, you only care about failing writes. Certainly, you could write a different test that was checking that failed reads worked correctly on this code path, but that doesn\u0027t have anything to do with power loss and is a different test that\u0027s probably full of a different set of CU_ASSERTs. In fact, failed reads will never be necessary on power failure tests at all, but you can leave that functionality in because it\u0027s probably useful for writing tests that catch disk failures.\n\nI just don\u0027t currently see a single test that you could write that wouldn\u0027t care whether it was the reads or the writes failing. I think you always should care because it affects the observed behavior (i.e. the CU_ASSERTs you write) so dramatically. Because of that, you\u0027d never end up using the general trigger.",
+      "parentUuid": "a527bcc3_2e247f6f",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b4edb65_ab8477a8",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 14
