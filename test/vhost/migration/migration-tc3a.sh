@@ -27,10 +27,12 @@ fi
 
 function ssh_remote()
 {
-	local ssh_cmd="ssh -i $SPDK_VHOST_SSH_KEY_FILE \
+	local ssh_cmd="sshpass -p root ssh \
 		-o UserKnownHostsFile=/dev/null \
-		-o StrictHostKeyChecking=no -o ControlMaster=auto \
-		root@$1"
+		-o StrictHostKeyChecking=no \
+		-o ControlMaster=auto \
+		-o User=root \
+		$1"
 
 	shift
 	$ssh_cmd "$@"
