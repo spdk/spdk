@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32ed9a77_2511168e",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-04T06:39:13Z",
+      "side": 1,
+      "message": "I\u0027d rather not. On my system this will use system-wide fio from /usr/bin/fio, which is a binary installed from DNF. So this is still kind of hardcoded, but will just point to different fio.\n\nMaybe we could add fio path as a new option in general section of the config file?",
+      "range": {
+        "startLine": 611,
+        "startChar": 8,
+        "endLine": 612,
+        "endChar": 37
+      },
+      "revId": "4b71799d8a78c8c61ef4d1b4f08990d0c2f4b224",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
