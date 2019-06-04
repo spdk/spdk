@@ -202,8 +202,14 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_intel_feat_latency_tracking) == 4, "In
 
 struct spdk_nvme_intel_marketing_description_page {
 	uint8_t		marketing_product[512];
+	/* Spec says this log page will only write 512 bytes, but there are some older FW
+	 * versions that accidentally write 516 instead.  So just pad this out to 4096 bytes
+	 * to make sure users of this structure never end up overwriting unintended parts of
+	 * memory.
+	 */
+	uint8_t		reserved[3584];
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_intel_marketing_description_page) == 512,
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_intel_marketing_description_page) == 4096,
 		   "Incorrect size");
 #ifdef __cplusplus
 }
