@@ -226,7 +226,7 @@ vm_wait_for_boot 300 $used_vms
 
 fio_disks=""
 for vm_num in $used_vms; do
-    vm_dir=$VM_BASE_DIR/$vm_num
+    vm_dir=$VM_DIR/$vm_num
     qemu_mask_param="VM_${vm_num}_qemu_mask"
 
     host_name="VM-$vm_num-${!qemu_mask_param}"
@@ -248,7 +248,7 @@ else
     job_file="default_integrity.job"
 fi
 # Run FIO traffic
-run_fio $fio_bin --job-file=$rootdir/test/vhost/common/fio_jobs/$job_file --out="$TEST_DIR/fio_results" $fio_disks
+run_fio $fio_bin --job-file=$rootdir/test/vhost/common/fio_jobs/$job_file --out="$VHOST_DIR/fio_results" $fio_disks
 
 notice "Shutting down virtual machines..."
 vm_shutdown_all
