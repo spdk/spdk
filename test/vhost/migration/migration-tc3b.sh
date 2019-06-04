@@ -40,7 +40,7 @@ function host_2_start_vhost()
 	$rpc add_vhost_scsi_lun $target_vm_ctrl 0 Nvme0n1
 
 	vm_setup --os="$os_image" --force=$target_vm --disk-type=spdk_vhost_scsi --disks=VhostScsi0 \
-		--memory=512 --vhost-num=1 --incoming=$incoming_vm
+		--memory=512 --vhost-name=1 --incoming=$incoming_vm
 	vm_run $target_vm
 	sleep 1
 

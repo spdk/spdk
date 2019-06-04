@@ -73,7 +73,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	vhost_json_config 0 $testdir/conf.json
 	notice ""
 
-	rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+	rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 	# General commands
 	notice "Trying to remove nonexistent controller"
@@ -142,7 +142,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 
 	notice "Testing done -> shutting down"
 	notice "killing vhost app"
-	vhost_kill
+	vhost_kill 0
 
 	notice "EXIT DONE"
 	notice "==============="

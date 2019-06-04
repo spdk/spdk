@@ -6,7 +6,7 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 source $rootdir/scripts/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 vm_count=1
 max_disks=""
@@ -282,6 +282,6 @@ $rpc_py get_bdevs
 $rpc_py get_vhost_controllers
 
 notice "Shutting down SPDK vhost app..."
-vhost_kill
+vhost_kill 0
 
 vhosttestfini

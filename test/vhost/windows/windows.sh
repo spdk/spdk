@@ -5,7 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 ctrl_type="spdk_vhost_scsi"
 ssh_pass=""
 vm_num="0"
@@ -132,6 +132,6 @@ notice "Shutting down Windows VM..."
 vm_kill $vm_num
 
 notice "Shutting down SPDK vhost app..."
-vhost_kill
+vhost_kill 0
 
 rm -f $aio_file

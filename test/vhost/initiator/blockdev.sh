@@ -37,7 +37,7 @@ vhosttestinit
 
 source $testdir/autotest.config
 PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
-RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+RPC_PY="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 if [ ! -x $FIO_PATH ]; then
 	error "Invalid path of fio binary"
@@ -50,6 +50,7 @@ fi
 
 trap 'rm -f *.state $rootdir/spdk.tar.gz $rootdir/fio.tar.gz $(get_vhost_dir)/Virtio0;\
  error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+
 function run_spdk_fio() {
 	fio_bdev --ioengine=spdk_bdev "$@" --spdk_mem=1024 --spdk_single_seg=1
 }
@@ -109,7 +110,7 @@ timing_exit run_spdk_fio_unmap
 $RPC_PY delete_nvme_controller Nvme0
 
 timing_enter vhost_kill
-vhost_kill
+vhost_kill 0
 timing_exit vhost_kill
 
 vhosttestfini

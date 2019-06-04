@@ -139,7 +139,7 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
-rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 if [[ -n $custom_cpu_cfg ]]; then
 	source $custom_cpu_cfg
@@ -386,7 +386,7 @@ else
 	else
 		cleanup_lvol_cfg
 	fi
-	vhost_kill
+	vhost_kill 0
 fi
 
 if [[ -n "$kernel_cpus" ]]; then

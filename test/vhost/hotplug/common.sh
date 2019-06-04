@@ -65,7 +65,7 @@ fio_job=$testdir/fio_jobs/default_integrity.job
 tmp_attach_job=$testdir/fio_jobs/fio_attach.job.tmp
 tmp_detach_job=$testdir/fio_jobs/fio_detach.job.tmp
 
-rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 function print_test_fio_header() {
     notice "==============="
@@ -181,7 +181,7 @@ function reboot_all_and_prepare() {
 
 function post_test_case() {
     vm_shutdown_all
-    vhost_kill
+    vhost_kill 0
 }
 
 function on_error_exit() {
