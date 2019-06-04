@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1511c073_ab155478",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 595,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-04T08:00:46Z",
+      "side": 1,
+      "message": "I think through the code path, I think we should move this section before the code \"if (spdk_likely(qpair-\u003eis_enabled))\", which means the request here has no children requests, and you can check as belows:\n\nif (ctrlr-\u003eis_failed) {\n    if(req-\u003eparent) {\n        nvme_request_remove_child(req-\u003eparent, req);\n\tnvme_free_request(req);\n    } else {\n        nvme_free_request(req);\n    }\n}\n\nThen you don\u0027t need to add the helper function above, thoughts?",
+      "range": {
+        "startLine": 591,
+        "startChar": 1,
+        "endLine": 595,
+        "endChar": 2
+      },
+      "revId": "50d199ac03e01c57367029d6d11674e6f61afb40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
