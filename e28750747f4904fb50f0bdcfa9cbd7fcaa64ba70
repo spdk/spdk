@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "21ed4414_2fc947b5",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-04T08:15:31Z",
+      "side": 1,
+      "message": "I don\u0027t think this path can be hard coded.\nIt works for our CI system and it\u0027s paths, but looking at vm_setup.sh it looks like vpp directory will be in \"~/\" directory, which may not be /home/sys_sgci for someone else.",
+      "range": {
+        "startLine": 162,
+        "startChar": 1,
+        "endLine": 162,
+        "endChar": 71
+      },
+      "revId": "e28750747f4904fb50f0bdcfa9cbd7fcaa64ba70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
