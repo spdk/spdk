@@ -138,6 +138,10 @@ struct spdk_ftl_attrs {
 	size_t					lbk_size;
 	/* Write buffer cache */
 	struct spdk_bdev_desc			*cache_bdev_desc;
+	/* Number of chunks per parallel unit in the underlying device (including any offline ones) */
+	size_t					num_chunks;
+	/* Number of sectors per chunk */
+	size_t					chunk_size;
 };
 
 struct ftl_module_init_opts {
@@ -215,7 +219,7 @@ void spdk_ftl_conf_init_defaults(struct spdk_ftl_conf *conf);
  * \param dev device
  * \param attr Attribute structure to fill
  */
-void  spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
+void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
 
 /**
  * Submits a read to the specified device.
