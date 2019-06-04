@@ -130,7 +130,6 @@ function vhost_run()
 				vhost_num="${param#*=}"
 				assert_number "$vhost_num"
 				;;
-			--json-path=*) local vhost_json_path="${param#*=}" ;;
 			--memory=*) local memory=${param#*=} ;;
 			--no-pci*) local no_pci="-u" ;;
 			*)
@@ -179,18 +178,20 @@ function vhost_run()
 
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
-	#do not generate nvmes if pci access is disabled
-	if [[ -z "$no_pci" ]]; then
-		$rootdir/scripts/gen_nvme.sh "--json" | $rootdir/scripts/rpc.py\
-		 -s $vhost_dir/rpc.sock load_subsystem_config
-	fi
-
-	if [[ -n "$vhost_json_path" ]]; then
-		$rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_path/conf.json"
-	fi
 
 	notice "vhost started - pid=$vhost_pid"
 	timing_exit vhost_start
+}
+
+function vhost_load_config()
+{
+	local vhost_num="$1"
+	local vhost_json_conf="$2"
+	local vhost_dir="$(get_vhost_dir $vhost_num)"
+
+	$rootdir/scripts/gen_nvme.sh "--json" | $rootdir/scripts/rpc.py\
+		-s $vhost_dir/rpc.sock load_subsystem_config
+	$rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_conf"
 }
 
 function vhost_kill()
