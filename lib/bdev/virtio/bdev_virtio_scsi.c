@@ -570,7 +570,7 @@ bdev_virtio_reset(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	tmf_req->type = VIRTIO_SCSI_T_TMF;
 	tmf_req->subtype = VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET;
 
-	enqueued_count = spdk_ring_enqueue(svdev->ctrlq_ring, (void **)&bdev_io, 1);
+	enqueued_count = spdk_ring_enqueue(svdev->ctrlq_ring, (void **)&bdev_io, 1, NULL);
 	if (spdk_likely(enqueued_count == 1)) {
 		return;
 	} else {
