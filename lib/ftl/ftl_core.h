@@ -41,6 +41,7 @@
 #include "spdk/thread.h"
 #include "spdk/util.h"
 #include "spdk_internal/log.h"
+#include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/ftl.h"
 #include "spdk/bdev.h"
@@ -491,7 +492,9 @@ ftl_vld_map_size(const struct spdk_ftl_dev *dev)
 #define FTL_NV_CACHE_HEADER_VERSION	(1)
 #define FTL_NV_CACHE_DATA_OFFSET	(1)
 #define FTL_NV_CACHE_PHASE_OFFSET	(62)
+#define FTL_NV_CACHE_PHASE_COUNT	(4)
 #define FTL_NV_CACHE_PHASE_MASK		(3ULL << FTL_NV_CACHE_PHASE_OFFSET)
+#define FTL_NV_CACHE_LBA_INVALID	(FTL_LBA_INVALID & ~FTL_NV_CACHE_PHASE_MASK)
 
 static inline bool
 ftl_nv_cache_phase_is_valid(unsigned int phase)
@@ -514,5 +517,16 @@ ftl_nv_cache_pack_lba(uint64_t lba, unsigned int phase)
 	return (lba & ~FTL_NV_CACHE_PHASE_MASK) | ((uint64_t)phase << FTL_NV_CACHE_PHASE_OFFSET);
 }
 
+static inline void
+ftl_nv_cache_unpack_lba(uint64_t in_lba, uint64_t *out_lba, unsigned int *phase)
+{
+	*out_lba = in_lba & ~FTL_NV_CACHE_PHASE_MASK;
+	*phase = (in_lba & FTL_NV_CACHE_PHASE_MASK) >> FTL_NV_CACHE_PHASE_OFFSET;
+
+	/* If the phase is invalid the block wasn't written yet, so treat the LBA as invalid too */
+	if (!ftl_nv_cache_phase_is_valid(*phase) || *out_lba == FTL_NV_CACHE_LBA_INVALID) {
+		*out_lba = FTL_LBA_INVALID;
+	}
+}
 
 #endif /* FTL_CORE_H */
