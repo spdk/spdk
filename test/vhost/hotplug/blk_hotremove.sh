@@ -19,7 +19,7 @@ function prepare_fio_cmd_tc1() {
     run_fio="$fio_bin --eta=never "
     for vm_num in $1; do
         cp $fio_job $tmp_detach_job
-        vm_dir=$VM_BASE_DIR/$vm_num
+        vm_dir=$VM_DIR/$vm_num
         vm_check_blk_location $vm_num
         for disk in $SCSI_DISK; do
             echo "[nvme-host$disk]" >> $tmp_detach_job

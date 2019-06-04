@@ -66,7 +66,7 @@ function vm_monitor_send()
 {
 	local vm_num=$1
 	local cmd_result_file="$2"
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$VM_DIR/$1"
 	local vm_monitor_port=$(cat $vm_dir/monitor_port)
 
 	[[ ! -z "$vm_monitor_port" ]] || fail "No monitor port!"
@@ -78,7 +78,7 @@ function vm_monitor_send()
 # Migrate VM $1
 function vm_migrate()
 {
-	local from_vm_dir="$VM_BASE_DIR/$1"
+	local from_vm_dir="$VM_DIR/$1"
 	local target_vm_dir="$(readlink -e $from_vm_dir/vm_migrate_to)"
 	local target_vm="$(basename $target_vm_dir)"
 	local target_vm_migration_port="$(cat $target_vm_dir/migration_port)"

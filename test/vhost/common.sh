@@ -1,16 +1,14 @@
 : ${SPDK_VHOST_VERBOSE=false}
-: ${VM_IMAGE="$HOME/vhost_vm_image.qcow2"}
+: ${VHOST_DIR="$HOME/vhost_test"}
 
 TEST_DIR=$(readlink -f $rootdir/..)
+VM_IMAGE=$VHOST_DIR/vhost_vm_image.qcow2
+VM_DIR=$VHOST_DIR/vms
+TARGET_DIR=$VHOST_DIR/vhost
 
-if ! hash qemu-img qemu-system-x86_64; then
-	error 'QEMU is not installed on this system. Unable to run vhost tests.'
-	exit 1
-fi
-
-VM_BASE_DIR="$TEST_DIR/vms"
-
-mkdir -p $TEST_DIR
+mkdir -p $VHOST_DIR
+mkdir -p $VM_DIR
+mkdir -p $TARGET_DIR
 
 #
 # Source config describing QEMU and VHOST cores and NUMA
@@ -19,6 +17,11 @@ source $rootdir/test/vhost/common/autotest.config
 
 function vhosttestinit()
 {
+	if ! hash qemu-img qemu-system-x86_64; then
+		error 'QEMU is not installed on this system. Unable to run vhost tests.'
+		exit 1
+	fi
+
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
 
@@ -28,13 +31,12 @@ function vhosttestinit()
 			echo "Download to $HOME? [yn]"
 			read download
 			if [ "$download" = "y" ]; then
-				curl https://dqtibwqq6s6ux.cloudfront.net/download/test_resources/vhost_vm_image.tar.gz | tar xz -C $HOME
+				curl https://dqtibwqq6s6ux.cloudfront.net/download/test_resources/vhost_vm_image.tar.gz | tar -xz -C $VHOST_DIR
 			fi
 		fi
 	fi
 
-	# Look for the VM image
-	if [[ ! -f $VM_IMAGE ]]; then
+	if [ ! -f $VM_IMAGE ]; then
 		error "VM image not found at $VM_IMAGE"
 		exit 1
 	fi
@@ -98,13 +100,13 @@ function get_vhost_dir()
 		local vhost_num=0
 	fi
 
-	echo "$TEST_DIR/vhost${vhost_num}"
+	echo "$TARGET_DIR/${vhost_num}"
 }
 
 function vhost_list_all()
 {
 	shopt -s nullglob
-	local vhost_list="$(echo $TEST_DIR/vhost[0-9]*)"
+	local vhost_list="$(echo $TARGET_DIR/[0-9]*)"
 	shopt -u nullglob
 
 	if [[ ! -z "$vhost_list" ]]; then
@@ -304,7 +306,7 @@ function vm_num_is_valid()
 function vm_ssh_socket()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$VM_DIR/$1"
 
 	cat $vm_dir/ssh_socket
 }
@@ -312,7 +314,7 @@ function vm_ssh_socket()
 function vm_fio_socket()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$VM_DIR/$1"
 
 	cat $vm_dir/fio_socket
 }
@@ -359,7 +361,7 @@ function vm_scp()
 function vm_is_running()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$VM_DIR/$1"
 
 	if [[ ! -r $vm_dir/qemu.pid ]]; then
 		return 1
@@ -386,7 +388,7 @@ function vm_is_running()
 function vm_os_booted()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$VM_DIR/$1"
 
 	if [[ ! -r $vm_dir/qemu.pid ]]; then
 		error "VM $1 is not running"
@@ -409,7 +411,7 @@ function vm_os_booted()
 function vm_shutdown()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$VM_DIR/$1"
 	if [[ ! -d "$vm_dir" ]]; then
 		error "VM$1 ($vm_dir) not exist - setup it first"
 		return 1
@@ -435,7 +437,7 @@ function vm_shutdown()
 function vm_kill()
 {
 	vm_num_is_valid $1 || return 1
-	local vm_dir="$VM_BASE_DIR/$1"
+	local vm_dir="$VM_DIR/$1"
 
 	if [[ ! -r $vm_dir/qemu.pid ]]; then
 		return 0
@@ -455,17 +457,17 @@ function vm_kill()
 	fi
 }
 
-# List all VM numbers in VM_BASE_DIR
+# List all VM numbers in VM_DIR
 #
 function vm_list_all()
 {
-	local vms="$(shopt -s nullglob; echo $VM_BASE_DIR/[0-9]*)"
+	local vms="$(shopt -s nullglob; echo $VM_DIR/[0-9]*)"
 	if [[ ! -z "$vms" ]]; then
 		basename --multiple $vms
 	fi
 }
 
-# Kills all VM in $VM_BASE_DIR
+# Kills all VM in $VM_DIR
 #
 function vm_kill_all()
 {
@@ -474,10 +476,10 @@ function vm_kill_all()
 		vm_kill $vm
 	done
 
-	rm -rf $VM_BASE_DIR
+	rm -rf $VM_DIR
 }
 
-# Shutdown all VM in $VM_BASE_DIR
+# Shutdown all VM in $VM_DIR
 #
 function vm_shutdown_all()
 {
@@ -513,7 +515,7 @@ function vm_shutdown_all()
 		sleep 1
 	done
 
-	rm -rf $VM_BASE_DIR
+	rm -rf $VM_DIR
 
 	$shell_restore_x
 	error "Timeout waiting for some VMs to shutdown"
@@ -573,14 +575,14 @@ function vm_setup()
 		vm_num=$force_vm
 
 		vm_num_is_valid $vm_num || return 1
-		local vm_dir="$VM_BASE_DIR/$vm_num"
+		local vm_dir="$VM_DIR/$vm_num"
 		[[ -d $vm_dir ]] && warning "removing existing VM in '$vm_dir'"
 	else
 		local vm_dir=""
 
 		set +x
 		for (( i=0; i<=256; i++)); do
-			local vm_dir="$VM_BASE_DIR/$i"
+			local vm_dir="$VM_DIR/$i"
 			[[ ! -d $vm_dir ]] && break
 		done
 		$shell_restore_x
@@ -603,7 +605,7 @@ function vm_setup()
 		fi
 
 		os_mode="original"
-		os="$VM_BASE_DIR/$vm_incoming/os.qcow2"
+		os="$VM_DIR/$vm_incoming/os.qcow2"
 	elif [[ ! -z "$vm_migrate_to" ]]; then
 		[[ "$os_mode" != "backing" ]] && warning "Using 'backing' mode for OS since '--migrate-to' is used"
 		os_mode=backing
@@ -828,8 +830,8 @@ function vm_setup()
 	echo $gdbserver_socket > $vm_dir/gdbserver_socket
 	echo $vnc_socket >> $vm_dir/vnc_socket
 
-	[[ -z $vm_incoming ]] || ln -fs $VM_BASE_DIR/$vm_incoming $vm_dir/vm_incoming
-	[[ -z $vm_migrate_to ]] || ln -fs $VM_BASE_DIR/$vm_migrate_to $vm_dir/vm_migrate_to
+	[[ -z $vm_incoming ]] || ln -fs $VM_DIR/$vm_incoming $vm_dir/vm_incoming
+	[[ -z $vm_migrate_to ]] || ln -fs $VM_DIR/$vm_migrate_to $vm_dir/vm_migrate_to
 }
 
 function vm_run()
@@ -854,7 +856,7 @@ function vm_run()
 		shift $((OPTIND-1))
 		for vm in $@; do
 			vm_num_is_valid $1 || return 1
-			if [[ ! -x $VM_BASE_DIR/$vm/run.sh ]]; then
+			if [[ ! -x $VM_DIR/$vm/run.sh ]]; then
 				error "VM$vm not defined - setup it first"
 				return 1
 			fi
@@ -864,12 +866,12 @@ function vm_run()
 
 	for vm in $vms_to_run; do
 		if vm_is_running $vm; then
-			warning "VM$vm ($VM_BASE_DIR/$vm) already running"
+			warning "VM$vm ($VM_DIR/$vm) already running"
 			continue
 		fi
 
-		notice "running $VM_BASE_DIR/$vm/run.sh"
-		if ! $VM_BASE_DIR/$vm/run.sh; then
+		notice "running $VM_DIR/$vm/run.sh"
+		if ! $VM_DIR/$vm/run.sh; then
 			error "FAILED to run vm $vm"
 			return 1
 		fi
@@ -881,22 +883,22 @@ function vm_print_logs()
 	vm_num=$1
 	warning "================"
 	warning "QEMU LOG:"
-	if [[ -r $VM_BASE_DIR/$vm_num/qemu.log ]]; then
-		cat $VM_BASE_DIR/$vm_num/qemu.log
+	if [[ -r $VM_DIR/$vm_num/qemu.log ]]; then
+		cat $VM_DIR/$vm_num/qemu.log
 	else
 		warning "LOG qemu.log not found"
 	fi
 
 	warning "VM LOG:"
-	if [[ -r $VM_BASE_DIR/$vm_num/serial.log ]]; then
-		cat $VM_BASE_DIR/$vm_num/serial.log
+	if [[ -r $VM_DIR/$vm_num/serial.log ]]; then
+		cat $VM_DIR/$vm_num/serial.log
 	else
 		warning "LOG serial.log not found"
 	fi
 
 	warning "SEABIOS LOG:"
-	if [[ -r $VM_BASE_DIR/$vm_num/seabios.log ]]; then
-		cat $VM_BASE_DIR/$vm_num/seabios.log
+	if [[ -r $VM_DIR/$vm_num/seabios.log ]]; then
+		cat $VM_DIR/$vm_num/seabios.log
 	else
 		warning "LOG seabios.log not found"
 	fi
@@ -920,11 +922,11 @@ function vm_wait_for_boot()
 	notice "Waiting for VMs to boot"
 	shift
 	if [[ "$@" == "" ]]; then
-		local vms_to_check="$VM_BASE_DIR/[0-9]*"
+		local vms_to_check="$VM_DIR/[0-9]*"
 	else
 		local vms_to_check=""
 		for vm in $@; do
-			vms_to_check+=" $VM_BASE_DIR/$vm"
+			vms_to_check+=" $VM_DIR/$vm"
 		done
 	fi
 
