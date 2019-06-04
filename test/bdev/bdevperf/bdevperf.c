@@ -78,6 +78,7 @@ static bool g_zcopy = true;
 static unsigned g_master_core;
 static int g_time_in_sec;
 static bool g_mix_specified;
+static const char *g_target_bdev;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -266,6 +267,11 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 	int rc;
 
 	*_target = NULL;
+
+	/* If target bdev was specified, skip all the others */
+	if (g_target_bdev != NULL && strcmp(spdk_bdev_get_name(bdev), g_target_bdev) != 0) {
+		return 0;
+	}
 
 	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
@@ -799,6 +805,7 @@ bdevperf_usage(void)
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
 	printf("\t\t(only valid with -S)\n");
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
+	printf(" -T <target>               target bdev\n");
 }
 
 /*
@@ -1048,6 +1055,8 @@ bdevperf_parse_arg(int ch, char *arg)
 
 	if (ch == 'w') {
 		g_workload_type = optarg;
+	} else if (ch == 'T') {
+		g_target_bdev = optarg;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -1107,7 +1116,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
