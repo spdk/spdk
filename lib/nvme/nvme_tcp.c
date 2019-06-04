@@ -231,8 +231,18 @@ static void
 nvme_tcp_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	struct nvme_tcp_pdu *pdu;
 
 	spdk_sock_close(&tqpair->sock);
+
+	/* clear the send_queue */
+	while (!TAILQ_EMPTY(&tqpair->send_queue)) {
+		pdu = TAILQ_FIRST(&tqpair->send_queue);
+		/* Remove the pdu from the send_queue to prevent the wrong sending out
+		 * in the next round connection
+		 */
+		TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
+	}
 }
 
 static int
@@ -1714,6 +1724,11 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 	}
 
 	tqpair->maxr2t = NVME_TCP_MAX_R2T_DEFAULT;
+	/* Explicitly set the state and recv_state of tqpair */
+	tqpair->state = NVME_TCP_QPAIR_STATE_INVALID;
+	if (tqpair->recv_state != NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
+		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	}
 	rc = nvme_tcp_qpair_icreq_send(tqpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to connect the tqpair\n");
