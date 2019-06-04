@@ -215,7 +215,15 @@ void spdk_ftl_conf_init_defaults(struct spdk_ftl_conf *conf);
  * \param dev device
  * \param attr Attribute structure to fill
  */
-void  spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
+void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
+
+/**
+ * Retrieve device's geometry.
+ *
+ * \param dev device
+ * \param geo Geometry structure to fill
+ */
+void spdk_ftl_dev_get_geo(const struct spdk_ftl_dev *dev, struct spdk_ocssd_geometry_data *geo);
 
 /**
  * Submits a read to the specified device.
