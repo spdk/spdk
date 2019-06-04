@@ -38,6 +38,7 @@ DIRS-y = nvme.c nvme_ctrlr.c nvme_ctrlr_cmd.c nvme_ctrlr_ocssd_cmd.c nvme_ns.c n
 	 nvme_quirks.c nvme_tcp.c \
 
 DIRS-$(CONFIG_RDMA) += nvme_rdma.c
+DIRS-y += nvme_tcp.c
 
 .PHONY: all clean $(DIRS-y)
 
