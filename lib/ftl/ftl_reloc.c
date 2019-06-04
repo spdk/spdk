@@ -88,6 +88,9 @@ struct ftl_band_reloc {
 	/* Indicates band being acitvely processed */
 	int					active;
 
+	/* Indicates band is waiting in pending queue */
+	bool					pending;
+
 	/* Reloc map iterator */
 	struct {
 		/* Array of chunk offsets */
@@ -139,6 +142,10 @@ struct ftl_reloc {
 
 	/* Pending band relocates queue */
 	TAILQ_HEAD(, ftl_band_reloc)		pending_queue;
+
+	/* Reloc lock */
+	pthread_spinlock_t			lock;
+
 };
 
 static size_t
@@ -157,18 +164,36 @@ ftl_reloc_iter_chk_done(struct ftl_band_reloc *breloc)
 	return ftl_reloc_iter_chk_offset(breloc) == num_lbks;
 }
 
+static bool
+ftl_reloc_lbkoff_valid(struct ftl_band_reloc *breloc, size_t lbkoff)
+{
+	struct ftl_reloc *reloc = breloc->parent;
+
+	pthread_spin_lock(&reloc->lock);
+	if (spdk_bit_array_get(breloc->reloc_map, lbkoff)) {
+		pthread_spin_unlock(&reloc->lock);
+		return true;
+	}
+
+	pthread_spin_unlock(&reloc->lock);
+	return false;
+}
+
 static void
 ftl_reloc_clr_lbk(struct ftl_band_reloc *breloc, size_t lbkoff)
 {
-	if (!spdk_bit_array_get(breloc->reloc_map, lbkoff)) {
+	struct ftl_reloc *reloc = breloc->parent;
+
+	if (!ftl_reloc_lbkoff_valid(breloc, lbkoff)) {
 		return;
 	}
 
+	pthread_spin_lock(&reloc->lock);
 	spdk_bit_array_clear(breloc->reloc_map, lbkoff);
 	assert(breloc->num_lbks);
 	breloc->num_lbks--;
+	pthread_spin_unlock(&reloc->lock);
 }
-
 
 static void
 ftl_reloc_read_lba_map_cb(void *arg, int status)
@@ -204,7 +229,6 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 	struct ftl_reloc_move *move;
 	size_t i;
 
-	breloc->active = 1;
 	reloc->num_active++;
 
 	if (!band->high_prio) {
@@ -304,7 +328,7 @@ ftl_reloc_iter_next_chk(struct ftl_band_reloc *breloc)
 static int
 ftl_reloc_lbk_valid(struct ftl_band_reloc *breloc, size_t lbkoff)
 {
-	return spdk_bit_array_get(breloc->reloc_map, lbkoff) &&
+	return ftl_reloc_lbkoff_valid(breloc, lbkoff) &&
 	       ftl_band_lbkoff_valid(breloc->band, lbkoff);
 }
 
@@ -548,13 +572,17 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 
 	ftl_band_release_lba_map(band);
 
-	breloc->active = 0;
 	reloc->num_active--;
 
-	if (breloc->num_lbks) {
+	pthread_spin_lock(&reloc->lock);
+	breloc->active = 0;
+	if (breloc->num_lbks && !breloc->pending) {
+		breloc->pending = true;
 		TAILQ_INSERT_TAIL(&reloc->pending_queue, breloc, entry);
+		pthread_spin_unlock(&reloc->lock);
 		return;
 	}
+	pthread_spin_unlock(&reloc->lock);
 
 	if (ftl_band_empty(band)) {
 		ftl_band_set_state(breloc->band, FTL_BAND_STATE_FREE);
@@ -641,7 +669,12 @@ ftl_reloc_add_active_queue(struct ftl_band_reloc *breloc)
 {
 	struct ftl_reloc *reloc = breloc->parent;
 
+	pthread_spin_lock(&reloc->lock);
+	breloc->active = 1;
+	breloc->pending = false;
 	TAILQ_REMOVE(&reloc->pending_queue, breloc, entry);
+	pthread_spin_unlock(&reloc->lock);
+
 	TAILQ_INSERT_HEAD(&reloc->active_queue, breloc, entry);
 	ftl_reloc_prep(breloc);
 }
@@ -690,6 +723,11 @@ ftl_reloc_init(struct spdk_ftl_dev *dev)
 	TAILQ_INIT(&reloc->active_queue);
 	TAILQ_INIT(&reloc->prio_queue);
 
+	if (pthread_spin_init(&reloc->lock, PTHREAD_PROCESS_PRIVATE)) {
+		SPDK_ERRLOG("Spinlock initialization failure\n");
+		goto error;
+	}
+
 	return reloc;
 error:
 	ftl_reloc_free(reloc);
@@ -709,6 +747,7 @@ ftl_reloc_free(struct ftl_reloc *reloc)
 		ftl_band_reloc_free(&reloc->brelocs[i]);
 	}
 
+	pthread_spin_destroy(&reloc->lock);
 	free(reloc->brelocs);
 	free(reloc);
 }
@@ -744,6 +783,7 @@ ftl_reloc(struct ftl_reloc *reloc)
 	breloc = TAILQ_FIRST(&reloc->prio_queue);
 	if (breloc) {
 		if (!breloc->active) {
+			breloc->active = true;
 			ftl_reloc_prep(breloc);
 		}
 		ftl_process_reloc(breloc);
@@ -754,12 +794,31 @@ ftl_reloc(struct ftl_reloc *reloc)
 		if (reloc->num_active == reloc->max_active) {
 			break;
 		}
+
+		if (breloc->band->state != FTL_BAND_STATE_CLOSED) {
+			continue;
+		}
+
+		assert(!breloc->active);
+
 		ftl_reloc_add_active_queue(breloc);
 	}
 
 	TAILQ_FOREACH_SAFE(breloc, &reloc->active_queue, entry, tbreloc) {
 		ftl_process_reloc(breloc);
 	}
+
+}
+
+static void
+ftl_reloc_set_lbk(struct ftl_band_reloc *breloc, size_t lbkoff)
+{
+	struct ftl_reloc *reloc = breloc->parent;
+
+	pthread_spin_lock(&reloc->lock);
+	spdk_bit_array_set(breloc->reloc_map, lbkoff);
+	breloc->num_lbks++;
+	pthread_spin_unlock(&reloc->lock);
 }
 
 void
@@ -767,22 +826,34 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 	      size_t num_lbks, int prio)
 {
 	struct ftl_band_reloc *breloc = &reloc->brelocs[band->id];
-	size_t i, prev_lbks = breloc->num_lbks;
+	size_t i, num_set = 0;
+
+	assert(offset + num_lbks <= ftl_num_band_lbks(band->dev));
 
 	for (i = offset; i < offset + num_lbks; ++i) {
-		if (spdk_bit_array_get(breloc->reloc_map, i)) {
+		if (ftl_reloc_lbkoff_valid(breloc, i)) {
 			continue;
 		}
-		spdk_bit_array_set(breloc->reloc_map, i);
-		breloc->num_lbks++;
+
+		num_set++;
+		ftl_reloc_set_lbk(breloc, i);
 	}
 
-	if (!prev_lbks && !prio) {
-		TAILQ_INSERT_HEAD(&reloc->pending_queue, breloc, entry);
+	if (num_set == 0) {
+		return;
 	}
 
-	if (prio) {
-		TAILQ_INSERT_TAIL(&reloc->prio_queue, breloc, entry);
-		ftl_band_acquire_lba_map(breloc->band);
+	pthread_spin_lock(&reloc->lock);
+	if (!breloc->active) {
+		if (!breloc->pending && !prio) {
+			breloc->pending = true;
+			TAILQ_INSERT_HEAD(&reloc->pending_queue, breloc, entry);
+		}
+
+		if (prio) {
+			TAILQ_INSERT_TAIL(&reloc->prio_queue, breloc, entry);
+			ftl_band_acquire_lba_map(breloc->band);
+		}
 	}
+	pthread_spin_unlock(&reloc->lock);
 }
