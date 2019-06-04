@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "101679cd_01e803bf",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1181,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-04T08:33:27Z",
+      "side": 1,
+      "message": "We\u0027d better to set g_status.done to true before the UT.",
+      "revId": "c4ae1035d6ffa0ce63d996d4397b66a0c3a09df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
