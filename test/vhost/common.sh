@@ -312,42 +312,22 @@ function vm_fio_socket()
 	cat $vm_dir/fio_socket
 }
 
-function vm_create_ssh_config()
-{
-	local ssh_config="$VM_BASE_DIR/ssh_config"
-	if [[ ! -f $ssh_config ]]; then
-		(
-		echo "Host *"
-		echo "  ControlPersist=10m"
-		echo "  ConnectTimeout=1"
-		echo "  Compression=no"
-		echo "  ControlMaster=auto"
-		echo "  UserKnownHostsFile=/dev/null"
-		echo "  StrictHostKeyChecking=no"
-		echo "  User root"
-		echo "  ControlPath=/tmp/%r@%h:%p.ssh"
-		echo ""
-		) > $ssh_config
-		# Control path created at /tmp because of live migration test case 3.
-		# In case of using sshfs share for the test - control path cannot be
-		# on share because remote server will fail on ssh commands.
-	fi
-}
-
-# Execute ssh command on given VM
+# Execute command on given VM
 # param $1 virtual machine number
 #
-function vm_ssh()
+function vm_exec()
 {
 	vm_num_is_valid $1 || return 1
-	vm_create_ssh_config
-	local ssh_config="$VM_BASE_DIR/ssh_config"
 
-	local ssh_cmd="ssh -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
-		-p $(vm_ssh_socket $1) $VM_SSH_OPTIONS 127.0.0.1"
-
+	local vm_num="$1"
 	shift
-	$ssh_cmd "$@"
+
+	sshpass -p root ssh \
+		-o UserKnownHostsFile=/dev/null \
+		-o StrictHostKeyChecking=no \
+		-o User=root \
+		-p $(vm_ssh_socket $vm_num) $VM_SSH_OPTIONS 127.0.0.1 \
+		"$@"
 }
 
 # Execute scp command on given VM
@@ -356,14 +336,16 @@ function vm_ssh()
 function vm_scp()
 {
 	vm_num_is_valid $1 || return 1
-	vm_create_ssh_config
-	local ssh_config="$VM_BASE_DIR/ssh_config"
 
-	local scp_cmd="scp -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
-		-P $(vm_ssh_socket $1) "
-
+	local vm_num="$1"
 	shift
-	$scp_cmd "$@"
+
+	sshpass -p root scp \
+		-o UserKnownHostsFile=/dev/null \
+		-o StrictHostKeyChecking=no \
+		-o User=root \
+		-P $(vm_ssh_socket $vm_num) $VM_SSH_OPTIONS \
+		"$@"
 }
 
 
@@ -406,9 +388,9 @@ function vm_os_booted()
 		return 1
 	fi
 
-	if ! VM_SSH_OPTIONS="-o ControlMaster=no" vm_ssh $1 "true" 2>/dev/null; then
+	if ! VM_SSH_OPTIONS="-o ControlMaster=no" vm_exec $1 "true" 2>/dev/null; then
 		# Shutdown existing master. Ignore errors as it might not exist.
-		VM_SSH_OPTIONS="-O exit" vm_ssh $1 "true" 2>/dev/null
+		VM_SSH_OPTIONS="-O exit" vm_exec $1 "true" 2>/dev/null
 		return 1
 	fi
 
@@ -437,7 +419,7 @@ function vm_shutdown()
 	# "fail" due to shutdown
 	notice "Shutting down virtual machine $vm_dir"
 	set +e
-	vm_ssh $1 "nohup sh -c 'shutdown -h -P now'" || true
+	vm_exec $1 "nohup sh -c 'shutdown -h -P now'" || true
 	notice "VM$1 is shutting down - wait a while to complete"
 	set -e
 }
@@ -923,7 +905,7 @@ function vm_wait_for_boot()
 	assert_number $1
 
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
+	#set +x
 
 	local all_booted=false
 	local timeout_time=$1
@@ -970,9 +952,9 @@ function vm_wait_for_boot()
 		notice "VM$vm_num ready"
 		#Change Timeout for stopping services to prevent lengthy powerdowns
 		#Check that remote system is not Cygwin in case of Windows VMs
-		local vm_os=$(vm_ssh $vm_num "uname -o")
+		local vm_os=$(vm_exec $vm_num "uname -o")
 		if [[ "$vm_os" != "Cygwin" ]]; then
-			vm_ssh $vm_num "echo 'DefaultTimeoutStopSec=10' >> /etc/systemd/system.conf; systemctl daemon-reexec"
+			vm_exec $vm_num "echo 'DefaultTimeoutStopSec=10' >> /etc/systemd/system.conf; systemctl daemon-reexec"
 		fi
 	done
 
@@ -1002,10 +984,10 @@ function vm_start_fio_server()
 	for vm_num in $@; do
 		notice "Starting fio server on VM$vm_num"
 		if [[ $fio_bin != "" ]]; then
-			cat $fio_bin | vm_ssh $vm_num 'cat > /root/fio; chmod +x /root/fio'
-			vm_ssh $vm_num /root/fio $readonly --eta=never --server --daemonize=/root/fio.pid
+			cat $fio_bin | vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio'
+			vm_exec $vm_num /root/fio $readonly --eta=never --server --daemonize=/root/fio.pid
 		else
-			vm_ssh $vm_num fio $readonly --eta=never --server --daemonize=/root/fio.pid
+			vm_exec $vm_num fio $readonly --eta=never --server --daemonize=/root/fio.pid
 		fi
 	done
 }
@@ -1022,7 +1004,7 @@ function vm_check_scsi_location()
 		fi; \
 	done'
 
-	SCSI_DISK="$(echo "$script" | vm_ssh $1 bash -s)"
+	SCSI_DISK="$(echo "$script" | vm_exec $1 bash -s)"
 
 	if [[ -z "$SCSI_DISK" ]]; then
 		error "no test disk found!"
@@ -1037,14 +1019,14 @@ function vm_reset_scsi_devices()
 {
 	for disk in "${@:2}"; do
 		notice "VM$1 Performing device reset on disk $disk"
-		vm_ssh $1 sg_reset /dev/$disk -vNd
+		vm_exec $1 sg_reset /dev/$disk -vNd
 	done
 }
 
 function vm_check_blk_location()
 {
 	local script='shopt -s nullglob; cd /sys/block; echo vd*'
-	SCSI_DISK="$(echo "$script" | vm_ssh $1 bash -s)"
+	SCSI_DISK="$(echo "$script" | vm_exec $1 bash -s)"
 
 	if [[ -z "$SCSI_DISK" ]]; then
 		error "no blk test disk found!"
@@ -1097,17 +1079,17 @@ function run_fio()
 		local vm_num=${vm%%:*}
 		local vmdisks=${vm#*:}
 
-		sed "s@filename=@filename=$vmdisks@" $job_file | vm_ssh $vm_num "cat > /root/$job_fname"
+		sed "s@filename=@filename=$vmdisks@" $job_file | vm_exec $vm_num "cat > /root/$job_fname"
 		fio_disks+="127.0.0.1:$(vm_fio_socket $vm_num):$vmdisks,"
 
-		vm_ssh $vm_num cat /root/$job_fname
+		vm_exec $vm_num cat /root/$job_fname
 		if ! $run_server_mode; then
 			if [[ ! -z "$fio_bin" ]]; then
-				cat $fio_bin | vm_ssh $vm_num 'cat > /root/fio; chmod +x /root/fio'
+				cat $fio_bin | vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio'
 			fi
 
 			notice "Running local fio on VM $vm_num"
-			vm_ssh $vm_num "nohup /root/fio /root/$job_fname 1>/root/$job_fname.out 2>/root/$job_fname.out </dev/null & echo \$! > /root/fio.pid"
+			vm_exec $vm_num "nohup /root/fio /root/$job_fname 1>/root/$job_fname.out 2>/root/$job_fname.out </dev/null & echo \$! > /root/fio.pid"
 		fi
 	done
 

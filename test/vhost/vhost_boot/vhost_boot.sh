@@ -92,14 +92,14 @@ vm_wait_for_boot 300 $vm_no
 timing_exit setup_vm
 
 timing_enter run_vm_cmd
-vm_ssh $vm_no "parted -s /dev/sda mkpart primary 10GB 100%; partprobe;  sleep 0.1;"
-vm_ssh $vm_no "mkfs.ext4 -F /dev/sda2; mkdir -p /mnt/sda2test; mount /dev/sda2 /mnt/sda2test;"
-vm_ssh $vm_no "fio --name=integrity --bsrange=4k-512k --iodepth=128 --numjobs=1 --direct=1 \
+vm_exec $vm_no "parted -s /dev/sda mkpart primary 10GB 100%; partprobe;  sleep 0.1;"
+vm_exec $vm_no "mkfs.ext4 -F /dev/sda2; mkdir -p /mnt/sda2test; mount /dev/sda2 /mnt/sda2test;"
+vm_exec $vm_no "fio --name=integrity --bsrange=4k-512k --iodepth=128 --numjobs=1 --direct=1 \
  --thread=1 --group_reporting=1 --rw=randrw --rwmixread=70 --filename=/mnt/sda2test/test_file \
  --verify=md5 --do_verify=1 --verify_backlog=1024 --fsync_on_close=1 --runtime=20 \
  --time_based=1 --size=1024m"
-vm_ssh $vm_no "umount /mnt/sda2test; rm -rf /mnt/sda2test"
-alignment_offset=$(vm_ssh $vm_no "cat /sys/block/sda/sda1/alignment_offset")
+vm_exec $vm_no "umount /mnt/sda2test; rm -rf /mnt/sda2test"
+alignment_offset=$(vm_exec $vm_no "cat /sys/block/sda/sda1/alignment_offset")
 echo "alignment_offset: $alignment_offset"
 timing_exit run_vm_cmd
 
