@@ -435,6 +435,10 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+
 	if (cdata->lpa.celp) {
 		if (get_cmd_effects_log_page(ctrlr) == 0) {
 			outstanding_commands++;
@@ -443,12 +447,18 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
 	if (cdata->vid == SPDK_PCI_VID_INTEL) {
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_SMART)) {
 			if (get_intel_smart_log_page(ctrlr) == 0) {
 				outstanding_commands++;
 			} else {
 				printf("Get Log Page (Intel SMART/health) failed\n");
+			}
+			while (outstanding_commands) {
+				spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 			}
 		}
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE)) {
@@ -457,12 +467,18 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 			} else {
 				printf("Get Log Page (Intel temperature) failed\n");
 			}
+			while (outstanding_commands) {
+				spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+			}
 		}
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION)) {
 			if (get_intel_md_log_page(ctrlr) == 0) {
 				outstanding_commands++;
 			} else {
 				printf("Get Log Page (Intel Marketing Description) failed\n");
+			}
+			while (outstanding_commands) {
+				spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 			}
 		}
 

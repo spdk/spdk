@@ -178,8 +178,21 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 		if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
 		    xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
+			uint8_t *test = req->payload.contig_or_cb_arg;
+			int i;
+
 			assert(req->pid == getpid());
 			memcpy(req->user_buffer, req->payload.contig_or_cb_arg, req->payload_size);
+			test += req->payload_size;
+			for (i = 0; i < 4096; i++) {
+				if (test[i] != 0xFE) {
+					break;
+				}
+			}
+			if (i != 4096) {
+				printf("size=%d but overwrote %d bytes\n", req->payload_size, i);
+				assert(false);
+			}
 		}
 
 		spdk_dma_free(req->payload.contig_or_cb_arg);
@@ -204,7 +217,7 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 	void *dma_buffer = NULL;
 
 	if (buffer && payload_size) {
-		dma_buffer = spdk_zmalloc(payload_size, 4096, NULL,
+		dma_buffer = spdk_zmalloc(payload_size + 4096, 4096, NULL,
 					  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		if (!dma_buffer) {
 			return NULL;
@@ -212,6 +225,8 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 
 		if (host_to_controller) {
 			memcpy(dma_buffer, buffer, payload_size);
+		} else {
+			memset(dma_buffer, 0xFE, payload_size + 4096);
 		}
 	}
 
