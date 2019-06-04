@@ -83,6 +83,9 @@ echo "leak:/usr/src/fio/parse.c" >> "$asan_suppression_file"
 echo "leak:/usr/src/fio/iolog.c" >> "$asan_suppression_file"
 echo "leak:/usr/src/fio/init.c" >> "$asan_suppression_file"
 
+# Suppress leaks in libiscsi
+echo "leak:libiscsi.so" >> "$asan_suppression_file"
+
 export LSAN_OPTIONS=suppressions="$asan_suppression_file"
 
 if [ -z "$DEPENDENCY_DIR" ]; then
