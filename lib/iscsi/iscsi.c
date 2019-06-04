@@ -422,10 +422,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 					       ISCSI_BHS_LEN - pdu->bhs_valid_bytes,
 					       (uint8_t *)&pdu->bhs + pdu->bhs_valid_bytes);
 		if (rc < 0) {
-			*_pdu = NULL;
-			spdk_put_pdu(pdu);
-			conn->pdu_in_progress = NULL;
-			return rc;
+			goto error;
 		}
 		pdu->bhs_valid_bytes += rc;
 		if (pdu->bhs_valid_bytes < ISCSI_BHS_LEN) {
@@ -444,10 +441,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 					       ahs_len - pdu->ahs_valid_bytes,
 					       pdu->ahs + pdu->ahs_valid_bytes);
 		if (rc < 0) {
-			*_pdu = NULL;
-			spdk_put_pdu(pdu);
-			conn->pdu_in_progress = NULL;
-			return rc;
+			goto error;
 		}
 
 		pdu->ahs_valid_bytes += rc;
@@ -464,10 +458,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 					       ISCSI_DIGEST_LEN - pdu->hdigest_valid_bytes,
 					       pdu->header_digest + pdu->hdigest_valid_bytes);
 		if (rc < 0) {
-			*_pdu = NULL;
-			spdk_put_pdu(pdu);
-			conn->pdu_in_progress = NULL;
-			return rc;
+			goto error;
 		}
 
 		pdu->hdigest_valid_bytes += rc;
@@ -489,10 +480,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 			} else {
 				SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
 					    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
-				*_pdu = NULL;
-				spdk_put_pdu(pdu);
-				conn->pdu_in_progress = NULL;
-				return SPDK_ISCSI_CONNECTION_FATAL;
+				goto error;
 			}
 			pdu->mobj = spdk_mempool_get(pool);
 			if (pdu->mobj == NULL) {
@@ -504,10 +492,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 		rc = iscsi_conn_read_data_segment(conn, pdu, data_len);
 		if (rc < 0) {
-			*_pdu = NULL;
-			spdk_put_pdu(pdu);
-			conn->pdu_in_progress = NULL;
-			return rc;
+			goto error;
 		}
 
 		pdu->data_valid_bytes += rc;
@@ -524,10 +509,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 					       ISCSI_DIGEST_LEN - pdu->ddigest_valid_bytes,
 					       pdu->data_digest + pdu->ddigest_valid_bytes);
 		if (rc < 0) {
-			*_pdu = NULL;
-			spdk_put_pdu(pdu);
-			conn->pdu_in_progress = NULL;
-			return rc;
+			goto error;
 		}
 
 		pdu->ddigest_valid_bytes += rc;
@@ -547,16 +529,18 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	if (data_len != 0) {
 		if (!iscsi_check_data_segment_length(conn, pdu, data_len)) {
 			rc = iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
-			spdk_put_pdu(pdu);
-
 			/*
 			 * If spdk_iscsi_reject() was not able to reject the PDU,
 			 * treat it as a fatal connection error.  Otherwise,
 			 * return SUCCESS here so that the caller will continue
 			 * to attempt to read PDUs.
 			 */
-			rc = (rc < 0) ? SPDK_ISCSI_CONNECTION_FATAL : SPDK_SUCCESS;
-			return rc;
+			if (rc == 0) {
+				spdk_put_pdu(pdu);
+				return SPDK_SUCCESS;
+			} else {
+				goto error;
+			}
 		}
 
 		pdu->data = pdu->data_buf;
@@ -570,8 +554,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		rc = MATCH_DIGEST_WORD(pdu->header_digest, crc32c);
 		if (rc == 0) {
 			SPDK_ERRLOG("header digest error (%s)\n", conn->initiator_name);
-			spdk_put_pdu(pdu);
-			return SPDK_ISCSI_CONNECTION_FATAL;
+			goto error;
 		}
 	}
 	if (conn->data_digest && data_len != 0) {
@@ -579,13 +562,18 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {
 			SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
-			spdk_put_pdu(pdu);
-			return SPDK_ISCSI_CONNECTION_FATAL;
+			goto error;
 		}
 	}
 
 	*_pdu = pdu;
 	return 1;
+
+error:
+	*_pdu = NULL;
+	spdk_put_pdu(pdu);
+	conn->pdu_in_progress = NULL;
+	return SPDK_ISCSI_CONNECTION_FATAL;
 }
 
 struct _iscsi_sgl {
