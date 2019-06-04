@@ -78,6 +78,7 @@ static bool g_zcopy = true;
 static unsigned g_master_core;
 static int g_time_in_sec;
 static bool g_mix_specified;
+static const char *g_target_bdev_name;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -349,14 +350,24 @@ bdevperf_construct_targets(void)
 	struct spdk_bdev *bdev;
 	int rc;
 
-	bdev = spdk_bdev_first_leaf();
-	while (bdev != NULL) {
-		rc = bdevperf_construct_target(bdev);
-		if (rc != 0) {
+	if (g_target_bdev_name != NULL) {
+		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
+		if (!bdev) {
+			fprintf(stderr, "Unable to find bdev '%s'\n", g_target_bdev_name);
 			return;
 		}
 
-		bdev = spdk_bdev_next_leaf(bdev);
+		bdevperf_construct_target(bdev);
+	} else {
+		bdev = spdk_bdev_first_leaf();
+		while (bdev != NULL) {
+			rc = bdevperf_construct_target(bdev);
+			if (rc != 0) {
+				return;
+			}
+
+			bdev = spdk_bdev_next_leaf(bdev);
+		}
 	}
 }
 
@@ -794,6 +805,7 @@ bdevperf_usage(void)
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
 	printf("\t\t(only valid with -S)\n");
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
+	printf(" -T <target>               target bdev\n");
 }
 
 /*
@@ -1043,6 +1055,8 @@ bdevperf_parse_arg(int ch, char *arg)
 
 	if (ch == 'w') {
 		g_workload_type = optarg;
+	} else if (ch == 'T') {
+		g_target_bdev_name = optarg;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -1102,7 +1116,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
