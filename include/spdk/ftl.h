@@ -143,6 +143,10 @@ struct spdk_ftl_attrs {
 	struct spdk_bdev_desc			*cache_bdev_desc;
 	/* Allow partial recovery after dirty shutdown */
 	bool					allow_open_bands;
+	/* Number of chunks per parallel unit in the underlying device (including any offline ones) */
+	size_t					num_chunks;
+	/* Number of sectors per chunk */
+	size_t					chunk_size;
 };
 
 struct ftl_module_init_opts {
@@ -220,7 +224,7 @@ void spdk_ftl_conf_init_defaults(struct spdk_ftl_conf *conf);
  * \param dev device
  * \param attr Attribute structure to fill
  */
-void  spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
+void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
 
 /**
  * Submits a read to the specified device.

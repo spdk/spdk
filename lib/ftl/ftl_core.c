@@ -1644,6 +1644,8 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->range = dev->range;
 	attrs->cache_bdev_desc = dev->nv_cache.bdev_desc;
 	attrs->allow_open_bands = dev->conf.allow_open_bands;
+	attrs->num_chunks = dev->geo.num_chk;
+	attrs->chunk_size = dev->geo.clba;
 }
 
 static void
