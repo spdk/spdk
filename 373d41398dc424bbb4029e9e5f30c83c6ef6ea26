@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4cccc9f_d9dd7d6c",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-04T08:57:00Z",
+      "side": 1,
+      "message": "This does not always work, debugging.",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 30
+      },
+      "revId": "373d41398dc424bbb4029e9e5f30c83c6ef6ea26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
