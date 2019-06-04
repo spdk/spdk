@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82dccd0a_f03f8531",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-04T14:18:29Z",
+      "side": 1,
+      "message": "vhost",
+      "range": {
+        "startLine": 592,
+        "startChar": 85,
+        "endLine": 592,
+        "endChar": 90
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d74fd864_cebe769c",
+        "filename": "scripts/rpc/fuzz.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-04T14:18:29Z",
+      "side": 1,
+      "message": "How about \"Valid if and only if is_blk is false\"",
+      "range": {
+        "startLine": 9,
+        "startChar": 74,
+        "endLine": 9,
+        "endChar": 104
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95c44716_d71475b6",
+        "filename": "scripts/rpc/fuzz.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-04T14:18:29Z",
+      "side": 1,
+      "message": "How about changing this to \"Valid if and only if is_blk is false\"",
+      "range": {
+        "startLine": 10,
+        "startChar": 96,
+        "endLine": 10,
+        "endChar": 126
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb4012b9_ee073e6e",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-04T14:18:29Z",
+      "side": 1,
+      "message": "add \"test\" between fuzz and the",
+      "range": {
+        "startLine": 2,
+        "startChar": 36,
+        "endLine": 2,
+        "endChar": 37
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f3ce44a_52a8eebc",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-04T14:18:29Z",
+      "side": 1,
+      "message": "Small cap \"i\"",
+      "range": {
+        "startLine": 11,
+        "startChar": 1,
+        "endLine": 11,
+        "endChar": 2
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a7c029a_12dec451",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-04T14:18:29Z",
+      "side": 1,
+      "message": "\"to\" instead of \"at\"",
+      "range": {
+        "startLine": 22,
+        "startChar": 89,
+        "endLine": 22,
+        "endChar": 91
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25f334be_9ac8ad20",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-04T14:18:29Z",
+      "side": 1,
+      "message": "Simplify the sentence by deleting this and changing the sentence to \"If you want ...\"",
+      "range": {
+        "startLine": 25,
+        "startChar": 3,
+        "endLine": 25,
+        "endChar": 23
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e0e3546_163498c2",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-04T14:18:29Z",
+      "side": 1,
+      "message": "I would suggest changing this to \"In most cases, this will result in the application failing all I/O immediately ...\"",
+      "range": {
+        "startLine": 26,
+        "startChar": 8,
+        "endLine": 27,
+        "endChar": 60
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
