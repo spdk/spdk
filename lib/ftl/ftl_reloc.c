@@ -158,7 +158,7 @@ _ftl_reloc_prep(struct ftl_band_reloc *breloc)
 
 	for (i = 0; i < reloc->max_qdepth; ++i) {
 		io = ftl_io_alloc(dev->ioch);
-		spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1);
+		spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1, NULL);
 	}
 }
 
@@ -215,7 +215,7 @@ ftl_reloc_free_io(struct ftl_band_reloc *breloc, struct ftl_io *io)
 {
 	spdk_dma_free(io->iov[0].iov_base);
 	free(io->lba.vector);
-	spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1);
+	spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1, NULL);
 }
 
 static void
@@ -257,7 +257,7 @@ ftl_reloc_read_cb(void *arg, int status)
 	}
 
 	io->flags &= ~FTL_IO_INITIALIZED;
-	spdk_ring_enqueue(breloc->write_queue, (void **)&io, 1);
+	spdk_ring_enqueue(breloc->write_queue, (void **)&io, 1, NULL);
 }
 
 static void
@@ -465,7 +465,7 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_io *io)
 	num_lbks = ftl_reloc_next_lbks(breloc, &ppa);
 
 	if (!num_lbks) {
-		spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1);
+		spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1, NULL);
 		return 0;
 	}
 

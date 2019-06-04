@@ -247,7 +247,7 @@ bdev_ftl_cb(void *arg, int status)
 
 	io->status = status;
 
-	cnt = spdk_ring_enqueue(io->ring, (void **)&io, 1);
+	cnt = spdk_ring_enqueue(io->ring, (void **)&io, 1, NULL);
 	assert(cnt == 1);
 }
 

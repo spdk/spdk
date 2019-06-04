@@ -368,7 +368,7 @@ ftl_rwb_batch_revert(struct ftl_rwb_batch *batch)
 {
 	struct ftl_rwb *rwb = batch->rwb;
 
-	if (spdk_ring_enqueue(rwb->prio_queue, (void **)&batch, 1) != 1) {
+	if (spdk_ring_enqueue(rwb->prio_queue, (void **)&batch, 1, NULL) != 1) {
 		assert(0 && "Should never happen");
 	}
 }
@@ -385,7 +385,7 @@ ftl_rwb_push(struct ftl_rwb_entry *entry)
 	/* Once all of the entries are put back, push the batch on the */
 	/* submission queue */
 	if (ftl_rwb_batch_full(batch, batch_size)) {
-		if (spdk_ring_enqueue(rwb->submit_queue, (void **)&batch, 1) != 1) {
+		if (spdk_ring_enqueue(rwb->submit_queue, (void **)&batch, 1, NULL) != 1) {
 			assert(0 && "Should never happen");
 		}
 	}
