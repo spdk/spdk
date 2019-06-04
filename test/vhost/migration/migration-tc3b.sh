@@ -8,7 +8,7 @@ incoming_vm=1
 target_vm=2
 target_vm_ctrl=naa.VhostScsi0.$target_vm
 rpc="$rootdir/scripts/rpc.py -s $(get_vhost_dir 1)/rpc.sock"
-share_dir=$TEST_DIR/share
+share_dir=$VHOST_DIR/share
 
 function host_2_cleanup_vhost()
 {
@@ -26,8 +26,8 @@ function host_2_cleanup_vhost()
 
 function host_2_start_vhost()
 {
-	echo "BASE DIR $TEST_DIR"
-	vhost_work_dir=$TEST_DIR/vhost1
+	echo "BASE DIR $VHOST_DIR"
+	vhost_work_dir=$VHOST_DIR/vhost1
 	mkdir -p $vhost_work_dir
 	rm -f $vhost_work_dir/*
 
@@ -49,7 +49,7 @@ function host_2_start_vhost()
 	echo "DONE" > $share_dir/DONE
 }
 
-echo $$ > $TEST_DIR/tc3b.pid
+echo $$ > $VHOST_DIR/tc3b.pid
 host_2_start_vhost
 suspend -f
 
