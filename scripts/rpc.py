@@ -34,6 +34,10 @@ if __name__ == "__main__":
                         help='Set verbose mode to INFO', default="ERROR")
     parser.add_argument('--verbose', dest='verbose', choices=['DEBUG', 'INFO', 'ERROR'],
                         help="""Set verbose level. """)
+    parser.add_argument('-f', dest='cmd_file',
+                        help='Read command from the provided file. All other arguments will be ignored.', default='')
+    parser.add_argument('-d', dest='doorbell_file',
+                        help='', default='/var/tmp/rpc_doorbell_file')
     subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name')
 
     def start_subsystem_init(args):
@@ -1821,9 +1825,51 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 exit(1)
 
     args = parser.parse_args()
+    if args.cmd_file:
+        with open(args.cmd_file, "r") as inputf, open(args.doorbell_file, "w") as doorbellf:
+            print("RPC server started")
+            while True:
+                input = inputf.readline()
+                if len(input) == 0:
+                    exit(0)
+
+                cmd = shlex.split(input)
+                try:
+                    args = parser.parse_args(cmd)
+                except SystemExit:
+                    doorbellf.write("1")
+                    doorbellf.flush()
+                    continue
+
+                if not hasattr(args, 'func'):
+                    parser.print_help()
+                    doorbellf.write("1")
+                    doorbellf.flush()
+                    continue
+
+                try:
+                    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout,
+                                                           log_level=getattr(logging, args.verbose.upper()))
+                    call_rpc_func(args)
+                except JSONRPCException as ex:
+                    print("Exception:")
+                    print(ex.message)
+                    doorbellf.write("1")
+                    doorbellf.flush()
+                    continue
+
+                doorbellf.write("0")
+                doorbellf.flush()
+            exit(0)
+
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
-        call_rpc_func(args)
+        try:
+            call_rpc_func(args)
+        except JSONRPCException as ex:
+            print("Exception:")
+            print(ex.message)
+            exit(1)
     elif sys.stdin.isatty():
         # No arguments and no data piped through stdin
         parser.print_help()
