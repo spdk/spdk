@@ -8,7 +8,7 @@ function error()
 	echo -e "ERROR: $1"
 	echo "error code: $error_code"
 	echo "==========="
-	vhost_kill
+	vhost_kill 0
 	pmem_clean_pool_file
 	return $error_code
 }

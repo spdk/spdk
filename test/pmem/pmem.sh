@@ -698,5 +698,5 @@ fi
 
 pmem_clean_pool_file
 report_test_completion "pmem"
-vhost_kill
+vhost_kill 0
 timing_exit pmem

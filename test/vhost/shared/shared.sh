@@ -5,7 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 function run_spdk_fio() {
 	fio_bdev --ioengine=spdk_bdev \
@@ -27,6 +27,6 @@ run_fio_pid=$!
 sleep 1
 run_spdk_fio --size=50% --offset=50% --filename=VirtioBlk0
 wait $run_fio_pid
-vhost_kill
+vhost_kill 0
 
 vhosttestfini

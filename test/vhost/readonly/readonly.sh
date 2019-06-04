@@ -5,7 +5,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
 
-rpc_py="$testdir/../../../scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$testdir/../../../scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 vm_img=""
 disk="Nvme0n1"
@@ -130,6 +130,6 @@ blk_ro_tc1
 
 $rpc_py delete_nvme_controller Nvme0
 
-vhost_kill
+vhost_kill 0
 
 vhosttestfini

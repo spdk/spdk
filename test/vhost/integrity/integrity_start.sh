@@ -52,7 +52,7 @@ done
 vhosttestinit
 
 . $(readlink -e "$(dirname $0)/../common.sh") || exit 1
-rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 
@@ -98,6 +98,6 @@ clean_lvol_cfg
 $rpc_py delete_nvme_controller Nvme0
 
 notice "Shutting down SPDK vhost app..."
-vhost_kill
+vhost_kill 0
 
 vhosttestfini

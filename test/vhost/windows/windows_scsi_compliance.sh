@@ -14,7 +14,7 @@ aio_file="$testdir/aio_disk"
 ssh_pass=""
 vm_num=1
 keep_results_dir=false
-rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 function usage()
 {
@@ -76,7 +76,7 @@ dos2unix $testdir/results/WIN_SCSI_*.log
 notice "Kill vm 1"
 vm_kill "$vm_num"
 notice "Kill spdk"
-vhost_kill
+vhost_kill 0
 notice "Remove $aio_file"
 rm -f $aio_file
 
