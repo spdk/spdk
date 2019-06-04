@@ -22,6 +22,30 @@
       "revId": "a09d640aab1cdb714dbd2d6017464f5a86bd3c6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f83c49cc_c6d9fb77",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1785,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-04T14:08:46Z",
+      "side": 1,
+      "message": "Yeah - this is different than how pcie and rdma operate.\nIf the qpair is created while the ctrlr is resetting - how do the requests end up getting allocated?",
+      "parentUuid": "37fc6af8_139435b3",
+      "range": {
+        "startLine": 1785,
+        "startChar": 7,
+        "endLine": 1785,
+        "endChar": 26
+      },
+      "revId": "a09d640aab1cdb714dbd2d6017464f5a86bd3c6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
