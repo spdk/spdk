@@ -46,6 +46,30 @@
       "revId": "a09d640aab1cdb714dbd2d6017464f5a86bd3c6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55a90e49_3fd2ba7f",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1785,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-04T15:25:30Z",
+      "side": 1,
+      "message": "Hi Shuhei \u0026 Jim,\n\nFor this code, I removed since I looked at the latest change in NVMe generic driver, there are some code changes.so we do not need the code here since the connect and creation is separated.",
+      "parentUuid": "f83c49cc_c6d9fb77",
+      "range": {
+        "startLine": 1785,
+        "startChar": 7,
+        "endLine": 1785,
+        "endChar": 26
+      },
+      "revId": "a09d640aab1cdb714dbd2d6017464f5a86bd3c6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
