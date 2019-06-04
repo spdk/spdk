@@ -369,17 +369,16 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 	struct iovec buf_iov, iovs[32];
 	int rc, _rc;
 
-	if (spdk_likely(!spdk_iscsi_get_dif_ctx(conn, pdu, &dif_ctx))) {
+	if (spdk_likely(!pdu->dif_insert_or_strip)) {
 		return spdk_iscsi_conn_read_data(conn,
 						 segment_len - pdu->data_valid_bytes,
 						 pdu->data_buf + pdu->data_valid_bytes);
 	} else {
-		pdu->dif_insert_or_strip = true;
 		buf_iov.iov_base = pdu->data_buf;
 		buf_iov.iov_len = pdu->data_buf_len;
 		rc = spdk_dif_set_md_interleave_iovs(iovs, 32, &buf_iov, 1,
 						     pdu->data_valid_bytes, segment_len, NULL,
-						     &dif_ctx);
+						     &pdu->dif_ctx);
 		if (rc > 0) {
 			rc = spdk_iscsi_conn_readv_data(conn, iovs, rc);
 			if (rc > 0) {
@@ -484,6 +483,10 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 				return 0;
 			}
 			pdu->data_buf = pdu->mobj->buf;
+
+			if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
+				pdu->dif_insert_or_strip = true;
+			}
 		}
 
 		rc = iscsi_conn_read_data_segment(conn, pdu, data_len);
