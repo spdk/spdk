@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15f0b6c8_1e14b0fc",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-04T20:00:44Z",
+      "side": 1,
+      "message": "I don\u0027t think we need both inorder_buffer and circular_buffer.  Exactly one will be true.  Even if there are no entries, we can just consider this an inorder buffer.\n\nSo I think just \"is_circular\" would be OK.  Or is_circular_buffer.",
+      "revId": "8254d12f2f096804472e8992f7b1a91651e688fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0aeadc38_29c038e3",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-04T20:00:44Z",
+      "side": 1,
+      "message": "I think \"full scale\" needs more explanation.  Someone using this tool for the first time will have no idea what this means, or the benefit of using it.",
+      "revId": "8254d12f2f096804472e8992f7b1a91651e688fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef0d2eaa_f8f6dabf",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-04T20:00:44Z",
+      "side": 1,
+      "message": "I think we should do a patch before this one that removes support for parsing only one core.  The user can do greps to get the data from one core if needed.  Then the code can be simpler, and this patch will be smaller.  What do you think?",
+      "revId": "8254d12f2f096804472e8992f7b1a91651e688fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
