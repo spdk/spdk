@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "b1787475_c1daa0c8",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-04T12:55:48Z",
+      "side": 1,
+      "message": "I\u0027m getting what are you saying, but still w/o general trigger we won\u0027t be able to hit some error paths easily. Let me show different example. Sample algorithm:\n\ncb_function4(errno)\n{\n    if (errno) {\n        ....                 // error path 3\n    }\n\n    ....\n}\n\ncb_function3(errno)\n{\n    if (errno) {\n        ....                 // error path 2\n    }\n\n    ....\n    function4(cb_function4)  //function4 performs only 2 reads\n}\n\ncb_function2(errno)\n{\n    if (errno) {\n        ....                 // error path 1\n    }\n\n    ....\n    function3(cb_function3)  //function3 performs only 2 writes\n}\n\nfunction1(errno)\n{\n    ....\n    function2(cb_function2)  //function2 performs only 2 reads\n}\n\n\nIf we will set to trigger on Nth number of read and run it in loop with N++ we will hit only error path 1 and 3. If we do the same thing with setting trigger to Nth write we will only hit error path 2. So for testing whole algorithm we have to write two separate loops/tests and both of them will test same functionality but with different simulated failures underneath. With general trigger and I can test each of the error path in above algorithm with only one loop/test (like in the next patch in series).\n\nIt all depends what aspect of the test we want to test - writes/reads/error paths. In next patch in series I want to test the case, where we loose power / fail at each stage of the delete operation no matter if it is a read or write and check if we recover from that correctly after power is back (writes failures) and also if error path won\u0027t crush/segfault/etc in case of failure (reads failures). This is where general trigger helps me to make this test simpler.",
+      "parentUuid": "a8430538_e02111d6",
+      "revId": "1e91b5432cceb094fac3b7ff6d861ede6ad8375d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b4edb65_ab8477a8",
         "filename": "test/unit/lib/blob/bs_dev_common.c",
         "patchSetId": 14
