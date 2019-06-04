@@ -2,6 +2,11 @@
 
 set -e
 
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vhost/common.sh
+
 vms=()
 declare -A vms_os
 declare -A vms_raw_disks
@@ -54,9 +59,6 @@ for param in "$@"; do
 done
 
 vhosttestinit
-
-. $(readlink -e "$(dirname $0)/../common.sh") || exit 1
-MIGRATION_DIR=$(readlink -f $(dirname $0))
 
 [[ ! -z "$test_cases" ]] || fail "Need '--test-cases=' parameter"
 
@@ -143,7 +145,7 @@ for test_case in ${test_cases//,/ }; do
 	notice "==============================="
 
 	timing_enter migration-tc${test_case}
-	source $MIGRATION_DIR/migration-tc${test_case}.sh
+	source $testdir/migration-tc${test_case}.sh
 	timing_exit migration-tc${test_case}
 done
 
