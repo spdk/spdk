@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "60c2043e_625082eb",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-04T08:43:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc623ba3_4a325cab",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 18
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6d0c24ab_8b8728ac",
         "filename": "test/ftl/dirty_shutdown.sh",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56ab4159_0fa02440",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-04T08:43:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6d0c24ab_8b8728ac",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 64
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "e7dc4f7a_b2e0acca",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-04T08:43:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65f8fd5b_9c852698",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 51
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40f86bf0_a530ff4d",
         "filename": "test/ftl/dirty_shutdown.sh",
         "patchSetId": 1
@@ -91,6 +163,30 @@
       "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b60334ff_5706425f",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-04T08:43:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "40f86bf0_a530ff4d",
+      "range": {
+        "startLine": 63,
+        "startChar": 3,
+        "endLine": 63,
+        "endChar": 18
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "94d6b614_74c488ca",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-04T08:43:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "726030c5_c6b59fa0",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 8
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27affd07_a75346ac",
         "filename": "test/ftl/dirty_shutdown.sh",
         "patchSetId": 1
@@ -128,6 +248,30 @@
       "writtenOn": "2019-05-31T13:07:55Z",
       "side": 1,
       "message": "Shouldn\u0027t you set the config actually allowing the initialization to continue if unclosed bands are found?",
+      "range": {
+        "startLine": 74,
+        "startChar": 22,
+        "endLine": 74,
+        "endChar": 46
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e29466aa_543564a3",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-04T08:43:12Z",
+      "side": 1,
+      "message": "It\u0027s already been saved in the config (-r option)",
+      "parentUuid": "27affd07_a75346ac",
       "range": {
         "startLine": 74,
         "startChar": 22,
@@ -160,6 +304,30 @@
       "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4abfd21_b0ae489e",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-04T08:43:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea97eecb_96906d48",
+      "range": {
+        "startLine": 84,
+        "startChar": 23,
+        "endLine": 84,
+        "endChar": 28
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
