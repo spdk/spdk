@@ -427,7 +427,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		pdu->bhs_valid_bytes += rc;
 		if (pdu->bhs_valid_bytes < ISCSI_BHS_LEN) {
 			*_pdu = NULL;
-			return SPDK_SUCCESS;
+			return 0;
 		}
 	}
 
@@ -447,7 +447,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		pdu->ahs_valid_bytes += rc;
 		if (pdu->ahs_valid_bytes < ahs_len) {
 			*_pdu = NULL;
-			return SPDK_SUCCESS;
+			return 0;
 		}
 	}
 
@@ -464,7 +464,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		pdu->hdigest_valid_bytes += rc;
 		if (pdu->hdigest_valid_bytes < ISCSI_DIGEST_LEN) {
 			*_pdu = NULL;
-			return SPDK_SUCCESS;
+			return 0;
 		}
 	}
 
@@ -485,7 +485,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 			pdu->mobj = spdk_mempool_get(pool);
 			if (pdu->mobj == NULL) {
 				*_pdu = NULL;
-				return SPDK_SUCCESS;
+				return 0;
 			}
 			pdu->data_buf = pdu->mobj->buf;
 		}
@@ -498,7 +498,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		pdu->data_valid_bytes += rc;
 		if (pdu->data_valid_bytes < data_len) {
 			*_pdu = NULL;
-			return SPDK_SUCCESS;
+			return 0;
 		}
 	}
 
@@ -515,7 +515,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		pdu->ddigest_valid_bytes += rc;
 		if (pdu->ddigest_valid_bytes < ISCSI_DIGEST_LEN) {
 			*_pdu = NULL;
-			return SPDK_SUCCESS;
+			return 0;
 		}
 	}
 
@@ -537,7 +537,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 			 */
 			if (rc == 0) {
 				spdk_put_pdu(pdu);
-				return SPDK_SUCCESS;
+				return 0;
 			} else {
 				goto error;
 			}
