@@ -73,7 +73,7 @@ timing_enter convert_vm_image
 modprobe nbd
 trap 'nbd_stop_disks $(get_vhost_dir)/rpc.sock /dev/nbd0; err_clean "${FUNCNAME}" "${LINENO}"' ERR
 nbd_start_disks "$(get_vhost_dir)/rpc.sock" $lvb_u /dev/nbd0
-$QEMU_PREFIX/bin/qemu-img convert $os_image -O raw /dev/nbd0
+qemu-img convert $os_image -O raw /dev/nbd0
 sync
 nbd_stop_disks $(get_vhost_dir)/rpc.sock /dev/nbd0
 sleep 1
