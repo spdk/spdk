@@ -69,7 +69,7 @@ function migration_tc2_configure_vhost()
 	timing_enter migration_tc2_configure_vhost
 
 	# Those are global intentionally - they will be unset in cleanup handler
-	nvmf_dir="$TEST_DIR/nvmf_tgt"
+	nvmf_dir="$VHOST_DIR/nvmf_tgt"
 
 	incoming_vm=1
 	target_vm=2
