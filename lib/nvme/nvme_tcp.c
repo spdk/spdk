@@ -116,6 +116,8 @@ struct nvme_tcp_req {
 };
 
 static void spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req);
+static void nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
+		enum nvme_tcp_pdu_recv_state state);
 
 static inline struct nvme_tcp_qpair *
 nvme_tcp_qpair(struct spdk_nvme_qpair *qpair)
@@ -231,8 +233,22 @@ static void
 nvme_tcp_qpair_disconnect(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	struct nvme_tcp_pdu *pdu;
 
 	spdk_sock_close(&tqpair->sock);
+
+	/* clear the send_queue */
+	while (!TAILQ_EMPTY(&tqpair->send_queue)) {
+		pdu = TAILQ_FIRST(&tqpair->send_queue);
+		TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
+	}
+
+	/* Reset the tqpair state and recv_state */
+	tqpair->state = NVME_TCP_QPAIR_STATE_INVALID;
+	if (tqpair->recv_state != NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
+		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	}
+
 }
 
 static int
