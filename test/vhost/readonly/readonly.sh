@@ -66,7 +66,7 @@ function blk_ro_tc1()
 	local vm_no="0"
 	local disk_name=$disk
 	local vhost_blk_name=""
-	local vm_dir="$TEST_DIR/vms/$vm_no"
+	local vm_dir="$VHOST_DIR/vms/$vm_no"
 
 	if [[ $disk =~ .*malloc.* ]]; then
 		disk_name=$($rpc_py construct_malloc_bdev 512 4096)

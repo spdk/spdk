@@ -43,10 +43,10 @@ notice "Testing vhost command line arguments"
 $VHOST_APP -c /path/to/non_existing_file/conf -S $testdir -e 0x0 -s 1024 -d -h --silence-noticelog
 
 # Testing vhost create pid file option. Vhost will exit with error as invalid config path is given
-if $VHOST_APP -c /path/to/non_existing_file/conf -f $TEST_DIR/vhost/vhost.pid; then
+if $VHOST_APP -c /path/to/non_existing_file/conf -f $VHOST_DIR/vhost/vhost.pid; then
 	fail "vhost started when specifying invalid config file"
 fi
-rm -f $TEST_DIR/vhost/vhost.pid
+rm -f $VHOST_DIR/vhost/vhost.pid
 
 # Testing vhost start with invalid config. Vhost will exit with error as bdev module init failed
 if $VHOST_APP -c $testdir/invalid.config; then

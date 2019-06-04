@@ -322,7 +322,7 @@ fi
 # Run FIO
 fio_disks=""
 for vm_num in $used_vms; do
-	vm_dir=$VM_BASE_DIR/$vm_num
+	vm_dir=$VM_DIR/$vm_num
 	host_name="VM-$vm_num"
 	vm_exec $vm_num "hostname $host_name"
 	vm_start_fio_server $fio_bin $vm_num
@@ -350,12 +350,12 @@ fio_job_fname=$(basename $fio_job)
 fio_log_fname="${fio_job_fname%%.*}.log"
 for i in $(seq 1 $fio_iterations); do
 	echo "Running FIO iteration $i"
-	run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" --json $fio_disks &
+	run_fio $fio_bin --job-file="$fio_job" --out="$VHOST_DIR/fio_results" --json $fio_disks &
 	fio_pid=$!
 
 	if $vm_sar_enable; then
 		sleep $vm_sar_delay
-		mkdir -p $TEST_DIR/fio_results/sar_stats
+		mkdir -p $VHOST_DIR/fio_results/sar_stats
 		pids=""
 		for vm_num in $used_vms; do
 			vm_exec "$vm_num" "mkdir -p /root/sar; sar -P ALL $vm_sar_interval $vm_sar_count >> /root/sar/sar_stats_VM${vm_num}_run${i}.txt" &
@@ -365,12 +365,12 @@ for i in $(seq 1 $fio_iterations); do
 			wait $j
 		done
 		for vm_num in $used_vms; do
-			vm_scp "$vm_num" "root@127.0.0.1:/root/sar/sar_stats_VM${vm_num}_run${i}.txt" "$TEST_DIR/fio_results/sar_stats"
+			vm_scp "$vm_num" "root@127.0.0.1:/root/sar/sar_stats_VM${vm_num}_run${i}.txt" "$VHOST_DIR/fio_results/sar_stats"
 		done
 	fi
 
 	wait $fio_pid
-	mv $TEST_DIR/fio_results/$fio_log_fname $TEST_DIR/fio_results/$fio_log_fname.$i
+	mv $VHOST_DIR/fio_results/$fio_log_fname $VHOST_DIR/fio_results/$fio_log_fname.$i
 	sleep 1
 done
 
