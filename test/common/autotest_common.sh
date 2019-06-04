@@ -88,6 +88,9 @@ echo "leak:spdk_fs_alloc_thread_ctx" >> "$asan_suppression_file"
 echo "leak:/usr/src/fio/parse.c" >> "$asan_suppression_file"
 echo "leak:/usr/src/fio/iolog.c" >> "$asan_suppression_file"
 
+# Suppress leaks in libiscsi
+echo "leak:libiscsi.so" >> "$asan_suppression_file"
+
 export LSAN_OPTIONS=suppressions="$asan_suppression_file"
 
 export DEFAULT_RPC_ADDR="/var/tmp/spdk.sock"
