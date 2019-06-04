@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07875f30_f8baf8d3",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-04T02:00:31Z",
+      "side": 1,
+      "message": "I think we can add a new function, such as _nvme_qpair_submit_child_request() to include this code section.",
+      "range": {
+        "startLine": 552,
+        "startChar": 1,
+        "endLine": 593,
+        "endChar": 2
+      },
+      "revId": "242d4e9d989b47af1c97fabfda22b685e73fc7df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
