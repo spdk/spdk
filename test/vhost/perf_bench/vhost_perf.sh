@@ -325,7 +325,7 @@ fio_disks=""
 for vm_num in $used_vms; do
 	vm_dir=$VM_BASE_DIR/$vm_num
 	host_name="VM-$vm_num"
-	vm_ssh $vm_num "hostname $host_name"
+	vm_exec $vm_num "hostname $host_name"
 	vm_start_fio_server $fio_bin $vm_num
 
 	if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
@@ -338,9 +338,9 @@ for vm_num in $used_vms; do
 
 	if [[ -n "$vm_throttle" ]]; then
 		block=$(printf '%s' $SCSI_DISK)
-		major_minor=$(vm_ssh "$vm_num" "cat /sys/block/$block/dev")
-		vm_ssh "$vm_num" "echo \"$major_minor $vm_throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.read_iops_device"
-		vm_ssh "$vm_num" "echo \"$major_minor $vm_throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.write_iops_device"
+		major_minor=$(vm_exec "$vm_num" "cat /sys/block/$block/dev")
+		vm_exec "$vm_num" "echo \"$major_minor $vm_throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.read_iops_device"
+		vm_exec "$vm_num" "echo \"$major_minor $vm_throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.write_iops_device"
 	fi
 
 	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
@@ -359,7 +359,7 @@ for i in $(seq 1 $fio_iterations); do
 		mkdir -p $TEST_DIR/fio_results/sar_stats
 		pids=""
 		for vm_num in $used_vms; do
-			vm_ssh "$vm_num" "mkdir -p /root/sar; sar -P ALL $vm_sar_interval $vm_sar_count >> /root/sar/sar_stats_VM${vm_num}_run${i}.txt" &
+			vm_exec "$vm_num" "mkdir -p /root/sar; sar -P ALL $vm_sar_interval $vm_sar_count >> /root/sar/sar_stats_VM${vm_num}_run${i}.txt" &
 			pids+=" $!"
 		done
 		for j in $pids; do

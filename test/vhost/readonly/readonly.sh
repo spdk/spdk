@@ -91,7 +91,7 @@ function blk_ro_tc1()
 	vm_run $vm_no
 	vm_wait_for_boot 300 $vm_no
 	notice "Preparing partition and file on guest VM"
-	vm_ssh $vm_no "bash -s" < $testdir/disabled_readonly_vm.sh
+	vm_exec $vm_no "bash -s" < $testdir/disabled_readonly_vm.sh
 	sleep 1
 
 	vm_shutdown_all
@@ -103,7 +103,7 @@ function blk_ro_tc1()
 	vm_run $vm_no
 	vm_wait_for_boot 300 $vm_no
 	notice "Testing readonly feature on guest VM"
-	vm_ssh $vm_no "bash -s" < $testdir/enabled_readonly_vm.sh
+	vm_exec $vm_no "bash -s" < $testdir/enabled_readonly_vm.sh
 	sleep 3
 
 	vm_shutdown_all
@@ -115,7 +115,7 @@ function blk_ro_tc1()
 	vm_run $vm_no
 	vm_wait_for_boot 300 $vm_no
 	notice "Removing partition and file from test disk on guest VM"
-	vm_ssh $vm_no "bash -s" < $testdir/delete_partition_vm.sh
+	vm_exec $vm_no "bash -s" < $testdir/delete_partition_vm.sh
 	sleep 1
 
 	vm_shutdown_all
