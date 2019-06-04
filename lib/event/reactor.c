@@ -135,7 +135,7 @@ spdk_event_call(struct spdk_event *event)
 	reactor = spdk_reactor_get(event->lcore);
 
 	assert(reactor->events != NULL);
-	rc = spdk_ring_enqueue(reactor->events, (void **)&event, 1);
+	rc = spdk_ring_enqueue(reactor->events, (void **)&event, 1, NULL);
 	if (rc != 1) {
 		assert(false);
 	}

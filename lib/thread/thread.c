@@ -692,7 +692,7 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 	msg->fn = fn;
 	msg->arg = ctx;
 
-	rc = spdk_ring_enqueue(thread->messages, (void **)&msg, 1);
+	rc = spdk_ring_enqueue(thread->messages, (void **)&msg, 1, NULL);
 	if (rc != 1) {
 		assert(false);
 		spdk_mempool_put(g_spdk_msg_mempool, msg);
