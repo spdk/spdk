@@ -46,6 +46,30 @@
       "revId": "ce31ec390b63595fd49e39c1b01978ab474146d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "461bf086_a7b17b7b",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1461,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-06-04T05:39:44Z",
+      "side": 0,
+      "message": "What I want to say is that, the previous for loop trying to find a core that belongs to both global cpu mask and conn-\u003eportal-\u003ecpumask. If it doesn\u0027t find, then assign first core of global cpu mask to lcore. So the right fix should be:\n\ndiff --git a/lib/iscsi/conn.c b/lib/iscsi/conn.c\nindex 6c1d8957e..31e82052e 100644\n--- a/lib/iscsi/conn.c\n+++ b/lib/iscsi/conn.c\n@@ -1458,7 +1458,7 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)\n \t\tbreak;\n \t}\n \n-\tif (lcore \u003e\u003d spdk_env_get_core_count()) {\n+\tif (i \u003e\u003d spdk_env_get_core_count()) {\n \t\tSPDK_ERRLOG(\"Unable to schedule connection on allowed CPU core. Scheduling on first core instead.\\n\");\n \t\tlcore \u003d spdk_env_get_first_core();\n \t}",
+      "parentUuid": "a59f36ac_624ce4ce",
+      "range": {
+        "startLine": 1461,
+        "startChar": 5,
+        "endLine": 1461,
+        "endChar": 10
+      },
+      "revId": "ce31ec390b63595fd49e39c1b01978ab474146d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
