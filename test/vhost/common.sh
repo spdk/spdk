@@ -93,42 +93,34 @@ function notice()
 
 function get_vhost_dir()
 {
-	if [[ ! -z "$1" ]]; then
-		assert_number "$1"
-		local vhost_num=$1
-	else
-		local vhost_num=0
+	local vhost_name="$1"
+
+	if [[ -z "$vhost_name" ]]; then
+		error "vhost name must be provided to get_vhost_dir"
+		return 1
 	fi
 
-	echo "$TARGET_DIR/${vhost_num}"
-}
-
-function vhost_list_all()
-{
-	shopt -s nullglob
-	local vhost_list="$(echo $TARGET_DIR/[0-9]*)"
-	shopt -u nullglob
-
-	if [[ ! -z "$vhost_list" ]]; then
-		vhost_list="$(basename --multiple $vhost_list)"
-		echo "${vhost_list//vhost/}"
-	fi
+	echo "$TARGET_DIR/${vhost_name}"
 }
 
 function vhost_run()
 {
-	local vhost_num="$1"
+	local vhost_name="$1"
 
-	assert_number "$vhost_num"
 	shift
 
-	local vhost_dir="$(get_vhost_dir $vhost_num)"
+	if [[ -z "$vhost_name" ]]; then
+		error "vhost name must be provided to vhost_run"
+		return 1
+	fi
+
+	local vhost_dir="$(get_vhost_dir $vhost_name)"
 	local vhost_app="$rootdir/app/vhost/vhost"
 	local vhost_log_file="$vhost_dir/vhost.log"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 	local vhost_socket="$vhost_dir/usvhost"
 	notice "starting vhost app in background"
-	[[ -r "$vhost_pid_file" ]] && vhost_kill $vhost_num
+	[[ -r "$vhost_pid_file" ]] && vhost_kill 0 $vhost_name
 	[[ -d $vhost_dir ]] && rm -f $vhost_dir/*
 	mkdir -p $vhost_dir
 
@@ -169,13 +161,14 @@ function vhost_load_config()
 function vhost_kill()
 {
 	local rc=0
-	local vhost_num=0
-	if [[ ! -z "$1" ]]; then
-		vhost_num=$1
-		assert_number "$vhost_num"
+	local vhost_name="$1"
+
+	if [[ -z "$vhost_name" ]]; then
+		error "Must provide vhost name to vhost_kill"
+		return 0
 	fi
 
-	local vhost_pid_file="$(get_vhost_dir $vhost_num)/vhost.pid"
+	local vhost_pid_file="$(get_vhost_dir $vhost_name)/vhost.pid"
 
 	if [[ ! -r $vhost_pid_file ]]; then
 		warning "no vhost pid file found"
@@ -223,14 +216,15 @@ function vhost_kill()
 
 function vhost_rpc
 {
-	local vhost_num=0
-	if [[ ! -z "$1" ]]; then
-		vhost_num=$1
-		assert_number "$vhost_num"
+	local vhost_name="$1"
+
+	if [[ -z "$vhost_name" ]]; then
+		error "vhost name must be provided to vhost_rpc"
+		return 1
 	fi
 	shift
 
-	$rootdir/scripts/rpc.py -s $(get_vhost_dir $vhost_num)/rpc.sock $@
+	$rootdir/scripts/rpc.py -s $(get_vhost_dir $vhost_name)/rpc.sock $@
 }
 
 ###
@@ -515,7 +509,7 @@ function vm_setup()
 	local force_vm=""
 	local guest_memory=1024
 	local queue_number=""
-	local vhost_dir="$(get_vhost_dir)"
+	local vhost_dir="$(get_vhost_dir 0)"
 	while getopts ':-:' optchar; do
 		case "$optchar" in
 			-)
@@ -532,7 +526,7 @@ function vm_setup()
 				queue_num=*) local queue_number=${OPTARG#*=} ;;
 				incoming=*) local vm_incoming="${OPTARG#*=}" ;;
 				migrate-to=*) local vm_migrate_to="${OPTARG#*=}" ;;
-				vhost-num=*) local vhost_dir="$(get_vhost_dir ${OPTARG#*=})" ;;
+				vhost-name=*) local vhost_dir="$(get_vhost_dir ${OPTARG#*=})" ;;
 				spdk-boot=*) local boot_from="${OPTARG#*=}" ;;
 				*)
 					error "unknown argument $OPTARG"
@@ -1091,7 +1085,7 @@ function run_fio()
 #
 function at_app_exit()
 {
-	local vhost_num
+	local vhost_name
 
 	notice "APP EXITING"
 	notice "killing all VMs"
@@ -1099,8 +1093,8 @@ function at_app_exit()
 	# Kill vhost application
 	notice "killing vhost app"
 
-	for vhost_num in $(vhost_list_all); do
-		vhost_kill $vhost_num
+	for vhost_name in $(ls $TARGET_DIR); do
+		vhost_kill $vhost_name
 	done
 
 	notice "EXIT DONE"

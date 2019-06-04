@@ -21,7 +21,7 @@ function migration_tc1_configure_vhost()
 	target_vm=1
 	incoming_vm_ctrlr=naa.Malloc0.$incoming_vm
 	target_vm_ctrlr=naa.Malloc0.$target_vm
-	rpc="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+	rpc="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 	trap 'migration_tc1_error_handler; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 
@@ -115,7 +115,7 @@ function migration_tc1()
 	migration_tc1_clean_vhost_config
 
 	notice "killing vhost app"
-	vhost_kill
+	vhost_kill 0
 
 	notice "Migration TC1 SUCCESS"
 }

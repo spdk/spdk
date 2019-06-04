@@ -131,6 +131,6 @@ truncate -s 400M $testdir/aio_bdev_0 $testdir/aio_bdev_1
 vhost_start
 $testdir/lvol_test.py $rpc_py $total_size $block_size $testdir $rootdir/app/vhost "${test_cases[@]}"
 
-vhost_kill
+vhost_kill 0
 rm -rf $testdir/aio_bdev_0 $testdir/aio_bdev_1
 trap - SIGINT SIGTERM EXIT

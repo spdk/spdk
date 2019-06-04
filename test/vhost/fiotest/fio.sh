@@ -91,7 +91,7 @@ notice ""
 notice "Setting up VM"
 notice ""
 
-rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 for vm_conf in ${vms[@]}; do
 	IFS=',' read -ra conf <<< "$vm_conf"
@@ -254,7 +254,7 @@ if ! $no_shutdown; then
 	fi
 	notice "Testing done -> shutting down"
 	notice "killing vhost app"
-	vhost_kill
+	vhost_kill 0
 
 	notice "EXIT DONE"
 	notice "==============="

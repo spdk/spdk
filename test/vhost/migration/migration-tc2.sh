@@ -129,9 +129,9 @@ function migration_tc2_configure_vhost()
 
 	notice "Setting up VMs"
 	vm_setup --os="$os_image" --force=$incoming_vm --disk-type=spdk_vhost_scsi --disks=VhostScsi0 \
-		--migrate-to=$target_vm  --memory=1024 --vhost-num=0
+		--migrate-to=$target_vm  --memory=1024 --vhost-name=0
 	vm_setup --force=$target_vm --disk-type=spdk_vhost_scsi --disks=VhostScsi0 --incoming=$incoming_vm --memory=1024 \
-		--vhost-num=1
+		--vhost-name=1
 
 	# Run everything
 	vm_run $incoming_vm $target_vm
