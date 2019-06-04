@@ -39,6 +39,12 @@ taken into account if trying to achieve an artificial latency on top of an nvme 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
 previously attached controller.
 
+### env
+
+The parameter `free_space` has been added to spdk_ring_enqueue() to wait when
+the ring is almost full and resume when there is enough space available in
+the ring.
+
 ## v19.04:
 
 ### nvme
