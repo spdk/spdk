@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47c6c9dd_0ba7514e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-06-04T09:32:27Z",
+      "side": 1,
+      "message": "Commit message should be update, e.g.\n\nlib/iscsi: fix wrong param in if statement\n  \nIf qualified core doesn\u0027t found, then we should compare \nspdk_env_get_core_count() with i, instead of lcore.",
+      "revId": "ac27416787e7c15fa73ea291af24d19888165a09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
