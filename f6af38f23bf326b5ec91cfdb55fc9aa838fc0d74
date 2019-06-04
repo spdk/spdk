@@ -16,6 +16,24 @@
       "revId": "f6af38f23bf326b5ec91cfdb55fc9aa838fc0d74",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "915b2369_d249e3e7",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-04T01:55:13Z",
+      "side": 1,
+      "message": "hI Jim,\n\nIt looks fine to me. I will revise this patch, retest the ut case and submit this patch again.",
+      "parentUuid": "543b2f9a_a5d17b73",
+      "revId": "f6af38f23bf326b5ec91cfdb55fc9aa838fc0d74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
