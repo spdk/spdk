@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd97ceb3_75b7c73c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-04T23:32:19Z",
+      "side": 1,
+      "message": "You can just say:\n\nFixes issue #808.\n\nGitHub actually picks up sentences written like this and will reference the patch in the GitHub issue once it is merged.",
+      "revId": "01de8c6304198e2be57a8c8e3134cdec6f0d2739",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1186bd61_1c8de670",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-04T23:32:19Z",
+      "side": 1,
+      "message": "Where do these pdus go?  I think you at least need a comment here - otherwise this just looks like memory is getting leaked.\n\nI think that maybe a comment is needed, explaining why this is OK here.",
+      "revId": "01de8c6304198e2be57a8c8e3134cdec6f0d2739",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
