@@ -435,6 +435,10 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+
 	if (cdata->lpa.celp) {
 		if (get_cmd_effects_log_page(ctrlr) == 0) {
 			outstanding_commands++;
@@ -443,6 +447,9 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
 	if (cdata->vid == SPDK_PCI_VID_INTEL) {
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_SMART)) {
 			if (get_intel_smart_log_page(ctrlr) == 0) {
