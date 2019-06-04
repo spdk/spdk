@@ -29,9 +29,24 @@ echo "Process pid: $pid"
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
+$rpc_py wait_subsystem_init &
+rpc_wait_pid=$!
 $rpc_py set_iscsi_options -o 30 -a 16
+
+# RPC wait_subsystem_init should be blocked, so its process must be existed
+ps $rpc_wait_pid
+
 $rpc_py start_subsystem_init
 echo "iscsi_tgt is listening. Running tests..."
+
+# RPC wait_subsystem_init should be already returned, so its process must be non-existed
+! ps $rpc_wait_pid
+
+# RPC wait_subsystem_init will directly returned after subsystem initialized.
+$rpc_py wait_subsystem_init &
+rpc_wait_pid=$!
+sleep 1
+! ps $rpc_wait_pid
 
 timing_exit start_iscsi_tgt
 
