@@ -48,6 +48,25 @@ function initiator_rpc() {
 RE_UUID="[[:alnum:]-]+"
 last_event_id=0
 
+function tgt_check_notification_types() {
+	timing_enter $FUNCNAME
+
+	local ret=0
+	local enabled_types="
+		bdev_register
+		bdev_unregister
+	"
+
+	get_types=$(tgt_rpc get_notification_types | jq -r '.[]')
+	if [ "`echo $enabled_types`" != "`echo $get_types`" ]; then
+		echo "ERROR: expected types:" $enabled_types ", but got:" $get_types
+		ret=1
+	fi
+
+	timing_exit $FUNCNAME
+	return $ret
+}
+
 function tgt_check_notifications() {
         local event_line event ev_type ev_ctx
         local rc=""
@@ -339,6 +358,8 @@ function json_config_test_init()
 		$rootdir/scripts/gen_nvme.sh --json
 		echo ']}'
 	) | tgt_rpc load_config
+
+	tgt_check_notification_types
 
 	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
 		create_bdev_subsystem_config
