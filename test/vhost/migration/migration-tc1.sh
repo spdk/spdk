@@ -81,7 +81,7 @@ function migration_tc1()
 
 	# Check if fio is still running before migration
 	if ! is_fio_running $incoming_vm; then
-		vm_ssh $incoming_vm "cat /root/$(basename ${job_file}).out"
+		vm_exec $incoming_vm "cat /root/$(basename ${job_file}).out"
 		error "FIO is not running before migration: process crashed or finished too early"
 	fi
 
@@ -90,7 +90,7 @@ function migration_tc1()
 
 	# Check if fio is still running after migration
 	if ! is_fio_running $target_vm; then
-		vm_ssh $target_vm "cat /root/$(basename ${job_file}).out"
+		vm_exec $target_vm "cat /root/$(basename ${job_file}).out"
 		error "FIO is not running after migration: process crashed or finished too early"
 	fi
 
@@ -105,7 +105,7 @@ function migration_tc1()
 	done
 
 	notice "Fio result is:"
-	vm_ssh $target_vm "cat /root/$(basename ${job_file}).out"
+	vm_exec $target_vm "cat /root/$(basename ${job_file}).out"
 
 	notice "Migration DONE"
 

@@ -119,7 +119,7 @@ function vms_prepare() {
 
         host_name="VM-${vm_num}-${!qemu_mask_param}"
         notice "Setting up hostname: $host_name"
-        vm_ssh $vm_num "hostname $host_name"
+        vm_exec $vm_num "hostname $host_name"
         vm_start_fio_server --fio-bin=$fio_bin $readonly $vm_num
     done
 }
@@ -127,7 +127,7 @@ function vms_prepare() {
 function vms_reboot_all() {
     notice "Rebooting all vms "
     for vm_num in $1; do
-        vm_ssh $vm_num "reboot" || true
+        vm_exec $vm_num "reboot" || true
         while vm_os_booted $vm_num; do
              sleep 0.5
         done

@@ -230,7 +230,7 @@ for vm_num in $used_vms; do
     qemu_mask_param="VM_${vm_num}_qemu_mask"
 
     host_name="VM-$vm_num-${!qemu_mask_param}"
-    vm_ssh $vm_num "hostname $host_name"
+    vm_exec $vm_num "hostname $host_name"
     vm_start_fio_server $fio_bin $vm_num
 
     if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then

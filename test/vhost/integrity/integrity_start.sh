@@ -88,7 +88,7 @@ vm_wait_for_boot 300 0
 
 # Run tests on VM
 vm_scp 0 $testdir/integrity_vm.sh root@127.0.0.1:/root/integrity_vm.sh
-vm_ssh 0 "~/integrity_vm.sh $ctrl_type \"$vm_fs\""
+vm_exec 0 "~/integrity_vm.sh $ctrl_type \"$vm_fs\""
 
 notice "Shutting down virtual machine..."
 vm_shutdown_all
