@@ -582,10 +582,12 @@ size_t spdk_ring_count(struct spdk_ring *ring);
  * \param ring A pointer to the ring.
  * \param objs A pointer to the array to be queued.
  * \param count Length count of the array of objects.
+ * \param free_space The amount of space in the ring after enqueue has finished if non-NULL.
  *
  * \return the number of objects enqueued.
  */
-size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count);
+size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count,
+			 size_t *free_space);
 
 /**
  * Dequeue count objects from the ring into the array objs.

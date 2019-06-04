@@ -393,9 +393,11 @@ spdk_ring_count(struct spdk_ring *ring)
 }
 
 size_t
-spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
+spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count,
+		  size_t *free_space)
 {
-	return rte_ring_enqueue_bulk((struct rte_ring *)ring, objs, count, NULL);
+	return rte_ring_enqueue_bulk((struct rte_ring *)ring, objs, count,
+				     free_space);
 }
 
 size_t
