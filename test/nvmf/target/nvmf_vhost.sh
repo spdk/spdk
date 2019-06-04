@@ -62,7 +62,7 @@ vm_wait_for_boot 300 3
 
 # Run the fio workload remotely
 vm_scp 3 $testdir/nvmf_vhost_fio.job 127.0.0.1:/root/nvmf_vhost_fio.job
-vm_ssh 3 "fio /root/nvmf_vhost_fio.job"
+vm_exec 3 "fio /root/nvmf_vhost_fio.job"
 vm_shutdown_all
 
 trap - SIGINT SIGTERM EXIT
