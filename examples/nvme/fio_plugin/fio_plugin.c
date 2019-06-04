@@ -575,7 +575,7 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, extended_lba_size, md_size,
 			       true, fio_qpair->md_start,
 			       (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns),
-			       fio_qpair->io_flags, lba, g_spdk_apptag_mask, g_spdk_apptag, 0);
+			       fio_qpair->io_flags, lba, g_spdk_apptag_mask, g_spdk_apptag, 0, 0);
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
 		return rc;
@@ -609,7 +609,7 @@ fio_separate_md_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, block_size, md_size,
 			       false, fio_qpair->md_start,
 			       (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns),
-			       fio_qpair->io_flags, lba, g_spdk_apptag_mask, g_spdk_apptag, 0);
+			       fio_qpair->io_flags, lba, g_spdk_apptag_mask, g_spdk_apptag, 0, 0);
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
 		return rc;

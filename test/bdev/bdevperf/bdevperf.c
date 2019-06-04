@@ -562,7 +562,7 @@ bdevperf_generate_dif(struct bdevperf_task *task)
 			       spdk_bdev_is_dif_head_of_md(bdev),
 			       spdk_bdev_get_dif_type(bdev),
 			       target->dif_check_flags,
-			       task->offset_blocks, 0, 0, 0);
+			       task->offset_blocks, 0, 0, 0, 0);
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
 		return rc;

@@ -527,7 +527,7 @@ void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun_desc *desc);
  *
  * \param lun Logical unit.
  * \param cdb SCSI CDB.
- * \param offset Offset in the payload.
+ * \param offset Byte offset in the payload.
  * \param dif_ctx Output parameter which will contain initialized DIF context.
  *
  * \return true on success or false otherwise.

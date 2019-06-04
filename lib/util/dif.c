@@ -200,8 +200,10 @@ int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		  uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
-		  uint16_t guard_seed)
+		  uint32_t data_offset, uint16_t guard_seed)
 {
+	uint32_t data_block_size;
+
 	if (md_size < sizeof(struct spdk_dif)) {
 		SPDK_ERRLOG("Metadata size is smaller than DIF size.\n");
 		return -EINVAL;
@@ -212,11 +214,13 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 			SPDK_ERRLOG("Block size is smaller than DIF size.\n");
 			return -EINVAL;
 		}
+		data_block_size = block_size - md_size;
 	} else {
 		if (block_size == 0 || (block_size % 512) != 0) {
 			SPDK_ERRLOG("Zero block size is not allowed\n");
 			return -EINVAL;
 		}
+		data_block_size = block_size;
 	}
 
 	if (!_dif_type_is_valid(dif_type, dif_flags)) {
@@ -232,6 +236,8 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	ctx->init_ref_tag = init_ref_tag;
 	ctx->apptag_mask = apptag_mask;
 	ctx->app_tag = app_tag;
+	ctx->data_offset = data_offset;
+	ctx->ref_tag_offset = data_offset / data_block_size;
 	ctx->guard_seed = guard_seed;
 
 	return 0;
@@ -258,9 +264,9 @@ _dif_generate(void *_dif, uint16_t guard, uint32_t offset_blocks,
 		 * remains the same as the initial reference tag.
 		 */
 		if (ctx->dif_type != SPDK_DIF_TYPE3) {
-			ref_tag = ctx->init_ref_tag + offset_blocks;
+			ref_tag = ctx->init_ref_tag + ctx->ref_tag_offset + offset_blocks;
 		} else {
-			ref_tag = ctx->init_ref_tag;
+			ref_tag = ctx->init_ref_tag + ctx->ref_tag_offset;
 		}
 
 		to_be32(&dif->ref_tag, ref_tag);
@@ -420,9 +426,9 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 	 * remains the same as the initial reference tag.
 	 */
 	if (ctx->dif_type != SPDK_DIF_TYPE3) {
-		ref_tag = ctx->init_ref_tag + offset_blocks;
+		ref_tag = ctx->init_ref_tag + ctx->ref_tag_offset + offset_blocks;
 	} else {
-		ref_tag = ctx->init_ref_tag;
+		ref_tag = ctx->init_ref_tag + ctx->ref_tag_offset;
 	}
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
