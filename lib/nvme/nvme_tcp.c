@@ -544,6 +544,7 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *t
 			return -1;
 		}
 
+		length = spdk_min(length, remaining_size);
 		tcp_req->iov[iovcnt].iov_len = length;
 		remaining_size -= length;
 		iovcnt++;
