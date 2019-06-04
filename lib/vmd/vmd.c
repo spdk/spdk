@@ -419,6 +419,7 @@ vmd_pcibus_remove_device(vmd_pci_bus *bus, vmd_pci_device *device)
 
 	while (list->next != NULL) {
 		if (list->next == device) {
+			assert(list->next->next);
 			list->next = list->next->next;
 		}
 		list = list->next;
