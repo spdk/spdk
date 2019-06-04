@@ -404,11 +404,32 @@ bdev_ftl_get_io_channel(void *ctx)
 }
 
 static void
+_bdev_ftl_write_config_info(struct ftl_bdev *ftl_bdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_ftl_attrs attrs;
+	const char *trtype_str, *cache_bdev;
+
+	spdk_ftl_dev_get_attrs(ftl_bdev->dev, &attrs);
+
+	trtype_str = spdk_nvme_transport_id_trtype_str(ftl_bdev->ctrlr->trid.trtype);
+	if (trtype_str) {
+		spdk_json_write_named_string(w, "trtype", trtype_str);
+	}
+
+	spdk_json_write_named_string(w, "traddr", ftl_bdev->ctrlr->trid.traddr);
+	spdk_json_write_named_string_fmt(w, "punits", "%d-%d", attrs.range.begin, attrs.range.end);
+
+	if (ftl_bdev->cache_bdev_desc) {
+		cache_bdev = spdk_bdev_get_name(spdk_bdev_desc_get_bdev(ftl_bdev->cache_bdev_desc));
+		spdk_json_write_named_string(w, "cache", cache_bdev);
+	}
+}
+
+static void
 bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
 	struct ftl_bdev *ftl_bdev = bdev->ctxt;
 	struct spdk_ftl_attrs attrs;
-	const char *trtype_str, *cache_bdev;
 	char uuid[SPDK_UUID_STRING_LEN];
 
 	spdk_ftl_dev_get_attrs(ftl_bdev->dev, &attrs);
@@ -420,24 +441,37 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", ftl_bdev->bdev.name);
 
-	trtype_str = spdk_nvme_transport_id_trtype_str(ftl_bdev->ctrlr->trid.trtype);
-	if (trtype_str) {
-		spdk_json_write_named_string(w, "trtype", trtype_str);
-	}
-
-	spdk_json_write_named_string(w, "traddr", ftl_bdev->ctrlr->trid.traddr);
-	spdk_json_write_named_string_fmt(w, "punits", "%d-%d", attrs.range.begin, attrs.range.end);
-
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &attrs.uuid);
 	spdk_json_write_named_string(w, "uuid", uuid);
 
-	if (ftl_bdev->cache_bdev_desc) {
-		cache_bdev = spdk_bdev_get_name(spdk_bdev_desc_get_bdev(ftl_bdev->cache_bdev_desc));
-		spdk_json_write_named_string(w, "cache", cache_bdev);
-	}
+	_bdev_ftl_write_config_info(ftl_bdev, w);
 
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
+}
+
+static int
+bdev_ftl_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct ftl_bdev *ftl_bdev = ctx;
+	struct spdk_ftl_attrs attrs;
+	struct spdk_ocssd_geometry_data geo;
+
+	spdk_ftl_dev_get_attrs(ftl_bdev->dev, &attrs);
+	spdk_ftl_dev_get_geo(ftl_bdev->dev, &geo);
+
+	spdk_json_write_named_object_begin(w, "ftl");
+
+	_bdev_ftl_write_config_info(ftl_bdev, w);
+
+	spdk_json_write_named_string_fmt(w, "chks", "%u", geo.num_chk);
+
+	spdk_json_write_named_string_fmt(w, "chk_size", "%u", geo.clba);
+
+	/* ftl */
+	spdk_json_write_object_end(w);
+
+	return 0;
 }
 
 static const struct spdk_bdev_fn_table ftl_fn_table = {
@@ -446,6 +480,7 @@ static const struct spdk_bdev_fn_table ftl_fn_table = {
 	.io_type_supported	= bdev_ftl_io_type_supported,
 	.get_io_channel		= bdev_ftl_get_io_channel,
 	.write_config_json	= bdev_ftl_write_config_json,
+	.dump_info_json		= bdev_ftl_dump_info_json,
 };
 
 int

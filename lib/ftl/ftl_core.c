@@ -1571,6 +1571,12 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->cache_bdev_desc = dev->nv_cache.bdev_desc;
 }
 
+void
+spdk_ftl_dev_get_geo(const struct spdk_ftl_dev *dev, struct spdk_ocssd_geometry_data *geo)
+{
+	*geo = dev->geo;
+}
+
 static void
 _ftl_io_write(void *ctx)
 {
