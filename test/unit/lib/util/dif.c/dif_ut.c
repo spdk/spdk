@@ -294,7 +294,7 @@ dif_sec_512_md_0_error_test(void)
 	int rc;
 
 	/* Metadata size is 0. */
-	rc = spdk_dif_ctx_init(&ctx, 512, 0, true, false, SPDK_DIF_TYPE1, 0, 0, 0, 0, 0);
+	rc = spdk_dif_ctx_init(&ctx, 512, 0, true, false, SPDK_DIF_TYPE1, 0, 0, 0, 0, 0, 0);
 	CU_ASSERT(rc != 0);
 }
 
@@ -315,7 +315,7 @@ dif_guard_seed_test(void)
 	dif = (struct spdk_dif *)(iov.iov_base + 512);
 
 	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
-			       SPDK_DIF_FLAGS_GUARD_CHECK, 0, 0, 0, 0);
+			       SPDK_DIF_FLAGS_GUARD_CHECK, 0, 0, 0, 0, 0);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate(&iov, 1, 1, &ctx);
@@ -329,7 +329,7 @@ dif_guard_seed_test(void)
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
-			       SPDK_DIF_FLAGS_GUARD_CHECK, 0, 0, 0, GUARD_SEED);
+			       SPDK_DIF_FLAGS_GUARD_CHECK, 0, 0, 0, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate(&iov, 1, 1, &ctx);
@@ -358,7 +358,7 @@ dif_generate_and_verify(struct iovec *iovs, int iovcnt,
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
-			       init_ref_tag, apptag_mask, app_tag, GUARD_SEED);
+			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
@@ -663,7 +663,7 @@ _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc,
-			       SPDK_DIF_TYPE1, dif_flags, 88, 0xFFFF, 0x88, GUARD_SEED);
+			       SPDK_DIF_TYPE1, dif_flags, 88, 0xFFFF, 0x88, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
@@ -821,7 +821,7 @@ dif_copy_gen_and_verify(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
-			       init_ref_tag, apptag_mask, app_tag, GUARD_SEED);
+			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate_copy(iovs, iovcnt, bounce_iov, num_blocks, &ctx);
@@ -992,7 +992,7 @@ _dif_copy_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, SPDK_DIF_TYPE1, dif_flags,
-			       88, 0xFFFF, 0x88, GUARD_SEED);
+			       88, 0xFFFF, 0x88, 0, GUARD_SEED);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	rc = spdk_dif_generate_copy(iovs, iovcnt, bounce_iov, num_blocks, &ctx);
@@ -1097,7 +1097,7 @@ dix_sec_512_md_0_error(void)
 	struct spdk_dif_ctx ctx;
 	int rc;
 
-	rc = spdk_dif_ctx_init(&ctx, 512, 0, false, false, SPDK_DIF_TYPE1, 0, 0, 0, 0, 0);
+	rc = spdk_dif_ctx_init(&ctx, 512, 0, false, false, SPDK_DIF_TYPE1, 0, 0, 0, 0, 0, 0);
 	CU_ASSERT(rc != 0);
 }
 
@@ -1114,7 +1114,7 @@ dix_generate_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, dif_type, dif_flags,
-			       init_ref_tag, apptag_mask, app_tag, GUARD_SEED);
+			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dix_generate(iovs, iovcnt, md_iov, num_blocks, &ctx);
@@ -1280,7 +1280,7 @@ _dix_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_io
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, SPDK_DIF_TYPE1, dif_flags,
-			       88, 0xFFFF, 0x88, GUARD_SEED);
+			       88, 0xFFFF, 0x88, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dix_generate(iovs, iovcnt, md_iov, num_blocks, &ctx);
@@ -1399,7 +1399,7 @@ set_md_interleave_iovs_test(void)
 			  SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
-			       dif_check_flags, 22, 0xFFFF, 0x22, GUARD_SEED);
+			       dif_check_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	/* The first data buffer:
@@ -1522,7 +1522,7 @@ set_md_interleave_iovs_split_test(void)
 			  SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
-			       dif_check_flags, 22, 0xFFFF, 0x22, GUARD_SEED);
+			       dif_check_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	/* The first SGL data buffer:
@@ -1676,7 +1676,7 @@ dif_generate_stream_test(void)
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1, dif_flags,
-			       22, 0xFFFF, 0x22, GUARD_SEED);
+			       22, 0xFFFF, 0x22, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate_stream(&iov, 1, 0, 511, &ctx);
@@ -1724,7 +1724,7 @@ update_crc32c_test(void)
 		    SPDK_DIF_FLAGS_REFTAG_CHECK;
 
 	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
-			       dif_flags, 0, 0, 0, 0);
+			       dif_flags, 0, 0, 0, 0, 0);
 	CU_ASSERT(rc == 0);
 
 	/* data[0][255:0] */

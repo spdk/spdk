@@ -1631,7 +1631,7 @@ bdev_nvme_verify_pi_error(struct spdk_bdev_io *bdev_io)
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
 			       bdev->dif_is_head_of_md, bdev->dif_type, bdev->dif_check_flags,
-			       bdev_io->u.bdev.offset_blocks, 0, 0, 0);
+			       bdev_io->u.bdev.offset_blocks, 0, 0, 0, 0);
 	if (rc != 0) {
 		SPDK_ERRLOG("Initialization of DIF context failed\n");
 		return;

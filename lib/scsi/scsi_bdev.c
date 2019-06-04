@@ -2164,7 +2164,7 @@ spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset
 			       spdk_bdev_is_dif_head_of_md(bdev),
 			       spdk_bdev_get_dif_type(bdev),
 			       dif_check_flags,
-			       ref_tag, 0, 0, 0);
+			       ref_tag, 0, 0, 0, 0);
 
 	return (rc == 0) ? true : false;
 }

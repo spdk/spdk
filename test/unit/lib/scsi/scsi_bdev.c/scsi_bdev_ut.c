@@ -272,7 +272,7 @@ int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		  uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
-		  uint16_t guard_seed)
+		  uint32_t data_offset, uint16_t guard_seed)
 {
 	ctx->init_ref_tag = init_ref_tag;
 	return 0;
