@@ -126,7 +126,7 @@ function is_fio_running()
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 
-	if vm_ssh $1 'kill -0 $(cat /root/fio.pid)'; then
+	if vm_exec $1 'kill -0 $(cat /root/fio.pid)'; then
 		local ret=0
 	else
 		local ret=1

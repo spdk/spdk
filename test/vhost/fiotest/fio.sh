@@ -193,7 +193,7 @@ for vm_num in $used_vms; do
 
 	host_name="VM-$vm_num"
 	notice "Setting up hostname: $host_name"
-	vm_ssh $vm_num "hostname $host_name"
+	vm_exec $vm_num "hostname $host_name"
 	vm_start_fio_server $fio_bin $readonly $vm_num
 
 	if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
