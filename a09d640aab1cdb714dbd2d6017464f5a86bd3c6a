@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37fc6af8_139435b3",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1785,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-04T08:21:21Z",
+      "side": 1,
+      "message": "Why nvme_qpair_init is OK but nvme_tcp_alloc_reqs should be skipped when ctrlr is resetting?\nI couldn\u0027t find any relationship between allocation requests and being resetting ctrlr.",
+      "range": {
+        "startLine": 1785,
+        "startChar": 7,
+        "endLine": 1785,
+        "endChar": 26
+      },
+      "revId": "a09d640aab1cdb714dbd2d6017464f5a86bd3c6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
