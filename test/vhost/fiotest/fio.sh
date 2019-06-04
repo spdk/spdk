@@ -81,7 +81,8 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	vhost_run --json-path=$testdir
+	vhost_run
+	vhost_json_config 0 $testdir/conf.json
 	notice ""
 fi
 
