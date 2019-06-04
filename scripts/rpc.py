@@ -408,6 +408,33 @@ if __name__ == "__main__":
     p.add_argument('name', help='rbd bdev name')
     p.set_defaults(func=delete_rbd_bdev)
 
+    def bdev_delay_create(args):
+        print(rpc.bdev.bdev_delay_create(args.client,
+                                         base_bdev_name=args.base_bdev_name,
+                                         name=args.name,
+                                         avg_read_latency=args.avg_read_latency,
+                                         p99_read_latency=args.nine_nine_read_latency,
+                                         avg_write_latency=args.avg_write_latency,
+                                         p99_write_latency=args.nine_nine_write_latency))
+
+    p = subparsers.add_parser('bdev_delay_create',
+                              help='Add a delay bdev on existing bdev')
+    p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
+    p.add_argument('-d', '--name', help="Name of the delay bdev", required=True)
+    p.add_argument('-r', '--avg-read-latency', help="Average latency to apply before completing read ops", required=True, type=int)
+    p.add_argument('-t', '--nine-nine-read-latency', help="latency to apply to 1 in 100 read ops", required=True, type=int)
+    p.add_argument('-w', '--avg-write-latency', help="Average latency to apply before completing write ops", required=True, type=int)
+    p.add_argument('-n', '--nine-nine-write-latency', help="latency to apply to 1 in 100 write ops", required=True, type=int)
+    p.set_defaults(func=bdev_delay_create)
+
+    def bdev_delay_delete(args):
+        rpc.bdev.bdev_delay_delete(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('bdev_delay_delete', help='Delete a delay bdev')
+    p.add_argument('name', help='delay bdev name')
+    p.set_defaults(func=bdev_delay_delete)
+
     def construct_error_bdev(args):
         print(rpc.bdev.construct_error_bdev(args.client,
                                             base_name=args.base_name))
@@ -1774,21 +1801,24 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
 
     def call_rpc_func(args):
-        try:
-            args.func(args)
-            check_called_name(args.called_rpc_name)
-        except JSONRPCException as ex:
-            print("Exception:")
-            print(ex.message)
-            exit(1)
+        args.func(args)
+        check_called_name(args.called_rpc_name)
 
     def execute_script(parser, client, fd):
+        executed_rpc = ""
         for rpc_call in map(str.rstrip, fd):
             if not rpc_call.strip():
                 continue
+            executed_rpc = "\n".join([executed_rpc, rpc_call])
             args = parser.parse_args(shlex.split(rpc_call))
             args.client = client
-            call_rpc_func(args)
+            try:
+                call_rpc_func(args)
+            except JSONRPCException as ex:
+                print("Exception:")
+                print(executed_rpc.strip() + " <<<")
+                print(ex.message)
+                exit(1)
 
     args = parser.parse_args()
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))

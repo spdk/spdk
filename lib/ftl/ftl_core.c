@@ -48,9 +48,6 @@
 #include "ftl_debug.h"
 #include "ftl_reloc.h"
 
-/* Max number of iovecs */
-#define FTL_MAX_IOV 1024
-
 struct ftl_wptr {
 	/* Owner device */
 	struct spdk_ftl_dev		*dev;
@@ -67,8 +64,8 @@ struct ftl_wptr {
 	/* Current erase block */
 	struct ftl_chunk		*chunk;
 
-	/* IO that is currently processed */
-	struct ftl_io			*current_io;
+	/* Pending IO queue */
+	TAILQ_HEAD(, ftl_io)		pending_queue;
 
 	/* List link */
 	LIST_ENTRY(ftl_wptr)		list_entry;
@@ -90,10 +87,6 @@ struct ftl_flush {
 	/* List link */
 	LIST_ENTRY(ftl_flush)		list_entry;
 };
-
-typedef int (*ftl_next_ppa_fn)(struct ftl_io *, struct ftl_ppa *);
-static void _ftl_read(void *);
-static void _ftl_write(void *);
 
 static int
 ftl_rwb_flags_from_io(const struct ftl_io *io)
@@ -409,6 +402,7 @@ ftl_wptr_init(struct ftl_band *band)
 	wptr->band = band;
 	wptr->chunk = CIRCLEQ_FIRST(&band->chunks);
 	wptr->ppa = wptr->chunk->start_ppa;
+	TAILQ_INIT(&wptr->pending_queue);
 
 	return wptr;
 }
@@ -736,61 +730,6 @@ ftl_add_to_retry_queue(struct ftl_io *io)
 }
 
 static int
-ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa)
-{
-	struct spdk_ftl_dev *dev = io->dev;
-	struct ftl_ppa ppa;
-	int rc = 0, lbk_cnt;
-
-	while (io->pos < io->lbk_cnt) {
-		/* We might hit the cache here, if so, skip the read */
-		lbk_cnt = rc = next_ppa(io, &ppa);
-
-		/* We might need to retry the read from scratch (e.g. */
-		/* because write was under way and completed before */
-		/* we could read it from rwb */
-		if (ftl_read_retry(rc)) {
-			continue;
-		}
-
-		/* We don't have to schedule the read, as it was read from cache */
-		if (ftl_read_canceled(rc)) {
-			ftl_io_advance(io, 1);
-			ftl_trace_completion(io->dev, io, rc ? FTL_TRACE_COMPLETION_INVALID :
-					     FTL_TRACE_COMPLETION_CACHE);
-			rc = 0;
-			continue;
-		}
-
-		assert(lbk_cnt > 0);
-
-		ftl_trace_submission(dev, io, ppa, lbk_cnt);
-		rc = spdk_nvme_ns_cmd_read(dev->ns, ftl_get_read_qpair(dev),
-					   ftl_io_iovec_addr(io),
-					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
-					   ftl_io_cmpl_cb, io, 0);
-		if (rc == -ENOMEM) {
-			ftl_add_to_retry_queue(io);
-			break;
-		} else if (rc) {
-			ftl_io_fail(io, rc);
-			break;
-		}
-
-		ftl_io_inc_req(io);
-		ftl_io_advance(io, lbk_cnt);
-	}
-
-	/* If we didn't have to read anything from the device, */
-	/* complete the request right away */
-	if (ftl_io_done(io)) {
-		ftl_io_complete(io);
-	}
-
-	return rc;
-}
-
-static int
 ftl_ppa_cache_read(struct ftl_io *io, uint64_t lba,
 		   struct ftl_ppa ppa, void *buf)
 {
@@ -853,6 +792,64 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa)
 	}
 
 	return i;
+}
+
+static int
+ftl_submit_read(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_ppa ppa;
+	int rc = 0, lbk_cnt;
+
+	while (io->pos < io->lbk_cnt) {
+		if (ftl_io_mode_ppa(io)) {
+			lbk_cnt = rc = ftl_ppa_read_next_ppa(io, &ppa);
+		} else {
+			lbk_cnt = rc = ftl_lba_read_next_ppa(io, &ppa);
+		}
+
+		/* We might need to retry the read from scratch (e.g. */
+		/* because write was under way and completed before */
+		/* we could read it from rwb */
+		if (ftl_read_retry(rc)) {
+			continue;
+		}
+
+		/* We don't have to schedule the read, as it was read from cache */
+		if (ftl_read_canceled(rc)) {
+			ftl_io_advance(io, 1);
+			ftl_trace_completion(io->dev, io, rc ? FTL_TRACE_COMPLETION_INVALID :
+					     FTL_TRACE_COMPLETION_CACHE);
+			rc = 0;
+			continue;
+		}
+
+		assert(lbk_cnt > 0);
+
+		ftl_trace_submission(dev, io, ppa, lbk_cnt);
+		rc = spdk_nvme_ns_cmd_read(dev->ns, ftl_get_read_qpair(dev),
+					   ftl_io_iovec_addr(io),
+					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
+					   ftl_io_cmpl_cb, io, 0);
+		if (rc == -ENOMEM) {
+			ftl_add_to_retry_queue(io);
+			break;
+		} else if (rc) {
+			ftl_io_fail(io, rc);
+			break;
+		}
+
+		ftl_io_inc_req(io);
+		ftl_io_advance(io, lbk_cnt);
+	}
+
+	/* If we didn't have to read anything from the device, */
+	/* complete the request right away */
+	if (ftl_io_done(io)) {
+		ftl_io_complete(io);
+	}
+
+	return rc;
 }
 
 static void
@@ -923,9 +920,8 @@ ftl_alloc_io_nv_cache(struct ftl_io *parent, size_t num_lbks)
 	struct ftl_io_init_opts opts = {
 		.dev		= parent->dev,
 		.parent		= parent,
-		.iov_cnt	= 1,
 		.data		= ftl_io_iovec_addr(parent),
-		.req_size	= num_lbks,
+		.lbk_cnt	= num_lbks,
 		.flags		= FTL_IO_CACHE,
 	};
 
@@ -1009,11 +1005,10 @@ _ftl_write_nv_cache(void *ctx)
 
 		/* Shrink the IO if there isn't enough room in the cache to fill the whole iovec */
 		if (spdk_unlikely(num_lbks != ftl_io_iovec_len_left(io))) {
-			ftl_io_shrink_iovec(child, ftl_io_iovec_addr(child), 1, num_lbks);
+			ftl_io_shrink_iovec(child, num_lbks);
 		}
 
 		ftl_submit_nv_cache(child);
-		ftl_io_advance(io, num_lbks);
 	}
 
 	if (ftl_io_done(io)) {
@@ -1172,8 +1167,7 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
 		.size		= sizeof(struct ftl_io),
 		.flags		= 0,
 		.type		= FTL_IO_WRITE,
-		.iov_cnt	= 1,
-		.req_size	= dev->xfer_size,
+		.lbk_cnt	= dev->xfer_size,
 		.fn		= cb,
 		.data		= data,
 		.md		= md,
@@ -1204,11 +1198,10 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
 	struct ftl_io		*child;
-	struct iovec		*iov = ftl_io_iovec(io);
 	int			rc;
 
 	/* Split IO to child requests and release chunk immediately after child is completed */
-	child = ftl_io_init_child_write(io, wptr->ppa, iov[io->iov_pos].iov_base,
+	child = ftl_io_init_child_write(io, wptr->ppa, ftl_io_iovec_addr(io),
 					ftl_io_get_md(io), ftl_io_child_write_cb);
 	if (!child) {
 		return -EAGAIN;
@@ -1237,39 +1230,30 @@ static int
 ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
-	struct iovec		*iov = ftl_io_iovec(io);
 	int			rc = 0;
-	size_t			lbk_cnt;
+
+	assert(io->lbk_cnt % dev->xfer_size == 0);
 
 	while (io->iov_pos < io->iov_cnt) {
-		lbk_cnt = iov[io->iov_pos].iov_len / PAGE_SIZE;
-		assert(iov[io->iov_pos].iov_len > 0);
-		assert(lbk_cnt == dev->xfer_size);
-
 		/* There are no guarantees of the order of completion of NVMe IO submission queue */
 		/* so wait until chunk is not busy before submitting another write */
 		if (wptr->chunk->busy) {
-			wptr->current_io = io;
+			TAILQ_INSERT_TAIL(&wptr->pending_queue, io, retry_entry);
 			rc = -EAGAIN;
 			break;
 		}
 
-		rc = ftl_submit_child_write(wptr, io, lbk_cnt);
-
+		rc = ftl_submit_child_write(wptr, io, dev->xfer_size);
 		if (rc == -EAGAIN) {
-			wptr->current_io = io;
+			TAILQ_INSERT_TAIL(&wptr->pending_queue, io, retry_entry);
 			break;
 		} else if (rc) {
 			ftl_io_fail(io, rc);
 			break;
 		}
 
-		ftl_trace_submission(dev, io, wptr->ppa, lbk_cnt);
-
-		/* Update parent iovec */
-		ftl_io_advance(io, lbk_cnt);
-
-		ftl_wptr_advance(wptr, lbk_cnt);
+		ftl_trace_submission(dev, io, wptr->ppa, dev->xfer_size);
+		ftl_wptr_advance(wptr, dev->xfer_size);
 	}
 
 	if (ftl_io_done(io)) {
@@ -1311,11 +1295,13 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	struct ftl_io		*io;
 	struct ftl_ppa		ppa, prev_ppa;
 
-	if (wptr->current_io) {
-		if (ftl_submit_write(wptr, wptr->current_io) == -EAGAIN) {
+	if (spdk_unlikely(!TAILQ_EMPTY(&wptr->pending_queue))) {
+		io = TAILQ_FIRST(&wptr->pending_queue);
+		TAILQ_REMOVE(&wptr->pending_queue, io, retry_entry);
+
+		if (ftl_submit_write(wptr, io) == -EAGAIN) {
 			return 0;
 		}
-		wptr->current_io = NULL;
 	}
 
 	/* Make sure the band is prepared for writing */
@@ -1591,50 +1577,30 @@ _ftl_io_write(void *ctx)
 	ftl_io_write((struct ftl_io *)ctx);
 }
 
-int
+void
 ftl_io_write(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 
 	/* For normal IOs we just need to copy the data onto the rwb */
 	if (!(io->flags & FTL_IO_MD)) {
-		return ftl_rwb_fill(io);
+		/* Other errors should be handled by ftl_rwb_fill */
+		if (ftl_rwb_fill(io) == -EAGAIN) {
+			spdk_thread_send_msg(spdk_get_thread(), _ftl_io_write, io);
+		}
+
+		return;
 	}
 
 	/* Metadata has its own buffer, so it doesn't have to be copied, so just */
 	/* send it the the core thread and schedule the write immediately */
 	if (ftl_check_core_thread(dev)) {
-		return ftl_submit_write(ftl_wptr_from_band(io->band), io);
+		/* We don't care about the errors, as the IO is either retried or completed
+		 * internally by ftl_submit_write */
+		ftl_submit_write(ftl_wptr_from_band(io->band), io);
+	} else {
+		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_write, io);
 	}
-
-	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_io_write, io);
-
-	return 0;
-}
-
-static int
-_spdk_ftl_write(struct ftl_io *io)
-{
-	int rc;
-
-	rc = ftl_io_write(io);
-	if (rc == -EAGAIN) {
-		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ioch),
-				     _ftl_write, io);
-		return 0;
-	}
-
-	if (rc) {
-		ftl_io_free(io);
-	}
-
-	return rc;
-}
-
-static void
-_ftl_write(void *ctx)
-{
-	_spdk_ftl_write(ctx);
 }
 
 int
@@ -1643,7 +1609,7 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 {
 	struct ftl_io *io;
 
-	if (iov_cnt == 0 || iov_cnt > FTL_MAX_IOV) {
+	if (iov_cnt == 0 || iov_cnt > FTL_IO_MAX_IOVEC) {
 		return -EINVAL;
 	}
 
@@ -1659,39 +1625,34 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 		return -EBUSY;
 	}
 
-	io = ftl_io_alloc(ch);
+	io = ftl_io_user_init(ch, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
 	if (!io) {
 		return -ENOMEM;
 	}
 
-	ftl_io_user_init(dev, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
-	return _spdk_ftl_write(io);
-}
+	ftl_io_write(io);
 
-int
-ftl_io_read(struct ftl_io *io)
-{
-	struct spdk_ftl_dev *dev = io->dev;
-	ftl_next_ppa_fn	next_ppa;
-
-	if (ftl_check_read_thread(dev)) {
-		if (ftl_io_mode_ppa(io)) {
-			next_ppa = ftl_ppa_read_next_ppa;
-		} else {
-			next_ppa = ftl_lba_read_next_ppa;
-		}
-
-		return ftl_submit_read(io, next_ppa);
-	}
-
-	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
 	return 0;
 }
 
 static void
-_ftl_read(void *arg)
+_ftl_io_read(void *arg)
 {
 	ftl_io_read((struct ftl_io *)arg);
+}
+
+void
+ftl_io_read(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+
+	if (ftl_check_read_thread(dev)) {
+		/* We don't care about the errors, as the IO is either retried or completed
+		 * internally by ftl_submit_read */
+		ftl_submit_read(io);
+	} else {
+		spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_io_read, io);
+	}
 }
 
 int
@@ -1700,7 +1661,7 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 {
 	struct ftl_io *io;
 
-	if (iov_cnt == 0 || iov_cnt > FTL_MAX_IOV) {
+	if (iov_cnt == 0 || iov_cnt > FTL_IO_MAX_IOVEC) {
 		return -EINVAL;
 	}
 
@@ -1716,12 +1677,11 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 		return -EBUSY;
 	}
 
-	io = ftl_io_alloc(ch);
+	io = ftl_io_user_init(ch, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
 	if (!io) {
 		return -ENOMEM;
 	}
 
-	ftl_io_user_init(dev, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
 	ftl_io_read(io);
 	return 0;
 }
@@ -1812,7 +1772,7 @@ ftl_process_retry_queue(struct spdk_ftl_dev *dev)
 
 		/* Retry only if IO is still healthy */
 		if (spdk_likely(io->status == 0)) {
-			rc = ftl_io_read(io);
+			rc = ftl_submit_read(io);
 			if (rc == -ENOMEM) {
 				break;
 			}

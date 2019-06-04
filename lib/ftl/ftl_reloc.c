@@ -213,7 +213,7 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 static void
 ftl_reloc_free_io(struct ftl_band_reloc *breloc, struct ftl_io *io)
 {
-	spdk_dma_free(io->iov.single.iov_base);
+	spdk_dma_free(io->iov[0].iov_base);
 	free(io->lba.vector);
 	spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1);
 }
@@ -414,21 +414,14 @@ ftl_reloc_io_reinit(struct ftl_io *io, struct ftl_band_reloc *breloc,
 static int
 ftl_reloc_write(struct ftl_band_reloc *breloc, struct ftl_io *io)
 {
-	int rc;
-
 	if (!(io->flags & FTL_IO_INITIALIZED)) {
 		ftl_reloc_io_reinit(io, breloc, ftl_reloc_write_cb,
 				    FTL_IO_WRITE,
 				    FTL_IO_KEEP_ALIVE | FTL_IO_WEAK | FTL_IO_VECTOR_LBA);
 	}
 
-	rc = ftl_io_write(io);
-	if (rc == -EAGAIN) {
-		spdk_ring_enqueue(breloc->write_queue, (void **)&io, 1);
-		return 0;
-	}
-
-	return rc;
+	ftl_io_write(io);
+	return 0;
 }
 
 static int
@@ -443,8 +436,7 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_io *io,
 		.size		= sizeof(*io),
 		.flags		= FTL_IO_KEEP_ALIVE | FTL_IO_INTERNAL | FTL_IO_PPA_MODE,
 		.type		= FTL_IO_READ,
-		.iov_cnt	= 1,
-		.req_size	= num_lbks,
+		.lbk_cnt	= num_lbks,
 		.fn		= ftl_reloc_read_cb,
 	};
 
@@ -469,7 +461,6 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_io *io)
 {
 	struct ftl_ppa ppa;
 	size_t num_lbks;
-	int rc;
 
 	num_lbks = ftl_reloc_next_lbks(breloc, &ppa);
 
@@ -483,12 +474,8 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_io *io)
 		return -1;
 	}
 
-	rc = ftl_io_read(io);
-	if (rc == -ENOMEM) {
-		rc = 0;
-	}
-
-	return rc;
+	ftl_io_read(io);
+	return 0;
 }
 
 static void

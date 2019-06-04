@@ -229,7 +229,7 @@ static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list
 
 static int g_aio_optind; /* Index of first AIO filename in argv */
 
-static void
+static inline void
 task_complete(struct perf_task *task);
 
 #if HAVE_LIBAIO
@@ -894,7 +894,7 @@ submit_single_io(struct perf_task *task)
 	}
 }
 
-static void
+static inline void
 task_complete(struct perf_task *task)
 {
 	struct ns_worker_ctx	*ns_ctx;

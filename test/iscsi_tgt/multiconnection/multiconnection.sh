@@ -73,8 +73,8 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 echo "Running FIO"
-$fio_py iscsi 131072 64 randrw 5 1
-$fio_py iscsi 262144 16 randwrite 10 1
+$fio_py -p iscsi -i 131072 -d 64 -t randrw -r 5
+$fio_py -p iscsi -i 262144 -d 16 -t randwrite -r 10
 sync
 
 trap - SIGINT SIGTERM EXIT

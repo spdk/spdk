@@ -886,8 +886,8 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	req->cb_arg = cb_arg;
 	req->payload = *payload;
 	req->payload_size = payload_size;
-	req->qpair = qpair;
 	req->pid = g_spdk_nvme_pid;
+	req->submit_tick = 0;
 
 	return req;
 }

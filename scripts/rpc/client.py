@@ -139,7 +139,7 @@ class JSONRPCClient(object):
 
     def call(self, method, params=None):
         self._logger.debug("call('%s')" % method)
-        self.send(method, params)
+        req_id = self.send(method, params)
         try:
             response = self.recv()
         except JSONRPCException as e:
@@ -151,7 +151,9 @@ class JSONRPCClient(object):
                 raise e
 
         if 'error' in response:
-            msg = "\n".join(["Got JSON-RPC error response",
+            msg = "\n".join(["request:", "%s" % json.dumps({**{"method": method, "req_id": req_id},
+                                                            **params}, indent=2),
+                             "Got JSON-RPC error response",
                              "response:",
                              json.dumps(response['error'], indent=2)])
             raise JSONRPCException(msg)

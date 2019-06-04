@@ -74,7 +74,7 @@ sleep 1
 iscsiadm -m node --login -p $MIGRATION_ADDRESS:$ISCSI_PORT
 
 # fio tests for multi-process
-$fio_py iscsi 4096 32 randrw 10 1 &
+$fio_py -p iscsi -i 4096 -d 32 -t randrw -r 10 &
 fiopid=$!
 sleep 5
 

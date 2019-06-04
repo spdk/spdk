@@ -125,18 +125,16 @@ ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 	return ppa;
 }
 
-int
+void
 ftl_io_read(struct ftl_io *io)
 {
 	io->cb.fn(io->cb.ctx, 0);
-	return 0;
 }
 
-int
+void
 ftl_io_write(struct ftl_io *io)
 {
 	io->cb.fn(io->cb.ctx, 0);
-	return 0;
 }
 
 struct ftl_io *
@@ -155,8 +153,8 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->flags = opts->flags;
 	io->cb.fn = opts->fn;
 	io->cb.ctx = io;
-	io->lbk_cnt = opts->req_size;
-	io->iov.single.iov_base = opts->data;
+	io->lbk_cnt = opts->lbk_cnt;
+	io->iov[0].iov_base = opts->data;
 	return io;
 }
 

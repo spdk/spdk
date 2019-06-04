@@ -734,8 +734,7 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data, str
 		.size		= sizeof(*io),
 		.flags		= FTL_IO_MD | FTL_IO_PPA_MODE,
 		.type		= FTL_IO_READ,
-		.iov_cnt	= 1,
-		.req_size	= lbk_cnt,
+		.lbk_cnt	= lbk_cnt,
 		.fn		= ftl_read_md_cb,
 		.data		= data,
 	};
@@ -756,7 +755,7 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data, str
 
 static struct ftl_io *
 ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
-		     void *data, size_t req_cnt, spdk_ftl_fn cb)
+		     void *data, size_t lbk_cnt, spdk_ftl_fn cb)
 {
 	struct ftl_io_init_opts opts = {
 		.dev		= dev,
@@ -766,8 +765,7 @@ ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		.size		= sizeof(struct ftl_io),
 		.flags		= FTL_IO_MD | FTL_IO_PPA_MODE,
 		.type		= FTL_IO_WRITE,
-		.iov_cnt	= req_cnt,
-		.req_size	= dev->xfer_size,
+		.lbk_cnt	= lbk_cnt,
 		.fn		= cb,
 		.data		= data,
 		.md		= NULL,
@@ -782,22 +780,16 @@ ftl_band_write_md(struct ftl_band *band, void *data, size_t lbk_cnt,
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_io *io;
-	int rc;
 
-	io = ftl_io_init_md_write(dev, band, data,
-				  spdk_divide_round_up(lbk_cnt, dev->xfer_size), cb);
+	io = ftl_io_init_md_write(dev, band, data, lbk_cnt, cb);
 	if (!io) {
 		return -ENOMEM;
 	}
 
 	md_fn(dev, &band->md, data);
 
-	rc = ftl_io_write(io);
-	if (rc == -EAGAIN) {
-		rc = 0;
-	}
-
-	return rc;
+	ftl_io_write(io);
+	return 0;
 }
 
 void
@@ -842,8 +834,7 @@ ftl_band_read_md(struct ftl_band *band, struct ftl_md *md, void *data, size_t lb
 		return -ENOENT;
 	}
 
-	io = ftl_io_init_md_read(dev, md, data, start_ppa, band, lbk_cnt,
-				 unpack_fn, cb);
+	io = ftl_io_init_md_read(dev, md, data, start_ppa, band, lbk_cnt, unpack_fn, cb);
 	if (!io) {
 		return -ENOMEM;
 	}

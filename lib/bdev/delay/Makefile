@@ -31,10 +31,12 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = vmd.c
-LIBNAME = vmd
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
+
+C_SRCS = vbdev_delay.c vbdev_delay_rpc.c
+LIBNAME = bdev_delay
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
