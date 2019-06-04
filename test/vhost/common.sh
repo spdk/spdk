@@ -1,15 +1,12 @@
 : ${SPDK_VHOST_VERBOSE=false}
-: ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 : ${VM_IMAGE=$(eval echo ~$(logname)/vhost_vm_image.qcow2)}
 
 TEST_DIR=$(readlink -f $rootdir/..)
 
-#Check if qemu exists
-if [ ! -d $QEMU_PREFIX ]; then
-	error "Qemu not installed on this machine."
+if ! hash qemu-img || hash qemu-system-x86_64; then
+	error 'QEMU is not installed on this system. Unable to run vhost tests.'
 	exit 1
 fi
-echo "Using qemu folder $QEMU_PREFIX"
 
 # SSH key file
 : ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
@@ -643,7 +640,7 @@ function vm_setup()
 
 	if [[ "$os_mode" == "backing" ]]; then
 		notice "Creating backing file for OS image file: $os"
-		if ! $QEMU_PREFIX/bin/qemu-img create -f qcow2 -b $os $vm_dir/os.qcow2; then
+		if ! qemu-img create -f qcow2 -b $os $vm_dir/os.qcow2; then
 			error "Failed to create OS backing file in '$vm_dir/os.qcow2' using '$os'"
 			return 1
 		fi
@@ -676,7 +673,7 @@ function vm_setup()
 	local task_mask=${!qemu_mask_param}
 
 	notice "TASK MASK: $task_mask"
-	local cmd="taskset -a -c $task_mask $QEMU_PREFIX/bin/qemu-system-x86_64 ${eol}"
+	local cmd="taskset -a -c $task_mask qemu-system-x86_64 ${eol}"
 	local vm_socket_offset=$(( 10000 + 100 * vm_num ))
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))
