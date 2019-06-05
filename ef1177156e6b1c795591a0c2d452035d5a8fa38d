@@ -22,6 +22,30 @@
       "revId": "ef1177156e6b1c795591a0c2d452035d5a8fa38d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "539fa345_fe316831",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-05T04:33:03Z",
+      "side": 0,
+      "message": "I think we should return pdu only when all fields are filled as I do in this patch.\nUpdating _pdu only at the end of this function is also stable even if any extra change.",
+      "parentUuid": "88c120a5_c82cd5f6",
+      "range": {
+        "startLine": 429,
+        "startChar": 4,
+        "endLine": 429,
+        "endChar": 8
+      },
+      "revId": "ef1177156e6b1c795591a0c2d452035d5a8fa38d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
