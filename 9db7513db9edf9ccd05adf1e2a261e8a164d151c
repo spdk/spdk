@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "383c874e_d52c08e3",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-05T10:38:59Z",
+      "side": 1,
+      "message": "I\u0027m sorry but I missed this in the review before - why are we setting mem_channel here? Can we remove it?",
+      "range": {
+        "startLine": 74,
+        "startChar": 1,
+        "endLine": 74,
+        "endChar": 22
+      },
+      "revId": "9db7513db9edf9ccd05adf1e2a261e8a164d151c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
