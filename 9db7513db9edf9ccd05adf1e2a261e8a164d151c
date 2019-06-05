@@ -22,6 +22,30 @@
       "revId": "9db7513db9edf9ccd05adf1e2a261e8a164d151c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "654edc8e_155a16a9",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-05T12:22:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "383c874e_d52c08e3",
+      "range": {
+        "startLine": 74,
+        "startChar": 1,
+        "endLine": 74,
+        "endChar": 22
+      },
+      "revId": "9db7513db9edf9ccd05adf1e2a261e8a164d151c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
