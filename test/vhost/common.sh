@@ -120,23 +120,10 @@ function vhost_list_all()
 
 function vhost_run()
 {
-	local param
 	local vhost_num="$1"
-	local memory=1024
 
 	assert_number "$vhost_num"
 	shift
-
-	for param in "$@"; do
-		case $param in
-			--memory=*) local memory=${param#*=} ;;
-			--no-pci*) local no_pci="-u" ;;
-			*)
-				error "Invalid parameter '$param'"
-				return 1
-				;;
-		esac
-	done
 
 	local vhost_dir="$(get_vhost_dir $vhost_num)"
 	local vhost_app="$rootdir/app/vhost/vhost"
@@ -153,18 +140,7 @@ function vhost_run()
 		return 1
 	fi
 
-	local reactor_mask="vhost_${vhost_num}_reactor_mask"
-	reactor_mask="${!reactor_mask}"
-
-	local master_core="vhost_${vhost_num}_master_core"
-	master_core="${!master_core}"
-
-	if [[ -z "$reactor_mask" ]] || [[ -z "$master_core" ]]; then
-		error "Parameters vhost_${vhost_num}_reactor_mask or vhost_${vhost_num}_master_core not found in autotest.config file"
-		return 1
-	fi
-
-	local cmd="$vhost_app -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock $no_pci"
+	local cmd="$vhost_app -r $vhost_dir/rpc.sock $2"
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
