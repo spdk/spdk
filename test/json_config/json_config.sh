@@ -277,8 +277,9 @@ function create_vhost_subsystem_config() {
 
 	tgt_rpc construct_vhost_blk_controller    VhostBlkCtrlr0 MallocForVhost0p5
 
-	tgt_rpc construct_vhost_nvme_controller   VhostNvmeCtrlr0 16
-	tgt_rpc add_vhost_nvme_ns                 VhostNvmeCtrlr0 MallocForVhost0p6
+# FIXME: enable after vhost-nvme is properly implemented against the latest rte_vhost (DPDK 19.05+)
+#	tgt_rpc construct_vhost_nvme_controller   VhostNvmeCtrlr0 16
+#	tgt_rpc add_vhost_nvme_ns                 VhostNvmeCtrlr0 MallocForVhost0p6
 
 	timing_exit $FUNCNAME
 }
