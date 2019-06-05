@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72b29044_9254399b",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-05T08:34:12Z",
+      "side": 1,
+      "message": "What is this? Please do a separate patch.",
+      "revId": "187e10284c1835d332a73c5a1e5331ba1325be4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
