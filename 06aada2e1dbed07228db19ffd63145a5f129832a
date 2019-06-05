@@ -1,0 +1,280 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b70489c1_355a58ec",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Let\u0027s just call it direct_access.",
+      "range": {
+        "startLine": 378,
+        "startChar": 62,
+        "endLine": 378,
+        "endChar": 79
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "198f8614_0fa3e6bb",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Let\u0027s add a comment explaining why we\u0027re clearing the direct access here.",
+      "range": {
+        "startLine": 384,
+        "startChar": 2,
+        "endLine": 384,
+        "endChar": 26
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9af33e2e_26efc048",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Can we just set it inside the opts definition? Or does astyle make a mess with it?",
+      "range": {
+        "startLine": 417,
+        "startChar": 13,
+        "endLine": 418,
+        "endChar": 27
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e6aaf5d_b28f0485",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Aren\u0027t this already set on line 427?",
+      "range": {
+        "startLine": 440,
+        "startChar": 1,
+        "endLine": 440,
+        "endChar": 29
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efa97e62_71a2bb0a",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Wouldn\u0027t the following be a more readable:\n\nif (status) {\n  restore-\u003epad_status \u003d status;\n  goto end;\n}\n\n...",
+      "range": {
+        "startLine": 474,
+        "startChar": 2,
+        "endLine": 477,
+        "endChar": 0
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8627f185_751d740e",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this just be \u0027\u003d\u0027?",
+      "range": {
+        "startLine": 524,
+        "startChar": 10,
+        "endLine": 524,
+        "endChar": 12
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e9b82fc_e11bf504",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "I don\u0027t think we need the alignment. Can you check it?",
+      "range": {
+        "startLine": 526,
+        "startChar": 61,
+        "endLine": 526,
+        "endChar": 75
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c64b6257_c0d08b30",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "There\u0027s only jump to that label, let\u0027s just free the buffer here.",
+      "range": {
+        "startLine": 536,
+        "startChar": 3,
+        "endLine": 536,
+        "endChar": 25
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1bfbebd_00e629c1",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Can we set this instead of setting the rc?",
+      "range": {
+        "startLine": 547,
+        "startChar": 1,
+        "endLine": 547,
+        "endChar": 26
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f4df12b_bec21643",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Remove this.",
+      "range": {
+        "startLine": 549,
+        "startChar": 1,
+        "endLine": 549,
+        "endChar": 8
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df81b6cd_492e5e8a",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Can we pad the bands sequentially (i.e. only pad one band at a time)? It won\u0027t be any slower (we are writing to the same parallel units) and we won\u0027t have to allocate all of the resources at once.",
+      "range": {
+        "startLine": 558,
+        "startChar": 0,
+        "endLine": 560,
+        "endChar": 2
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f6c646d_ae0ea906",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:33:20Z",
+      "side": 1,
+      "message": "Perhaps we could use spdk_strerror? It\u0027s much easier to read an error message rather than just an error number.",
+      "range": {
+        "startLine": 572,
+        "startChar": 7,
+        "endLine": 572,
+        "endChar": 13
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
