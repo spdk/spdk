@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12205f24_755cb948",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3435,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T17:14:20Z",
+      "side": 1,
+      "message": "SPDK uses /* */ formatting - check_format.sh is failing on this\n\nNote that you can run the check_format.sh script on your local system to catch things like this before pushing patches out for review/CI.",
+      "revId": "89e112077418c3ffb9d70c2c212b53c5b154ab8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
