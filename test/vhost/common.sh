@@ -118,15 +118,14 @@ function vhost_list_all()
 function vhost_run()
 {
 	local param
-	local vhost_num=0
+	local vhost_num="$1"
 	local memory=1024
+
+	assert_number "$vhost_num"
+	shift
 
 	for param in "$@"; do
 		case $param in
-			--vhost-num=*)
-				vhost_num="${param#*=}"
-				assert_number "$vhost_num"
-				;;
 			--memory=*) local memory=${param#*=} ;;
 			--no-pci*) local no_pci="-u" ;;
 			*)
