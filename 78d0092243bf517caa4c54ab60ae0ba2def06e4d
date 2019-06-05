@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f94e55f6_a7350fcb",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-05T08:24:04Z",
+      "side": 1,
+      "message": "This should be substracted outside the if\n\nif ()\n  blkcfg.seg_max \u003d ...\nelse\n  blkcfg.seg_max \u003d ...\nfi\n\n/*  -2 for REQ and RESP and -1 for region boundary splitting */\nblkcfg.seg_max -\u003d 3;",
+      "range": {
+        "startLine": 902,
+        "startChar": 48,
+        "endLine": 902,
+        "endChar": 56
+      },
+      "revId": "78d0092243bf517caa4c54ab60ae0ba2def06e4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
