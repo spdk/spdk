@@ -186,6 +186,29 @@
     },
     {
       "key": {
+        "uuid": "a017c21f_47fc88c1",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-05T14:03:34Z",
+      "side": 1,
+      "message": "Don\u0027t you need to call spdk_free(dev_ctx-\u003eio_ctx_array) to free the memory allocated using spdk_malloc?",
+      "range": {
+        "startLine": 176,
+        "startChar": 1,
+        "endLine": 176,
+        "endChar": 2
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d0a6e7d9_e2f793db",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 9
@@ -202,6 +225,98 @@
         "startChar": 2,
         "endLine": 293,
         "endChar": 3
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cb7b0b5_aa1b9749",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-05T14:03:34Z",
+      "side": 1,
+      "message": "Use \"return rc\" to keep things consistent",
+      "range": {
+        "startLine": 324,
+        "startChar": 2,
+        "endLine": 324,
+        "endChar": 11
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47821334_9b99ee6f",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-05T14:03:34Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be return rc? just like above",
+      "range": {
+        "startLine": 377,
+        "startChar": 2,
+        "endLine": 377,
+        "endChar": 11
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f6a79d2_ff3d99a5",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-05T14:03:34Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be return rc? Just like above",
+      "range": {
+        "startLine": 384,
+        "startChar": 2,
+        "endLine": 384,
+        "endChar": 12
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75d59ece_ff7f720a",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-05T14:03:34Z",
+      "side": 1,
+      "message": "During error_out, don\u0027t you also need call spdk_thread_exit and spdk_thread_destroy to destroy the spdk thread",
+      "range": {
+        "startLine": 444,
+        "startChar": 0,
+        "endLine": 444,
+        "endChar": 10
       },
       "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
