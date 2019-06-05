@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c1351105_174d0243",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b70489c1_355a58ec",
+      "range": {
+        "startLine": 378,
+        "startChar": 62,
+        "endLine": 378,
+        "endChar": 79
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "198f8614_0fa3e6bb",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 9
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "5a14b8ca_db9f3439",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "198f8614_0fa3e6bb",
+      "range": {
+        "startLine": 384,
+        "startChar": 2,
+        "endLine": 384,
+        "endChar": 26
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9af33e2e_26efc048",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 9
@@ -59,6 +107,30 @@
       "writtenOn": "2019-06-05T07:33:20Z",
       "side": 1,
       "message": "Can we just set it inside the opts definition? Or does astyle make a mess with it?",
+      "range": {
+        "startLine": 417,
+        "startChar": 13,
+        "endLine": 418,
+        "endChar": 27
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0345869f_1113131c",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Astyle makes it less readable, yes",
+      "parentUuid": "9af33e2e_26efc048",
       "range": {
         "startLine": 417,
         "startChar": 13,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "b7bc9a10_395580d5",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0e6aaf5d_b28f0485",
+      "range": {
+        "startLine": 440,
+        "startChar": 1,
+        "endLine": 440,
+        "endChar": 29
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efa97e62_71a2bb0a",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 9
@@ -114,6 +210,30 @@
       "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20c9ec94_77e04828",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "efa97e62_71a2bb0a",
+      "range": {
+        "startLine": 474,
+        "startChar": 2,
+        "endLine": 477,
+        "endChar": 0
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "aafa057c_4f9022c4",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8627f185_751d740e",
+      "range": {
+        "startLine": 524,
+        "startChar": 10,
+        "endLine": 524,
+        "endChar": 12
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e9b82fc_e11bf504",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 9
@@ -160,6 +304,30 @@
       "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11c639ab_9aa4fdb8",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1e9b82fc_e11bf504",
+      "range": {
+        "startLine": 526,
+        "startChar": 61,
+        "endLine": 526,
+        "endChar": 75
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -186,6 +354,30 @@
     },
     {
       "key": {
+        "uuid": "e2fd2fb5_a8c55a37",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c64b6257_c0d08b30",
+      "range": {
+        "startLine": 536,
+        "startChar": 3,
+        "endLine": 536,
+        "endChar": 25
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1bfbebd_00e629c1",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 9
@@ -197,6 +389,30 @@
       "writtenOn": "2019-06-05T07:33:20Z",
       "side": 1,
       "message": "Can we set this instead of setting the rc?",
+      "range": {
+        "startLine": 547,
+        "startChar": 1,
+        "endLine": 547,
+        "endChar": 26
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "087579cf_d9322e2e",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "This way we can have one common path for errors (which is when we want to set the pad_status) for both functions that return an error code and buffer",
+      "parentUuid": "d1bfbebd_00e629c1",
       "range": {
         "startLine": 547,
         "startChar": 1,
@@ -232,6 +448,30 @@
     },
     {
       "key": {
+        "uuid": "5290a390_47d67086",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f4df12b_bec21643",
+      "range": {
+        "startLine": 549,
+        "startChar": 1,
+        "endLine": 549,
+        "endChar": 8
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df81b6cd_492e5e8a",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 9
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "0d2f4c83_6471adf3",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "df81b6cd_492e5e8a",
+      "range": {
+        "startLine": 558,
+        "startChar": 0,
+        "endLine": 560,
+        "endChar": 2
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f6c646d_ae0ea906",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 9
@@ -275,6 +539,30 @@
       "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9ffd130_f0ff2743",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:49:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7f6c646d_ae0ea906",
+      "range": {
+        "startLine": 572,
+        "startChar": 7,
+        "endLine": 572,
+        "endChar": 13
+      },
+      "revId": "06aada2e1dbed07228db19ffd63145a5f129832a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
