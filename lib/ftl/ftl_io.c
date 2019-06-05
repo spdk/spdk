@@ -272,6 +272,7 @@ struct ftl_io *
 ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 {
 	struct ftl_io *io = opts->io;
+	struct ftl_io *parent = opts->parent;
 	struct spdk_ftl_dev *dev = opts->dev;
 	struct iovec iov = {
 		.iov_base = opts->data,
@@ -279,8 +280,8 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	};
 
 	if (!io) {
-		if (opts->parent) {
-			io = ftl_io_alloc_child(opts->parent);
+		if (parent) {
+			io = ftl_io_alloc_child(parent);
 		} else {
 			io = ftl_io_alloc(dev->ioch);
 		}
@@ -296,6 +297,14 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->rwb_batch = opts->rwb_batch;
 	io->band = opts->band;
 	io->md = opts->md;
+
+	if (parent) {
+		if (parent->flags & FTL_IO_VECTOR_LBA) {
+			io->lba.vector = parent->lba.vector + parent->pos;
+		} else {
+			io->lba.single = parent->lba.single + parent->pos;
+		}
+	}
 
 	if (ftl_io_init_iovec(io, &iov, 1, opts->lbk_cnt)) {
 		if (!opts->io) {
