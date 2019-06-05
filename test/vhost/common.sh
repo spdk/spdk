@@ -132,14 +132,14 @@ function vhost_run()
 		return 1
 	fi
 
-	local cmd="$vhost_app -r $vhost_dir/rpc.sock $2"
-
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
 	notice "Command:     $cmd"
 
+	local current=$(pwd)
+
 	timing_enter vhost_start
-	cd $vhost_dir; $cmd &
+	$vhost_app -S $vhost_dir -r $vhost_dir/rpc.sock $2 &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
 
@@ -486,6 +486,7 @@ function vm_shutdown_all()
 
 		if [[ $all_vms_down == 1 ]]; then
 			notice "All VMs successfully shut down"
+			rm -rf $VM_DIR
 			$shell_restore_x
 			return 0
 		fi
