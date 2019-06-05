@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "078f7699_8cddecf7",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T19:07:11Z",
+      "side": 1,
+      "message": "For organizational clarity, can you put these in an anonymous struct?\n\nstruct {\n    struct spdk_nvme_cmd *vaddr;\n    uint64_t paddr;\n    uint64_t size_bytes;\n} sq;\n\nAnd a similar one for cq.\n\nI\u0027d also recommend making buffer_size a uin64_t since it will pad out to that anyway, and also naming it \"size_bytes\" so the unit is clear.",
+      "revId": "4b7c993bd4a999ca280c9c186ac4a390c5544fa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fa084c9_5ca3dfe9",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T19:07:11Z",
+      "side": 1,
+      "message": "I wouldn\u0027t capture these values onto the stack here. Just refer to them via opts-\u003esq_paddr and such below. I think that\u0027s simpler.",
+      "revId": "4b7c993bd4a999ca280c9c186ac4a390c5544fa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3192e57d_eea07e66",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1043,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T19:07:11Z",
+      "side": 1,
+      "message": "This comment only applies to the case where we do the spdk_zmalloc, so move it there.",
+      "revId": "4b7c993bd4a999ca280c9c186ac4a390c5544fa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
