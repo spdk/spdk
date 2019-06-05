@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "120bbb78_11fe05d0",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-05T10:47:24Z",
+      "side": 1,
+      "message": "We print different stuff here, can we maybe put the entire `if hasattr(args, \u0027func\u0027):` from line #1825 under the try/catch?",
+      "revId": "0f783d45aece974981f2b46c83251e20d18c5e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
