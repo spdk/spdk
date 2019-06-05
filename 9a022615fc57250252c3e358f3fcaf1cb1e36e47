@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5586de65_7e5fccb6",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:04:27Z",
+      "side": 1,
+      "message": "Let\u0027s just call this ftl_add_direct_wptr.",
+      "range": {
+        "startLine": 419,
+        "startChar": 19,
+        "endLine": 419,
+        "endChar": 27
+      },
+      "revId": "9a022615fc57250252c3e358f3fcaf1cb1e36e47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4b10eea_5be11273",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:04:27Z",
+      "side": 1,
+      "message": "Let\u0027s remove this parameter and retrieve it from band inside this function.",
+      "range": {
+        "startLine": 419,
+        "startChar": 28,
+        "endLine": 419,
+        "endChar": 53
+      },
+      "revId": "9a022615fc57250252c3e358f3fcaf1cb1e36e47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "beb53964_793b65e7",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:04:27Z",
+      "side": 1,
+      "message": "ftl_close_direct_band_wptr -\u003e ftl_close_direct_wptr?",
+      "range": {
+        "startLine": 444,
+        "startChar": 0,
+        "endLine": 444,
+        "endChar": 26
+      },
+      "revId": "9a022615fc57250252c3e358f3fcaf1cb1e36e47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c3c602e_1d23a2df",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:04:27Z",
+      "side": 1,
+      "message": "Why manually set state instead of calling ftl_band_set_state?",
+      "range": {
+        "startLine": 450,
+        "startChar": 1,
+        "endLine": 450,
+        "endChar": 34
+      },
+      "revId": "9a022615fc57250252c3e358f3fcaf1cb1e36e47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
