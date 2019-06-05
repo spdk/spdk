@@ -86,8 +86,8 @@ function migration_tc2_configure_vhost()
 
 	# Run nvmf_tgt and two vhost instances:
 	# nvmf_tgt uses core id 2 (-m 0x4)
-	# First uses core id 0 (vhost_0_reactor_mask=0x1)
-	# Second uses core id 1 (vhost_1_reactor_mask=0x2)
+	# First uses core id 0
+	# Second uses core id 1
 	# This force to use VM 1 and 2.
 	timing_enter start_nvmf_tgt
 	notice "Running nvmf_tgt..."
@@ -102,11 +102,8 @@ function migration_tc2_configure_vhost()
 	$rootdir/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 	timing_exit start_nvmf_tgt
 
-	vhost_run 0 --memory=512 --no-pci
-	# Those are global intentionally
-	vhost_1_reactor_mask=0x2
-	vhost_1_master_core=1
-	vhost_run 1 --memory=512 --no-pci
+	vhost_run 0 "-m 0x1 -s 512 -u"
+	vhost_run 1 "-m 0x2 -s 512 -u"
 
 	local rdma_ip_list=$(get_available_rdma_ips)
 	local nvmf_target_ip=$(echo "$rdma_ip_list" | head -n 1)
