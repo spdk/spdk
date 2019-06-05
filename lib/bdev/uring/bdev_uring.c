@@ -206,7 +206,7 @@ bdev_uring_reap(struct io_uring *ring, int max)
 
 	count = 0;
 	for (i = 0; i < max; i++) {
-		ret = io_uring_get_completion(ring, &cqe);
+		ret = io_uring_peek_cqe(ring, &cqe);
 		if (ret != 0) {
 			return ret;
 		}
@@ -224,6 +224,7 @@ bdev_uring_reap(struct io_uring *ring, int max)
 
 		uring_task->ch->group_ch->io_inflight--;
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(uring_task), status);
+		io_uring_cqe_seen(ring, cqe);
 		count++;
 	}
 
