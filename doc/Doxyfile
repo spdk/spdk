@@ -795,7 +795,6 @@ INPUT                  += \
                          misc.md \
                          driver_modules.md \
                          tools.md \
-                         experimental_tools.md \
                          performance_reports.md \
 
 # All remaining pages are listed here in alphabetical order by filename.
