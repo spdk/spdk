@@ -36,6 +36,7 @@
 #include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
+#include "spdk/vmd.h"
 #include "spdk/nvme_ocssd.h"
 #include "spdk/env.h"
 #include "spdk/nvme_intel.h"
@@ -93,6 +94,8 @@ static char g_core_mask[16] = "0x1";
 static struct spdk_nvme_transport_id g_trid;
 
 static int g_controllers_found = 0;
+
+static bool g_vmd = false;
 
 static void
 hex_dump(const void *data, size_t size)
@@ -1661,6 +1664,7 @@ usage(const char *program_name)
 	printf(" -d         DPDK huge memory size in MB\n");
 	printf(" -x         print hex dump of raw data\n");
 	printf(" -v         verbose (enable warnings)\n");
+	printf(" -V         enumerate VMD\n");
 	printf(" -H         show this usage\n");
 }
 
@@ -1672,7 +1676,7 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:i:p:r:xHL:")) != -1) {
+	while ((op = getopt(argc, argv, "d:i:p:r:xHL:V")) != -1) {
 		switch (op) {
 		case 'd':
 			g_dpdk_mem = spdk_strtol(optarg, 10);
@@ -1720,8 +1724,12 @@ parse_args(int argc, char **argv)
 			return 0;
 #endif
 			break;
-
 		case 'H':
+			usage(argv[0]);
+			break;
+		case 'V':
+			g_vmd = true;
+			break;
 		default:
 			usage(argv[0]);
 			return 1;
@@ -1771,6 +1779,11 @@ int main(int argc, char **argv)
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		return 1;
+	}
+
+	if (g_vmd && spdk_vmd_init()) {
+		fprintf(stderr, "Failed to initialize VMD."
+			" Some NVMe devices can be unavailable.\n");
 	}
 
 	/* A specific trid is required. */
