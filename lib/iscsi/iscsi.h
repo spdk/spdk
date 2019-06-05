@@ -353,7 +353,6 @@ struct spdk_iscsi_globals {
 #define ISCSI_FULL_FEATURE_PHASE		3
 
 enum spdk_error_codes {
-	SPDK_SUCCESS		= 0,
 	SPDK_ISCSI_CONNECTION_FATAL	= -1,
 	SPDK_PDU_FATAL		= -2,
 };

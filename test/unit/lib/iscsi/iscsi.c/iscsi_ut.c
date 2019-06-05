@@ -566,7 +566,7 @@ add_transfer_task_test(void)
 
 	rc = add_transfer_task(&conn, &task);
 
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_FIRST(&conn.queued_r2t_tasks) == &task);
 
 	TAILQ_REMOVE(&conn.queued_r2t_tasks, &task, link);
@@ -577,7 +577,7 @@ add_transfer_task_test(void)
 
 	rc = add_transfer_task(&conn, &task);
 
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_FIRST(&conn.active_r2t_tasks) == &task);
 
 	TAILQ_REMOVE(&conn.active_r2t_tasks, &task, link);
@@ -644,7 +644,7 @@ get_transfer_task_test(void)
 	spdk_iscsi_task_set_pdu(&task1, pdu1);
 
 	rc = add_transfer_task(&conn, &task1);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	pdu2 = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu2 != NULL);
@@ -654,7 +654,7 @@ get_transfer_task_test(void)
 	spdk_iscsi_task_set_pdu(&task2, pdu2);
 
 	rc = add_transfer_task(&conn, &task2);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	task = get_transfer_task(&conn, 1);
 	CU_ASSERT(task == &task1);
@@ -710,7 +710,7 @@ del_transfer_task_test(void)
 	task1.tag = 11;
 
 	rc = add_transfer_task(&conn, &task1);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	pdu2 = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu2 != NULL);
@@ -721,7 +721,7 @@ del_transfer_task_test(void)
 	task2.tag = 12;
 
 	rc = add_transfer_task(&conn, &task2);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	pdu3 = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu3 != NULL);
@@ -732,7 +732,7 @@ del_transfer_task_test(void)
 	task3.tag = 13;
 
 	rc = add_transfer_task(&conn, &task3);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	pdu4 = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu4 != NULL);
@@ -743,7 +743,7 @@ del_transfer_task_test(void)
 	task4.tag = 14;
 
 	rc = add_transfer_task(&conn, &task4);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	pdu5 = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(pdu5 != NULL);
@@ -754,7 +754,7 @@ del_transfer_task_test(void)
 	task5.tag = 15;
 
 	rc = add_transfer_task(&conn, &task5);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(get_transfer_task(&conn, 1) == &task1);
 	CU_ASSERT(get_transfer_task(&conn, 5) == NULL);
@@ -835,7 +835,7 @@ clear_all_transfer_tasks_test(void)
 	spdk_iscsi_task_set_pdu(task1, pdu1);
 
 	rc = add_transfer_task(&conn, task1);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	mgmt_pdu1 = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(mgmt_pdu1 != NULL);
@@ -856,7 +856,7 @@ clear_all_transfer_tasks_test(void)
 	spdk_iscsi_task_set_pdu(task2, pdu2);
 
 	rc = add_transfer_task(&conn, task2);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	task3 = spdk_iscsi_task_get(&conn, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(task3 != NULL);
@@ -871,7 +871,7 @@ clear_all_transfer_tasks_test(void)
 	spdk_iscsi_task_set_pdu(task3, pdu3);
 
 	rc = add_transfer_task(&conn, task3);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	task4 = spdk_iscsi_task_get(&conn, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(task4 != NULL);
@@ -886,7 +886,7 @@ clear_all_transfer_tasks_test(void)
 	spdk_iscsi_task_set_pdu(task4, pdu4);
 
 	rc = add_transfer_task(&conn, task4);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	task5 = spdk_iscsi_task_get(&conn, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(task5 != NULL);
@@ -901,7 +901,7 @@ clear_all_transfer_tasks_test(void)
 	spdk_iscsi_task_set_pdu(task5, pdu5);
 
 	rc = add_transfer_task(&conn, task5);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	mgmt_pdu2 = spdk_get_pdu();
 	SPDK_CU_ASSERT_FATAL(mgmt_pdu2 != NULL);
@@ -922,7 +922,7 @@ clear_all_transfer_tasks_test(void)
 	spdk_iscsi_task_set_pdu(task6, pdu6);
 
 	rc = add_transfer_task(&conn, task6);
-	CU_ASSERT(rc == SPDK_SUCCESS);
+	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(conn.ttt == 4);
 
