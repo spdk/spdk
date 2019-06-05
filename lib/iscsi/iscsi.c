@@ -96,8 +96,8 @@ static int iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
 
 static int create_iscsi_sess(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_tgt_node *target, enum session_type session_type);
-static int append_iscsi_sess(struct spdk_iscsi_conn *conn,
-			     const char *initiator_port_name, uint16_t tsih, uint16_t cid);
+static uint8_t append_iscsi_sess(struct spdk_iscsi_conn *conn,
+				 const char *initiator_port_name, uint16_t tsih, uint16_t cid);
 
 static void remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN);
 
@@ -1376,14 +1376,14 @@ iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
 		/* multiple connections */
 		rc = append_iscsi_sess(conn, initiator_port_name,
 				       from_be16(&rsph->tsih), cid);
-		if (rc < 0) {
+		if (rc != 0) {
 			SPDK_ERRLOG("isid=%"PRIx64", tsih=%u, cid=%u:"
 				    "spdk_append_iscsi_sess() failed\n",
 				    iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih),
 				    cid);
 			/* Can't include in session */
 			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-			rsph->status_detail = ISCSI_LOGIN_CONN_ADD_FAIL;
+			rsph->status_detail = rc;
 			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 		}
 	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
@@ -4862,7 +4862,7 @@ get_iscsi_sess_by_tsih(uint16_t tsih)
 	return session;
 }
 
-static int
+static uint8_t
 append_iscsi_sess(struct spdk_iscsi_conn *conn,
 		  const char *initiator_port_name, uint16_t tsih, uint16_t cid)
 {
@@ -4874,7 +4874,7 @@ append_iscsi_sess(struct spdk_iscsi_conn *conn,
 	sess = get_iscsi_sess_by_tsih(tsih);
 	if (sess == NULL) {
 		SPDK_ERRLOG("spdk_get_iscsi_sess_by_tsih failed\n");
-		return -1;
+		return ISCSI_LOGIN_CONN_ADD_FAIL;
 	}
 	if ((conn->portal->group->tag != sess->tag) ||
 	    (strcasecmp(initiator_port_name, spdk_scsi_port_get_name(sess->initiator_port)) != 0) ||
@@ -4882,14 +4882,14 @@ append_iscsi_sess(struct spdk_iscsi_conn *conn,
 		/* no match */
 		SPDK_ERRLOG("no MCS session for init port name=%s, tsih=%d, cid=%d\n",
 			    initiator_port_name, tsih, cid);
-		return -1;
+		return ISCSI_LOGIN_CONN_ADD_FAIL;
 	}
 
 	if (sess->connections >= sess->MaxConnections) {
 		/* no slot for connection */
 		SPDK_ERRLOG("too many connections for init port name=%s, tsih=%d, cid=%d\n",
 			    initiator_port_name, tsih, cid);
-		return -1;
+		return ISCSI_LOGIN_TOO_MANY_CONNECTIONS;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Connections (tsih %d): %d\n", sess->tsih, sess->connections);
