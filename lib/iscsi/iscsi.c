@@ -4447,6 +4447,46 @@ init_login_reject_response(struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rs
 	rsph->itt = pdu->bhs.itt;
 }
 
+static void
+iscsi_pdu_dump(struct spdk_iscsi_pdu *pdu)
+{
+	struct iscsi_bhs *reqh;
+	int opcode, pdu_hdr_len = 0;
+
+	reqh = &pdu->bhs;
+	opcode = reqh->opcode;
+
+	SPDK_ERRLOG("opcode: %d\n", opcode);
+
+	switch (opcode) {
+	case ISCSI_OP_NOPOUT:
+		pdu_hdr_len = sizeof(struct iscsi_bhs_nop_out);
+		break;
+	case ISCSI_OP_SCSI:
+		pdu_hdr_len = sizeof(struct iscsi_bhs_scsi_req);
+		break;
+	case ISCSI_OP_TASK:
+		pdu_hdr_len = sizeof(struct iscsi_bhs_task_req);
+		break;
+	case ISCSI_OP_TEXT:
+		pdu_hdr_len = sizeof(struct iscsi_bhs_text_req);
+		break;
+	case ISCSI_OP_LOGOUT:
+		pdu_hdr_len = sizeof(struct iscsi_bhs_logout_req);
+		break;
+	case ISCSI_OP_SCSI_DATAOUT:
+		pdu_hdr_len = sizeof(struct iscsi_bhs_data_out);
+		break;
+	case ISCSI_OP_SNACK:
+		pdu_hdr_len = sizeof(struct iscsi_bhs_snack_req);
+		break;
+	default:
+		SPDK_ERRLOG("opcode is unknown\n");
+		return;
+	}
+
+	SPDK_ERRLOGDUMP("PDU", (uint8_t *)reqh, pdu_hdr_len);
+}
 int
 spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
@@ -4490,6 +4530,7 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	} else if (conn->state == ISCSI_CONN_STATE_INVALID) {
 		SPDK_ERRLOG("before Full Feature\n");
+		iscsi_pdu_dump(pdu);
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
