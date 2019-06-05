@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab789260_90dd331b",
+        "filename": "lib/bdev/uring/bdev_uring.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T19:25:43Z",
+      "side": 1,
+      "message": "We should call this before spdk_bdev_io_complete because the user callback may immediately submit more requests and we want cqes available.",
+      "revId": "518f1d2d3c460b41d5a32ecf2de71550dedf0811",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
