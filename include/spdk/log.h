@@ -139,6 +139,13 @@ enum spdk_log_level spdk_log_get_print_level(void);
 void spdk_log(enum spdk_log_level level, const char *file, const int line, const char *func,
 	      const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
 
+#define SPDK_ERRLOGDUMP(LABEL, BUF, LEN)				\
+	do {								\
+		if ((LEN)) {						\
+			spdk_log_dump(stderr, (LABEL), (BUF), (LEN));	\
+		}							\
+	} while (0)
+
 /**
  * Log the contents of a raw buffer to a file.
  *
