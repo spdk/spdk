@@ -4446,6 +4446,12 @@ init_login_reject_response(struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rs
 	rsph->itt = pdu->bhs.itt;
 }
 
+static void
+iscsi_pdu_dump(struct spdk_iscsi_pdu *pdu)
+{
+	SPDK_ERRLOGDUMP("PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
+}
+
 int
 spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
@@ -4489,6 +4495,7 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	} else if (conn->state == ISCSI_CONN_STATE_INVALID) {
 		SPDK_ERRLOG("before Full Feature\n");
+		iscsi_pdu_dump(pdu);
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
