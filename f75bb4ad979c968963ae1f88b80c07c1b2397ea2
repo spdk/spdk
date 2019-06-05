@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51b3d967_5037a686",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:06:58Z",
+      "side": 1,
+      "message": "Let\u0027s rename this as well. Perhaps ftl_retrieve_punit_chunk_info?",
+      "range": {
+        "startLine": 221,
+        "startChar": 0,
+        "endLine": 221,
+        "endChar": 16
+      },
+      "revId": "f75bb4ad979c968963ae1f88b80c07c1b2397ea2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
