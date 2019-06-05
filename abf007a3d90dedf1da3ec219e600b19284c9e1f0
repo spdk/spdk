@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49b66e11_ccf38634",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T18:43:17Z",
+      "side": 1,
+      "message": "We actually need to extend this check to reject FABRICS CONNECT commands while pausing/paused too.",
+      "revId": "abf007a3d90dedf1da3ec219e600b19284c9e1f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45a16990_862b53ba",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 2403,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T18:43:17Z",
+      "side": 1,
+      "message": "/* scan-build falsely reporting dereference of null pointer */",
+      "revId": "abf007a3d90dedf1da3ec219e600b19284c9e1f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c503d39_da2e97f7",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 2572,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T18:43:17Z",
+      "side": 1,
+      "message": "Update comment to say to still increment io_outstanding because spdk_nvmf_request_complete decrements it.",
+      "revId": "abf007a3d90dedf1da3ec219e600b19284c9e1f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
