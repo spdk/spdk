@@ -24,8 +24,5 @@
 # Tools
 @copydoc tools
 
-# Experimental Tools
-@copydoc experimental_tools
-
 # Performance Reports
 @copydoc performance_reports
