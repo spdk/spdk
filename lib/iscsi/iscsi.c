@@ -1907,8 +1907,8 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 	}
 	/* make sure reqh->version_max < ISCSI_VERSION */
 	if (reqh->version_min > ISCSI_VERSION) {
-		SPDK_ERRLOG("unsupported version %d/%d\n", reqh->version_min,
-			    reqh->version_max);
+		SPDK_ERRLOG("unsupported version min %d/max %d, expecting %d\n", reqh->version_min,
+			    reqh->version_max, ISCSI_VERSION);
 		/* Unsupported version */
 		/* set all reserved flag to zero */
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
