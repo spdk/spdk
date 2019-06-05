@@ -1040,7 +1040,7 @@ ftl_alloc_io_nv_cache(struct ftl_io *parent, size_t num_lbks)
 		.parent		= parent,
 		.data		= ftl_io_iovec_addr(parent),
 		.lbk_cnt	= num_lbks,
-		.flags		= FTL_IO_CACHE,
+		.flags		= parent->flags | FTL_IO_CACHE,
 	};
 
 	return ftl_io_init_internal(&opts);
