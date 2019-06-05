@@ -57,7 +57,7 @@ function migration_tc1()
 	local job_file="$testdir/migration-tc1.job"
 
 	# Run vhost
-	vhost_run
+	vhost_run 0
 	migration_tc1_configure_vhost
 
 	notice "Setting up VMs"
