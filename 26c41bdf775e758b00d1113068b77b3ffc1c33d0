@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d3a91360_3b4a6bf6",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-05T04:56:20Z",
+      "side": 1,
+      "message": "non-NULL is derived from https://doc.dpdk.org/api/rte__ring_8h.html#ab8debfb458e927d559e7ce750048502d. this should be OK.",
+      "parentUuid": "ccb1796e_385f4b4f",
+      "range": {
+        "startLine": 585,
+        "startChar": 24,
+        "endLine": 585,
+        "endChar": 32
+      },
+      "revId": "26c41bdf775e758b00d1113068b77b3ffc1c33d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9c51375_950dc079",
         "filename": "include/spdk/env.h",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-05T04:27:48Z",
       "side": 1,
       "message": "could we used the unsigned int*, then we can avoid the type conversion",
+      "range": {
+        "startLine": 590,
+        "startChar": 3,
+        "endLine": 590,
+        "endChar": 11
+      },
+      "revId": "26c41bdf775e758b00d1113068b77b3ffc1c33d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16a752fe_9617ced8",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-05T04:56:20Z",
+      "side": 1,
+      "message": "Your comment makes sense but I thought that using size_t is consistent with count. I want to wait for reviews from others.",
+      "parentUuid": "c9c51375_950dc079",
       "range": {
         "startLine": 590,
         "startChar": 3,
