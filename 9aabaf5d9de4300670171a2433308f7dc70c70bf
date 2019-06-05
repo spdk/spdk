@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a3111dc_bb7e7924",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T20:35:38Z",
+      "side": 1,
+      "message": "do we need to add this?  I don\u0027t see it being used",
+      "revId": "9aabaf5d9de4300670171a2433308f7dc70c70bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2410898_778b0443",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T20:35:38Z",
+      "side": 1,
+      "message": "is this needed?  I thought my caec8928 patch allowed trailing new lines",
+      "revId": "9aabaf5d9de4300670171a2433308f7dc70c70bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3903e47c_d5487f0d",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T20:35:38Z",
+      "side": 1,
+      "message": "unneeded whitespace change",
+      "revId": "9aabaf5d9de4300670171a2433308f7dc70c70bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d88757d_735f4973",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T20:35:38Z",
+      "side": 1,
+      "message": "unneeded whitespace change",
+      "revId": "9aabaf5d9de4300670171a2433308f7dc70c70bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
