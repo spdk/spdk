@@ -73,8 +73,6 @@ zeroes_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
 }
 
-
-
 static void
 zeroes_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	      struct iovec *iov, int iovcnt,
@@ -90,7 +88,8 @@ zeroes_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		    uint64_t lba, uint32_t lba_count,
 		    struct spdk_bs_dev_cb_args *cb_args)
 {
-	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EPERM);
+	assert(false);
 }
 
 static void
@@ -98,7 +97,8 @@ zeroes_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	     uint64_t lba, uint32_t lba_count,
 	     struct spdk_bs_dev_cb_args *cb_args)
 {
-	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EPERM);
+	assert(false);
 }
 
 static struct spdk_bs_dev g_zeroes_bs_dev = {
