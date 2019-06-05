@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30e6176c_81560345",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-05T13:08:01Z",
+      "side": 1,
+      "message": "Doxygen does not understand the lists here as lists. I think you need to add \u0027-\u0027 before each line. Currently some sections are shown all in single line.",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 76
+      },
+      "revId": "802f8e051c55f949417deac5a26d8a69cbf82980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "363c1667_eb0ae168",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-05T13:08:01Z",
+      "side": 1,
+      "message": "Please either remove or fill out this section.",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 246,
+        "endChar": 5
+      },
+      "revId": "802f8e051c55f949417deac5a26d8a69cbf82980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
