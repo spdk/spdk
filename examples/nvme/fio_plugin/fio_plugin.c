@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
+#include "spdk/vmd.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
@@ -69,6 +70,7 @@ struct spdk_fio_options {
 	int	apptag;
 	int	apptag_mask;
 	char	*digest_enable;
+	int	enable_vmd;
 };
 
 struct spdk_fio_request {
@@ -430,6 +432,10 @@ static int spdk_fio_setup(struct thread_data *td)
 		rc = pthread_create(&g_ctrlr_thread_id, NULL, &spdk_fio_poll_ctrlrs, NULL);
 		if (rc != 0) {
 			SPDK_ERRLOG("Unable to spawn a thread to poll admin queues. They won't be polled.\n");
+		}
+
+		if (fio_options->enable_vmd && spdk_vmd_init()) {
+			SPDK_ERRLOG("Failed to initialize VMD. Some NVMe devices can be unavailable.\n");
 		}
 	}
 
@@ -1042,6 +1048,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, digest_enable),
 		.def		= NULL,
 		.help		= "Control the NVMe/TCP control(digest_enable=NONE|HEADER|DATA|BOTH)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "enable_vmd",
+		.lname		= "Enable VMD enumeration",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, enable_vmd),
+		.def		= "0",
+		.help		= "Enable VMD enumeration (enable_vmd=1 or enable_vmd=0)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
