@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4564f6ab_5d027605",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-05T08:37:44Z",
+      "side": 1,
+      "message": "double whitespace",
+      "range": {
+        "startLine": 855,
+        "startChar": 70,
+        "endLine": 855,
+        "endChar": 72
+      },
+      "revId": "ec014a3855a05d1e3a1dc2073bf470fced3547ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
