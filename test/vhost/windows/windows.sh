@@ -84,7 +84,7 @@ vm_kill_all
 # Violating this rule doesn't cause any issues for SPDK vhost,
 # but triggers an assert, so we can only run Windows VMs with non-debug SPDK builds.
 notice "running SPDK vhost"
-vhost_run
+vhost_run 0
 notice "..."
 
 # Prepare bdevs for later vhost controllers use

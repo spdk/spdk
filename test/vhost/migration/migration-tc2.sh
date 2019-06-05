@@ -102,11 +102,11 @@ function migration_tc2_configure_vhost()
 	$rootdir/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 	timing_exit start_nvmf_tgt
 
-	vhost_run --memory=512 --vhost-num=0 --no-pci
+	vhost_run 0 --memory=512 --no-pci
 	# Those are global intentionally
 	vhost_1_reactor_mask=0x2
 	vhost_1_master_core=1
-	vhost_run --memory=512 --vhost-num=1 --no-pci
+	vhost_run 1 --memory=512 --no-pci
 
 	local rdma_ip_list=$(get_available_rdma_ips)
 	local nvmf_target_ip=$(echo "$rdma_ip_list" | head -n 1)

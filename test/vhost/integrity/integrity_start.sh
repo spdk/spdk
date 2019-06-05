@@ -60,7 +60,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 vm_kill_all
 
 notice "Starting SPDK vhost"
-vhost_run
+vhost_run 0
 notice "..."
 
 # Set up lvols and vhost controllers

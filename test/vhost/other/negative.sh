@@ -69,7 +69,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	vhost_run
+	vhost_run 0
 	vhost_json_config 0 $testdir/conf.json
 	notice ""
 

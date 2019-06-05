@@ -88,7 +88,7 @@ function create_bdev_config()
 }
 
 timing_enter vhost_run
-vhost_run
+vhost_run 0
 timing_exit vhost_run
 
 timing_enter create_bdev_config
