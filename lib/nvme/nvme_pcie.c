@@ -1317,8 +1317,8 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		req->retries < spdk_nvme_retry_count;
 
 	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
-		nvme_qpair_print_command(qpair, &req->cmd);
-		nvme_qpair_print_completion(qpair, cpl);
+		spdk_nvme_qpair_print_command(qpair, &req->cmd);
+		spdk_nvme_qpair_print_completion(qpair, cpl);
 	}
 
 	assert(cpl->cid == req->cmd.cid);
@@ -2149,7 +2149,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			nvme_pcie_qpair_complete_tracker(qpair, tr, cpl, true);
 		} else {
 			SPDK_ERRLOG("cpl does not map to outstanding cmd\n");
-			nvme_qpair_print_completion(qpair, cpl);
+			spdk_nvme_qpair_print_completion(qpair, cpl);
 			assert(0);
 		}
 

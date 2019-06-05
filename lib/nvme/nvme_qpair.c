@@ -151,7 +151,7 @@ nvme_io_qpair_print_command(struct spdk_nvme_qpair *qpair,
 }
 
 void
-nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd)
+spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd)
 {
 	assert(qpair != NULL);
 	assert(cmd != NULL);
@@ -297,8 +297,8 @@ spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 }
 
 void
-nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
-			    struct spdk_nvme_cpl *cpl)
+spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
+				 struct spdk_nvme_cpl *cpl)
 {
 	SPDK_NOTICELOG("%s (%02x/%02x) sqid:%d cid:%d cdw0:%x sqhd:%04x p:%x m:%x dnr:%x\n",
 		       spdk_nvme_cpl_get_status_string(&cpl->status),
@@ -379,8 +379,8 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 
 	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
 		SPDK_NOTICELOG("Command completed manually:\n");
-		nvme_qpair_print_command(qpair, &req->cmd);
-		nvme_qpair_print_completion(qpair, &cpl);
+		spdk_nvme_qpair_print_command(qpair, &req->cmd);
+		spdk_nvme_qpair_print_completion(qpair, &cpl);
 	}
 
 	nvme_complete_request(req->cb_fn, req->cb_arg, qpair, req, &cpl);
