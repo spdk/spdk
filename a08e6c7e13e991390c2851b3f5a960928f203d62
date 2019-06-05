@@ -46,6 +46,30 @@
       "revId": "a08e6c7e13e991390c2851b3f5a960928f203d62",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ccd5fd2c_923365ac",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1921,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-05T06:37:13Z",
+      "side": 1,
+      "message": "The original code is fine according to my understanding, but you can change it as you listed above.",
+      "parentUuid": "ffcae99a_2aa2a6b6",
+      "range": {
+        "startLine": 1921,
+        "startChar": 1,
+        "endLine": 1921,
+        "endChar": 50
+      },
+      "revId": "a08e6c7e13e991390c2851b3f5a960928f203d62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
