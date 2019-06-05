@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1eb76732_cffcbef0",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:39:37Z",
+      "side": 1,
+      "message": "Can we revert the logic and call this \u0027allow_open_bands\u0027?",
+      "range": {
+        "startLine": 94,
+        "startChar": 10,
+        "endLine": 94,
+        "endChar": 33
+      },
+      "revId": "801f93aa53538c244716c31313a95d032218d1ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34f9a3b8_5c2fdf19",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T07:39:37Z",
+      "side": 1,
+      "message": "Let\u0027s log this in an error log too.",
+      "revId": "801f93aa53538c244716c31313a95d032218d1ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
