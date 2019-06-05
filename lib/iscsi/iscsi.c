@@ -1429,9 +1429,8 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 					    conn->initiator_addr);
 	if (!result) {
 		SPDK_ERRLOG("access denied\n");
-		/* Not found */
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_TARGET_NOT_FOUND;
+		rsph->status_detail = ISCSI_LOGIN_AUTHORIZATION_FAIL;
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
 
