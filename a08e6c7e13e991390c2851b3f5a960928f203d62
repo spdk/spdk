@@ -22,6 +22,30 @@
       "revId": "a08e6c7e13e991390c2851b3f5a960928f203d62",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffcae99a_2aa2a6b6",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1921,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-06-05T06:29:26Z",
+      "side": 1,
+      "message": "The original comment is saying version_max while the code afterwards is using version_min to check. So that I\u0027ve made the change to be consistent. Or maybe I could add another check in below like\n\nreqh-\u003eversion_min \u003e ISCSI_VERSION || reqh-\u003eversion_max \u003c ISCSI_VERSION\n\nAnd also updated the comment.\n\nWhat\u0027s your suggestion?",
+      "parentUuid": "ff5f750e_3155db8a",
+      "range": {
+        "startLine": 1921,
+        "startChar": 1,
+        "endLine": 1921,
+        "endChar": 50
+      },
+      "revId": "a08e6c7e13e991390c2851b3f5a960928f203d62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
