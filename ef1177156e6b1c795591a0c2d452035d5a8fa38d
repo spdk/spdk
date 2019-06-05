@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88c120a5_c82cd5f6",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-05T04:16:53Z",
+      "side": 0,
+      "message": "I have a suggestion, can we set:\n\n_pdu at the beginning of this function. in case if there are some further change.",
+      "range": {
+        "startLine": 429,
+        "startChar": 4,
+        "endLine": 429,
+        "endChar": 8
+      },
+      "revId": "ef1177156e6b1c795591a0c2d452035d5a8fa38d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
