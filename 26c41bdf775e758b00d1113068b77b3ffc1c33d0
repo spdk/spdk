@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccb1796e_385f4b4f",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-05T04:27:48Z",
+      "side": 1,
+      "message": "not NULL",
+      "range": {
+        "startLine": 585,
+        "startChar": 24,
+        "endLine": 585,
+        "endChar": 32
+      },
+      "revId": "26c41bdf775e758b00d1113068b77b3ffc1c33d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9c51375_950dc079",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-05T04:27:48Z",
+      "side": 1,
+      "message": "could we used the unsigned int*, then we can avoid the type conversion",
+      "range": {
+        "startLine": 590,
+        "startChar": 3,
+        "endLine": 590,
+        "endChar": 11
+      },
+      "revId": "26c41bdf775e758b00d1113068b77b3ffc1c33d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "585bf378_03ccb015",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-05T04:27:48Z",
+      "side": 1,
+      "message": "Will directly use unsigned int * would be better?",
+      "range": {
+        "startLine": 397,
+        "startChar": 4,
+        "endLine": 397,
+        "endChar": 12
+      },
+      "revId": "26c41bdf775e758b00d1113068b77b3ffc1c33d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
