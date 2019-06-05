@@ -98,4 +98,11 @@ __attribute__((constructor)) static void register_flag_##flag(void) \
 #define SPDK_LOGDUMP(...) do { } while (0)
 #endif
 
+#define SPDK_ERRLOGDUMP(LABEL, BUF, LEN)				\
+	do {								\
+		if ((LEN)) {						\
+			spdk_log_dump(stderr, (LABEL), (BUF), (LEN));	\
+		}							\
+	} while (0)
+
 #endif /* SPDK_INTERNAL_LOG_H */
