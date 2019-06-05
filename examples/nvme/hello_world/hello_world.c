@@ -37,6 +37,13 @@
 #include "spdk/vmd.h"
 #include "spdk/env.h"
 
+/*
+ * These would not normally be present in "production" code.
+ * They are here to force test the failing I/O paths.
+ */
+#define FAIL_WRITE (0)
+#define FAIL_READ (0)
+
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr	*ctrlr;
 	struct ctrlr_entry	*next;
@@ -56,7 +63,7 @@ static struct ns_entry *g_namespaces = NULL;
 static bool g_vmd = false;
 
 static void
-register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
+register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns, int nsid)
 {
 	struct ns_entry *entry;
 	const struct spdk_nvme_ctrlr_data *cdata;
@@ -73,8 +80,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	if (!spdk_nvme_ns_is_active(ns)) {
 		printf("Controller %-20.20s (%-20.20s): Skipping inactive NS %u\n",
-		       cdata->mn, cdata->sn,
-		       spdk_nvme_ns_get_id(ns));
+		       cdata->mn, cdata->sn, nsid);
 		return;
 	}
 
@@ -105,6 +111,19 @@ read_complete(void *arg, const struct spdk_nvme_cpl *completion)
 {
 	struct hello_world_sequence *sequence = arg;
 
+	/* Assume the I/O was successful */
+	sequence->is_completed = 1;
+	/* See if an error occurred. If so, display information
+	 * about it, and set completion value so that I/O
+	 * caller is aware that an error occurred.
+	 */
+	if (spdk_nvme_cpl_is_error(completion)) {
+		spdk_nvme_qpair_print_completion(sequence->ns_entry->qpair, (struct spdk_nvme_cpl *)completion);
+		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		fprintf(stderr, "Read I/O failed, aborting run\n");
+		sequence->is_completed = 2;
+	}
+
 	/*
 	 * The read I/O has completed.  Print the contents of the
 	 *  buffer, free the buffer, then mark the sequence as
@@ -113,7 +132,6 @@ read_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 */
 	printf("%s", sequence->buf);
 	spdk_free(sequence->buf);
-	sequence->is_completed = 1;
 }
 
 static void
@@ -123,6 +141,17 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	struct ns_entry			*ns_entry = sequence->ns_entry;
 	int				rc;
 
+	/* See if an error occurred. If so, display information
+	 * about it, and set completion value so that I/O
+	 * caller is aware that an error occurred.
+	 */
+	if (spdk_nvme_cpl_is_error(completion)) {
+		spdk_nvme_qpair_print_completion(sequence->ns_entry->qpair, (struct spdk_nvme_cpl *)completion);
+		fprintf(stderr, "I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		fprintf(stderr, "Write I/O failed, aborting run\n");
+		sequence->is_completed = 2;
+		exit(1);
+	}
 	/*
 	 * The write I/O has completed.  Free the buffer associated with
 	 *  the write I/O and allocate a new zeroed buffer for reading
@@ -136,7 +165,11 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	sequence->buf = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 
 	rc = spdk_nvme_ns_cmd_read(ns_entry->ns, ns_entry->qpair, sequence->buf,
+#if FAIL_READ
+				   -1, /* Bad LBA start */
+#else
 				   0, /* LBA start */
+#endif
 				   1, /* number of LBAs */
 				   read_complete, (void *)sequence, 0);
 	if (rc != 0) {
@@ -217,7 +250,11 @@ hello_world(void)
 		 *  process.
 		 */
 		rc = spdk_nvme_ns_cmd_write(ns_entry->ns, ns_entry->qpair, sequence.buf,
+#if FAIL_WRITE
+					    -1, /* Bad LBA start */
+#else
 					    0, /* LBA start */
+#endif
 					    1, /* number of LBAs */
 					    write_complete, &sequence, 0);
 		if (rc != 0) {
@@ -300,7 +337,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		if (ns == NULL) {
 			continue;
 		}
-		register_ns(ctrlr, ns);
+		register_ns(ctrlr, ns, nsid);
 	}
 }
 

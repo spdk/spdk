@@ -977,10 +977,7 @@ uint64_t nvme_get_quirks(const struct spdk_pci_id *id);
 int	nvme_robust_mutex_init_shared(pthread_mutex_t *mtx);
 int	nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx);
 
-const char *spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status);
 bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
-void	nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd);
-void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl);
 
 struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	const struct spdk_nvme_transport_id *trid);
