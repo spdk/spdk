@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f42071bf_66cf027b",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T16:06:16Z",
+      "side": 1,
+      "message": "should we put this in include/spdk_internal/log.h instead?  it\u0027s similar to SPDK_LOGDUMP which exists in that file\n\nit might also be good to add this in a separate patch, but it\u0027s fine adding it in this patch too",
+      "revId": "b4a0506df909866c267aac2ea656b5177df7a65b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2defb6ae_a8cd3ae1",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4462,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T16:06:16Z",
+      "side": 1,
+      "message": "iscsi bhs is always exactly 48 bytes - no matter the opcode - so I think this switch statement is not needed, just always dump sizeof(struct iscsi_bhs) which is 48 bytes",
+      "revId": "b4a0506df909866c267aac2ea656b5177df7a65b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
