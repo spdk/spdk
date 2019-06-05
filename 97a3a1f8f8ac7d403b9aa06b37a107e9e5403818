@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31f28841_33a7108c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T14:51:47Z",
+      "side": 1,
+      "message": "Could you add:\n\nFixes issue #789.",
+      "revId": "97a3a1f8f8ac7d403b9aa06b37a107e9e5403818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
