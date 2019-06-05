@@ -183,6 +183,29 @@
       "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0a6e7d9_e2f793db",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-05T13:55:24Z",
+      "side": 1,
+      "message": "You could actually do just spdk_vtophys() to check if the address is valid.\n\nIn the virtio lib we read pagemap because we need to get hugetlbfs file descriptors, but here we don\u0027t.",
+      "range": {
+        "startLine": 287,
+        "startChar": 2,
+        "endLine": 293,
+        "endChar": 3
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
