@@ -2346,6 +2346,32 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
 		uint8_t opc);
 
+/**
+ * \brief Given NVMe status, return ASCII string for that error.
+ *
+ * \param status Status from NVMe completion queue element.
+ * \return Returns status as an ASCII string.
+ */
+const char *spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status);
+
+/**
+ * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe submission queue entry (command).
+ *
+ * \param qpair Pointer to the NVMe queue pair - used to determine admin versus I/O queue.
+ * \param cmd Pointer to the submission queue command to be formatted.
+ */
+void spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair,
+				   struct spdk_nvme_cmd *cmd);
+
+/**
+ * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe completion queue entry.
+ *
+ * \param qpair Pointer to the NVMe queue pair - presently unused.
+ * \param cpl Pointer to the completion queue element to be formatted.
+ */
+void spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
+				      struct spdk_nvme_cpl *cpl);
+
 #ifdef SPDK_CONFIG_RDMA
 struct ibv_context;
 struct ibv_pd;
