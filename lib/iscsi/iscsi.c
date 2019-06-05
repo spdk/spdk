@@ -3467,14 +3467,14 @@ iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		SPDK_NOTICELOG("ABORT_TASK\n");
 
 		iscsi_op_abort_task(task, ref_task_tag);
-		return SPDK_SUCCESS;
+		return 0;
 
 	/* abort all tasks issued via this session on the LUN */
 	case ISCSI_TASK_FUNC_ABORT_TASK_SET:
 		SPDK_NOTICELOG("ABORT_TASK_SET\n");
 
 		spdk_iscsi_op_abort_task_set(task, SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET);
-		return SPDK_SUCCESS;
+		return 0;
 
 	case ISCSI_TASK_FUNC_CLEAR_TASK_SET:
 		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
@@ -3490,7 +3490,7 @@ iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		SPDK_NOTICELOG("LOGICAL_UNIT_RESET\n");
 
 		spdk_iscsi_op_abort_task_set(task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
-		return SPDK_SUCCESS;
+		return 0;
 
 	case ISCSI_TASK_FUNC_TARGET_WARM_RESET:
 		SPDK_NOTICELOG("TARGET_WARM_RESET (Unsupported)\n");
@@ -3598,7 +3598,7 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	if (task_tag == 0xffffffffU) {
 		if (I_bit == 1) {
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got NOPOUT ITT=0xffffffff\n");
-			return SPDK_SUCCESS;
+			return 0;
 		} else {
 			SPDK_ERRLOG("got NOPOUT ITT=0xffffffff, I=0\n");
 			return SPDK_ISCSI_CONNECTION_FATAL;
@@ -3647,7 +3647,7 @@ iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
 	conn->last_nopin = spdk_get_ticks();
 
-	return SPDK_SUCCESS;
+	return 0;
 }
 
 static int
@@ -3676,7 +3676,7 @@ add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	 */
 	if (conn->pending_r2t >= DEFAULT_MAXR2T) {
 		TAILQ_INSERT_TAIL(&conn->queued_r2t_tasks, task, link);
-		return SPDK_SUCCESS;
+		return 0;
 	}
 
 	conn->data_out_cnt += data_out_req;
@@ -3711,7 +3711,7 @@ add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	}
 
 	TAILQ_INSERT_TAIL(&conn->active_r2t_tasks, task, link);
-	return SPDK_SUCCESS;
+	return 0;
 }
 
 /* If there are additional large writes queued for R2Ts, start them now.
@@ -4385,7 +4385,7 @@ iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
 
-	return SPDK_SUCCESS;
+	return 0;
 }
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
