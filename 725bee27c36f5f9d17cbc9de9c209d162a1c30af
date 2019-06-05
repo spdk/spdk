@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "841bf536_eb4c3e33",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:54:46Z",
+      "side": 1,
+      "message": "The field is part of the config that\u0027s used during creation so it should be saved in write_config function (which is one of the places where this structure is used)",
+      "parentUuid": "83e1840d_8b4552fe",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 145,
+        "endChar": 24
+      },
+      "revId": "725bee27c36f5f9d17cbc9de9c209d162a1c30af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e3723651_49a04ec4",
         "filename": "lib/bdev/nvme/bdev_ftl.h",
         "patchSetId": 5
@@ -45,6 +69,30 @@
       "revId": "725bee27c36f5f9d17cbc9de9c209d162a1c30af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4f27df0_862063c3",
+        "filename": "lib/bdev/nvme/bdev_ftl.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-05T10:54:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3723651_49a04ec4",
+      "range": {
+        "startLine": 68,
+        "startChar": 10,
+        "endLine": 68,
+        "endChar": 23
+      },
+      "revId": "725bee27c36f5f9d17cbc9de9c209d162a1c30af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
