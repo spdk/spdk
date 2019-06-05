@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "c9ea0f4e_690efe68",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T17:37:17Z",
+      "side": 1,
+      "message": "This needs more context. How about this:\n\nAdd spdk_sock_get_optimal_sock_group(), which returns the optimal sock group for this socket. When a socket is created, it is often assigned to a sock group using spdk_sock_group_add_sock so that a set of sockets can be polled more efficiently. For some network devices, it is optimal to assign particular sockets to specific sock groups. This API is intended to provide the user with that information.",
+      "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d409128a_ff7836f1",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T17:37:17Z",
+      "side": 1,
+      "message": "Get the optimal sock group for this sock.",
+      "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98fa9901_72c9d1fd",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T17:37:17Z",
+      "side": 1,
+      "message": "\\param sock The socket\n\\param group Returns the optimal sock group. If there is no optimal sock group, returns NULL.",
+      "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cdfe713_1c1217ac",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-05T17:37:17Z",
+      "side": 1,
+      "message": "returns 0 on success. Negated errno on failure.",
+      "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "82d67054_63f99b94",
         "filename": "lib/sock/sock.c",
         "patchSetId": 14
