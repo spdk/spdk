@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff5f750e_3155db8a",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1921,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-05T05:59:25Z",
+      "side": 1,
+      "message": "Keep the original comment is fine here, version_min \u003e ISCSI_VERSION is the error case.",
+      "range": {
+        "startLine": 1921,
+        "startChar": 1,
+        "endLine": 1921,
+        "endChar": 50
+      },
+      "revId": "a08e6c7e13e991390c2851b3f5a960928f203d62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
