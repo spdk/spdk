@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "6f496134_55cd3728",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T08:00:41Z",
+      "side": 1,
+      "message": "Actually I don\u0027t think we need this for rm -f, as it returns 0 even if the file doesn\u0027t exist. I was rather thinking about the delete_ftl_bdev call + killing the bdev_svc.",
+      "parentUuid": "60c2043e_625082eb",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 18
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6d0c24ab_8b8728ac",
         "filename": "test/ftl/dirty_shutdown.sh",
         "patchSetId": 1
@@ -281,6 +305,30 @@
       "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a2054fa_7fb8c0be",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T08:00:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e29466aa_543564a3",
+      "range": {
+        "startLine": 74,
+        "startChar": 22,
+        "endLine": 74,
+        "endChar": 46
+      },
+      "revId": "faacf6bf18a6efcc32e1b2b0602c493900931525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {

@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff8c5a0d_4bb867e7",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T08:00:41Z",
+      "side": 1,
+      "message": "I wouldn\u0027t mention bad chunks, as right now this test only works reliably if whole band is filled with good chunks.",
+      "range": {
+        "startLine": 51,
+        "startChar": 107,
+        "endLine": 51,
+        "endChar": 117
+      },
+      "revId": "b352e07912745bf9f0b8c6302b18697ae1e083a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c9b1ea1_ed37b3fa",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T08:00:41Z",
+      "side": 1,
+      "message": "Why unlink instead of rm?",
+      "range": {
+        "startLine": 68,
+        "startChar": 1,
+        "endLine": 68,
+        "endChar": 8
+      },
+      "revId": "b352e07912745bf9f0b8c6302b18697ae1e083a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd425a25_ba3c275a",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T08:00:41Z",
+      "side": 1,
+      "message": "Add \"-f\" to the rm to avoid prompts.",
+      "range": {
+        "startLine": 69,
+        "startChar": 1,
+        "endLine": 69,
+        "endChar": 4
+      },
+      "revId": "b352e07912745bf9f0b8c6302b18697ae1e083a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db2fd985_f80b04f0",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-05T08:00:41Z",
+      "side": 1,
+      "message": "What\u0027s the reason for this?",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 0
+      },
+      "revId": "b352e07912745bf9f0b8c6302b18697ae1e083a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
