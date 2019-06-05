@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfc6e06d_7577b6ae",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-05T06:09:10Z",
+      "side": 1,
+      "message": "This is actually outdated and needs to be removed.\n\nI think we can remove this entire comment (lines #63-#76). If someone wants to use VMD, he needs a guide, not a comment in lsvmd.c.",
+      "range": {
+        "startLine": 73,
+        "startChar": 25,
+        "endLine": 73,
+        "endChar": 75
+      },
+      "revId": "89d5a0fbf6aa4840e4b89fb6ec86e6f1cf3f2a59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
