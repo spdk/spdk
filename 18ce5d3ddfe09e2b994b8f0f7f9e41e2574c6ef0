@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3dfba6e_a391645b",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-05T04:01:05Z",
+      "side": 0,
+      "message": "Will this state be finally removed.",
+      "range": {
+        "startLine": 430,
+        "startChar": 10,
+        "endLine": 430,
+        "endChar": 21
+      },
+      "revId": "18ce5d3ddfe09e2b994b8f0f7f9e41e2574c6ef0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
