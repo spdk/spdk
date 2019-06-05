@@ -168,7 +168,8 @@ function vhost_kill()
 		return 0
 	fi
 
-	local vhost_pid_file="$(get_vhost_dir $vhost_name)/vhost.pid"
+	local vhost_dir="$(get_vhost_dir $vhost_name)"
+	local vhost_pid_file="$vhost_dir/vhost.pid"
 
 	if [[ ! -r $vhost_pid_file ]]; then
 		warning "no vhost pid file found"
@@ -179,19 +180,19 @@ function vhost_kill()
 	local vhost_pid="$(cat $vhost_pid_file)"
 	notice "killing vhost (PID $vhost_pid) app"
 
-	if /bin/kill -INT $vhost_pid >/dev/null; then
+	if kill -INT $vhost_pid > /dev/null; then
 		notice "sent SIGINT to vhost app - waiting 60 seconds to exit"
 		for ((i=0; i<60; i++)); do
-			if /bin/kill -0 $vhost_pid; then
+			if kill -0 $vhost_pid; then
 				echo "."
 				sleep 1
 			else
 				break
 			fi
 		done
-		if /bin/kill -0 $vhost_pid; then
+		if kill -0 $vhost_pid; then
 			error "ERROR: vhost was NOT killed - sending SIGABRT"
-			/bin/kill -ABRT $vhost_pid
+			kill -ABRT $vhost_pid
 			rm $vhost_pid_file
 			rc=1
 		else
@@ -199,17 +200,19 @@ function vhost_kill()
 				echo "."
 			done
 		fi
-	elif /bin/kill -0 $vhost_pid; then
+	elif kill -0 $vhost_pid; then
 		error "vhost NOT killed - you need to kill it manually"
 		rc=1
 	else
-		notice "vhost was no running"
+		notice "vhost was not running"
 	fi
 
 	timing_exit vhost_kill
 	if [[ $rc == 0 ]]; then
 		rm $vhost_pid_file
 	fi
+
+	rm -rf $vhost_dir
 
 	return $rc
 }
