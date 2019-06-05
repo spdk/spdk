@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3793e795_e87d43f7",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T16:22:33Z",
+      "side": 1,
+      "message": "this should differentiate between 1 (No VMD controllers found) and -1 (Some kind of enumeration error)",
+      "revId": "1f22720b4377f388b352a475ef9550765c88551f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47b5df6f_f1ceef8c",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-06-05T16:22:33Z",
+      "side": 1,
+      "message": "this can also return 1 if a device was not attached, but there was no error (see spdk_pci_enumerate documentation)",
+      "revId": "1f22720b4377f388b352a475ef9550765c88551f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
