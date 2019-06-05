@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
+#include "spdk/vmd.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
@@ -430,6 +431,10 @@ static int spdk_fio_setup(struct thread_data *td)
 		rc = pthread_create(&g_ctrlr_thread_id, NULL, &spdk_fio_poll_ctrlrs, NULL);
 		if (rc != 0) {
 			SPDK_ERRLOG("Unable to spawn a thread to poll admin queues. They won't be polled.\n");
+		}
+
+		if (spdk_vmd_init()) {
+			SPDK_ERRLOG("Failed to initialize VMD. Some NVMe devices can be unavailable.\n");
 		}
 	}
 
