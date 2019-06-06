@@ -258,14 +258,12 @@ blockdev_heads_destroy(void)
 }
 
 static int
-bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
+bdevperf_construct_target(struct spdk_bdev *bdev)
 {
 	struct io_target *target;
 	size_t align;
 	int block_size, data_block_size;
-	int rc;
-
-	*_target = NULL;
+	int rc, index;
 
 	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
@@ -335,32 +333,29 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 	target->reset_timer = NULL;
 	TAILQ_INIT(&target->task_list);
 
-	*_target = target;
+	/* Mapping each created target to lcore */
+	index = g_target_count % spdk_env_get_core_count();
+	target->next = g_head[index];
+	target->lcore = g_coremap[index];
+	g_head[index] = target;
+	g_target_count++;
+
 	return 0;
 }
 
 static void
 bdevperf_construct_targets(void)
 {
-	int index = 0;
 	struct spdk_bdev *bdev;
-	struct io_target *target;
 	int rc;
 
 	bdev = spdk_bdev_first_leaf();
 	while (bdev != NULL) {
-		rc = bdevperf_construct_target(bdev, &target);
+		rc = bdevperf_construct_target(bdev);
 		if (rc != 0) {
 			return;
 		}
-		if (target != NULL) {
-			/* Mapping each created target to lcore */
-			index = g_target_count % spdk_env_get_core_count();
-			target->next = g_head[index];
-			target->lcore = g_coremap[index];
-			g_head[index] = target;
-			g_target_count++;
-		}
+
 		bdev = spdk_bdev_next_leaf(bdev);
 	}
 }
