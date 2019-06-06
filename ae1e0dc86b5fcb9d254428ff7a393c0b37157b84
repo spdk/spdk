@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ebbc982b_6be97477",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1569,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-06T01:17:00Z",
+      "side": 1,
+      "message": "There are cases from application layer like iSCSI and zero copy API will not set the data buffer, these requests will allocate data buffer in bdev layer, so I need to make it to NULL to test such cases.",
+      "parentUuid": "335c97b5_c63b9e8f",
+      "revId": "ae1e0dc86b5fcb9d254428ff7a393c0b37157b84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1dc7faec_ec16baaa",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 13
