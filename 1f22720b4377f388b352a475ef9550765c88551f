@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1cb93f92_44304119",
+        "filename": "examples/vmd/lsvmd/lsvmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-06T07:52:19Z",
+      "side": 1,
+      "message": "In current implementation spdk_vmd_init() calls spdk_pci_enumerate(), so we can only have -1 or 0 on return. Do you think that we should return 1 from spdk_vmd_init() if we didn\u0027t find any VMD controllers?\nI was thinking that we should just try to attach all existing VMD controllers and if someone will try to use NVMe device behind VMD conroller which dosen\u0027t exist it fail on spdk_nvme_connect().",
+      "parentUuid": "3793e795_e87d43f7",
+      "revId": "1f22720b4377f388b352a475ef9550765c88551f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "47b5df6f_f1ceef8c",
         "filename": "include/spdk/vmd.h",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-06-05T16:22:33Z",
       "side": 1,
       "message": "this can also return 1 if a device was not attached, but there was no error (see spdk_pci_enumerate documentation)",
+      "revId": "1f22720b4377f388b352a475ef9550765c88551f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d78bfad_ac970709",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-06T07:52:19Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nI think that you are looking on error codes from callback passed to spdk_pci_enumerate.\nspdk_pci_enumerate can only return 0 or -1.\nspdk_pci_enumerate documentation: \"return -1 if an internal error occured or the provided callback returned -1, 0 otherwise\"\n\nvmd_enum_cb() passed to spdk_pci_enumerate returns 0 or -1 in current implementation, so we have only case where VMD device was attached successfully or there was an error.\n\n-Wojtek",
+      "parentUuid": "47b5df6f_f1ceef8c",
       "revId": "1f22720b4377f388b352a475ef9550765c88551f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
