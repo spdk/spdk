@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "60e473dd_727275f7",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T11:11:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d79d1534_d0b402c1",
+      "revId": "847c32cedb85197d90ec4cdc6bc89ad96134ee68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33726339_e984bf05",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 1
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "b9a0818d_2e62be7f",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T11:11:04Z",
+      "side": 1,
+      "message": "Done, see https://review.gerrithub.io/c/spdk/spdk/+/457089",
+      "parentUuid": "33726339_e984bf05",
+      "range": {
+        "startLine": 362,
+        "startChar": 0,
+        "endLine": 369,
+        "endChar": 3
+      },
+      "revId": "847c32cedb85197d90ec4cdc6bc89ad96134ee68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08fcff69_6d9be01a",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 1
@@ -53,6 +95,30 @@
       "writtenOn": "2019-06-06T08:40:55Z",
       "side": 1,
       "message": "You could check if g_target_bdev was provided here and call either bdevperf_construct_target() for that particular bdev or bdevperf_construct_targets().",
+      "range": {
+        "startLine": 977,
+        "startChar": 1,
+        "endLine": 977,
+        "endChar": 30
+      },
+      "revId": "847c32cedb85197d90ec4cdc6bc89ad96134ee68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15541cfb_8ae1aad9",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 977,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T11:11:04Z",
+      "side": 1,
+      "message": "I\u0027ve done that check inside bdevperf_construct_targets to keep all the code constructing targets inside that function.",
+      "parentUuid": "08fcff69_6d9be01a",
       "range": {
         "startLine": 977,
         "startChar": 1,
