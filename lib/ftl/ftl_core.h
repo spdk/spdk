@@ -498,6 +498,14 @@ ftl_nv_cache_next_phase(unsigned int current)
 	return phases[current];
 }
 
+static inline unsigned int
+ftl_nv_cache_prev_phase(unsigned int current)
+{
+	static const unsigned int phases[] = { 0, 3, 1, 2 };
+	assert(ftl_nv_cache_phase_is_valid(current));
+	return phases[current];
+}
+
 static inline uint64_t
 ftl_nv_cache_pack_lba(uint64_t lba, unsigned int phase)
 {
