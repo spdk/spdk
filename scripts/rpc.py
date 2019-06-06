@@ -139,13 +139,11 @@ if __name__ == "__main__":
     def construct_compress_bdev(args):
         print_string(rpc.bdev.construct_compress_bdev(args.client,
                                                       base_bdev_name=args.base_bdev_name,
-                                                      pm_path=args.pm_path,
-                                                      comp_pmd=args.comp_pmd))
+                                                      pm_path=args.pm_path))
     p = subparsers.add_parser('construct_compress_bdev',
                               help='Add a compress vbdev')
     p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
     p.add_argument('-p', '--pm_path', help="Path to persistent memory")
-    p.add_argument('-d', '--comp_pmd', help="Name of the compression device driver")
     p.set_defaults(func=construct_compress_bdev)
 
     def delete_compress_bdev(args):
