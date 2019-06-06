@@ -41,7 +41,6 @@
 struct rpc_construct_compress {
 	char *base_bdev_name;
 	char *pm_path;
-	char *comp_pmd;
 };
 
 /* Free the allocated memory resource after the RPC handling. */
@@ -50,14 +49,12 @@ free_rpc_construct_compress(struct rpc_construct_compress *r)
 {
 	free(r->base_bdev_name);
 	free(r->pm_path);
-	free(r->comp_pmd);
 }
 
 /* Structure to decode the input parameters for this RPC method. */
 static const struct spdk_json_object_decoder rpc_construct_compress_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_compress, base_bdev_name), spdk_json_decode_string},
 	{"pm_path", offsetof(struct rpc_construct_compress, pm_path), spdk_json_decode_string},
-	{"comp_pmd", offsetof(struct rpc_construct_compress, comp_pmd), spdk_json_decode_string},
 };
 
 /* Decode the parameters for this RPC method and properly construct the compress
@@ -79,7 +76,7 @@ spdk_rpc_construct_compress_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = create_compress_bdev(req.base_bdev_name, req.pm_path, req.comp_pmd);
+	rc = create_compress_bdev(req.base_bdev_name, req.pm_path);
 	if (rc != 0) {
 		goto invalid;
 	}
