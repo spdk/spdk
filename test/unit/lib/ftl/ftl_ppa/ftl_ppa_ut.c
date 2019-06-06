@@ -112,7 +112,7 @@ cleanup(void)
 }
 
 static void
-test_ppa_pack(void)
+test_ppa_pack32(void)
 {
 	struct ftl_ppa orig = {}, ppa;
 
@@ -144,6 +144,45 @@ test_ppa_pack(void)
 	ppa = ftl_ppa_from_packed(g_dev, ppa);
 	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
 	CU_ASSERT_TRUE(ftl_ppa_cached(ppa));
+	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+	clean_l2p();
+}
+
+static void
+test_ppa_pack64(void)
+{
+	struct ftl_ppa orig = {}, ppa;
+
+	orig.lbk = 4;
+	orig.chk = 3;
+	orig.pu = 2;
+	orig.grp = 1;
+
+	/* Check valid address transformation */
+	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
+	ppa = ftl_ppa_addr_unpack(g_dev, ppa.ppa);
+	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
+	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+
+	orig.lbk = 0x7ea0be0f;
+	orig.chk = 0x6;
+	orig.pu = 0x4;
+	orig.grp = 0x2;
+
+	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
+	ppa = ftl_ppa_addr_unpack(g_dev, ppa.ppa);
+	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
+	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+
+	/* Check maximum valid address for ppaf */
+	orig.lbk = 0x7fffffff;
+	orig.chk = 0xf;
+	orig.pu = 0x7;
+	orig.grp = 0x3;
+
+	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
+	ppa = ftl_ppa_addr_unpack(g_dev, ppa.ppa);
+	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
 	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
 	clean_l2p();
 }
@@ -248,7 +287,7 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite32, "test_ppa_pack",
-			    test_ppa_pack) == NULL
+			    test_ppa_pack32) == NULL
 		|| CU_add_test(suite32, "test_ppa32_invalid",
 			       test_ppa_invalid) == NULL
 		|| CU_add_test(suite32, "test_ppa32_trans",
@@ -261,6 +300,8 @@ main(int argc, char **argv)
 			       test_ppa_trans) == NULL
 		|| CU_add_test(suite64, "test_ppa64_cached",
 			       test_ppa_cached) == NULL
+		|| CU_add_test(suite64, "test_ppa64_pack",
+			       test_ppa_pack64) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

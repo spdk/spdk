@@ -307,10 +307,17 @@ ftl_ppa_cached(struct ftl_ppa ppa)
 static inline uint64_t
 ftl_ppa_addr_pack(const struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 {
-	return (ppa.lbk << dev->ppaf.lbk_offset) |
-	       (ppa.chk << dev->ppaf.chk_offset) |
-	       (ppa.pu  << dev->ppaf.pu_offset) |
-	       (ppa.grp << dev->ppaf.grp_offset);
+	uint64_t lbk, chk, pu, grp;
+
+	lbk = ppa.lbk;
+	chk = ppa.chk;
+	pu = ppa.pu;
+	grp = ppa.grp;
+
+	return (lbk << dev->ppaf.lbk_offset) |
+	       (chk << dev->ppaf.chk_offset) |
+	       (pu  << dev->ppaf.pu_offset) |
+	       (grp << dev->ppaf.grp_offset);
 }
 
 static inline struct ftl_ppa
