@@ -1353,7 +1353,8 @@ iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 		rc = spdk_iscsi_read_pdu(conn, &pdu);
 		if (rc == 0) {
 			break;
-		} else if (rc == SPDK_ISCSI_CONNECTION_FATAL) {
+		} else if (rc < 0) {
+			SPDK_ERRLOG("Failed to read pdu, error=%d\n", rc);
 			return rc;
 		}
 
@@ -1365,7 +1366,7 @@ iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 
 		rc = spdk_iscsi_execute(conn, pdu);
 		spdk_put_pdu(pdu);
-		if (rc != 0) {
+		if (rc < 0) {
 			SPDK_ERRLOG("spdk_iscsi_execute() fatal error on %s(%s)\n",
 				    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
 				    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
