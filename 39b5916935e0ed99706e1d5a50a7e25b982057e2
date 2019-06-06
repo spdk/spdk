@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0da4ed89_fa397ea9",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T05:16:57Z",
+      "side": 1,
+      "message": "This should be just `rm -f`",
+      "range": {
+        "startLine": 79,
+        "startChar": 9,
+        "endLine": 79,
+        "endChar": 10
+      },
+      "revId": "39b5916935e0ed99706e1d5a50a7e25b982057e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
