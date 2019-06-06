@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "967a31ea_139cf815",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T20:42:25Z",
+      "side": 1,
+      "message": "We usually put declarations in a single line, only definitions are split.",
+      "revId": "e406572c2211b3a96783eb3ca0ce3ea5adfd8fcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
