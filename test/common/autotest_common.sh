@@ -325,6 +325,67 @@ function process_shm() {
 	return 0
 }
 
+function forcekillbdevsvc() {
+	# $1 = bdev_svc pid
+	if [ -z "$1" ]; then
+		exit 1
+	fi
+
+	local rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
+
+	if hash ip &>/dev/null; then
+		local have_ip_cmd=true
+	else
+		local have_ip_cmd=false
+	fi
+
+	if hash ss &>/dev/null; then
+		local have_ss_cmd=true
+	else
+		local have_ss_cmd=false
+	fi
+
+	xtrace_disable
+	local ret=0
+	local i
+
+	kill -9 $1
+	rm -f $rpc_addr
+	rm -f /var/run/spdk_bdev-1
+
+	# Sometimes the socket is still visible in the system for some time after the kill, wait until it's clear
+	for (( i = 40; i != 0; i-- )); do
+		if $have_ip_cmd; then
+			namespace=$(ip netns identify $1)
+			if [ -n "$namespace" ]; then
+				ns_cmd="ip netns exec $namespace"
+			fi
+		fi
+
+		if $have_ss_cmd; then
+			if ! $ns_cmd ss -ln | egrep -q "\s+$rpc_addr\s+"; then
+				break
+			fi
+		elif [[ "$(uname -s)" == "Linux" ]]; then
+			# For Linux, if system doesn't have ss, just assume it has netstat
+			if ! $ns_cmd netstat -an | grep -iw LISTENING | egrep -q "\s+$rpc_addr\$"; then
+				break
+			fi
+		else
+			break;
+		fi
+		sleep 0.5
+	done
+
+	if (( i == 0 )); then
+		echo "ERROR: timeout while waiting for process (pid: $1) to stop listening on '$rpc_addr'"
+		ret=1
+	fi
+
+	xtrace_restore
+	return $ret
+}
+
 function waitforlisten() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
