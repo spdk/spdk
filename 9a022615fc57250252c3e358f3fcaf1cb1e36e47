@@ -187,6 +187,30 @@
       "revId": "9a022615fc57250252c3e358f3fcaf1cb1e36e47",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62e706a8_478b7687",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T11:13:39Z",
+      "side": 1,
+      "message": "So maybe we could set this state in restore instead of here? And just assert here that band-\u003estate \u003d\u003d FTL_BAND_STATE_CLOSED?",
+      "parentUuid": "580f7aeb_5960d79f",
+      "range": {
+        "startLine": 450,
+        "startChar": 1,
+        "endLine": 450,
+        "endChar": 34
+      },
+      "revId": "9a022615fc57250252c3e358f3fcaf1cb1e36e47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
