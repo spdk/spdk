@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30a06640_7ac6928f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T15:39:20Z",
+      "side": 1,
+      "message": "For future reference: in cases like this please directly include the relevant log snippets. Such URLs will eventually expire and won\u0027t be useful anymore. In general it\u0027s easier to see a few lines of logs rather than having to browse the entire autotest log.",
+      "revId": "42699d4477aebabf6d9351141ba9d739aafdc245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
