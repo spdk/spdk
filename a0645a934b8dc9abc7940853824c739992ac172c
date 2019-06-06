@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "92033e01_ac2cf746",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-06T00:32:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c9ea0f4e_690efe68",
+      "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d409128a_ff7836f1",
         "filename": "include/spdk/sock.h",
         "patchSetId": 14
@@ -30,6 +48,24 @@
       "writtenOn": "2019-06-05T17:37:17Z",
       "side": 1,
       "message": "Get the optimal sock group for this sock.",
+      "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1bcbdb8_fcc13e8e",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-06T00:32:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d409128a_ff7836f1",
       "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "38c84288_34c11a54",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-06T00:32:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "98fa9901_72c9d1fd",
+      "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2cdfe713_1c1217ac",
         "filename": "include/spdk/sock.h",
         "patchSetId": 14
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "8cb80f9b_4f813972",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-06T00:32:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2cdfe713_1c1217ac",
+      "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "82d67054_63f99b94",
         "filename": "lib/sock/sock.c",
         "patchSetId": 14
@@ -81,6 +153,24 @@
       "writtenOn": "2019-06-05T17:33:03Z",
       "side": 1,
       "message": "Having looked at the new version a bit, I\u0027m going to make another suggestion here. You have a map of placement_id -\u003e group. The group is ref counted for each socket. You then have these three functions (ignore spdk_sock_remove_sock_group_from_map_table for now because it is special):\n\nspdk_sock_map_placement_id_to_group\nspdk_sock_remove_placement_id_from_map_list\nspdk_sock_find_sock_group_from_map_list\n\nI\u0027d model this using these three operations:\n\n/* Look up the group for a placement_id. Do not take a reference. */\nstatic struct spdk_sock_group *group\nspdk_sock_map_lookup(int placement_id);\n\n/* Insert a group into the placement map. If the group is already in the map, take a reference. */\nstatic void\nspdk_sock_map_insert(int placement_id, struct spdk_sock_group *group);\n\n/* Release a reference to the group for a given placement_id. If the reference count is 0, remove the group. */\nstatic void\nspdk_sock_map_release(int placement_id);\n\nI think this gets rid of the weird bool parameter on the current find operation and makes the API more intuitive. You\u0027ll still need a fourth function to forcibly remove a group from the map anywhere that it appears (i.e. spdk_sock_remove_sock_group_from_map_table) that\u0027s used in the shutdown path.",
+      "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45673ea8_a2abe3d4",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-06T00:32:28Z",
+      "side": 1,
+      "message": "Hi Ben, \nI am fine to rename these functions.",
+      "parentUuid": "82d67054_63f99b94",
       "revId": "a0645a934b8dc9abc7940853824c739992ac172c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
