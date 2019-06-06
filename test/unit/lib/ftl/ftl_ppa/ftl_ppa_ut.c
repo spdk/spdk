@@ -149,6 +149,24 @@ test_ppa_pack(void)
 }
 
 static void
+test_ppa_pack64(void)
+{
+	struct ftl_ppa orig = {}, ppa;
+
+	orig.lbk = 4;
+	orig.chk = 3;
+	orig.pu = 2;
+	orig.grp = 1;
+
+	/* Check valid address transformation */
+	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
+	ppa = ftl_ppa_addr_unpack(g_dev, ppa.ppa);
+	CU_ASSERT_FALSE(ftl_ppa_invalid(ppa));
+	CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
+	clean_l2p();
+}
+
+static void
 test_ppa_trans(void)
 {
 	struct ftl_ppa ppa = {}, orig = {};
@@ -261,6 +279,8 @@ main(int argc, char **argv)
 			       test_ppa_trans) == NULL
 		|| CU_add_test(suite64, "test_ppa64_cached",
 			       test_ppa_cached) == NULL
+		|| CU_add_test(suite64, "test_ppa64_pack",
+			       test_ppa_pack64) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
