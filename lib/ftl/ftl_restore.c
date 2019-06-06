@@ -51,8 +51,11 @@ struct ftl_restore_band {
 	STAILQ_ENTRY(ftl_restore_band)	stailq;
 };
 
+struct ftl_nv_cache_restore;
+
 /* Describes single phase to be restored from non-volatile cache */
 struct ftl_nv_cache_range {
+	struct ftl_nv_cache_restore	*parent;
 	/* Start offset */
 	uint64_t			start_addr;
 	/* Last block's address */
@@ -62,9 +65,15 @@ struct ftl_nv_cache_range {
 	 * and the starting block due to range overlap)
 	 */
 	uint64_t			num_blocks;
+	/* Number of blocks already recovered */
+	uint64_t			num_recovered;
+	/* Current address during recovery */
+	uint64_t			current_addr;
+	/* Phase of the range */
+	unsigned int			phase;
+	/* Indicates whether the data from this range needs to be recoevered */
+	bool				recovery;
 };
-
-struct ftl_nv_cache_restore;
 
 struct ftl_nv_cache_block {
 	struct ftl_nv_cache_restore	*parent;
@@ -96,6 +105,10 @@ struct ftl_nv_cache_restore {
 	size_t				num_outstanding;
 	/* Recovery/scan status */
 	int				status;
+	/* Recover the data from non-volatile cache */
+	bool				recovery;
+	/* Current phase of the recovery */
+	unsigned int			phase;
 };
 
 struct ftl_restore {
@@ -441,36 +454,27 @@ ftl_nv_cache_restore_complete(struct ftl_nv_cache_restore *restore, int status)
 	}
 }
 
+static void ftl_nv_cache_block_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+
 static void
-ftl_nv_cache_scan_done(struct ftl_nv_cache_restore *restore)
+ftl_nv_cache_recovery_done(struct ftl_nv_cache_restore *restore)
 {
 	struct ftl_nv_cache *nv_cache = restore->nv_cache;
 	struct ftl_nv_cache_range *range;
 	struct spdk_bdev *bdev;
+	unsigned int phase = nv_cache->phase;
 	uint64_t current_addr;
-	unsigned int phase;
 
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-	phase = nv_cache->phase;
 
-#if defined(DEBUG)
-	uint64_t i, num_blocks = 0;
-	for (i = 0; i < FTL_NV_CACHE_PHASE_COUNT; ++i) {
-		range = &restore->range[i];
-		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Range %"PRIu64": %"PRIu64"-%"PRIu64" (%" PRIu64
-			      ")\n", i, range->start_addr, range->last_addr, range->num_blocks);
-		num_blocks += range->num_blocks;
-	}
-	assert(num_blocks == nv_cache->num_data_blocks);
-#endif
 	/* The latest phase is the one written in the header (set in nvc_cache->phase) */
 	range = &restore->range[phase];
 	current_addr = range->last_addr + 1;
 
 	/*
-	 * The first range might be empty (only the header was written) or the range might end at
-	 * the last available address, in which case set current address to the beginning of the
-	 * device.
+	 * The first range might be empty (only the header was written) or the range might
+	 * end at the last available address, in which case set current address to the
+	 * beginning of the device.
 	 */
 	if (range->num_blocks == 0 || current_addr >= spdk_bdev_get_num_blocks(bdev)) {
 		current_addr = 1;
@@ -485,6 +489,199 @@ ftl_nv_cache_scan_done(struct ftl_nv_cache_restore *restore)
 		      PRIu64")\n", phase, current_addr);
 
 	ftl_nv_cache_restore_complete(restore, 0);
+}
+
+static void
+ftl_nv_cache_recover_block(struct ftl_nv_cache_block *block)
+{
+	struct ftl_nv_cache_restore *restore = block->parent;
+	struct ftl_nv_cache *nv_cache = restore->nv_cache;
+	struct ftl_nv_cache_range *range = &restore->range[restore->phase];
+	int rc;
+
+	assert(range->current_addr <= range->last_addr);
+
+	restore->num_outstanding++;
+	block->offset = range->current_addr++;
+	rc = spdk_bdev_read_blocks_with_md(nv_cache->bdev_desc, restore->ioch,
+					   block->buf, block->md_buf,
+					   block->offset, 1, ftl_nv_cache_block_read_cb,
+					   block);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Non-volatile cache restoration failed on block %"PRIu64" (%s)\n",
+			    block->offset, spdk_strerror(-rc));
+		restore->num_outstanding--;
+		ftl_nv_cache_restore_complete(restore, rc);
+	}
+}
+
+static void
+ftl_nv_cache_recover_range(struct ftl_nv_cache_restore *restore)
+{
+	struct ftl_nv_cache_range *range;
+	unsigned int phase = restore->phase;
+
+	do {
+		/* Find first range with non-zero number of blocks that is marked for recovery */
+		range = &restore->range[phase];
+		if (range->recovery && range->num_recovered < range->num_blocks) {
+			break;
+		}
+
+		phase = ftl_nv_cache_next_phase(phase);
+	} while (phase != restore->phase);
+
+	/* There are no ranges to be recovered, we're done */
+	if (range->num_recovered == range->num_blocks || !range->recovery) {
+		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Non-volatile cache recovery done\n");
+		ftl_nv_cache_recovery_done(restore);
+		return;
+	}
+
+	range->current_addr = range->start_addr;
+	restore->phase = phase;
+
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Recovering range %u %"PRIu64"-%"PRIu64" (%"PRIu64")\n",
+		      phase, range->start_addr, range->last_addr, range->num_blocks);
+
+	ftl_nv_cache_recover_block(&restore->block[0]);
+}
+
+static void
+ftl_nv_cache_write_cb(struct ftl_io *io, void *cb_arg, int status)
+{
+	struct ftl_nv_cache_block *block = cb_arg;
+	struct ftl_nv_cache_restore *restore = block->parent;
+	struct ftl_nv_cache_range *range = &restore->range[restore->phase];
+
+	restore->num_outstanding--;
+	if (status != 0) {
+		SPDK_ERRLOG("Non-volatile cache restoration failed on block %"PRIu64" (%s)\n",
+			    block->offset, spdk_strerror(-status));
+		ftl_nv_cache_restore_complete(restore, -ENOMEM);
+		return;
+	}
+
+	range->num_recovered++;
+	if (range->current_addr <= range->last_addr) {
+		ftl_nv_cache_recover_block(block);
+	} else if (restore->num_outstanding == 0) {
+		assert(range->num_recovered == range->num_blocks);
+		ftl_nv_cache_recover_range(restore);
+	}
+}
+
+static struct ftl_io *
+ftl_nv_cache_alloc_io(struct ftl_nv_cache_block *block, uint64_t lba)
+{
+	struct ftl_restore *restore = SPDK_CONTAINEROF(block->parent, struct ftl_restore, nv_cache);
+	struct ftl_io_init_opts opts = {
+		.dev		= restore->dev,
+		.io		= NULL,
+		.flags		= FTL_IO_BYPASS_CACHE,
+		.type		= FTL_IO_WRITE,
+		.lbk_cnt	= 1,
+		.cb_fn		= ftl_nv_cache_write_cb,
+		.cb_ctx		= block,
+		.data		= block->buf,
+	};
+	struct ftl_io *io;
+
+	io = ftl_io_init_internal(&opts);
+	if (spdk_unlikely(!io)) {
+		return NULL;
+	}
+
+	io->lba.single = lba;
+	return io;
+}
+
+static void
+ftl_nv_cache_block_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_nv_cache_block *block = cb_arg;
+	struct ftl_nv_cache_restore *restore = block->parent;
+	struct ftl_nv_cache_range *range = &restore->range[restore->phase];
+	struct ftl_io *io;
+	unsigned int phase;
+	uint64_t lba;
+
+	spdk_bdev_free_io(bdev_io);
+	restore->num_outstanding--;
+
+	if (!success) {
+		SPDK_ERRLOG("Non-volatile cache restoration failed on block %"PRIu64"\n",
+			    block->offset);
+		ftl_nv_cache_restore_complete(restore, -EIO);
+		return;
+	}
+
+	ftl_nv_cache_unpack_lba(*(uint64_t *)block->md_buf, &lba, &phase);
+	if (spdk_unlikely(phase != restore->phase)) {
+		if (range->current_addr < range->last_addr) {
+			ftl_nv_cache_recover_block(block);
+		} else if (restore->num_outstanding == 0) {
+			ftl_nv_cache_recover_range(restore);
+		}
+
+		return;
+	}
+
+	io = ftl_nv_cache_alloc_io(block, lba);
+	if (spdk_unlikely(!io)) {
+		SPDK_ERRLOG("Failed to allocate ftl_io during non-volatile cache recovery\n");
+		ftl_nv_cache_restore_complete(restore, -ENOMEM);
+		return;
+	}
+
+	restore->num_outstanding++;
+	ftl_io_write(io);
+}
+
+/*
+ * Since we have no control over the order in which the requests complete in regards to their
+ * submission, the cache can be in either of the following states:
+ *  - [1 1 1 1 1 1 1 1 1 1]: simplest case, whole cache contains single phase (although it should be
+ *			     very rare),
+ *  - [1 1 1 1 3 3 3 3 3 3]: two phases, changing somewhere in the middle with no overlap. This is
+ *			     the state left by clean shutdown,
+ *  - [1 1 1 1 3 1 3 3 3 3]: similar to the above, but this time the two ranges overlap. This
+ *			     happens when completions are reordered during unsafe shutdown,
+ *  - [2 1 2 1 1 1 1 3 1 3]: three different phases, each one of which can overlap with
+ *			     previous/next one. The data from the oldest phase doesn't need to be
+ *			     recoevered, as it was already being written to, which means it's
+ *			     already on the main storage.
+ */
+static void
+ftl_nv_cache_scan_done(struct ftl_nv_cache_restore *restore)
+{
+	struct ftl_nv_cache *nv_cache = restore->nv_cache;
+#if defined(DEBUG)
+	struct ftl_nv_cache_range *range;
+	uint64_t i, num_blocks = 0;
+
+	for (i = 0; i < FTL_NV_CACHE_PHASE_COUNT; ++i) {
+		range = &restore->range[i];
+		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Range %"PRIu64": %"PRIu64"-%"PRIu64" (%" PRIu64
+			      ")\n", i, range->start_addr, range->last_addr, range->num_blocks);
+		num_blocks += range->num_blocks;
+	}
+	assert(num_blocks == nv_cache->num_data_blocks);
+#endif
+	if (!restore->recovery) {
+		ftl_nv_cache_recovery_done(restore);
+	} else {
+		restore->phase = ftl_nv_cache_prev_phase(nv_cache->phase);
+		/*
+		 * Only the latest two phases need to be recovered. The third one, even if present,
+		 * already has to be stored on the main storage, as it's already started to be
+		 * overwritten (only present here because of reording of requests' completions).
+		 */
+		restore->range[nv_cache->phase].recovery = true;
+		restore->range[restore->phase].recovery = true;
+
+		ftl_nv_cache_recover_range(restore);
+	}
 }
 
 static int ftl_nv_cache_scan_block(struct ftl_nv_cache_block *block);
@@ -656,9 +853,12 @@ ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb)
 	}
 
 	for (i = 0; i < FTL_NV_CACHE_PHASE_COUNT; ++i) {
+		nvc_restore->range[i].parent = nvc_restore;
 		nvc_restore->range[i].start_addr = FTL_LBA_INVALID;
 		nvc_restore->range[i].last_addr = FTL_LBA_INVALID;
 		nvc_restore->range[i].num_blocks = 0;
+		nvc_restore->range[i].recovery = false;
+		nvc_restore->range[i].phase = i;
 	}
 
 	rc = spdk_bdev_read_blocks(nv_cache->bdev_desc, ioch->cache_ioch, nvc_restore->block[0].buf,
@@ -700,6 +900,7 @@ ftl_pad_chunk_pad_finish(struct ftl_restore_band *rband, bool direct_access)
 			rband->band->state = FTL_BAND_STATE_CLOSED;
 			ftl_band_set_direct_access(rband->band, false);
 		}
+
 		if (--restore->num_pad_bands == 0) {
 			ftl_restore_complete(restore, restore->pad_status);
 			return true;
@@ -877,6 +1078,7 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 			SPDK_ERRLOG("%s while restoring tail md. Will attempt to pad band %u.\n",
 				    spdk_strerror(-status), rband->band->id);
 			STAILQ_INSERT_TAIL(&restore->pad_bands, rband, stailq);
+			restore->nv_cache.recovery = true;
 			restore->num_pad_bands++;
 		}
 	}
