@@ -325,6 +325,72 @@ function process_shm() {
 	return 0
 }
 
+function forcekillbdevsvc() {
+	# $1 = bdev_svc pid
+	bdev_svc=$1
+	if [ -z "$bdev_svc" ]; then
+		return 1
+	fi
+
+	local rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
+
+	if hash ip &>/dev/null; then
+		local have_ip_cmd=true
+		namespace=$(ip netns identify $bdev_svc)
+	else
+		local have_ip_cmd=false
+	fi
+
+	if hash ss &>/dev/null; then
+		local have_ss_cmd=true
+	else
+		local have_ss_cmd=false
+	fi
+
+	kill -9 $bdev_svc
+	rm -f /var/run/spdk_bdev-1
+
+	xtrace_disable
+	local ret=0
+	local i
+
+	# Sometimes the socket is still visible in the system for some time after the kill, wait until it's clear
+	for (( i = 40; i != 0; i-- )); do
+		if $have_ip_cmd; then
+			if [ -n "$namespace" ]; then
+				ns_cmd="ip netns exec $namespace"
+			fi
+		fi
+
+		if $have_ss_cmd; then
+			if ! $ns_cmd ss -ln | egrep -q "\s+$rpc_addr\s+"; then
+				break
+			fi
+		elif [[ "$(uname -s)" == "Linux" ]]; then
+			# For Linux, if system doesn't have ss, just assume it has netstat
+			if ! $ns_cmd netstat -an | grep -iw LISTENING | egrep -q "\s+$rpc_addr\$"; then
+				break
+			fi
+		else
+			# If socket isn't detected by the above commands then the corresponding way
+			# of checking in waitforlisten would be to send an actual rpc call. We can't
+			# do it here (as it will actually fail right away), but it's fine as
+			# waitforlisten will work correctly in that case (it will retry the rpc call
+			# until the socket switches port if the bdev_svc is started again)
+			break
+		fi
+		sleep 0.5
+	done
+
+	if (( i == 0 )); then
+		echo "ERROR: timeout while waiting for process (pid: $1) to stop listening on '$rpc_addr'"
+		ret=1
+	fi
+
+	xtrace_restore
+	return $ret
+}
+
 function waitforlisten() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
