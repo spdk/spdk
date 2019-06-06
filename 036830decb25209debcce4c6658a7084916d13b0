@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0668b3c_e9cc6267",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T11:30:56Z",
+      "side": 1,
+      "message": "I know I\u0027ve asked you to call it like that (my bad), but perhaps it\u0027d make more sense to call it similarly to the variable it sets (allow_open_bands).",
+      "range": {
+        "startLine": 145,
+        "startChar": 10,
+        "endLine": 145,
+        "endChar": 29
+      },
+      "revId": "036830decb25209debcce4c6658a7084916d13b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
