@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "05cc8c43_54cf2cb4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "82dccd0a_f03f8531",
+      "range": {
+        "startLine": 592,
+        "startChar": 85,
+        "endLine": 592,
+        "endChar": 90
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d74fd864_cebe769c",
         "filename": "scripts/rpc/fuzz.py",
         "patchSetId": 9
@@ -45,6 +69,30 @@
       "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ae6f809_c9758b98",
+        "filename": "scripts/rpc/fuzz.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d74fd864_cebe769c",
+      "range": {
+        "startLine": 9,
+        "startChar": 74,
+        "endLine": 9,
+        "endChar": 104
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "3e7a387f_c54bae3a",
+        "filename": "scripts/rpc/fuzz.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "95c44716_d71475b6",
+      "range": {
+        "startLine": 10,
+        "startChar": 96,
+        "endLine": 10,
+        "endChar": 126
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb4012b9_ee073e6e",
         "filename": "test/app/fuzz/vhost_fuzz/README.md",
         "patchSetId": 9
@@ -91,6 +163,30 @@
       "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e5646c3_d17a255c",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb4012b9_ee073e6e",
+      "range": {
+        "startLine": 2,
+        "startChar": 36,
+        "endLine": 2,
+        "endChar": 37
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "b385559b_69d739df",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f3ce44a_52a8eebc",
+      "range": {
+        "startLine": 11,
+        "startChar": 1,
+        "endLine": 11,
+        "endChar": 2
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a7c029a_12dec451",
         "filename": "test/app/fuzz/vhost_fuzz/README.md",
         "patchSetId": 9
@@ -137,6 +257,30 @@
       "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c769f516_8a92325a",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a7c029a_12dec451",
+      "range": {
+        "startLine": 22,
+        "startChar": 89,
+        "endLine": 22,
+        "endChar": 91
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "a0693ccc_898e3d57",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25f334be_9ac8ad20",
+      "range": {
+        "startLine": 25,
+        "startChar": 3,
+        "endLine": 25,
+        "endChar": 23
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e0e3546_163498c2",
         "filename": "test/app/fuzz/vhost_fuzz/README.md",
         "patchSetId": 9
@@ -183,6 +351,30 @@
       "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47cc3974_a7a1639a",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0e0e3546_163498c2",
+      "range": {
+        "startLine": 26,
+        "startChar": 8,
+        "endLine": 27,
+        "endChar": 60
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "ebe579a9_fbc2b36b",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a017c21f_47fc88c1",
+      "range": {
+        "startLine": 176,
+        "startChar": 1,
+        "endLine": 176,
+        "endChar": 2
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0a6e7d9_e2f793db",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 9
@@ -220,6 +436,30 @@
       "writtenOn": "2019-06-05T13:55:24Z",
       "side": 1,
       "message": "You could actually do just spdk_vtophys() to check if the address is valid.\n\nIn the virtio lib we read pagemap because we need to get hugetlbfs file descriptors, but here we don\u0027t.",
+      "range": {
+        "startLine": 287,
+        "startChar": 2,
+        "endLine": 293,
+        "endChar": 3
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59cc29ab_5720c952",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Thanks! Saves a ton of space!",
+      "parentUuid": "d0a6e7d9_e2f793db",
       "range": {
         "startLine": 287,
         "startChar": 2,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "5f26bbdf_0d5da201",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3cb7b0b5_aa1b9749",
+      "range": {
+        "startLine": 324,
+        "startChar": 2,
+        "endLine": 324,
+        "endChar": 11
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47821334_9b99ee6f",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 9
@@ -275,6 +539,30 @@
       "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19c16b9a_52dd0587",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47821334_9b99ee6f",
+      "range": {
+        "startLine": 377,
+        "startChar": 2,
+        "endLine": 377,
+        "endChar": 11
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -301,6 +589,30 @@
     },
     {
       "key": {
+        "uuid": "64cef3e0_3daff081",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f6a79d2_ff3d99a5",
+      "range": {
+        "startLine": 384,
+        "startChar": 2,
+        "endLine": 384,
+        "endChar": 12
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "75d59ece_ff7f720a",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 9
@@ -312,6 +624,30 @@
       "writtenOn": "2019-06-05T14:03:34Z",
       "side": 1,
       "message": "During error_out, don\u0027t you also need call spdk_thread_exit and spdk_thread_destroy to destroy the spdk thread",
+      "range": {
+        "startLine": 444,
+        "startChar": 0,
+        "endLine": 444,
+        "endChar": 10
+      },
+      "revId": "5f344813935e0eadb640ebf4c7ce4373bfce9d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a6c6710_8da419c3",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-06T00:15:12Z",
+      "side": 1,
+      "message": "No, vhost_fuzz_dev_init gets invoked by the rpc before the application even starts. This code doesn\u0027t run on a thread I created. The spdk event framework will take care of it.",
+      "parentUuid": "75d59ece_ff7f720a",
       "range": {
         "startLine": 444,
         "startChar": 0,
