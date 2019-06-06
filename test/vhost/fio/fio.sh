@@ -24,15 +24,27 @@ vhost_rpc vhost0 construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b M
 vhost_rpc vhost0 construct_vhost_scsi_controller naa.VhostScsi0.0
 vhost_rpc vhost0 add_vhost_scsi_lun naa.VhostScsi0.0 0 "Malloc0"
 
-# Start qemu based VM.
+# Construct vhost blk controller
+vhost_rpc vhost0 construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
+vhost_rpc vhost0 construct_vhost_blk_controller naa.Malloc1.1 Malloc1
+
+# Start qemu based VMs
 vm_setup --os="$VM_IMAGE" --disk-type=spdk_vhost_scsi --disks="VhostScsi0" --vhost-name=vhost0 --force=0
+vm_setup --os="$VM_IMAGE" --disk-type=spdk_vhost_blk --disks="Malloc1" --vhost-name=vhost0 --force=1
+
 vm_run 0
+vm_run 1
+
 vm_wait_for_boot 300 0
+vm_wait_for_boot 300 1
 sleep 5
 
 # Run the fio workload on the VM
 vm_scp 0 $testdir/vhost_fio.job 127.0.0.1:/root/vhost_fio.job
 vm_exec 0 "fio /root/vhost_fio.job"
+
+vm_scp 1 $testdir/vhost_fio.job 127.0.0.1:/root/vhost_fio.job
+vm_exec 1 "fio /root/vhost_fio.job"
 
 # Shut the VM down
 vm_shutdown_all
