@@ -10,6 +10,10 @@ def print_dict(d):
     print(json.dumps(d, indent=2))
 
 
+def print_string(s):
+    print(json.dumps(s, indent=2).strip('"'))
+
+
 class JSONRPCException(Exception):
     def __init__(self, message):
         self.message = message
