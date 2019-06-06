@@ -94,6 +94,30 @@
     },
     {
       "key": {
+        "uuid": "832f612c_81f199cc",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T18:06:18Z",
+      "side": 1,
+      "message": "According to C89 it needs to be declared at the beginning of a block - which is true in this case, so it\u0027s fine.",
+      "parentUuid": "f83a797d_d39eae03",
+      "range": {
+        "startLine": 244,
+        "startChar": 2,
+        "endLine": 244,
+        "endChar": 8
+      },
+      "revId": "71e4ee534fc5be6407c9089fe8338885ea589bac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3a5860be_24ddbe8d",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 5
