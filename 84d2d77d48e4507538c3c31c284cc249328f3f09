@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbfd6c38_a366e220",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T13:26:30Z",
+      "side": 1,
+      "message": "We are changing the state of the LBA map, so the const doesn\u0027t really make sense here.",
+      "range": {
+        "startLine": 896,
+        "startChar": 30,
+        "endLine": 896,
+        "endChar": 36
+      },
+      "revId": "84d2d77d48e4507538c3c31c284cc249328f3f09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee3a7852_e5011982",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T13:26:30Z",
+      "side": 1,
+      "message": "Let\u0027s rename this to ftl_lba_map_alloc_request.",
+      "range": {
+        "startLine": 966,
+        "startChar": 0,
+        "endLine": 966,
+        "endChar": 25
+      },
+      "revId": "84d2d77d48e4507538c3c31c284cc249328f3f09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "307f18ab_ca243400",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T13:26:30Z",
+      "side": 1,
+      "message": "What\u0027s going on with the formatting here?",
+      "range": {
+        "startLine": 549,
+        "startChar": 4,
+        "endLine": 555,
+        "endChar": 9
+      },
+      "revId": "84d2d77d48e4507538c3c31c284cc249328f3f09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5d34636_438e9a9e",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1054,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T13:26:30Z",
+      "side": 1,
+      "message": "This could be just inlined. We don\u0027t really have functions for freeing up specific resources, it\u0027s all done in ftl_dev_free_sync. Let\u0027s do the same here.",
+      "range": {
+        "startLine": 1054,
+        "startChar": 0,
+        "endLine": 1054,
+        "endChar": 18
+      },
+      "revId": "84d2d77d48e4507538c3c31c284cc249328f3f09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1178a95b_4003abd8",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1057,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T13:26:30Z",
+      "side": 1,
+      "message": "This should probably check that dev-\u003elba_request_pool !\u003d NULL.",
+      "range": {
+        "startLine": 1057,
+        "startChar": 0,
+        "endLine": 1057,
+        "endChar": 78
+      },
+      "revId": "84d2d77d48e4507538c3c31c284cc249328f3f09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
