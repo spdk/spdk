@@ -80,7 +80,17 @@ void spdk_rpc_close(void);
  * \param params Parameters associated with the RPC request.
  */
 typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
-					const struct spdk_json_val *params);
+					const struct spdk_json_val *params,
+					void *ctx);
+
+/**
+ * Function signature for RPC request handlers.
+ *
+ * \param request RPC request to handle.
+ * \param params Parameters associated with the RPC request.
+ */
+typedef void (*spdk_rpc_method_handler_no_ctx)(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params);
 
 /**
  * Register an RPC method.
@@ -91,7 +101,15 @@ typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
  * the RPC server is set in the state_mask, the method is allowed. Otherwise, it is rejected.
  */
 void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
-			      uint32_t state_mask);
+			      void *ctx, uint32_t state_mask);
+
+/**
+ * This is used for registering methods with no context parameter (all spdk
+ * native methods). Smart trick so that we don't have to rewrite signatures
+ * of all method handlers in spdk.
+ */
+void spdk_rpc_no_ctx_wrapper(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params, void *ctx);
 
 /**
  * Register a deprecated alias for an RPC method.
@@ -124,7 +142,7 @@ int spdk_rpc_is_method_allowed(const char *method, uint32_t state_mask);
 #define SPDK_RPC_REGISTER(method, func, state_mask) \
 static void __attribute__((constructor(1000))) rpc_register_##func(void) \
 { \
-	spdk_rpc_register_method(method, func, state_mask); \
+	spdk_rpc_register_method(method, spdk_rpc_no_ctx_wrapper, func, state_mask); \
 }
 
 #define SPDK_RPC_REGISTER_ALIAS_DEPRECATED(method, alias) \
