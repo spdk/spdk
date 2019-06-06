@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1c33cac_32ba9e97",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T11:34:42Z",
+      "side": 1,
+      "message": "I think this should be a separate patch.",
+      "revId": "f1d8e916fa7762ca04d3b9e6036ad8c3a1e54732",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fdd9f86_e664f023",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-06T11:34:42Z",
+      "side": 1,
+      "message": "Will this exit set status !\u003d 0? Let\u0027s explicitly set the exit status here. And a print would be nice too, to know why the script failed.",
+      "range": {
+        "startLine": 66,
+        "startChar": 1,
+        "endLine": 66,
+        "endChar": 5
+      },
+      "revId": "f1d8e916fa7762ca04d3b9e6036ad8c3a1e54732",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
