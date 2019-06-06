@@ -59,6 +59,7 @@ struct spdk_rpc_method {
 	bool is_deprecated;
 	struct spdk_rpc_method *is_alias_of;
 	bool deprecation_warning_printed;
+	void *ctx;
 };
 
 static SLIST_HEAD(, spdk_rpc_method) g_rpc_methods = SLIST_HEAD_INITIALIZER(g_rpc_methods);
@@ -125,7 +126,7 @@ jsonrpc_handler(struct spdk_jsonrpc_request *request,
 	}
 
 	if ((m->state_mask & g_rpc_state) == g_rpc_state) {
-		m->func(request, params);
+		m->func(request, params, m->ctx);
 	} else {
 		if (g_rpc_state == SPDK_RPC_STARTUP) {
 			spdk_jsonrpc_send_error_response_fmt(request,
@@ -225,7 +226,16 @@ spdk_rpc_accept(void)
 }
 
 void
-spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func, uint32_t state_mask)
+spdk_rpc_no_ctx_wrapper(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params,
+			void *ctx)
+{
+	spdk_rpc_method_handler_no_ctx func = ctx;
+	func(request, params);
+}
+
+void
+spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func, void *ctx,
+			 uint32_t state_mask)
 {
 	struct spdk_rpc_method *m;
 
@@ -244,6 +254,7 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func, uint3
 
 	m->func = func;
 	m->state_mask = state_mask;
+	m->ctx = ctx;
 
 	/* TODO: use a hash table or sorted list */
 	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);

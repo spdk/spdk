@@ -45,8 +45,10 @@ DEFINE_STUB(spdk_event_allocate, struct spdk_event *, (uint32_t core, spdk_event
 DEFINE_STUB_V(spdk_subsystem_init, (spdk_subsystem_init_fn cb_fn, void *cb_arg));
 DEFINE_STUB_V(spdk_subsystem_fini, (spdk_msg_fn cb_fn, void *cb_arg));
 DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_handler func,
-		uint32_t state_mask));
+		void *ctx, uint32_t state_mask));
 DEFINE_STUB_V(spdk_rpc_register_alias_deprecated, (const char *method, const char *alias));
+DEFINE_STUB_V(spdk_rpc_no_ctx_wrapper, (struct spdk_jsonrpc_request *request,
+					const struct spdk_json_val *params, void *ctx));
 DEFINE_STUB_V(spdk_rpc_set_state, (uint32_t state));
 DEFINE_STUB(spdk_rpc_get_state, uint32_t, (void), SPDK_RPC_RUNTIME);
 DEFINE_STUB(spdk_rpc_initialize, int, (const char *listen_addr), 0);
