@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "765c54b2_38979e02",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T19:49:41Z",
+      "side": 1,
+      "message": "Is this a correct markdown? I always thought you need a whitespace after the hash.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 1
+      },
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17ff2bef_14d02f38",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T19:49:41Z",
+      "side": 1,
+      "message": "... and an empty line afterwards",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be90f88d_180d7365",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T19:49:41Z",
+      "side": 1,
+      "message": "This is unused; can be removed as well.",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7014af5b_ffded064",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T19:49:41Z",
+      "side": 1,
+      "message": "You should also release the virtqueue - virtio_dev_release_queue(VIRTIO_REQUESTQ);\n\nThat function doesn\u0027t do anything interesting now, but we may eventually refactor it to free some memory.",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8ec8491_d53d2fce",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T19:49:41Z",
+      "side": 1,
+      "message": "I believe you can simplify the code now:\n\n```\nwhile (true) { // maybe replace with `for` and set the max. number of iterations?\n if (spdk_vtophys() \u003d\u003d VTOPHYS_ERROR) return chosen_address;\n}\nreturn NULL;\n```",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cf0bbde_3f4a6bef",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-06T19:49:41Z",
+      "side": 1,
+      "message": "You should put the name in a new line.",
+      "range": {
+        "startLine": 210,
+        "startChar": 11,
+        "endLine": 210,
+        "endChar": 26
+      },
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
