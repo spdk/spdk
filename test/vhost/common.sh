@@ -5,6 +5,13 @@ set -e
 
 TEST_DIR=$(readlink -f $rootdir/..)
 
+#Check if qemu exists
+if [ ! -d $QEMU_PREFIX ]; then
+	error "Qemu not installed on this machine."
+	exit 1
+fi
+echo "Using qemu folder $QEMU_PREFIX"
+
 # SSH key file
 : ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
 if [[ ! -r "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
