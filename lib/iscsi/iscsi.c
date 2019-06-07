@@ -4620,7 +4620,7 @@ spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		       struct spdk_dif_ctx *dif_ctx)
 {
 	struct iscsi_bhs *bhs;
-	uint32_t offset = 0;
+	uint32_t data_offset = 0;
 	uint8_t *cdb = NULL;
 	uint64_t lun;
 	int lun_id = 0;
@@ -4647,7 +4647,7 @@ spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		struct iscsi_bhs_scsi_req *sbhs;
 
 		sbhs = (struct iscsi_bhs_scsi_req *)bhs;
-		offset = 0;
+		data_offset = 0;
 		cdb = sbhs->cdb;
 		lun = from_be64(&sbhs->lun);
 		lun_id = spdk_scsi_lun_id_fmt_to_int(lun);
@@ -4659,7 +4659,7 @@ spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		int transfer_tag;
 
 		dbhs = (struct iscsi_bhs_data_out *)bhs;
-		offset = from_be32(&dbhs->buffer_offset);
+		data_offset = from_be32(&dbhs->buffer_offset);
 		transfer_tag = from_be32(&dbhs->ttt);
 		task = get_transfer_task(conn, transfer_tag);
 		if (task == NULL) {
@@ -4674,7 +4674,7 @@ spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		struct spdk_iscsi_task *task;
 
 		dbhs = (struct iscsi_bhs_data_in *)bhs;
-		offset = from_be32(&dbhs->buffer_offset);
+		data_offset = from_be32(&dbhs->buffer_offset);
 		task = pdu->task;
 		assert(task != NULL);
 		cdb = task->scsi.cdb;
@@ -4690,7 +4690,7 @@ spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		return false;
 	}
 
-	return spdk_scsi_lun_get_dif_ctx(lun_dev, cdb, offset, dif_ctx);
+	return spdk_scsi_lun_get_dif_ctx(lun_dev, cdb, data_offset, dif_ctx);
 }
 
 void spdk_free_sess(struct spdk_iscsi_sess *sess)

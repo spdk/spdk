@@ -198,7 +198,7 @@ void spdk_scsi_port_destruct(struct spdk_scsi_port *port);
 int spdk_bdev_scsi_execute(struct spdk_scsi_task *task);
 void spdk_bdev_scsi_reset(struct spdk_scsi_task *task);
 
-bool spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset,
+bool spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t data_offset,
 				struct spdk_dif_ctx *dif_ctx);
 
 int spdk_scsi_pr_out(struct spdk_scsi_task *task, uint8_t *cdb, uint8_t *data, uint16_t data_len);

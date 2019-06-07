@@ -2115,8 +2115,8 @@ spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 }
 
 bool
-spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset,
-			   struct spdk_dif_ctx *dif_ctx)
+spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb,
+			   uint32_t data_offset, struct spdk_dif_ctx *dif_ctx)
 {
 	uint32_t ref_tag = 0, dif_check_flags = 0;
 	int rc;
@@ -2147,8 +2147,6 @@ spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset
 		return false;
 	}
 
-	ref_tag += offset / spdk_bdev_get_data_block_size(bdev);
-
 	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
 		dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
 	}
@@ -2164,7 +2162,7 @@ spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset
 			       spdk_bdev_is_dif_head_of_md(bdev),
 			       spdk_bdev_get_dif_type(bdev),
 			       dif_check_flags,
-			       ref_tag, 0, 0, 0, 0);
+			       ref_tag, 0, 0, data_offset, 0);
 
 	return (rc == 0) ? true : false;
 }
