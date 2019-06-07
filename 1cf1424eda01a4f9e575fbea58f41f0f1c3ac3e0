@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c803e44_9138dc51",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T07:51:07Z",
+      "side": 1,
+      "message": "You\u0027re locking twice here, it doesn\u0027t really make sense. Instead of having a function that checks if the blocks are valid under a lock, let\u0027s just operate on bit_array directly while locking only once.",
+      "range": {
+        "startLine": 186,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 35
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "998d498e_f7efecd1",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T07:51:07Z",
+      "side": 1,
+      "message": "Why is this not under a lock?",
+      "range": {
+        "startLine": 677,
+        "startChar": 0,
+        "endLine": 677,
+        "endChar": 56
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e41f029_601cbb9f",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T07:51:07Z",
+      "side": 1,
+      "message": "This will call pthread_spin_destroy on an uninitialized lock.",
+      "range": {
+        "startLine": 727,
+        "startChar": 7,
+        "endLine": 727,
+        "endChar": 12
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4648c446_b6a16124",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T07:51:07Z",
+      "side": 1,
+      "message": "How are these changes related to the locks?",
+      "range": {
+        "startLine": 785,
+        "startChar": 3,
+        "endLine": 785,
+        "endChar": 25
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13252807_23e973e4",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T07:51:07Z",
+      "side": 1,
+      "message": "Shouldn\u0027t all the accesses to the queues be protected by a lock? They\u0027re under a lock in ftl_reloc_add.",
+      "range": {
+        "startLine": 786,
+        "startChar": 0,
+        "endLine": 809,
+        "endChar": 0
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97cebe82_a89e31a8",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T07:51:07Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it make more sense to do this atomically? Acquiring the lock twice during each loop iteration doesn\u0027t seem like a good idea...",
+      "range": {
+        "startLine": 833,
+        "startChar": 0,
+        "endLine": 838,
+        "endChar": 31
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
