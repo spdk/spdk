@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "1499c82f_1c97ca19",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T06:37:07Z",
+      "side": 1,
+      "message": "Can we do something about it? I\u0027m suspecting the culprit here is the \u0027dev-\u003econf\u0027 part. Could you check if extracting dev-\u003econf to a separate variable fixes that?",
+      "parentUuid": "cabae935_142bece8",
+      "range": {
+        "startLine": 549,
+        "startChar": 4,
+        "endLine": 555,
+        "endChar": 9
+      },
+      "revId": "84d2d77d48e4507538c3c31c284cc249328f3f09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b5d34636_438e9a9e",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 39
