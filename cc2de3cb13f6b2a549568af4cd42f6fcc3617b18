@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "476ae866_5f0f9bcd",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-07T08:23:11Z",
+      "side": 1,
+      "message": "This actually does absolutely nothing :)\nprint(s) could be changed to \"return(s)\". It\u0027s still doesn\u0027t do much, but at least it handles null/none unexpected output.",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 12
+      },
+      "revId": "cc2de3cb13f6b2a549568af4cd42f6fcc3617b18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
