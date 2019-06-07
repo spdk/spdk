@@ -961,7 +961,7 @@ ret:
 }
 
 static int
-verify_test_params(struct spdk_app_opts *opts)
+verify_test_params(void)
 {
 	if (g_queue_depth <= 0) {
 		spdk_app_usage();
@@ -1038,9 +1038,9 @@ verify_test_params(struct spdk_app_opts *opts)
 				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
 			return 1;
 		}
-		if (opts->reactor_mask) {
+		if (spdk_env_get_core_count() > 1) {
 			fprintf(stderr, "Ignoring -m option. Verify can only run with a single core.\n");
-			opts->reactor_mask = NULL;
+			return 1;
 		}
 		g_verify = true;
 		if (!strcmp(g_workload_type, "reset")) {
@@ -1102,6 +1102,11 @@ bdevperf_run(void *arg1)
 	struct io_target *target;
 	struct spdk_event *event;
 	int rc;
+
+	if (verify_test_params() != 0) {
+		spdk_app_stop(1);
+		return;
+	}
 
 	rc = blockdev_heads_init();
 	if (rc) {
@@ -1255,10 +1260,6 @@ main(int argc, char **argv)
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
-	}
-
-	if (verify_test_params(&opts) != 0) {
-		exit(1);
 	}
 
 	rc = spdk_app_start(&opts, bdevperf_run, NULL);
