@@ -145,6 +145,17 @@ static inline void *env_vzalloc(size_t size)
 			    SPDK_MALLOC_DMA);
 }
 
+static inline void *env_secure_alloc(size_t size)
+{
+	return spdk_zmalloc(size, 0, NULL, SPDK_ENV_LCORE_ID_ANY,
+			    SPDK_MALLOC_DMA);
+}
+
+static inline void env_secure_free(const void *ptr, size_t size)
+{
+	return spdk_free((void *)ptr);
+}
+
 static inline void env_vfree(const void *ptr)
 {
 	return spdk_free((void *)ptr);
