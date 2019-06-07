@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "6f879977_3609d733",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T11:02:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2d982225_dbdd7bd0",
+      "range": {
+        "startLine": 186,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 35
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "998d498e_f7efecd1",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 9
@@ -144,6 +168,30 @@
     },
     {
       "key": {
+        "uuid": "bd8f63c2_f02b7cf3",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T11:02:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "973ecdfd_f4217b17",
+      "range": {
+        "startLine": 677,
+        "startChar": 0,
+        "endLine": 677,
+        "endChar": 56
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e41f029_601cbb9f",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 9
@@ -164,6 +212,30 @@
       "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dafe1794_e1f07ec3",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T11:02:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1e41f029_601cbb9f",
+      "range": {
+        "startLine": 727,
+        "startChar": 7,
+        "endLine": 727,
+        "endChar": 12
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -226,6 +298,30 @@
       "side": 1,
       "message": "So why are we setting this here without a lock?",
       "parentUuid": "c5de37a1_6feec213",
+      "range": {
+        "startLine": 785,
+        "startChar": 3,
+        "endLine": 785,
+        "endChar": 25
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c67a4dc_c3b03b00",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T11:02:44Z",
+      "side": 1,
+      "message": "This is for high prio queue which are only set from core thread.",
+      "parentUuid": "70f025f3_16241933",
       "range": {
         "startLine": 785,
         "startChar": 3,
@@ -309,6 +405,30 @@
     },
     {
       "key": {
+        "uuid": "af322ea4_9a811229",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T11:02:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "135832fe_9f7cc138",
+      "range": {
+        "startLine": 786,
+        "startChar": 0,
+        "endLine": 809,
+        "endChar": 0
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97cebe82_a89e31a8",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 9
@@ -377,6 +497,30 @@
       "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee76ed82_6cbd89b7",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T11:02:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b8ac1a3f_1f522b84",
+      "range": {
+        "startLine": 833,
+        "startChar": 0,
+        "endLine": 838,
+        "endChar": 31
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
