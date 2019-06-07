@@ -24,6 +24,7 @@ CPUS_ALLOWED=1
 NUMJOBS=1
 REPEAT_NO=3
 NOIOSCALING=false
+COMPILE_WITH_LTO=true
 
 function get_cores(){
 	local cpu_list="$1"
@@ -259,6 +260,14 @@ function run_nvme_fio(){
 	sleep 1
 }
 
+function use_lto() {
+#Link time optimization(lto) allows the linker to run a post-link optimization pass on the code.
+	cd $ROOT_DIR
+	FIO_DIR=$(readlink -f $(dirname $FIO_BIN))
+	./configure --with-fio=$FIO_DIR --enable-lto
+	make -j${nproc}
+}
+
 function usage()
 {
 	set +x
@@ -281,6 +290,7 @@ function usage()
 	echo "    --block-size=INT      The  block  size  in  bytes  used for I/O units. [default=$BLK_SIZE]"
 	echo "    --numjobs=INT         Create the specified number of clones of this job. [default=$NUMJOBS]"
 	echo "    --no-preconditioning  Skip preconditioning"
+	echo "    --compile-with-lto    Compile SPDK with lto gcc flag before running the workloads. {default=$COMPILE_WITH_LTO}"
 	echo "    --no-io-scaling       Do not scale iodepth for each device in SPDK fio plugin. [default=$NOIOSCALING]"
 	set -x
 }
@@ -305,6 +315,7 @@ while getopts 'h-:' optchar; do
 			cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
 			numjobs=*) NUMJOBS="${OPTARG#*=}" ;;
 			repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
+			compile-with-lto=*) COMPILE_WITH_LTO="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'"; exit 1 ;;
 		esac
 		;;
