@@ -24,6 +24,7 @@
 # "--repeat-no" Repeat each workolad specified number of times.
 # "--numjobs" - Number of fio threads running the workload.
 # "--no-io-scaling" - Set number of iodepth to be per job instead per device for SPDK fio_plugin.
+# "--compile-with-lto" - By default this script will compile SPDK with lto gcc flag. Set this flag to false in CI environments where SPDK is already compiled with lto to avoid recompling.
 # An Example Performance Test Run
 # "./spdk/test/perf/run_perf.sh --run-time=600 --ramp-time=60 --cpu-allowed=28 --fio-bin=/usr/src/fio/fio\
 #  --rwmixread=100 --iodepth=256 --fio-plugin=bdev --no-preconditioning --disk-no=6"
@@ -38,6 +39,10 @@ disks_numa=$(get_numa_node $PLUGIN "$disk_names")
 cores=$(get_cores "$CPUS_ALLOWED")
 no_cores=($cores)
 no_cores=${#no_cores[@]}
+
+if $COMPILE_WITH_LTO; then
+	use_lto
+fi
 
 if $PRECONDITIONING; then
 	HUGEMEM=8192 $ROOT_DIR/scripts/setup.sh
