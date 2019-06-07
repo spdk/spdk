@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da2ab0af_cdfa9bf1",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-07T05:51:11Z",
+      "side": 1,
+      "message": "Backticks in bash are deprecated and should be avoided. Please use $() instead.",
+      "range": {
+        "startLine": 61,
+        "startChar": 7,
+        "endLine": 61,
+        "endChar": 8
+      },
+      "revId": "81b0cb45dd57f18aec16f6bf5276e6c488fd3094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
