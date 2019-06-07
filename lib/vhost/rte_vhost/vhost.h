@@ -301,7 +301,7 @@ gpa_to_hpa(struct virtio_net *dev, uint64_t gpa, uint64_t size)
 
 struct virtio_net *get_device(int vid);
 
-int vhost_new_device(uint64_t features);
+int vhost_new_device(uint64_t features, struct vhost_device_ops const *ops);
 void cleanup_device(struct virtio_net *dev, int destroy);
 void reset_device(struct virtio_net *dev);
 void vhost_destroy_device(int);

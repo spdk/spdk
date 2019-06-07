@@ -1217,16 +1217,6 @@ vhost_user_msg_handler(int vid, int fd)
 	if (dev == NULL)
 		return -1;
 
-	if (!dev->notify_ops) {
-		dev->notify_ops = vhost_driver_callback_get(dev->ifname);
-		if (!dev->notify_ops) {
-			RTE_LOG(ERR, VHOST_CONFIG,
-				"failed to get callback ops for driver %s\n",
-				dev->ifname);
-			return -1;
-		}
-	}
-
 	ret = read_vhost_message(fd, &msg);
 	if (ret <= 0 || msg.request >= VHOST_USER_MAX) {
 		if (ret < 0)
