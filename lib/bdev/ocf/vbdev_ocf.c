@@ -1069,11 +1069,13 @@ create_from_bdevs(struct vbdev_ocf *vbdev,
 }
 
 /* Init and then start vbdev if all base devices are present */
-int
+void
 vbdev_ocf_construct(const char *vbdev_name,
 		    const char *cache_mode_name,
 		    const char *cache_name,
-		    const char *core_name)
+		    const char *core_name,
+		    void (*cb)(int, struct vbdev_ocf *, void *),
+		    void *cb_arg)
 {
 	int rc;
 	struct spdk_bdev *cache_bdev = spdk_bdev_get_by_name(cache_name);
@@ -1082,12 +1084,14 @@ vbdev_ocf_construct(const char *vbdev_name,
 
 	rc = init_vbdev(vbdev_name, cache_mode_name, cache_name, core_name);
 	if (rc) {
-		return rc;
+		cb(rc, NULL, cb_arg);
+		return;
 	}
 
 	vbdev = vbdev_ocf_get_by_name(vbdev_name);
 	if (vbdev == NULL) {
-		return -ENODEV;
+		cb(-ENODEV, NULL, cb_arg);
+		return;
 	}
 
 	if (cache_bdev == NULL) {
@@ -1099,7 +1103,8 @@ vbdev_ocf_construct(const char *vbdev_name,
 			       vbdev->name, core_name);
 	}
 
-	return create_from_bdevs(vbdev, cache_bdev, core_bdev);
+	rc = create_from_bdevs(vbdev, cache_bdev, core_bdev);
+	cb(rc, vbdev, cb_arg);
 }
 
 /* This called if new device is created in SPDK application
