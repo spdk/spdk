@@ -83,7 +83,7 @@ struct vbdev_ocf_config {
 
 /* Types for management operations */
 typedef void (*vbdev_ocf_mngt_fn)(struct vbdev_ocf *);
-typedef void (*vbdev_ocf_mngt_callback)(int, void *);
+typedef void (*vbdev_ocf_mngt_callback)(int, struct vbdev_ocf *, void *);
 
 /* Context for asynchronous management operations
  * Single management operation usually contains a list of sub procedures,
