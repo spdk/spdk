@@ -79,6 +79,7 @@ static unsigned g_master_core;
 static int g_time_in_sec;
 static bool g_mix_specified;
 static const char *g_target_bdev_name;
+static bool g_wait_for_tests = false;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -806,6 +807,7 @@ bdevperf_usage(void)
 	printf("\t\t(only valid with -S)\n");
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 	printf(" -T <target>               target bdev\n");
+	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
 }
 
 /*
@@ -1108,6 +1110,11 @@ bdevperf_run(void *arg1)
 		return;
 	}
 
+	if (g_wait_for_tests) {
+		/* Do not perform any tests until RPC is received */
+		return;
+	}
+
 	rc = blockdev_heads_init();
 	if (rc) {
 		spdk_app_stop(1);
@@ -1197,6 +1204,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_workload_type = optarg;
 	} else if (ch == 'T') {
 		g_target_bdev_name = optarg;
+	} else if (ch == 'z') {
+		g_wait_for_tests = true;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -1245,7 +1254,6 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "bdevperf";
-	opts.rpc_addr = NULL;
 	opts.reactor_mask = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
@@ -1256,7 +1264,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zq:o:t:w:M:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
