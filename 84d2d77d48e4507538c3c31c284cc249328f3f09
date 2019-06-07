@@ -191,6 +191,30 @@
     },
     {
       "key": {
+        "uuid": "1956f207_c283e93a",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T06:49:26Z",
+      "side": 1,
+      "message": "Extracting doesn\u0027t work.",
+      "parentUuid": "1499c82f_1c97ca19",
+      "range": {
+        "startLine": 549,
+        "startChar": 4,
+        "endLine": 555,
+        "endChar": 9
+      },
+      "revId": "84d2d77d48e4507538c3c31c284cc249328f3f09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b5d34636_438e9a9e",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 39
