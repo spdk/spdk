@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d9c8ac2_5971b3d5",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-06-07T09:07:07Z",
+      "side": 1,
+      "message": "Instead of 4096, should be something like \nDPAGE_SIZE\u003d`getconf PAGE_SIZE`",
+      "revId": "10c89d8309bb69d32f16a50e9d428ff8b2103747",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
