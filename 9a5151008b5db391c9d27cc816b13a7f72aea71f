@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91accf4e_73315b9a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-07T06:01:39Z",
+      "side": 1,
+      "message": "Duplicate with line #26",
+      "revId": "9a5151008b5db391c9d27cc816b13a7f72aea71f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cee81e6a_29f1e9f6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-07T06:01:39Z",
+      "side": 1,
+      "message": "Outdated, no longer relevant.",
+      "range": {
+        "startLine": 38,
+        "startChar": 55,
+        "endLine": 38,
+        "endChar": 84
+      },
+      "revId": "9a5151008b5db391c9d27cc816b13a7f72aea71f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05fe216b_ee2f5d31",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-07T06:01:39Z",
+      "side": 1,
+      "message": "Outdated.",
+      "revId": "9a5151008b5db391c9d27cc816b13a7f72aea71f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0608f444_13d8730e",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 968,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-07T06:01:39Z",
+      "side": 1,
+      "message": "Is this true? In nvme_ctrl.c I can still see `ctrlr-\u003eopts.io_queue_size \u003d spdk_min(ctrlr-\u003eopts.io_queue_size, MAX_IO_QUEUE_ENTRIES);` so the queue does have a maximum size restriction.",
+      "revId": "9a5151008b5db391c9d27cc816b13a7f72aea71f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
