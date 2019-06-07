@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ee410dd2_33638102",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-06-07T15:19:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "30e6176c_81560345",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 76
+      },
+      "revId": "802f8e051c55f949417deac5a26d8a69cbf82980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "363c1667_eb0ae168",
         "filename": "doc/vpp_integration.md",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-05T13:08:01Z",
       "side": 1,
       "message": "Please either remove or fill out this section.",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 246,
+        "endChar": 5
+      },
+      "revId": "802f8e051c55f949417deac5a26d8a69cbf82980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cbed8c3_c965e20f",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-06-07T15:19:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "363c1667_eb0ae168",
       "range": {
         "startLine": 244,
         "startChar": 0,
