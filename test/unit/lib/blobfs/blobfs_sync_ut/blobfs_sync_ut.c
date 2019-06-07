@@ -133,6 +133,24 @@ _fs_init(void *arg)
 }
 
 static void
+_fs_load(void *arg)
+{
+	struct spdk_thread *thread;
+	struct spdk_bs_dev *dev;
+
+	g_fs = NULL;
+	g_fserrno = -1;
+	dev = init_dev();
+	spdk_fs_load(dev, send_request, fs_op_with_handle_complete, NULL);
+	thread = spdk_get_thread();
+	while (spdk_thread_poll(thread, 0, 0) > 0) {}
+
+	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
+	SPDK_CU_ASSERT_FATAL(g_fs->bdev == dev);
+	CU_ASSERT(g_fserrno == 0);
+}
+
+static void
 _fs_unload(void *arg)
 {
 	struct spdk_thread *thread;
@@ -178,6 +196,81 @@ cache_write(void)
 
 	rc = spdk_fs_delete_file(g_fs, channel, "testfile");
 	CU_ASSERT(rc == -ENOENT);
+
+	spdk_fs_free_thread_ctx(channel);
+
+	ut_send_request(_fs_unload, NULL);
+}
+
+static void
+file_length(void)
+{
+	int rc;
+	char *buf;
+	uint64_t buf_length;
+	struct spdk_fs_thread_ctx *channel;
+	struct spdk_file_stat stat = {0};
+
+	ut_send_request(_fs_init, NULL);
+
+	channel = spdk_fs_alloc_thread_ctx(g_fs);
+
+	g_file = NULL;
+	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	/* Write slightly more than one CACHE_BUFFER.  Filling at least one cache
+	 * buffer triggers a flush to disk.  Currently when that cache buffer is written,
+	 * it will proceed to write the final byte, even though there's been no explicit
+	 * sync for it yet.  We will fix that eventually, but for now test with this
+	 * behavior since it matches a subtle RocksDB failure scenario.
+	 */
+	buf_length = CACHE_BUFFER_SIZE + 1;
+	buf = calloc(1, buf_length);
+	spdk_file_write(g_file, channel, buf, 0, buf_length);
+	free(buf);
+
+	/* Spin until all of the data has been flushed to the SSD.  There's been no
+	 * sync operation yet, so the xattr on the file is still 0.
+	 */
+	while (g_file->length_flushed != buf_length) {}
+
+	/* Close the file.  This causes an implicit sync which should write the
+	 * length_flushed value as the "length" xattr on the file.
+	 */
+	spdk_file_close(g_file, channel);
+
+	rc = spdk_fs_file_stat(g_fs, channel, "testfile", &stat);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(buf_length == stat.size);
+
+	spdk_fs_free_thread_ctx(channel);
+
+	/* Unload and reload the filesystem.  The file length will be
+	 * read during load from the length xattr.  We want to make sure
+	 * it matches what was written when the file was originally
+	 * written and closed.
+	 */
+	ut_send_request(_fs_unload, NULL);
+
+	ut_send_request(_fs_load, NULL);
+
+	channel = spdk_fs_alloc_thread_ctx(g_fs);
+
+	rc = spdk_fs_file_stat(g_fs, channel, "testfile", &stat);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(buf_length == stat.size);
+
+	g_file = NULL;
+	rc = spdk_fs_open_file(g_fs, channel, "testfile", 0, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	spdk_file_close(g_file, channel);
+
+	rc = spdk_fs_delete_file(g_fs, channel, "testfile");
+	CU_ASSERT(rc == 0);
 
 	spdk_fs_free_thread_ctx(channel);
 
@@ -369,6 +462,7 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "write", cache_write) == NULL ||
+		CU_add_test(suite, "file length", file_length) == NULL ||
 		CU_add_test(suite, "write_null_buffer", cache_write_null_buffer) == NULL ||
 		CU_add_test(suite, "create_sync", fs_create_sync) == NULL ||
 		CU_add_test(suite, "append_no_cache", cache_append_no_cache) == NULL ||
