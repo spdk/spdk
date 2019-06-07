@@ -2903,6 +2903,11 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		return -EINVAL;
 	}
 
+	if (!_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES) &&
+	    !_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE)) {
+		return -ENOTSUP;
+	}
+
 	bdev_io = spdk_bdev_get_io(channel);
 
 	if (!bdev_io) {
@@ -2919,16 +2924,15 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
 		spdk_bdev_io_submit(bdev_io);
 		return 0;
-	} else if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE)) {
-		assert(spdk_bdev_get_block_size(bdev) <= ZERO_BUFFER_SIZE);
-		bdev_io->u.bdev.split_remaining_num_blocks = num_blocks;
-		bdev_io->u.bdev.split_current_offset_blocks = offset_blocks;
-		_spdk_bdev_write_zero_buffer_next(bdev_io);
-		return 0;
-	} else {
-		spdk_bdev_free_io(bdev_io);
-		return -ENOTSUP;
 	}
+
+	assert(_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
+	assert(spdk_bdev_get_block_size(bdev) <= ZERO_BUFFER_SIZE);
+	bdev_io->u.bdev.split_remaining_num_blocks = num_blocks;
+	bdev_io->u.bdev.split_current_offset_blocks = offset_blocks;
+	_spdk_bdev_write_zero_buffer_next(bdev_io);
+
+	return 0;
 }
 
 int
