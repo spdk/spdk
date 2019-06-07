@@ -157,43 +157,43 @@ get_other_cache_instance(struct vbdev_ocf *vbdev)
 
 /* Stop OCF cache object
  * vbdev_ocf is not operational after this */
-static int
+static void
 stop_vbdev(struct vbdev_ocf *vbdev)
 {
 	int rc;
 
-	if (vbdev == NULL) {
-		return -EFAULT;
-	}
-
 	if (vbdev->ocf_cache == NULL) {
-		return -EFAULT;
+		vbdev_ocf_mngt_continue(vbdev, -EFAULT);
+		return;
 	}
 
 	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
-		return -EINVAL;
+		vbdev_ocf_mngt_continue(vbdev, -EINVAL);
+		return;
 	}
 
 	if (get_other_cache_instance(vbdev)) {
 		SPDK_NOTICELOG("Not stopping cache instance '%s'"
 			       " because it is referenced by other OCF bdev\n",
 			       vbdev->cache.name);
-		return 0;
+		vbdev_ocf_mngt_continue(vbdev, 0);
+		return;
 	}
 
 	rc = ocf_mngt_cache_lock(vbdev->ocf_cache);
 	if (rc) {
-		return rc;
+		vbdev_ocf_mngt_continue(vbdev, rc);
+		return;
 	}
 
 	rc = ocf_mngt_cache_stop(vbdev->ocf_cache);
-	ocf_mngt_cache_unlock(vbdev->ocf_cache);
 	if (rc) {
 		SPDK_ERRLOG("Could not stop cache for '%s'\n", vbdev->name);
-		return rc;
 	}
 
-	return rc;
+	ocf_mngt_cache_unlock(vbdev->ocf_cache);
+
+	vbdev_ocf_mngt_continue(vbdev, rc);
 }
 
 /* Release SPDK and OCF objects associated with base */
@@ -216,9 +216,7 @@ remove_base(struct vbdev_ocf_base *base)
 
 	/* Release OCF-part */
 	if (base->parent->ocf_cache && ocf_cache_is_running(base->parent->ocf_cache)) {
-		if (base->is_cache) {
-			rc = stop_vbdev(base->parent);
-		} else {
+		if (!base->is_cache) {
 			rc = ocf_core_get(base->parent->ocf_cache, base->id, &core);
 			if (rc) {
 				goto close_spdk_dev;
@@ -245,10 +243,6 @@ close_spdk_dev:
 static void
 unregister_finish(struct vbdev_ocf *vbdev)
 {
-	int status;
-
-	status = stop_vbdev(vbdev);
-
 	if (vbdev->core.attached) {
 		remove_base(&vbdev->core);
 	}
@@ -256,7 +250,7 @@ unregister_finish(struct vbdev_ocf *vbdev)
 		remove_base(&vbdev->cache);
 	}
 
-	spdk_bdev_destruct_done(&vbdev->exp_bdev, status);
+	spdk_bdev_destruct_done(&vbdev->exp_bdev, vbdev->mngt_ctx.status);
 	vbdev_ocf_mngt_continue(vbdev, 0);
 }
 
@@ -281,6 +275,7 @@ wait_for_requests(struct vbdev_ocf *vbdev)
 /* Procedures called during unregister */
 vbdev_ocf_mngt_fn unregister_path[] = {
 	wait_for_requests,
+	stop_vbdev,
 	unregister_finish,
 	NULL
 };
