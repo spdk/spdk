@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dbf65299_e294dd9a",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T09:20:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "825a963e_04f87d2e",
+      "range": {
+        "startLine": 133,
+        "startChar": 0,
+        "endLine": 135,
+        "endChar": 2
+      },
+      "revId": "3232835365811dbd94725a16a18ca78ea600f177",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a516922e_86d710e8",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 26
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "90522a7b_c1e675c4",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1810,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T09:20:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a516922e_86d710e8",
+      "range": {
+        "startLine": 1805,
+        "startChar": 0,
+        "endLine": 1810,
+        "endChar": 0
+      },
+      "revId": "3232835365811dbd94725a16a18ca78ea600f177",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10453971_d7b42290",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 26
@@ -59,6 +107,30 @@
       "writtenOn": "2019-06-07T07:59:04Z",
       "side": 1,
       "message": "I think it\u0027d make more sense to chunk the parallel unit ANM events into num_bands number of chunk events (inside ftl_anm.c).",
+      "range": {
+        "startLine": 1811,
+        "startChar": 0,
+        "endLine": 1815,
+        "endChar": 0
+      },
+      "revId": "3232835365811dbd94725a16a18ca78ea600f177",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf012f05_140d2490",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1815,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T09:20:08Z",
+      "side": 1,
+      "message": "I\u0027m not so sure if we want to allocate more events (extra callocs/free). I think current approach is fine.",
+      "parentUuid": "10453971_d7b42290",
       "range": {
         "startLine": 1811,
         "startChar": 0,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "6b752173_d319e450",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T09:20:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "59f8886c_4481d96c",
+      "range": {
+        "startLine": 357,
+        "startChar": 0,
+        "endLine": 357,
+        "endChar": 1
+      },
+      "revId": "3232835365811dbd94725a16a18ca78ea600f177",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "00019d47_3acada3f",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 26
@@ -105,6 +201,30 @@
       "writtenOn": "2019-06-07T07:59:04Z",
       "side": 1,
       "message": "When is this happening?",
+      "range": {
+        "startLine": 379,
+        "startChar": 5,
+        "endLine": 379,
+        "endChar": 38
+      },
+      "revId": "3232835365811dbd94725a16a18ca78ea600f177",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e331b062_59af405c",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T09:20:08Z",
+      "side": 1,
+      "message": "Looks like some qemu bug, but I think this check is fine - we should validate external input (probably assert will be better, but this requires qemu investigation)",
+      "parentUuid": "00019d47_3acada3f",
       "range": {
         "startLine": 379,
         "startChar": 5,
@@ -137,6 +257,30 @@
       "revId": "3232835365811dbd94725a16a18ca78ea600f177",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62e22277_237957bb",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T09:20:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a7d9a683_79253812",
+      "range": {
+        "startLine": 381,
+        "startChar": 0,
+        "endLine": 381,
+        "endChar": 2
+      },
+      "revId": "3232835365811dbd94725a16a18ca78ea600f177",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
