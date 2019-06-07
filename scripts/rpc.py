@@ -6,6 +6,7 @@ import logging
 import argparse
 import rpc
 import sys
+import shlex
 
 try:
     from shlex import quote
@@ -1804,7 +1805,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def execute_script(parser, client, fd):
         for rpc_call in map(str.rstrip, fd):
-            args = parser.parse_args(rpc_call.split())
+            args = parser.parse_args(shlex.split(rpc_call))
             args.client = client
             call_rpc_func(args)
 
