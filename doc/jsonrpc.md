@@ -3487,6 +3487,7 @@ io_unit_size                | Optional | number  | I/O unit size (bytes)
 max_aq_depth                | Optional | number  | Max number of admin cmds per AQ
 num_shared_buffers          | Optional | number  | The number of pooled data buffers available to the transport
 buf_cache_size              | Optional | number  | The number of shared buffers to reserve for each poll group
+max_srq_depth               | Optional | number  | The number of elements in a per-thread shared receive queue (RDMA only)
 
 ### Example:
 
