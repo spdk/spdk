@@ -69,6 +69,24 @@
       "revId": "1f22720b4377f388b352a475ef9550765c88551f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4f25506_f26697c1",
+        "filename": "include/spdk/vmd.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-07T04:28:04Z",
+      "side": 1,
+      "message": "Eventually this function would also start a hotplug poller and attach some VMD endpoints after returning, so I\u0027d say it should return either 0 or -errno. We\u0027re adding separate APIs to the env layer to iterate through all spdk_pci_device objects and it should cover your concern.\n\nI\u0027m fine with this patch and Jim is on holiday, so let\u0027s get this merged.",
+      "parentUuid": "7d78bfad_ac970709",
+      "revId": "1f22720b4377f388b352a475ef9550765c88551f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
