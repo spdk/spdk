@@ -225,11 +225,11 @@ vbdev_ocf_ctx_data_seek(ctx_data_t *dst, ctx_data_seek_t seek, uint32_t offset)
 
 	switch (seek) {
 	case ctx_data_seek_begin:
-		off = MIN(off, d->size);
+		off = MIN(offset, d->size);
 		d->seek = off;
 		break;
 	case ctx_data_seek_current:
-		off = MIN(off, d->size - d->seek);
+		off = MIN(offset, d->size - d->seek);
 		d->seek += off;
 		break;
 	}
