@@ -81,6 +81,10 @@ struct vbdev_ocf_config {
 
 	/* Core initial config */
 	struct ocf_mngt_core_config         core;
+
+	/* Load flag, if set to true, then we will try load cache instance from disk,
+	 * otherwise we will create new cache on that disk */
+	bool                                loadq;
 };
 
 /* Types for management operations */
@@ -174,6 +178,7 @@ void vbdev_ocf_construct(
 	const char *cache_mode_name,
 	const char *cache_name,
 	const char *core_name,
+	bool loadq,
 	void (*cb)(int, struct vbdev_ocf *, void *),
 	void *cb_arg);
 
