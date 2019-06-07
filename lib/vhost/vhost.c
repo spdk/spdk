@@ -1177,7 +1177,11 @@ start_device(int vid)
 	 * Tested on QEMU 2.10.91 and 2.11.50.
 	 */
 	for (i = 0; i < vsession->max_queues; i++) {
-		rte_vhost_vring_call(vsession->vid, vsession->virtqueue[i].vring_idx);
+		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
+
+		if (q->vring.desc == NULL || q->vring.size == 0) {
+			rte_vhost_vring_call(vsession->vid, q->vring_idx);
+		}
 	}
 
 	spdk_vhost_session_set_coalescing(vdev, vsession, NULL);
