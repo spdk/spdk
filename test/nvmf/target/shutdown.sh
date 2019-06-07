@@ -74,6 +74,10 @@ timing_enter test1
 # Run bdev_svc, which connects but does not issue I/O
 $rootdir/test/app/bdev_svc/bdev_svc -i 1 -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf &
 perfpid=$!
+
+# Expand the trap to clean up the test app if something goes wrong
+trap "process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid; nvmfcleanup; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
+
 waitforlisten $perfpid /var/tmp/bdevperf.sock
 $rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
 
@@ -116,9 +120,6 @@ $rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevp
 perfpid=$!
 waitforlisten $perfpid /var/tmp/bdevperf.sock
 $rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
-
-# Expand the trap to clean up bdevperf if something goes wrong
-trap "process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid; nvmfcleanup; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforio /var/tmp/bdevperf.sock Nvme1n1
 
