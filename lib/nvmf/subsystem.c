@@ -1022,6 +1022,11 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		return 0;
 	}
 
+	if (spdk_bdev_get_md_size(bdev) != 0 && !spdk_bdev_is_md_interleaved(bdev)) {
+		SPDK_ERRLOG("Can't attach bdev with separate metadata.\n");
+		return 0;
+	}
+
 	spdk_nvmf_ns_opts_get_defaults(&opts, sizeof(opts));
 	if (user_opts) {
 		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
