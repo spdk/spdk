@@ -39,6 +39,24 @@
       "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b571ac46_d214b560",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4296,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-07T13:22:38Z",
+      "side": 1,
+      "message": "My bad, this is per-bdev mutex. In this case we should introduce another global mutex protecting g_bdev_mgr.bdevs everywhere throughout the code.",
+      "parentUuid": "a71238b1_f0bbc0f6",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
