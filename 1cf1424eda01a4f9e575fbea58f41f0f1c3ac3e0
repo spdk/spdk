@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "2d982225_dbdd7bd0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T09:46:31Z",
+      "side": 1,
+      "message": "No you don\u0027t need recursive lock. You should get rid of the ftl_reloc_lbkoff_valid altogether and just operate on the bit_array directly. In every place this function is used, you\u0027re taking the lock aferwards anyway.",
+      "parentUuid": "7bb3595a_68b0dd2e",
+      "range": {
+        "startLine": 186,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 35
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "998d498e_f7efecd1",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 9
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "ftl_reloc_add can only operate on pending_queue from diffrent thread.",
       "parentUuid": "998d498e_f7efecd1",
+      "range": {
+        "startLine": 677,
+        "startChar": 0,
+        "endLine": 677,
+        "endChar": 56
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "973ecdfd_f4217b17",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T09:46:31Z",
+      "side": 1,
+      "message": "It\u0027s a bit hard to follow. Could you please explain in a comment (ideally near the lock definition) the exact structures it\u0027s protecting?",
+      "parentUuid": "4ed20ac7_18090aa5",
       "range": {
         "startLine": 677,
         "startChar": 0,
@@ -166,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "70f025f3_16241933",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T09:46:31Z",
+      "side": 1,
+      "message": "So why are we setting this here without a lock?",
+      "parentUuid": "c5de37a1_6feec213",
+      "range": {
+        "startLine": 785,
+        "startChar": 3,
+        "endLine": 785,
+        "endChar": 25
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "13252807_23e973e4",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 9
@@ -213,6 +285,30 @@
     },
     {
       "key": {
+        "uuid": "135832fe_9f7cc138",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T09:46:31Z",
+      "side": 1,
+      "message": "Yeah, but you\u0027re iterating through the pending/prio queue without a lock.",
+      "parentUuid": "a5744520_f4ff06da",
+      "range": {
+        "startLine": 786,
+        "startChar": 0,
+        "endLine": 809,
+        "endChar": 0
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "97cebe82_a89e31a8",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 9
@@ -248,6 +344,30 @@
       "side": 1,
       "message": "In such case we need recursive lock or spread this lock in more places in code.",
       "parentUuid": "97cebe82_a89e31a8",
+      "range": {
+        "startLine": 833,
+        "startChar": 0,
+        "endLine": 838,
+        "endChar": 31
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8ac1a3f_1f522b84",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T09:46:31Z",
+      "side": 1,
+      "message": "No, you don\u0027t need recursive lock. You should acquire the lock before the loop and release it at  the end of this function (as you need it again on line 845). Instead of calling the ftl_reloc_lbk_off_valid / ftl_reloc_set_lbk just use the bit_array API.",
+      "parentUuid": "8e24ac25_f4cbe437",
       "range": {
         "startLine": 833,
         "startChar": 0,
