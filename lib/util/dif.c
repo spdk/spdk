@@ -1372,38 +1372,37 @@ dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 			   uint32_t *_mapped_len,
 			   const struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, head_unalign;
-	uint32_t num_blocks, offset_blocks;
+	uint32_t data_block_size, num_blocks, len;
 	struct _dif_sgl sgl;
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	num_blocks = data_len / data_block_size;
+	num_blocks = data_offset / data_block_size;
 
-	if (buf_len < num_blocks * ctx->block_size) {
+	if (buf_len < data_len + num_blocks * ctx->md_size) {
 		SPDK_ERRLOG("Buffer overflow will occur. Buffer size is %" PRIu32 " but"
 			    " necessary size is %" PRIu32 "\n",
-			    buf_len, num_blocks * ctx->block_size);
+			    buf_len, data_len + num_blocks * ctx->md_size);
 		return -ERANGE;
 	}
 
-	offset_blocks = data_offset / data_block_size;
-	head_unalign = data_offset % data_block_size;
-
 	_dif_sgl_init(&sgl, iovs, iovcnt);
-	buf += offset_blocks * ctx->block_size;
 
-	while (offset_blocks < num_blocks) {
-		buf += head_unalign;
+	buf += (data_offset / data_block_size) * ctx->block_size + (data_offset % data_block_size);
 
-		if (!_dif_sgl_append(&sgl, buf, data_block_size - head_unalign)) {
+	data_len -= data_offset;
+
+	while (data_len != 0) {
+		len = data_block_size - (data_offset % data_block_size);
+		len = spdk_min(len, data_len);
+
+		if (!_dif_sgl_append(&sgl, buf, len)) {
 			break;
 		}
 
-		buf += ctx->block_size - head_unalign;
-		offset_blocks++;
-
-		head_unalign = 0;
+		buf += len + ctx->md_size;
+		data_offset += len;
+		data_len -= len;
 	}
 
 	if (_mapped_len != NULL) {
@@ -1420,47 +1419,47 @@ dif_set_md_interleave_iovs_split(struct iovec *iovs, int iovcnt,
 				 uint32_t *_mapped_len,
 				 const struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, head_unalign;
-	uint32_t num_blocks, offset_blocks;
+	uint32_t data_block_size, num_blocks;
 	struct _dif_sgl dif_sgl;
 	struct _dif_sgl buf_sgl;
 	uint8_t *buf;
-	uint32_t buf_len, remaining;
+	uint32_t buf_offset, len, remaining;
 
 	data_block_size = ctx->block_size - ctx->md_size;
-	num_blocks = data_len / data_block_size;
+	num_blocks = data_offset / data_block_size;
 
 	_dif_sgl_init(&dif_sgl, iovs, iovcnt);
 	_dif_sgl_init(&buf_sgl, buf_iovs, buf_iovcnt);
 
-	if (!_dif_sgl_is_valid(&buf_sgl, num_blocks * ctx->block_size)) {
+	if (!_dif_sgl_is_valid(&buf_sgl, data_len + num_blocks * ctx->md_size)) {
 		SPDK_ERRLOG("Buffer overflow will occur.\n");
 		return -ERANGE;
 	}
 
-	offset_blocks = data_offset / data_block_size;
-	head_unalign = data_offset % data_block_size;
+	buf_offset = (data_offset / data_block_size) * ctx->block_size + (data_offset % data_block_size);
+	_dif_sgl_advance(&buf_sgl, buf_offset);
 
-	_dif_sgl_advance(&buf_sgl, offset_blocks * ctx->block_size);
+	data_len -= data_offset;
 
-	while (offset_blocks < num_blocks) {
-		_dif_sgl_advance(&buf_sgl, head_unalign);
+	while (data_len != 0) {
+		remaining = data_block_size - (data_offset % data_block_size);
+		remaining = spdk_min(remaining, data_len);
 
-		remaining = data_block_size - head_unalign;
 		while (remaining != 0) {
-			_dif_sgl_get_buf(&buf_sgl, (void *)&buf, &buf_len);
-			buf_len = spdk_min(buf_len, remaining);
+			_dif_sgl_get_buf(&buf_sgl, (void *)&buf, &len);
+			len = spdk_min(len, remaining);
 
-			if (!_dif_sgl_append(&dif_sgl, buf, buf_len)) {
+			if (!_dif_sgl_append(&dif_sgl, buf, len)) {
 				goto end;
 			}
-			_dif_sgl_advance(&buf_sgl, buf_len);
-			remaining -= buf_len;
-		}
-		_dif_sgl_advance(&buf_sgl, ctx->md_size);
-		offset_blocks++;
 
-		head_unalign = 0;
+			_dif_sgl_advance(&buf_sgl, len);
+			data_offset += len;
+			remaining -= len;
+			data_len -= len;
+		}
+
+		_dif_sgl_advance(&buf_sgl, ctx->md_size);
 	}
 
 end:
@@ -1478,16 +1477,7 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 				uint32_t *_mapped_len,
 				const struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size;
-
 	if (iovs == NULL || iovcnt == 0 || buf_iovs == NULL || buf_iovcnt == 0) {
-		return -EINVAL;
-	}
-
-	data_block_size = ctx->block_size - ctx->md_size;
-
-	if ((data_len % data_block_size) != 0) {
-		SPDK_ERRLOG("Data length must be a multiple of data block size\n");
 		return -EINVAL;
 	}
 
