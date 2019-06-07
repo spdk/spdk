@@ -3,6 +3,7 @@
 #
 #  Copyright (c) Intel Corporation.
 #  Copyright (c) 2017, IBM Corporation.
+#  Copyright (c) 2019, Mellanox Corporation.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -83,6 +84,7 @@ COMMON_CFLAGS += -march=native
 endif
 ifeq ($(TARGET_MACHINE),aarch64)
 COMMON_CFLAGS += -march=armv8-a+crc
+COMMON_CFLAGS += -DPAGE_SIZE=4096
 endif
 
 ifeq ($(CONFIG_WERROR), y)
