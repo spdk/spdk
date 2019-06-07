@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "7234d19f_0e3dedae",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-07T08:33:17Z",
+      "side": 1,
+      "message": "Is this even a right place to put this test?\njson_config.sh is about testing saving/loading JSON config files. get_notification_types doesn\u0027t fit here in my opinion.",
+      "range": {
+        "startLine": 51,
+        "startChar": 9,
+        "endLine": 51,
+        "endChar": 37
+      },
+      "revId": "81b0cb45dd57f18aec16f6bf5276e6c488fd3094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da2ab0af_cdfa9bf1",
         "filename": "test/json_config/json_config.sh",
         "patchSetId": 3
