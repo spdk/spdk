@@ -4,7 +4,8 @@ set -e
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-rpc_py="$rootdir/scripts/rpc.py"
+rpc_server=/var/tmp/spdk-raid.sock
+rpc_py="$rootdir/scripts/rpc.py -s $rpc_server"
 tmp_file=/tmp/raidrandtest
 
 source $rootdir/test/common/autotest_common.sh
@@ -62,7 +63,6 @@ function on_error_exit() {
 
 function raid_function_test() {
 	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
-		local rpc_server=/var/tmp/spdk-raid.sock
 		local conf=$1
 		local nbd=/dev/nbd0
 		local raid_bdev
@@ -77,7 +77,7 @@ function raid_function_test() {
 		echo "Process raid pid: $raid_pid"
 		waitforlisten $raid_pid $rpc_server
 
-		raid_bdev=$($rootdir/scripts/rpc.py -s $rpc_server get_raid_bdevs online | cut -d ' ' -f 1)
+		raid_bdev=$($rpc_py get_raid_bdevs online | cut -d ' ' -f 1)
 		if [ $raid_bdev = "" ]; then
 			echo "No raid0 device in SPDK app"
 			return 1
