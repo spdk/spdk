@@ -13,6 +13,11 @@ run_step() {
 	echo "--spdk_cache_size=$CACHE_SIZE" >> "$1"_flags.txt
 
 	echo -n Start $1 test phase...
+	# ASAN has some bugs around thread_local variables.  We have a destructor in place
+	# to free the thread contexts, but ASAN complains about the leak before those
+	# destructors have a chance to run.  So suppress this one specific leak using
+	# LSAN_OPTIONS.
+	export LSAN_OPTIONS="suppressions=$testdir/lsan_suppressions.txt"
 	/usr/bin/time taskset 0xFF $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
 	echo done.
 }
