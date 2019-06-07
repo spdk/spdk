@@ -350,6 +350,24 @@
     },
     {
       "key": {
+        "uuid": "52d2df86_8ceca0aa",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T06:07:59Z",
+      "side": 1,
+      "message": "breloc-\u003enum_inflight \u003d\u003d 0 is shutdown complete condition and ftl_reloc_free is called after that (actually this is last module in deinitialization flow)",
+      "parentUuid": "52214524_8203c9c1",
+      "revId": "4e57327f992746f440da620b39d6508e53b9ad04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "20b1d9bb_9095ac5c",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 19
