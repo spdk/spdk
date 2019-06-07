@@ -8,6 +8,12 @@ Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.
 
+### bdev
+
+The format of the data returned by the get_bdevs_iostat RPC has changed to
+make it easier to parse.  It now returns an object with a "ticks" object
+and "bdevs" array with the per-bdev statistics.
+
 ## v19.04:
 
 ### nvme
