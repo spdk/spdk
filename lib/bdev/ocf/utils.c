@@ -74,7 +74,12 @@ mngt_poll_fn(void *opaque)
 	struct vbdev_ocf *vbdev = opaque;
 
 	if (vbdev->mngt_ctx.poller_fn) {
-		vbdev->mngt_ctx.poller_fn(vbdev);
+		if (vbdev->mngt_ctx.timeout_ts &&
+		    spdk_get_ticks() >= vbdev->mngt_ctx.timeout_ts) {
+			vbdev_ocf_mngt_continue(vbdev, -ETIMEDOUT);
+		} else {
+			vbdev->mngt_ctx.poller_fn(vbdev);
+		}
 	}
 
 	return 0;
@@ -104,11 +109,22 @@ vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
 	return 0;
 }
 
+
+static void
+vbdev_ocf_mngt_poll_set_timeout(struct vbdev_ocf *vbdev, uint64_t millisec)
+{
+	uint64_t ticks;
+
+	ticks = millisec * spdk_get_ticks_hz() / 1000;
+	vbdev->mngt_ctx.timeout_ts = spdk_get_ticks() + ticks;
+}
+
 void
 vbdev_ocf_mngt_poll(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn fn)
 {
 	assert(vbdev->mngt_ctx.poller != NULL);
 	vbdev->mngt_ctx.poller_fn = fn;
+	vbdev_ocf_mngt_poll_set_timeout(vbdev, 5000);
 }
 
 void
