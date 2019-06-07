@@ -16,6 +16,24 @@
       "revId": "0f783d45aece974981f2b46c83251e20d18c5e85",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e64fc2b9_b3f9c803",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-07T08:29:05Z",
+      "side": 1,
+      "message": "I don\u0027t think so. The way we handle exception for execute_script() and call_rpc_func is different.\n\nExecute_script() additionaly uses \"executed_rpc\" variable to print specific line from STDIN which failed. We don\u0027t need to do that when calling rpc.py with arguments.",
+      "parentUuid": "120bbb78_11fe05d0",
+      "revId": "0f783d45aece974981f2b46c83251e20d18c5e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
