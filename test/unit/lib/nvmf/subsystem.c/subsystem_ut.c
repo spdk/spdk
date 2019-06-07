@@ -53,6 +53,12 @@ DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 512);
 
+DEFINE_STUB(spdk_bdev_get_md_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 0);
+
+DEFINE_STUB(spdk_bdev_is_md_interleaved, bool,
+	    (const struct spdk_bdev *bdev), false);
+
 DEFINE_STUB(spdk_nvmf_transport_stop_listen,
 	    int,
 	    (struct spdk_nvmf_transport *transport,
