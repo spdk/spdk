@@ -131,7 +131,7 @@ vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
 
 	spdk_poller_unregister(&vbdev->mngt_ctx.poller);
 	if (vbdev->mngt_ctx.cb) {
-		vbdev->mngt_ctx.cb(vbdev->mngt_ctx.status, vbdev->mngt_ctx.cb_arg);
+		vbdev->mngt_ctx.cb(vbdev->mngt_ctx.status, vbdev, vbdev->mngt_ctx.cb_arg);
 	}
 	memset(&vbdev->mngt_ctx, 0, sizeof(vbdev->mngt_ctx));
 }
