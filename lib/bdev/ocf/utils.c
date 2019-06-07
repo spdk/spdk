@@ -112,6 +112,18 @@ vbdev_ocf_mngt_poll(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn fn)
 }
 
 void
+vbdev_ocf_mngt_stop(struct vbdev_ocf *vbdev)
+{
+	spdk_poller_unregister(&vbdev->mngt_ctx.poller);
+
+	if (vbdev->mngt_ctx.cb) {
+		vbdev->mngt_ctx.cb(vbdev->mngt_ctx.status, vbdev, vbdev->mngt_ctx.cb_arg);
+	}
+
+	memset(&vbdev->mngt_ctx, 0, sizeof(vbdev->mngt_ctx));
+}
+
+void
 vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
 {
 	if (vbdev->mngt_ctx.current_step == NULL) {
@@ -129,9 +141,5 @@ vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
 		return;
 	}
 
-	spdk_poller_unregister(&vbdev->mngt_ctx.poller);
-	if (vbdev->mngt_ctx.cb) {
-		vbdev->mngt_ctx.cb(vbdev->mngt_ctx.status, vbdev, vbdev->mngt_ctx.cb_arg);
-	}
-	memset(&vbdev->mngt_ctx, 0, sizeof(vbdev->mngt_ctx));
+	vbdev_ocf_mngt_stop(vbdev);
 }
