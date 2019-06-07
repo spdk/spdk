@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77d8402a_338b9517",
+        "filename": "test/unit/lib/ftl/ftl_ppa/ftl_ppa_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T13:42:52Z",
+      "side": 1,
+      "message": "Can we rename it test_ppa_pack32?",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 115,
+        "endChar": 13
+      },
+      "revId": "66fffdb9692256f52975c64343d908b74a52bd2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d0edb54_b9574dfe",
+        "filename": "test/unit/lib/ftl/ftl_ppa/ftl_ppa_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T13:42:52Z",
+      "side": 1,
+      "message": "Let\u0027s test the boundaries as well (similar to the test above).",
+      "revId": "66fffdb9692256f52975c64343d908b74a52bd2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
