@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a1bb8a6_8b4fe413",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4284,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-07T13:05:50Z",
+      "side": 1,
+      "message": "At this point I think even spdk_bdev_open2 would suit better. This function has significantly different signature than spdk_bdev_open() but current name suggests it is spdk_bdev_open() with just some additional params.",
+      "range": {
+        "startLine": 4284,
+        "startChar": 10,
+        "endLine": 4284,
+        "endChar": 26
+      },
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a71238b1_f0bbc0f6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4296,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-07T13:05:50Z",
+      "side": 1,
+      "message": "you should lock before getting the bdev",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
