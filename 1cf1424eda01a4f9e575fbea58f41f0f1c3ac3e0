@@ -142,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "c5de37a1_6feec213",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T08:15:37Z",
+      "side": 1,
+      "message": "This need to be done under the lock when we are operate on pending queue, so I\u0027ve moved this from reloc_prep to ftl_reloc_add_active_queue",
+      "parentUuid": "4648c446_b6a16124",
+      "range": {
+        "startLine": 785,
+        "startChar": 3,
+        "endLine": 785,
+        "endChar": 25
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "13252807_23e973e4",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 9
