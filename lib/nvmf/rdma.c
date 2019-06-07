@@ -429,6 +429,8 @@ struct spdk_nvmf_rdma_device {
 	struct spdk_mem_map			*map;
 	struct ibv_pd				*pd;
 
+	int					num_srq;
+
 	TAILQ_ENTRY(spdk_nvmf_rdma_device)	link;
 };
 
@@ -2943,9 +2945,10 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		TAILQ_INIT(&poller->qpairs);
 
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
-		if (transport->opts.no_srq == false && device->attr.max_srq != 0) {
+		if (transport->opts.no_srq == false && device->num_srq < device->attr.max_srq) {
 			poller->max_srq_depth = transport->opts.max_srq_depth;
 
+			device->num_srq++;
 			memset(&srq_init_attr, 0, sizeof(struct ibv_srq_init_attr));
 			srq_init_attr.attr.max_wr = poller->max_srq_depth;
 			srq_init_attr.attr.max_sge = spdk_min(device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
