@@ -56,11 +56,11 @@ function tgt_check_notifications() {
                 # remove ID
                 event="${event_line%:*}"
 
-                ev_type=${event%*:}
-                ev_ctx=${event#:*}
+                ev_type=${event%:*}
+                ev_ctx=${event#*:}
 
-                ex_ev_type=${1%*:}
-                ex_ev_ctx=${1#:*}
+                ex_ev_type=${1%%:*}
+                ex_ev_ctx=${1#*:}
 
                 last_event_id=${event_line##*:}
 
