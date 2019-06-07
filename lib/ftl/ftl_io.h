@@ -73,6 +73,8 @@ enum ftl_io_flags {
 	/* Indicates that PPA should be taken from IO struct, */
 	/* not assigned by wptr, only works if wptr is also in direct mode */
 	FTL_IO_DIRECT_ACCESS	= (1 << 9),
+	/* Bypass the non-volatile cache */
+	FTL_IO_BYPASS_CACHE	= (1 << 10),
 };
 
 enum ftl_io_type {
