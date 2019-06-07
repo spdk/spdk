@@ -98,7 +98,7 @@ spdk_rpc_construct_ocf_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	vbdev_ocf_construct(req.name, req.mode, req.cache_bdev_name, req.core_bdev_name,
+	vbdev_ocf_construct(req.name, req.mode, req.cache_bdev_name, req.core_bdev_name, false,
 			    construct_cb, request);
 	free_rpc_construct_ocf_bdev(&req);
 }
