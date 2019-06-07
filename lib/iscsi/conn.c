@@ -1428,6 +1428,7 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_tgt_node	*target;
 	uint32_t			i;
 	uint32_t			lcore;
+	int				rc;
 
 	lcore = SPDK_ENV_LCORE_ID_ANY;
 
@@ -1481,6 +1482,13 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	assert(conn->lcore == spdk_env_get_current_core());
 	pg = &g_spdk_iscsi.poll_group[conn->lcore];
 	iscsi_poll_group_remove_conn(pg, conn);
+
+	/* Keep trying to flush PDUs until our list is empty - to make sure
+	 * all data is sent before moving the connection to another core.
+	 */
+	do {
+		rc = iscsi_conn_flush_pdus_internal(conn);
+	} while (rc == 1);
 
 	conn->last_nopin = spdk_get_ticks();
 	event = spdk_event_allocate(lcore, iscsi_conn_full_feature_migrate,
