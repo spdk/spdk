@@ -960,6 +960,141 @@ ret:
 	return -1;
 }
 
+static int
+verify_test_params(struct spdk_app_opts *opts)
+{
+	if (g_queue_depth <= 0) {
+		spdk_app_usage();
+		bdevperf_usage();
+		return 1;
+	}
+	if (g_io_size <= 0) {
+		spdk_app_usage();
+		bdevperf_usage();
+		return 1;
+	}
+	if (!g_workload_type) {
+		spdk_app_usage();
+		bdevperf_usage();
+		return 1;
+	}
+	if (g_time_in_sec <= 0) {
+		spdk_app_usage();
+		bdevperf_usage();
+		return 1;
+	}
+	g_time_in_usec = g_time_in_sec * 1000000LL;
+
+	if (g_show_performance_ema_period > 0 &&
+	    g_show_performance_real_time == 0) {
+		fprintf(stderr, "-P option must be specified with -S option\n");
+		return 1;
+	}
+
+	if (strcmp(g_workload_type, "read") &&
+	    strcmp(g_workload_type, "write") &&
+	    strcmp(g_workload_type, "randread") &&
+	    strcmp(g_workload_type, "randwrite") &&
+	    strcmp(g_workload_type, "rw") &&
+	    strcmp(g_workload_type, "randrw") &&
+	    strcmp(g_workload_type, "verify") &&
+	    strcmp(g_workload_type, "reset") &&
+	    strcmp(g_workload_type, "unmap") &&
+	    strcmp(g_workload_type, "write_zeroes") &&
+	    strcmp(g_workload_type, "flush")) {
+		fprintf(stderr,
+			"io pattern type must be one of\n"
+			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
+		return 1;
+	}
+
+	if (!strcmp(g_workload_type, "read") ||
+	    !strcmp(g_workload_type, "randread")) {
+		g_rw_percentage = 100;
+	}
+
+	if (!strcmp(g_workload_type, "write") ||
+	    !strcmp(g_workload_type, "randwrite")) {
+		g_rw_percentage = 0;
+	}
+
+	if (!strcmp(g_workload_type, "unmap")) {
+		g_unmap = true;
+	}
+
+	if (!strcmp(g_workload_type, "write_zeroes")) {
+		g_write_zeroes = true;
+	}
+
+	if (!strcmp(g_workload_type, "flush")) {
+		g_flush = true;
+	}
+
+	if (!strcmp(g_workload_type, "verify") ||
+	    !strcmp(g_workload_type, "reset")) {
+		g_rw_percentage = 50;
+		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
+				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
+			return 1;
+		}
+		if (opts->reactor_mask) {
+			fprintf(stderr, "Ignoring -m option. Verify can only run with a single core.\n");
+			opts->reactor_mask = NULL;
+		}
+		g_verify = true;
+		if (!strcmp(g_workload_type, "reset")) {
+			g_reset = true;
+		}
+	}
+
+	if (!strcmp(g_workload_type, "read") ||
+	    !strcmp(g_workload_type, "randread") ||
+	    !strcmp(g_workload_type, "write") ||
+	    !strcmp(g_workload_type, "randwrite") ||
+	    !strcmp(g_workload_type, "verify") ||
+	    !strcmp(g_workload_type, "reset") ||
+	    !strcmp(g_workload_type, "unmap") ||
+	    !strcmp(g_workload_type, "write_zeroes") ||
+	    !strcmp(g_workload_type, "flush")) {
+		if (g_mix_specified) {
+			fprintf(stderr, "Ignoring -M option... Please use -M option"
+				" only when using rw or randrw.\n");
+		}
+	}
+
+	if (!strcmp(g_workload_type, "rw") ||
+	    !strcmp(g_workload_type, "randrw")) {
+		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
+			fprintf(stderr,
+				"-M must be specified to value from 0 to 100 "
+				"for rw or randrw.\n");
+			return 1;
+		}
+	}
+
+	if (!strcmp(g_workload_type, "read") ||
+	    !strcmp(g_workload_type, "write") ||
+	    !strcmp(g_workload_type, "rw") ||
+	    !strcmp(g_workload_type, "verify") ||
+	    !strcmp(g_workload_type, "reset") ||
+	    !strcmp(g_workload_type, "unmap") ||
+	    !strcmp(g_workload_type, "write_zeroes")) {
+		g_is_random = 0;
+	} else {
+		g_is_random = 1;
+	}
+
+	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+		printf("I/O size of %d is greater than zero copy threshold (%d).\n",
+		       g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
+		printf("Zero copy mechanism will not be used.\n");
+		g_zcopy = false;
+	}
+
+	return 0;
+}
+
 static void
 bdevperf_run(void *arg1)
 {
@@ -1122,133 +1257,8 @@ main(int argc, char **argv)
 		return rc;
 	}
 
-	if (g_queue_depth <= 0) {
-		spdk_app_usage();
-		bdevperf_usage();
+	if (verify_test_params(&opts) != 0) {
 		exit(1);
-	}
-	if (g_io_size <= 0) {
-		spdk_app_usage();
-		bdevperf_usage();
-		exit(1);
-	}
-	if (!g_workload_type) {
-		spdk_app_usage();
-		bdevperf_usage();
-		exit(1);
-	}
-	if (g_time_in_sec <= 0) {
-		spdk_app_usage();
-		bdevperf_usage();
-		exit(1);
-	}
-	g_time_in_usec = g_time_in_sec * 1000000LL;
-
-	if (g_show_performance_ema_period > 0 &&
-	    g_show_performance_real_time == 0) {
-		fprintf(stderr, "-P option must be specified with -S option\n");
-		exit(1);
-	}
-
-	if (strcmp(g_workload_type, "read") &&
-	    strcmp(g_workload_type, "write") &&
-	    strcmp(g_workload_type, "randread") &&
-	    strcmp(g_workload_type, "randwrite") &&
-	    strcmp(g_workload_type, "rw") &&
-	    strcmp(g_workload_type, "randrw") &&
-	    strcmp(g_workload_type, "verify") &&
-	    strcmp(g_workload_type, "reset") &&
-	    strcmp(g_workload_type, "unmap") &&
-	    strcmp(g_workload_type, "write_zeroes") &&
-	    strcmp(g_workload_type, "flush")) {
-		fprintf(stderr,
-			"io pattern type must be one of\n"
-			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
-		exit(1);
-	}
-
-	if (!strcmp(g_workload_type, "read") ||
-	    !strcmp(g_workload_type, "randread")) {
-		g_rw_percentage = 100;
-	}
-
-	if (!strcmp(g_workload_type, "write") ||
-	    !strcmp(g_workload_type, "randwrite")) {
-		g_rw_percentage = 0;
-	}
-
-	if (!strcmp(g_workload_type, "unmap")) {
-		g_unmap = true;
-	}
-
-	if (!strcmp(g_workload_type, "write_zeroes")) {
-		g_write_zeroes = true;
-	}
-
-	if (!strcmp(g_workload_type, "flush")) {
-		g_flush = true;
-	}
-
-	if (!strcmp(g_workload_type, "verify") ||
-	    !strcmp(g_workload_type, "reset")) {
-		g_rw_percentage = 50;
-		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
-			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
-				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
-			exit(1);
-		}
-		if (opts.reactor_mask) {
-			fprintf(stderr, "Ignoring -m option. Verify can only run with a single core.\n");
-			opts.reactor_mask = NULL;
-		}
-		g_verify = true;
-		if (!strcmp(g_workload_type, "reset")) {
-			g_reset = true;
-		}
-	}
-
-	if (!strcmp(g_workload_type, "read") ||
-	    !strcmp(g_workload_type, "randread") ||
-	    !strcmp(g_workload_type, "write") ||
-	    !strcmp(g_workload_type, "randwrite") ||
-	    !strcmp(g_workload_type, "verify") ||
-	    !strcmp(g_workload_type, "reset") ||
-	    !strcmp(g_workload_type, "unmap") ||
-	    !strcmp(g_workload_type, "write_zeroes") ||
-	    !strcmp(g_workload_type, "flush")) {
-		if (g_mix_specified) {
-			fprintf(stderr, "Ignoring -M option... Please use -M option"
-				" only when using rw or randrw.\n");
-		}
-	}
-
-	if (!strcmp(g_workload_type, "rw") ||
-	    !strcmp(g_workload_type, "randrw")) {
-		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
-			fprintf(stderr,
-				"-M must be specified to value from 0 to 100 "
-				"for rw or randrw.\n");
-			exit(1);
-		}
-	}
-
-	if (!strcmp(g_workload_type, "read") ||
-	    !strcmp(g_workload_type, "write") ||
-	    !strcmp(g_workload_type, "rw") ||
-	    !strcmp(g_workload_type, "verify") ||
-	    !strcmp(g_workload_type, "reset") ||
-	    !strcmp(g_workload_type, "unmap") ||
-	    !strcmp(g_workload_type, "write_zeroes")) {
-		g_is_random = 0;
-	} else {
-		g_is_random = 1;
-	}
-
-	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
-		printf("I/O size of %d is greater than zero copy threshold (%d).\n",
-		       g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
-		printf("Zero copy mechanism will not be used.\n");
-		g_zcopy = false;
 	}
 
 	rc = spdk_app_start(&opts, bdevperf_run, NULL);
