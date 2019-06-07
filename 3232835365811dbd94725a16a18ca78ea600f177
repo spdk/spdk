@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "5e99b828_c691e6ce",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1815,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T09:56:03Z",
+      "side": 1,
+      "message": "That approach would be much more clean. We\u0027re planning on removing that allocations, so I think it\u0027d be better to keep the code clean. Also the whole parallel unit events should be rare, so it shouldn\u0027t have much impact on performance anyway.",
+      "parentUuid": "cf012f05_140d2490",
+      "range": {
+        "startLine": 1811,
+        "startChar": 0,
+        "endLine": 1815,
+        "endChar": 0
+      },
+      "revId": "3232835365811dbd94725a16a18ca78ea600f177",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "59f8886c_4481d96c",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 26
@@ -225,6 +249,30 @@
       "side": 1,
       "message": "Looks like some qemu bug, but I think this check is fine - we should validate external input (probably assert will be better, but this requires qemu investigation)",
       "parentUuid": "00019d47_3acada3f",
+      "range": {
+        "startLine": 379,
+        "startChar": 5,
+        "endLine": 379,
+        "endChar": 38
+      },
+      "revId": "3232835365811dbd94725a16a18ca78ea600f177",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa47f779_37079ece",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-07T09:56:03Z",
+      "side": 1,
+      "message": "Yeah, the check is fine, but I think it shouldn\u0027t be here. This function should assume that the PPA is within the bounds of the underlying device. Checking if the PPA has chunk \u003e geo.max_chunks should be done inside ftl_anm.c",
+      "parentUuid": "e331b062_59af405c",
       "range": {
         "startLine": 379,
         "startChar": 5,
