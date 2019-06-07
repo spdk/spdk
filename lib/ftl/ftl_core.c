@@ -1603,7 +1603,7 @@ ftl_rwb_fill(struct ftl_io *io)
 	}
 
 	if (ftl_io_done(io)) {
-		if (dev->nv_cache.bdev_desc) {
+		if (dev->nv_cache.bdev_desc && !(io->flags & FTL_IO_BYPASS_CACHE)) {
 			ftl_write_nv_cache(io);
 		} else {
 			ftl_io_complete(io);
