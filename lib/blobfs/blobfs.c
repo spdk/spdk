@@ -2053,11 +2053,15 @@ __file_flush(void *ctx)
 
 	pthread_spin_lock(&file->lock);
 	next = spdk_tree_find_buffer(file->tree, file->length_flushed);
-	if (next == NULL || next->in_progress) {
+	if (next == NULL || next->in_progress ||
+	    ((next->bytes_filled < next->buf_size) && TAILQ_EMPTY(&file->sync_requests))) {
 		/*
-		 * There is either no data to flush, or a flush I/O is already in
-		 *  progress.  So return immediately - if a flush I/O is in
-		 *  progress we will flush more data after that is completed.
+		 * There is either no data to flush, a flush I/O is already in
+		 *  progress, or the next buffer is partially filled but there's no
+		 *  outstanding request to sync it.
+		 * So return immediately - if a flush I/O is in progress we will flush
+		 *  more data after that is completed, or a partial buffer will get flushed
+		 *  when it is either filled or the file is synced.
 		 */
 		free_fs_request(req);
 		if (next == NULL) {
