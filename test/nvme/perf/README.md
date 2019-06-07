@@ -66,8 +66,11 @@ Specifies how many times run each workload. End results are averages of these wo
 By default disks are preconditioned before test using fio with parameters: size=100%, loops=2, bs=1M, w=write,
 iodepth=32, ioengine=spdk. It can be skiped when this option is set.
 
-#### "--no-io-scaling"
+#### --no-io-scaling
 For SPDK fio plugin iodepth is multiplied by number of devices. When this option is set this multiplication will be disabled.
+
+#### --compile-with-lto
+By default this script will compile SPDK with link time optimization (lto) gcc flag. Set this flag to false in CI environments where SPDK is already compiled with lto prior to calling this script to avoid recompiling SPDK.
 
 ## Results
 Results are stored in "results" folder. After each workload, to this folder are copied files with:
