@@ -36,7 +36,9 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', dest='verbose', choices=['DEBUG', 'INFO', 'ERROR'],
                         help="""Set verbose level. """)
     parser.add_argument('--dry_run', dest='dry_run', action='store_true', help="Display request and exit")
+    parser.add_argument('--daemon', dest='daemon', action='store_true', help="Run rpc as deamon")
     parser.set_defaults(dry_run=False)
+    parser.set_defaults(daemon=False)
     subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name')
 
     def start_subsystem_init(args):
@@ -1801,14 +1803,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def check_called_name(name):
         if name in deprecated_aliases:
-            print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
+            print_string("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
 
     class mock_client:
-        def call(self, method, params):
-            print("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
+        def call(self, method, params=None):
+            return print_string("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
 
+    global cmd_output
     def mock_print(arg):
-        pass
+        global cmd_output
+        cmd_output = str(arg) + "\n"
+        return cmd_output
 
     def call_rpc_func(args):
         args.func(args)
@@ -1835,6 +1840,32 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 exit(1)
 
     args = parser.parse_args()
+    if args.daemon:
+        import socket
+        import time
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.bind("/tmp/socketname")
+        s.listen(1)
+        while True:
+            try:
+                conn, addr = s.accept()
+                data = conn.recv(1024)
+                if not data:
+                    break
+                cmd = data.decode("utf-8")
+                tmp_args = parser.parse_args(cmd.split())
+                print_dict = mock_print
+                print_string = mock_print
+                if args.dry_run:
+                    tmp_args.client = mock_client()
+                else:
+                    tmp_args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+                call_rpc_func(tmp_args)
+                conn.sendall(cmd_output.encode())
+            finally:
+                conn.close()
+        s.close()
+        exit(0)
     if args.dry_run:
         args.client = mock_client()
         print_dict = mock_print
