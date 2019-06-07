@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2432e4b1_e22cfce0",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T13:17:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4924fbb6_0c31418e",
+      "revId": "35a8174bf311f45838c89fc0c4660d14857af83b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4a27491b_137c28da",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 30
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "488070ea_d0a499c5",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T13:17:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4a27491b_137c28da",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 172,
+        "endChar": 2
+      },
+      "revId": "35a8174bf311f45838c89fc0c4660d14857af83b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46ceb1e6_f8311721",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 30
@@ -53,6 +95,30 @@
       "writtenOn": "2019-06-07T13:01:44Z",
       "side": 1,
       "message": "I think this should be done unconditionally here.",
+      "range": {
+        "startLine": 175,
+        "startChar": 2,
+        "endLine": 177,
+        "endChar": 3
+      },
+      "revId": "35a8174bf311f45838c89fc0c4660d14857af83b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6325550b_336bca3c",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T13:17:22Z",
+      "side": 1,
+      "message": "We need to pass orginal ppa in case FTL_ANM_RANGE_LBK",
+      "parentUuid": "46ceb1e6_f8311721",
       "range": {
         "startLine": 175,
         "startChar": 2,
