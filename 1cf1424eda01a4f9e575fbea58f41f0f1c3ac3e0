@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7bb3595a_68b0dd2e",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T08:10:51Z",
+      "side": 1,
+      "message": "In such case we need recursive lock or spread this lock in more places in code.",
+      "parentUuid": "2c803e44_9138dc51",
+      "range": {
+        "startLine": 186,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 35
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "998d498e_f7efecd1",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-07T07:51:07Z",
       "side": 1,
       "message": "Why is this not under a lock?",
+      "range": {
+        "startLine": 677,
+        "startChar": 0,
+        "endLine": 677,
+        "endChar": 56
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ed20ac7_18090aa5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T08:10:51Z",
+      "side": 1,
+      "message": "ftl_reloc_add can only operate on pending_queue from diffrent thread.",
+      "parentUuid": "998d498e_f7efecd1",
       "range": {
         "startLine": 677,
         "startChar": 0,
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "a5744520_f4ff06da",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T08:10:51Z",
+      "side": 1,
+      "message": "There is a lock on pending queue remove in ftl_reloc_add_active_queue().",
+      "parentUuid": "13252807_23e973e4",
+      "range": {
+        "startLine": 786,
+        "startChar": 0,
+        "endLine": 809,
+        "endChar": 0
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "97cebe82_a89e31a8",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 9
@@ -128,6 +200,30 @@
       "writtenOn": "2019-06-07T07:51:07Z",
       "side": 1,
       "message": "Wouldn\u0027t it make more sense to do this atomically? Acquiring the lock twice during each loop iteration doesn\u0027t seem like a good idea...",
+      "range": {
+        "startLine": 833,
+        "startChar": 0,
+        "endLine": 838,
+        "endChar": 31
+      },
+      "revId": "1cf1424eda01a4f9e575fbea58f41f0f1c3ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e24ac25_f4cbe437",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-07T08:10:51Z",
+      "side": 1,
+      "message": "In such case we need recursive lock or spread this lock in more places in code.",
+      "parentUuid": "97cebe82_a89e31a8",
       "range": {
         "startLine": 833,
         "startChar": 0,
