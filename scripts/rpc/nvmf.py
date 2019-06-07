@@ -45,7 +45,8 @@ def nvmf_create_transport(client,
                           max_aq_depth=None,
                           num_shared_buffers=None,
                           buf_cache_size=None,
-                          max_srq_depth=None):
+                          max_srq_depth=None,
+                          no_srq=False):
     """NVMf Transport Create options.
 
     Args:
@@ -59,6 +60,7 @@ def nvmf_create_transport(client,
         num_shared_buffers: The number of pooled data buffers available to the transport (optional)
         buf_cache_size: The number of shared buffers to reserve for each poll group (optional)
         max_srq_depth: Max number of outstanding I/O per shared receive queue - RDMA specific (optional)
+        no_srq: Boolean flag to disable SRQ even for devices that support it - RDMA specific (optional)
 
     Returns:
         True or False
@@ -84,6 +86,8 @@ def nvmf_create_transport(client,
         params['buf_cache_size'] = buf_cache_size
     if max_srq_depth:
         params['max_srq_depth'] = max_srq_depth
+    if no_srq:
+        params['no_srq'] = no_srq
     return client.call('nvmf_create_transport', params)
 
 

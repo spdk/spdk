@@ -64,15 +64,16 @@ struct spdk_json_write_ctx;
 struct spdk_nvmf_transport;
 
 struct spdk_nvmf_transport_opts {
-	uint16_t max_queue_depth;
-	uint16_t max_qpairs_per_ctrlr;
-	uint32_t in_capsule_data_size;
-	uint32_t max_io_size;
-	uint32_t io_unit_size;
-	uint32_t max_aq_depth;
-	uint32_t num_shared_buffers;
-	uint32_t buf_cache_size;
-	uint32_t max_srq_depth;
+	uint16_t	max_queue_depth;
+	uint16_t	max_qpairs_per_ctrlr;
+	uint32_t	in_capsule_data_size;
+	uint32_t	max_io_size;
+	uint32_t	io_unit_size;
+	uint32_t	max_aq_depth;
+	uint32_t	num_shared_buffers;
+	uint32_t	buf_cache_size;
+	uint32_t	max_srq_depth;
+	bool		no_srq;
 };
 
 /**
