@@ -1309,6 +1309,7 @@ iscsi_parse_globals(void)
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
 		free(g_spdk_iscsi.session);
+		g_spdk_iscsi.session = NULL;
 		return -1;
 	}
 
@@ -1316,6 +1317,7 @@ iscsi_parse_globals(void)
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
 		free(g_spdk_iscsi.session);
+		g_spdk_iscsi.session = NULL;
 		return rc;
 	}
 
