@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a01539a0_f2126ebd",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1480,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-07T18:02:52Z",
+      "side": 1,
+      "message": "I\u0027ve said this so many times, but I have to say it again. \"Core\" is such a terrible term to use here and it needs to be changed immediately.",
+      "revId": "8e15d2239a086b2f61718521d6d1aba2b9620e09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
