@@ -39,6 +39,8 @@ cores=$(get_cores "$CPUS_ALLOWED")
 no_cores=($cores)
 no_cores=${#no_cores[@]}
 
+use_lto
+
 if $PRECONDITIONING; then
 	HUGEMEM=8192 $ROOT_DIR/scripts/setup.sh
 	cp $BASE_DIR/config.fio.tmp $BASE_DIR/config.fio

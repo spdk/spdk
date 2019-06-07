@@ -259,6 +259,14 @@ function run_nvme_fio(){
 	sleep 1
 }
 
+function use_lto() {
+#Link time optimization(lto) allows the linker to run a post-link optimization pass on the code.
+        cd $ROOT_DIR
+        FIO_DIR=$(readlink -f $(dirname $FIO_BIN))
+        ./configure --with-fio=$FIO_DIR --enable-lto
+        make -j${nproc}
+}
+
 function usage()
 {
 	set +x
