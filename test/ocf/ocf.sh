@@ -20,3 +20,4 @@ suite "$testdir/management/create-destruct.sh"
 suite "$testdir/management/multicore.sh"
 
 timing_exit ocf
+report_test_completion "ocf"
