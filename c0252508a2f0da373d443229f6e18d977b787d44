@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3bfc16b7_3357e262",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-08T11:06:30Z",
+      "side": 1,
+      "message": "Yeah, I agree it\u0027s super bad.\n\nDidn\u0027t we consider putting spdk_cpuset in the header in the very beginning? I think the decision was to abstract it away so that later on we can increase max cpu number without breaking the ABI.",
+      "parentUuid": "7d5aed8f_e320a5cb",
+      "revId": "c0252508a2f0da373d443229f6e18d977b787d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "42a63f31_7045c583",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "b02f24d7_8530cf0b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-08T11:06:30Z",
+      "side": 1,
+      "message": "Ack, thanks",
+      "parentUuid": "42a63f31_7045c583",
+      "revId": "c0252508a2f0da373d443229f6e18d977b787d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c08b1ef0_412fde36",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2019-05-29T23:45:31Z",
       "side": 1,
       "message": "I\u0027m not sure I follow this comment.  Should this be an assert instead?",
+      "revId": "c0252508a2f0da373d443229f6e18d977b787d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e1c8e8e_7eab4c13",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-08T11:06:30Z",
+      "side": 1,
+      "message": "True, this comment doesn\u0027t make much sense now. I removed it.",
+      "parentUuid": "c08b1ef0_412fde36",
       "revId": "c0252508a2f0da373d443229f6e18d977b787d44",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
