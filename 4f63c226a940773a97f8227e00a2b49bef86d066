@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be62d684_eb129f06",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-06-09T15:31:37Z",
+      "side": 1,
+      "message": "Hi,\n\nThe value was corrected in commit 5327875c74e7c7481b6c67f305618016a075aa6d\nhttps://review.gerrithub.io/c/spdk/spdk/+/454447",
+      "revId": "4f63c226a940773a97f8227e00a2b49bef86d066",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
