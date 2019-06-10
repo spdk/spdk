@@ -22,6 +22,30 @@
       "revId": "cc2de3cb13f6b2a549568af4cd42f6fcc3617b18",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3524533a_bf79c13a",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-10T10:05:32Z",
+      "side": 1,
+      "message": "I changed it to print json. It is helpful in case of get_spdk_version rpc. If only one string is displayed I remove quotes.",
+      "parentUuid": "476ae866_5f0f9bcd",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 12
+      },
+      "revId": "cc2de3cb13f6b2a549568af4cd42f6fcc3617b18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
