@@ -52,15 +52,14 @@ $rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t read -r 10 &
 fio_pid=$!
 
 sleep 3
-set +e
 
 $rpc_py destroy_raid_bdev "raid0"
 for malloc_bdev in $malloc_bdevs; do
 	$rpc_py delete_malloc_bdev "$malloc_bdev"
 done
 
-wait $fio_pid
-fio_status=$?
+fio_status=0
+wait $fio_pid || fio_status=$?
 
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 
@@ -72,7 +71,6 @@ if [ $fio_status -eq 0 ]; then
 else
         echo "nvmf hotplug test: fio failed as expected"
 fi
-set -e
 
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
