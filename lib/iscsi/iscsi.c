@@ -2129,7 +2129,6 @@ iscsi_op_login_rsp_handle_t_bit(struct spdk_iscsi_conn *conn,
 		}
 
 		conn->full_feature = 1;
-		spdk_iscsi_conn_schedule(conn);
 		break;
 
 	default:
@@ -2240,7 +2239,10 @@ iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	rc = iscsi_op_login_response(conn, rsp_pdu, *params_p);
 	if (rc == 0) {
-		conn->state = ISCSI_CONN_STATE_RUNNING;
+		if (conn->full_feature != 0) {
+			conn->state = ISCSI_CONN_STATE_RUNNING;
+			spdk_iscsi_conn_schedule(conn);
+		}
 	} else {
 		SPDK_ERRLOG("login error - connection will be destroyed\n");
 	}
