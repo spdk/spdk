@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b297f808_4b12b499",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1144,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-10T22:08:31Z",
+      "side": 1,
+      "message": "Combine this with the if statement above. You can just move ns-\u003eptp_activated \u003d ptpl into that if and this gets simpler.",
+      "revId": "017e47620759f8101e47f275cfdb111a30d84cf2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
