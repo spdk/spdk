@@ -98,6 +98,9 @@ struct spdk_dif_ctx {
 	/* Offset to initial reference tag */
 	uint32_t		ref_tag_offset;
 
+	/* Interim guard value when the last data block was partial. */
+	uint16_t		last_guard;
+
 	/* Seed value for guard computation */
 	uint16_t		guard_seed;
 };
@@ -320,5 +323,5 @@ int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
  */
 int spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			     uint32_t data_offset, uint32_t data_len,
-			     const struct spdk_dif_ctx *ctx);
+			     struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
