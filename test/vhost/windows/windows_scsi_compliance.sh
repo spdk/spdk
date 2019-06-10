@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-set -e
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
+
 # Tested with windows vm with OS Name: Microsoft Windows Server 2012 R2 Datacenter
 # and OS Version: 6.3.9600 N/A Build 9600
 # In order to run this test with windows vm

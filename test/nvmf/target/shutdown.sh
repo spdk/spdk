@@ -10,8 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-set -e
-
 function waitforio() {
 	# $1 = RPC socket
 	if [ -z "$1" ]; then

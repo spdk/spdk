@@ -1,5 +1,3 @@
-set -e
-
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 

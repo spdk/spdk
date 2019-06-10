@@ -17,8 +17,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-set -e
-
 timing_enter nvme_cli
 nvmftestinit
 nvmfappstart "-m 0xF"

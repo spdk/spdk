@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 rootdir=$(readlink -f $(dirname $0)/../..)
 SPDK_AUTOTEST_X=false
 source "$rootdir/test/common/autotest_common.sh"

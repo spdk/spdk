@@ -2,9 +2,6 @@
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-
-set -e
-
 source $rootdir/test/common/autotest_common.sh
 
 timing_enter rpc_client

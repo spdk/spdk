@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-set -e
-
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
+source $rootdir/test/common/autotest_common.sh
+source $testdir/nbd_common.sh
+
 rpc_py="$rootdir/scripts/rpc.py"
 
 function run_fio()
@@ -16,9 +17,6 @@ function run_fio()
 		fio_bdev --ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio "$@"
 	fi
 }
-
-source $rootdir/test/common/autotest_common.sh
-source $testdir/nbd_common.sh
 
 function nbd_function_test() {
 	if [ $(uname -s) = Linux ] && modprobe -n nbd; then

@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
+
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
-
-set -e
 
 DEFAULT_VM_IMAGE="/home/sys_sgsw/vhost_vm_image.qcow2"
 CENTOS_VM_IMAGE="/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
