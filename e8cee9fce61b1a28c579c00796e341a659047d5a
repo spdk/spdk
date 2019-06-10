@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75ae1c16_2f630dcb",
+        "filename": "test/nvmf/target/shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-10T14:18:38Z",
+      "side": 1,
+      "message": "The comment needs to be updated.",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 62
+      },
+      "revId": "e8cee9fce61b1a28c579c00796e341a659047d5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f3c0e44_8a1223cf",
+        "filename": "test/nvmf/target/shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-10T14:18:38Z",
+      "side": 1,
+      "message": "What about the trap for this bdevperf? It could be still left running if the NVMf target crashes early, which is quite realistic in this test scenario.",
+      "range": {
+        "startLine": 119,
+        "startChar": 28,
+        "endLine": 119,
+        "endChar": 36
+      },
+      "revId": "e8cee9fce61b1a28c579c00796e341a659047d5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
