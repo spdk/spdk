@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
 set -e
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/iscsi_tgt/common.sh
+
+rpc_py="$rootdir/scripts/rpc.py -s $testdir/rpc_iscsi.sock"
 
 BLK_SIZE=4096
 RW=randrw
@@ -13,7 +19,6 @@ DISKNO="ALL"
 CPUMASK=0x02
 NUM_JOBS=1
 ISCSI_TGT_CM=0x02
-. $(readlink -e "$(dirname $0)/../common.sh")
 
 # Performance test for iscsi_tgt, run on devices with proper hardware support (target and inititator)
 function usage()
@@ -48,10 +53,6 @@ while getopts 'h-:' optchar; do
 	esac
 done
 
-. $(readlink -e "$(dirname $0)/../../common/autotest_common.sh") || exit 1
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-
 if [ -z "$TARGET_IP" ]; then
 	error "No IP address of iscsi target is given"
 fi
@@ -73,7 +74,6 @@ function ssh_initiator(){
 }
 
 NETMASK=$INITIATOR_IP/32
-rpc_py="$rootdir/scripts/rpc.py -s $testdir/rpc_iscsi.sock"
 iscsi_fio_results="$testdir/perf_output/iscsi_fio.json"
 rm -rf $iscsi_fio_results
 mkdir -p $testdir/perf_output
