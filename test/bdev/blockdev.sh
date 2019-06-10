@@ -54,7 +54,6 @@ function nbd_function_test() {
 timing_enter bdev
 
 cp $testdir/bdev.conf.in $testdir/bdev.conf
-$rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
 	timing_enter rbd_setup
@@ -97,6 +96,17 @@ trap "killprocess $bdevio_pid; exit 1" SIGINT SIGTERM EXIT
 echo "Process bdevio pid: $bdevio_pid"
 waitforlisten $bdevio_pid
 $testdir/bdevio/tests.py perform_tests
+
+# Test NVMe
+timing_enter blockdev_nvme
+if [ "$(scripts/gen_nvme.sh --json | jq -r '.config[].params')" = "" ];then
+	echo "No NVMe present to test with"
+	exit 1
+fi
+$rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
+$testdir/bdevio/tests.py perform_tests -b Nvme0n1
+$rpc_py delete_nvme_controller Nvme0
+timing_exit blockdev_nvme
 
 # Test AIO
 timing_enter blockdev_aio
