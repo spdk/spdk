@@ -228,6 +228,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [ $SPDK_TEST_LVOL -eq 1 ]; then
 		timing_enter lvol
 		run_test suite ./test/lvol/lvol.sh --test-cases=all
+		run_test suite ./test/lvol/lvol2.sh
 		run_test suite ./test/blobstore/blob_io_wait/blob_io_wait.sh
 		report_test_completion "lvol"
 		timing_exit lvol
