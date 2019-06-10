@@ -7,8 +7,6 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-set -e
-
 timing_enter rpc
 nvmftestinit
 nvmfappstart "-m 0xF"

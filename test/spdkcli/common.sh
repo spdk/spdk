@@ -1,5 +1,3 @@
-set -xe
-
 testdir=$(readlink -f $(dirname $0))
 SPDKCLI_BUILD_DIR=$(readlink -f $testdir/../..)
 spdkcli_job="$SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job.py"

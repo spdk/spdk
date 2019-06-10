@@ -10,8 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-set -e
-
 # connect disconnect is geared towards ensuring that we are properly freeing resources after disconnecting qpairs.
 timing_enter connect_disconnect
 

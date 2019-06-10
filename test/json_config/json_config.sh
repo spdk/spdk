@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 
-set -e
-
 rootdir=$(readlink -f $(dirname $0)/../..)
 SPDK_AUTOTEST_X=false
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
-
-set -x
 
 if [[ $SPDK_TEST_ISCSI -eq 1 ]]; then
 	source "$rootdir/test/iscsi_tgt/common.sh"
@@ -18,8 +14,6 @@ if [[ $SPDK_TEST_VHOST -ne 1 && $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
 	echo "WARNING: Virtio initiator JSON_config test requires vhost target."
 	echo "         Setting SPDK_TEST_VHOST=1 for duration of current script."
 fi
-
-set -x
 
 if (( SPDK_TEST_BLOCKDEV + \
 		SPDK_TEST_ISCSI +
@@ -113,7 +107,6 @@ function json_config_test_start_app() {
 
 	[[ ! -z "${#app_socket[$app]}" ]] # Check app type
 	[[ -z "${app_pid[$app]}" ]] # Assert if app is not running
-	set -x
 
 	local app_extra_params=""
 	if [[ $SPDK_TEST_VHOST -eq 1 || $SPDK_TEST_VHOST_INIT -eq 1 ]]; then

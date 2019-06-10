@@ -10,8 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-set -e
-
 timing_enter bdevio
 nvmftestinit
 nvmfappstart "-m 0xF"

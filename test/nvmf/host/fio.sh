@@ -8,8 +8,6 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-set -e
-
 nvmftestinit
 
 if [ ! -d /usr/src/fio ]; then

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -xe
-
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh

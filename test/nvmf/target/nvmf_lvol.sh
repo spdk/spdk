@@ -12,8 +12,6 @@ LVOL_BDEV_FINAL_SIZE=30
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-set -e
-
 timing_enter lvol_integrity
 nvmftestinit
 nvmfappstart "-m 0x7"

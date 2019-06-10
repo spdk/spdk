@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -ex
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/test/common/autotest_common.sh
 
 run_step() {
 	if [ -z "$1" ]; then
@@ -24,10 +26,6 @@ run_step() {
 run_bsdump() {
 	$rootdir/examples/blob/cli/blobcli -c $ROCKSDB_CONF -b Nvme0n1 -D &> bsdump.txt
 }
-
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/test/common/autotest_common.sh
 
 # In the autotest job, we copy the rocksdb source to just outside the spdk directory.
 DB_BENCH_DIR="$rootdir/../rocksdb"

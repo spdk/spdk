@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 
-set -e
-
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-rpc_py=$rootdir/scripts/rpc.py
-
 source $rootdir/test/common/autotest_common.sh
+
+rpc_py=$rootdir/scripts/rpc.py
 
 mount_dir=$(mktemp -d)
 device=$1
