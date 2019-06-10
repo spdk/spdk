@@ -71,12 +71,6 @@ if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 	$testdir/gen_crypto.sh Malloc6 Malloc7 >> $testdir/bdev.conf
 fi
 
-if hash pmempool; then
-	rm -f /tmp/spdk-pmem-pool
-	pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
-	echo "[Pmem]" >> $testdir/bdev.conf
-	echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $testdir/bdev.conf
-fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter hello_bdev
@@ -100,6 +94,21 @@ trap "killprocess $bdevio_pid; exit 1" SIGINT SIGTERM EXIT
 echo "Process bdevio pid: $bdevio_pid"
 waitforlisten $bdevio_pid
 $testdir/bdevio/tests.py perform_tests
+
+# Test PMDK
+if [ $SPDK_TEST_PMDK -eq 1 ]; then
+	timing_enter blockdev_pmdk
+	pool_file="/tmp/spdk-pmem-pool"
+	rm -f $pool_file
+	$rpc_py create_pmem_pool $pool_file 32 512
+	$rpc_py construct_pmem_bdev $pool_file -n Pmem0
+
+	$testdir/bdevio/tests.py perform_tests -b Pmem0
+	$rpc_py delete_pmem_bdev Pmem0
+	$rpc_py delete_pmem_pool $pool_file
+	timing_exit blockdev_pmdk
+fi
+
 killprocess $bdevio_pid
 trap - SIGINT SIGTERM EXIT
 timing_exit bounds
