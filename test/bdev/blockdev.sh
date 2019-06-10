@@ -55,13 +55,6 @@ timing_enter bdev
 
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 
-if [ $SPDK_TEST_RBD -eq 1 ]; then
-	timing_enter rbd_setup
-	rbd_setup 127.0.0.1
-	timing_exit rbd_setup
-
-	$rootdir/scripts/gen_rbd.sh >> $testdir/bdev.conf
-fi
 
 if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 	$testdir/gen_crypto.sh Malloc6 Malloc7 >> $testdir/bdev.conf
@@ -134,6 +127,17 @@ if [ $SPDK_TEST_PMDK -eq 1 ]; then
 	$rpc_py delete_pmem_bdev Pmem0
 	$rpc_py delete_pmem_pool $pool_file
 	timing_exit blockdev_pmdk
+fi
+
+# Test RBD
+if [ $SPDK_TEST_RBD -eq 1 ]; then
+	timing_enter blockdev_rbd
+	rbd_setup 127.0.0.1
+
+	rbd_bdev="$($rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 512)"
+	$testdir/bdevio/tests.py perform_tests -b $rbd_bdev
+	$rpc_py delete_rbd_bdev $rbd_bdev
+	timing_exit blockdev_rbd
 fi
 
 killprocess $bdevio_pid
