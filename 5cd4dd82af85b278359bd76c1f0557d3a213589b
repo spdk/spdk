@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c58587f_2f962de7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1880,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-10T04:34:53Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nI don\u0027t think allocating buffer by bdev module means no_payload. No payload reminds me flush.\n\nHow about the following\n1. Change the current _spdk_bdev_io_split to spdk_bdev_io_split (remove underscore)\n2. Change the current _spdk_bdev_io_split_with_payload to _spdk_bdev_io_split (remove _wtih_payload).\n3. Introduce _spdk_bdev_io_split_with_get_buf or _spdk_bdev_io_split_and_get_buf or anything else?",
+      "range": {
+        "startLine": 1880,
+        "startChar": 2,
+        "endLine": 1880,
+        "endChar": 37
+      },
+      "revId": "5cd4dd82af85b278359bd76c1f0557d3a213589b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
