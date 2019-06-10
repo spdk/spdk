@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -ex
-
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh

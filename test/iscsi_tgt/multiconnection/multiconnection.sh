@@ -34,7 +34,6 @@ function remove_backends() {
 	return 0
 }
 
-set -e
 timing_enter multiconnection
 
 timing_enter start_iscsi_tgt

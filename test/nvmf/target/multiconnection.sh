@@ -12,8 +12,6 @@ NVMF_SUBSYS=11
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-set -e
-
 timing_enter multiconnection
 nvmftestinit
 nvmfappstart "-m 0xF"

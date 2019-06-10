@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 
-set -e
-
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-rpc_py=$rootdir/scripts/rpc.py
-
 source $rootdir/test/common/autotest_common.sh
+
+rpc_py=$rootdir/scripts/rpc.py
 
 function at_ftl_exit() {
 	# restore original driver

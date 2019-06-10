@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
-set -e
-
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-
 source $rootdir/test/common/autotest_common.sh
 
 tests=('-q 1 -w randwrite -t 4 -o 69632' '-q 128 -w randwrite -t 4 -o 4096' '-q 128 -w verify -t 4 -o 4096')
