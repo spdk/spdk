@@ -130,6 +130,9 @@ static struct spdk_vpp_main {
 
 	struct spdk_poller *vpp_queue_poller;
 	struct spdk_poller *app_queue_poller;
+
+	/* VPP VNET_API_ERROR_* -> "Error string" hashtable */
+	uword *error_string_by_error_number;
 } g_svm;
 
 struct spdk_vpp_sock_group_impl {
@@ -139,6 +142,26 @@ struct spdk_vpp_sock_group_impl {
 
 #define __vpp_session(sock) ((struct spdk_vpp_session *)sock)
 #define __vpp_group_impl(group) ((struct spdk_vpp_sock_group_impl *)group)
+
+/* VPP-like error code to the message string translation
+ * TODO: made it more SPDK friendly!
+ */
+static u8 *
+vpp_format_api_error(u8 *s, va_list *args)
+{
+	i32 error = va_arg(*args, u32);
+	uword *p;
+
+	p = hash_get(g_svm.error_string_by_error_number, -error);
+
+	if (p) {
+		s = format(s, "%s", p[0]);
+	} else {
+		s = format(s, "%d", error);
+	}
+
+	return s;
+}
 
 static void
 handle_mq_event(session_event_t *e)
@@ -422,8 +445,9 @@ vl_api_disconnect_session_reply_t_handler(vl_api_disconnect_session_reply_t *mp)
 	struct spdk_vpp_session *session;
 
 	if (mp->retval) {
-		SPDK_ERRLOG("Disconnecting session failed (%d).\n", ntohl(mp->retval));
-		return;
+		clib_warning("VCL<%d>: ERROR: sid %u: disconnect failed: %U",
+			     getpid(), mp->context, vpp_format_api_error,
+			     ntohl(mp->retval));
 	}
 
 	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
@@ -1291,6 +1315,13 @@ spdk_vpp_net_framework_init(void)
 	clib_mem_init_thread_safe(0, SPDK_VPP_CLIB_MEM_SIZE);
 	svm_fifo_segment_main_init(&g_svm.segment_main, SPDK_VPP_SEGMENT_BASEVA,
 				   SPDK_VPP_SEGMENT_TIMEOUT);
+
+	/* Initialize and set VPP error hashtable (string by vpp errno) */
+	g_svm.error_string_by_error_number = hash_create(0, sizeof(uword));
+	hash_set(g_svm.error_string_by_error_number, 99, "Misc");
+#define _(n,v,s) hash_set (g_svm.error_string_by_error_number, -v, s);
+	foreach_vnet_api_error;
+#undef _
 
 	app_name = spdk_sprintf_alloc("SPDK_%d", getpid());
 	if (app_name == NULL) {
