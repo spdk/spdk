@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85d96e89_3cfc18f8",
+        "filename": "test/openstack/openstack_versus_spdk.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-10T13:40:47Z",
+      "side": 1,
+      "message": "This script is not needed in my opinion, at least not at the moment.\nRunning a test like that would spawn a VM on one of the CI hosts (VM or Phy server) and then run the test inside this spawned VM. I don\u0027t think that\u0027s what we want. The other change that you work on (Vagrant scripts for creating a openstack capable VM) would serve as a tool to create a VM image which would later be attached directly to CI, and tests would be run directly there.",
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0685afc_b93d3e98",
+        "filename": "test/openstack/openstack_versus_spdk.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-10T13:40:47Z",
+      "side": 1,
+      "message": "For future reference - we moved all dependencies to sys_sgci home dir. sys_sgsw is deprecated.",
+      "range": {
+        "startLine": 9,
+        "startChar": 16,
+        "endLine": 9,
+        "endChar": 24
+      },
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df65c2f8_1f77a9d0",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-10T13:40:47Z",
+      "side": 1,
+      "message": "According to Maciej this should be not needed.\nYou\u0027d just check-out or install Openstack and it should have vs. SPDK tests included. So you just need to run appropriate test from Openstack instead of creating your own.",
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d033f7fd_0dd6476d",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-10T13:40:47Z",
+      "side": 1,
+      "message": "Swap places. Variable definitions first, sourcing later.",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 30
+      },
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b87de007_eb01db24",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-10T13:40:47Z",
+      "side": 1,
+      "message": "Use tabs",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 8
+      },
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
