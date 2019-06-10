@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
+
 set -e
-BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../ && pwd)"
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../..)
+source $rootdir/test/common/autotest_common.sh
 
 total_size=256
 block_size=512
 test_cases=all
 x=""
 
-rpc_py="$TEST_DIR/scripts/rpc.py "
+rpc_py="$rootdir/scripts/rpc.py "
 
 function usage() {
     [[ ! -z $2 ]] && ( echo "$2"; echo ""; )
@@ -104,15 +107,13 @@ while getopts 'xh-:' optchar; do
 done
 shift $(( OPTIND - 1 ))
 
-source $TEST_DIR/test/common/autotest_common.sh
-
 ###  Function starts vhost app
 function vhost_start()
 {
     modprobe nbd
-    $TEST_DIR/app/vhost/vhost &
+    $rootdir/app/vhost/vhost &
     vhost_pid=$!
-    echo $vhost_pid > $BASE_DIR/vhost.pid
+    echo $vhost_pid > $testdir/vhost.pid
     waitforlisten $vhost_pid
 }
 
@@ -120,18 +121,18 @@ function vhost_start()
 function vhost_kill()
 {
     ### Kill with SIGKILL param
-    if pkill -F $BASE_DIR/vhost.pid; then
+    if pkill -F $testdir/vhost.pid; then
         sleep 1
     fi
-    rm $BASE_DIR/vhost.pid || true
+    rm $testdir/vhost.pid || true
 }
 
-trap "vhost_kill; rm -f $BASE_DIR/aio_bdev_0 $BASE_DIR/aio_bdev_1; exit 1" SIGINT SIGTERM EXIT
+trap "vhost_kill; rm -f $testdir/aio_bdev_0 $testdir/aio_bdev_1; exit 1" SIGINT SIGTERM EXIT
 
-truncate -s 400M $BASE_DIR/aio_bdev_0 $BASE_DIR/aio_bdev_1
+truncate -s 400M $testdir/aio_bdev_0 $testdir/aio_bdev_1
 vhost_start
-$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $BASE_DIR $TEST_DIR/app/vhost "${test_cases[@]}"
+$testdir/lvol_test.py $rpc_py $total_size $block_size $testdir $rootdir/app/vhost "${test_cases[@]}"
 
 vhost_kill
-rm -rf $BASE_DIR/aio_bdev_0 $BASE_DIR/aio_bdev_1
+rm -rf $testdir/aio_bdev_0 $testdir/aio_bdev_1
 trap - SIGINT SIGTERM EXIT
