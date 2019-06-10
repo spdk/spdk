@@ -2,7 +2,7 @@
 # as we are usin non-interactive session to connect to remote.
 # Without -m it would be not possible to suspend the process.
 set -m
-source $MIGRATION_DIR/autotest.config
+source $testdir/autotest.config
 
 incoming_vm=1
 target_vm=2
