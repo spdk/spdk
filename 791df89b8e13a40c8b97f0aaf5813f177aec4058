@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "84bd504d_31b9eb45",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-10T07:41:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9ef86ea6_6585773f",
+      "range": {
+        "startLine": 336,
+        "startChar": 0,
+        "endLine": 337,
+        "endChar": 11
+      },
+      "revId": "791df89b8e13a40c8b97f0aaf5813f177aec4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60b1a974_0b4b2e02",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 12
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-07T14:01:51Z",
       "side": 1,
       "message": "If we\u0027re protecting pending_queue + reloc_map, shouldn\u0027t the lock only protect this line?",
+      "range": {
+        "startLine": 569,
+        "startChar": 2,
+        "endLine": 569,
+        "endChar": 58
+      },
+      "revId": "791df89b8e13a40c8b97f0aaf5813f177aec4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90aaba19_408e634c",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-10T07:41:40Z",
+      "side": 1,
+      "message": "Pending and active flag need to be changed under the lock.",
+      "parentUuid": "60b1a974_0b4b2e02",
       "range": {
         "startLine": 569,
         "startChar": 2,
@@ -68,6 +116,30 @@
       "revId": "791df89b8e13a40c8b97f0aaf5813f177aec4058",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02731cd9_feb752f2",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-10T07:41:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0ee4c24c_60aae595",
+      "range": {
+        "startLine": 828,
+        "startChar": 2,
+        "endLine": 828,
+        "endChar": 36
+      },
+      "revId": "791df89b8e13a40c8b97f0aaf5813f177aec4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
