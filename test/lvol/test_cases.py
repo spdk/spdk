@@ -110,8 +110,6 @@ def test_counter():
 def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
-            # construct_lvol_store  - positive tests
-            1: 'construct_lvs_positive',
             # construct_lvol_bdev - positive tests
             50: 'construct_logical_volume_positive',
             51: 'construct_multi_logical_volumes_positive',
@@ -311,36 +309,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.get_lvol_stores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    # positive tests
-    @case_message
-    def test_case1(self):
-        """
-        construct_lvs_positive
-
-        Positive test for constructing a new lvol store.
-        Call construct_lvol_store with correct base bdev name.
-        """
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Construct_lvol_store on correct, exisitng malloc bdev
-        uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name)
-        # Check correct uuid values in response get_lvol_stores command
-        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
-                                                  self.cluster_size)
-        self.c.destroy_lvol_store(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
-        if self.c.check_get_lvol_stores("", "", "") == 1:
-            fail_count += 1
-
-        # Expected result
-        # - call successful, return code = 0, uuid printed to stdout
-        # - get_lvol_stores: backend used for construct_lvol_store has uuid
-        #   field set with the same uuid as returned from RPC call
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case50(self):
