@@ -61,7 +61,7 @@ At this point, RocksDB is ready for testing with SPDK.  Three `db_bench` paramet
    Default is 4096 (4GB).  (Optional)
 
 SPDK has a set of scripts which will run `db_bench` against a variety of workloads and capture performance and profiling
-data.  The primary script is `test/blobfs/rocksdb/run_tests.sh`.
+data.  The primary script is `test/blobfs/rocksdb/rocksdb.sh`.
 
 # FUSE
 
