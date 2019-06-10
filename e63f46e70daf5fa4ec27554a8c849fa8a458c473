@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ad0b0a3_6366837b",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-10T18:45:38Z",
+      "side": 1,
+      "message": "The environment abstraction layer doesn\u0027t depend on the log library, so what\u0027s the env layer going to do with this? I think instead of this, just have whatever code currently calls spdk_env_init also call spdk_log_open(func).",
+      "revId": "e63f46e70daf5fa4ec27554a8c849fa8a458c473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
