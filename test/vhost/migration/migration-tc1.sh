@@ -54,7 +54,7 @@ function migration_tc1()
 	# Use 2 VMs:
 	# incoming VM - the one we want to migrate
 	# targe VM - the one which will accept migration
-	local job_file="$MIGRATION_DIR/migration-tc1.job"
+	local job_file="$testdir/migration-tc1.job"
 
 	# Run vhost
 	vhost_run
