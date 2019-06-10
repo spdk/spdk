@@ -1377,7 +1377,7 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	req->iov = iov;
 	req->iovcnt = iovcnt;
 	req->offset = offset;
-	req->logical_map_index = offset / vol->logical_blocks_per_chunk;
+	req->logical_map_index = logical_map_index;
 	req->length = length;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
