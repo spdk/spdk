@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f875053_98ab0f1c",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-10T13:38:09Z",
+      "side": 1,
+      "message": "Let\u0027s split this line, it\u0027s too long.",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 138
+      },
+      "revId": "889a41eea6e10bfdff22908268acfdcff6a9f510",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f94dcc9_ba49d742",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-10T13:38:09Z",
+      "side": 1,
+      "message": "Do we need all these syncs? Can\u0027t we have just one of them at the end? Or use the oflag\u003ddsync?",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 4
+      },
+      "revId": "889a41eea6e10bfdff22908268acfdcff6a9f510",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
