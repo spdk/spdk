@@ -58,6 +58,10 @@ ifeq ($(CONFIG_REDUCE),y)
 DIRS-y += compress
 endif
 
+ifeq ($(CONFIG_URING),y)
+DIRS-y += uring
+endif
+
 ifeq ($(OS),Linux)
 DIRS-y += aio
 DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
