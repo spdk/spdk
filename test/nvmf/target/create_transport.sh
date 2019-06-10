@@ -10,8 +10,6 @@ NULL_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
-set -e
-
 if ! hash nvme; then
 	echo "nvme command not found; skipping create transport test"
 	exit 0
