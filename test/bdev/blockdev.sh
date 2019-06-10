@@ -71,9 +71,15 @@ fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter hello_bdev
-	if grep -q Nvme0 $testdir/bdev.conf; then
-		$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/bdev.conf -b Nvme0n1
+	$rootdir/scripts/gen_nvme.sh > $testdir/hello.conf
+	if grep -q Nvme0 $testdir/hello.conf; then
+		$rootdir/examples/bdev/hello_world/hello_bdev -c $testdir/hello.conf -b Nvme0n1
+	else
+		echo "No NVMe present to test with"
+		rm -f $testdir/hello.conf
+		exit 1
 	fi
+	rm -f $testdir/hello.conf
 	timing_exit hello_bdev
 fi
 
