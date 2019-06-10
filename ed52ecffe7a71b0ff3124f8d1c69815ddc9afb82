@@ -45,6 +45,54 @@
       "revId": "ed52ecffe7a71b0ff3124f8d1c69815ddc9afb82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b87e53d_73bf3006",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-10T17:01:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3fd48808_a9e67df4",
+      "range": {
+        "startLine": 32,
+        "startChar": 74,
+        "endLine": 32,
+        "endChar": 81
+      },
+      "revId": "ed52ecffe7a71b0ff3124f8d1c69815ddc9afb82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5252c863_3bfc7283",
+        "filename": "test/nvmf/target/fuzz.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-10T17:01:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9639b77f_921b6091",
+      "range": {
+        "startLine": 32,
+        "startChar": 127,
+        "endLine": 32,
+        "endChar": 157
+      },
+      "revId": "ed52ecffe7a71b0ff3124f8d1c69815ddc9afb82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
