@@ -154,6 +154,24 @@
     },
     {
       "key": {
+        "uuid": "0504807c_00569f64",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-10T18:18:04Z",
+      "side": 1,
+      "message": "Oh, you probably do. It\u0027s not a big deal though. Unless there\u0027s something else to fix, the patch looks good.",
+      "parentUuid": "4e6b0b83_371ab93e",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e8ec8491_d53d2fce",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 10
