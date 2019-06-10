@@ -114,24 +114,22 @@ $fio_py -p iscsi -i 1048576 -d 128 -t rw -r 10 &
 fio_pid=$!
 
 sleep 3
-set +e
+
 # Delete raid0, Malloc0, Malloc1 blockdevs
 $rpc_py destroy_raid_bdev 'raid0'
 $rpc_py delete_malloc_bdev 'Malloc0'
 $rpc_py delete_malloc_bdev 'Malloc1'
 
-wait $fio_pid
-fio_status=$?
+fio_status=0
+wait $fio_pid || fio_status=$?
+
 
 if [ $fio_status -eq 0 ]; then
 	echo "iscsi hotplug test: fio successful - expected failure"
-	set -e
 	exit 1
 else
 	echo "iscsi hotplug test: fio failed as expected"
 fi
-
-set -e
 
 iscsicleanup
 $rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
