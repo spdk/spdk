@@ -14,9 +14,6 @@
   # leaving the rest of the device inaccessible
   Split Malloc2 8 4
 
-[AIO]
-  AIO /tmp/aiofile AIO0 2048
-
 [QoS]
   # QoS section defines limitation on performance
   # metric like IOPS and bandwidth
