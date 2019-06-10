@@ -56,11 +56,6 @@ timing_enter bdev
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 
 
-if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
-	$testdir/gen_crypto.sh Malloc6 Malloc7 >> $testdir/bdev.conf
-fi
-
-
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter hello_bdev
 	$rootdir/scripts/gen_nvme.sh > $testdir/hello.conf
@@ -138,6 +133,24 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	$testdir/bdevio/tests.py perform_tests -b $rbd_bdev
 	$rpc_py delete_rbd_bdev $rbd_bdev
 	timing_exit blockdev_rbd
+fi
+
+# Test Crypto
+if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+	timing_enter blockdev_crypto
+	# Use QAT if available
+	if [ $(lspci -d:37c8 | wc -l) -eq 1 ]; then
+		$rpc_py	construct_malloc_bdev 32 4192 -b Malloc_QAT
+		$rpc_py	-b Malloc_QAT -c bdev_qat -d crypto_qat -k 0123456789123456
+		$testdir/bdevio/tests.py perform_tests -b bdev_qat
+		$rpc_py	delete_malloc_bdev Malloc_QAT
+	fi
+
+	$rpc_py	construct_malloc_bdev 32 4192 -b Malloc_AES
+	$rpc_py	-b Malloc_AES -c bdev_aes -d crypto_aesni_mb -k 9012345678912345
+	$testdir/bdevio/tests.py perform_tests -b bdev_aes
+	$rpc_py	delete_malloc_bdev Malloc_AES
+	timing_exit blockdev_crypto
 fi
 
 killprocess $bdevio_pid
