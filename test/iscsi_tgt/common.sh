@@ -102,6 +102,24 @@ function iscsitestfini() {
 	fi
 }
 
+function gdb_attach() {
+	gdb -q --batch \
+		-ex 'handle SIGHUP nostop pass' \
+		-ex 'handle SIGQUIT nostop pass' \
+		-ex 'handle SIGPIPE nostop pass' \
+		-ex 'handle SIGALRM nostop pass' \
+		-ex 'handle SIGTERM nostop pass' \
+		-ex 'handle SIGUSR1 nostop pass' \
+		-ex 'handle SIGUSR2 nostop pass' \
+		-ex 'handle SIGCHLD nostop pass' \
+		-ex 'set print thread-events off' \
+		-ex 'cont' \
+		-ex 'thread apply all bt' \
+		-ex 'quit' \
+		--tty=/dev/stdout \
+		-p $1
+}
+
 function start_vpp() {
 	# We need to make sure that posix side doesn't send jumbo packets while
 	# for VPP side maximal size of MTU for TCP is 1460 and tests doesn't work
@@ -124,6 +142,8 @@ function start_vpp() {
 
 	vpp_pid=$!
 	echo "VPP Process pid: $vpp_pid"
+
+	gdb_attach $vpp_pid &
 
 	# Wait until VPP starts responding
 	xtrace_disable
