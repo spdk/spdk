@@ -84,6 +84,24 @@ function iscsitestfini() {
 	fi
 }
 
+function gdb_run() {
+	gdb -q --batch \
+		-ex 'handle SIGHUP nostop pass' \
+		-ex 'handle SIGQUIT nostop pass' \
+		-ex 'handle SIGPIPE nostop pass' \
+		-ex 'handle SIGALRM nostop pass' \
+		-ex 'handle SIGTERM nostop pass' \
+		-ex 'handle SIGUSR1 nostop pass' \
+		-ex 'handle SIGUSR2 nostop pass' \
+		-ex 'handle SIGCHLD nostop pass' \
+		-ex 'set print thread-events off' \
+		-ex 'run' \
+		-ex 'thread apply all bt' \
+		-ex 'quit' \
+		--tty=/dev/stdout \
+		--args $*
+}
+
 function start_vpp() {
 	# We need to make sure that posix side doesn't send jumbo packets while
 	# for VPP side maximal size of MTU for TCP is 1460 and tests doesn't work
@@ -94,7 +112,7 @@ function start_vpp() {
 	ethtool -k $INITIATOR_INTERFACE
 
 	# Start VPP process in SPDK target network namespace
-	$TARGET_NS_CMD vpp \
+	gdb_run $TARGET_NS_CMD vpp \
 		unix { nodaemon cli-listen /run/vpp/cli.sock } \
 		dpdk { no-pci num-mbufs 128000 } \
 		session { evt_qs_memfd_seg } \
@@ -106,7 +124,8 @@ function start_vpp() {
 
 	vpp_pid=$!
 	echo "VPP Process pid: $vpp_pid"
-	waitforlisten $vpp_pid /run/vpp/cli.sock
+	sleep 10
+	#waitforlisten $vpp_pid /run/vpp/cli.sock
 
 	# Setup host interface
 	vppctl create host-interface name $TARGET_INTERFACE
