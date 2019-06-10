@@ -16,6 +16,24 @@
       "revId": "aba8bf81c6ded869d5fff6e07da2e8b2c1643371",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "242fae34_a9583fa5",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1007,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-10T04:12:39Z",
+      "side": 1,
+      "message": "Good catch. It should be added, but in a separate patch. This one just moves the code around.",
+      "parentUuid": "a748f387_f2ec47e7",
+      "revId": "aba8bf81c6ded869d5fff6e07da2e8b2c1643371",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
