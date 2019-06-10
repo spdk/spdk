@@ -53,9 +53,6 @@ function nbd_function_test() {
 
 timing_enter bdev
 
-# Create a file to be used as an AIO backend
-dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
-
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
 
@@ -100,6 +97,17 @@ trap "killprocess $bdevio_pid; exit 1" SIGINT SIGTERM EXIT
 echo "Process bdevio pid: $bdevio_pid"
 waitforlisten $bdevio_pid
 $testdir/bdevio/tests.py perform_tests
+
+# Test AIO
+if [ $(uname -s) = Linux ]; then
+	timing_enter blockdev_aio
+	# Create a file to be used as an AIO backend
+	dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
+	$rpc_py construct_aio_bdev /tmp/aiofile AIO0 2048
+	$testdir/bdevio/tests.py perform_tests -b AIO0
+	timing_exit blockdev_aio
+fi
+
 killprocess $bdevio_pid
 trap - SIGINT SIGTERM EXIT
 timing_exit bounds
@@ -181,6 +189,9 @@ if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
 fi
 
+# if [ $(uname -s) = Linux ]
+#	$rpc_py delete_aio_bdev AIO0
+# fi
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
 rm -f $testdir/bdev.conf
