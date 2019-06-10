@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c2843ac_7db55a96",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-10T22:02:58Z",
+      "side": 1,
+      "message": "I don\u0027t actually know the answer to this question, and it\u0027s only possible via NVMe-oF, but here it is anyway.\n\nIf I have a subsystem with 1 namespace and I make a reservation on it, then I remove the namespace and add that namespace to a different subsystem, should my reservation still be there?\n\nI have no idea. Unfortunately, that impacts whether we set this file up per-subsystem or per-namespace.",
+      "revId": "7017b71d58892f873c83a3952011a1e7d504a5d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
