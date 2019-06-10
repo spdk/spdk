@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "115815ee_849e1448",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-06-10T09:27:58Z",
+      "side": 1,
+      "message": "Will revert this back as the testing is moving forward and now failed at nvmf. So will have other changes to follow.\n\nnvmf_tgt: rdma.c:3460: spdk_nvmf_rdma_poller_poll: Assertion `rdma_req-\u003enum_outstanding_data_wr \u003e 0\u0027 failed.",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 40
+      },
+      "revId": "c704d64b53f2ada9b0dfc49de42d409846325142",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
