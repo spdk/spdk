@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ba3a09b6_83ba7dff",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-10T17:01:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "765c54b2_38979e02",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 1
+      },
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17ff2bef_14d02f38",
         "filename": "test/app/fuzz/vhost_fuzz/README.md",
         "patchSetId": 10
@@ -39,6 +63,24 @@
       "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6420d4b1_488ee819",
+        "filename": "test/app/fuzz/vhost_fuzz/README.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-10T17:01:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "17ff2bef_14d02f38",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "fb50e7f6_45bacd04",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-10T17:01:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be90f88d_180d7365",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7014af5b_ffded064",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 10
@@ -70,6 +130,24 @@
       "writtenOn": "2019-06-06T19:49:41Z",
       "side": 1,
       "message": "You should also release the virtqueue - virtio_dev_release_queue(VIRTIO_REQUESTQ);\n\nThat function doesn\u0027t do anything interesting now, but we may eventually refactor it to free some memory.",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e6b0b83_371ab93e",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-10T17:01:29Z",
+      "side": 1,
+      "message": "Thanks, for the scsi devices, do I also need to do this for the eventq and controlq?",
+      "parentUuid": "7014af5b_ffded064",
       "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -93,6 +171,24 @@
     },
     {
       "key": {
+        "uuid": "bc42869f_b8fd8c03",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-10T17:01:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8ec8491_d53d2fce",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0cf0bbde_3f4a6bef",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 10
@@ -113,6 +209,30 @@
       "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f589ef9_92af19e5",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-10T17:01:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0cf0bbde_3f4a6bef",
+      "range": {
+        "startLine": 210,
+        "startChar": 11,
+        "endLine": 210,
+        "endChar": 26
+      },
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
