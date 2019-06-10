@@ -162,7 +162,7 @@ function migration_tc2()
 	# Use 2 VMs:
 	# incoming VM - the one we want to migrate
 	# targe VM - the one which will accept migration
-	local job_file="$MIGRATION_DIR/migration-tc2.job"
+	local job_file="$testdir/migration-tc2.job"
 
 	migration_tc2_configure_vhost
 

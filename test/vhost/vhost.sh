@@ -120,13 +120,15 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_exit readonly
 fi
 
-if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+# Common out first to run this in the per patch testing
+# Will enable it later
+#if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
 	timing_enter vhost_migration
 	echo 'Running migration suite...'
 	run_test case $WORKDIR/migration/migration.sh -x \
 	--fio-bin=$FIO_BIN --os=$VM_IMAGE --test-cases=1,2
 	timing_exit vhost_migration
-fi
+#fi
 
 timing_enter integrity_lvol_scsi
 echo 'Running lvol integrity suite...'
