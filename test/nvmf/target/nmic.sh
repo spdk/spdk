@@ -27,11 +27,10 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
 
 echo "test case1: single bdev can't be used in multiple subsystems"
-set +e
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode2 -a -s SPDK2
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 Malloc0
-nmic_status=$?
+nmic_status=0
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 Malloc0 || nmic_status=$?
 
 if [ $nmic_status -eq 0 ]; then
 	echo " Adding namespace passed - failure expected."
@@ -41,7 +40,6 @@ if [ $nmic_status -eq 0 ]; then
 else
 	echo " Adding namespace failed - expected result."
 fi
-set -e
 
 echo "test case2: host connect to nvmf target in multiple paths"
 if [ ! -z $NVMF_SECOND_TARGET_IP ]; then
