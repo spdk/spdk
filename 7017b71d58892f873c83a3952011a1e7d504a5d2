@@ -16,6 +16,70 @@
       "revId": "7017b71d58892f873c83a3952011a1e7d504a5d2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78632b07_e815f6fb",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-10T23:35:51Z",
+      "side": 1,
+      "message": "I don\u0027t think we should move reservation in that case. SCSI persistent reservation is per I_T nexus, and NVMe-oF will be able to follow SCSI for reservation.",
+      "parentUuid": "0c2843ac_7db55a96",
+      "revId": "7017b71d58892f873c83a3952011a1e7d504a5d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74743ab0_ba1f9961",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 931,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-10T23:35:51Z",
+      "side": 1,
+      "message": "we can call just free(ns-\u003eptpl_file).",
+      "range": {
+        "startLine": 931,
+        "startChar": 1,
+        "endLine": 931,
+        "endChar": 21
+      },
+      "revId": "7017b71d58892f873c83a3952011a1e7d504a5d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c566eee_406f905e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1112,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-10T23:35:51Z",
+      "side": 1,
+      "message": "should we check if ns-\u003eptpl_file is NULL here?",
+      "range": {
+        "startLine": 1112,
+        "startChar": 2,
+        "endLine": 1112,
+        "endChar": 36
+      },
+      "revId": "7017b71d58892f873c83a3952011a1e7d504a5d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
