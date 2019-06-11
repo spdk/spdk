@@ -22,6 +22,30 @@
       "revId": "0d9258312279730f4cb1b8cef1ce63640e3fdd15",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16c3e7cb_eebd689e",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-11T08:21:23Z",
+      "side": 1,
+      "message": "To be honest I wouldn\u0027t even put LTO/PGO options here in the test script. I think test scripts should just run the traffic and gather results.\n\nFrom my perspective, as I will be using these scripts in CI scheduler:\nI do the compilation as a separate test step, prior to running the tests. LTO/PGO options would then be specified as Jenkins job parameters, and not even passed to the test scripts.",
+      "parentUuid": "4364d2e5_01ec56b4",
+      "range": {
+        "startLine": 266,
+        "startChar": 40,
+        "endLine": 266,
+        "endChar": 52
+      },
+      "revId": "0d9258312279730f4cb1b8cef1ce63640e3fdd15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
