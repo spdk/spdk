@@ -50,8 +50,7 @@ Nvme Opal library spdk_opal_cmd deprecated. Adding seperate command APIs.
 NVMe Opal library add support for activating locking SP which will make the transaction
 from "Manufactured-Inactive" state to "Manufactured" state. Upon successfully invoking
 of this method, lock and unlock features will be enabled.
-NVMe Opal library add support for locking/unlocking range.
-
+NVMe Opal library add support for locking/unlocking range and list locking range info.
 
 Added spdk_nvme_ctrlr_io_cmd_raw_no_payload_build() allowing a caller to pass
 a completely formed command to an NVMe submission queue (buffer addresses and all).
