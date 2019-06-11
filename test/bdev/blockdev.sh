@@ -37,6 +37,7 @@ function nbd_function_test() {
 		modprobe nbd
 		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} &
 		nbd_pid=$!
+		trap "killprocess $nbd_pid; exit 1" SIGINT SIGTERM EXIT
 		echo "Process nbd pid: $nbd_pid"
 		waitforlisten $nbd_pid $rpc_server
 
