@@ -204,8 +204,12 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 	reloc->num_active++;
 
 	if (!band->high_prio) {
-		if (ftl_band_alloc_lba_map(band)) {
-			assert(false);
+		if (band->lba_map.ref_cnt == 0) {
+			if (ftl_band_alloc_lba_map(band)) {
+				assert(false);
+			}
+		} else {
+			ftl_band_acquire_lba_map(band);
 		}
 	}
 
@@ -551,7 +555,7 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 		return;
 	}
 
-	if (ftl_band_empty(band)) {
+	if (ftl_band_empty(band) && band->state == FTL_BAND_STATE_CLOSED) {
 		ftl_band_set_state(breloc->band, FTL_BAND_STATE_FREE);
 	}
 }
@@ -749,6 +753,7 @@ ftl_reloc(struct ftl_reloc *reloc)
 		if (reloc->num_active == reloc->max_active) {
 			break;
 		}
+
 		ftl_reloc_add_active_queue(breloc);
 	}
 
