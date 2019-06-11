@@ -847,6 +847,14 @@ function freebsd_update_contigmem_mod()
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
 
+# DEBUG:
+echo "============================================="
+echo "HOME=${HOME}"
+echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+echo "PATH=${PATH}"
+echo "HOME=${HOME}"
+echo "============================================="
+
 PS4=' \t	\$ '
 if $SPDK_AUTOTEST_X; then
 	# explicitly enable xtraces
