@@ -119,7 +119,7 @@ struct ftl_restore {
 	/* LBA map buffer */
 	void				*lba_map;
 	/* Indicates we're in the final phase of the restoration */
-	bool				l2p_phase;
+	bool				final_phase;
 	/* Non-volatile cache recovery */
 	struct ftl_nv_cache_restore	nv_cache;
 };
@@ -164,7 +164,7 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 
 	restore->dev = dev;
 	restore->cb = cb;
-	restore->l2p_phase = false;
+	restore->final_phase = false;
 
 	restore->bands = calloc(ftl_dev_num_bands(dev), sizeof(*restore->bands));
 	if (!restore->bands) {
@@ -204,10 +204,10 @@ static void
 ftl_restore_complete(struct ftl_restore *restore, int status)
 {
 	struct ftl_restore *ctx = status ? NULL : restore;
-	bool l2p_phase = restore->l2p_phase;
+	bool final_phase = restore->final_phase;
 
 	restore->cb(restore->dev, ctx, status);
-	if (status || l2p_phase) {
+	if (status || final_phase) {
 		ftl_restore_free(restore);
 	}
 }
@@ -617,8 +617,8 @@ out:
 	spdk_bdev_free_io(bdev_io);
 }
 
-static void
-ftl_restore_nv_cache(struct ftl_restore *restore)
+void
+ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb)
 {
 	struct spdk_ftl_dev *dev = restore->dev;
 	struct spdk_bdev *bdev;
@@ -632,8 +632,12 @@ ftl_restore_nv_cache(struct ftl_restore *restore)
 	ioch = spdk_io_channel_get_ctx(dev->ioch);
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 	alignment = spdk_max(spdk_bdev_get_buf_align(bdev), sizeof(uint64_t));
+
 	nvc_restore->nv_cache = nv_cache;
 	nvc_restore->ioch = ioch->cache_ioch;
+
+	restore->final_phase = true;
+	restore->cb = cb;
 
 	for (i = 0; i < FTL_NV_CACHE_RESTORE_DEPTH; ++i) {
 		block = &nvc_restore->block[i];
@@ -808,11 +812,7 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 	if (rc) {
 		restore->pad_status = rc;
 		if (--restore->num_pad_bands == 0) {
-			if (dev->nv_cache.bdev_desc) {
-				ftl_restore_nv_cache(restore);
-			} else {
-				ftl_restore_complete(restore, restore->pad_status);
-			}
+			ftl_restore_complete(restore, restore->pad_status);
 		}
 		return;
 	}
@@ -891,8 +891,6 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 		if (!STAILQ_EMPTY(&restore->pad_bands)) {
 			spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_restore_pad_open_bands,
 					     restore);
-		} else if (dev->nv_cache.bdev_desc) {
-			ftl_restore_nv_cache(restore);
 		} else {
 			ftl_restore_complete(restore, 0);
 		}
@@ -925,11 +923,12 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 int
 ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb)
 {
+	struct spdk_ftl_dev *dev = restore->dev;
 	struct ftl_restore_band *rband;
 
-	restore->l2p_phase = true;
 	restore->current = 0;
 	restore->cb = cb;
+	restore->final_phase = dev->nv_cache.bdev_desc == NULL;
 
 	/* If restore_device is called, there must be at least one valid band */
 	rband = ftl_restore_next_band(restore);
