@@ -957,22 +957,38 @@ ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 }
 
 static void
+ftl_restore_nv_cache_cb(struct spdk_ftl_dev *dev, struct ftl_restore *restore, int status)
+{
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Failed to restore the non-volatile cache state\n");
+		ftl_init_fail(dev);
+		return;
+	}
+
+	ftl_init_complete(dev);
+}
+
+static void
 ftl_restore_device_cb(struct spdk_ftl_dev *dev, struct ftl_restore *restore, int status)
 {
 	if (status) {
 		SPDK_ERRLOG("Failed to restore the device from the SSD\n");
-		goto error;
+		ftl_init_fail(dev);
+		return;
 	}
 
 	if (ftl_init_bands_state(dev)) {
 		SPDK_ERRLOG("Unable to finish the initialization\n");
-		goto error;
+		ftl_init_fail(dev);
+		return;
 	}
 
-	ftl_init_complete(dev);
-	return;
-error:
-	ftl_init_fail(dev);
+	if (!dev->nv_cache.bdev_desc) {
+		ftl_init_complete(dev);
+		return;
+	}
+
+	ftl_restore_nv_cache(restore, ftl_restore_nv_cache_cb);
 }
 
 static void
