@@ -99,14 +99,18 @@ spdk_scsi_pr_register_registrant(struct spdk_scsi_lun *lun,
 
 	/* New I_T nexus */
 	reg->initiator_port = initiator_port;
-	snprintf(reg->initiator_port_name, sizeof(reg->initiator_port_name), "%s",
-		 initiator_port->name);
-	reg->transport_id_len = initiator_port->transport_id_len;
-	memcpy(reg->transport_id, initiator_port->transport_id, reg->transport_id_len);
+	if (initiator_port) {
+		snprintf(reg->initiator_port_name, sizeof(reg->initiator_port_name), "%s",
+			 initiator_port->name);
+		reg->transport_id_len = initiator_port->transport_id_len;
+		memcpy(reg->transport_id, initiator_port->transport_id, reg->transport_id_len);
+	}
 	reg->target_port = target_port;
-	snprintf(reg->target_port_name, sizeof(reg->target_port_name), "%s",
-		 target_port->name);
-	reg->relative_target_port_id = target_port->index;
+	if (target_port) {
+		snprintf(reg->target_port_name, sizeof(reg->target_port_name), "%s",
+			 target_port->name);
+		reg->relative_target_port_id = target_port->index;
+	}
 	reg->rkey = sa_rkey;
 	TAILQ_INSERT_TAIL(&lun->reg_head, reg, link);
 	lun->pr_generation++;
