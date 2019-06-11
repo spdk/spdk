@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f11dd764_c93739e3",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-11T05:36:26Z",
+      "side": 1,
+      "message": "Shuhei is right, there is Host Identifier associated with each Namespace, so both bdev uuid and Host Identifier will be verified for persistent reservations.",
+      "parentUuid": "78632b07_e815f6fb",
+      "revId": "7017b71d58892f873c83a3952011a1e7d504a5d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "74743ab0_ba1f9961",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 4
