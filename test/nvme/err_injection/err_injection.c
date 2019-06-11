@@ -180,6 +180,10 @@ read_test(bool error_expected)
 	struct dev *dev;
 
 	foreach_dev(dev) {
+		if (dev->ns == NULL) {
+			continue;
+		}
+
 		dev->error_expected = error_expected;
 		dev->data = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
 		if (!dev->data) {
