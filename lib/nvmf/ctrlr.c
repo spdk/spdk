@@ -1116,8 +1116,7 @@ spdk_nvmf_ctrlr_get_features_reservation_persistence(struct spdk_nvmf_request *r
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	/* TODO: Persistence feature can't support for now */
-	response->cdw0 = 0;
+	response->cdw0 = ns->ptpl_activated;
 
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -1131,12 +1130,22 @@ spdk_nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *r
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_ns *ns;
+	bool ptpl;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Reservation Persistence\n");
 
 	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
-	if (cmd->nsid != 0xffffffffu && ns == NULL) {
-		SPDK_ERRLOG("Set Features - Invalid Namespace ID\n");
+	ptpl = cmd->cdw11 & 0x1u;
+
+	if (cmd->nsid != 0xffffffffu && ns && ns->ptpl_file) {
+		ns->ptpl_activated = ptpl;
+	} else if (cmd->nsid == 0xffffffffu) {
+		for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns && ns->ptpl_file;
+		     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
+			ns->ptpl_activated = ptpl;
+		}
+	} else {
+		SPDK_ERRLOG("Set Features - Invalid Namespace ID or Reservation Configuration\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1144,7 +1153,7 @@ spdk_nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *r
 
 	/* TODO: Feature not changeable for now */
 	response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-	response->status.sc = SPDK_NVME_SC_FEATURE_NOT_CHANGEABLE;
+	response->status.sc = SPDK_NVME_SC_FEATURE_ID_NOT_SAVEABLE;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
