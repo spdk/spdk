@@ -102,6 +102,17 @@ $rpc_py	destruct_split_vbdev Malloc_split
 $rpc_py	delete_malloc_bdev Malloc_split
 timing_exit blockdev_split
 
+# Test Raid
+timing_enter blockdev_raid
+$rpc_py	construct_malloc_bdev 32 512 -b Malloc_raid1
+$rpc_py	construct_malloc_bdev 32 512 -b Malloc_raid2
+$rpc_py	construct_raid_bdev -n raid0 -b "Malloc_raid1 Malloc_raid2" -r 0 -z 64
+$testdir/bdevio/tests.py perform_tests -b raid0
+$rpc_py	destroy_raid_bdev raid0
+$rpc_py	delete_malloc_bdev Malloc_raid1
+$rpc_py	delete_malloc_bdev Malloc_raid2
+timing_exit blockdev_raid
+
 # Test NVMe
 timing_enter blockdev_nvme
 if [ "$(scripts/gen_nvme.sh --json | jq -r '.config[].params')" = "" ];then

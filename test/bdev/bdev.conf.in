@@ -23,10 +23,3 @@
   # Assign 100 (MB) bandwidth for the Malloc3 block
   # device
   Limit_BPS Malloc3 100
-
-[RAID0]
-  Name raid0
-  StripSize 64
-  NumDevices 2
-  RaidLevel 0
-  Devices Malloc4 Malloc5
