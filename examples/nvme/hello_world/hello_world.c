@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
+#include "spdk/vmd.h"
 #include "spdk/env.h"
 
 struct ctrlr_entry {
@@ -51,6 +52,8 @@ struct ns_entry {
 
 static struct ctrlr_entry *g_controllers = NULL;
 static struct ns_entry *g_namespaces = NULL;
+
+static bool g_vmd = false;
 
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
@@ -322,10 +325,43 @@ cleanup(void)
 	}
 }
 
+static void
+usage(const char *program_name)
+{
+	printf("%s [options]", program_name);
+	printf("\n");
+	printf("options:\n");
+	printf(" -V         enumerate VMD\n");
+}
+
+static int
+parse_args(int argc, char **argv)
+{
+	int op;
+
+	while ((op = getopt(argc, argv, "V")) != -1) {
+		switch (op) {
+		case 'V':
+			g_vmd = true;
+			break;
+		default:
+			usage(argv[0]);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;
+
+	rc = parse_args(argc, argv);
+	if (rc != 0) {
+		return rc;
+	}
 
 	/*
 	 * SPDK relies on an abstraction around the local environment
@@ -342,6 +378,11 @@ int main(int argc, char **argv)
 	}
 
 	printf("Initializing NVMe Controllers\n");
+
+	if (g_vmd && spdk_vmd_init()) {
+		fprintf(stderr, "Failed to initialize VMD."
+			" Some NVMe devices can be unavailable.\n");
+	}
 
 	/*
 	 * Start the SPDK NVMe enumeration process.  probe_cb will be called
