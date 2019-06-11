@@ -301,13 +301,12 @@ test_reloc_iter_full(void)
 }
 
 static void
-test_reloc_iter_empty(void)
+test_reloc_empty_band(void)
 {
 	struct spdk_ftl_dev *dev;
 	struct ftl_reloc *reloc;
 	struct ftl_band_reloc *breloc;
 	struct ftl_band *band;
-	struct ftl_ppa ppa;
 
 	setup_reloc(&dev, &reloc, &g_geo, &g_range);
 
@@ -316,8 +315,6 @@ test_reloc_iter_empty(void)
 
 	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0);
 
-	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
-	CU_ASSERT_EQUAL(0, ftl_reloc_next_lbks(breloc, &ppa));
 	CU_ASSERT_EQUAL(breloc->num_lbks, 0);
 
 	cleanup_reloc(dev, reloc);
@@ -481,31 +478,6 @@ test_reloc_single_lbk(void)
 	cleanup_reloc(dev, reloc);
 }
 
-static void
-test_reloc_empty_band(void)
-{
-	struct spdk_ftl_dev *dev;
-	struct ftl_reloc *reloc;
-	struct ftl_band_reloc *breloc;
-	struct ftl_band *band;
-
-	setup_reloc(&dev, &reloc, &g_geo, &g_range);
-
-	breloc = &reloc->brelocs[0];
-	band = breloc->band;
-
-	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0);
-
-	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
-
-	ftl_reloc(reloc);
-
-	CU_ASSERT_EQUAL(breloc->num_lbks, 0);
-	SPDK_CU_ASSERT_FATAL(breloc->moves != NULL);
-
-	cleanup_reloc(dev, reloc);
-}
-
 int
 main(int argc, char **argv)
 {
@@ -525,8 +497,6 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "test_reloc_iter_full",
 			    test_reloc_iter_full) == NULL
-		|| CU_add_test(suite, "test_reloc_iter_empty",
-			       test_reloc_iter_empty) == NULL
 		|| CU_add_test(suite, "test_reloc_empty_band",
 			       test_reloc_empty_band) == NULL
 		|| CU_add_test(suite, "test_reloc_full_band",
