@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8472985c_fda97018",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-11T17:44:23Z",
+      "side": 1,
+      "message": "I\u0027m not a big fan of naked constants, not a huge deal but I think it would be better to define something like LOG_ALIGNMENT even right here or at least comment. Why is the alignment here 4K?",
+      "revId": "3454fc849456a5de594928ee7fae6008a34930fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
