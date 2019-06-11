@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
+#include "spdk/vmd.h"
 #include "spdk/env.h"
 
 struct ctrlr_entry {
@@ -342,6 +343,11 @@ int main(int argc, char **argv)
 	}
 
 	printf("Initializing NVMe Controllers\n");
+
+	if (spdk_vmd_init()) {
+		fprintf(stderr, "Unable to initialize VMD\n");
+		return 1;
+	}
 
 	/*
 	 * Start the SPDK NVMe enumeration process.  probe_cb will be called
