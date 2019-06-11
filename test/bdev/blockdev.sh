@@ -51,8 +51,6 @@ function nbd_function_test() {
 
 timing_enter bdev
 
-cp $testdir/bdev.conf.in $testdir/bdev.conf
-
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter hello_bdev
@@ -76,12 +74,11 @@ else
 	# Dynamic memory management is not supported on BSD
 	PRE_RESERVED_MEM=2048
 fi
-$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $testdir/bdev.conf &
+$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM &
 bdevio_pid=$!
 trap "killprocess $bdevio_pid; exit 1" SIGINT SIGTERM EXIT
 echo "Process bdevio pid: $bdevio_pid"
 waitforlisten $bdevio_pid
-$testdir/bdevio/tests.py perform_tests
 
 # Test Malloc
 timing_enter blockdev_malloc
