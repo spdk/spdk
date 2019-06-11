@@ -16,6 +16,24 @@
       "revId": "3454fc849456a5de594928ee7fae6008a34930fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "851d6096_0412c3f8",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T18:12:10Z",
+      "side": 1,
+      "message": "Higher up in the comments they discussed that this doesn\u0027t need to be aligned at all and they\u0027re going to do an audit to remove all of these unnecessary alignments. For this patch, he just left the value the same as it was.",
+      "parentUuid": "8472985c_fda97018",
+      "revId": "3454fc849456a5de594928ee7fae6008a34930fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
