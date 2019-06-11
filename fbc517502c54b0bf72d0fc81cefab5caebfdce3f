@@ -1,0 +1,310 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d21945dd_407c10c0",
+        "filename": "test/app/fuzz/common/fuzz_common.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "rename to fuzz_common.h. You can leave the implementations in here for now.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1edd301c_e90ea5b1",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "Call this nvme_fuzz_request",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38f73f8b_6f4d9a3d",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "How is this different than the controller?",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f4b4e9e_790ff6e3",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "nvme_fuzz_ctrlr",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3aa16e2_35ec9ae0",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "nvme_fuzz_qp",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c0a8491_a8614dfe",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "Do you have exactly one of these per namespace, or one per thread? If it\u0027s one per namespace, call this nvme_fuzz_ns. If it\u0027s one per thread, call this nvme_fuzz_job.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c413e8df_2485d24c",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "If this \"ns_ctx\" is more like a job, where you can have one per thread, it may make more sense to just have a single qpair here. You can spawn a thread to do admin and a thread to do I/O commands entirely separately, which I think simplifies quite a few checks throughout the code.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d56975b9_f97ca961",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "This function and the one below don\u0027t print - they generate json. Should probably change the name",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12cd644d_9cf0dc04",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "This set of if statements may be better written with more nesting. Something like this:\n\nif (g_cmd_array) {\n/* Stuff for running a fixed number of commands */\n} else {\n/* Stuff for running for a period of time */\n}",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8678d96c_b244576b",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "use true/false when assigning to g_run",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfe72203_11407792",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "This check and the one below it are probably better written like this:\n\nuint64_t *counter;\nif (g_run_admin_commands) {\n    counter \u003d \u0026ns_entry-\u003ea_qp.submitted_cmd_counter;\n} else {\n    counter \u003d \u0026ns_entry-\u003eio_qp.submitted_cmd_counter;\n}\n\nif (*counter \u003e\u003d g_cmd_array_size) {\n    g_run \u003d false;\n}",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "635b8ad4_a6f12ac7",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "I\u0027d pull this if (!g_run) check from the two if statements out to it\u0027s own check up front.\n\nif (g_run) {\n    return 0;\n}\n\n\n... Exit handling ...",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb5c6139_9325d60a",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "In the case where we\u0027re running from an array of pre-made commands, can\u0027t you just set qp-\u003efree_ctx_objs up so that it only has enough entries for what\u0027s in the array? Then this check gets simpler.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dde2d7ec_5f701ac6",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "if (!g_run) {\n    return;\n}\n\nRemoves a layer of indentation",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a6b361f_db3ba528",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "This if (rc) check isn\u0027t necessary.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8d54617_2ef29045",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "You can just read this variable - a 32 bit load is atomic on x86.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20891a86_fa2099f9",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "You can probably check this less often.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37e108b3_7bec1cb1",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T17:49:59Z",
+      "side": 1,
+      "message": "The -j option doesn\u0027t mix well with the -t option. I think you should set up the infrastructure to have two distinct modes - run for a given amount of time, or run a given number of commands. Using the -j option implies you\u0027re running for a given number of commands.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
