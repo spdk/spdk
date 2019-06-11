@@ -191,6 +191,30 @@
     },
     {
       "key": {
+        "uuid": "dfbf965d_142ac9a1",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-11T11:18:52Z",
+      "side": 1,
+      "message": "That doesn\u0027t change anything. You can still have core thread executing code from lines 771-772 with other threads calling ftl_reloc_add() on the same band.",
+      "parentUuid": "b806c616_7df79cfd",
+      "range": {
+        "startLine": 569,
+        "startChar": 2,
+        "endLine": 569,
+        "endChar": 58
+      },
+      "revId": "791df89b8e13a40c8b97f0aaf5813f177aec4058",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b0987ea2_db50a084",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 12
