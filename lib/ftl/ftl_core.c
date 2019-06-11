@@ -1865,11 +1865,24 @@ spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
 	return 0;
 }
 
+static void
+_ftl_process_anm_event(void *ctx)
+{
+	ftl_process_anm_event((struct ftl_anm_event *)ctx);
+}
+
 void
 ftl_process_anm_event(struct ftl_anm_event *event)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Unconsumed ANM received for dev: %p...\n", event->dev);
-	ftl_anm_event_complete(event);
+	struct spdk_ftl_dev *dev = event->dev;
+
+	if (ftl_check_core_thread(dev)) {
+		SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Unconsumed ANM received for dev: %p...\n",
+			      event->dev);
+		ftl_anm_event_complete(event);
+	} else {
+		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_process_anm_event, event);
+	}
 }
 
 static void
