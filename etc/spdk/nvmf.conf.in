@@ -134,6 +134,9 @@
   # Set the number of shared buffers to be cached per poll group
   #BufCacheSize 32
 
+  # Set whether to use the C2H Success optimization, only used for TCP transport.
+  # C2HSuccess true
+
 [Nvme]
   # NVMe Device Whitelist
   # Users may specify which NVMe devices to claim by their transport id.

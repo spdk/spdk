@@ -483,6 +483,7 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 	struct spdk_nvmf_transport_opts opts = { 0 };
 	enum spdk_nvme_transport_type trtype;
 	struct spdk_nvmf_transport *transport;
+	bool bval;
 	int val;
 
 	type = spdk_conf_section_get_val(ctx->sp, "Type");
@@ -552,20 +553,31 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 			opts.max_srq_depth = val;
 		} else {
 			SPDK_ERRLOG("MaxSRQDepth is relevant only for RDMA transport '%s'\n", type);
-			ctx->cb_fn(-1);
-			free(ctx);
-			return;
+			goto error_out;
 		}
+	}
+
+	bval = spdk_conf_section_get_boolval(ctx->sp, "C2HSuccess", true);
+	if (trtype == SPDK_NVME_TRANSPORT_TCP) {
+		opts.c2h_success = bval;
+	} else {
+		SPDK_ERRLOG("C2HSuccess is relevant only for TCP transport '%s'\n", type);
+		goto error_out;
 	}
 
 	transport = spdk_nvmf_transport_create(trtype, &opts);
 	if (transport) {
 		spdk_nvmf_tgt_add_transport(g_spdk_nvmf_tgt, transport, spdk_nvmf_tgt_add_transport_done, ctx);
 	} else {
-		ctx->cb_fn(-1);
-		free(ctx);
-		return;
+		goto error_out;
 	}
+
+	return;
+
+error_out:
+	ctx->cb_fn(-1);
+	free(ctx);
+	return;
 }
 
 static int
