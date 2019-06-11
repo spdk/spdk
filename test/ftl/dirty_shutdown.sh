@@ -17,6 +17,7 @@ restore_kill() {
 	rm -f $testdir/empty
 	rm -f $testdir/testblock
 	rm -f $testdir/testfile.md5
+	rm -f $testdir/testfile2.md5
 
 	$rpc_py delete_ftl_bdev -b nvme0 || true
 	killprocess $svcpid || true
@@ -50,12 +51,18 @@ $rpc_py save_config > $testdir/config/ftl.json
 
 # Send band worth of data in 2 steps (some data should be written to 2nd band due to metadata overhead)
 dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$(($band_size - $chunk_size)) oflag=dsync
-dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$chunk_size seek=$(($band_size - $chunk_size)) oflag=dsync
+offset=$(($band_size - $chunk_size))
+
+dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$chunk_size seek=$offset oflag=dsync
+offset=$(($offset + $chunk_size))
+
 # Save md5 data of first batch (which should be fully on a closed band and recoverable)
 dd if=/dev/nbd0 bs=4K count=$(($band_size - $chunk_size)) | md5sum > $testdir/testfile.md5
 
 # Make sure the third batch of written data is fully on the second band
-dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$additional_blocks seek=$band_size oflag=dsync
+dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$additional_blocks seek=$offset oflag=dsync
+offset=$(($offset + $additional_blocks))
+
 $rpc_py stop_nbd_disk /dev/nbd0
 
 # Force kill bdev service (dirty shutdown) and start it again
@@ -71,12 +78,23 @@ waitforlisten $svcpid
 # Ftl should recover, though with a loss of data (-o config option)
 $rpc_py load_config < $testdir/config/ftl.json
 
+# Write extra data after restore
+dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$chunk_size seek=$offset oflag=dsync
+# Save md5 data
+dd if=/dev/nbd0 bs=4K count=$chunk_size skip=$offset | md5sum > $testdir/testfile2.md5
+
+# Make sure all data will be read from disk
+echo 3 > /proc/sys/vm/drop_caches
+
 # Without persistent cache, first batch of data should be recoverable
 dd if=/dev/nbd0 bs=4K count=$(($band_size - $chunk_size)) | md5sum -c $testdir/testfile.md5
+
 dd if=/dev/nbd0 of=$testdir/testblock bs=4k count=$additional_blocks skip=$band_size
-# Last 4k blocks should be on second band, and return as 0s
+# Last 4k blocks from before restore should be on second band, and return as 0s
 dd if=/dev/zero of=$testdir/empty bs=4k count=$additional_blocks
 cmp $testdir/empty $testdir/testblock
+# Verify data written after restore is still there
+dd if=/dev/nbd0 bs=4K count=$chunk_size skip=$(($band_size + $additional_blocks)) | md5sum -c $testdir/testfile2.md5
 
 report_test_completion ftl_dirty_shutdown
 

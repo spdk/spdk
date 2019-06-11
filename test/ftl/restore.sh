@@ -16,6 +16,7 @@ restore_kill() {
 	fi
 	rm -rf $mount_dir
 	rm -f $testdir/testfile.md5
+	rm -f $testdir/testfile2.md5
 	rm -f $testdir/config/ftl.json
 
 	$rpc_py delete_ftl_bdev -b nvme0
@@ -61,7 +62,17 @@ waitforlisten $svcpid
 $rpc_py load_config < $testdir/config/ftl.json
 
 mount /dev/nbd0 $mount_dir
+
+# Write second file, to make sure writer thread has restored properly
+dd if=/dev/urandom of=$mount_dir/testfile2 bs=4K count=256K
+md5sum $mount_dir/testfile2 > $testdir/testfile2.md5
+
+# Make sure second file will be read from disk
+echo 3 > /proc/sys/vm/drop_caches
+
+# Check both files have proper data
 md5sum -c $testdir/testfile.md5
+md5sum -c $testdir/testfile2.md5
 
 report_test_completion occsd_restore
 
