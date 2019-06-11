@@ -108,6 +108,27 @@ _dif_sgl_append(struct _dif_sgl *s, uint8_t *data, uint32_t data_len)
 	}
 }
 
+static inline bool
+_dif_sgl_append_split(struct _dif_sgl *dst, struct _dif_sgl *src, uint32_t data_len)
+{
+	uint8_t *buf;
+	uint32_t buf_len;
+
+	while (data_len != 0) {
+		_dif_sgl_get_buf(src, (void *)&buf, &buf_len);
+		buf_len = spdk_min(buf_len, data_len);
+
+		if (!_dif_sgl_append(dst, buf, buf_len)) {
+			return false;
+		}
+
+		_dif_sgl_advance(src, buf_len);
+		data_len -= buf_len;
+	}
+
+	return true;
+}
+
 /* This function must be used before starting iteration. */
 static bool
 _dif_sgl_is_bytes_multiple(struct _dif_sgl *s, uint32_t bytes)
@@ -1424,8 +1445,6 @@ dif_set_md_interleave_iovs_split(struct iovec *iovs, int iovcnt,
 	uint32_t num_blocks, offset_blocks;
 	struct _dif_sgl dif_sgl;
 	struct _dif_sgl buf_sgl;
-	uint8_t *buf;
-	uint32_t buf_len, remaining;
 
 	data_block_size = ctx->block_size - ctx->md_size;
 	num_blocks = data_len / data_block_size;
@@ -1446,16 +1465,9 @@ dif_set_md_interleave_iovs_split(struct iovec *iovs, int iovcnt,
 	while (offset_blocks < num_blocks) {
 		_dif_sgl_advance(&buf_sgl, head_unalign);
 
-		remaining = data_block_size - head_unalign;
-		while (remaining != 0) {
-			_dif_sgl_get_buf(&buf_sgl, (void *)&buf, &buf_len);
-			buf_len = spdk_min(buf_len, remaining);
-
-			if (!_dif_sgl_append(&dif_sgl, buf, buf_len)) {
-				goto end;
-			}
-			_dif_sgl_advance(&buf_sgl, buf_len);
-			remaining -= buf_len;
+		if (!_dif_sgl_append_split(&dif_sgl, &buf_sgl,
+					   data_block_size - head_unalign)) {
+			break;
 		}
 		_dif_sgl_advance(&buf_sgl, ctx->md_size);
 		offset_blocks++;
@@ -1463,7 +1475,6 @@ dif_set_md_interleave_iovs_split(struct iovec *iovs, int iovcnt,
 		head_unalign = 0;
 	}
 
-end:
 	if (_mapped_len != NULL) {
 		*_mapped_len = dif_sgl.total_size;
 	}
