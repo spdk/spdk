@@ -128,6 +128,30 @@
       "revId": "35a8174bf311f45838c89fc0c4660d14857af83b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c3d407b_c641afbc",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-11T07:57:01Z",
+      "side": 1,
+      "message": "Then let\u0027s move this at the bottom of the loop and instead of using ftl_band_ppa_from_lbkoff to retrieve PPA, change the \u0027chk\u0027 part of the PPA.\n\nAlso, I there\u0027s one more reason that you shouldn\u0027t use ftl_band_ppa_from_lbkoff - if a band\u0027s first chunk is invalid it\u0027ll create an event for the next chunk. You should skip offline chunks here.",
+      "parentUuid": "6325550b_336bca3c",
+      "range": {
+        "startLine": 175,
+        "startChar": 2,
+        "endLine": 177,
+        "endChar": 3
+      },
+      "revId": "35a8174bf311f45838c89fc0c4660d14857af83b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
