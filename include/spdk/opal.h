@@ -151,6 +151,17 @@ enum spdk_opal_locking_range {
 	OPAL_LOCKING_RANGE_10,
 };
 
+struct spdk_opal_locking_range_info {
+	uint8_t locking_range_id;
+	uint8_t _padding[7];
+	uint64_t range_start;
+	uint64_t range_length;
+	bool read_lock_enabled;
+	bool write_lock_enabled;
+	bool read_locked;
+	bool write_locked;
+};
+
 struct spdk_opal_dev;
 
 struct spdk_opal_dev *spdk_opal_init_dev(void *dev_handler);
@@ -170,5 +181,12 @@ int spdk_opal_cmd_lock_unlock(struct spdk_opal_dev *dev, enum spdk_opal_user use
 int spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user user,
 				      enum spdk_opal_locking_range locking_range_id, uint64_t range_start,
 				      uint64_t range_length, const char *passwd);
+
+int spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd);
+int spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *passwd,
+		enum spdk_opal_locking_range locking_range_id);
+struct spdk_opal_locking_range_info *spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev,
+		enum spdk_opal_locking_range id);
+uint8_t spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev);
 
 #endif
