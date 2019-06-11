@@ -1592,7 +1592,7 @@ static void
 _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 static void
-_spdk_bdev_io_split_with_payload(void *_bdev_io)
+_spdk_bdev_io_split(void *_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io = _bdev_io;
 	uint64_t current_offset, remaining;
@@ -1694,7 +1694,7 @@ _spdk_bdev_io_split_with_payload(void *_bdev_io)
 				if (bdev_io->u.bdev.split_outstanding == 0) {
 					/* No I/O is outstanding. Hence we should wait here. */
 					_spdk_bdev_queue_io_wait_with_cb(bdev_io,
-									 _spdk_bdev_io_split_with_payload);
+									 _spdk_bdev_io_split);
 				}
 			} else {
 				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
@@ -1736,11 +1736,11 @@ _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	 * Continue with the splitting process.  This function will complete the parent I/O if the
 	 * splitting is done.
 	 */
-	_spdk_bdev_io_split_with_payload(parent_io);
+	_spdk_bdev_io_split(parent_io);
 }
 
 static void
-_spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	assert(_spdk_bdev_io_type_can_split(bdev_io->type));
 
@@ -1749,7 +1749,7 @@ _spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	bdev_io->u.bdev.split_outstanding = 0;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	_spdk_bdev_io_split_with_payload(bdev_io);
+	_spdk_bdev_io_split(bdev_io);
 }
 
 static void
@@ -1761,7 +1761,7 @@ _spdk_bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *
 		return;
 	}
 
-	_spdk_bdev_io_split(ch, bdev_io);
+	spdk_bdev_io_split(ch, bdev_io);
 }
 
 /* Explicitly mark this inline, since it's used as a function pointer and otherwise won't
@@ -1816,7 +1816,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 			spdk_bdev_io_get_buf(bdev_io, _spdk_bdev_io_split_get_buf_cb,
 					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		} else {
-			_spdk_bdev_io_split(NULL, bdev_io);
+			spdk_bdev_io_split(NULL, bdev_io);
 		}
 		return;
 	}
