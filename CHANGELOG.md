@@ -2,6 +2,10 @@
 
 ## v19.07: (Upcoming Release)
 
+### blobfs
+
+Blobfs file asynchronous operations were added to public APIs.
+
 ### util
 
 A new file API `spdk_posix_file_load` was added to load file content into a data buffer.
