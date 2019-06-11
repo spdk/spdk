@@ -2,6 +2,108 @@
   "comments": [
     {
       "key": {
+        "uuid": "2a8ef8bb_86f2805d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T18:01:22Z",
+      "side": 1,
+      "message": "Leave ANM out for now - we\u0027ll discuss how to implement that separately.",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e74ece5_d1f4aa98",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T18:01:22Z",
+      "side": 1,
+      "message": "name this member just \u0027type\u0027",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a5e4c20_1b382611",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T18:01:22Z",
+      "side": 1,
+      "message": "Make this a union based on the event type.\n\nunion {\n    struct {\n    } remove; /* I\u0027m not sure you can make an empty struct, but you get the idea */\n    struct {\n        uint64_t new_size;\n    } resize;\n} data;",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd6a006a_2a170001",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T18:01:22Z",
+      "side": 1,
+      "message": "Maybe just name this spdk_bdev_open_ext?",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "890af3b8_d2a5d0e2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T18:01:22Z",
+      "side": 1,
+      "message": "Put remove_cb/remove_ctx into a union with event_cb/event_ctx - you never have both at the same time.\n\nYou could even make this union have a real type name so you can pass it as the argument to spdk_bdev_open_generic.",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1148b21_314f6d60",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4209,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-11T18:01:22Z",
+      "side": 1,
+      "message": "Name this _spdk_bdev_open? Or does that already exist somewhere",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8a1bb8a6_8b4fe413",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
