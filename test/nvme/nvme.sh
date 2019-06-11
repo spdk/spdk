@@ -8,7 +8,8 @@ source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
 function get_nvme_name_from_bdf {
-	lsblk -d --output NAME
+	blkname=()
+
 	nvme_devs=$(lsblk -d --output NAME | grep "^nvme") || true
 	if [ -z "$nvme_devs" ]; then
 		return
@@ -20,10 +21,11 @@ function get_nvme_name_from_bdf {
 		fi
 		bdf=$(basename "$link_name")
 		if [ "$bdf" = "$1" ]; then
-			eval "$2=$dev"
-			return
+			blkname+=($dev)
 		fi
 	done
+
+	printf '%s\n' "${blkname[@]}"
 }
 
 timing_enter nvme
@@ -42,15 +44,16 @@ if [ `uname` = Linux ]; then
 	# note: more work probably needs to be done to properly handle devices with multiple
 	# namespaces
 	for bdf in $(iter_pci_class_code 01 08 02); do
-		get_nvme_name_from_bdf "$bdf" blkname
-		if [ "$blkname" != "" ]; then
-			mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
-			if [ "$mountpoints" = "0" ]; then
-				break
-			else
-				blkname=''
+		for blkname in $(get_nvme_name_from_bdf $bdf); do
+			if [ "$blkname" != "" ]; then
+				mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
+				if [ "$mountpoints" = "0" ]; then
+					break
+				else
+					blkname=''
+				fi
 			fi
-		fi
+		done
 	done
 
 	# if we found an NVMe block device without an active mountpoint, create and mount
@@ -167,8 +170,10 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 	timing_enter fio_plugin
 	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 	for bdf in $(iter_pci_class_code 01 08 02); do
-		fio_nvme $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
-		report_test_completion "bdev_fio"
+		for blkname in $(get_nvme_name_from_bdf $bdf); do
+			fio_nvme $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=${blkname##*n}"
+			report_test_completion "bdev_fio"
+		done
 	done
 	timing_exit fio_plugin
 fi
