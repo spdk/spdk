@@ -85,6 +85,23 @@ echo "Process bdevio pid: $bdevio_pid"
 waitforlisten $bdevio_pid
 $testdir/bdevio/tests.py perform_tests
 
+# Test Split
+timing_enter blockdev_split
+$rpc_py	construct_malloc_bdev 32 512 -b Malloc_split
+
+#Split Malloc into two auto-sized halves
+$rpc_py	construct_split_vbdev Malloc_split 2
+$testdir/bdevio/tests.py perform_tests
+$rpc_py	destruct_split_vbdev Malloc_split
+
+# Split Malloc2 into eight 4-megabyte pieces, leaving the rest of the device inaccessible
+$rpc_py	construct_split_vbdev Malloc_split 8 -s 4
+$testdir/bdevio/tests.py perform_tests
+$rpc_py	destruct_split_vbdev Malloc_split
+
+$rpc_py	delete_malloc_bdev Malloc_split
+timing_exit blockdev_split
+
 # Test NVMe
 timing_enter blockdev_nvme
 if [ "$(scripts/gen_nvme.sh --json | jq -r '.config[].params')" = "" ];then
