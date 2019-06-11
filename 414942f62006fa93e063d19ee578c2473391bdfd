@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc9147a1_df6f7923",
+        "filename": "examples/nvme/hello_world/hello_world.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-11T05:40:53Z",
+      "side": 1,
+      "message": "This won\u0027t work if the nvme lib is built as a shared library. It won\u0027t have the nvme_qpair_print_completion symbol exported.\n\nAssigning Ben.",
+      "revId": "414942f62006fa93e063d19ee578c2473391bdfd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
