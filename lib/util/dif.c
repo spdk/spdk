@@ -1372,25 +1372,23 @@ dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 			   uint32_t *_mapped_len,
 			   const struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, num_blocks, len;
+	uint32_t data_block_size, buf_offset, num_blocks, len;
 	struct _dif_sgl sgl;
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	num_blocks = data_offset / data_block_size;
+	buf_offset = (data_offset / data_block_size) * ctx->block_size + (data_offset % data_block_size);
+	num_blocks = (data_offset + data_len) / data_block_size;
 
-	if (buf_len < data_len + num_blocks * ctx->md_size) {
+	if (buf_len < data_offset + data_len + num_blocks * ctx->md_size) {
 		SPDK_ERRLOG("Buffer overflow will occur. Buffer size is %" PRIu32 " but"
 			    " necessary size is %" PRIu32 "\n",
-			    buf_len, data_len + num_blocks * ctx->md_size);
+			    buf_len, buf_offset + data_len + num_blocks * ctx->md_size);
 		return -ERANGE;
 	}
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
-
-	buf += (data_offset / data_block_size) * ctx->block_size + (data_offset % data_block_size);
-
-	data_len -= data_offset;
+	buf += buf_offset;
 
 	while (data_len != 0) {
 		len = data_block_size - (data_offset % data_block_size);
@@ -1426,20 +1424,19 @@ dif_set_md_interleave_iovs_split(struct iovec *iovs, int iovcnt,
 	uint32_t buf_offset, len, remaining;
 
 	data_block_size = ctx->block_size - ctx->md_size;
-	num_blocks = data_offset / data_block_size;
+
+	buf_offset = (data_offset / data_block_size) * ctx->block_size + (data_offset % data_block_size);
+	num_blocks = (data_offset + data_len) / data_block_size;
 
 	_dif_sgl_init(&dif_sgl, iovs, iovcnt);
 	_dif_sgl_init(&buf_sgl, buf_iovs, buf_iovcnt);
 
-	if (!_dif_sgl_is_valid(&buf_sgl, data_len + num_blocks * ctx->md_size)) {
+	if (!_dif_sgl_is_valid(&buf_sgl, data_offset + data_len + num_blocks * ctx->md_size)) {
 		SPDK_ERRLOG("Buffer overflow will occur.\n");
 		return -ERANGE;
 	}
 
-	buf_offset = (data_offset / data_block_size) * ctx->block_size + (data_offset % data_block_size);
 	_dif_sgl_advance(&buf_sgl, buf_offset);
-
-	data_len -= data_offset;
 
 	while (data_len != 0) {
 		remaining = data_block_size - (data_offset % data_block_size);
@@ -1479,11 +1476,6 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 {
 	if (iovs == NULL || iovcnt == 0 || buf_iovs == NULL || buf_iovcnt == 0) {
 		return -EINVAL;
-	}
-
-	if (data_offset >= data_len) {
-		SPDK_ERRLOG("Data offset must be smaller than data length\n");
-		return -ERANGE;
 	}
 
 	if (buf_iovcnt == 1) {

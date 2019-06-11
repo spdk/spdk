@@ -1430,6 +1430,7 @@ set_md_interleave_iovs_test(void)
 	CU_ASSERT(rc == 0);
 
 	data_offset += read_len;
+	data_len -= read_len;
 
 	/* 2nd read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
@@ -1448,6 +1449,7 @@ set_md_interleave_iovs_test(void)
 	CU_ASSERT(rc == 0);
 
 	data_offset += read_len;
+	data_len -= read_len;
 
 	/* 3rd read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
@@ -1466,6 +1468,7 @@ set_md_interleave_iovs_test(void)
 	CU_ASSERT(rc == 0);
 
 	data_offset += read_len;
+	data_len -= read_len;
 
 	/* 4th read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
@@ -1482,6 +1485,8 @@ set_md_interleave_iovs_test(void)
 
 	data_offset += read_len;
 	CU_ASSERT(data_offset == 4096 * 4);
+	data_len -= read_len;
+	CU_ASSERT(data_len == 0);
 
 	/* The second data buffer:
 	 * - Set data pattern with a space for metadata for each block.
@@ -1561,6 +1566,7 @@ set_md_interleave_iovs_split_test(void)
 	CU_ASSERT(rc == 0);
 
 	data_offset += read_len;
+	data_len -= read_len;
 
 	/* 2nd read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
@@ -1583,6 +1589,7 @@ set_md_interleave_iovs_split_test(void)
 	CU_ASSERT(rc == 0);
 
 	data_offset += read_len;
+	data_len -= read_len;
 
 	/* 3rd read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
@@ -1605,6 +1612,7 @@ set_md_interleave_iovs_split_test(void)
 	CU_ASSERT(rc == 0);
 
 	data_offset += read_len;
+	data_len -= read_len;
 
 	/* 4th read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
@@ -1622,6 +1630,8 @@ set_md_interleave_iovs_split_test(void)
 
 	data_offset += read_len;
 	CU_ASSERT(data_offset == 512 * 4);
+	data_len -= read_len;
+	CU_ASSERT(data_len == 0);
 
 	/* The second SGL data buffer:
 	 * - Set data pattern with a space for metadata for each block.
