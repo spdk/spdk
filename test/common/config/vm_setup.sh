@@ -492,6 +492,9 @@ if $INSTALL; then
         if ! sudo apt-get install -y libpmempool1; then
             echo "Package libpmempool1 is available at Ubuntu 18 [universe] repositorium" >&2
         fi
+        if ! sudo apt-get install -y clang-tools; then
+            echo "Package clang-tools is available at Ubuntu 18 [universe] repositorium" >&2
+        fi
         if ! sudo apt-get install -y --no-install-suggests --no-install-recommends open-isns-utils; then
             echo "Package open-isns-utils is available at Ubuntu 18 [universe] repositorium" >&2
         fi
