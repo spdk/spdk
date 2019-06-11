@@ -442,6 +442,154 @@ void spdk_file_writev_async(struct spdk_file *file, struct spdk_io_channel *chan
 			    struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
 			    spdk_file_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Get statistics about the file including the underlying blob id and the file size.
+ *
+ * \param fs Blobstore filesystem.
+ * \param name The file name used to look up the matched file in the blobstore filesystem.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ */
+void spdk_fs_file_stat_async(struct spdk_filesystem *fs, const char *name,
+			     spdk_file_stat_op_complete cb_fn, void *cb_arg);
+
+/**
+ * Create a new file on the given blobstore filesystem.
+ *
+ * \param fs Blobstore filesystem.
+ * \param name The file name for this new file.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ */
+void spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
+			       spdk_file_op_complete cb_fn, void *cb_args);
+
+/**
+ * Open the file.
+ *
+ * \param fs Blobstore filesystem.
+ * \param name The file name used to look up the matched file in the blobstore filesystem.
+ * \param flags This flags will be used to control the open mode.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ */
+void spdk_fs_open_file_async(struct spdk_filesystem *fs, const char *name, uint32_t flags,
+			     spdk_file_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
+ * Close the file.
+ *
+ * \param file File to close.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ */
+void spdk_file_close_async(struct spdk_file *file, spdk_file_op_complete cb_fn, void *cb_arg);
+
+
+/**
+ * Change the file name.
+ *
+ * This operation will overwrite an existing file if there is a file with the
+ * same name.
+ *
+ * \param fs Blobstore filesystem.
+ * \param old_name Old name of the file.
+ * \param new_name New name of the file.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ */
+void spdk_fs_rename_file_async(struct spdk_filesystem *fs, const char *old_name,
+			       const char *new_name, spdk_fs_op_complete cb_fn,
+			       void *cb_arg);
+
+/**
+ * Delete the file.
+ *
+ * \param fs Blobstore filesystem.
+ * \param name The name of the file to be deleted.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ *
+ */
+void spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
+			       spdk_file_op_complete cb_fn, void *cb_arg);
+
+/**
+ * Truncate the file.
+ *
+ * \param file File to truncate.
+ * \param length New size in bytes of the file.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ */
+void spdk_file_truncate_async(struct spdk_file *file, uint64_t length,
+			      spdk_file_op_complete cb_fn, void *arg);
+
+/**
+ * Write data to the given file.
+ *
+ * \param file File to write.
+ * \param channel I/O channel for asynchronous operations.
+ * \param payload The specified buffer which should contain the data to be transmitted.
+ * \param offset The beginning position to write data.
+ * \param length The size in bytes of data to write.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ */
+void spdk_file_write_async(struct spdk_file *file, struct spdk_io_channel *channel,
+			   void *payload, uint64_t offset, uint64_t length,
+			   spdk_file_op_complete cb_fn, void *cb_arg);
+
+/**
+ * Read data to user buffer from the given file.
+ *
+ * \param file File to write.
+ * \param channel I/O channel for asynchronous operations.
+ * \param payload The specified buffer which will store the obtained data.
+ * \param offset The beginning position to read.
+ * \param length The size in bytes of data to read.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ */
+void spdk_file_read_async(struct spdk_file *file, struct spdk_io_channel *channel,
+			  void *payload, uint64_t offset, uint64_t length,
+			  spdk_file_op_complete cb_fn, void *cb_arg);
+
+/**
+ * Sync all dirty cache buffers to the backing block device.  For async
+ *  usage models, completion of the sync indicates only that data written
+ *  when the sync command was issued have been flushed to disk - it does
+ *  not guarantee any writes submitted after the sync have been flushed,
+ *  even if those writes are completed before the sync.
+ *
+ * \param file File to write.
+ * \param channel I/O channel for asynchronous operations.
+ * \param cb_fn Called when the request is complete.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ * return None.
+ */
+void spdk_file_sync_async(struct spdk_file *file, struct spdk_io_channel *channel,
+			  spdk_file_op_complete cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif

@@ -34,7 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/blobfs.h"
-#include "blobfs_internal.h"
+#include "tree.h"
 
 #include "spdk/queue.h"
 #include "spdk/assert.h"
