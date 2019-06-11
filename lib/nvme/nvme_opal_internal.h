@@ -299,6 +299,8 @@ struct spdk_opal_dev {
 	struct spdk_opal_info *opal_info;
 
 	uint64_t timeout;   /* seconds */
+	uint8_t max_ranges; /* max locking range number */
+	struct spdk_opal_locking_range_info *locking_range_info[OPAL_MAX_LRS];
 
 	pthread_mutex_t mutex_lock; /* some structs are accessed by current thread only */
 };
