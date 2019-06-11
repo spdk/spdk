@@ -83,6 +83,13 @@ echo "Process bdevio pid: $bdevio_pid"
 waitforlisten $bdevio_pid
 $testdir/bdevio/tests.py perform_tests
 
+# Test Malloc
+timing_enter blockdev_malloc
+$rpc_py	construct_malloc_bdev 32 512 -b Malloc_test
+$testdir/bdevio/tests.py perform_tests -b Malloc_test
+$rpc_py	delete_malloc_bdev Malloc_test
+timing_exit blockdev_malloc
+
 # Test Passthrough
 timing_enter blockdev_passthrough
 $rpc_py	construct_malloc_bdev 32 512 -b Malloc_PT
