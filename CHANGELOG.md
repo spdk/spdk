@@ -8,6 +8,9 @@ A new file API `spdk_posix_file_load` was added to load file content into a data
 
 ### NVMe-oF Target
 
+The c2h success optimization under which a command capsule response is not sent
+for reads is turned on. A config knob was added to allow for enable/disable.
+
 Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.
