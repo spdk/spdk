@@ -152,6 +152,30 @@
       "revId": "35a8174bf311f45838c89fc0c4660d14857af83b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa2e660f_0ed38dc0",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-11T08:57:00Z",
+      "side": 1,
+      "message": "ftl_band_ppa_from_lbkoff will return ppa for offline chunk, so this should be fine. Also if we generate event on offline chunk it will be dropped by reloc itself. But I\u0027m fine to filter this out here.",
+      "parentUuid": "5c3d407b_c641afbc",
+      "range": {
+        "startLine": 175,
+        "startChar": 2,
+        "endLine": 177,
+        "endChar": 3
+      },
+      "revId": "35a8174bf311f45838c89fc0c4660d14857af83b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
