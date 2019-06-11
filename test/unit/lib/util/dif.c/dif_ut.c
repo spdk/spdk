@@ -1391,7 +1391,7 @@ set_md_interleave_iovs_test(void)
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
 	struct iovec iov1, iov2, dif_iovs[4];
-	uint32_t dif_check_flags, mapped_len = 0, read_base = 0;
+	uint32_t dif_check_flags, data_len, read_len, data_offset, mapped_len = 0;
 	uint8_t *buf1, *buf2;
 	int rc;
 
@@ -1410,8 +1410,12 @@ set_md_interleave_iovs_test(void)
 	SPDK_CU_ASSERT_FATAL(buf1 != NULL);
 	_iov_set_buf(&iov1, buf1, (4096 + 128) * 4);
 
+	data_offset = 0;
+	data_len = 4096 * 4;
+
+	/* 1st read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
-					     0, 4096 * 4, &mapped_len, &ctx);
+					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 4096 * 4);
 	CU_ASSERT(_iov_check(&dif_iovs[0], buf1, 4096) == true);
@@ -1419,14 +1423,17 @@ set_md_interleave_iovs_test(void)
 	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
 	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 4096) == true);
 
-	read_base = ut_readv(0, 1024, dif_iovs, 4);
-	CU_ASSERT(read_base == 1024);
+	read_len = ut_readv(data_offset, 1024, dif_iovs, 4);
+	CU_ASSERT(read_len == 1024);
 
-	rc = spdk_dif_generate_stream(&iov1, 1, 0, 1024, &ctx);
+	rc = spdk_dif_generate_stream(&iov1, 1, data_offset, read_len, &ctx);
 	CU_ASSERT(rc == 0);
 
+	data_offset += read_len;
+
+	/* 2nd read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
-					     read_base, 4096 * 4, &mapped_len, &ctx);
+					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 3072 + 4096 * 3);
 	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 1024, 3072) == true);
@@ -1434,14 +1441,17 @@ set_md_interleave_iovs_test(void)
 	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
 	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 4096) == true);
 
-	read_base += ut_readv(read_base, 3071, dif_iovs, 4);
-	CU_ASSERT(read_base == 4095);
+	read_len = ut_readv(data_offset, 3071, dif_iovs, 4);
+	CU_ASSERT(read_len == 3071);
 
-	rc = spdk_dif_generate_stream(&iov1, 1, 1024, 3071, &ctx);
+	rc = spdk_dif_generate_stream(&iov1, 1, data_offset, read_len, &ctx);
 	CU_ASSERT(rc == 0);
 
+	data_offset += read_len;
+
+	/* 3rd read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
-					     read_base, 4096 * 4, &mapped_len, &ctx);
+					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 1 + 4096 * 3);
 	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 4095, 1) == true);
@@ -1449,23 +1459,29 @@ set_md_interleave_iovs_test(void)
 	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
 	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 4096) == true);
 
-	read_base += ut_readv(read_base, 1 + 4096 * 2 + 512, dif_iovs, 4);
-	CU_ASSERT(read_base == 4096 * 3 + 512);
+	read_len = ut_readv(data_offset, 1 + 4096 * 2 + 512, dif_iovs, 4);
+	CU_ASSERT(read_len == 1 + 4096 * 2 + 512);
 
-	rc = spdk_dif_generate_stream(&iov1, 1, 4095, 1 + 4096 * 2 + 512, &ctx);
+	rc = spdk_dif_generate_stream(&iov1, 1, data_offset, read_len, &ctx);
 	CU_ASSERT(rc == 0);
 
+	data_offset += read_len;
+
+	/* 4th read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
-					     read_base, 4096 * 4, &mapped_len, &ctx);
+					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(mapped_len == 3584);
 	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + (4096 + 128) * 3 + 512, 3584) == true);
 
-	read_base += ut_readv(read_base, 3584, dif_iovs, 1);
-	CU_ASSERT(read_base == 4096 * 4);
+	read_len = ut_readv(data_offset, 3584, dif_iovs, 1);
+	CU_ASSERT(read_len == 3584);
 
-	rc = spdk_dif_generate_stream(&iov1, 1, 4096 * 3 + 512, 3584, &ctx);
+	rc = spdk_dif_generate_stream(&iov1, 1, data_offset, read_len, &ctx);
 	CU_ASSERT(rc == 0);
+
+	data_offset += read_len;
+	CU_ASSERT(data_offset == 4096 * 4);
 
 	/* The second data buffer:
 	 * - Set data pattern with a space for metadata for each block.
@@ -1499,7 +1515,7 @@ set_md_interleave_iovs_split_test(void)
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
 	struct iovec iovs1[7], iovs2[7], dif_iovs[8];
-	uint32_t dif_check_flags, mapped_len = 0, read_base = 0;
+	uint32_t dif_check_flags, data_len, read_len, data_offset, mapped_len = 0;
 	int rc, i;
 
 	dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
@@ -1521,8 +1537,12 @@ set_md_interleave_iovs_split_test(void)
 	_iov_alloc_buf(&iovs1[5], 3 + 300);
 	_iov_alloc_buf(&iovs1[6], 212 + 8);
 
+	data_offset = 0;
+	data_len = 512 * 4;
+
+	/* 1st read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
-					     0, 512 * 4, &mapped_len, &ctx);
+					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 8);
 	CU_ASSERT(mapped_len == 512 * 4);
 	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base, 512) == true);
@@ -1534,14 +1554,17 @@ set_md_interleave_iovs_split_test(void)
 	CU_ASSERT(_iov_check(&dif_iovs[6], iovs1[5].iov_base + 3, 300) == true);
 	CU_ASSERT(_iov_check(&dif_iovs[7], iovs1[6].iov_base, 212) == true);
 
-	read_base = ut_readv(0, 128, dif_iovs, 8);
-	CU_ASSERT(read_base == 128);
+	read_len = ut_readv(data_offset, 128, dif_iovs, 8);
+	CU_ASSERT(read_len == 128);
 
-	rc = spdk_dif_generate_stream(iovs1, 7, 0, 128, &ctx);
+	rc = spdk_dif_generate_stream(iovs1, 7, data_offset, read_len, &ctx);
 	CU_ASSERT(rc == 0);
 
+	data_offset += read_len;
+
+	/* 2nd read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
-					     read_base, 512 * 4, &mapped_len, &ctx);
+					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 8);
 	CU_ASSERT(mapped_len == 384 + 512 * 3);
 	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base + 128, 384) == true);
@@ -1553,14 +1576,17 @@ set_md_interleave_iovs_split_test(void)
 	CU_ASSERT(_iov_check(&dif_iovs[6], iovs1[5].iov_base + 3, 300) == true);
 	CU_ASSERT(_iov_check(&dif_iovs[7], iovs1[6].iov_base, 212) == true);
 
-	read_base += ut_readv(read_base, 383, dif_iovs, 8);
-	CU_ASSERT(read_base == 511);
+	read_len = ut_readv(data_offset, 383, dif_iovs, 8);
+	CU_ASSERT(read_len == 383);
 
-	rc = spdk_dif_generate_stream(iovs1, 7, 128, 383, &ctx);
+	rc = spdk_dif_generate_stream(iovs1, 7, data_offset, read_len, &ctx);
 	CU_ASSERT(rc == 0);
 
+	data_offset += read_len;
+
+	/* 3rd read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
-					     read_base, 512 * 4, &mapped_len, &ctx);
+					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 8);
 	CU_ASSERT(mapped_len == 1 + 512 * 3);
 	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base + 511, 1) == true);
@@ -1572,24 +1598,30 @@ set_md_interleave_iovs_split_test(void)
 	CU_ASSERT(_iov_check(&dif_iovs[6], iovs1[5].iov_base + 3, 300) == true);
 	CU_ASSERT(_iov_check(&dif_iovs[7], iovs1[6].iov_base, 212) == true);
 
-	read_base += ut_readv(read_base, 1 + 512 * 2 + 128, dif_iovs, 8);
-	CU_ASSERT(read_base == 512 * 3 + 128);
+	read_len = ut_readv(data_offset, 1 + 512 * 2 + 128, dif_iovs, 8);
+	CU_ASSERT(read_len == 1 + 512 * 2 + 128);
 
-	rc = spdk_dif_generate_stream(iovs1, 7, 511, 1 + 512 * 2 + 128, &ctx);
+	rc = spdk_dif_generate_stream(iovs1, 7, data_offset, read_len, &ctx);
 	CU_ASSERT(rc == 0);
 
+	data_offset += read_len;
+
+	/* 4th read */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
-					     read_base, 512 * 4, &mapped_len, &ctx);
+					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 2);
 	CU_ASSERT(mapped_len == 384);
 	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[5].iov_base + 3 + 128, 172) == true);
 	CU_ASSERT(_iov_check(&dif_iovs[1], iovs1[6].iov_base, 212) == true);
 
-	read_base += ut_readv(read_base, 384, dif_iovs, 8);
-	CU_ASSERT(read_base == 512 * 4);
+	read_len = ut_readv(data_offset, 384, dif_iovs, 8);
+	CU_ASSERT(read_len == 384);
 
-	rc = spdk_dif_generate_stream(iovs1, 7, 512 * 3 + 128, 384, &ctx);
+	rc = spdk_dif_generate_stream(iovs1, 7, data_offset, read_len, &ctx);
 	CU_ASSERT(rc == 0);
+
+	data_offset += read_len;
+	CU_ASSERT(data_offset == 512 * 4);
 
 	/* The second SGL data buffer:
 	 * - Set data pattern with a space for metadata for each block.
