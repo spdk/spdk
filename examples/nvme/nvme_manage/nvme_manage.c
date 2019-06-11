@@ -939,7 +939,8 @@ opal_usage(void)
 	printf("\n");
 	printf("\t[1: scan device]\n");
 	printf("\t[2: Init - take ownership and activate locking]\n");
-	printf("\t[3: lock/unlock the range]\n");
+	printf("\t[3: Setup locking range and enable locking]\n");
+	printf("\t[4: List locking ranges]\n");
 	printf("\t[9: revert tper]\n");
 	printf("\t[0: quit]\n");
 }
@@ -1021,12 +1022,16 @@ opal_locking_usage(void)
 }
 
 static void
-opal_lock_range(struct dev *iter)
+opal_setup_lockingrange(struct dev *iter)
 {
 	char passwd[MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
 	int ret;
 	int ch;
+	uint64_t range_start;
+	uint64_t range_length;
+	int locking_range_flag;
+	struct spdk_opal_locking_range_info *info;
 	int state;
 	enum spdk_opal_lock_state state_flag;
 
@@ -1036,7 +1041,7 @@ opal_lock_range(struct dev *iter)
 			return;
 		}
 		if (spdk_opal_supported(iter->opal_dev)) {
-			printf("Please input the password for locking the range:\n");
+			printf("Please input the password for setting up locking range:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
 			if (passwd_p) {
@@ -1047,20 +1052,25 @@ opal_lock_range(struct dev *iter)
 					return;
 				}
 
-				ret = spdk_opal_cmd_setup_locking_range(iter->opal_dev,
-									OPAL_ADMIN1, OPAL_LOCKING_RANGE_GLOBAL, 0, 0, passwd_p); /* just put here for testing */
-				if (ret) {
-					printf("Setup locking range failure: %d\n", ret);
-					return;
+				printf("Specify locking range id:\n");
+				if (!scanf("%d", &locking_range_flag)) {
+					printf("Invalid locking range id\n");
+				}
+
+				printf("range length:\n");
+				if (!scanf("%ld", &range_length)) {
+					printf("Invalid range length\n");
+				}
+
+				printf("range start:\n");
+				if (!scanf("%ld", &range_start)) {
+					printf("Invalid range start address\n");
 				}
 
 				opal_locking_usage();
-				ret = scanf("%d", &state);
-				if (ret != 1) {
-					printf("Invalid input\n");
-					return;
+				if (!scanf("%d", &state)) {
+					printf("Invalid option\n");
 				}
-
 				switch (state) {
 				case 1:
 					state_flag = OPAL_RWLOCK;
@@ -1076,16 +1086,102 @@ opal_lock_range(struct dev *iter)
 					return;
 				}
 
-				ret = spdk_opal_cmd_lock_unlock(iter->opal_dev, OPAL_ADMIN1, state_flag,
-								OPAL_LOCKING_RANGE_GLOBAL, passwd_p);
+				ret = spdk_opal_cmd_setup_locking_range(iter->opal_dev,
+									OPAL_ADMIN1, locking_range_flag, range_start, range_length, passwd_p);
 				if (ret) {
-					printf("lock range failure: %d\n", ret);
+					printf("Setup locking range failure: %d\n", ret);
 					return;
 				}
+
+				ret = spdk_opal_cmd_lock_unlock(iter->opal_dev, OPAL_ADMIN1, state_flag,
+								locking_range_flag, passwd_p);
+				if (ret) {
+					printf("Unlock range failure: %d\n", ret);
+					return;
+				}
+
+				ret = spdk_opal_cmd_get_locking_range_info(iter->opal_dev,
+						passwd_p, locking_range_flag);
+				if (ret) {
+					printf("Get locking range info failure: %d\n", ret);
+					return;
+				}
+				info = spdk_opal_get_locking_range_info(iter->opal_dev, locking_range_flag);
+
+				printf("locking range ID: %d\n", info->locking_range_id);
+				printf("range start: %ld\n", info->range_start);
+				printf("range length: %ld\n", info->range_length);
+				printf("read lock enabled: %d\n", info->read_lock_enabled);
+				printf("write lock enabled: %d\n", info->write_lock_enabled);
+				printf("read locked: %d\n", info->read_locked);
+				printf("write locked: %d\n", info->write_locked);
 
 				printf("...\n...\nOpal setup locking range success\n");
 			} else {
 				printf("Input password invalid. Opal setup locking range failure\n");
+			}
+		}
+		spdk_opal_close(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
+		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+	}
+}
+
+static void
+opal_list_locking_ranges(struct dev *iter)
+{
+	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ret;
+	int ch;
+	int max_ranges;
+	int i;
+	struct spdk_opal_locking_range_info *info;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		if (spdk_opal_supported(iter->opal_dev)) {
+			printf("Please input password:\n");
+			while ((ch = getchar()) != '\n' && ch != EOF);
+			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
+			if (passwd_p) {
+				ret = spdk_opal_cmd_get_max_ranges(iter->opal_dev, passwd_p);
+				if (ret) {
+					printf("get max ranges failure: %d\n", ret);
+					return;
+				}
+
+				max_ranges = spdk_opal_get_max_locking_ranges(iter->opal_dev);
+				for (i = 0; i < max_ranges; i++) {
+					ret = spdk_opal_cmd_get_locking_range_info(iter->opal_dev,
+							passwd_p, i);
+					if (ret) {
+						printf("Get locking range info failure: %d\n", ret);
+						return;
+					}
+					info = spdk_opal_get_locking_range_info(iter->opal_dev, i);
+					if (info == NULL) {
+						continue;
+					}
+
+					printf("===============================================\n");
+					printf("locking range ID: %d\t", info->locking_range_id);
+					if (i == 0) { printf("(Global Range)"); }
+					printf("\n===============================================\n");
+					printf("range start: %ld\t", info->range_start);
+					printf("range length: %ld\n", info->range_length);
+					printf("read lock enabled: %d\t", info->read_lock_enabled);
+					printf("write lock enabled: %d\t", info->write_lock_enabled);
+					printf("read locked: %d\t", info->read_locked);
+					printf("write locked: %d\n", info->write_locked);
+					printf("\n");
+				}
+			} else {
+				printf("Input password invalid. List locking ranges failure\n");
 			}
 		}
 		spdk_opal_close(iter->opal_dev);
@@ -1165,7 +1261,10 @@ test_opal(void)
 			opal_init(ctrlr);   /* Take ownership, Activate Locking SP */
 			break;
 		case 3:
-			opal_lock_range(ctrlr);
+			opal_setup_lockingrange(ctrlr);
+			break;
+		case 4:
+			opal_list_locking_ranges(ctrlr);
 			break;
 		case 9:
 			opal_revert_tper(ctrlr);

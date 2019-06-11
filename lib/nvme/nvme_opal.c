@@ -287,7 +287,7 @@ opal_finalize_and_send(struct spdk_opal_dev *dev, bool eod, spdk_opal_cb cb, voi
 		return ret;
 	}
 
-	return opal_send_recv(dev, cb, NULL);
+	return opal_send_recv(dev, cb, data);
 }
 
 static size_t
@@ -521,6 +521,28 @@ opal_response_get_u64(const struct spdk_opal_resp_parsed *resp, int index)
 	}
 
 	return resp->resp_tokens[index].stored.unsigned_num;
+}
+
+static uint16_t
+opal_response_get_u16(const struct spdk_opal_resp_parsed *resp, int index)
+{
+	uint64_t i = opal_response_get_u64(resp, index);
+	if (i > 0xffff) {
+		SPDK_ERRLOG("parse reponse u16 failed. Overflow\n");
+		return 0;
+	}
+	return (uint16_t) i;
+}
+
+static uint8_t
+opal_response_get_u8(const struct spdk_opal_resp_parsed *resp, int index)
+{
+	uint64_t i = opal_response_get_u64(resp, index);
+	if (i > 0xff) {
+		SPDK_ERRLOG("parse reponse u8 failed. Overflow\n");
+		return 0;
+	}
+	return (uint8_t) i;
 }
 
 static size_t
@@ -1458,6 +1480,132 @@ opal_setup_locking_range(struct spdk_opal_dev *dev,
 }
 
 static int
+opal_get_max_ranges_cb(struct spdk_opal_dev *dev, void *data)
+{
+	uint8_t max_ranges;
+	int error = 0;
+
+	error = opal_parse_and_check_status(dev, NULL);
+	if (error) {
+		return error;
+	}
+
+	max_ranges = opal_response_get_u16(&dev->parsed_resp, 4); /* "MaxRanges" is token 4 of response */
+	dev->max_ranges = max_ranges;
+	return 0;
+}
+
+static int
+opal_get_max_ranges(struct spdk_opal_dev *dev)
+{
+	int err = 0;
+
+	opal_clear_cmd(dev);
+	opal_set_comid(dev, dev->comid);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_CALL);
+	opal_add_token_bytestring(&err, dev, spdk_opal_uid[UID_LOCKING_INFO_TABLE],
+				  OPAL_UID_LENGTH);
+	opal_add_token_bytestring(&err, dev, spdk_opal_method[GET_METHOD], OPAL_UID_LENGTH);
+
+	opal_add_tokens(&err, dev, 12, SPDK_OPAL_STARTLIST,
+			SPDK_OPAL_STARTLIST,
+			SPDK_OPAL_STARTNAME,
+			SPDK_OPAL_STARTCOLUMN,
+			SPDK_OPAL_MAXRANGES,
+			SPDK_OPAL_ENDNAME,
+			SPDK_OPAL_STARTNAME,
+			SPDK_OPAL_ENDCOLUMN,
+			SPDK_OPAL_MAXRANGES,
+			SPDK_OPAL_ENDNAME,
+			SPDK_OPAL_ENDLIST,
+			SPDK_OPAL_ENDLIST);
+
+	if (err) {
+		SPDK_ERRLOG("Error Building GET Lifecycle Status command\n");
+		return err;
+	}
+
+	return opal_finalize_and_send(dev, 1, opal_get_max_ranges_cb, NULL);
+}
+
+static int
+opal_get_locking_range_info_cb(struct spdk_opal_dev *dev, void *data)
+{
+	int error = 0;
+	int id = *(uint8_t *)data;
+
+	error = opal_parse_and_check_status(dev, NULL);
+	if (error) {
+		return error;
+	}
+
+	if (id > dev->max_ranges) {
+		SPDK_ERRLOG("Locking range ID not valid\n");
+		return -EINVAL;
+	}
+
+	dev->locking_range_info[id]->range_start = opal_response_get_u64(&dev->parsed_resp, 4);
+	dev->locking_range_info[id]->range_length = opal_response_get_u64(&dev->parsed_resp, 8);
+	dev->locking_range_info[id]->read_lock_enabled = opal_response_get_u8(&dev->parsed_resp, 12);
+	dev->locking_range_info[id]->write_lock_enabled = opal_response_get_u8(&dev->parsed_resp, 16);
+	dev->locking_range_info[id]->read_locked = opal_response_get_u8(&dev->parsed_resp, 20);
+	dev->locking_range_info[id]->write_locked = opal_response_get_u8(&dev->parsed_resp, 24);
+
+	return 0;
+}
+
+static int
+opal_get_locking_range_info(struct spdk_opal_dev *dev, uint8_t locking_range_id)
+{
+	int err = 0;
+	uint8_t uid_locking_range[OPAL_UID_LENGTH];
+	struct spdk_opal_locking_range_info *info;
+
+	err = opal_build_locking_range(uid_locking_range, OPAL_UID_LENGTH, locking_range_id);
+	if (err) {
+		return err;
+	}
+
+	info = calloc(1, sizeof(struct spdk_opal_locking_range_info));
+	if (info == NULL) {
+		SPDK_ERRLOG("Memory allocation failed for spdk_opal_locking_range_info\n");
+		return -ENOMEM;
+	}
+
+	info->locking_range_id = locking_range_id;
+	dev->locking_range_info[locking_range_id] = info;
+
+	opal_clear_cmd(dev);
+	opal_set_comid(dev, dev->comid);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_CALL);
+	opal_add_token_bytestring(&err, dev, uid_locking_range, OPAL_UID_LENGTH);
+	opal_add_token_bytestring(&err, dev, spdk_opal_method[GET_METHOD], OPAL_UID_LENGTH);
+
+
+	opal_add_tokens(&err, dev, 12, SPDK_OPAL_STARTLIST,
+			SPDK_OPAL_STARTLIST,
+			SPDK_OPAL_STARTNAME,
+			SPDK_OPAL_STARTCOLUMN,
+			SPDK_OPAL_RANGESTART,
+			SPDK_OPAL_ENDNAME,
+			SPDK_OPAL_STARTNAME,
+			SPDK_OPAL_ENDCOLUMN,
+			SPDK_OPAL_WRITELOCKED,
+			SPDK_OPAL_ENDNAME,
+			SPDK_OPAL_ENDLIST,
+			SPDK_OPAL_ENDLIST);
+
+	if (err) {
+		SPDK_ERRLOG("Error Building get locking range info command\n");
+		return err;
+	}
+
+	return opal_finalize_and_send(dev, 1, opal_get_locking_range_info_cb, &locking_range_id);
+}
+
+static int
 opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, void *data)
 {
 	uint8_t cpin_uid[OPAL_UID_LENGTH];
@@ -1799,6 +1947,95 @@ end:
 	return ret;
 }
 
+int
+spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd)
+{
+	struct spdk_opal_key opal_key;
+	struct opal_common_session session;
+	int ret;
+
+	if (!dev || dev->supported == false) {
+		return -ENODEV;
+	}
+
+	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	if (ret != 0) {
+		return ret;
+	}
+
+	memset(&session, 0, sizeof(struct opal_common_session));
+	session.opal_key = &opal_key;
+	session.who = OPAL_ADMIN1;
+
+	pthread_mutex_lock(&dev->mutex_lock);
+	ret = opal_start_auth_session(dev, &session);
+	if (ret) {
+		SPDK_ERRLOG("start authenticate session error %d: %s\n", ret, opal_error_to_human(ret));
+		pthread_mutex_unlock(&dev->mutex_lock);
+		return ret;
+	}
+
+	ret = opal_get_max_ranges(dev);
+	if (ret) {
+		SPDK_ERRLOG("get max ranges error %d: %s\n", ret, opal_error_to_human(ret));
+		goto end;
+	}
+
+end:
+	ret += opal_end_session(dev);
+	if (ret) {
+		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+	}
+
+	pthread_mutex_unlock(&dev->mutex_lock);
+	return ret;
+}
+
+int
+spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *passwd,
+				     enum spdk_opal_locking_range locking_range_id)
+{
+	struct spdk_opal_key opal_key;
+	struct opal_common_session session;
+	int ret;
+
+	if (!dev || dev->supported == false) {
+		return -ENODEV;
+	}
+
+	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	if (ret != 0) {
+		return ret;
+	}
+
+	memset(&session, 0, sizeof(struct opal_common_session));
+	session.opal_key = &opal_key;
+	session.who = OPAL_ADMIN1;
+
+	pthread_mutex_lock(&dev->mutex_lock);
+	ret = opal_start_auth_session(dev, &session);
+	if (ret) {
+		SPDK_ERRLOG("start authenticate session error %d: %s\n", ret, opal_error_to_human(ret));
+		pthread_mutex_unlock(&dev->mutex_lock);
+		return ret;
+	}
+
+	ret = opal_get_locking_range_info(dev, locking_range_id);
+	if (ret) {
+		SPDK_ERRLOG("get locking range info error %d: %s\n", ret, opal_error_to_human(ret));
+		goto end;
+	}
+
+end:
+	ret += opal_end_session(dev);
+	if (ret) {
+		SPDK_ERRLOG("end session error %d: %s\n", ret, opal_error_to_human(ret));
+	}
+
+	pthread_mutex_unlock(&dev->mutex_lock);
+	return ret;
+}
+
 struct spdk_opal_info *
 spdk_opal_get_info(struct spdk_opal_dev *dev)
 {
@@ -1809,6 +2046,18 @@ bool
 spdk_opal_supported(struct spdk_opal_dev *dev)
 {
 	return dev->supported;
+}
+
+struct spdk_opal_locking_range_info *
+spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev, enum spdk_opal_locking_range id)
+{
+	return dev->locking_range_info[id];
+}
+
+uint8_t
+spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev)
+{
+	return dev->max_ranges;
 }
 
 /* Log component for opal submodule */
