@@ -1187,12 +1187,17 @@ rpc_perform_tests_cb(unsigned num_failures, struct spdk_jsonrpc_request *request
 {
 	struct spdk_json_write_ctx *w;
 
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
+	if (num_failures == 0) {
+		w = spdk_jsonrpc_begin_result(request);
+		if (w == NULL) {
+			return;
+		}
+		spdk_json_write_uint32(w, num_failures);
+		spdk_jsonrpc_end_result(request, w);
+	} else {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "%d test cases failed", num_failures);
 	}
-	spdk_json_write_uint32(w, num_failures);
-	spdk_jsonrpc_end_result(request, w);
 }
 
 static void
