@@ -42,6 +42,7 @@
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/uuid.h"
+#include "spdk/json.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -1339,6 +1340,102 @@ spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsyst
 	return subsystem->max_allowed_nsid;
 }
 
+static int
+spdk_nvmf_ns_json_write_cb(void *cb_ctx, const void *data, size_t size)
+{
+	char *file = cb_ctx;
+	size_t rc;
+	FILE *fd;
+
+	fd = fopen(file, "w");
+	if (!fd) {
+		SPDK_ERRLOG("Can't open file %s for write\n", file);
+		return -ENOENT;
+	}
+	rc = fwrite(data, 1, size, fd);
+	fclose(fd);
+
+	return rc == size ? 0 : -1;
+}
+
+static int
+spdk_nvmf_ns_reservation_update(const char *file, struct spdk_nvmf_reservation_info *info)
+{
+	struct spdk_json_write_ctx *w;
+	uint32_t i;
+	int rc = 0;
+
+	w = spdk_json_write_begin(spdk_nvmf_ns_json_write_cb, (void *)file, 0);
+	if (w == NULL) {
+		return -ENOMEM;
+	}
+	/* clear the configuration file */
+	if (!info->ptpl_activated) {
+		goto exit;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_bool(w, "ptpl", info->ptpl_activated);
+	spdk_json_write_named_uint32(w, "rtype", info->rtype);
+	spdk_json_write_named_uint64(w, "crkey", info->crkey);
+	spdk_json_write_named_string(w, "bdev_uuid", info->bdev_uuid);
+	spdk_json_write_named_string(w, "holder_uuid", info->holder_uuid);
+
+	spdk_json_write_named_array_begin(w, "registrants");
+	for (i = 0; i < info->num_regs; i++) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_uint64(w, "rkey", info->registrants[i].rkey);
+		spdk_json_write_named_string(w, "host_uuid", info->registrants[i].host_uuid);
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+	spdk_json_write_object_end(w);
+
+exit:
+	rc = spdk_json_write_end(w);
+	return rc;
+}
+
+static bool
+nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns);
+
+static int
+nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_reservation_info info;
+	struct spdk_nvmf_registrant *reg, *tmp;
+	uint32_t i = 0;
+
+	assert(ns != NULL);
+
+	if (!ns->bdev || !ns->ptpl_file) {
+		return 0;
+	}
+
+	memset(&info, 0, sizeof(info));
+	spdk_uuid_fmt_lower(info.bdev_uuid, sizeof(info.bdev_uuid), spdk_bdev_get_uuid(ns->bdev));
+
+	if (ns->rtype) {
+		info.rtype = ns->rtype;
+		info.crkey = ns->crkey;
+		if (!nvmf_ns_reservation_all_registrants_type(ns)) {
+			assert(ns->holder != NULL);
+			spdk_uuid_fmt_lower(info.holder_uuid, sizeof(info.holder_uuid), &ns->holder->hostid);
+		}
+	}
+
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
+		spdk_uuid_fmt_lower(info.registrants[i].host_uuid, sizeof(info.registrants[i].host_uuid),
+				    &reg->hostid);
+		info.registrants[i++].rkey = reg->rkey;
+	}
+
+	info.num_regs = i;
+	info.ptpl_activated = ns->ptpl_activated;
+
+	return spdk_nvmf_ns_reservation_update(ns->ptpl_file, &info);
+}
+
 static struct spdk_nvmf_registrant *
 nvmf_ns_reservation_get_registrant(struct spdk_nvmf_ns *ns,
 				   struct spdk_uuid *uuid)
@@ -1609,11 +1706,20 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 		      "NRKEY 0x%"PRIx64", NRKEY 0x%"PRIx64"\n",
 		      rrega, iekey, cptpl, key.crkey, key.nrkey);
 
-	/* TODO: doesn't support for now */
-	if (cptpl == SPDK_NVME_RESERVE_PTPL_PERSIST_POWER_LOSS) {
-		SPDK_ERRLOG("Can't change persist through power loss for now\n");
-		status = SPDK_NVME_SC_INVALID_FIELD;
-		goto exit;
+	if (cptpl == SPDK_NVME_RESERVE_PTPL_CLEAR_POWER_ON) {
+		/* Ture to OFF state, and need to be updated in the configuration file */
+		if (ns->ptpl_activated) {
+			ns->ptpl_activated = 0;
+			update_sgroup = true;
+		}
+	} else if (cptpl == SPDK_NVME_RESERVE_PTPL_PERSIST_POWER_LOSS) {
+		if (ns->ptpl_file == NULL) {
+			status = SPDK_NVME_SC_INVALID_FIELD;
+			goto exit;
+		} else if (ns->ptpl_activated == 0) {
+			ns->ptpl_activated = 1;
+			update_sgroup = true;
+		}
 	}
 
 	/* current Host Identifier has registrant or not */
@@ -1690,6 +1796,12 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 	}
 
 exit:
+	if (update_sgroup) {
+		rc = nvmf_ns_update_reservation_info(ns);
+		if (rc != 0) {
+			status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		}
+	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	req->rsp->nvme_cpl.status.sc = status;
 	return update_sgroup;
