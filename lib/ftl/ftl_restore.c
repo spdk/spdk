@@ -64,8 +64,6 @@ struct ftl_restore {
 
 	STAILQ_HEAD(, ftl_restore_band) pad_bands;
 
-	size_t				num_pad_bands;
-
 	int				pad_status;
 
 	void				*md_buf;
@@ -379,6 +377,7 @@ static bool
 ftl_pad_chunk_pad_finish(struct ftl_restore_band *rband, bool direct_access)
 {
 	struct ftl_restore *restore = rband->parent;
+	struct ftl_restore_band *next_band;
 	size_t i, num_pad_chunks = 0;
 
 	if (spdk_unlikely(restore->pad_status && !restore->num_ios)) {
@@ -405,12 +404,13 @@ ftl_pad_chunk_pad_finish(struct ftl_restore_band *rband, bool direct_access)
 			rband->band->state = FTL_BAND_STATE_CLOSED;
 			ftl_band_set_direct_access(rband->band, false);
 		}
-		if (--restore->num_pad_bands == 0) {
+		next_band = STAILQ_NEXT(rband, stailq);
+		if (!next_band) {
 			ftl_restore_complete(restore, restore->pad_status);
 			return true;
 		} else {
 			/* Start off padding in the next band */
-			ftl_restore_pad_band(STAILQ_NEXT(rband, stailq));
+			ftl_restore_pad_band(next_band);
 			return true;
 		}
 	}
@@ -516,9 +516,7 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 	rc = ftl_band_set_direct_access(band, true);
 	if (rc) {
 		restore->pad_status = rc;
-		if (--restore->num_pad_bands == 0) {
-			ftl_restore_complete(restore, restore->pad_status);
-		}
+		ftl_restore_complete(restore, restore->pad_status);
 		return;
 	}
 
@@ -582,7 +580,6 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 			SPDK_ERRLOG("%s while restoring tail md. Will attempt to pad band %u.\n",
 				    spdk_strerror(-status), rband->band->id);
 			STAILQ_INSERT_TAIL(&restore->pad_bands, rband, stailq);
-			restore->num_pad_bands++;
 		}
 	}
 
