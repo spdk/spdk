@@ -1740,6 +1740,134 @@ _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 }
 
 static void
+_spdk_bdev_io_split_get_buf_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+
+static void
+_spdk_bdev_io_split_get_buf(void *_bdev_io)
+{
+	struct spdk_bdev_io *bdev_io = _bdev_io;
+	uint64_t current_offset, remaining;
+	uint32_t to_next_boundary;
+	int rc;
+
+	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
+	current_offset = bdev_io->u.bdev.split_current_offset_blocks;
+
+	while (remaining > 0) {
+		to_next_boundary = _to_next_boundary(current_offset, bdev_io->bdev->optimal_io_boundary);
+		to_next_boundary = spdk_min(remaining, to_next_boundary);
+
+		bdev_io->u.bdev.split_outstanding++;
+		assert(bdev_io->u.bdev.split_count < BDEV_IO_NUM_CHILD_IOV);
+		bdev_io->u.bdev.split_offset[bdev_io->u.bdev.split_count++] = current_offset;
+
+		rc = spdk_bdev_readv_blocks(bdev_io->internal.desc,
+					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					    NULL, 0, current_offset, to_next_boundary,
+					    _spdk_bdev_io_split_get_buf_done, bdev_io);
+
+		if (rc == 0) {
+			current_offset += to_next_boundary;
+			remaining -= to_next_boundary;
+			bdev_io->u.bdev.split_current_offset_blocks = current_offset;
+			bdev_io->u.bdev.split_remaining_num_blocks = remaining;
+		} else {
+			bdev_io->u.bdev.split_outstanding--;
+			if (rc == -ENOMEM) {
+				if (bdev_io->u.bdev.split_outstanding == 0) {
+					/* No I/O is outstanding. Hence we should wait here. */
+					_spdk_bdev_queue_io_wait_with_cb(bdev_io,
+									 _spdk_bdev_io_split_get_buf);
+				}
+			} else {
+				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+				if (bdev_io->u.bdev.split_outstanding == 0) {
+					bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+				}
+			}
+
+			return;
+		}
+	}
+}
+
+static void
+_spdk_bdev_io_split_get_buf_cb(struct spdk_io_channel *ch,
+			       struct spdk_bdev_io *parent_io,
+			       bool success)
+{
+	void *buf;
+	size_t len;
+	struct spdk_bdev_io *child_io;
+
+	buf = parent_io->u.bdev.iovs[0].iov_base;
+	len = parent_io->u.bdev.iovs[0].iov_len;
+
+	/* TODO: remove the data copy here after iSCSI layer can support multiple vectors */
+	assert(parent_io->u.bdev.iovcnt == 1);
+
+	if (spdk_likely(success)) {
+		_copy_iovs_to_buf(buf, len, parent_io->child_iov, parent_io->u.bdev.split_count);
+	} else {
+		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	while (!TAILQ_EMPTY(&parent_io->internal.split_head)) {
+		child_io = TAILQ_FIRST(&parent_io->internal.split_head);
+		TAILQ_REMOVE(&parent_io->internal.split_head, child_io, internal.split);
+		spdk_bdev_free_io(child_io);
+	}
+
+	parent_io->internal.cb(parent_io, parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
+			       parent_io->internal.caller_ctx);
+}
+
+static void
+_spdk_bdev_io_split_get_buf_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *parent_io = cb_arg;
+	uint32_t i;
+
+	assert(bdev_io->u.bdev.iovcnt == 1);
+
+	if (spdk_unlikely(!success)) {
+		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	} else {
+		/* save children data buffer pointer to parent bdev_io based on offset */
+		for (i = 0; i < parent_io->u.bdev.split_count; i++) {
+			if (bdev_io->u.bdev.offset_blocks == parent_io->u.bdev.split_offset[i]) {
+				parent_io->child_iov[i].iov_base = bdev_io->u.bdev.iovs[0].iov_base;
+				parent_io->child_iov[i].iov_len = bdev_io->u.bdev.iovs[0].iov_len;
+				break;
+			}
+		}
+	}
+
+	parent_io->u.bdev.split_outstanding--;
+	TAILQ_INSERT_TAIL(&parent_io->internal.split_head, bdev_io, internal.split);
+	if (parent_io->u.bdev.split_outstanding != 0) {
+		return;
+	}
+
+	/*
+	 * Parent I/O finishes when all blocks are consumed or there is any failure of
+	 * child I/O and no outstanding child I/O.
+	 */
+	if (parent_io->u.bdev.split_remaining_num_blocks == 0 ||
+	    parent_io->internal.status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		spdk_bdev_io_get_buf(parent_io, _spdk_bdev_io_split_get_buf_cb,
+				     parent_io->u.bdev.num_blocks * parent_io->bdev->blocklen);
+		return;
+	}
+
+	/*
+	 * Continue with the splitting process.  This function will complete the parent I/O if the
+	 * splitting is done.
+	 */
+	_spdk_bdev_io_split_get_buf(parent_io);
+}
+
+static void
 spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	assert(_spdk_bdev_io_type_can_split(bdev_io->type));
@@ -1747,21 +1875,16 @@ spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	bdev_io->u.bdev.split_current_offset_blocks = bdev_io->u.bdev.offset_blocks;
 	bdev_io->u.bdev.split_remaining_num_blocks = bdev_io->u.bdev.num_blocks;
 	bdev_io->u.bdev.split_outstanding = 0;
+	bdev_io->u.bdev.split_count = 0;
+	memset(bdev_io->u.bdev.split_offset, 0, sizeof(uint64_t) * BDEV_IO_NUM_CHILD_IOV);
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	_spdk_bdev_io_split(bdev_io);
-}
-
-static void
-_spdk_bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
-			       bool success)
-{
-	if (!success) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
+	if (_is_buf_allocated(bdev_io->u.bdev.iovs)) {
+		_spdk_bdev_io_split(bdev_io);
+	} else {
+		assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
+		_spdk_bdev_io_split_get_buf(bdev_io);
 	}
-
-	spdk_bdev_io_split(ch, bdev_io);
 }
 
 /* Explicitly mark this inline, since it's used as a function pointer and otherwise won't
@@ -1812,12 +1935,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev->split_on_optimal_io_boundary && _spdk_bdev_io_should_split(bdev_io)) {
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			spdk_bdev_io_get_buf(bdev_io, _spdk_bdev_io_split_get_buf_cb,
-					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
-		} else {
-			spdk_bdev_io_split(NULL, bdev_io);
-		}
+		spdk_bdev_io_split(NULL, bdev_io);
 		return;
 	}
 
@@ -1863,6 +1981,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.orig_iovs = NULL;
 	bdev_io->internal.orig_iovcnt = 0;
 	bdev_io->internal.orig_md_buf = NULL;
+	TAILQ_INIT(&bdev_io->internal.split_head);
 }
 
 static bool
