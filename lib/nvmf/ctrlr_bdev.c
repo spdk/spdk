@@ -144,7 +144,9 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_da
 	}
 	nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
 	nsdata->nmic.can_share = 1;
-	nsdata->nsrescap.rescap.persist = 0; /* TODO: don't support for now */
+	if (ns->ptpl_file != NULL) {
+		nsdata->nsrescap.rescap.persist = 1;
+	}
 	nsdata->nsrescap.rescap.write_exclusive = 1;
 	nsdata->nsrescap.rescap.exclusive_access = 1;
 	nsdata->nsrescap.rescap.write_exclusive_reg_only = 1;
