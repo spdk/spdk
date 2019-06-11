@@ -219,6 +219,8 @@ struct spdk_nvmf_ns {
 	struct spdk_nvmf_registrant *holder;
 	/* Persist Through Power Loss file which contains the persistent reservation */
 	char *ptpl_file;
+	/* Persist Through Power Loss feature is enabled */
+	bool ptpl_activated;
 };
 
 struct spdk_nvmf_qpair {

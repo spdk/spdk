@@ -2009,8 +2009,7 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 	status_data->data.gen = ns->gen;
 	status_data->data.rtype = ns->rtype;
 	status_data->data.regctl = regctl;
-	/* TODO: Don't support Persist Through Power Loss State for now */
-	status_data->data.ptpls = 0;
+	status_data->data.ptpls = ns->ptpl_activated;
 
 	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
 		assert(count <= regctl);
