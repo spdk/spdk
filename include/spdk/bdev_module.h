@@ -457,6 +457,12 @@ struct spdk_bdev_io {
 			/** count of outstanding batched split I/Os */
 			uint32_t split_outstanding;
 
+			/** count of children split I/Os, used for READ I/Os without payload */
+			uint32_t split_count;
+
+			/** children offset position in parent spdk_bdev_io */
+			uint64_t split_offset[BDEV_IO_NUM_CHILD_IOV];
+
 			struct {
 				/** Whether the buffer should be populated with the real data */
 				uint8_t populate : 1;
@@ -563,6 +569,12 @@ struct spdk_bdev_io {
 
 		/** Callback for when buf is allocated */
 		spdk_bdev_io_get_buf_cb get_buf_cb;
+
+		/** Member used for linking split child I/Os together. */
+		TAILQ_ENTRY(spdk_bdev_io) split;
+
+		/** Queue all the children bdev_io to this list */
+		bdev_io_tailq_t split_head;
 
 		/** Member used for linking child I/Os together. */
 		TAILQ_ENTRY(spdk_bdev_io) link;
