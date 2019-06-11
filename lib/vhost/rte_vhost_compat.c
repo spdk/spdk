@@ -111,13 +111,13 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 		}
 		break;
 	case VHOST_USER_GET_CONFIG: {
-		struct vhost_user_config *cfg = &msg->payload.cfg;
+		struct vhost_user_config cfg = msg->payload.cfg;
 		int rc = 0;
 
 		spdk_vhost_lock();
 		if (vsession->vdev->backend->vhost_get_config) {
 			rc = vsession->vdev->backend->vhost_get_config(vsession->vdev,
-				cfg->region, cfg->size);
+				cfg.region, cfg.size);
 			if (rc != 0) {
 				msg->size = 0;
 			}
@@ -127,13 +127,13 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 		return RTE_VHOST_MSG_RESULT_REPLY;
 	}
 	case VHOST_USER_SET_CONFIG: {
-		struct vhost_user_config *cfg = &msg->payload.cfg;
+		struct vhost_user_config cfg = msg->payload.cfg;
 		int rc = 0;
 
 		spdk_vhost_lock();
 		if (vsession->vdev->backend->vhost_set_config) {
 			rc = vsession->vdev->backend->vhost_set_config(vsession->vdev,
-				cfg->region, cfg->offset, cfg->size, cfg->flags);
+				cfg.region, cfg.offset, cfg.size, cfg.flags);
 		}
 		spdk_vhost_unlock();
 
