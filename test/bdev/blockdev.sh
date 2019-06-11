@@ -42,8 +42,6 @@ function nbd_function_test() {
 		nbd_rpc_start_stop_verify $rpc_server "${bdev_list[*]}"
 		nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
 
-		$rpc_py -s $rpc_server delete_passthru_bdev TestPT
-
 		killprocess $nbd_pid
 		trap - SIGINT SIGTERM EXIT
 	fi
@@ -84,6 +82,15 @@ trap "killprocess $bdevio_pid; exit 1" SIGINT SIGTERM EXIT
 echo "Process bdevio pid: $bdevio_pid"
 waitforlisten $bdevio_pid
 $testdir/bdevio/tests.py perform_tests
+
+# Test Passthrough
+timing_enter blockdev_passthrough
+$rpc_py	construct_malloc_bdev 32 512 -b Malloc_PT
+$rpc_py	construct_passthru_bdev -b Malloc_PT -p TestPT
+$testdir/bdevio/tests.py perform_tests -b TestPT
+$rpc_py	delete_passthru_bdev TestPT
+$rpc_py	delete_malloc_bdev Malloc_PT
+timing_exit blockdev_passthrough
 
 # Test Split
 timing_enter blockdev_split

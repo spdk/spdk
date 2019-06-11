@@ -1,7 +1,3 @@
-[Passthru]
-  # PT <bdev name> <vbdev name>
-  PT Malloc3 TestPT
-
 [Malloc]
   NumberOfLuns 8
   LunSizeInMB 32
