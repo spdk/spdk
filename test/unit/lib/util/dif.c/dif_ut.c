@@ -1575,7 +1575,7 @@ set_md_interleave_iovs_split_test(void)
 	read_base += ut_readv(read_base, 1 + 512 * 2 + 128, dif_iovs, 8);
 	CU_ASSERT(read_base == 512 * 3 + 128);
 
-	rc = spdk_dif_generate_stream(iovs1, 7, 383, 1 + 512 * 2 + 128, &ctx);
+	rc = spdk_dif_generate_stream(iovs1, 7, 511, 1 + 512 * 2 + 128, &ctx);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 8, iovs1, 7,
