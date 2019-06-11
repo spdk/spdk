@@ -96,6 +96,7 @@ struct ut_expected_io {
 	uint64_t			length;
 	int				iovcnt;
 	struct iovec			iov[BDEV_IO_NUM_CHILD_IOV];
+	void				*md_buf;
 	TAILQ_ENTRY(ut_expected_io)	link;
 };
 
@@ -156,6 +157,10 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 
 	if (expected_io->type != SPDK_BDEV_IO_TYPE_INVALID) {
 		CU_ASSERT(bdev_io->type == expected_io->type);
+	}
+
+	if (expected_io->md_buf != NULL) {
+		CU_ASSERT(expected_io->md_buf == bdev_io->u.bdev.md_buf);
 	}
 
 	if (expected_io->length == 0) {
@@ -229,8 +234,30 @@ bdev_ut_get_io_channel(void *ctx)
 	return spdk_get_io_channel(&g_bdev_ut_io_device);
 }
 
-DEFINE_STUB(stub_io_type_supported, static bool, (void *_bdev, enum spdk_bdev_io_type io_type),
-	    true);
+static bool g_io_types_supported[SPDK_BDEV_NUM_IO_TYPES] = {
+	[SPDK_BDEV_IO_TYPE_READ]		= true,
+	[SPDK_BDEV_IO_TYPE_WRITE]		= true,
+	[SPDK_BDEV_IO_TYPE_UNMAP]		= true,
+	[SPDK_BDEV_IO_TYPE_FLUSH]		= true,
+	[SPDK_BDEV_IO_TYPE_RESET]		= true,
+	[SPDK_BDEV_IO_TYPE_NVME_ADMIN]		= true,
+	[SPDK_BDEV_IO_TYPE_NVME_IO]		= true,
+	[SPDK_BDEV_IO_TYPE_NVME_IO_MD]		= true,
+	[SPDK_BDEV_IO_TYPE_WRITE_ZEROES]	= true,
+	[SPDK_BDEV_IO_TYPE_ZCOPY]		= true,
+};
+
+static void
+ut_enable_io_type(enum spdk_bdev_io_type io_type, bool enable)
+{
+	g_io_types_supported[io_type] = enable;
+}
+
+static bool
+stub_io_type_supported(void *_bdev, enum spdk_bdev_io_type io_type)
+{
+	return g_io_types_supported[io_type];
+}
 
 static struct spdk_bdev_fn_table fn_table = {
 	.destruct = stub_destruct,
@@ -787,10 +814,12 @@ bdev_io_types_test(void)
 	CU_ASSERT(io_ch != NULL);
 
 	/* WRITE and WRITE ZEROES are not supported */
-	MOCK_SET(stub_io_type_supported, false);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, false);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE, false);
 	rc = spdk_bdev_write_zeroes_blocks(desc, io_ch, 0, 128, io_done, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
-	MOCK_SET(stub_io_type_supported, true);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE, true);
 
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
@@ -1669,6 +1698,110 @@ bdev_histograms(void)
 	poll_threads();
 }
 
+static void
+bdev_write_zeroes(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_expected_io *expected_io;
+	uint64_t offset, num_io_blocks, num_blocks;
+	uint32_t num_completed, num_requests;
+	int rc;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	ioch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	fn_table.submit_request = stub_submit_request;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	/* First test that if the bdev supports write_zeroes, the request won't be split */
+	bdev->md_len = 0;
+	bdev->blocklen = 4096;
+	num_blocks = (ZERO_BUFFER_SIZE / bdev->blocklen) * 2;
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, 0, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_write_zeroes_blocks(desc, ioch, 0, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+
+	/* Check that if write zeroes is not supported it'll be replaced by regular writes */
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, false);
+	num_io_blocks = ZERO_BUFFER_SIZE / bdev->blocklen;
+	num_requests = 2;
+	num_blocks = (ZERO_BUFFER_SIZE / bdev->blocklen) * num_requests;
+
+	for (offset = 0; offset < num_requests; ++offset) {
+		expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE,
+						   offset * num_io_blocks, num_io_blocks, 0);
+		TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	}
+
+	rc = spdk_bdev_write_zeroes_blocks(desc, ioch, 0, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(num_requests);
+	CU_ASSERT_EQUAL(num_completed, num_requests);
+
+	/* Check that the splitting is correct if bdev has interleaved metadata */
+	bdev->md_interleave = true;
+	bdev->md_len = 64;
+	bdev->blocklen = 4096 + 64;
+	num_blocks = (ZERO_BUFFER_SIZE / bdev->blocklen) * 2;
+
+	num_requests = offset = 0;
+	while (offset < num_blocks) {
+		num_io_blocks = spdk_min(ZERO_BUFFER_SIZE / bdev->blocklen, num_blocks - offset);
+		expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE,
+						   offset, num_io_blocks, 0);
+		TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+		offset += num_io_blocks;
+		num_requests++;
+	}
+
+	rc = spdk_bdev_write_zeroes_blocks(desc, ioch, 0, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(num_requests);
+	CU_ASSERT_EQUAL(num_completed, num_requests);
+	num_completed = stub_complete_io(num_requests);
+	assert(num_completed == 0);
+
+	/* Check the the same for separate metadata buffer */
+	bdev->md_interleave = false;
+	bdev->md_len = 64;
+	bdev->blocklen = 4096;
+
+	num_requests = offset = 0;
+	while (offset < num_blocks) {
+		num_io_blocks = spdk_min(ZERO_BUFFER_SIZE / (bdev->blocklen + bdev->md_len), num_blocks);
+		expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE,
+						   offset, num_io_blocks, 0);
+		expected_io->md_buf = (char *)g_bdev_mgr.zero_buffer + num_io_blocks * bdev->blocklen;
+		TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+		offset += num_io_blocks;
+		num_requests++;
+	}
+
+	rc = spdk_bdev_write_zeroes_blocks(desc, ioch, 0, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(num_requests);
+	CU_ASSERT_EQUAL(num_completed, num_requests);
+
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
+	spdk_put_io_channel(ioch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1698,7 +1831,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
 		CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait) == NULL ||
 		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL ||
-		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL
+		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL ||
+		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
