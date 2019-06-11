@@ -37,6 +37,7 @@ function nbd_function_test() {
 		modprobe nbd
 		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} &
 		nbd_pid=$!
+		trap "killprocess $nbd_pid; exit 1" SIGINT SIGTERM EXIT
 		echo "Process nbd pid: $nbd_pid"
 		waitforlisten $nbd_pid $rpc_server
 
@@ -46,6 +47,7 @@ function nbd_function_test() {
 		$rpc_py -s $rpc_server delete_passthru_bdev TestPT
 
 		killprocess $nbd_pid
+		trap - SIGINT SIGTERM EXIT
 	fi
 
 	return 0
@@ -174,7 +176,6 @@ fi
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
 rm -f $testdir/bdev.conf
-trap - SIGINT SIGTERM EXIT
 rbd_cleanup
 report_test_completion "bdev"
 timing_exit bdev
