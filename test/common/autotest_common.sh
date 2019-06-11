@@ -341,18 +341,6 @@ function waitforlisten() {
 
 	local rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
 
-	if hash ip &>/dev/null; then
-		local have_ip_cmd=true
-	else
-		local have_ip_cmd=false
-	fi
-
-	if hash ss &>/dev/null; then
-		local have_ss_cmd=true
-	else
-		local have_ss_cmd=false
-	fi
-
 	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
 	xtrace_disable
@@ -367,31 +355,10 @@ function waitforlisten() {
 			break
 		fi
 
-		# FIXME: don't know how to fix this for FreeBSD
-		if $have_ip_cmd; then
-			namespace=$(ip netns identify $1)
-			if [ -n "$namespace" ]; then
-				ns_cmd="ip netns exec $namespace"
-			fi
+		if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" rpc_get_methods &>/dev/null; then
+			break
 		fi
 
-		if $have_ss_cmd; then
-			if $ns_cmd ss -ln | egrep -q "\s+$rpc_addr\s+"; then
-				break
-			fi
-		elif [[ "$(uname -s)" == "Linux" ]]; then
-			# For Linux, if system doesn't have ss, just assume it has netstat
-			if $ns_cmd netstat -an | grep -iw LISTENING | egrep -q "\s+$rpc_addr\$"; then
-				break
-			fi
-		else
-			# On FreeBSD netstat output 'State' column is missing for Unix sockets.
-			# To workaround this issue just try to use provided address.
-			# XXX: This solution could be used for other distros.
-			if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" rpc_get_methods &>/dev/null; then
-				break
-			fi
-		fi
 		sleep 0.5
 	done
 
