@@ -55,9 +55,6 @@
 #define NVMF_TCP_PDU_MAX_C2H_DATA_SIZE	131072
 #define NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM  64  /* Maximal c2h_data pdu number for ecah tqpair */
 
-/* This is used to support the Linux kernel NVMe-oF initiator */
-#define LINUX_KERNEL_SUPPORT_NOT_SENDING_RESP_FOR_C2H 0
-
 /* spdk nvmf related structure */
 enum spdk_nvmf_tcp_req_state {
 
@@ -535,14 +532,15 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
 		     "  max_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
-		     "  num_shared_buffers=%d\n",
+		     "  num_shared_buffers=%d, c2h_success=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr,
 		     opts->io_unit_size,
 		     opts->in_capsule_data_size,
 		     opts->max_aq_depth,
-		     opts->num_shared_buffers);
+		     opts->num_shared_buffers,
+		     opts->c2h_success);
 
 	/* I/O unit size cannot be larger than max I/O size */
 	if (opts->io_unit_size > opts->max_io_size) {
@@ -1460,11 +1458,11 @@ spdk_nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 	assert(tcp_req->c2h_data_pdu_num > 0);
 	tcp_req->c2h_data_pdu_num--;
 	if (!tcp_req->c2h_data_pdu_num) {
-#if LINUX_KERNEL_SUPPORT_NOT_SENDING_RESP_FOR_C2H
-		nvmf_tcp_request_free(tcp_req);
-#else
-		spdk_nvmf_tcp_send_capsule_resp_pdu(tcp_req, tqpair);
-#endif
+		if (tqpair->qpair.transport->opts.c2h_success) {
+			nvmf_tcp_request_free(tcp_req);
+		} else {
+			spdk_nvmf_tcp_send_capsule_resp_pdu(tcp_req, tqpair);
+		}
 	}
 
 	tqpair->c2h_data_pdu_cnt--;
@@ -2233,10 +2231,9 @@ spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 	if (iov_index == (tcp_req->req.iovcnt - 1) && (tcp_req->c2h_data_offset == tcp_req->req.length)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Last pdu for tcp_req=%p on tqpair=%p\n", tcp_req, tqpair);
 		c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
-		/* The linux kernel does not support this yet */
-#if LINUX_KERNEL_SUPPORT_NOT_SENDING_RESP_FOR_C2H
-		c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
-#endif
+		if (tqpair->qpair.transport->opts.c2h_success) {
+			c2h_data->common.flags |= SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
+		}
 		TAILQ_REMOVE(&tqpair->queued_c2h_data_tcp_req, tcp_req, link);
 	}
 
@@ -2748,6 +2745,7 @@ spdk_nvmf_tcp_qpair_set_sq_size(struct spdk_nvmf_qpair *qpair)
 #define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS 511
 #define SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE 32
+#define SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION true
 
 static void
 spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -2760,6 +2758,7 @@ spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_aq_depth =		SPDK_NVMF_TCP_DEFAULT_AQ_DEPTH;
 	opts->num_shared_buffers =	SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS;
 	opts->buf_cache_size =		SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE;
+	opts->c2h_success =		SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION;
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
