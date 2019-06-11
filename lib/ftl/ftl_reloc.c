@@ -749,6 +749,11 @@ ftl_reloc(struct ftl_reloc *reloc)
 		if (reloc->num_active == reloc->max_active) {
 			break;
 		}
+
+		if (breloc->band->state != FTL_BAND_STATE_CLOSED) {
+			continue;
+		}
+
 		ftl_reloc_add_active_queue(breloc);
 	}
 
