@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ce056dd_c23834cf",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-11T07:31:03Z",
+      "side": 1,
+      "message": "By system-wide I\u0027d assume that you mean the one installed by DNF or APT, which is most typically installed as binary /usr/bin/fio.\nI\u0027d change the sentence to something like:\n\"If not provided then, default fio location (/usr/scr/fio) defined in test/scripts/common/vm_setup.sh will be used by default.\"",
+      "range": {
+        "startLine": 55,
+        "startChar": 75,
+        "endLine": 56,
+        "endChar": 51
+      },
+      "revId": "d685696f741805c33fb0c797f778f18fb0db69ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bd7a5e5_b54d3090",
+        "filename": "scripts/perf/nvmf/config.json",
+        "patchSetId": 6
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-11T07:31:03Z",
+      "side": 1,
+      "message": "missing comma at end of line",
+      "range": {
+        "startLine": 19,
+        "startChar": 36,
+        "endLine": 19,
+        "endChar": 37
+      },
+      "revId": "d685696f741805c33fb0c797f778f18fb0db69ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e62df3dc_0c0e55bd",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-11T07:31:03Z",
+      "side": 1,
+      "message": "This will not work, as non-default argument is put after arguments with default values.\n\nYou can give it a default value here, fio_dir\u003d\"/usr/src/fio\"",
+      "range": {
+        "startLine": 180,
+        "startChar": 17,
+        "endLine": 180,
+        "endChar": 24
+      },
+      "revId": "d685696f741805c33fb0c797f778f18fb0db69ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0749616_df97bbac",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-11T07:31:03Z",
+      "side": 1,
+      "message": "This is not needed and can be solved using default values in __init__, and can be just self.fio_dir \u003d fio_dir",
+      "range": {
+        "startLine": 190,
+        "startChar": 0,
+        "endLine": 193,
+        "endChar": 41
+      },
+      "revId": "d685696f741805c33fb0c797f778f18fb0db69ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55fae905_a23667e2",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-11T07:31:03Z",
+      "side": 1,
+      "message": "This is already done in base Initiator class",
+      "range": {
+        "startLine": 612,
+        "startChar": 0,
+        "endLine": 613,
+        "endChar": 34
+      },
+      "revId": "d685696f741805c33fb0c797f778f18fb0db69ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
