@@ -769,6 +769,10 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 	struct ftl_band_reloc *breloc = &reloc->brelocs[band->id];
 	size_t i, prev_lbks = breloc->num_lbks;
 
+	if (band->lba_map.num_vld == 0) {
+		return;
+	}
+
 	for (i = offset; i < offset + num_lbks; ++i) {
 		if (spdk_bit_array_get(breloc->reloc_map, i)) {
 			continue;
