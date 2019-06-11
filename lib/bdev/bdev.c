@@ -2476,6 +2476,16 @@ spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev)
 	}
 }
 
+static uint32_t
+_bdev_get_block_size_with_md(const struct spdk_bdev *bdev)
+{
+	if (!spdk_bdev_is_md_interleaved(bdev)) {
+		return bdev->blocklen + bdev->md_len;
+	} else {
+		return bdev->blocklen;
+	}
+}
+
 enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
 {
 	if (bdev->md_len != 0) {
@@ -3148,7 +3158,7 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	}
 
 	assert(_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
-	assert(spdk_bdev_get_block_size(bdev) <= ZERO_BUFFER_SIZE);
+	assert(_bdev_get_block_size_with_md(bdev) <= ZERO_BUFFER_SIZE);
 	bdev_io->u.bdev.split_remaining_num_blocks = num_blocks;
 	bdev_io->u.bdev.split_current_offset_blocks = offset_blocks;
 	_spdk_bdev_write_zero_buffer_next(bdev_io);
@@ -4448,18 +4458,24 @@ _spdk_bdev_write_zero_buffer_next(void *_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io = _bdev_io;
 	uint64_t num_bytes, num_blocks;
+	void *md_buf = NULL;
 	int rc;
 
-	num_bytes = spdk_min(spdk_bdev_get_block_size(bdev_io->bdev) *
+	num_bytes = spdk_min(_bdev_get_block_size_with_md(bdev_io->bdev) *
 			     bdev_io->u.bdev.split_remaining_num_blocks,
 			     ZERO_BUFFER_SIZE);
-	num_blocks = num_bytes / spdk_bdev_get_block_size(bdev_io->bdev);
+	num_blocks = num_bytes / _bdev_get_block_size_with_md(bdev_io->bdev);
 
-	rc = spdk_bdev_write_blocks(bdev_io->internal.desc,
-				    spdk_io_channel_from_ctx(bdev_io->internal.ch),
-				    g_bdev_mgr.zero_buffer,
-				    bdev_io->u.bdev.split_current_offset_blocks, num_blocks,
-				    _spdk_bdev_write_zero_buffer_done, bdev_io);
+	if (spdk_bdev_is_md_separate(bdev_io->bdev)) {
+		md_buf = (char *)g_bdev_mgr.zero_buffer +
+			 spdk_bdev_get_block_size(bdev_io->bdev) * num_blocks;
+	}
+
+	rc = _spdk_bdev_write_blocks_with_md(bdev_io->internal.desc,
+					     spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					     g_bdev_mgr.zero_buffer, md_buf,
+					     bdev_io->u.bdev.split_current_offset_blocks, num_blocks,
+					     _spdk_bdev_write_zero_buffer_done, bdev_io);
 	if (rc == 0) {
 		bdev_io->u.bdev.split_remaining_num_blocks -= num_blocks;
 		bdev_io->u.bdev.split_current_offset_blocks += num_blocks;
