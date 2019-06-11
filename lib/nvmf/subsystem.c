@@ -43,6 +43,7 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/uuid.h"
 #include "spdk/json.h"
+#include "spdk/file.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -1009,6 +1010,11 @@ static struct spdk_bdev_module ns_bdev_module = {
 	.name	= "NVMe-oF Target",
 };
 
+static int
+spdk_nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info);
+static int
+nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
+
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
@@ -1016,6 +1022,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 {
 	struct spdk_nvmf_ns_opts opts;
 	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_reservation_info info = {0};
 	int rc;
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
@@ -1115,6 +1122,16 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	TAILQ_INIT(&ns->registrants);
 
 	if (ptpl_file) {
+		rc = spdk_nvmf_ns_load_reservation(ptpl_file, &info);
+		if (!rc) {
+			rc = nvmf_ns_reservation_restore(ns, &info);
+			if (rc) {
+				SPDK_ERRLOG("Subsystem restore reservation failed\n");
+				spdk_bdev_close(ns->desc);
+				free(ns);
+				return 0;
+			}
+		}
 		ns->ptpl_file = strdup(ptpl_file);
 	}
 
@@ -1340,6 +1357,193 @@ spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsyst
 	return subsystem->max_allowed_nsid;
 }
 
+struct _nvmf_ns_registrant {
+	uint64_t		rkey;
+	char			*host_uuid;
+};
+
+struct _nvmf_ns_registrants {
+	size_t				num_regs;
+	struct _nvmf_ns_registrant	reg[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+};
+
+struct _nvmf_ns_reservation {
+	bool					ptpl_activated;
+	enum spdk_nvme_reservation_type		rtype;
+	uint64_t				crkey;
+	char					*bdev_uuid;
+	char					*holder_uuid;
+	struct _nvmf_ns_registrants		regs;
+};
+
+static const struct spdk_json_object_decoder nvmf_ns_pr_reg_decoders[] = {
+	{"rkey", offsetof(struct _nvmf_ns_registrant, rkey), spdk_json_decode_uint64},
+	{"host_uuid", offsetof(struct _nvmf_ns_registrant, host_uuid), spdk_json_decode_string},
+};
+
+static int
+nvmf_decode_ns_pr_reg(const struct spdk_json_val *val, void *out)
+{
+	struct _nvmf_ns_registrant *reg = out;
+
+	return spdk_json_decode_object(val, nvmf_ns_pr_reg_decoders,
+				       SPDK_COUNTOF(nvmf_ns_pr_reg_decoders), reg);
+}
+
+static int
+nvmf_decode_ns_pr_regs(const struct spdk_json_val *val, void *out)
+{
+	struct _nvmf_ns_registrants *regs = out;
+
+	return spdk_json_decode_array(val, nvmf_decode_ns_pr_reg, regs->reg,
+				      SPDK_NVMF_MAX_NUM_REGISTRANTS, &regs->num_regs,
+				      sizeof(struct _nvmf_ns_registrant));
+}
+
+static const struct spdk_json_object_decoder nvmf_ns_pr_decoders[] = {
+	{"ptpl", offsetof(struct _nvmf_ns_reservation, ptpl_activated), spdk_json_decode_bool, true},
+	{"rtype", offsetof(struct _nvmf_ns_reservation, rtype), spdk_json_decode_uint32, true},
+	{"crkey", offsetof(struct _nvmf_ns_reservation, crkey), spdk_json_decode_uint64, true},
+	{"bdev_uuid", offsetof(struct _nvmf_ns_reservation, bdev_uuid), spdk_json_decode_string},
+	{"holder_uuid", offsetof(struct _nvmf_ns_reservation, holder_uuid), spdk_json_decode_string, true},
+	{"registrants", offsetof(struct _nvmf_ns_reservation, regs), nvmf_decode_ns_pr_regs},
+};
+
+static int
+spdk_nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info)
+{
+	FILE *fd;
+	size_t json_size;
+	ssize_t values_cnt, rc;
+	void *json = NULL, *end;
+	struct spdk_json_val *values = NULL;
+	struct _nvmf_ns_reservation res;
+	uint32_t i;
+
+	fd = fopen(file, "r");
+	/* It's not an error if the file does not exist */
+	if (!fd) {
+		SPDK_NOTICELOG("File %s does not exist\n", file);
+		return -ENOENT;
+	}
+
+	/* Load all persist file contents into a local buffer */
+	json = spdk_posix_file_load(fd, &json_size);
+	fclose(fd);
+	if (!json) {
+		SPDK_ERRLOG("Load persit file %s failed\n", file);
+		return -ENOMEM;
+	}
+
+	rc = spdk_json_parse(json, json_size, NULL, 0, &end, 0);
+	if (rc < 0) {
+		SPDK_NOTICELOG("Parsing JSON configuration failed (%zd)\n", rc);
+		goto exit;
+	}
+
+	values_cnt = rc;
+	values = calloc(values_cnt, sizeof(struct spdk_json_val));
+	if (values == NULL) {
+		goto exit;
+	}
+
+	rc = spdk_json_parse(json, json_size, values, values_cnt, &end, 0);
+	if (rc != values_cnt) {
+		SPDK_ERRLOG("Parsing JSON configuration failed (%zd)\n", rc);
+		goto exit;
+	}
+
+	memset(&res, 0, sizeof(res));
+	/* Decode json */
+	if (spdk_json_decode_object(values, nvmf_ns_pr_decoders,
+				    SPDK_COUNTOF(nvmf_ns_pr_decoders),
+				    &res)) {
+		SPDK_ERRLOG("Invalid objects in the persist file %s\n", file);
+		rc = -EINVAL;
+		goto exit;
+	}
+
+	rc = 0;
+	info->ptpl_activated = res.ptpl_activated;
+	info->rtype = res.rtype;
+	info->crkey = res.crkey;
+	snprintf(info->bdev_uuid, sizeof(info->bdev_uuid), "%s", res.bdev_uuid);
+	snprintf(info->holder_uuid, sizeof(info->holder_uuid), "%s", res.holder_uuid);
+	info->num_regs = res.regs.num_regs;
+	for (i = 0; i < res.regs.num_regs; i++) {
+		info->registrants[i].rkey = res.regs.reg[i].rkey;
+		snprintf(info->registrants[i].host_uuid, sizeof(info->registrants[i].host_uuid), "%s",
+			 res.regs.reg[i].host_uuid);
+		free(res.regs.reg[i].host_uuid);
+	}
+	free(res.bdev_uuid);
+	free(res.holder_uuid);
+
+exit:
+	free(json);
+	free(values);
+	return rc;
+}
+
+static bool
+nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns);
+
+static int
+nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info)
+{
+	uint32_t i;
+	struct spdk_nvmf_registrant *reg, *holder = NULL;
+	struct spdk_uuid bdev_uuid, holder_uuid;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "NSID %u, PTPL %u, Number of registrants %u\n",
+		      ns->nsid, info->ptpl_activated, info->num_regs);
+
+	/* it's not an error */
+	if (!info->ptpl_activated || !info->num_regs) {
+		return 0;
+	}
+
+	spdk_uuid_parse(&bdev_uuid, info->bdev_uuid);
+	if (spdk_uuid_compare(&bdev_uuid, spdk_bdev_get_uuid(ns->bdev))) {
+		SPDK_ERRLOG("Existing bdev UUID is not same with configuration file\n");
+		return -EINVAL;
+	}
+
+	ns->crkey = info->crkey;
+	ns->rtype = info->rtype;
+	ns->ptpl_activated = info->ptpl_activated;
+	spdk_uuid_parse(&holder_uuid, info->holder_uuid);
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Bdev UUID %s\n", info->bdev_uuid);
+	if (info->rtype) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Holder UUID %s, RTYPE %u, RKEY 0x%"PRIx64"\n",
+			      info->holder_uuid, info->rtype, info->crkey);
+	}
+
+	for (i = 0; i < info->num_regs; i++) {
+		reg = calloc(1, sizeof(*reg));
+		if (!reg) {
+			return -ENOMEM;
+		}
+		spdk_uuid_parse(&reg->hostid, info->registrants[i].host_uuid);
+		reg->rkey = info->registrants[i].rkey;
+		TAILQ_INSERT_TAIL(&ns->registrants, reg, link);
+		if (!spdk_uuid_compare(&holder_uuid, &reg->hostid)) {
+			holder = reg;
+		}
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Registrant RKEY 0x%"PRIx64", Host UUID %s\n",
+			      info->registrants[i].rkey, info->registrants[i].host_uuid);
+	}
+
+	if (nvmf_ns_reservation_all_registrants_type(ns)) {
+		ns->holder = TAILQ_FIRST(&ns->registrants);;
+	} else {
+		ns->holder = holder;
+	}
+
+	return 0;
+}
+
 static int
 spdk_nvmf_ns_json_write_cb(void *cb_ctx, const void *data, size_t size)
 {
@@ -1395,9 +1599,6 @@ exit:
 	rc = spdk_json_write_end(w);
 	return rc;
 }
-
-static bool
-nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns);
 
 static int
 nvmf_ns_update_reservation_info(struct spdk_nvmf_ns *ns)
