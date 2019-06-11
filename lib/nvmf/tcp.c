@@ -56,7 +56,7 @@
 #define NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM  64  /* Maximal c2h_data pdu number for ecah tqpair */
 
 /* This is used to support the Linux kernel NVMe-oF initiator */
-#define LINUX_KERNEL_SUPPORT_NOT_SENDING_RESP_FOR_C2H 0
+#define LINUX_KERNEL_SUPPORT_NOT_SENDING_RESP_FOR_C2H 1
 
 /* spdk nvmf related structure */
 enum spdk_nvmf_tcp_req_state {
