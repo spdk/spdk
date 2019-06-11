@@ -415,6 +415,9 @@ test_reloc_chunk(void)
 
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
+	/* High priority band have allocated lba map */
+	band->high_prio = 1;
+	ftl_band_alloc_lba_map(band);
 	num_io = MAX_RELOC_QDEPTH * reloc->xfer_size;
 	num_iters = ftl_dev_lbks_in_chunk(dev) / num_io;
 
