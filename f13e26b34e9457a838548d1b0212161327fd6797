@@ -22,6 +22,30 @@
       "revId": "f13e26b34e9457a838548d1b0212161327fd6797",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eaee3f7e_56c33a49",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-11T13:30:36Z",
+      "side": 1,
+      "message": "this doesn\u0027t seem equivalent, assert on either of these conditions? So all single disk raid configs would hit this?",
+      "parentUuid": "abd53a11_7296868c",
+      "range": {
+        "startLine": 457,
+        "startChar": 8,
+        "endLine": 457,
+        "endChar": 76
+      },
+      "revId": "f13e26b34e9457a838548d1b0212161327fd6797",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
