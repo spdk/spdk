@@ -35,7 +35,7 @@
 
 #include "spdk/blobfs.h"
 #include "spdk/conf.h"
-#include "blobfs_internal.h"
+#include "tree.h"
 
 #include "spdk/queue.h"
 #include "spdk/thread.h"
