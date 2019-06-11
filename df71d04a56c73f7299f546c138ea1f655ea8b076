@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd1e96a0_81b385bf",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1312,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-11T21:35:48Z",
+      "side": 1,
+      "message": "I don\u0027t think this is completely thread safe. Theoretically, this function could be preempted after removing the ctrlr from the subsystem and before setting ctrlr-\u003esubsystem to NULL. Or another thread calling this function could perform the if check on line 1305 before line 1312 executes on the other thread. Also, there are no compiler or architectural guarantees about which will happen first between the tailq_remove operations or setting ctrlr-\u003esubsys to null.\nIf this function did manage to execute twice, it could result in trying to dereference a NULL pointer inside of TAILQ_REMOVE.",
+      "revId": "df71d04a56c73f7299f546c138ea1f655ea8b076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
