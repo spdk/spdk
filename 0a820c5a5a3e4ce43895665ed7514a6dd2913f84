@@ -22,6 +22,30 @@
       "revId": "0a820c5a5a3e4ce43895665ed7514a6dd2913f84",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc84454b_ba197fba",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 2498,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-06-11T01:24:56Z",
+      "side": 1,
+      "message": "Because fabric connect cmd start with ctrlr \u003d\u003d NULL， we don\u0027t increase the sgroup-\u003eio_outstanding.",
+      "parentUuid": "2cee3e5f_ce2f9724",
+      "range": {
+        "startLine": 2497,
+        "startChar": 4,
+        "endLine": 2498,
+        "endChar": 72
+      },
+      "revId": "0a820c5a5a3e4ce43895665ed7514a6dd2913f84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
