@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb27a8b0_ae368dc9",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "I don\u0027t think things like these should be in a test script.\nInstalling dependencies like Vagrant and its plugins should be done in separate script, most probably test/common/config/vm_setup.sh or some new script.",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 3
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "750525fb_a903af4a",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "I don\u0027t think we need a function for that (and possibly other functions like this as well). Why not just call \"vagrant halt\" directly?",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cb729c8_787bf7cf",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "Exactly why do we need to do this?\nIs this to clean-up after some previous script execution which did not clean-up after itself?\nTo achieve this there should be traps which do the clean up.",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94038257_5c794fc2",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "I don\u0027t think we should go down to provider-specific commands.\nAs an end user I think  I just want to install VBox, Vagrant and simply call vagrant calls, not be involved in managing vbox.",
+      "range": {
+        "startLine": 147,
+        "startChar": 0,
+        "endLine": 154,
+        "endChar": 52
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d52b5c00_6c20ec4b",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "check_vm_status name is rather general.  What do we check for exactly in this function? Is it running/halted/etc? \nIf so, then I think \"vagrant status\" would suffice. I am highly against introducing provider-specific management tools if they are not needed.",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 168,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09e6b693_634c29f0",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "Why not jsut \"vagrant destroy\"?",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 184,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1148e706_91e553a9",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "This could be probably done like vm_check_nvme_device() function",
+      "range": {
+        "startLine": 209,
+        "startChar": 0,
+        "endLine": 213,
+        "endChar": 103
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "feabd25c_6fb127c7",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "naming consistency - other functions use just small letters.\n\nAlso, function name is not very meaningful.\nIn function body I see that we ... kill some process? (clear_provider_mutex), manage vagrant plugin, vbox net interfaces?\nI\u0027m confused.",
+      "range": {
+        "startLine": 216,
+        "startChar": 9,
+        "endLine": 216,
+        "endChar": 28
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc1cb0a8_0060bb13",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "Trap should not be removed until tests have finished.",
+      "range": {
+        "startLine": 291,
+        "startChar": 1,
+        "endLine": 291,
+        "endChar": 26
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

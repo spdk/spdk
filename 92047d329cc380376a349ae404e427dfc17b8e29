@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3571889_8c6d5faa",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 40
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "Well, that\u0027s a shame :/ Personally I found libvirt to be easier to use, but that\u0027s just my personal preference I guess.",
+      "range": {
+        "startLine": 9,
+        "startChar": 58,
+        "endLine": 10,
+        "endChar": 17
+      },
+      "revId": "92047d329cc380376a349ae404e427dfc17b8e29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f0650fa_c097f2fa",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 40
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-12T14:34:34Z",
+      "side": 1,
+      "message": "Mixed tabs/spaces in file.\nPrefer tabs so that indents can be adjusted in users IDE.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 32
+      },
+      "revId": "92047d329cc380376a349ae404e427dfc17b8e29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
