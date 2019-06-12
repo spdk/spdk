@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6e30def9_4f9e257e",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-12T16:10:34Z",
+      "side": 1,
+      "message": "Echo won\u0027t propagate correctly to \u0027for\u0027 loop in line 214",
+      "parentUuid": "035410c3_3c361af2",
+      "range": {
+        "startLine": 154,
+        "startChar": 1,
+        "endLine": 154,
+        "endChar": 14
+      },
+      "revId": "6f9be7b471c47dfc0f0f86c4d5f4ed1157610efa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e29b1562_b238a729",
         "filename": "scripts/setup.sh",
         "patchSetId": 2
@@ -36,6 +60,24 @@
       "writtenOn": "2019-06-12T15:35:16Z",
       "side": 1,
       "message": "This if statement looks confusing.\n\nCan we rename \"mount\" variable to \"mountpoints\"?\n\nif ! $mountpoints; then\n   linux_bind...\nelse\n   ...",
+      "revId": "6f9be7b471c47dfc0f0f86c4d5f4ed1157610efa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "649b31b7_d2d20feb",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-12T16:10:34Z",
+      "side": 1,
+      "message": "mountpoints is already used, but I\u0027m open to other suggestions.",
+      "parentUuid": "e29b1562_b238a729",
       "revId": "6f9be7b471c47dfc0f0f86c4d5f4ed1157610efa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
