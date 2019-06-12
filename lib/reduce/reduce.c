@@ -658,7 +658,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 
 	_initialize_vol_pm_pointers(vol);
 
-	num_chunks = vol->params.vol_size / vol->params.chunk_size;
+	num_chunks = _get_total_chunks(vol->params.vol_size, vol->params.chunk_size);
 	for (i = 0; i < num_chunks; i++) {
 		logical_map_index = vol->pm_logical_map[i];
 		if (logical_map_index == REDUCE_EMPTY_MAP_ENTRY) {
