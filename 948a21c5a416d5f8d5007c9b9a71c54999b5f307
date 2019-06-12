@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "837902b8_3acacd05",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 786,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-12T08:54:19Z",
+      "side": 1,
+      "message": "So what is going to happen if prev_lbks !\u003d breloc-\u003enum_lbks, the band was on the pending queue (it already had some bits of it marked for relocation) and we\u0027re calling ftl_reloc_add with prio \u003d 1? I think we should check if the band is on either of the queues before adding it to another one.",
+      "range": {
+        "startLine": 783,
+        "startChar": 0,
+        "endLine": 786,
+        "endChar": 2
+      },
+      "revId": "948a21c5a416d5f8d5007c9b9a71c54999b5f307",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
