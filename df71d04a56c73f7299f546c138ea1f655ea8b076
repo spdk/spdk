@@ -16,6 +16,24 @@
       "revId": "df71d04a56c73f7299f546c138ea1f655ea8b076",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d77f62c3_94bfa8d7",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1312,
+      "author": {
+        "id": 1014226
+      },
+      "writtenOn": "2019-06-12T07:51:05Z",
+      "side": 1,
+      "message": "I agree that the race exists, and the only really thread safe option to fix it would be to add a lock. But wouldn\u0027t this be the case with _spdk_nvmf_subsystem_remove_host, _nvmf_subsystem_remove_listener for example, only instead of a NULL pointer they would dereference already freed memory.\n\nI can add a \"management operation lock\" to the subsystem to make all of these operations thread safe, but this seems unaligned to how the code is written today.\n\nWDYT?",
+      "parentUuid": "dd1e96a0_81b385bf",
+      "revId": "df71d04a56c73f7299f546c138ea1f655ea8b076",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
