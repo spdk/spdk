@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ca8b6ee_9cc22bf7",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-12T09:01:04Z",
+      "side": 1,
+      "message": "Use \u0027band\u0027.",
+      "range": {
+        "startLine": 212,
+        "startChar": 28,
+        "endLine": 212,
+        "endChar": 40
+      },
+      "revId": "9613271a5d983962987e12c890b477396cdc28d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
