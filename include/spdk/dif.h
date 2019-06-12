@@ -288,12 +288,17 @@ int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
  * This function removes the necessity of data copy in the SPDK application
  * during DIF insertion and strip.
  *
+ * When the extended LBA payload is splitted into multiple data segments,
+ * start of each data segment is passed through the DIF context. data_offset
+ * and data_len is within a data segment.
+ *
  * \param iovs iovec array set by this function.
  * \param iovcnt Number of elements in the iovec array.
  * \param buf_iovs SGL for the buffer to create extended LBA payload.
  * \param buf_iovcnt Size of the SGL for the buffer to create extended LBA payload.
- * \param data_offset Offset to store the next incoming data.
- * \param data_len Expected length of the newly read data in the extended LBA payload.
+ * \param data_offset Offset to store the next incoming data in the current data segment.
+ * \param data_len Expected length of the newly read data in the current data segment of
+ * the extended LBA payload.
  * \param mapped_len Output parameter that will contain data length mapped by
  * the iovec array.
  * \param ctx DIF context.
