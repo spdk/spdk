@@ -34,6 +34,24 @@
       "revId": "a9daba69e07cde5fece4ea7d427130ba42e6aa1b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ae84039_ff62bef7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-12T14:33:23Z",
+      "side": 1,
+      "message": "Ziye said: Change log is not ok. For us, we still have some kernels between 5.0 and 5.1. And if other customers use the old version or back porting the module without the optimized support, it will fail. I do not object setting the default value to 1, but if you do not export the config, customers need to change the spdk code to compile or change the kernel code in the initiator side, and it is not flexible.",
+      "parentUuid": "ec8db252_36f7ee40",
+      "revId": "a9daba69e07cde5fece4ea7d427130ba42e6aa1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
