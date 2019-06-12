@@ -79,6 +79,8 @@ elif [ -f /etc/debian_version ]; then
 		git astyle pep8 lcov clang uuid-dev sg3-utils libiscsi-dev pciutils
 	# Additional python style checker not available on ubuntu 16.04 or earlier.
 	apt-get install -y pycodestyle || true
+	# Additional dependencies for scan-build on ubuntu 18.04 or later
+    apt-get install -y clang-tools || true
 	# Additional (optional) dependencies for showing backtrace in logs
 	apt-get install -y libunwind-dev || true
 	# Additional dependencies for NVMe over Fabrics
