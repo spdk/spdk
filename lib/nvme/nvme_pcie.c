@@ -967,7 +967,8 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 
-	pqpair->last_sq_tail = pqpair->sq_tail = pqpair->cq_head = 0;
+	/* all head/tail vals are set to 0 */
+	pqpair->last_sq_tail = pqpair->sq_tail = pqpair->sq_head = pqpair->cq_head = 0;
 
 	/*
 	 * First time through the completion queue, HW will set phase
@@ -1377,14 +1378,21 @@ static void
 nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_tracker *tr, *temp;
+	struct nvme_tracker *tr, *temp, *last;
 
+	last = TAILQ_LAST(&pqpair->outstanding_tr, nvme_outstanding_tr_head);
+
+	/* Abort previously submitted (outstanding) trs */
 	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, temp) {
 		if (!qpair->ctrlr->opts.disable_error_logging) {
 			SPDK_ERRLOG("aborting outstanding command\n");
 		}
 		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 							SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
+
+		if (tr == last) {
+			break;
+		}
 	}
 }
 
