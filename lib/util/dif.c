@@ -295,9 +295,9 @@ _dif_generate(void *_dif, uint16_t guard, uint32_t offset_blocks,
 }
 
 static void
-dif_generate(struct _dif_sgl *sgl, uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+dif_generate(struct _dif_sgl *sgl, uint32_t offset_blocks, uint32_t num_blocks,
+	     const struct spdk_dif_ctx *ctx)
 {
-	uint32_t offset_blocks = 0;
 	void *buf;
 	uint16_t guard = 0;
 
@@ -363,13 +363,12 @@ _dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_blocks,
 }
 
 static void
-dif_generate_split(struct _dif_sgl *sgl, uint32_t num_blocks,
+dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_blocks, uint32_t num_blocks,
 		   const struct spdk_dif_ctx *ctx)
 {
-	uint32_t offset_blocks;
-
-	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+	while (offset_blocks < num_blocks) {
 		_dif_generate_split(sgl, offset_blocks, ctx);
+		offset_blocks++;
 	}
 }
 
@@ -391,9 +390,9 @@ spdk_dif_generate(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	}
 
 	if (_dif_sgl_is_bytes_multiple(&sgl, ctx->block_size)) {
-		dif_generate(&sgl, num_blocks, ctx);
+		dif_generate(&sgl, 0, num_blocks, ctx);
 	} else {
-		dif_generate_split(&sgl, num_blocks, ctx);
+		dif_generate_split(&sgl, 0, num_blocks, ctx);
 	}
 
 	return 0;
