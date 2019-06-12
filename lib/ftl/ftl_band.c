@@ -147,17 +147,6 @@ ftl_band_write_failed(struct ftl_band *band)
 	ftl_band_set_state(band, FTL_BAND_STATE_CLOSED);
 }
 
-void
-ftl_band_clear_lba_map(struct ftl_band *band)
-{
-	struct ftl_lba_map *lba_map = &band->lba_map;
-
-	spdk_bit_array_clear_mask(lba_map->vld);
-	memset(lba_map->map, 0, ftl_lba_map_pool_elem_size(band->dev));
-
-	lba_map->num_vld = 0;
-}
-
 static void
 ftl_band_free_lba_map(struct ftl_band *band)
 {
@@ -1176,6 +1165,23 @@ ftl_band_next_operational_chunk(struct ftl_band *band, struct ftl_chunk *chunk)
 	}
 
 	return result;
+}
+
+void
+ftl_band_clear_lba_map(struct ftl_band *band)
+{
+	struct ftl_lba_map *lba_map = &band->lba_map;
+	size_t num_segments;
+
+	spdk_bit_array_clear_mask(lba_map->vld);
+	memset(lba_map->map, 0, ftl_lba_map_pool_elem_size(band->dev));
+
+	/* For open band all lba map segments are already cached */
+	assert(band->state == FTL_BAND_STATE_PREP);
+	num_segments = spdk_divide_round_up(ftl_num_band_lbks(band->dev), FTL_NUM_LBA_IN_BLOCK);
+	ftl_lba_map_set_segment_state(&band->lba_map, 0, num_segments, FTL_LBA_MAP_SEG_CACHED);
+
+	lba_map->num_vld = 0;
 }
 
 size_t
