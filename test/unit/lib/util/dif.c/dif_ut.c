@@ -1719,6 +1719,65 @@ dif_generate_stream_test(void)
 	_iov_free_buf(&iov);
 }
 
+static void
+set_md_interleave_iovs_alignment_test(void)
+{
+	struct iovec iovs[3], dif_iovs[5];
+	uint32_t mapped_len = 0;
+	int rc;
+	struct spdk_dif_ctx ctx;
+
+	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
+			       0, 0, 0, 0, 0, 0);
+	CU_ASSERT(rc == 0);
+
+	/* The case that buffer size is smaller than necessary. */
+	_iov_set_buf(&iovs[0], (uint8_t *)0xDEADBEEF, 1024);
+	_iov_set_buf(&iovs[1], (uint8_t *)0xFEEDBEEF, 1024);
+	_iov_set_buf(&iovs[2], (uint8_t *)0xC0FFEE, 24);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 0, 2048, &mapped_len, &ctx);
+	CU_ASSERT(rc == -ERANGE);
+
+	/* The folllowing are the normal cases. */
+	_iov_set_buf(&iovs[2], (uint8_t *)0xC0FFEE, 32);
+
+	/* data length is less than a data block size. */
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 0, 500, &mapped_len, &ctx);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(mapped_len == 500);
+	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)0xDEADBEEF, 500) == true);
+
+	/* Pass enough number of iovecs */
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 500, 1000, &mapped_len, &ctx);
+	CU_ASSERT(rc == 4);
+	CU_ASSERT(mapped_len == 1000);
+	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)(0xDEADBEEF + 500), 12) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], (void *)(0xDEADBEEF + 520), 504) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], (void *)0xFEEDBEEF, 8) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[3], (void *)(0xFEEDBEEF + 16), 476) == true);
+
+	/* Pass iovecs smaller than necessary */
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 3, iovs, 3, 500, 1000, &mapped_len, &ctx);
+	CU_ASSERT(rc == 3);
+	CU_ASSERT(mapped_len == 524);
+	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)(0xDEADBEEF + 500), 12) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], (void *)(0xDEADBEEF + 520), 504) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], (void *)0xFEEDBEEF, 8) == true);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 1500, 500, &mapped_len, &ctx);
+	CU_ASSERT(rc == 2);
+	CU_ASSERT(mapped_len == 500);
+	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)(0xFEEDBEEF + 492), 36) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], (void *)(0xFEEDBEEF + 536), 464) == true);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 2000, 48, &mapped_len, &ctx);
+	CU_ASSERT(rc == 2);
+	CU_ASSERT(mapped_len == 48);
+	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)0xFEEDBEEF + 1000, 24) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], (void *)0xC0FFEE, 24) ==  true);
+}
+
 #define UT_CRC32C_XOR	0xffffffffUL
 
 static void
@@ -1900,6 +1959,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "set_md_interleave_iovs_split_test",
 			    set_md_interleave_iovs_split_test) == NULL ||
 		CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test) == NULL ||
+		CU_add_test(suite, "set_md_interleave_iovs_alignment_test",
+			    set_md_interleave_iovs_alignment_test) == NULL ||
 		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL
 	) {
 		CU_cleanup_registry();
