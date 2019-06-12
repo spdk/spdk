@@ -291,6 +291,8 @@ spdk_reduce_vol_get_uuid(struct spdk_reduce_vol *vol)
 static void
 _initialize_vol_pm_pointers(struct spdk_reduce_vol *vol)
 {
+	uint64_t logical_map_size;
+
 	/* Superblock is at the beginning of the pm file. */
 	vol->pm_super = (struct spdk_reduce_vol_superblock *)vol->pm_file.pm_buf;
 
@@ -298,7 +300,8 @@ _initialize_vol_pm_pointers(struct spdk_reduce_vol *vol)
 	vol->pm_logical_map = (uint64_t *)(vol->pm_super + 1);
 
 	/* Chunks maps follow the logical map. */
-	vol->pm_chunk_maps = vol->pm_logical_map + (vol->params.vol_size / vol->params.chunk_size);
+	logical_map_size = _get_pm_logical_map_size(vol->params.vol_size, vol->params.chunk_size);
+	vol->pm_chunk_maps = (uint64_t *)((uint8_t *)vol->pm_logical_map + logical_map_size);
 }
 
 /* We need 2 iovs during load - one for the superblock, another for the path */
