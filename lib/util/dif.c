@@ -259,6 +259,7 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	ctx->app_tag = app_tag;
 	ctx->data_offset = data_offset;
 	ctx->ref_tag_offset = data_offset / data_block_size;
+	ctx->last_guard = guard_seed;
 	ctx->guard_seed = guard_seed;
 
 	return 0;
@@ -1443,12 +1444,33 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 	return iovcnt - dif_sgl.iovcnt;
 }
 
+static uint16_t
+_guard_compute_split(struct _dif_sgl *sgl, uint32_t data_len, uint16_t guard)
+{
+	uint32_t len;
+	void *buf;
+
+	while (data_len != 0) {
+		_dif_sgl_get_buf(sgl, &buf, &len);
+		len = spdk_min(len, data_len);
+
+		guard = spdk_crc16_t10dif(guard, buf, len);
+
+		_dif_sgl_advance(sgl, len);
+		data_len -= len;
+	}
+
+	return guard;
+}
+
 int
 spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			 uint32_t data_offset, uint32_t data_len,
-			 const struct spdk_dif_ctx *ctx)
+			 struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, offset_blocks, num_blocks;
+	uint32_t data_block_size, head_unalign, tail_unalign;
+	uint32_t offset_blocks, num_blocks, offset_in_block, len;
+	uint16_t guard = 0;
 	struct _dif_sgl sgl;
 
 	if (iovs == NULL || iovcnt == 0) {
@@ -1457,21 +1479,53 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	offset_blocks = data_offset / data_block_size;
-	data_len += data_offset % data_block_size;
-
-	data_offset = offset_blocks * ctx->block_size;
-	num_blocks = data_len / data_block_size;
+	num_blocks = (data_offset + data_len) / data_block_size;
+	tail_unalign = (data_offset + data_len) % data_block_size;
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 
-	if (!_dif_sgl_is_valid(&sgl, data_offset + num_blocks * ctx->block_size)) {
+	if (!_dif_sgl_is_valid(&sgl, num_blocks * ctx->block_size + tail_unalign)) {
 		return -ERANGE;
 	}
 
-	_dif_sgl_advance(&sgl, data_offset);
+	offset_blocks = data_offset / data_block_size;
+	head_unalign = data_offset % data_block_size;
 
-	dif_generate_split(&sgl, offset_blocks, offset_blocks + num_blocks, ctx);
+	_dif_sgl_advance(&sgl, offset_blocks * ctx->block_size + head_unalign);
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = ctx->last_guard;
+	}
+
+	while (data_len != 0) {
+		offset_blocks = data_offset / data_block_size;
+		offset_in_block = data_offset % data_block_size;
+
+		len = spdk_min(data_len, _to_next_boundary(data_offset, data_block_size));
+
+		if ((offset_in_block + len) == data_block_size) {
+			/* if the current data block is complete, append DIF to the end of
+			 * the data block and set seed value to the last guard.
+			 */
+			_dif_generate_split(&sgl, offset_in_block, guard, offset_blocks, ctx);
+
+			if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+				guard = ctx->guard_seed;
+			}
+		} else {
+			/* if the current data block is partial, it must be the last. */
+			assert(data_len == len);
+			if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+				guard = _guard_compute_split(&sgl, len, guard);
+			}
+		}
+		data_offset += len;
+		data_len -= len;
+	}
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		ctx->last_guard = guard;
+	}
 
 	return 0;
 }
