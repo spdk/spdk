@@ -11,10 +11,6 @@ PLUGIN_DIR=$rootdir/examples/bdev/fio_plugin
 FIO_PATH="/usr/src/fio"
 virtio_bdevs=""
 virtio_with_unmap=""
-os_image="/home/sys_sgsw/vhost_vm_image.qcow2"
-#different linux distributions have different versions of targetcli that have different names for ramdisk option
-targetcli_rd_name=""
-kernel_vhost_disk="naa.5012345678901234"
 
 function usage()
 {
@@ -22,7 +18,6 @@ function usage()
 	echo "Script for running vhost initiator tests."
 	echo "Usage: $(basename $1) [-h|--help] [--fiobin=PATH]"
 	echo "-h, --help            Print help and exit"
-	echo "    --vm_image=PATH   Path to VM image used in these tests [default=$os_image]"
 	echo "    --fiopath=PATH    Path to fio directory on host [default=$FIO_PATH]"
 }
 
@@ -32,7 +27,6 @@ while getopts 'h-:' optchar; do
 		case "$OPTARG" in
 			help) usage $0 && exit 0 ;;
 			fiopath=*) FIO_PATH="${OPTARG#*=}" ;;
-			vm_image=*) os_image="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
 		esac
 		;;
@@ -56,27 +50,8 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-if targetcli ls backstores | grep ramdisk ; then
-	targetcli_rd_name="ramdisk"
-elif targetcli ls backstores | grep rd_mcp ; then
-	targetcli_rd_name="rd_mcp"
-else
-	error "targetcli: cannot create a ramdisk.\
-	 Neither backstores/ramdisk nor backstores/rd_mcp is available"
-fi
-
-function remove_kernel_vhost()
-{
-	if targetcli "/vhost/$kernel_vhost_disk ls"; then
-		targetcli "/vhost delete $kernel_vhost_disk"
-	fi
-	if targetcli "/backstores/$targetcli_rd_name/ramdisk ls"; then
-		targetcli "/backstores/$targetcli_rd_name delete ramdisk"
-	fi
-}
-
 trap 'rm -f *.state $rootdir/spdk.tar.gz $rootdir/fio.tar.gz $(get_vhost_dir)/Virtio0;\
- remove_kernel_vhost; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+ error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	fio_bdev --ioengine=spdk_bdev "$@" --spdk_mem=1024 --spdk_single_seg=1
 }
@@ -132,72 +107,6 @@ timing_enter run_spdk_fio_unmap
 run_spdk_fio $testdir/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$testdir/bdev.conf \
 	--spdk_conf=$testdir/bdev.conf
 timing_exit run_spdk_fio_unmap
-
-timing_enter create_kernel_vhost
-targetcli "/backstores/$targetcli_rd_name create name=ramdisk size=1GB"
-targetcli "/vhost create $kernel_vhost_disk"
-targetcli "/vhost/$kernel_vhost_disk/tpg1/luns create /backstores/$targetcli_rd_name/ramdisk"
-timing_exit create_kernel_vhost
-
-timing_enter setup_vm
-vm_no="0"
-vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image \
- --disks="Nvme0n1_scsi0:Malloc0:Malloc1:$kernel_vhost_disk,kernel_vhost:Virtio0,virtio:\
- Nvme0n1_blk0,spdk_vhost_blk:Nvme0n1_blk1,spdk_vhost_blk" \
- --queue_num=8 --memory=6144
-vm_run $vm_no
-
-timing_enter vm_wait_for_boot
-vm_wait_for_boot 300 $vm_no
-timing_exit vm_wait_for_boot
-
-timing_enter vm_scp_spdk
-touch $rootdir/spdk.tar.gz
-tar --exclude="spdk.tar.gz" --exclude="*.o" --exclude="*.d" --exclude=".git" -C $rootdir -zcf $rootdir/spdk.tar.gz .
-vm_scp $vm_no $rootdir/spdk.tar.gz "127.0.0.1:/root"
-vm_ssh $vm_no "mkdir -p /root/spdk; tar -zxf /root/spdk.tar.gz -C /root/spdk --strip-components=1"
-
-touch $rootdir/fio.tar.gz
-tar --exclude="fio.tar.gz" --exclude="*.o" --exclude="*.d" --exclude=".git" -C $FIO_PATH -zcf $rootdir/fio.tar.gz .
-vm_scp $vm_no $rootdir/fio.tar.gz "127.0.0.1:/root"
-vm_ssh $vm_no "rm -rf /root/fio_src; mkdir -p /root/fio_src; tar -zxf /root/fio.tar.gz -C /root/fio_src --strip-components=1"
-timing_exit vm_scp_spdk
-
-timing_enter vm_build_spdk
-nproc=$(vm_ssh $vm_no "nproc")
-vm_ssh $vm_no " cd /root/fio_src ; make clean ; make -j${nproc} ; make install"
-vm_ssh $vm_no " cd spdk ; ./configure --with-fio=/root/fio_src ; make clean ; make -j${nproc}"
-timing_exit vm_build_spdk
-
-vm_ssh $vm_no "/root/spdk/scripts/setup.sh"
-vbdevs=$(vm_ssh $vm_no ". /root/spdk/test/common/autotest_common.sh && discover_bdevs /root/spdk \
- /root/spdk/test/vhost/initiator/bdev_pci.conf")
-virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
-virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
- | join(":")' <<< $vbdevs)
-timing_exit setup_vm
-
-timing_enter run_spdk_fio_pci
-vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
- /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_bdevs --section=job_randwrite \
- --section=job_randrw --section=job_write --section=job_rw \
- --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1"
-timing_exit run_spdk_fio_pci
-
-timing_enter run_spdk_fio_pci_unmap
-vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
- /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_with_unmap \
- --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1"
-timing_exit run_spdk_fio_pci_unmap
-
-timing_enter vm_shutdown_all
-vm_shutdown_all
-timing_exit vm_shutdown_all
-
-rm -f *.state $rootdir/spdk.tar.gz $rootdir/fio.tar.gz $(get_vhost_dir)/Virtio0
-timing_enter remove_kernel_vhost
-remove_kernel_vhost
-timing_exit remove_kernel_vhost
 
 $RPC_PY delete_nvme_controller Nvme0
 
