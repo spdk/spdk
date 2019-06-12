@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3df95653_4ff8b018",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-12T04:54:37Z",
+      "side": 1,
+      "message": "You can move the definition to _internal.h.",
+      "revId": "efd554f04863ee240520bca062e29779d05ac0a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4aeeb5fd_55611933",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1769,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-12T04:54:37Z",
+      "side": 1,
+      "message": "move to line 1762, and remove other opal_end_session() call.",
+      "range": {
+        "startLine": 1769,
+        "startChar": 0,
+        "endLine": 1769,
+        "endChar": 4
+      },
+      "revId": "efd554f04863ee240520bca062e29779d05ac0a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc6bf41b_39325599",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1789,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-12T04:54:37Z",
+      "side": 1,
+      "message": "think about the optimization for opal_create_key(), I don\u0027t see any reference for the variable dev-\u003edev_key, you can remove it.",
+      "revId": "efd554f04863ee240520bca062e29779d05ac0a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbd42bf2_6a9c1f43",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1830,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-12T04:54:37Z",
+      "side": 1,
+      "message": "same here.",
+      "revId": "efd554f04863ee240520bca062e29779d05ac0a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
