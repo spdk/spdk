@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06095dc3_c8c6d519",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-12T05:43:27Z",
+      "side": 1,
+      "message": "We may be able to update the following comment slightly, but that will be low priority.",
+      "revId": "9a6e1328beea9633ce1c12039fc66cb934e322b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
