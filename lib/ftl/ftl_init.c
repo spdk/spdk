@@ -755,13 +755,16 @@ static int
 ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 {
 	struct spdk_ftl_conf *conf = &dev->conf;
+	struct ftl_band *band;
 	size_t i;
 
 	spdk_uuid_generate(&dev->uuid);
 
 	dev->num_lbas = 0;
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
-		dev->num_lbas += ftl_band_num_usable_lbks(&dev->bands[i]);
+		band = &dev->bands[i];
+		dev->num_lbas += ftl_band_num_usable_lbks(band);
+		band->tail_md_ppa = ftl_band_tail_md_ppa(band);
 	}
 
 	dev->num_lbas = (dev->num_lbas * (100 - conf->lba_rsvd)) / 100;
