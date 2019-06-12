@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "734fc598_5d5f1867",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-12T08:49:21Z",
+      "side": 1,
+      "message": "I think you meant \u0027data corruption\u0027 here.",
+      "range": {
+        "startLine": 11,
+        "startChar": 36,
+        "endLine": 11,
+        "endChar": 46
+      },
+      "revId": "17d693fa9aa458ae0b7422c5a05451d818c8f337",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64d9fa10_bfda06e2",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-12T08:49:21Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it be a bit more readable if we\u0027ve stored current offset in a variable?",
+      "range": {
+        "startLine": 78,
+        "startChar": 65,
+        "endLine": 78,
+        "endChar": 95
+      },
+      "revId": "17d693fa9aa458ae0b7422c5a05451d818c8f337",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15880254_8351bf5e",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-12T08:49:21Z",
+      "side": 1,
+      "message": "Is this necessary? We\u0027re dropping caches anyway.",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 4
+      },
+      "revId": "17d693fa9aa458ae0b7422c5a05451d818c8f337",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
