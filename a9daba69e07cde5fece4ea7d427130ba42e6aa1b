@@ -52,6 +52,24 @@
       "revId": "a9daba69e07cde5fece4ea7d427130ba42e6aa1b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df59054f_8b509ce0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-12T14:37:32Z",
+      "side": 1,
+      "message": "the old kernel is EOL, practically due to the nature of the kernel, it\u0027s impossible can set a production system that uses an ELOed kernel -- this is exactly why everyone @ China or elsewhere that I know use one of the LTS kernels listed at kernel.org: 4.4, 4.9, 4.14 or 4.19 \n\nIf someone uses EOLed or backported kernel, they should either rebuild spdk or backport the optimization. This is how I see it.\n\nLets have one of the maintainers to provide their vote..",
+      "parentUuid": "7ae84039_ff62bef7",
+      "revId": "a9daba69e07cde5fece4ea7d427130ba42e6aa1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
