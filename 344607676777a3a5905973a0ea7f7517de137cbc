@@ -1,0 +1,349 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00d0f56a_0acf0f02",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5406,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "I don\u0027t see a place where md_ro for snapshot/clone is returned to original value on any of the error paths. Shouldn\u0027t it be set back ?",
+      "range": {
+        "startLine": 5406,
+        "startChar": 1,
+        "endLine": 5406,
+        "endChar": 30
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b10d80ad_f27f14c3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5535,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we add some UT around having clone being closed but two opens were issued on snapshot ?",
+      "range": {
+        "startLine": 5517,
+        "startChar": 0,
+        "endLine": 5535,
+        "endChar": 2
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5568d21f_d5c50b37",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5563,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "There is no knowledge that this blob is a snapshot at this point. Function name implies deletion of snapshot occurred, why not do a generic replacement for _spdk_bs_delete_ebusy_close_cpl() ?",
+      "range": {
+        "startLine": 5563,
+        "startChar": 24,
+        "endLine": 5563,
+        "endChar": 60
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67b42ff6_1c6d9bb5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5564,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "Error handling is different here and on line 5581, first blob close is called and without waiting for results the sequence is finished. Only for the reason of not having ctx.\nMeanwhile _spdk_delete_snapshot_cleanup_finish() only works because of passing NULL as ctx will avoid calling sequence finish again.\nHow about revert to using _spdk_bs_delete_ebusy_close_cpl() [or add similar variant for enomem] and just free(ctx) on 5576 and 5583 ?",
+      "range": {
+        "startLine": 5563,
+        "startChar": 0,
+        "endLine": 5564,
+        "endChar": 40
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f1546d8_cf0feccf",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5572,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "snapshot",
+      "range": {
+        "startLine": 5572,
+        "startChar": 48,
+        "endLine": 5572,
+        "endChar": 57
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cf55be2_38c1275a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5575,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "^Function name",
+      "range": {
+        "startLine": 5575,
+        "startChar": 24,
+        "endLine": 5575,
+        "endChar": 60
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74fca72d_2b59a1e5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5582,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "^Function name",
+      "range": {
+        "startLine": 5582,
+        "startChar": 24,
+        "endLine": 5582,
+        "endChar": 60
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e876b3d_4b279ff6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5598,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "clones",
+      "range": {
+        "startLine": 5598,
+        "startChar": 33,
+        "endLine": 5598,
+        "endChar": 38
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0915ff7_df74b37e",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5964,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "you could check that count\u003d\u003d2, as in previous tests.",
+      "range": {
+        "startLine": 5963,
+        "startChar": 1,
+        "endLine": 5964,
+        "endChar": 49
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90dc990e_d90d3bda",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 6033,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "\u0027before creating snapshot 4\u0027\nOverall this kind of description is not really that clear, since one has to follow each step and have image of the structure in their had for each one. The diagram before this test case describes state as after step 6 (even then clone2 is created after step 10). Yet later steps affect changes to the structure not following any distinct order (like reverse deletion). Not much value added imo with this kind of description.",
+      "range": {
+        "startLine": 6033,
+        "startChar": 46,
+        "endLine": 6033,
+        "endChar": 72
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f973ec5a_9d95d1e0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 6043,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "snapshot",
+      "range": {
+        "startLine": 6043,
+        "startChar": 30,
+        "endLine": 6043,
+        "endChar": 39
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "474536d3_c89de744",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 6069,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "Meaning ? step 5 ? \nThis step (9) deletes snapshot 1 which was created quite some time ago. I think either remove this description or make it more clear.",
+      "range": {
+        "startLine": 6069,
+        "startChar": 46,
+        "endLine": 6069,
+        "endChar": 72
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90efe569_059ec775",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 6076,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "Should exact ids for 2 clones be checked as well ?",
+      "range": {
+        "startLine": 6076,
+        "startChar": 1,
+        "endLine": 6076,
+        "endChar": 23
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "064abbad_6a8a7cea",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 6146,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "\u0027snapshot2\u0027 ? Since \u0027snapshot1\u0027 no longer exists",
+      "range": {
+        "startLine": 6146,
+        "startChar": 4,
+        "endLine": 6146,
+        "endChar": 12
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "812aa756_d12046ac",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 6171,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-12T13:33:01Z",
+      "side": 1,
+      "message": "\u0027snapshot3\u0027",
+      "range": {
+        "startLine": 6171,
+        "startChar": 4,
+        "endLine": 6171,
+        "endChar": 13
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
