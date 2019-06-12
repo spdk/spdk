@@ -266,7 +266,6 @@ ftl_wptr_close_band(struct ftl_wptr *wptr)
 	struct ftl_band *band = wptr->band;
 
 	ftl_band_set_state(band, FTL_BAND_STATE_CLOSING);
-	band->tail_md_ppa = wptr->ppa;
 
 	return ftl_band_write_tail_md(band, ftl_md_write_cb);
 }
