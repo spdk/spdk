@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2f80143a_f5b1d51f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-12T09:29:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "734fc598_5d5f1867",
+      "range": {
+        "startLine": 11,
+        "startChar": 36,
+        "endLine": 11,
+        "endChar": 46
+      },
+      "revId": "17d693fa9aa458ae0b7422c5a05451d818c8f337",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64d9fa10_bfda06e2",
         "filename": "test/ftl/dirty_shutdown.sh",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "f4c55ade_3dad0f3d",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-12T09:29:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64d9fa10_bfda06e2",
+      "range": {
+        "startLine": 78,
+        "startChar": 65,
+        "endLine": 78,
+        "endChar": 95
+      },
+      "revId": "17d693fa9aa458ae0b7422c5a05451d818c8f337",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15880254_8351bf5e",
         "filename": "test/ftl/restore.sh",
         "patchSetId": 1
@@ -68,6 +116,30 @@
       "revId": "17d693fa9aa458ae0b7422c5a05451d818c8f337",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69056698_a954fe78",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-12T09:29:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "15880254_8351bf5e",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 4
+      },
+      "revId": "17d693fa9aa458ae0b7422c5a05451d818c8f337",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
