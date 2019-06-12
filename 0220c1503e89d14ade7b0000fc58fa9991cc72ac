@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eadfdb4a_39652125",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1420,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-12T06:41:08Z",
+      "side": 1,
+      "message": "Just free the opal_key and return here? same as your later patch.",
+      "revId": "0220c1503e89d14ade7b0000fc58fa9991cc72ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
