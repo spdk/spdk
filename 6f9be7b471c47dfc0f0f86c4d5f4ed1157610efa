@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "035410c3_3c361af2",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-12T15:35:16Z",
+      "side": 1,
+      "message": "is this any different from echo?",
+      "range": {
+        "startLine": 154,
+        "startChar": 1,
+        "endLine": 154,
+        "endChar": 14
+      },
+      "revId": "6f9be7b471c47dfc0f0f86c4d5f4ed1157610efa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e29b1562_b238a729",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-12T15:35:16Z",
+      "side": 1,
+      "message": "This if statement looks confusing.\n\nCan we rename \"mount\" variable to \"mountpoints\"?\n\nif ! $mountpoints; then\n   linux_bind...\nelse\n   ...",
+      "revId": "6f9be7b471c47dfc0f0f86c4d5f4ed1157610efa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
