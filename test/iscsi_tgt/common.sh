@@ -105,6 +105,50 @@ function gdb_attach() {
 		-p $1
 }
 
+echo "--------------"
+echo "1. Normal exit"
+sleep 3 &
+pid=$!
+gdb_attach $pid > gdb-test-normal.log &
+sleep 3
+LOG=$( cat gdb-test-normal.log )
+if [[ "$LOG" =~ "exited normally" ]]; then
+	echo "PASS"
+else
+	echo "FAILED"
+	exit 1
+fi
+
+echo "----------"
+echo "2. SIGTERM"
+sleep 60 &
+pid=$!
+gdb_attach $pid > gdb-test-sigterm.log &
+sleep 1
+kill $pid
+LOG=$( cat gdb-test-sigterm.log )
+if [[ "$LOG" =~ "SIGTERM" ]]; then
+	echo "PASS"
+else
+	echo "FAILED"
+	exit 1
+fi
+
+echo "----------"
+echo "3. SIGSEGV"
+sleep 60 &
+pid=$!
+gdb_attach $pid > gdb-test-sigsegv.log &
+sleep 1
+kill -11 $pid
+LOG=$( cat gdb-test-sigsegv.log )
+if [[ "$LOG" =~ "SIGSEGV" ]]; then
+	echo "PASS"
+else
+	echo "FAILED"
+	exit 1
+fi
+
 function start_vpp() {
 	# We need to make sure that posix side doesn't send jumbo packets while
 	# for VPP side maximal size of MTU for TCP is 1460 and tests doesn't work
