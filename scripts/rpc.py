@@ -1814,18 +1814,31 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         args.func(args)
         check_called_name(args.called_rpc_name)
 
-    def execute_script(parser, client, fd):
+    def execute_script(parser, dry_run, client, fd):
+        global print_dict
+        global print_string
+        global print_array
+        global_print_dict = print_dict
+        global_print_string = print_string
+        global_print_array = print_array
         executed_rpc = ""
         for rpc_call in map(str.rstrip, fd):
             if not rpc_call.strip():
                 continue
             executed_rpc = "\n".join([executed_rpc, rpc_call])
             args = parser.parse_args(shlex.split(rpc_call))
-            if args.dry_run:
+            if args.dry_run or dry_run:
                 args.client = mock_client()
-                call_rpc_func(args)
-                continue
-            args.client = client
+                print_dict = mock_print
+                print_string = mock_print
+                print_array = mock_print
+            else:
+                print_dict = global_print_dict
+                print_string = global_print_string
+                print_array = global_print_array
+                if not client:
+                    client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+                args.client = client
             try:
                 call_rpc_func(args)
             except JSONRPCException as ex:
@@ -1835,18 +1848,20 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 exit(1)
 
     args = parser.parse_args()
-    if args.dry_run:
-        args.client = mock_client()
-        print_dict = mock_print
-        print_string = mock_print
-        print_array = mock_print
-    else:
-        args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
+        if args.dry_run:
+            args.client = mock_client()
+            print_dict = mock_print
+            print_string = mock_print
+            print_array = mock_print
+        else:
+            args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
         call_rpc_func(args)
     elif sys.stdin.isatty():
         # No arguments and no data piped through stdin
         parser.print_help()
         exit(1)
     else:
-        execute_script(parser, args.client, sys.stdin)
+        if not hasattr(args, 'client'):
+            args.client = None
+        execute_script(parser, args.dry_run, args.client, sys.stdin)
