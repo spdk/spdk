@@ -55,7 +55,7 @@ nvme disconnect -n nqn.2016-06.io.spdk:cnode1
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
 # do frequent add delete of namespaces with different nsid.
-for i in `seq 1 $times`
+for i in $(seq 1 $times)
 do
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
@@ -75,7 +75,7 @@ done
 nvmfcleanup
 
 # do frequent add delete.
-for i in `seq 1 $times`
+for i in $(seq 1 $times)
 do
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT

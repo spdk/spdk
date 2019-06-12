@@ -21,7 +21,7 @@ fi
 
 timing_enter nvme_cli
 
-if [ `uname` = Linux ]; then
+if [ $(uname) = Linux ]; then
 	start_stub "-s 2048 -i 0 -m 0xF"
 	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 fi
@@ -49,7 +49,7 @@ sed -i 's/shm_id=.*/shm_id=0/g' spdk.conf
 ./nvme get-feature $bdf -n 1 -f 1 -s 1 -l 100
 ./nvme get-log $bdf -n 1 -i 1 -l 100
 ./nvme reset $bdf
-if [ `uname` = Linux ]; then
+if [ $(uname) = Linux ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi

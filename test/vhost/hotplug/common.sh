@@ -158,7 +158,7 @@ function check_fio_retcode() {
 function wait_for_finish() {
     local wait_for_pid=$1
     local sequence=${2:-30}
-    for i in `seq 1 $sequence`; do
+    for i in $(seq 1 $sequence); do
         if kill -0 $wait_for_pid; then
              sleep 0.5
              continue

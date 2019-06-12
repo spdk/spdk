@@ -56,7 +56,7 @@ echo "[Nvme]" > $testdir/bdevperf.conf
 timing_enter create_subsystems
 # Create subsystems
 rm -rf $testdir/rpcs.txt
-for i in `seq 1 $num_subsystems`
+for i in $(seq 1 $num_subsystems)
 do
 	echo construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i >> $testdir/rpcs.txt
 	echo nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i >> $testdir/rpcs.txt

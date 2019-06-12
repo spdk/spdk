@@ -12,7 +12,7 @@ have_pci_nics=0
 
 function load_ib_rdma_modules()
 {
-	if [ `uname` != Linux ]; then
+	if [ $(uname) != Linux ]; then
 		return 0
 	fi
 
@@ -53,7 +53,7 @@ function detect_nics_and_probe_drivers()
 	NIC_VENDOR="$1"
 	NIC_CLASS="$2"
 
-	nvmf_nic_bdfs=`lspci | grep Ethernet | grep "$NIC_VENDOR" | grep "$NIC_CLASS" | awk -F ' ' '{print "0000:"$1}'`
+	nvmf_nic_bdfs=$(lspci | grep Ethernet | grep "$NIC_VENDOR" | grep "$NIC_CLASS" | awk -F ' ' '{print "0000:"$1}')
 
 	if [ -z "$nvmf_nic_bdfs" ]; then
 		return 0
@@ -123,8 +123,8 @@ function get_available_rdma_ips()
 
 function get_rdma_if_list()
 {
-	for nic_type in `ls /sys/class/infiniband`; do
-		for nic_name in `ls /sys/class/infiniband/${nic_type}/device/net`; do
+	for nic_type in $(ls /sys/class/infiniband); do
+		for nic_name in $(ls /sys/class/infiniband/${nic_type}/device/net); do
 			echo "$nic_name"
 		done
 	done

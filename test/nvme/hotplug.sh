@@ -139,7 +139,7 @@ timing_exit wait_for_example
 
 trap - SIGINT SIGTERM EXIT
 
-qemupid=`cat "$qemu_pidfile" | awk '{printf $0}'`
+qemupid=$(cat "$qemu_pidfile" | awk '{printf $0}')
 kill -9 $qemupid
 rm "$qemu_pidfile"
 rm "$test_img"

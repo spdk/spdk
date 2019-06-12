@@ -28,7 +28,7 @@ function get_nvme_name_from_bdf {
 
 timing_enter nvme
 
-if [ `uname` = Linux ]; then
+if [ $(uname) = Linux ]; then
 	# check that our setup.sh script does not bind NVMe devices to uio/vfio if they
 	# have an active mountpoint
 	$rootdir/scripts/setup.sh reset
@@ -87,7 +87,7 @@ if [ `uname` = Linux ]; then
 	fi
 fi
 
-if [ `uname` = Linux ]; then
+if [ $(uname) = Linux ]; then
 	start_stub "-s 4096 -i 0 -m 0xF"
 	trap "kill_stub -9; exit 1" SIGINT SIGTERM EXIT
 fi
@@ -144,7 +144,7 @@ timing_enter arbitration
 $rootdir/examples/nvme/arbitration/arbitration -t 3 -i 0
 timing_exit arbitration
 
-if [ `uname` = Linux ]; then
+if [ $(uname) = Linux ]; then
 	timing_enter multi_secondary
 	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x1 &
 	pid0=$!
@@ -157,7 +157,7 @@ if [ `uname` = Linux ]; then
 	timing_exit multi_secondary
 fi
 
-if [ `uname` = Linux ]; then
+if [ $(uname) = Linux ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi

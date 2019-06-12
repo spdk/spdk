@@ -175,11 +175,11 @@ if [[ $vm_count -le $max_disks ]]; then
 	done
 else
 	#Calculate least minimum number of splits on each disks
-	for i in `seq 0 $((max_disks - 1))`; do
+	for i in $(seq 0 $((max_disks - 1))); do
 		splits+=( $((vm_count / max_disks)) )
 	done
 	# Split up the remainder
-	for i in `seq 0 $((vm_count % max_disks - 1))`; do
+	for i in $(seq 0 $((vm_count % max_disks - 1))); do
 		(( splits[i]++ ))
 	done
 fi
