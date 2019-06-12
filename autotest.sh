@@ -249,6 +249,19 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 fi
 
+if [ $SPDK_TEST_VAGRANT_AUTO -eq 1 ]; then
+	timing_enter vagrant_auto
+	#Test VM about Fedora28
+	run_test suit ./scripts/vagrant/vagrant_auto.sh -e
+	#Test VM about ubuntu18
+	export VM_OS=ubuntu18
+	run_test suit ./scripts/vagrant/vagrant_auto.sh -e
+	#Reserve this for vgrant vhost completions
+	#run_test suit ./scripts/vagrant/vagrant_auto.sh -v
+	report_test_completion "vagrant_auto"
+	timing_exit vagrant_auto
+fi
+
 timing_enter cleanup
 autotest_cleanup
 timing_exit cleanup
