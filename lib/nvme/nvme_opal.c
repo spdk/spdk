@@ -612,11 +612,10 @@ opal_set_comid(struct spdk_opal_dev *dev, uint16_t comid)
 	hdr->com_packet.extended_comid[1] = 0;
 }
 
-static int
-opal_create_key(struct spdk_opal_key **opal_key, const char *passwd,
-		enum spdk_opal_locking_range locking_range)
+static inline int
+opal_init_key(struct spdk_opal_key *opal_key, const char *passwd,
+	      enum spdk_opal_locking_range locking_range)
 {
-	struct spdk_opal_key *_opal_key;
 	int len;
 
 	if (passwd == NULL || passwd[0] == '\0') {
@@ -631,17 +630,11 @@ opal_create_key(struct spdk_opal_key **opal_key, const char *passwd,
 		return -EINVAL;
 	}
 
-	_opal_key = calloc(1, sizeof(struct spdk_opal_key));
-	if (!_opal_key) {
-		SPDK_ERRLOG("Memory allocation failed for spdk_opal_key\n");
-		return -ENOMEM;
-	}
+	memset(opal_key, 0, sizeof(struct spdk_opal_key));
+	opal_key->key_len = len;
+	memcpy(opal_key->key, passwd, opal_key->key_len);
+	opal_key->locking_range = locking_range;
 
-	_opal_key->key_len = len;
-	memcpy(_opal_key->key, passwd, _opal_key->key_len);
-	_opal_key->locking_range = locking_range;
-
-	*opal_key = _opal_key;
 	return 0;
 }
 
@@ -1125,18 +1118,17 @@ opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, void *data)
 {
 	uint8_t cpin_uid[OPAL_UID_LENGTH];
 	const char *new_passwd = data;
-	struct spdk_opal_key *opal_key = NULL;
+	struct spdk_opal_key opal_key;
 	int ret;
 
-	ret = opal_create_key(&opal_key, new_passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&opal_key, new_passwd, OPAL_LOCKING_RANGE_GLOBAL);
 	if (ret != 0) {
 		return ret;
 	}
-	dev->dev_key = opal_key;
 
 	memcpy(cpin_uid, spdk_opal_uid[UID_C_PIN_SID], OPAL_UID_LENGTH);
 
-	if (opal_generic_pw_cmd(opal_key->key, opal_key->key_len, cpin_uid, dev)) {
+	if (opal_generic_pw_cmd(opal_key.key, opal_key.key_len, cpin_uid, dev)) {
 		SPDK_ERRLOG("Error building Set SID cpin\n");
 		return -ERANGE;
 	}
@@ -1282,22 +1274,21 @@ int
 spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 {
 	int ret;
-	struct spdk_opal_key *opal_key = NULL;
+	struct spdk_opal_key opal_key;
 
 	if (!dev || dev->supported == false) {
 		return -ENODEV;
 	}
 
-	ret = opal_create_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
+	ret = opal_init_key(&opal_key, passwd, OPAL_LOCKING_RANGE_GLOBAL);
 	if (ret != 0) {
 		return ret;
 	}
-	dev->dev_key = opal_key;
 
 	pthread_mutex_lock(&dev->mutex_lock);
 	opal_setup_dev(dev);
 
-	ret = opal_start_adminsp_session(dev, opal_key);
+	ret = opal_start_adminsp_session(dev, &opal_key);
 	if (ret) {
 		opal_end_session(dev);
 		SPDK_ERRLOG("Error on starting admin SP session with error %d: %s\n", ret,
@@ -1317,8 +1308,6 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 
 end:
 	pthread_mutex_unlock(&dev->mutex_lock);
-	free(opal_key);
-	dev->dev_key = NULL;
 	return ret;
 }
 

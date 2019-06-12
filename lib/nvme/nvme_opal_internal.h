@@ -301,8 +301,6 @@ struct spdk_opal_dev {
 	size_t prev_d_len;
 	void *prev_data;
 
-	struct spdk_opal_key *dev_key;
-
 	struct spdk_opal_info *opal_info;
 
 	uint64_t timeout;   /* seconds */
