@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f327a1a_823541c1",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1448,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-12T04:40:56Z",
+      "side": 1,
+      "message": "move end: label to line 1440, then you don\u0027t need to call opal_end_session() at line 1425,1419,1427.",
+      "range": {
+        "startLine": 1448,
+        "startChar": 0,
+        "endLine": 1448,
+        "endChar": 4
+      },
+      "revId": "5e6b1326e1b3b38049b0b6e31e533d406237f7d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
