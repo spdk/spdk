@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dc9d0e77_36b9389f",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-06-12T06:20:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3df95653_4ff8b018",
+      "revId": "efd554f04863ee240520bca062e29779d05ac0a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4aeeb5fd_55611933",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 6
@@ -30,6 +48,30 @@
       "writtenOn": "2019-06-12T04:54:37Z",
       "side": 1,
       "message": "move to line 1762, and remove other opal_end_session() call.",
+      "range": {
+        "startLine": 1769,
+        "startChar": 0,
+        "endLine": 1769,
+        "endChar": 4
+      },
+      "revId": "efd554f04863ee240520bca062e29779d05ac0a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d69e70c_03628fe8",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1769,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-06-12T06:20:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4aeeb5fd_55611933",
       "range": {
         "startLine": 1769,
         "startChar": 0,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "60a88d76_7c9960c6",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1789,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-06-12T06:20:19Z",
+      "side": 1,
+      "message": "I think you are right. dev-\u003edev_key looks redundant. I will remove this in a seperate patch. Thank you for your review.",
+      "parentUuid": "fc6bf41b_39325599",
+      "revId": "efd554f04863ee240520bca062e29779d05ac0a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbd42bf2_6a9c1f43",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 6
@@ -70,6 +130,24 @@
       "writtenOn": "2019-06-12T04:54:37Z",
       "side": 1,
       "message": "same here.",
+      "revId": "efd554f04863ee240520bca062e29779d05ac0a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e44007f4_76fdf838",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1830,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-06-12T06:20:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fbd42bf2_6a9c1f43",
       "revId": "efd554f04863ee240520bca062e29779d05ac0a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
