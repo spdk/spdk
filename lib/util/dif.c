@@ -1385,17 +1385,12 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	if ((data_len % data_block_size) != 0) {
-		SPDK_ERRLOG("Data length must be a multiple of data block size\n");
+	if (((data_offset + data_len) % data_block_size) != 0) {
+		SPDK_ERRLOG("Data offset + length must be a multiple of data block size\n");
 		return -EINVAL;
 	}
 
-	if (data_offset >= data_len) {
-		SPDK_ERRLOG("Data offset must be smaller than data length\n");
-		return -ERANGE;
-	}
-
-	num_blocks = data_len / data_block_size;
+	num_blocks = (data_offset + data_len) / data_block_size;
 
 	_dif_sgl_init(&dif_sgl, iovs, iovcnt);
 	_dif_sgl_init(&buf_sgl, buf_iovs, buf_iovcnt);
