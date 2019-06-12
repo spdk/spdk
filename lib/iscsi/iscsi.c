@@ -386,7 +386,8 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 		buf_iov.iov_base = pdu->data_buf;
 		buf_iov.iov_len = pdu->data_buf_len;
 		rc = spdk_dif_set_md_interleave_iovs(iovs, 32, &buf_iov, 1,
-						     pdu->data_valid_bytes, segment_len, NULL,
+						     pdu->data_valid_bytes,
+						     segment_len - pdu->data_valid_bytes, NULL,
 						     &pdu->dif_ctx);
 		if (rc > 0) {
 			rc = spdk_iscsi_conn_readv_data(conn, iovs, rc);
@@ -637,8 +638,8 @@ _iscsi_sgl_append_with_md(struct _iscsi_sgl *s,
 		buf_iov.iov_base = buf;
 		buf_iov.iov_len = buf_len;
 		rc = spdk_dif_set_md_interleave_iovs(s->iov, s->iovcnt, &buf_iov, 1,
-						     s->iov_offset, data_len, &total_size,
-						     dif_ctx);
+						     s->iov_offset, data_len - s->iov_offset,
+						     &total_size, dif_ctx);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to setup iovs for DIF strip\n");
 			return false;
