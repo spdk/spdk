@@ -22,6 +22,30 @@
       "revId": "99a869dbb05febc6474b37553e95ebfcdc7d1343",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5eb9ee96_27fa4440",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1885,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-12T10:20:27Z",
+      "side": 1,
+      "message": "I follow the pattern used in core module - but I think your proposal is fine.",
+      "parentUuid": "4e007097_e4c8fbbe",
+      "range": {
+        "startLine": 1879,
+        "startChar": 0,
+        "endLine": 1885,
+        "endChar": 2
+      },
+      "revId": "99a869dbb05febc6474b37553e95ebfcdc7d1343",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
