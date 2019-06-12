@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b934f894_c4a156f5",
+        "filename": "test/app/fuzz/common/fuzz_common.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d21945dd_407c10c0",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1edd301c_e90ea5b1",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "8d702525_cb13925c",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1edd301c_e90ea5b1",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38f73f8b_6f4d9a3d",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -47,6 +83,24 @@
       "writtenOn": "2019-06-11T17:49:59Z",
       "side": 1,
       "message": "How is this different than the controller?",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e8ff221_b3070aef",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "I keep all of the trids in a list before I actually initialize the controllers. It is used when I parse the configuration file that the user passes in and then converted to a controller when the application actually starts and I call begin_fuzz.",
+      "parentUuid": "38f73f8b_6f4d9a3d",
       "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "5dbf6b87_7401f78c",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8f4b4e9e_790ff6e3",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3aa16e2_35ec9ae0",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -84,6 +156,24 @@
       "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dbe469d1_f8af27fd",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d3aa16e2_35ec9ae0",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "ab7c716e_38b9ca04",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Currently I only have one per namespace. Each namespace is only accessed from a single thread and we currently submit I/O and admin commands on that same thread.",
+      "parentUuid": "8c0a8491_a8614dfe",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c413e8df_2485d24c",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -115,6 +223,24 @@
       "writtenOn": "2019-06-11T17:49:59Z",
       "side": 1,
       "message": "If this \"ns_ctx\" is more like a job, where you can have one per thread, it may make more sense to just have a single qpair here. You can spawn a thread to do admin and a thread to do I/O commands entirely separately, which I think simplifies quite a few checks throughout the code.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8297020_0f458b1c",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "See above. That would be an interesting rewrite though. I don\u0027t think there\u0027s anything that would prevent us from changing the logic of the namespace.",
+      "parentUuid": "c413e8df_2485d24c",
       "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "b84e7f3f_42d2b320",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d56975b9_f97ca961",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12cd644d_9cf0dc04",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -152,6 +296,24 @@
       "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "480b7727_40f4e7ec",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "12cd644d_9cf0dc04",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -172,6 +334,24 @@
     },
     {
       "key": {
+        "uuid": "af67db28_f34efe83",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8678d96c_b244576b",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dfe72203_11407792",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -186,6 +366,24 @@
       "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6a8e046_1f762b9c",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dfe72203_11407792",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -206,6 +404,24 @@
     },
     {
       "key": {
+        "uuid": "39a374d7_40356e87",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "635b8ad4_a6f12ac7",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb5c6139_9325d60a",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -217,6 +433,24 @@
       "writtenOn": "2019-06-11T17:49:59Z",
       "side": 1,
       "message": "In the case where we\u0027re running from an array of pre-made commands, can\u0027t you just set qp-\u003efree_ctx_objs up so that it only has enough entries for what\u0027s in the array? Then this check gets simpler.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "244b6dcd_da9f7132",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "free_ctx_objs only ever has at most a full queue depth worth of objects (128 in the I/O case). The check to make sure that free_ctx_objs is not empty is more to ensure that I have the resources to accommodate the next command and it\u0027s applicable in both scenarios.\nFor example, if I had a json file that contained 4096 entries, and I allocated enough entries in free_ctx_objs to accomodate all of those, then I will try to submit all of them in a single iteration. That will lead to 1 of 2 things:\n1. I get back pressure from the nvme driver because it doesn\u0027t have enough entries in the queue to handle that.\n2. I submit way more entries in one loop through of this function. That increases the number of outstanding I/O when one of them fails or hangs the target.",
+      "parentUuid": "cb5c6139_9325d60a",
       "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -240,6 +474,24 @@
     },
     {
       "key": {
+        "uuid": "04eb8c38_645ecdf7",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dde2d7ec_5f701ac6",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a6b361f_db3ba528",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -254,6 +506,24 @@
       "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7bf441a1_322d9850",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a6b361f_db3ba528",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -274,6 +544,24 @@
     },
     {
       "key": {
+        "uuid": "136bdfd4_f96ec655",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f8d54617_2ef29045",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20891a86_fa2099f9",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -291,6 +579,24 @@
     },
     {
       "key": {
+        "uuid": "5cc9d8a0_d14a1cd9",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "20891a86_fa2099f9",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37e108b3_7bec1cb1",
         "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
         "patchSetId": 39
@@ -302,6 +608,24 @@
       "writtenOn": "2019-06-11T17:49:59Z",
       "side": 1,
       "message": "The -j option doesn\u0027t mix well with the -t option. I think you should set up the infrastructure to have two distinct modes - run for a given amount of time, or run a given number of commands. Using the -j option implies you\u0027re running for a given number of commands.",
+      "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7b69b06_9c8f251d",
+        "filename": "test/app/fuzz/nvme_fuzz/nvme_fuzz.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-12T00:18:17Z",
+      "side": 1,
+      "message": "Yeah, -j supersedes -t. I can document that here in the options. Or is there a different way you think I could convey that to users?",
+      "parentUuid": "37e108b3_7bec1cb1",
       "revId": "fbc517502c54b0bf72d0fc81cefab5caebfdce3f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
