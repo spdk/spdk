@@ -1398,8 +1398,7 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 				uint32_t *_mapped_len,
 				const struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, head_unalign, tail_unalign;
-	uint32_t num_blocks, offset_blocks, len;
+	uint32_t data_block_size, buf_len, buf_offset, len;
 	struct _dif_sgl dif_sgl;
 	struct _dif_sgl buf_sgl;
 
@@ -1409,21 +1408,21 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	num_blocks = (data_offset + data_len) / data_block_size;
-	tail_unalign = (data_offset + data_len) % data_block_size;
+	buf_len = ((data_offset + data_len) / data_block_size) * ctx->block_size +
+		  ((data_offset + data_len) % data_block_size);
 
 	_dif_sgl_init(&dif_sgl, iovs, iovcnt);
 	_dif_sgl_init(&buf_sgl, buf_iovs, buf_iovcnt);
 
-	if (!_dif_sgl_is_valid(&buf_sgl, num_blocks * ctx->block_size + tail_unalign)) {
+	if (!_dif_sgl_is_valid(&buf_sgl, buf_len)) {
 		SPDK_ERRLOG("Buffer overflow will occur.\n");
 		return -ERANGE;
 	}
 
-	offset_blocks = data_offset / data_block_size;
-	head_unalign = data_offset % data_block_size;
+	buf_offset = (data_offset / data_block_size) * ctx->block_size +
+		     (data_offset % data_block_size);
 
-	_dif_sgl_advance(&buf_sgl, offset_blocks * ctx->block_size + head_unalign);
+	_dif_sgl_advance(&buf_sgl, buf_offset);
 
 	while (data_len != 0) {
 		len = spdk_min(data_len, _to_next_boundary(data_offset, data_block_size));
