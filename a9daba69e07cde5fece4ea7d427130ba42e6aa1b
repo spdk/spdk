@@ -16,6 +16,24 @@
       "revId": "a9daba69e07cde5fece4ea7d427130ba42e6aa1b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec8db252_36f7ee40",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-12T13:43:29Z",
+      "side": 1,
+      "message": "Or wrote: as I wrote in the change-log, the only kernel version (5.0.x) that doesn\u0027t supports this is EOL-ed by now (see kernel.org main page). I don\u0027t see the point to export config option now for supporting old kernel. We can keep it in the code for some time under ifdef and then remove the ifdef as well. The kernel target has none of them (config option nor ifdef), we shouldn\u0027t be holier than the pope here IMHO.",
+      "parentUuid": "f5841d75_00d23e5d",
+      "revId": "a9daba69e07cde5fece4ea7d427130ba42e6aa1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
