@@ -91,7 +91,7 @@ if [ $(uname) = Linux ]; then
 fi
 
 timing_enter reset
-$testdir/reset/reset -q 64 -w write -s 4096 -t 2
+$testdir/reset/reset -q 64 -w write -s 4096 -t 5
 timing_exit reset
 
 timing_enter identify
