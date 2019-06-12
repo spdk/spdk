@@ -298,7 +298,8 @@ _initialize_vol_pm_pointers(struct spdk_reduce_vol *vol)
 	vol->pm_logical_map = (uint64_t *)(vol->pm_super + 1);
 
 	/* Chunks maps follow the logical map. */
-	vol->pm_chunk_maps = vol->pm_logical_map + (vol->params.vol_size / vol->params.chunk_size);
+	vol->pm_chunk_maps = vol->pm_logical_map +
+			     _get_pm_logical_map_size(vol->params.vol_size, vol->params.chunk_size);
 }
 
 /* We need 2 iovs during load - one for the superblock, another for the path */
