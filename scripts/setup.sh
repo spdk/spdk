@@ -135,6 +135,8 @@ function linux_hugetlbfs_mounts() {
 }
 
 function get_nvme_name_from_bdf {
+	blkname=()
+
 	set +e
 	nvme_devs=`lsblk -d --output NAME | grep "^nvme"`
 	set -e
@@ -145,10 +147,11 @@ function get_nvme_name_from_bdf {
 		fi
 		link_bdf=$(basename "$link_name")
 		if [ "$link_bdf" = "$1" ]; then
-			eval "$2=$dev"
-			return
+			blkname+=($dev)
 		fi
 	done
+
+	printf '%s\n' "${blkname[@]}"
 }
 
 function get_virtio_names_from_bdf {
@@ -201,20 +204,27 @@ function configure_linux_pci {
 	# NVMe
 	for bdf in $(iter_all_pci_class_code 01 08 02); do
 		blkname=''
-		get_nvme_name_from_bdf "$bdf" blkname
+		blknames=()
 		if ! pci_can_use $bdf; then
 			pci_dev_echo "$bdf" "Skipping un-whitelisted NVMe controller $blkname"
 			continue
 		fi
-		if [ "$blkname" != "" ]; then
+
+		mount=false
+		for blkname in $(get_nvme_name_from_bdf $bdf); do
 			mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
-		else
-			mountpoints="0"
-		fi
-		if [ "$mountpoints" = "0" ]; then
+			if [ "$mountpoints" != "0" ]; then
+				mount=true
+				blknames+=($blkname)
+			fi
+		done
+
+		if [ "$mount" = false ]; then
 			linux_bind_driver "$bdf" "$driver_name"
 		else
-			pci_dev_echo "$bdf" "Active mountpoints on /dev/$blkname, so not binding PCI dev"
+			for name in ${blknames[@]}; do
+				pci_dev_echo "$bdf" "Active mountpoints on /dev/$name, so not binding PCI dev"
+			done
 		fi
 	done
 
