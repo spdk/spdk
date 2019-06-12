@@ -41,6 +41,18 @@ previously attached controller.
 
 Nvme Opal library spdk_opal_cmd deprecated. Adding seperate command APIs.
 
+Added spdk_nvme_ctrlr_io_cmd_raw_no_payload_build() allowing a caller to pass
+a completely formed command to an NVMe submission queue (buffer addresses and all).
+This is supported on the PCIe transport only.
+
+Added spdk_nvme_get_ctrlr_registers() to return a pointer to the virtual address
+of the NVMe controller registers.  This is supported on the PCIe transport only.
+
+Added additional options to the spdk_nvme_ctrlr_alloc_qpair() option parameter
+structure to allow caller to override the virtual and optionally physical address
+of the submission and completion queue pair to be created.  This is supported on
+the PCIe transport only.
+
 ### env
 
 The parameter `free_space` has been added to spdk_ring_enqueue() to wait when
