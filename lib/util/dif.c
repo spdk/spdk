@@ -259,6 +259,7 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	ctx->app_tag = app_tag;
 	ctx->data_offset = data_offset;
 	ctx->ref_tag_offset = data_offset / data_block_size;
+	ctx->last_guard = guard_seed;
 	ctx->guard_seed = guard_seed;
 
 	return 0;
@@ -1511,33 +1512,67 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 static int
 dif_generate_stream(uint8_t *buf, uint32_t buf_len,
 		    uint32_t data_offset, uint32_t data_len,
-		    const struct spdk_dif_ctx *ctx)
+		    struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, offset_blocks, num_blocks, i;
+	uint32_t data_block_size, head_unalign, tail_unalign;
+	uint32_t num_blocks, offset_blocks, offset_in_block, len;
 	uint16_t guard = 0;
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	offset_blocks = data_offset / data_block_size;
-	data_len += data_offset % data_block_size;
+	num_blocks = (data_offset + data_len) / data_block_size;
+	tail_unalign = (data_offset + data_len) % data_block_size;
 
-	data_offset = offset_blocks * ctx->block_size;
-	num_blocks = data_len / data_block_size;
-
-	if (data_offset + num_blocks * ctx->block_size > buf_len) {
+	if (buf_len < num_blocks * ctx->block_size + tail_unalign) {
+		SPDK_ERRLOG("Buffer overflow will occur. Buffer size is %" PRIu32 " but"
+			    "necessary size is %" PRIu32 "\n",
+			    buf_len, num_blocks * ctx->block_size + tail_unalign);
 		return -ERANGE;
 	}
 
-	buf += data_offset;
+	offset_blocks = data_offset / data_block_size;
+	head_unalign = data_offset % data_block_size;
 
-	for (i = 0; i < num_blocks; i++) {
-		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-			guard = spdk_crc16_t10dif(ctx->guard_seed, buf, ctx->guard_interval);
+	buf += offset_blocks * ctx->block_size + head_unalign;
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = ctx->last_guard;
+	}
+
+	while (data_len != 0) {
+		offset_blocks = data_offset / data_block_size;
+		offset_in_block = data_offset % data_block_size;
+
+		len = spdk_min(data_len, _to_next_boundary(data_offset, data_block_size));
+
+		if ((offset_in_block + len) == data_block_size) {
+			if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+				guard = spdk_crc16_t10dif(guard, buf,
+							  ctx->guard_interval - offset_in_block);
+			}
+
+			_dif_generate(buf + ctx->guard_interval - offset_in_block, guard,
+				      offset_blocks, ctx);
+
+			if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+				guard = ctx->guard_seed;
+			}
+		} else {
+			/* If the current data block is partial, it should be the last. */
+			assert(data_len == len);
+
+			if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+				guard = spdk_crc16_t10dif(guard, buf, len);
+			}
 		}
 
-		_dif_generate(buf + ctx->guard_interval, guard, offset_blocks + i, ctx);
+		buf += len + ctx->md_size;
+		data_offset += len;
+		data_len -= len;
+	}
 
-		buf += ctx->block_size;
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		ctx->last_guard = guard;
 	}
 
 	return 0;
@@ -1582,7 +1617,7 @@ dif_generate_stream_split(struct iovec *iovs, int iovcnt,
 int
 spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			 uint32_t data_offset, uint32_t data_len,
-			 const struct spdk_dif_ctx *ctx)
+			 struct spdk_dif_ctx *ctx)
 {
 	if (iovs == NULL || iovcnt == 0) {
 		return -EINVAL;
