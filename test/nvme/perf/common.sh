@@ -44,7 +44,7 @@ function get_numa_node(){
 	local disks=$2
 	if [ "$plugin" = "nvme" ]; then
 		for bdf in $disks; do
-			local driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
+			local driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			# Use this check to ommit blacklisted devices ( not binded to driver with setup.sh script )
 			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
 				echo $(cat /sys/bus/pci/devices/$bdf/numa_node)
@@ -67,7 +67,7 @@ function get_disks(){
 	local plugin=$1
 	if [ "$plugin" = "nvme" ]; then
 		for bdf in $(iter_pci_class_code 01 08 02); do
-			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
+			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			if [ "$driver" = "vfio-pci" ] || [ "$driver" = "uio_pci_generic" ]; then
 				echo "$bdf"
 			fi

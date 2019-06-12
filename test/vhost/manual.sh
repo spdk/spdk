@@ -49,7 +49,7 @@ if [[ ! -r "${VM_IMAGE}" ]]; then
 	exit 1
 fi
 
-DISKS_NUMBER=`lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}'| wc -l`
+DISKS_NUMBER=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}'| wc -l)
 
 WORKDIR=$(readlink -f $(dirname $0))
 

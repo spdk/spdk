@@ -28,7 +28,7 @@ fi
 
 $rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
 
-for i in `seq 1 $NVMF_SUBSYS`
+for i in $(seq 1 $NVMF_SUBSYS)
 do
 	$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i
@@ -36,7 +36,7 @@ do
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 done
 
-for i in `seq 1 $NVMF_SUBSYS`; do
+for i in $(seq 1 $NVMF_SUBSYS); do
 	k=$[$i-1]
 	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
@@ -47,7 +47,7 @@ $rootdir/scripts/fio.py -p nvmf -i 262144 -d 64 -t read -r 10
 $rootdir/scripts/fio.py -p nvmf -i 262144 -d 64 -t randwrite -r 10
 
 sync
-for i in `seq 1 $NVMF_SUBSYS`; do
+for i in $(seq 1 $NVMF_SUBSYS); do
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}" || true
 	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode${i}
 done

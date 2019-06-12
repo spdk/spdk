@@ -30,7 +30,7 @@ if ls $TESTDIR/results/testrun_* &> /dev/null; then
 fi
 
 if [ -z "$RESULTS_DIR" ]; then
-	RESULTS_DIR=$TESTDIR/results/testrun_`date +%Y%m%d_%H%M%S`
+	RESULTS_DIR=$TESTDIR/results/testrun_$(date +%Y%m%d_%H%M%S)
 	mkdir -p $RESULTS_DIR
 	rm -f $TESTDIR/results/last
 	ln -s $RESULTS_DIR $TESTDIR/results/last
@@ -157,7 +157,7 @@ run_step() {
 		echo -n Generating perf report for $1 test phase...
 		sudo perf report -f -n | sed '/#/d' | sed '/%/!d' | sort -r > $1.perf.txt
 		sudo rm perf.data
-		$TESTDIR/postprocess.py `pwd` $1 > $1_summary.txt
+		$TESTDIR/postprocess.py $(pwd) $1 > $1_summary.txt
 	echo done.
 	fi
 }

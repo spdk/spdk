@@ -140,7 +140,7 @@ if [ -d ${DEPENDENCY_DIR}/vtune_codes ]; then
 fi
 
 if [ -d /usr/include/iscsi ]; then
-	libiscsi_version=`grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}'`
+	libiscsi_version=$(grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}')
 	if [ $libiscsi_version -ge 20150621 ]; then
 		config_params+=' --with-iscsi-initiator'
 	fi
@@ -414,7 +414,7 @@ function waitfornbd() {
 	#  need to check the size of the output file instead.
 	for ((i=1; i<=20; i++)); do
 		dd if=/dev/$nbd_name of=/tmp/nbdtest bs=4096 count=1 iflag=direct
-		size=`stat -c %s /tmp/nbdtest`
+		size=$(stat -c %s /tmp/nbdtest)
 		rm -f /tmp/nbdtest
 		if [ "$size" != "0" ]; then
 			return 0
@@ -609,9 +609,9 @@ function part_dev_by_gpt () {
 			parted -s $nbd_path mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
 
 			# change the GUID to SPDK GUID value
-			SPDK_GPT_GUID=`grep SPDK_GPT_PART_TYPE_GUID $rootdir/lib/bdev/gpt/gpt.h \
+			SPDK_GPT_GUID=$(grep SPDK_GPT_PART_TYPE_GUID $rootdir/lib/bdev/gpt/gpt.h \
 				| awk -F "(" '{ print $2}' | sed 's/)//g' \
-				| awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g'`
+				| awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g')
 			sgdisk -t 1:$SPDK_GPT_GUID $nbd_path
 			sgdisk -t 2:$SPDK_GPT_GUID $nbd_path
 		elif [ "$operation" = reset ]; then
@@ -823,7 +823,7 @@ function autotest_cleanup()
 
 function freebsd_update_contigmem_mod()
 {
-	if [ `uname` = FreeBSD ]; then
+	if [ $(uname) = FreeBSD ]; then
 		kldunload contigmem.ko || true
 		if [ ! -z "$WITH_DPDK_DIR" ]; then
 			echo "Warning: SPDK only works on FreeBSD with patches that only exist in SPDK's dpdk submodule"

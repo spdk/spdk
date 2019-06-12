@@ -32,7 +32,7 @@ for incapsule in 0 4096; do
 
 	mkdir -p /mnt/device
 
-	devs=`lsblk -l -o NAME | grep nvme`
+	devs=$(lsblk -l -o NAME | grep nvme)
 
 	for dev in $devs; do
 		timing_enter parted

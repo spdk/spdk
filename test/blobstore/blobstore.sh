@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SYSTEM=`uname -s`
+SYSTEM=$(uname -s)
 if [ $SYSTEM = "FreeBSD" ] ; then
     echo "blobstore.sh cannot run on FreeBSD currently."
     exit 0
