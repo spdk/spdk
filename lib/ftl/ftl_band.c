@@ -138,7 +138,6 @@ ftl_band_write_failed(struct ftl_band *band)
 	struct spdk_ftl_dev *dev = band->dev;
 
 	band->high_prio = 1;
-	band->tail_md_ppa = ftl_to_ppa(FTL_PPA_INVALID);
 
 	if (!dev->df_band) {
 		dev->df_band = band;
@@ -1076,14 +1075,16 @@ static void
 ftl_erase_fail(struct ftl_io *io, int status)
 {
 	struct ftl_chunk *chunk;
+	struct ftl_band *band = io->band;
 	char buf[128];
 
 	SPDK_ERRLOG("Erase failed @ppa: %s, status: %d\n",
 		    ftl_ppa2str(io->ppa, buf, sizeof(buf)), status);
 
-	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
+	chunk = ftl_band_chunk_from_ppa(band, io->ppa);
 	chunk->state = FTL_CHUNK_STATE_BAD;
-	ftl_band_remove_chunk(io->band, chunk);
+	ftl_band_remove_chunk(band, chunk);
+	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
 }
 
 static void

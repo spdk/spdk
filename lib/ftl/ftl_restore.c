@@ -611,7 +611,6 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 	struct ftl_restore *restore = rband->parent;
 	struct ftl_band *band = rband->band;
 
-	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
 	band->lba_map.map = restore->lba_map;
 	band->lba_map.dma_buf = restore->md_buf;
 
