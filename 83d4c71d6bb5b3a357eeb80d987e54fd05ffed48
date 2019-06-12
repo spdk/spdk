@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1ba14eb3_306b73b2",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-12T10:50:34Z",
+      "side": 1,
+      "message": "I have plan to get rid of this allocation. I can add separate error code for this.",
+      "parentUuid": "bacc8f95_983e64f6",
+      "range": {
+        "startLine": 185,
+        "startChar": 3,
+        "endLine": 185,
+        "endChar": 13
+      },
+      "revId": "83d4c71d6bb5b3a357eeb80d987e54fd05ffed48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "03aecc5a_04666165",
         "filename": "lib/ftl/ftl_anm.h",
         "patchSetId": 39
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-12T09:10:44Z",
       "side": 1,
       "message": "Do we need this? Shouldn\u0027t ppa + num_lbks be enough?",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 27
+      },
+      "revId": "83d4c71d6bb5b3a357eeb80d987e54fd05ffed48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2e814e1_d0063e0b",
+        "filename": "lib/ftl/ftl_anm.h",
+        "patchSetId": 39
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-12T10:50:34Z",
+      "side": 1,
+      "message": "Yes, this is not needed anymore here.",
+      "parentUuid": "03aecc5a_04666165",
       "range": {
         "startLine": 60,
         "startChar": 0,
