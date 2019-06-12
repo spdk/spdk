@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01cf7ce0_ba2ad79a",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-12T08:17:40Z",
+      "side": 1,
+      "message": "Let\u0027s just use a variable instead:\nbdevsvc_pid\u003d$1",
+      "range": {
+        "startLine": 329,
+        "startChar": 1,
+        "endLine": 329,
+        "endChar": 20
+      },
+      "revId": "3322cda2b17a398167d63931c6c994fc2d95d14a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b081d5a4_f92c4c7c",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-12T08:17:40Z",
+      "side": 1,
+      "message": "Wouldn\u0027t return make more sense here?",
+      "range": {
+        "startLine": 331,
+        "startChar": 2,
+        "endLine": 331,
+        "endChar": 8
+      },
+      "revId": "3322cda2b17a398167d63931c6c994fc2d95d14a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b32d87c8_37c80dff",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-12T08:17:40Z",
+      "side": 1,
+      "message": "Let\u0027s do that just before the loop.",
+      "range": {
+        "startLine": 348,
+        "startChar": 0,
+        "endLine": 351,
+        "endChar": 0
+      },
+      "revId": "3322cda2b17a398167d63931c6c994fc2d95d14a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c75d64a_e0db3549",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-12T08:17:40Z",
+      "side": 1,
+      "message": "So if we don\u0027t have the ss utility and we\u0027re not on Linux we\u0027re returning successfully without checking if the socket was cleaned up by the system... I think this function should either fail if there\u0027s no reason to query if the socket is still lingering or have a way to check this on other systems. Do we need to remove it on line 353? Perhaps we could monitor this file?",
+      "range": {
+        "startLine": 374,
+        "startChar": 0,
+        "endLine": 380,
+        "endChar": 22
+      },
+      "revId": "3322cda2b17a398167d63931c6c994fc2d95d14a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
