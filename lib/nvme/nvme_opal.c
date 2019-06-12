@@ -1132,7 +1132,6 @@ opal_set_sid_cpin_pin(struct spdk_opal_dev *dev, void *data)
 	if (ret != 0) {
 		return ret;
 	}
-	dev->dev_key = opal_key;
 
 	memcpy(cpin_uid, spdk_opal_uid[UID_C_PIN_SID], OPAL_UID_LENGTH);
 
@@ -1292,7 +1291,6 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 	if (ret != 0) {
 		return ret;
 	}
-	dev->dev_key = opal_key;
 
 	pthread_mutex_lock(&dev->mutex_lock);
 	opal_setup_dev(dev);
@@ -1318,7 +1316,6 @@ spdk_opal_cmd_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
 end:
 	pthread_mutex_unlock(&dev->mutex_lock);
 	free(opal_key);
-	dev->dev_key = NULL;
 	return ret;
 }
 
