@@ -37,6 +37,7 @@ for incapsule in 0 4096; do
 	for dev in $devs; do
 		timing_enter parted
 		parted -s /dev/$dev mklabel msdos  mkpart primary '0%' '100%'
+		partprobe
 		timing_exit parted
 		sleep 1
 
