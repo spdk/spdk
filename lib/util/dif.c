@@ -316,18 +316,12 @@ dif_generate(struct _dif_sgl *sgl, uint32_t offset_blocks, uint32_t num_blocks,
 }
 
 static void
-_dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_blocks,
-		    const struct spdk_dif_ctx *ctx)
+_dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint16_t guard,
+		    uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
-	uint32_t offset_in_block, offset_in_dif, buf_len;
+	uint32_t offset_in_dif, buf_len;
 	void *buf;
-	uint16_t guard = 0;
 	struct spdk_dif dif = {};
-
-	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-		guard = ctx->guard_seed;
-	}
-	offset_in_block = 0;
 
 	while (offset_in_block < ctx->block_size) {
 		_dif_sgl_get_buf(sgl, &buf, &buf_len);
@@ -366,8 +360,14 @@ static void
 dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_blocks, uint32_t num_blocks,
 		   const struct spdk_dif_ctx *ctx)
 {
+	uint16_t guard = 0;
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = ctx->guard_seed;
+	}
+
 	while (offset_blocks < num_blocks) {
-		_dif_generate_split(sgl, offset_blocks, ctx);
+		_dif_generate_split(sgl, 0, guard, offset_blocks, ctx);
 		offset_blocks++;
 	}
 }
