@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5841d75_00d23e5d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-12T13:40:40Z",
+      "side": 1,
+      "message": "Ziye wrote: Our spdk initiator already.support this by checking the flags of the receiving pdu.That time,I mark this to make the kernel compatible. If we  set the macro to 1, how about supporting the old kernel?",
+      "revId": "a9daba69e07cde5fece4ea7d427130ba42e6aa1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
