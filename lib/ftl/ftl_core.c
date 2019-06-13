@@ -202,25 +202,41 @@ ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	struct ftl_band *band = io->band;
 	struct ftl_wptr *wptr;
+	size_t id;
 
-	wptr = ftl_wptr_from_band(io->band);
+	wptr = ftl_wptr_from_band(band);
 
 	if (status) {
 		ftl_md_write_fail(io, status);
 		return;
 	}
 
-	ftl_band_set_next_state(io->band);
-	if (io->band->state == FTL_BAND_STATE_CLOSED) {
+	ftl_band_set_next_state(band);
+	if (band->state == FTL_BAND_STATE_CLOSED) {
 		if (nv_cache->bdev_desc) {
 			pthread_spin_lock(&nv_cache->lock);
-			nv_cache->num_available += ftl_band_user_lbks(io->band);
+			nv_cache->num_available += ftl_band_user_lbks(band);
 
 			if (spdk_unlikely(nv_cache->num_available > nv_cache->num_data_blocks)) {
 				nv_cache->num_available = nv_cache->num_data_blocks;
 			}
 			pthread_spin_unlock(&nv_cache->lock);
+		}
+
+		/*
+		 * Go through the reloc_bitmap, checking for all the bands that had its data moved
+		 * onto current band and update their counters to allow them to be used for writing
+		 * (once they're closed and empty).
+		 */
+		for (id = 0; id < ftl_dev_num_bands(dev); ++id) {
+			if (spdk_bit_array_get(band->reloc_bitmap, id)) {
+				assert(dev->bands[id].num_reloc_bands > 0);
+				dev->bands[id].num_reloc_bands--;
+
+				spdk_bit_array_clear(band->reloc_bitmap, id);
+			}
 		}
 
 		ftl_remove_wptr(wptr);
@@ -362,11 +378,17 @@ ftl_next_write_band(struct spdk_ftl_dev *dev)
 {
 	struct ftl_band *band;
 
-	band = LIST_FIRST(&dev->free_bands);
-	if (!band) {
+	/* Find a free band that has all of its data moved onto other closed bands */
+	LIST_FOREACH(band, &dev->free_bands, list_entry) {
+		assert(band->state == FTL_BAND_STATE_FREE);
+		if (band->num_reloc_bands == 0 && band->num_reloc_blocks == 0) {
+			break;
+		}
+	}
+
+	if (spdk_unlikely(!band)) {
 		return NULL;
 	}
-	assert(band->state == FTL_BAND_STATE_FREE);
 
 	if (ftl_band_erase(band)) {
 		/* TODO: handle erase failure */
@@ -1202,6 +1224,7 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_rwb_batch *batch = io->rwb_batch;
 	struct ftl_rwb_entry *entry;
+	struct ftl_band *band;
 
 	if (status) {
 		ftl_write_fail(io, status);
@@ -1210,9 +1233,15 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 
 	assert(io->lbk_cnt == dev->xfer_size);
 	ftl_rwb_foreach(entry, batch) {
+		band = entry->band;
 		if (!(io->flags & FTL_IO_MD) && !(entry->flags & FTL_IO_PAD)) {
 			/* Verify that the LBA is set for user lbks */
 			assert(entry->lba != FTL_LBA_INVALID);
+		}
+
+		if (band != NULL) {
+			assert(band->num_reloc_blocks > 0);
+			band->num_reloc_blocks--;
 		}
 
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write ppa:%lu, lba:%lu\n",
@@ -1447,6 +1476,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	struct ftl_rwb_entry	*entry;
 	struct ftl_io		*io;
 	struct ftl_ppa		ppa, prev_ppa;
+	struct ftl_band		*band;
 
 	if (spdk_unlikely(!TAILQ_EMPTY(&wptr->pending_queue))) {
 		io = TAILQ_FIRST(&wptr->pending_queue);
@@ -1484,8 +1514,15 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 
 	ppa = wptr->ppa;
 	ftl_rwb_foreach(entry, batch) {
-		entry->ppa = ppa;
+		if (entry->flags & FTL_IO_WEAK) {
+			band = ftl_band_from_ppa(dev, entry->ppa);
+			if (!spdk_bit_array_get(wptr->band->reloc_bitmap, band->id)) {
+				spdk_bit_array_set(wptr->band->reloc_bitmap, band->id);
+				band->num_reloc_bands++;
+			}
+		}
 
+		entry->ppa = ppa;
 		if (entry->lba != FTL_LBA_INVALID) {
 			pthread_spin_lock(&entry->lock);
 			prev_ppa = ftl_l2p_get(dev, entry->lba);
@@ -1552,13 +1589,12 @@ ftl_process_writes(struct spdk_ftl_dev *dev)
 static void
 ftl_rwb_entry_fill(struct ftl_rwb_entry *entry, struct ftl_io *io)
 {
-	struct ftl_band *band;
-
 	memcpy(entry->data, ftl_io_iovec_addr(io), FTL_BLOCK_SIZE);
 
 	if (ftl_rwb_entry_weak(entry)) {
-		band = ftl_band_from_ppa(io->dev, io->ppa);
-		entry->ppa = ftl_band_next_ppa(band, io->ppa, io->pos);
+		entry->band = ftl_band_from_ppa(io->dev, io->ppa);
+		entry->ppa = ftl_band_next_ppa(entry->band, io->ppa, io->pos);
+		entry->band->num_reloc_blocks++;
 	}
 
 	entry->trace = io->trace;
