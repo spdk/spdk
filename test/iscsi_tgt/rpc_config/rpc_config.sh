@@ -5,9 +5,12 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
+# $1 = test type posix or vpp.
+# $2 = "iso" - triggers isolation mode (setting up required environment).
+iscsitestinit $2 $1
+
 timing_enter rpc_config
 
-# $1 = test type (posix/vpp)
 if [ "$1" == "posix" ] || [ "$1" == "vpp" ]; then
 	TEST_TYPE=$1
 else
@@ -58,4 +61,7 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $pid
+
+iscsitestfini $2 $1
+
 timing_exit rpc_config
