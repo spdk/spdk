@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f77a474e_d67ffd4c",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-13T16:33:59Z",
+      "side": 1,
+      "message": "Add a print message to show the config file used for the test. \nSomething like \"print(\"Using config file: %s\" % config_file_path)\"\nThis will help with debugging in case someone is trying to look back at the logs to see what configuration file was used.",
+      "revId": "cfa8e5075c45b44f610d64fafb507eb3da6033b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
