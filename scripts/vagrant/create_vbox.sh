@@ -17,7 +17,7 @@ display_help() {
 	echo
 	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrld] <distro>"
 	echo
-	echo "  distro = <centos7 | ubuntu16 | ubuntu18 | fedora26 | fedora27 | freebsd11> "
+	echo "  distro = <centos7 | ubuntu16 | ubuntu18 | fedora28 | fedora29 | fedora 30 | freebsd11> "
 	echo
 	echo "  -b <nvme-backing-file>    default: ${NVME_FILE}"
 	echo "  -s <ram-size> in kb       default: ${SPDK_VAGRANT_VMRAM}"
@@ -35,10 +35,10 @@ display_help() {
 	echo
 	echo " Examples:"
 	echo
-	echo "  $0 -x http://user:password@host:port fedora27"
+	echo "  $0 -x http://user:password@host:port fedora28"
 	echo "  $0 -s 2048 -n 2 ubuntu16"
 	echo "  $0 -rv freebsd"
-	echo "  $0 fedora26 "
+	echo "  $0 fedora28 "
 	echo
 }
 
@@ -122,13 +122,13 @@ case "$SPDK_VAGRANT_DISTRO" in
 	ubuntu18)
 		export SPDK_VAGRANT_DISTRO
 	;;
-	fedora26)
-		export SPDK_VAGRANT_DISTRO
-	;;
-	fedora27)
-		export SPDK_VAGRANT_DISTRO
-	;;
 	fedora28)
+		export SPDK_VAGRANT_DISTRO
+	;;
+	fedora29)
+		export SPDK_VAGRANT_DISTRO
+	;;
+	fedora30)
 		export SPDK_VAGRANT_DISTRO
 	;;
 	freebsd11)
