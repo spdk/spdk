@@ -13,6 +13,7 @@ WINDOWS_IMG="/home/sys_sgsw/windows_scsi_compliance/windows_vm_image.qcow2"
 aio_file="$testdir/aio_disk"
 ssh_pass=""
 vm_num=1
+keep_results=false
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 function usage()
@@ -22,6 +23,7 @@ function usage()
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo "  --vm-ssh-pass=PASSWORD    Text password for the VM"
 	echo "  --vm-image-path           Path of windows image"
+	echo "  --keep_results            Do not delete dir with results"
 
 	exit 0
 }
@@ -33,6 +35,7 @@ while getopts 'h-:' optchar; do
 			help) usage $0 ;;
 			vm-ssh-pass=*) ssh_pass="${OPTARG#*=}" ;;
 			vm-image-path=*) WINDOWS_IMG="${OPTARG#*=}" ;;
+			keep_results*) keep_results=true ;;
 		esac
 		;;
 	h) usage $0 ;;
@@ -78,4 +81,6 @@ notice "Remove $aio_file"
 rm -f $aio_file
 
 python3 $testdir/windows_scsi_compliance.py
-rm -rf $testdir/results
+if ! $keep_results; then
+	rm -rf $testdir/results
+fi
