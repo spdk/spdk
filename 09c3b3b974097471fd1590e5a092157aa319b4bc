@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fd06e27_d494043b",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-13T07:34:09Z",
+      "side": 1,
+      "message": "Change name to \"script_dir\" or similar to clearly indicate what kind of path this is",
+      "revId": "09c3b3b974097471fd1590e5a092157aa319b4bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6490a373_1a976027",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-13T07:34:09Z",
+      "side": 1,
+      "message": "config_file_path",
+      "range": {
+        "startLine": 656,
+        "startChar": 4,
+        "endLine": 656,
+        "endChar": 19
+      },
+      "revId": "09c3b3b974097471fd1590e5a092157aa319b4bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2dd39c38_02f9a6c3",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-13T07:34:09Z",
+      "side": 1,
+      "message": "This could be changed so that we don\u0027t do lines 655-656 every time.\n\n```\nif (len(sys.argv) \u003e 1):\n   config_file_path \u003d sys.argv[1]\nelse:\n   path \u003d os.path.dirname(...)\n   config_file_path \u003d ...",
+      "range": {
+        "startLine": 657,
+        "startChar": 0,
+        "endLine": 658,
+        "endChar": 36
+      },
+      "revId": "09c3b3b974097471fd1590e5a092157aa319b4bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
