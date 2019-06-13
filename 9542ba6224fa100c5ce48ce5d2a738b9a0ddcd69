@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67307c16_596ea3d6",
+        "filename": "test/app/fuzz/vhost_fuzz/example.json",
+        "patchSetId": 14
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-13T02:10:03Z",
+      "side": 1,
+      "message": "Can we use hex string here? Decimal is not easy to use for address.",
+      "range": {
+        "startLine": 4,
+        "startChar": 18,
+        "endLine": 4,
+        "endChar": 32
+      },
+      "revId": "9542ba6224fa100c5ce48ce5d2a738b9a0ddcd69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa9d4d00_41f9eae1",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-13T02:10:03Z",
+      "side": 1,
+      "message": "duplicated.",
+      "range": {
+        "startLine": 265,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 10
+      },
+      "revId": "9542ba6224fa100c5ce48ce5d2a738b9a0ddcd69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
