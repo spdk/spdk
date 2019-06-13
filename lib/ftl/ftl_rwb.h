@@ -42,8 +42,9 @@
 #include "ftl_trace.h"
 
 struct ftl_rwb;
-struct spdk_ftl_conf;
 struct ftl_rwb_batch;
+struct ftl_band;
+struct spdk_ftl_conf;
 
 enum ftl_rwb_entry_type {
 	FTL_RWB_TYPE_INTERNAL,
@@ -64,6 +65,9 @@ struct ftl_rwb_entry {
 
 	/* Physical address */
 	struct ftl_ppa				ppa;
+
+	/* Band the data is moved from (only valid when relocating data) */
+	struct ftl_band				*band;
 
 	/* Position within the rwb's buffer */
 	unsigned int				pos;
