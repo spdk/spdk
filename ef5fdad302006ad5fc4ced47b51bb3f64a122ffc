@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "396dbb5f_ff5a03a0",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-13T07:22:48Z",
+      "side": 1,
+      "message": "I think we can use hardcoded bdev names, as all the rest test part is using them. This can be a separate patch through.",
+      "revId": "ef5fdad302006ad5fc4ced47b51bb3f64a122ffc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
