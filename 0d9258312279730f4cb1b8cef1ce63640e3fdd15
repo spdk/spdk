@@ -46,6 +46,30 @@
       "revId": "0d9258312279730f4cb1b8cef1ce63640e3fdd15",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "989f591a_373b9c3f",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-13T21:45:37Z",
+      "side": 1,
+      "message": "These are both good inputs but recall that the script also serves the purpose of automating performance test execution outside our CI. We want to be able to point other users who are evaluating SPDK to these scripts so that they can use them to evaluate SPDK on their platforms. I can add a flag to the script (compile-spdk) that can be used to enable running the script only without recompiling spdk. What do you guys think?\nAdditionally, we have seen lto and pgo flags cause error/warnings in other areas. For example, at some point we were disabling the isal module using --without-isal because the compile would fail when we used lto/pgo flag. I know Ben and Jim worked through most of these issues but this is something that could crop up in the future if you are compiling some other SPDK module that we have tested with these flags. So there might be scenarios where you just want to limit the lto flag to just the modules we need for this test.",
+      "parentUuid": "16c3e7cb_eebd689e",
+      "range": {
+        "startLine": 266,
+        "startChar": 40,
+        "endLine": 266,
+        "endChar": 52
+      },
+      "revId": "0d9258312279730f4cb1b8cef1ce63640e3fdd15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
