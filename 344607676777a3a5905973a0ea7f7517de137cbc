@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "92887131_1a0ec2e8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5564,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-13T08:53:41Z",
+      "side": 1,
+      "message": "My actual concern here is that we finish the sequence before blob is closed. This part should be fixed since we would report up that blob delete failed with ENOMEM, before closing reference to the blob.",
+      "parentUuid": "a7c76af2_783572a9",
+      "range": {
+        "startLine": 5563,
+        "startChar": 0,
+        "endLine": 5564,
+        "endChar": 40
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f1546d8_cf0feccf",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 51
