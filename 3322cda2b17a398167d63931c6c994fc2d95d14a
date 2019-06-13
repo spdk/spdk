@@ -187,6 +187,30 @@
       "revId": "3322cda2b17a398167d63931c6c994fc2d95d14a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d33c23f8_6c40f965",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-13T06:38:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ffd7145c_5ad24d73",
+      "range": {
+        "startLine": 374,
+        "startChar": 0,
+        "endLine": 380,
+        "endChar": 22
+      },
+      "revId": "3322cda2b17a398167d63931c6c994fc2d95d14a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
