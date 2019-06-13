@@ -258,6 +258,7 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	ctx->app_tag = app_tag;
 	ctx->data_offset = data_offset;
 	ctx->ref_tag_offset = data_offset / data_block_size;
+	ctx->last_guard = guard_seed;
 	ctx->guard_seed = guard_seed;
 
 	return 0;
@@ -1465,9 +1466,10 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 int
 spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			 uint32_t data_offset, uint32_t data_len,
-			 const struct spdk_dif_ctx *ctx)
+			 struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, offset_blocks, num_blocks, i;
+	uint32_t data_block_size, buf_len, buf_offset;
+	uint32_t len, offset_in_block, offset_blocks;
 	uint16_t guard = 0;
 	struct _dif_sgl sgl;
 
@@ -1478,25 +1480,40 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 	data_block_size = ctx->block_size - ctx->md_size;
 
 	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-		guard = ctx->guard_seed;
+		guard = ctx->last_guard;
 	}
 
-	offset_blocks = data_offset / data_block_size;
-	data_len += data_offset % data_block_size;
-
-	data_offset = offset_blocks * ctx->block_size;
-	num_blocks = data_len / data_block_size;
+	/* If the last data block is complete, DIF of the data block is
+	 * inserted in this function.
+	 */
+	buf_len = ((data_offset + data_len) / data_block_size) * ctx->block_size +
+		  ((data_offset + data_len) % data_block_size);
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 
-	if (!_dif_sgl_is_valid(&sgl, data_offset + num_blocks * ctx->block_size)) {
+	if (!_dif_sgl_is_valid(&sgl, buf_len)) {
 		return -ERANGE;
 	}
 
-	_dif_sgl_advance(&sgl, data_offset);
+	buf_offset = (data_offset / data_block_size) * ctx->block_size +
+		     (data_offset % data_block_size);
 
-	for (i = 0; i < num_blocks; i++) {
-		_dif_generate_split(&sgl, 0, ctx->block_size, guard, offset_blocks + i, ctx);
+	_dif_sgl_advance(&sgl, buf_offset);
+	buf_len -= buf_offset;
+
+	while (buf_len != 0) {
+		len = spdk_min(buf_len, _to_next_boundary(buf_offset, ctx->block_size));
+		offset_in_block = buf_offset % ctx->block_size;
+		offset_blocks = buf_offset / ctx->block_size;
+
+		guard = _dif_generate_split(&sgl, offset_in_block, len, guard, offset_blocks, ctx);
+
+		buf_len -= len;
+		buf_offset += len;
+	}
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		ctx->last_guard = guard;
 	}
 
 	return 0;
