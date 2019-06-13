@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1f14300e_9546efe8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5406,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-13T08:15:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "00d0f56a_0acf0f02",
+      "range": {
+        "startLine": 5406,
+        "startChar": 1,
+        "endLine": 5406,
+        "endChar": 30
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b10d80ad_f27f14c3",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 51
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-12T13:33:01Z",
       "side": 1,
       "message": "Shouldn\u0027t we add some UT around having clone being closed but two opens were issued on snapshot ?",
+      "range": {
+        "startLine": 5517,
+        "startChar": 0,
+        "endLine": 5535,
+        "endChar": 2
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f5fc307_14cdee80",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5535,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-13T08:15:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b10d80ad_f27f14c3",
       "range": {
         "startLine": 5517,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9b265499_899f452b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5563,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-13T08:15:38Z",
+      "side": 1,
+      "message": "Agree, but \u0027ebusy\u0027 isn\u0027t the best name because we use the same function also for successful deletion.",
+      "parentUuid": "5568d21f_d5c50b37",
+      "range": {
+        "startLine": 5563,
+        "startChar": 24,
+        "endLine": 5563,
+        "endChar": 60
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67b42ff6_1c6d9bb5",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 51
@@ -82,6 +154,30 @@
       "writtenOn": "2019-06-12T13:33:01Z",
       "side": 1,
       "message": "Error handling is different here and on line 5581, first blob close is called and without waiting for results the sequence is finished. Only for the reason of not having ctx.\nMeanwhile _spdk_delete_snapshot_cleanup_finish() only works because of passing NULL as ctx will avoid calling sequence finish again.\nHow about revert to using _spdk_bs_delete_ebusy_close_cpl() [or add similar variant for enomem] and just free(ctx) on 5576 and 5583 ?",
+      "range": {
+        "startLine": 5563,
+        "startChar": 0,
+        "endLine": 5564,
+        "endChar": 40
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7c76af2_783572a9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5564,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-13T08:15:38Z",
+      "side": 1,
+      "message": "This will add additional lines of code, which are already in the function that has been created for that purpose. Here is the very special case where calloc failed and we have no other option than call the function with NULL, but in other cases let\u0027s use it as it was supposed to be used.",
+      "parentUuid": "67b42ff6_1c6d9bb5",
       "range": {
         "startLine": 5563,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "800fd15f_23f6c74a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5572,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-13T08:15:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4f1546d8_cf0feccf",
+      "range": {
+        "startLine": 5572,
+        "startChar": 48,
+        "endLine": 5572,
+        "endChar": 57
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0cf55be2_38c1275a",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 51
@@ -128,6 +248,30 @@
       "writtenOn": "2019-06-12T13:33:01Z",
       "side": 1,
       "message": "^Function name",
+      "range": {
+        "startLine": 5575,
+        "startChar": 24,
+        "endLine": 5575,
+        "endChar": 60
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e40c2d1_d0093339",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5575,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-13T08:15:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0cf55be2_38c1275a",
       "range": {
         "startLine": 5575,
         "startChar": 24,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "96cdd44b_c891bba7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5582,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-13T08:15:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "74fca72d_2b59a1e5",
+      "range": {
+        "startLine": 5582,
+        "startChar": 24,
+        "endLine": 5582,
+        "endChar": 60
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e876b3d_4b279ff6",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 51
@@ -174,6 +342,30 @@
       "writtenOn": "2019-06-12T13:33:01Z",
       "side": 1,
       "message": "clones",
+      "range": {
+        "startLine": 5598,
+        "startChar": 33,
+        "endLine": 5598,
+        "endChar": 38
+      },
+      "revId": "344607676777a3a5905973a0ea7f7517de137cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e6b3012_0965e613",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 5598,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-13T08:15:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2e876b3d_4b279ff6",
       "range": {
         "startLine": 5598,
         "startChar": 33,
