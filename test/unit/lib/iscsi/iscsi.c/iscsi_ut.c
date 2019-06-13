@@ -52,12 +52,16 @@
 #define UT_TARGET_NAME2		"iqn.2017-11.spdk.io:t0002"
 #define UT_INITIATOR_NAME1	"iqn.2017-11.spdk.io:i0001"
 #define UT_INITIATOR_NAME2	"iqn.2017-11.spdk.io:i0002"
+#define UT_ISCSI_TSIH		256
 
 struct spdk_iscsi_tgt_node *
 spdk_iscsi_find_tgt_node(const char *target_name)
 {
+	static struct spdk_iscsi_tgt_node tgt;
+
 	if (strcasecmp(target_name, UT_TARGET_NAME1) == 0) {
-		return (struct spdk_iscsi_tgt_node *)1;
+		tgt.dev = NULL;
+		return (struct spdk_iscsi_tgt_node *)&tgt;
 	} else {
 		return NULL;
 	}
@@ -148,6 +152,92 @@ op_login_check_target_test(void)
 	rc = iscsi_op_login_check_target(&conn, &rsp_pdu,
 					 UT_TARGET_NAME1, &target);
 	CU_ASSERT(rc != 0);
+}
+
+static void
+op_login_session_normal_test(void)
+{
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_portal portal;
+	struct spdk_iscsi_portal_grp group;
+	struct spdk_iscsi_pdu rsp_pdu;
+	struct iscsi_bhs_login_rsp *rsph;
+	struct spdk_iscsi_sess sess;
+	struct iscsi_param param;
+	struct spdk_iscsi_tgt_node *target;
+	int rc;
+
+	/* expect failure: NULL params for target name */
+	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
+					   NULL, &target, 0);
+	CU_ASSERT(rc != 0);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu.bhs;
+	rsph->tsih = 0;
+	memset(rsph->isid, 0, sizeof(rsph->isid));
+	conn.portal = &portal;
+	portal.group = &group;
+	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
+	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_MISSING_PARMS);
+
+	/* expect failure: incorrect key for target name */
+	param.next = NULL;
+	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
+					   &param, &target, 0);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
+	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_MISSING_PARMS);
+
+	/* expect failure: NULL target name */
+	param.key = "TargetName";
+	param.val = NULL;
+	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
+					   &param, &target, 0);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
+	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_MISSING_PARMS);
+
+	/* expect failure: session not found */
+	param.key = "TargetName";
+	param.val = "iqn.2017-11.spdk.io:t0001";
+	snprintf(conn.initiator_name, sizeof(conn.initiator_name),
+		 "%s", UT_INITIATOR_NAME1);
+	conn.portal->group->tag = 0;
+	rsph->tsih = 1; /* to append the session */
+	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
+					   &param, &target, 0);
+	CU_ASSERT(conn.target_port == NULL);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
+	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_CONN_ADD_FAIL);
+
+	/* expect failure: session found while tag is wrong */
+	g_spdk_iscsi.MaxSessions = UT_ISCSI_TSIH * 2;
+	g_spdk_iscsi.session = calloc(1, sizeof(void *) * g_spdk_iscsi.MaxSessions);
+	g_spdk_iscsi.session[UT_ISCSI_TSIH - 1] = &sess;
+	sess.tsih = UT_ISCSI_TSIH;
+	rsph->tsih = UT_ISCSI_TSIH >> 8; /* to append the session */
+	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
+					   &param, &target, 0);
+	CU_ASSERT(conn.target_port == NULL);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
+	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_CONN_ADD_FAIL);
+
+	/* expect suceess: drop the session */
+	rsph->tsih = 0; /* to create the session */
+	g_spdk_iscsi.AllowDuplicateIsid = false;
+	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
+					   &param, &target, 0);
+	CU_ASSERT(rc == 0);
+
+	/* expect suceess: create the session */
+	rsph->tsih = 0; /* to create the session */
+	g_spdk_iscsi.AllowDuplicateIsid = true;
+	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
+					   &param, &target, 0);
+	CU_ASSERT(rc == 0);
+
+	free(g_spdk_iscsi.session);
 }
 
 static void
@@ -1363,6 +1453,7 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "login check target test", op_login_check_target_test) == NULL
+		|| CU_add_test(suite, "login_session_normal_test", op_login_session_normal_test) == NULL
 		|| CU_add_test(suite, "maxburstlength test", maxburstlength_test) == NULL
 		|| CU_add_test(suite, "underflow for read transfer test",
 			       underflow_for_read_transfer_test) == NULL
