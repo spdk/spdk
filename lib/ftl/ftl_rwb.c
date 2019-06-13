@@ -302,6 +302,7 @@ ftl_rwb_batch_release(struct ftl_rwb_batch *batch)
 	ftl_rwb_foreach(entry, batch) {
 		num_acquired = __atomic_fetch_sub(&rwb->num_acquired[ftl_rwb_entry_type(entry)], 1,
 						  __ATOMIC_SEQ_CST);
+		entry->band = NULL;
 		assert(num_acquired  > 0);
 	}
 
