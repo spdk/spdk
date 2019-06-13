@@ -441,9 +441,11 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move,
 static int
 ftl_reloc_write(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move)
 {
+	int io_flags =  FTL_IO_WEAK | FTL_IO_VECTOR_LBA | FTL_IO_BYPASS_CACHE;
+
 	if (spdk_likely(!move->io)) {
 		move->io = ftl_reloc_io_init(breloc, move, ftl_reloc_write_cb,
-					     FTL_IO_WRITE, FTL_IO_WEAK | FTL_IO_VECTOR_LBA);
+					     FTL_IO_WRITE, io_flags);
 		if (!move->io) {
 			ftl_reloc_free_move(breloc, move);
 			return -ENOMEM;
