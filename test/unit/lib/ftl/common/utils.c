@@ -101,6 +101,9 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	band->chunk_buf = calloc(ftl_dev_num_punits(dev), sizeof(*band->chunk_buf));
 	SPDK_CU_ASSERT_FATAL(band->chunk_buf != NULL);
 
+	band->reloc_bitmap = spdk_bit_array_create(ftl_dev_num_bands(dev));
+	SPDK_CU_ASSERT_FATAL(band->reloc_bitmap != NULL);
+
 	for (size_t i = 0; i < ftl_dev_num_punits(dev); ++i) {
 		chunk = &band->chunk_buf[i];
 		chunk->pos = i;
@@ -133,6 +136,7 @@ test_free_ftl_band(struct ftl_band *band)
 {
 	SPDK_CU_ASSERT_FATAL(band != NULL);
 	spdk_bit_array_free(&band->lba_map.vld);
+	spdk_bit_array_free(&band->reloc_bitmap);
 	free(band->chunk_buf);
 	free(band->lba_map.map);
 	spdk_dma_free(band->lba_map.dma_buf);
