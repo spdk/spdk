@@ -98,6 +98,13 @@ struct spdk_dif_ctx {
 	/* Offset to initial reference tag */
 	uint32_t		ref_tag_offset;
 
+	/** Guard value of the last data block.
+	 *
+	 * Interim guard value is set if the last data block is partial, or
+	 * seed value is set otherwise.
+	 */
+	uint16_t		last_guard;
+
 	/* Seed value for guard computation */
 	uint16_t		guard_seed;
 };
@@ -315,15 +322,21 @@ int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 /**
  * Generate and insert DIF into metadata space for newly read data block.
  *
+ * When the extended LBA payload is splitted into multiple data segments,
+ * start of each data segment is passed through the DIF context. data_offset
+ * and data_len is within a data segment.
+ *
  * \param iovs iovec array describing the extended LBA payload.
  * \param iovcnt Number of elements in the iovec array.
- * \param data_offset Offset to the newly read data in the extended LBA payload.
- * \param data_len Length of the newly read data in the extended LBA payload.
+ * \param data_offset Offset to the newly read data in the current data segment of
+ * the extended LBA payload.
+ * \param data_len Length of the newly read data in the current data segment of
+ * the extended LBA payload.
  * \param ctx DIF context.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			     uint32_t data_offset, uint32_t data_len,
-			     const struct spdk_dif_ctx *ctx);
+			     struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
