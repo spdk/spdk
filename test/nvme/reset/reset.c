@@ -287,17 +287,6 @@ work_fn(void *arg)
 	}
 
 	while (1) {
-		/*
-		 * Check for completed I/O for each controller. A new
-		 * I/O will be submitted in the io_complete callback
-		 * to replace each I/O that is completed.
-		 */
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx != NULL) {
-			check_io(ns_ctx);
-			ns_ctx = ns_ctx->next;
-		}
-
 		if (!did_reset && ((tsc_end - spdk_get_ticks()) / g_tsc_rate) > (uint64_t)g_time_in_sec / 2) {
 			ns_ctx = worker->ns_ctx;
 			while (ns_ctx != NULL) {
@@ -308,6 +297,17 @@ work_fn(void *arg)
 				ns_ctx = ns_ctx->next;
 			}
 			did_reset = true;
+		}
+
+		/*
+		 * Check for completed I/O for each controller. A new
+		 * I/O will be submitted in the io_complete callback
+		 * to replace each I/O that is completed.
+		 */
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx != NULL) {
+			check_io(ns_ctx);
+			ns_ctx = ns_ctx->next;
 		}
 
 		if (spdk_get_ticks() > tsc_end) {
