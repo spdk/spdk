@@ -78,4 +78,3 @@ notice "Remove $aio_file"
 rm -f $aio_file
 
 python3 $testdir/windows_scsi_compliance.py
-rm -rf $testdir/results
