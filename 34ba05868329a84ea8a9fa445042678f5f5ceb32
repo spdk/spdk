@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66e051a4_9277ac52",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-13T00:57:12Z",
+      "side": 1,
+      "message": "zeroed the whole opal_key data structure here.",
+      "revId": "34ba05868329a84ea8a9fa445042678f5f5ceb32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
