@@ -185,6 +185,13 @@ struct ftl_band {
 	/* End metadata start ppa */
 	struct ftl_ppa				tail_md_ppa;
 
+	/* Bitmap of all bands that have its data moved onto this band */
+	struct spdk_bit_array			*reloc_bitmap;
+	/* Number of open bands containing data moved from this band */
+	size_t					num_reloc_bands;
+	/* Number of blocks currently being moved from this band */
+	size_t					num_reloc_blocks;
+
 	/* Free/shut bands' lists */
 	LIST_ENTRY(ftl_band)			list_entry;
 
