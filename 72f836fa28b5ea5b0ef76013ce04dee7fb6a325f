@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "340ad11d_6f220ebe",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1628,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-13T02:40:49Z",
+      "side": 1,
+      "message": "maybe something like \"512 * 160 KiB with 128 IO boundary, split two children requests, 63.5KiB and 16.5KiB.\"",
+      "range": {
+        "startLine": 1628,
+        "startChar": 46,
+        "endLine": 1628,
+        "endChar": 50
+      },
+      "revId": "72f836fa28b5ea5b0ef76013ce04dee7fb6a325f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
