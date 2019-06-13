@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "415b8b06_440ea5b0",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-13T12:20:22Z",
+      "side": 1,
+      "message": "This will probably end up being /usr/local/src/vpp, please modify depending on what works in patch at beginning of the series.",
+      "range": {
+        "startLine": 212,
+        "startChar": 16,
+        "endLine": 212,
+        "endChar": 19
+      },
+      "revId": "5718883e78c087e7f6aa8e51ed86dac77e105b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "116d9852_484a64ee",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-13T12:20:22Z",
+      "side": 1,
+      "message": "This patch will need 3rd cherry pick too, right ?",
+      "range": {
+        "startLine": 222,
+        "startChar": 0,
+        "endLine": 223,
+        "endChar": 77
+      },
+      "revId": "5718883e78c087e7f6aa8e51ed86dac77e105b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
