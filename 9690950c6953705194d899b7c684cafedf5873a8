@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc84a6c0_29a728c9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2839,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-13T08:38:37Z",
+      "side": 1,
+      "message": "Indenting it further as new xattr are added does not look best. Can it be done differently ? Ex. if (xattr1 || xattr2) then open blob else move on to next blob.",
+      "range": {
+        "startLine": 2836,
+        "startChar": 0,
+        "endLine": 2839,
+        "endChar": 17
+      },
+      "revId": "9690950c6953705194d899b7c684cafedf5873a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
