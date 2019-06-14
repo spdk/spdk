@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ea99efc2_0af95224",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 40
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "for vagrant 2.1 it supports libvirt, but vagrant2.2 vagrant reports error.",
+      "parentUuid": "b3571889_8c6d5faa",
+      "range": {
+        "startLine": 9,
+        "startChar": 58,
+        "endLine": 10,
+        "endChar": 17
+      },
+      "revId": "92047d329cc380376a349ae404e427dfc17b8e29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0f0650fa_c097f2fa",
         "filename": "/COMMIT_MSG",
         "patchSetId": 40
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-12T14:34:34Z",
       "side": 1,
       "message": "Mixed tabs/spaces in file.\nPrefer tabs so that indents can be adjusted in users IDE.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 32
+      },
+      "revId": "92047d329cc380376a349ae404e427dfc17b8e29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca393b9e_9e0a55e4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 40
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "0f0650fa_c097f2fa",
       "range": {
         "startLine": 12,
         "startChar": 0,

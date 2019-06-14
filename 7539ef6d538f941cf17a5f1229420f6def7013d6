@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7d142622_2c089023",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "as I said, this are workaround for host power loss and then vagrant up issue.",
+      "parentUuid": "cb27a8b0_ae368dc9",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 3
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "750525fb_a903af4a",
         "filename": "scripts/vagrant/vagrant_auto.sh",
         "patchSetId": 41
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-12T14:34:34Z",
       "side": 1,
       "message": "I don\u0027t think we need a function for that (and possibly other functions like this as well). Why not just call \"vagrant halt\" directly?",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d946db7_2525f566",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "1. reduce time,remove no need behaviors.\n2. avoid error exceptions.",
+      "parentUuid": "750525fb_a903af4a",
       "range": {
         "startLine": 93,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "3f5d9f11_7c2c909b",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "this looks ugly,  but if you use muti-terminal to do this, one is running libvirt and one is virtualbox, if kill process, vm will to a status power off.",
+      "parentUuid": "3cb729c8_787bf7cf",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "94038257_5c794fc2",
         "filename": "scripts/vagrant/vagrant_auto.sh",
         "patchSetId": 41
@@ -82,6 +154,30 @@
       "writtenOn": "2019-06-12T14:34:34Z",
       "side": 1,
       "message": "I don\u0027t think we should go down to provider-specific commands.\nAs an end user I think  I just want to install VBox, Vagrant and simply call vagrant calls, not be involved in managing vbox.",
+      "range": {
+        "startLine": 147,
+        "startChar": 0,
+        "endLine": 154,
+        "endChar": 52
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37143570_5bec11ef",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "done.\nI am worried about user can\u0027t use this, and remove this is ok.",
+      "parentUuid": "94038257_5c794fc2",
       "range": {
         "startLine": 147,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "649178ab_7fddb433",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "d52b5c00_6c20ec4b",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 168,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "09e6b693_634c29f0",
         "filename": "scripts/vagrant/vagrant_auto.sh",
         "patchSetId": 41
@@ -128,6 +248,30 @@
       "writtenOn": "2019-06-12T14:34:34Z",
       "side": 1,
       "message": "Why not jsut \"vagrant destroy\"?",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 184,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b11fb6dc_39bb25fd",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "09e6b693_634c29f0",
       "range": {
         "startLine": 179,
         "startChar": 0,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "d7e71633_161bd271",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "good catch. done.",
+      "parentUuid": "1148e706_91e553a9",
+      "range": {
+        "startLine": 209,
+        "startChar": 0,
+        "endLine": 213,
+        "endChar": 103
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "feabd25c_6fb127c7",
         "filename": "scripts/vagrant/vagrant_auto.sh",
         "patchSetId": 41
@@ -186,6 +354,30 @@
     },
     {
       "key": {
+        "uuid": "3070c953_51d0090d",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "feabd25c_6fb127c7",
+      "range": {
+        "startLine": 216,
+        "startChar": 9,
+        "endLine": 216,
+        "endChar": 28
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fc1cb0a8_0060bb13",
         "filename": "scripts/vagrant/vagrant_auto.sh",
         "patchSetId": 41
@@ -197,6 +389,30 @@
       "writtenOn": "2019-06-12T14:34:34Z",
       "side": 1,
       "message": "Trap should not be removed until tests have finished.",
+      "range": {
+        "startLine": 291,
+        "startChar": 1,
+        "endLine": 291,
+        "endChar": 26
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd00dec8_4e94635e",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-14T07:49:58Z",
+      "side": 1,
+      "message": "I want to re-use this vm, and ssh to execute auto test, out test already had it\u0027s own trap.\nthis are remote executing. \nhere we only need  to kill sock.\nonce it be created sucessfully,  we can use ./vagrant_auto.sh  to retest.",
+      "parentUuid": "fc1cb0a8_0060bb13",
       "range": {
         "startLine": 291,
         "startChar": 1,
