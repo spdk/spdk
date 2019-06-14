@@ -539,10 +539,10 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 	struct ftl_reloc *reloc = breloc->parent;
 	struct ftl_band *band = breloc->band;
 
-	if (band->high_prio) {
+	if (band->high_prio && breloc->num_lbks == 0) {
 		band->high_prio = 0;
 		TAILQ_REMOVE(&reloc->prio_queue, breloc, entry);
-	} else {
+	} else if (!band->high_prio) {
 		TAILQ_REMOVE(&reloc->active_queue, breloc, entry);
 	}
 
@@ -553,7 +553,7 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 	breloc->active = 0;
 	reloc->num_active--;
 
-	if (breloc->num_lbks) {
+	if (!band->high_prio && breloc->num_lbks) {
 		TAILQ_INSERT_TAIL(&reloc->pending_queue, breloc, entry);
 		return;
 	}
@@ -785,6 +785,23 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 	}
 
 	if (prio) {
+		struct ftl_band_reloc *iter_breloc;
+
+		/* If priority band is already on pending or active queue, remove it from it */
+		TAILQ_FOREACH(iter_breloc, &reloc->pending_queue, entry) {
+			if (breloc == iter_breloc) {
+				TAILQ_REMOVE(&reloc->pending_queue, breloc, entry);
+				break;
+			}
+		}
+
+		TAILQ_FOREACH(iter_breloc, &reloc->active_queue, entry) {
+			if (breloc == iter_breloc) {
+				TAILQ_REMOVE(&reloc->active_queue, breloc, entry);
+				break;
+			}
+		}
+
 		TAILQ_INSERT_TAIL(&reloc->prio_queue, breloc, entry);
 		ftl_band_acquire_lba_map(breloc->band);
 	}
