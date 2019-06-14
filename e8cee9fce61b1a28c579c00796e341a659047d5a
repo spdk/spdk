@@ -93,6 +93,30 @@
       "revId": "e8cee9fce61b1a28c579c00796e341a659047d5a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a67b00e1_7ccdc579",
+        "filename": "test/nvmf/target/shutdown.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-14T00:56:59Z",
+      "side": 1,
+      "message": "You use double quotes around $perfpid, so it\u0027s evaluated instantly at the time you define the trap. The trap will always try to kill some single pid of that bdev_svc instance. You could use single quotes in the entire trap command - then it would work like you describe.\n\ntrap \u0027process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid; nvmfcleanup; nvmftestfini; exit 1\u0027 SIGINT SIGTERM EXIT",
+      "parentUuid": "3dad7481_940c132b",
+      "range": {
+        "startLine": 119,
+        "startChar": 28,
+        "endLine": 119,
+        "endChar": 36
+      },
+      "revId": "e8cee9fce61b1a28c579c00796e341a659047d5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
