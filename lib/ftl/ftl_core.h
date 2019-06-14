@@ -255,6 +255,7 @@ int	ftl_band_set_direct_access(struct ftl_band *band, bool access);
 int	ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 				struct spdk_ocssd_chunk_information_entry *info,
 				unsigned int num_entries);
+bool	ftl_ppa_is_written(struct ftl_band *band, struct ftl_ppa ppa);
 
 #define ftl_to_ppa(addr) \
 	(struct ftl_ppa) { .ppa = (uint64_t)(addr) }
