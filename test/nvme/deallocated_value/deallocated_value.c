@@ -272,7 +272,7 @@ deallocate_test(void)
 		printf("\nController %-20.20s (%-20.20s)\n", data->mn, data->sn);
 		printf("Controller PCI vendor:%u PCI subsystem vendor:%u\n", data->vid, data->ssvid);
 		printf("Namespace Block Size:%u\n", spdk_nvme_ns_get_sector_size(ns_entry->ns));
-		printf("Writing Blocks 0 to %d with random data.\n", NUM_BLOCKS);
+		printf("Writing Blocks 0 to %d with random data.\n", NUM_BLOCKS - 1);
 		printf("On next read, read value will match random data.\n");
 
 		context.ns_entry = ns_entry;
