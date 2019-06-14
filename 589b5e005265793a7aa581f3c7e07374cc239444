@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a801b3bf_2be1d3d8",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-14T05:05:15Z",
+      "side": 1,
+      "message": "I\u0027d really like to avoid adding this to autotest_common. I\u0027m trying to remove all that socket magic from waitforlisten in a separate patch and here we\u0027re adding almost the same code again. Also, this function seems to be usable only for bdev_svc (?) which doesn\u0027t make it really useful.\n\nIn the ftl dirty shutdown test, could we just do:\n\nkill -9 $pid\nwait $pid || true (or sleep 1 if wait doesn\u0027t work for some reason)\n\n?",
+      "range": {
+        "startLine": 328,
+        "startChar": 9,
+        "endLine": 328,
+        "endChar": 25
+      },
+      "revId": "589b5e005265793a7aa581f3c7e07374cc239444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
