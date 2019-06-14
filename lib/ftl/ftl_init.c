@@ -355,6 +355,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 			chunk->punit = punit;
 			chunk->start_ppa = punit->start_ppa;
 			chunk->start_ppa.chk = band->id;
+			chunk->write_offset = ftl_dev_lbks_in_chunk(dev);
 
 			if (chunk->state != FTL_CHUNK_STATE_BAD) {
 				band->num_chunks++;

@@ -57,6 +57,7 @@ static struct spdk_ftl_punit_range g_range = {
 };
 
 DEFINE_STUB(ftl_dev_tail_md_disk_size, size_t, (const struct spdk_ftl_dev *dev), 1);
+DEFINE_STUB(ftl_ppa_is_written, bool, (struct ftl_band *band, struct ftl_ppa ppa), true);
 DEFINE_STUB_V(ftl_band_set_state, (struct ftl_band *band, enum ftl_band_state state));
 DEFINE_STUB_V(ftl_trace_lba_io_init, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
 DEFINE_STUB_V(ftl_free_io, (struct ftl_io *io));

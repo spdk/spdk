@@ -1087,6 +1087,7 @@ ftl_band_erase_cb(struct ftl_io *io, void *ctx, int status)
 	}
 	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
 	chunk->state = FTL_CHUNK_STATE_FREE;
+	chunk->write_offset = 0;
 }
 
 int
