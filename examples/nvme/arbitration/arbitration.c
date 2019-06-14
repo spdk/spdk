@@ -434,8 +434,16 @@ cleanup(uint32_t task_count)
 	};
 
 	while (worker) {
+		struct ns_worker_ctx *ns_ctx = worker->ns_ctx;
+
+		/* ns_worker_ctx is a list in the worker */
+		while (ns_ctx) {
+			struct ns_worker_ctx *next_ns_ctx = ns_ctx->next;
+			free(ns_ctx);
+			ns_ctx = next_ns_ctx;
+		}
+
 		next_worker = worker->next;
-		free(worker->ns_ctx);
 		free(worker);
 		worker = next_worker;
 	};
