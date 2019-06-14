@@ -304,7 +304,10 @@ ftl_reloc_iter_next_chk(struct ftl_band_reloc *breloc)
 static int
 ftl_reloc_lbk_valid(struct ftl_band_reloc *breloc, size_t lbkoff)
 {
-	return spdk_bit_array_get(breloc->reloc_map, lbkoff) &&
+	struct ftl_ppa ppa = ftl_band_ppa_from_lbkoff(breloc->band, lbkoff);
+
+	return ftl_ppa_is_written(breloc->band, ppa) &&
+	       spdk_bit_array_get(breloc->reloc_map, lbkoff) &&
 	       ftl_band_lbkoff_valid(breloc->band, lbkoff);
 }
 

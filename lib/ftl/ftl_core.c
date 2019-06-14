@@ -1254,6 +1254,7 @@ ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 
 	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
 	chunk->busy = false;
+	chunk->write_offset += io->lbk_cnt;
 }
 
 static int
@@ -1882,6 +1883,14 @@ ftl_process_anm_event(struct ftl_anm_event *event)
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Unconsumed ANM received for dev: %p...\n", event->dev);
 	ftl_anm_event_complete(event);
+}
+
+bool
+ftl_ppa_is_written(struct ftl_band *band, struct ftl_ppa ppa)
+{
+	struct ftl_chunk *chunk = ftl_band_chunk_from_ppa(band, ppa);
+
+	return ppa.lbk < chunk->write_offset;
 }
 
 static void
