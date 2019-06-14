@@ -45,6 +45,14 @@
 #include "fio.h"
 #include "optgroup.h"
 
+/* FreeBSD is missing CLOCK_MONOTONIC_RAW,
+ * so alternative is provided. */
+#ifdef CLOCK_MONOTONIC_RAW /* Defined in glibc bits/time.h */
+#define CLOCK_TYPE_ID CLOCK_MONOTONIC_RAW
+#else
+#define CLOCK_TYPE_ID CLOCK_MONOTONIC
+#endif
+
 #define NVME_IO_ALIGN		4096
 
 static bool g_spdk_env_initialized;
@@ -844,7 +852,7 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 
 	if (t) {
 		timeout = t->tv_sec * 1000000000L + t->tv_nsec;
-		clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+		clock_gettime(CLOCK_TYPE_ID, &t0);
 	}
 
 	fio_thread->iocq_count = 0;
@@ -874,7 +882,7 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		if (t) {
 			uint64_t elapse;
 
-			clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
+			clock_gettime(CLOCK_TYPE_ID, &t1);
 			elapse = ((t1.tv_sec - t0.tv_sec) * 1000000000L)
 				 + t1.tv_nsec - t0.tv_nsec;
 			if (elapse > timeout) {

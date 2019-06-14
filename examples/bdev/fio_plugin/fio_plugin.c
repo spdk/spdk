@@ -49,6 +49,14 @@
 #include "fio.h"
 #include "optgroup.h"
 
+/* FreeBSD is missing CLOCK_MONOTONIC_RAW,
+ * so alternative is provided. */
+#ifdef CLOCK_MONOTONIC_RAW /* Defined in glibc bits/time.h */
+#define CLOCK_TYPE_ID CLOCK_MONOTONIC_RAW
+#else
+#define CLOCK_TYPE_ID CLOCK_MONOTONIC
+#endif
+
 struct spdk_fio_options {
 	void *pad;
 	char *conf;
@@ -316,7 +324,7 @@ spdk_init_thread_poll(void *arg)
 	while (g_poll_loop) {
 		spdk_fio_poll_thread(fio_thread);
 
-		clock_gettime(CLOCK_MONOTONIC, &ts);
+		clock_gettime(CLOCK_TYPE_ID, &ts);
 		spdk_fio_calc_timeout(fio_thread, &ts);
 
 		rc = pthread_cond_timedwait(&g_init_cond, &g_init_mtx, &ts);
@@ -355,7 +363,7 @@ spdk_fio_init_env(struct thread_data *td)
 		return -1;
 	}
 
-	if (pthread_condattr_setclock(&attr, CLOCK_MONOTONIC)) {
+	if (pthread_condattr_setclock(&attr, CLOCK_TYPE_ID)) {
 		SPDK_ERRLOG("Unable to initialize condition variable\n");
 		goto out;
 	}
@@ -663,7 +671,7 @@ spdk_fio_getevents(struct thread_data *td, unsigned int min,
 
 	if (t) {
 		timeout = t->tv_sec * SPDK_SEC_TO_NSEC + t->tv_nsec;
-		clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
+		clock_gettime(CLOCK_TYPE_ID, &t0);
 	}
 
 	fio_thread->iocq_count = 0;
@@ -676,7 +684,7 @@ spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		}
 
 		if (t) {
-			clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
+			clock_gettime(CLOCK_TYPE_ID, &t1);
 			uint64_t elapse = ((t1.tv_sec - t0.tv_sec) * SPDK_SEC_TO_NSEC)
 					  + t1.tv_nsec - t0.tv_nsec;
 			if (elapse > timeout) {
