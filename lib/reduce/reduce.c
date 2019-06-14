@@ -1395,4 +1395,39 @@ spdk_reduce_vol_get_params(struct spdk_reduce_vol *vol)
 	return &vol->params;
 }
 
+void spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol)
+{
+	uint64_t logical_map_size, num_chunks, ttl_chunk_sz;
+	uint32_t struct_size;
+	uint64_t chunk_map_size;
+
+	SPDK_NOTICELOG("vol info:\n");
+	SPDK_NOTICELOG("\tvol->params.backing_io_unit_size = 0x%x\n", vol->params.backing_io_unit_size);
+	SPDK_NOTICELOG("\tvol->params.logical_block_size = 0x%x\n", vol->params.logical_block_size);
+	SPDK_NOTICELOG("\tvol->params.chunk_size = 0x%x\n", vol->params.chunk_size);
+	SPDK_NOTICELOG("\tvol->params.vol_size = 0x%" PRIx64 "\n", vol->params.vol_size);
+	num_chunks = _get_total_chunks(vol->params.vol_size, vol->params.chunk_size);
+	SPDK_NOTICELOG("\ttotal chunks (including extra) = 0x%" PRIx64 "\n", num_chunks);
+	SPDK_NOTICELOG("\ttotal chunks (excluding extra) = 0x%" PRIx64 "\n",
+		       vol->params.vol_size / vol->params.chunk_size);
+	ttl_chunk_sz = _get_pm_total_chunks_size(vol->params.vol_size, vol->params.chunk_size,
+			vol->params.backing_io_unit_size);
+	SPDK_NOTICELOG("\ttotal_chunks_size = 0x%" PRIx64 "\n", ttl_chunk_sz);
+	struct_size = _reduce_vol_get_chunk_struct_size(vol);
+	SPDK_NOTICELOG("\tchunk_struct_size = 0x%x\n", struct_size);
+
+	SPDK_NOTICELOG("pmem info:\n");
+	SPDK_NOTICELOG("\tvol->pm_file.size = 0x%" PRIx64 "\n", vol->pm_file.size);
+	SPDK_NOTICELOG("\tvol->pm_file.pm_buf = %p\n", (void *)vol->pm_file.pm_buf);
+	SPDK_NOTICELOG("\tvol->pm_super = %p\n", (void *)vol->pm_super);
+	SPDK_NOTICELOG("\tvol->pm_logical_map = %p\n", (void *)vol->pm_logical_map);
+	logical_map_size = _get_pm_logical_map_size(vol->params.vol_size,
+			   vol->params.chunk_size);
+	SPDK_NOTICELOG("\tlogical_map_size = 0x%" PRIx64 "\n", logical_map_size);
+	SPDK_NOTICELOG("\tvol->pm_chunk_maps = %p\n", (void *)vol->pm_chunk_maps);
+	chunk_map_size = _get_pm_total_chunks_size(vol->params.vol_size, vol->params.chunk_size,
+			 vol->params.backing_io_unit_size);
+	SPDK_NOTICELOG("\tchunk_map_size = 0x%" PRIx64 "\n", chunk_map_size);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("reduce", SPDK_LOG_REDUCE)
