@@ -180,7 +180,6 @@ ftl_restore_check_seq(const struct ftl_restore *restore)
 
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 		rband = &restore->bands[i];
-
 		if (rband->md_status != FTL_MD_SUCCESS) {
 			continue;
 		}
@@ -507,6 +506,8 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 	if (ftl_pad_chunk_pad_finish(rband, false)) {
 		/* If we're here, end meta wasn't recognized, but the whole band is written */
 		/* Assume the band was padded and ignore it */
+		/* Set NULL to lba map as it wasn't cleared by restore_l2p */
+		band->lba_map.map = NULL;
 		return;
 	}
 
@@ -534,7 +535,9 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 		ppa = band->chunk_buf[i].start_ppa;
 		ppa.lbk = info.wp;
 
-		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, sizeof(uint32_t), NULL);
+		/* We need 4k alignment, otherwise on current QEMU version scatter gather lists to */
+		/* underlying block device become broken */
+		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, FTL_BLOCK_SIZE, NULL);
 		if (spdk_unlikely(!buffer)) {
 			rc = -ENOMEM;
 			goto error;
