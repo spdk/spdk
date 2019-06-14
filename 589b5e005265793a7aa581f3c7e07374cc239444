@@ -22,6 +22,30 @@
       "revId": "589b5e005265793a7aa581f3c7e07374cc239444",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10723a57_5298fcba",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-14T07:01:56Z",
+      "side": 1,
+      "message": "If the socket code is going to be removed from waitforlisten that\u0027s actually great. The rpc_get_methods call would work for us (if that\u0027s what\u0027s going to be used). \nThe problem here is that with kill -9 it takes some time until the old socket disappears from the system and ss/netstat detects the change, so a subsequent bdev_svc restart and waitforlisten call would end prematurely and any rpc call would fail.\n\nwait doesn\u0027t really work (since the problem isn\u0027t in the process ending but the resources still hanging around). Sleep would, but that seems unreliable and like something that would eventually lead to false negatives in verification builds",
+      "parentUuid": "a801b3bf_2be1d3d8",
+      "range": {
+        "startLine": 328,
+        "startChar": 9,
+        "endLine": 328,
+        "endChar": 25
+      },
+      "revId": "589b5e005265793a7aa581f3c7e07374cc239444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
