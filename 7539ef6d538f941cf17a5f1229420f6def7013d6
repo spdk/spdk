@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "381c2d85_e595c2ef",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-14T11:41:55Z",
+      "side": 1,
+      "message": "Host power loss?\nSorry, but I do not understand.",
+      "parentUuid": "7d142622_2c089023",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 3
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "750525fb_a903af4a",
         "filename": "scripts/vagrant/vagrant_auto.sh",
         "patchSetId": 41
@@ -96,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "313f3142_867be255",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-14T11:41:55Z",
+      "side": 1,
+      "message": "1. Reduce time? How?\n2. Any examples of errors when doing vagrant halt?",
+      "parentUuid": "1d946db7_2525f566",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3cb729c8_787bf7cf",
         "filename": "scripts/vagrant/vagrant_auto.sh",
         "patchSetId": 41
@@ -131,6 +179,30 @@
       "side": 1,
       "message": "this looks ugly,  but if you use muti-terminal to do this, one is running libvirt and one is virtualbox, if kill process, vm will to a status power off.",
       "parentUuid": "3cb729c8_787bf7cf",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82a107a9_41579af3",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-14T11:41:55Z",
+      "side": 1,
+      "message": "Mutli terminal? I\u0027m a bit confused now. Does that mean these scripts are for manual testing, or for CI?\nWhy do we need multiple provider support at the same time?",
+      "parentUuid": "3f5d9f11_7c2c909b",
       "range": {
         "startLine": 110,
         "startChar": 0,
@@ -413,6 +485,30 @@
       "side": 1,
       "message": "I want to re-use this vm, and ssh to execute auto test, out test already had it\u0027s own trap.\nthis are remote executing. \nhere we only need  to kill sock.\nonce it be created sucessfully,  we can use ./vagrant_auto.sh  to retest.",
       "parentUuid": "fc1cb0a8_0060bb13",
+      "range": {
+        "startLine": 291,
+        "startChar": 1,
+        "endLine": 291,
+        "endChar": 26
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5ac029f_e3458d3f",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-14T11:41:55Z",
+      "side": 1,
+      "message": "Re-use - I asked this question a few lines before: does that mean you use these scripts for manual tests?\nIf you remove the trap here, then we won\u0027t be able to do a proper clean-up routine if we run automated tests in CI.",
+      "parentUuid": "dd00dec8_4e94635e",
       "range": {
         "startLine": 291,
         "startChar": 1,
