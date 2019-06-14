@@ -128,13 +128,15 @@ sleep 3
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
 		$rpc_py delete_crypto_bdev 'crypto0'
-		$rpc_py delete_malloc_bdev 'Malloc2'
 	fi
 fi
-# Delete raid0, Malloc0, Malloc1 blockdevs
+# Delete raid0 blockdev
 $rpc_py destroy_raid_bdev 'raid0'
-$rpc_py delete_malloc_bdev 'Malloc0'
-$rpc_py delete_malloc_bdev 'Malloc1'
+
+# Delete all allocated malloc blockdevs
+for $malloc_bdev in "$malloc_bdevs"; do
+	$rpc_py delete_malloc_bdev '$malloc_bdev'
+done
 
 fio_status=0
 wait $fio_pid || fio_status=$?
