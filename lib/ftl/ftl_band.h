@@ -185,6 +185,9 @@ struct ftl_band {
 	/* End metadata start ppa */
 	struct ftl_ppa				tail_md_ppa;
 
+	/* Inflight write operations */
+	size_t					inflight_writes;
+
 	/* Free/shut bands' lists */
 	LIST_ENTRY(ftl_band)			list_entry;
 
@@ -229,6 +232,7 @@ int		ftl_band_write_prep(struct ftl_band *band);
 struct ftl_chunk *ftl_band_next_operational_chunk(struct ftl_band *band,
 		struct ftl_chunk *chunk);
 size_t		ftl_lba_map_pool_elem_size(struct spdk_ftl_dev *dev);
+size_t		ftl_xfer_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa);
 
 static inline int
 ftl_band_empty(const struct ftl_band *band)

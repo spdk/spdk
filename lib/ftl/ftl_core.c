@@ -206,6 +206,7 @@ ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 	struct spdk_bdev *bdev;
 
 	wptr = ftl_wptr_from_band(io->band);
+	wptr->band->inflight_writes--;
 
 	if (status) {
 		ftl_md_write_fail(io, status);
@@ -507,6 +508,7 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 	}
 
 	wptr->offset += xfer_size;
+	wptr->band->inflight_writes++;
 	next_thld = (ftl_band_num_usable_lbks(band) * conf->band_thld) / 100;
 
 	if (ftl_band_full(band, wptr->offset)) {
@@ -1123,6 +1125,9 @@ ftl_write_cb(struct ftl_io *io, void *arg, int status)
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_rwb_batch *batch = io->rwb_batch;
 	struct ftl_rwb_entry *entry;
+	struct ftl_band *band = io->band;
+
+	band->inflight_writes--;
 
 	if (status) {
 		ftl_write_fail(io, status);
@@ -1883,6 +1888,28 @@ ftl_process_anm_event(struct ftl_anm_event *event)
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Unconsumed ANM received for dev: %p...\n", event->dev);
 	ftl_anm_event_complete(event);
+}
+
+bool
+ftl_ppa_is_written(struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
+{
+	struct ftl_band *band = ftl_band_from_ppa(dev, ppa);
+	struct ftl_wptr *wptr = NULL;
+	size_t lbkoff = ftl_xfer_offset_from_ppa(band, ppa);
+
+	if (band->state == FTL_BAND_STATE_CLOSED) {
+		return true;
+	}
+
+	LIST_FOREACH(wptr, &dev->wptr_list, list_entry) {
+		if (wptr->band == band) {
+			if (lbkoff > (wptr->offset - band->inflight_writes * dev->xfer_size)) {
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
 
 static void
