@@ -2656,11 +2656,19 @@ spdk_nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair)
 	spdk_nvmf_tcp_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair));
 }
 
+#define SOCK_POLL_ONCE_PER_LOOP_NUMBERS  50
+
 static int
 spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 	int rc;
+	static uint64_t loop_num_to_wait = 0;
+
+	if (loop_num_to_wait > 0) {
+		loop_num_to_wait--;
+		return 0;
+	}
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 
@@ -2672,6 +2680,10 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
 		return rc;
+	} else if (rc == 0) {
+		loop_num_to_wait += SOCK_POLL_ONCE_PER_LOOP_NUMBERS;
+	} else {
+		loop_num_to_wait--;
 	}
 
 	return 0;
