@@ -1480,10 +1480,8 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 		if (strlen(target_short_name) >= MAX_TARGET_NAME) {
 			SPDK_ERRLOG("Target Short Name (%s) is more than %u characters\n",
 				    target_short_name, MAX_TARGET_NAME);
-			/* Invalid request */
-			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-			rsph->status_detail = ISCSI_LOGIN_INVALID_LOGIN_REQUEST;
-			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+			rc = SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+			goto error;
 		}
 		snprintf(conn->target_short_name, MAX_TARGET_NAME, "%s",
 			 target_short_name);
@@ -1497,6 +1495,10 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 		return rc;
 	}
 
+	if (conn->portal == NULL || conn->portal->group == NULL) {
+		rc = SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+		goto error;
+	}
 	conn->target = *target;
 	conn->dev = (*target)->dev;
 	conn->target_port = spdk_scsi_dev_find_port_by_id((*target)->dev,
@@ -1517,6 +1519,7 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 		rc = iscsi_op_login_negotiate_digest_param(conn, *target);
 	}
 
+error:
 	if (rc != 0) {
 		/* Invalid request */
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
