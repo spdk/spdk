@@ -1836,13 +1836,15 @@ err:
 	spdk_nvmf_tcp_send_c2h_term_req(tqpair, pdu, fes, error_offset);
 }
 
+#define MAX_NVME_TCP_PDU_LOOP_COUNT 32
+
 static int
 spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	int rc = 0;
 	struct nvme_tcp_pdu *pdu;
 	enum nvme_tcp_pdu_recv_state prev_state;
-	uint32_t data_len;
+	uint32_t data_len, current_pdu_num = 0;
 	uint8_t psh_len, pdo, hlen;
 	int8_t  padding_len;
 
@@ -1920,6 +1922,9 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 
 			/* All header(ch, psh, head digist) of this PDU has now been read from the socket. */
 			spdk_nvmf_tcp_pdu_psh_handle(tqpair);
+			if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
+				current_pdu_num++;
+			}
 			break;
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
 			pdu = &tqpair->pdu_in_progress;
@@ -1949,6 +1954,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 
 			/* All of this PDU has now been read from the socket. */
 			spdk_nvmf_tcp_pdu_payload_handle(tqpair);
+			current_pdu_num++;
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
 			pdu = &tqpair->pdu_in_progress;
@@ -1963,7 +1969,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			SPDK_ERRLOG("code should not come to here");
 			break;
 		}
-	} while (tqpair->recv_state != prev_state);
+	} while ((tqpair->recv_state != prev_state) && (current_pdu_num < MAX_NVME_TCP_PDU_LOOP_COUNT));
 
 	return rc;
 }
