@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "492b94ed_3647ba48",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1890,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-14T11:35:35Z",
+      "side": 1,
+      "message": "Pass band instead of dev",
+      "revId": "a68f8e1299c1961b9257ec2a6f6b897c8a578b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44123f38_d0a282bb",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1899,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-14T11:35:35Z",
+      "side": 1,
+      "message": "return ppa.lbk \u003c chunk-\u003ewrite_offset;",
+      "range": {
+        "startLine": 1895,
+        "startChar": 0,
+        "endLine": 1899,
+        "endChar": 13
+      },
+      "revId": "a68f8e1299c1961b9257ec2a6f6b897c8a578b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
