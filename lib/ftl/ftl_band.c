@@ -619,7 +619,7 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 	return ppa;
 }
 
-static size_t
+size_t
 ftl_xfer_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
 {
 	struct ftl_chunk *chunk, *current_chunk;
