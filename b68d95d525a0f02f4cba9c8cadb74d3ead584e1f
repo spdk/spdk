@@ -16,6 +16,24 @@
       "revId": "b68d95d525a0f02f4cba9c8cadb74d3ead584e1f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62ae07fe_61ad3ad8",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-06-14T05:58:10Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nSorry for some delays.\nThis is in fact how it was originally implemented in patchset 1. But it was changed to current implementation after comment from Pawel (please, see comments for patchset 1). The motivation was to improve error handling. If spdk_thread_get_stats fails for any reason we will report error in RPC response and not just silently drop some thread from the list.",
+      "parentUuid": "9b6fd46c_25fb721e",
+      "revId": "b68d95d525a0f02f4cba9c8cadb74d3ead584e1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
