@@ -49,6 +49,12 @@
 #include "fio.h"
 #include "optgroup.h"
 
+/* FreeBSD is missing CLOCK_MONOTONIC_RAW,
+ * so alternative is provided. */
+#ifndef CLOCK_MONOTONIC_RAW /* Defined in glibc bits/time.h */
+#define CLOCK_MONOTONIC_RAW CLOCK_MONOTONIC
+#endif
+
 struct spdk_fio_options {
 	void *pad;
 	char *conf;
