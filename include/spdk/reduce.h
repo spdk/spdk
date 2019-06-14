@@ -239,4 +239,13 @@ void spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
  * \return params structure for the compressed volume.
  */
 const struct spdk_reduce_vol_params *spdk_reduce_vol_get_params(struct spdk_reduce_vol *vol);
+
+/**
+ * Dump out key information for a libreduce compressed volume and its PMEM.
+ *
+ * This function will print key information for a given volume its PMEM.
+ *
+ * \param vol Previously loaded or initialized compressed volume.
+ */
+void spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol);
 #endif /* SPDK_REDUCE_H_ */
