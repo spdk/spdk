@@ -63,6 +63,9 @@ struct ftl_chunk {
 	/* Indicates that there is inflight write */
 	bool					busy;
 
+	/* Current logical block's offset */
+	size_t					write_offset;
+
 	/* First PPA */
 	struct ftl_ppa				start_ppa;
 
