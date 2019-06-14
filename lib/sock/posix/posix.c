@@ -332,6 +332,24 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 		return NULL;
 	}
 
+#if 1
+	int sock_prio = 1;
+	int len = sizeof(sock_prio);
+	int ret = setsockopt(rc, SOL_SOCKET, SO_PRIORITY, &sock_prio, len);
+	if (ret != 0) {
+		close(rc);
+	}
+#endif
+
+#if 0
+	int busy_read = 50;
+ 	ret = setsockopt(rc, SOL_SOCKET, SO_BUSY_POLL, & busy_read, sizeof(int));
+	if (ret != 0) {
+		close(rc);
+	}
+
+#endif
+
 	flag = fcntl(rc, F_GETFL);
 	if ((!(flag & O_NONBLOCK)) && (fcntl(rc, F_SETFL, flag | O_NONBLOCK) < 0)) {
 		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", rc, errno);

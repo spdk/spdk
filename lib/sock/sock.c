@@ -358,6 +358,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 
 	rc = sock->net_impl->get_placement_id(sock, &placement_id);
 	if (!rc && (placement_id != 0)) {
+		printf("the placement_id =%d\n", placement_id);
 		rc = spdk_sock_map_insert(placement_id, group);
 		if (rc < 0) {
 			return -1;
