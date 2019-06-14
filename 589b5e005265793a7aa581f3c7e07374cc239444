@@ -46,6 +46,30 @@
       "revId": "589b5e005265793a7aa581f3c7e07374cc239444",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5271c2de_e0d4ccc5",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-14T11:21:34Z",
+      "side": 1,
+      "message": "I see. I\u0027ll try to finish up that patch today.",
+      "parentUuid": "10723a57_5298fcba",
+      "range": {
+        "startLine": 328,
+        "startChar": 9,
+        "endLine": 328,
+        "endChar": 25
+      },
+      "revId": "589b5e005265793a7aa581f3c7e07374cc239444",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
