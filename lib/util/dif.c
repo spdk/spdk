@@ -250,6 +250,7 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 
 	ctx->block_size = block_size;
 	ctx->md_size = md_size;
+	ctx->md_interleave = md_interleave;
 	ctx->guard_interval = _get_guard_interval(block_size, md_size, dif_loc, md_interleave);
 	ctx->dif_type = dif_type;
 	ctx->dif_flags = dif_flags;
@@ -262,6 +263,21 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	ctx->guard_seed = guard_seed;
 
 	return 0;
+}
+
+void
+spdk_dif_ctx_set_data_offset(struct spdk_dif_ctx *ctx, uint32_t data_offset)
+{
+	uint32_t data_block_size;
+
+	if (ctx->md_interleave) {
+		data_block_size = ctx->block_size - ctx->md_size;
+	} else {
+		data_block_size = ctx->block_size;
+	}
+
+	ctx->data_offset = data_offset;
+	ctx->ref_tag_offset = data_offset / data_block_size;
 }
 
 static void
