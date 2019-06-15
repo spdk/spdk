@@ -5,6 +5,8 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/pmem/common.sh
 
+rpc_py="$rootdir/scripts/rpc.py "
+
 enable_script_debug=false
 test_info=false
 test_create=false

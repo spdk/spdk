@@ -1,9 +1,3 @@
-BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../ && pwd)"
-rpc_py="$TEST_DIR/scripts/rpc.py "
-
-source $TEST_DIR/test/common/autotest_common.sh
-
 # Prints error message and return error code, closes vhost app and remove
 # pmem pool file
 # input: error message, error code
@@ -21,10 +15,10 @@ function error()
 
 # check if there is pool file & remove it
 # input: path to pool file
-# default: $TEST_DIR/test/pmem/pool_file
+# default: $default_pool_file
 function pmem_clean_pool_file()
 {
-	local pool_file=${1:-$TEST_DIR/test/pmem/pool_file}
+	local pool_file=${1:-$default_pool_file}
 
 	if [ -f $pool_file ]; then
 		echo "Deleting old pool_file"
@@ -34,10 +28,10 @@ function pmem_clean_pool_file()
 
 # create new pmem file
 # input: path to pool file, size in MB, block_size
-# default: $TEST_DIR/test/pmem/pool_file 32 512
+# default: $default_pool_file 32 512
 function pmem_create_pool_file()
 {
-	local pool_file=${1:-$TEST_DIR/test/pmem/pool_file}
+	local pool_file=${1:-$default_pool_file}
 	local size=${2:-32}
 	local block_size=${3:-512}
 
@@ -54,12 +48,12 @@ function pmem_create_pool_file()
 
 function pmem_unmount_ramspace
 {
-	if [ -d "$TEST_DIR/test/pmem/ramspace" ]; then
-		if mount | grep -q "$TEST_DIR/test/pmem/ramspace"; then
-			umount $TEST_DIR/test/pmem/ramspace
+	if [ -d "$testdir/ramspace" ]; then
+		if mount | grep -q "$testdir/ramspace"; then
+			umount $testdir/ramspace
 		fi
 
-		rm -rf $TEST_DIR/test/pmem/ramspace
+		rm -rf $testdir/ramspace
 	fi
 }
 
@@ -75,23 +69,23 @@ function vhost_start()
 {
 	local vhost_pid
 
-	$TEST_DIR/app/vhost/vhost &
+	$rootdir/app/vhost/vhost &
 	if [ $? != 0 ]; then
 		echo -e "ERROR: Failed to launch vhost!"
 		return 1
 	fi
 
 	vhost_pid=$!
-	echo $vhost_pid > $TEST_DIR/test/pmem/vhost.pid
+	echo $vhost_pid > $testdir/vhost.pid
 	waitforlisten $vhost_pid
 }
 
 function vhost_kill()
 {
-	local vhost_pid_file="$TEST_DIR/test/pmem/vhost.pid"
+	local vhost_pid_file="$testdir/vhost.pid"
 	local vhost_pid="$(cat $vhost_pid_file)"
 
-	if [[ ! -f $TEST_DIR/test/pmem/vhost.pid ]]; then
+	if [[ ! -f $vhost_pid_file ]]; then
 		echo -e "ERROR: No vhost pid file found!"
 		return 1
 	fi
