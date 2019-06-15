@@ -74,6 +74,9 @@ struct spdk_dif_ctx {
 	/** Metadata size */
 	uint32_t		md_size;
 
+	/** Metadata location */
+	bool			md_interleave;
+
 	/** Interval for guard computation for DIF */
 	uint32_t		guard_interval;
 
@@ -149,6 +152,14 @@ int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md
 		      bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
 		      uint32_t data_offset, uint16_t guard_seed);
+
+/**
+ * Update date offset of DIF context.
+ *
+ * \param ctx DIF context.
+ * \param data_offset Byte offset from the start of the whole data buffer.
+ */
+void spdk_dif_ctx_set_data_offset(struct spdk_dif_ctx *ctx, uint32_t data_offset);
 
 /**
  * Generate DIF for extended LBA payload.
