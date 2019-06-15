@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../ && pwd)"
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/pmem/common.sh
 
 enable_script_debug=false
 test_info=false
@@ -11,8 +13,8 @@ test_construct_bdev=false
 test_delete_bdev=false
 test_all=true
 test_all_get=false
-default_pool_file=$TEST_DIR/test/pmem/pool_file
-obj_pool_file=$TEST_DIR/test/pmem/obj_pool_file
+default_pool_file="$testdir/pool_file"
+obj_pool_file="$testdir/obj_pool_file"
 bdev_name=pmem0
 
 function usage()
@@ -64,9 +66,6 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-source $TEST_DIR/test/pmem/common.sh
-source $TEST_DIR/test/common/autotest_common.sh
-
 #================================================
 # pmem_pool_info tests
 #================================================
@@ -85,7 +84,7 @@ function pmem_pool_info_tc2()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 
-	if $rpc_py pmem_pool_info $TEST_DIR/non/existing/path/non_existent_file; then
+	if $rpc_py pmem_pool_info $rootdir/non/existing/path/non_existent_file; then
 		error "pmem_pool_info passed with invalid path!"
 	fi
 
@@ -95,7 +94,7 @@ function pmem_pool_info_tc2()
 function pmem_pool_info_tc3()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
-	pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
+	pmem_clean_pool_file $testdir/obj_pool_file
 
 	echo "Creating new type OBJ pool file"
 	if hash pmempool; then
@@ -105,12 +104,12 @@ function pmem_pool_info_tc3()
 		truncate -s "32M" $obj_pool_file
 	fi
 
-	if $rpc_py pmem_pool_info $TEST_DIR/test/pmem/obj_pool_file; then
-		pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
+	if $rpc_py pmem_pool_info $testdir/obj_pool_file; then
+		pmem_clean_pool_file $testdir/obj_pool_file
 		error "Pmem_pool_info passed with invalid pool_file type!"
 	fi
 
-	pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
+	pmem_clean_pool_file $testdir/obj_pool_file
 	return 0
 }
 
@@ -165,11 +164,11 @@ function create_pmem_pool_tc2()
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 
-	if  $rpc_py create_pmem_pool $TEST_DIR/non/existing/path/non_existent_file 32 512; then
+	if  $rpc_py create_pmem_pool $rootdir/non/existing/path/non_existent_file 32 512; then
 		error "Mem pool file created with incorrect path!"
 	fi
 
-	if $rpc_py pmem_pool_info $TEST_DIR/non/existing/path/non_existent_file; then
+	if $rpc_py pmem_pool_info $rootdir/non/existing/path/non_existent_file; then
 		error "create_pmem_pool created invalid pool file!"
 	fi
 
@@ -211,24 +210,24 @@ function create_pmem_pool_tc4()
 	pmem_print_tc_name ${FUNCNAME[0]}
 
 	pmem_unmount_ramspace
-	mkdir $TEST_DIR/test/pmem/ramspace
-	mount -t tmpfs -o size=300m tmpfs $TEST_DIR/test/pmem/ramspace
-	if ! $rpc_py create_pmem_pool $TEST_DIR/test/pmem/ramspace/pool_file 256 512; then
+	mkdir $rootdir/test/pmem/ramspace
+	mount -t tmpfs -o size=300m tmpfs $rootdir/test/pmem/ramspace
+	if ! $rpc_py create_pmem_pool $rootdir/test/pmem/ramspace/pool_file 256 512; then
 		pmem_unmount_ramspace
 		error "Failed to create pmem pool!"
 	fi
 
-	if ! $rpc_py pmem_pool_info $TEST_DIR/test/pmem/ramspace/pool_file; then
+	if ! $rpc_py pmem_pool_info $rootdir/test/pmem/ramspace/pool_file; then
 		pmem_unmount_ramspace
 		error "Failed to get pmem info"
 	fi
 
-	if ! $rpc_py delete_pmem_pool $TEST_DIR/test/pmem/ramspace/pool_file; then
+	if ! $rpc_py delete_pmem_pool $rootdir/test/pmem/ramspace/pool_file; then
 		pmem_unmount_ramspace
 		error "Failed to delete pool file!"
 	fi
 
-	if [ -f $TEST_DIR/test/pmem/ramspace/pool_file ]; then
+	if [ -f $rootdir/test/pmem/ramspace/pool_file ]; then
 		pmem_unmount_ramspace
 		error "Failed to delete pmem file / file still exists!"
 	fi
@@ -386,7 +385,7 @@ function delete_pmem_pool_tc1()
 function delete_pmem_pool_tc2()
 {
 	pmem_print_tc_name "delete_pmem_pool_tc2"
-	pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
+	pmem_clean_pool_file $testdir/obj_pool_file
 
 	echo "Creating new type OBJ pool file"
 	if hash pmempool; then
@@ -396,12 +395,12 @@ function delete_pmem_pool_tc2()
 		truncate -s "32M" $obj_pool_file
 	fi
 
-	if $rpc_py delete_pmem_pool $TEST_DIR/test/pmem/obj_pool_file; then
-		pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
+	if $rpc_py delete_pmem_pool $testdir/obj_pool_file; then
+		pmem_clean_pool_file $testdir/obj_pool_file
 		error "delete_pmem_pool deleted invalid pmem pool type!"
 	fi
 
-	pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
+	pmem_clean_pool_file $testdir/obj_pool_file
 	return 0
 }
 
@@ -461,7 +460,7 @@ function construct_pmem_bdev_tc2()
 	pmem_clean_pool_file
 
 	pmem_create_pool_file
-	if $rpc_py construct_pmem_bdev -n $bdev_name $TEST_DIR/non/existing/path/non_existent_file; then
+	if $rpc_py construct_pmem_bdev -n $bdev_name $rootdir/non/existing/path/non_existent_file; then
 		error "Created pmem bdev w/out valid pool file!"
 	fi
 
@@ -477,14 +476,14 @@ function construct_pmem_bdev_tc3()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 
-	truncate -s 32M $TEST_DIR/test/pmem/random_file
-	if $rpc_py construct_pmem_bdev -n $bdev_name $TEST_DIR/test/pmem/random_file; then
+	truncate -s 32M $rootdir/test/pmem/random_file
+	if $rpc_py construct_pmem_bdev -n $bdev_name $rootdir/test/pmem/random_file; then
 		error "Created pmem bdev from random file!"
 	fi
 
-	if [ -f $TEST_DIR/test/pmem/random_file ]; then
+	if [ -f $rootdir/test/pmem/random_file ]; then
 		echo "Deleting previously created random file"
-		rm $TEST_DIR/test/pmem/random_file
+		rm $rootdir/test/pmem/random_file
 	fi
 
 	return 0
@@ -493,7 +492,7 @@ function construct_pmem_bdev_tc3()
 function construct_pmem_bdev_tc4()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
-	pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
+	pmem_clean_pool_file $testdir/obj_pool_file
 
 	echo "Creating new type OBJ pool file"
 	if hash pmempool; then
@@ -503,12 +502,12 @@ function construct_pmem_bdev_tc4()
 		truncate -s "32M" $obj_pool_file
 	fi
 
-	if $rpc_py construct_pmem_bdev -n $bdev_name $TEST_DIR/test/pmem/obj_pool_file; then
-		pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
+	if $rpc_py construct_pmem_bdev -n $bdev_name $testdir/obj_pool_file; then
+		pmem_clean_pool_file $testdir/obj_pool_file
 		error "Created pmem bdev from obj type pmem file!"
 	fi
 
-	pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
+	pmem_clean_pool_file $testdir/obj_pool_file
 	return 0
 }
 
