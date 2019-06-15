@@ -94,7 +94,7 @@ function pmem_pool_info_tc2()
 function pmem_pool_info_tc3()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
-	pmem_clean_pool_file $testdir/obj_pool_file
+	pmem_clean_pool_file $obj_pool_file
 
 	echo "Creating new type OBJ pool file"
 	if hash pmempool; then
@@ -104,12 +104,12 @@ function pmem_pool_info_tc3()
 		truncate -s "32M" $obj_pool_file
 	fi
 
-	if $rpc_py pmem_pool_info $testdir/obj_pool_file; then
-		pmem_clean_pool_file $testdir/obj_pool_file
+	if $rpc_py pmem_pool_info $obj_pool_file; then
+		pmem_clean_pool_file $obj_pool_file
 		error "Pmem_pool_info passed with invalid pool_file type!"
 	fi
 
-	pmem_clean_pool_file $testdir/obj_pool_file
+	pmem_clean_pool_file $obj_pool_file
 	return 0
 }
 
@@ -385,7 +385,7 @@ function delete_pmem_pool_tc1()
 function delete_pmem_pool_tc2()
 {
 	pmem_print_tc_name "delete_pmem_pool_tc2"
-	pmem_clean_pool_file $testdir/obj_pool_file
+	pmem_clean_pool_file $obj_pool_file
 
 	echo "Creating new type OBJ pool file"
 	if hash pmempool; then
@@ -395,12 +395,12 @@ function delete_pmem_pool_tc2()
 		truncate -s "32M" $obj_pool_file
 	fi
 
-	if $rpc_py delete_pmem_pool $testdir/obj_pool_file; then
-		pmem_clean_pool_file $testdir/obj_pool_file
+	if $rpc_py delete_pmem_pool $obj_pool_file; then
+		pmem_clean_pool_file $obj_pool_file
 		error "delete_pmem_pool deleted invalid pmem pool type!"
 	fi
 
-	pmem_clean_pool_file $testdir/obj_pool_file
+	pmem_clean_pool_file $obj_pool_file
 	return 0
 }
 
@@ -492,7 +492,7 @@ function construct_pmem_bdev_tc3()
 function construct_pmem_bdev_tc4()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
-	pmem_clean_pool_file $testdir/obj_pool_file
+	pmem_clean_pool_file $obj_pool_file
 
 	echo "Creating new type OBJ pool file"
 	if hash pmempool; then
@@ -502,12 +502,12 @@ function construct_pmem_bdev_tc4()
 		truncate -s "32M" $obj_pool_file
 	fi
 
-	if $rpc_py construct_pmem_bdev -n $bdev_name $testdir/obj_pool_file; then
-		pmem_clean_pool_file $testdir/obj_pool_file
+	if $rpc_py construct_pmem_bdev -n $bdev_name $obj_pool_file; then
+		pmem_clean_pool_file $obj_pool_file
 		error "Created pmem bdev from obj type pmem file!"
 	fi
 
-	pmem_clean_pool_file $testdir/obj_pool_file
+	pmem_clean_pool_file $obj_pool_file
 	return 0
 }
 
