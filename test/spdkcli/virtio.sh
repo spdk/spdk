@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-set -xe
 
 testdir=$(readlink -f $(dirname $0))
-. $testdir/common.sh
+rootdir=$(readlink -f $testdir/../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/spdkcli/common.sh
 
 trap 'killprocess $virtio_pid; on_error_exit' ERR
 timing_enter spdk_cli_vhost_init

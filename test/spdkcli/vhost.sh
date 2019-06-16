@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-set -xe
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/spdkcli/common.sh
 
 MATCH_FILE="spdkcli_vhost.test"
 SPDKCLI_BRANCH="/"
-testdir=$(readlink -f $(dirname $0))
-. $testdir/common.sh
 
 timing_enter spdk_cli_vhost
 trap 'on_error_exit' ERR
