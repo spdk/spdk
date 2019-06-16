@@ -8,8 +8,8 @@ import collections
 os.chdir(os.path.join(os.path.dirname(sys.argv[0]), "results"))
 
 scsi_logs = filter(lambda x: x.endswith(".log"), os.listdir("./"))
-scsi_1_pattern = re.compile("(ASSERTION\s[1-9][\d+]?\.\d+\s)(.+\s)([\w\W]+?)(Result:\s)(\w+)", re.I | re.M)
-scsi_2_pattern = re.compile("(?:Start:\s)(ASSERTION:\s)?(.+)(?:,.+=\s)([\w\W]+?)(End:\s)(\w+)(,.*)", re.I | re.M)
+scsi_1_pattern = re.compile(r"(ASSERTION\s[1-9][\d+]?\.\d+\s)(.+\s)([\w\W]+?)(Result:\s)(\w+)", re.I | re.M)
+scsi_2_pattern = re.compile(r"(?:Start:\s)(ASSERTION:\s)?(.+)(?:,.+=\s)([\w\W]+?)(End:\s)(\w+)(,.*)", re.I | re.M)
 fails = []
 warns = []
 
@@ -64,8 +64,8 @@ for log in scsi_logs:
 
     # Go through output for each test from log file; parse and save to dict
     for m in matches_found:
-        test_name = re.sub("\s+", "_", (m[0] + m[1]).strip())
-        test_name = re.sub("[():]", "", test_name)
+        test_name = re.sub(r"\s+", "_", (m[0] + m[1]).strip())
+        test_name = re.sub(r"[():]", "", test_name)
         test_name = test_name[0:-1] if "." in test_name[-1] else test_name
         tc_result = m[4].upper()
 
