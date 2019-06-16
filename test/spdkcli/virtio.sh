@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-set -xe
 
 testdir=$(readlink -f $(dirname $0))
-. $testdir/common.sh
+rootdir=$(readlink -f $testdir/../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/spdkcli/common.sh
 
 trap 'killprocess $virtio_pid; on_error_exit' ERR
 timing_enter spdk_cli_vhost_init
@@ -12,7 +13,7 @@ run_spdk_tgt
 timing_exit run_spdk_tgt
 
 timing_enter run_spdk_virtio
-$SPDKCLI_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x4 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock &
+$rootdir/app/spdk_tgt/spdk_tgt -m 0x4 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock &
 virtio_pid=$!
 waitforlisten $virtio_pid /var/tmp/virtio.sock
 timing_exit run_spdk_virtio

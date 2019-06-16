@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-set -xe
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../..)
+source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/spdkcli/common.sh
 
 MATCH_FILE="spdkcli_rbd.test"
 SPDKCLI_BRANCH="/bdevs/rbd"
-testdir=$(readlink -f $(dirname $0))
-. $testdir/common.sh
 
 timing_enter spdk_cli_rbd
 trap 'on_error_exit' ERR
@@ -14,7 +16,6 @@ timing_exit run_spdk_tgt
 
 timing_enter spdkcli_create_rbd_config
 trap 'rbd_cleanup; on_error_exit' ERR
-rootdir=$(readlink -f $SPDKCLI_BUILD_DIR)
 rbd_cleanup
 rbd_setup 127.0.0.1
 $spdkcli_job "'/bdevs/rbd create rbd foo 512' 'Ceph0' True
