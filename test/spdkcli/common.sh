@@ -1,8 +1,5 @@
-testdir=$(readlink -f $(dirname $0))
-SPDKCLI_BUILD_DIR=$(readlink -f $testdir/../..)
-spdkcli_job="$SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job.py"
-spdk_clear_config_py="$SPDKCLI_BUILD_DIR/test/json_config/clear_config.py"
-. $SPDKCLI_BUILD_DIR/test/common/autotest_common.sh
+spdkcli_job="$rootdir/test/spdkcli/spdkcli_job.py"
+spdk_clear_config_py="$rootdir/test/json_config/clear_config.py"
 
 function on_error_exit() {
 	set +e
@@ -24,31 +21,31 @@ function on_error_exit() {
 }
 
 function run_spdk_tgt() {
-	$SPDKCLI_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 4096 &
+	$rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 4096 &
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
 }
 
 function run_nvmf_tgt() {
-	$SPDKCLI_BUILD_DIR/app/nvmf_tgt/nvmf_tgt -m 0x3 -p 0 -s 4096 &
+	$rootdir/app/nvmf_tgt/nvmf_tgt -m 0x3 -p 0 -s 4096 &
 	nvmf_tgt_pid=$!
 	waitforlisten $nvmf_tgt_pid
 }
 
 function run_iscsi_tgt() {
-	$SPDKCLI_BUILD_DIR/app/iscsi_tgt/iscsi_tgt -m 0x3 -p 0 -s 4096 &
+	$rootdir/app/iscsi_tgt/iscsi_tgt -m 0x3 -p 0 -s 4096 &
 	iscsi_tgt_pid=$!
 	waitforlisten $iscsi_tgt_pid
 }
 
 function run_vhost_tgt() {
-	$SPDKCLI_BUILD_DIR/app/vhost/vhost -m 0x3 -p 0 -s 4096 &
+	$rootdir/app/vhost/vhost -m 0x3 -p 0 -s 4096 &
 	vhost_tgt_pid=$!
 	waitforlisten $vhost_tgt_pid
 }
 
 function check_match() {
-	$SPDKCLI_BUILD_DIR/scripts/spdkcli.py ll $SPDKCLI_BRANCH > $testdir/match_files/${MATCH_FILE}
-	$SPDKCLI_BUILD_DIR/test/app/match/match -v $testdir/match_files/${MATCH_FILE}.match
+	$rootdir/scripts/spdkcli.py ll $SPDKCLI_BRANCH > $testdir/match_files/${MATCH_FILE}
+	$rootdir/test/app/match/match -v $testdir/match_files/${MATCH_FILE}.match
 	rm -f $testdir/match_files/${MATCH_FILE}
 }
