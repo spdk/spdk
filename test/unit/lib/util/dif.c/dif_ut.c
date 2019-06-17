@@ -2079,6 +2079,67 @@ _dif_verify_split_test(void)
 	free(buf);
 }
 
+static void
+dif_verify_stream_multi_segments_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct spdk_dif_error err_blk = {};
+	struct iovec iov = {};
+	uint8_t *buf;
+	uint32_t dif_flags;
+	int rc;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
+			       dif_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	buf = calloc(1, (4096 + 128) * 4);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
+	_iov_set_buf(&iov, buf, (4096 + 128) * 4);
+
+	rc = ut_data_pattern_generate(&iov, 1, 4096 + 128, 128, 4);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iov, 1, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	/* 1st data segment */
+	_iov_set_buf(&iov, buf, 1024);
+	spdk_dif_ctx_set_data_offset(&ctx, 0);
+
+	rc = spdk_dif_verify_stream(&iov, 1, 0, 1024, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	/* 2nd data segment */
+	_iov_set_buf(&iov, buf + 1024, (3072 + 128) + (4096 + 128) * 2 + 512);
+	spdk_dif_ctx_set_data_offset(&ctx, 1024);
+
+	rc = spdk_dif_verify_stream(&iov, 1, 0, 3072 + 4096 * 2 + 512, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	/* 3rd data segment */
+	_iov_set_buf(&iov, buf + (4096 + 128) * 3 + 512, 3584 + 128);
+	spdk_dif_ctx_set_data_offset(&ctx, 4096 * 3);
+
+	rc = spdk_dif_verify_stream(&iov, 1, 0, 3584, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	/* verify all data segments once */
+	_iov_set_buf(&iov, buf, (4096 + 128) * 4);
+	spdk_dif_ctx_set_data_offset(&ctx, 0);
+
+	rc = spdk_dif_verify(&iov, 1, 4, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = ut_data_pattern_verify(&iov, 1, 4096 + 128, 128, 4);
+	CU_ASSERT(rc == 0);
+
+	free(buf);
+}
+
 #define UT_CRC32C_XOR	0xffffffffUL
 
 static void
@@ -2266,6 +2327,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "set_md_interleave_iovs_multi_segments_test",
 			    set_md_interleave_iovs_multi_segments_test) == NULL ||
 		CU_add_test(suite, "_dif_verify_split_test", _dif_verify_split_test) == NULL ||
+		CU_add_test(suite, "dif_verify_stream_multi_segments_test",
+			    dif_verify_stream_multi_segments_test) == NULL ||
 		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL
 	) {
 		CU_cleanup_registry();
