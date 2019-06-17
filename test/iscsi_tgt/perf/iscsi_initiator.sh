@@ -20,7 +20,7 @@ iscsi_fio_results="$testdir/perf_output/iscsi_fio.json"
 trap "iscsiadm -m node --logout; iscsiadm -m node -o delete; exit 1" ERR SIGTERM SIGABRT
 iscsiadm -m discovery -t sendtargets -p $IP_T:$ISCSI_PORT
 iscsiadm -m node --login -p $IP_T:$ISCSI_PORT
-sleep 1
+waitforiscsidevices 1
 
 disks=($(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}'))
 for (( i=0; i < ${#disks[@]}; i++ ))
