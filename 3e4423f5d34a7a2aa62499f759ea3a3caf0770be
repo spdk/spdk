@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8c5b0fa_4ca29b27",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-17T04:48:48Z",
+      "side": 1,
+      "message": "no need to `set -e`, it\u0027s already done inside autotest_common.sh. I know we do it in a lot of other scripts now, but there\u0027s a patch series to remove those.",
+      "revId": "3e4423f5d34a7a2aa62499f759ea3a3caf0770be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e670c679_6e4a27f7",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-17T04:48:48Z",
+      "side": 1,
+      "message": "Can you move it up in this file, just after defining testdir and rootdir?\n\nautotest_common enables not only `set -e`, but also `set -x`. This results in each subsequent command being printed to the log. It might be handy to see in the log that pu_start was defined to 0 and additional_blocks to 16.\n\nThe preferred test file header should look like this:\n\n#!/usr/bin/env bash\n\ntestdir\u003d$(readlink -f $(dirname $0))\nrootdir\u003d$(readlink -f $testdir/../..)\nsource $rootdir/test/common/autotest_common.sh\n\nrpc_py\u003d\"$rootdir/scripts/rpc.py\"\n[...]",
+      "revId": "3e4423f5d34a7a2aa62499f759ea3a3caf0770be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b16a52b9_523dd006",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-17T04:48:48Z",
+      "side": 1,
+      "message": "Is there any reason to use bdev_svc specifically? This app doesn\u0027t do anything interesting anymore and we might want to actually remove it in future. Could you use $rootdir/app/spdk_tgt/spdk_tgt? That\u0027s the future-proof app.",
+      "range": {
+        "startLine": 36,
+        "startChar": 1,
+        "endLine": 36,
+        "endChar": 34
+      },
+      "revId": "3e4423f5d34a7a2aa62499f759ea3a3caf0770be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
