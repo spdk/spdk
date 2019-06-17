@@ -355,7 +355,7 @@ function waitforlisten() {
 			break
 		fi
 
-		if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" rpc_get_methods &>/dev/null; then
+		if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" rpc_get_methods; then
 			break
 		fi
 
