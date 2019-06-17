@@ -350,4 +350,20 @@ int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 int spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			     uint32_t data_offset, uint32_t data_len,
 			     struct spdk_dif_ctx *ctx);
+
+/**
+ * Verify DIF for the to-be-written block of the extended LBA payload.
+ *
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param data_offset Offset to the to-be-written data in the extended LBA payload.
+ * \param data_len Length of the to-be-written data in the extended LBA payload.
+ * \param ctx DIF context.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_verify_stream(struct iovec *iovs, int iovcnt,
+			   uint32_t data_offset, uint32_t data_len,
+			   struct spdk_dif_ctx *ctx,
+			   struct spdk_dif_error *err_blk);
 #endif /* SPDK_DIF_H */
