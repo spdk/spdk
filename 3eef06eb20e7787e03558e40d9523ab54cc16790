@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "350992c3_9e34a184",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1764,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-17T13:56:37Z",
+      "side": 1,
+      "message": "what about metadata buffers? We already have _spdk_bdev_readv_blocks_with_md() with a separate md buffer that can be allocated by the bdev layer as well.",
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13a74497_5bdbab23",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1806,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-17T13:56:37Z",
+      "side": 1,
+      "message": "why is this done in bdev layer? Can\u0027t we call _copy_iovs_to_buf() in iscsi?",
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2afa0633_fc1f4b60",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1815,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-17T13:56:37Z",
+      "side": 1,
+      "message": "This is a very cheap solution. We should be able to transfer ownership of the data buffers from split I/Os to the parent I/O and have them freed only when the parent I/O is freed, meaning that split I/Os could be freed as soon as they\u0027re completed.",
+      "range": {
+        "startLine": 1815,
+        "startChar": 0,
+        "endLine": 1815,
+        "endChar": 56
+      },
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50c89864_0daecd48",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1838,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-17T13:56:37Z",
+      "side": 1,
+      "message": "Introducing this array adds at least a few MBs of memory usage on each spdk instance. Isn\u0027t there any way to avoid that? Can\u0027t we point those split I/Os to `\u0026parent_io-\u003echild_iov[i]` as soon as we send them?",
+      "range": {
+        "startLine": 1838,
+        "startChar": 58,
+        "endLine": 1838,
+        "endChar": 70
+      },
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
