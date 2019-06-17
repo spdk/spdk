@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb42fbbf_ecec35ee",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1484,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-17T04:14:00Z",
+      "side": 1,
+      "message": "this consolidation of error path is good but I\u0027m not sure if a patch which includes only this is valuable.",
+      "range": {
+        "startLine": 1483,
+        "startChar": 3,
+        "endLine": 1484,
+        "endChar": 14
+      },
+      "revId": "224f5c5b2c5d10e9da00b51a06b24d4304ae12c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a623c44_ae030fa2",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1505,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-17T04:14:00Z",
+      "side": 1,
+      "message": "Please use conn-\u003epg_tag instead, and added NULL check will become unnecessary.",
+      "range": {
+        "startLine": 1505,
+        "startChar": 6,
+        "endLine": 1505,
+        "endChar": 31
+      },
+      "revId": "224f5c5b2c5d10e9da00b51a06b24d4304ae12c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
