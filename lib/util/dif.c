@@ -1575,3 +1575,71 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 
 	return 0;
 }
+
+int
+spdk_dif_verify_stream(struct iovec *iovs, int iovcnt,
+		       uint32_t data_offset, uint32_t data_len,
+		       struct spdk_dif_ctx *ctx,
+		       struct spdk_dif_error *err_blk)
+{
+	uint32_t data_block_size, data_unalign, buf_len, buf_offset;
+	uint32_t len, offset_in_block, offset_blocks;
+	uint16_t guard = 0;
+	struct _dif_sgl sgl;
+	int rc = 0;
+
+	if (iovs == NULL || iovcnt == 0) {
+		return -EINVAL;
+	}
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = ctx->last_guard;
+	}
+
+	data_unalign = ctx->data_offset % data_block_size;
+
+	/* If the last data block is complete, DIF of the data block is
+	 * verified in this function.;
+	 */
+	buf_len = ((data_unalign + data_offset + data_len) / data_block_size) * ctx->block_size +
+		  ((data_unalign + data_offset + data_len) % data_block_size);
+	buf_len -= data_unalign;
+
+	_dif_sgl_init(&sgl, iovs, iovcnt);
+
+	if (!_dif_sgl_is_valid(&sgl, buf_len)) {
+		return -ERANGE;
+	}
+
+	buf_offset = ((data_unalign + data_offset) / data_block_size) * ctx->block_size +
+		     ((data_unalign + data_offset) % data_block_size);
+	buf_offset -= data_unalign;
+
+	_dif_sgl_advance(&sgl, buf_offset);
+	buf_len -= buf_offset;
+
+	buf_offset += data_unalign;
+
+	while (buf_len != 0) {
+		len = spdk_min(buf_len, _to_next_boundary(buf_offset, ctx->block_size));
+		offset_in_block = buf_offset % ctx->block_size;
+		offset_blocks = buf_offset / ctx->block_size;
+
+		rc = _dif_verify_split(&sgl, offset_in_block, len, &guard, offset_blocks,
+				       ctx, err_blk);
+		if (rc != 0) {
+			goto error;
+		}
+
+		buf_len -= len;
+		buf_offset += len;
+	}
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		ctx->last_guard = guard;
+	}
+error:
+	return rc;
+}
