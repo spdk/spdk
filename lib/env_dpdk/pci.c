@@ -46,6 +46,7 @@
  */
 #define DPDK_HOTPLUG_RETRY_COUNT 4
 
+static pthread_t g_pci_pthread;
 static pthread_mutex_t g_pci_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, spdk_pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pci_devices);
 static TAILQ_HEAD(, spdk_pci_driver) g_pci_drivers = TAILQ_HEAD_INITIALIZER(g_pci_drivers);
@@ -174,6 +175,8 @@ spdk_pci_device_rte_hotremove(const char *device_name,
 void
 spdk_pci_init(void)
 {
+	g_pci_pthread = pthread_self();
+
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	struct spdk_pci_driver *driver;
 
@@ -307,6 +310,7 @@ spdk_pci_device_fini(struct rte_pci_device *_dev)
 void
 spdk_pci_device_detach(struct spdk_pci_device *dev)
 {
+	assert(pthread_equal(pthread_self(), g_pci_pthread));
 	assert(dev->internal.attached);
 	dev->internal.attached = false;
 	dev->detach(dev);
@@ -321,6 +325,7 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	int rc;
 	char bdf[32];
 
+	assert(pthread_equal(pthread_self(), g_pci_pthread));
 	spdk_pci_addr_fmt(bdf, sizeof(bdf), pci_address);
 
 	pthread_mutex_lock(&g_pci_mutex);
@@ -377,10 +382,6 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	return rc == 0 ? 0 : -1;
 }
 
-/* Note: You can call spdk_pci_enumerate from more than one thread
- *       simultaneously safely, but you cannot call spdk_pci_enumerate
- *       and rte_eal_pci_probe simultaneously.
- */
 int
 spdk_pci_enumerate(struct spdk_pci_driver *driver,
 		   spdk_pci_enum_cb enum_cb,
@@ -389,6 +390,7 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 	struct spdk_pci_device *dev;
 	int rc;
 
+	assert(pthread_equal(pthread_self(), g_pci_pthread));
 	pthread_mutex_lock(&g_pci_mutex);
 
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
@@ -751,6 +753,7 @@ spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
 void
 spdk_pci_hook_device(struct spdk_pci_driver *drv, struct spdk_pci_device *dev)
 {
+	assert(pthread_equal(pthread_self(), g_pci_pthread));
 	assert(dev->map_bar != NULL);
 	assert(dev->unmap_bar != NULL);
 	assert(dev->cfg_read != NULL);
@@ -763,6 +766,7 @@ spdk_pci_hook_device(struct spdk_pci_driver *drv, struct spdk_pci_device *dev)
 void
 spdk_pci_unhook_device(struct spdk_pci_device *dev)
 {
+	assert(pthread_equal(pthread_self(), g_pci_pthread));
 	assert(!dev->internal.attached);
 	TAILQ_REMOVE(&g_pci_devices, dev, internal.tailq);
 }
