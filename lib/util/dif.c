@@ -579,23 +579,27 @@ dif_verify(struct _dif_sgl *sgl, uint32_t num_blocks,
 }
 
 static int
-_dif_verify_split(struct _dif_sgl *sgl, uint32_t offset_blocks,
+_dif_verify_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_t data_len,
+		  uint16_t *_guard, uint32_t offset_blocks,
 		  const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
-	uint32_t offset_in_block, offset_in_dif, buf_len;
+	uint32_t offset_in_dif, buf_len;
 	void *buf;
-	uint16_t guard = 0;
+	uint16_t guard;
 	struct spdk_dif dif = {};
-	int rc;
+	int rc = 0;
 
-	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-		guard = ctx->guard_seed;
-	}
-	offset_in_block = 0;
+	assert(_guard != NULL);
+	assert(offset_in_block < ctx->guard_interval);
+	assert(offset_in_block + data_len < ctx->guard_interval ||
+	       offset_in_block + data_len == ctx->block_size);
+
+	guard = *_guard;
 
 	/* Compute CRC over split logical block data. */
-	while (offset_in_block < ctx->guard_interval) {
+	while (data_len != 0 && offset_in_block < ctx->guard_interval) {
 		_dif_sgl_get_buf(sgl, &buf, &buf_len);
+		buf_len = spdk_min(buf_len, data_len);
 		buf_len = spdk_min(buf_len, ctx->guard_interval - offset_in_block);
 
 		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
@@ -604,6 +608,11 @@ _dif_verify_split(struct _dif_sgl *sgl, uint32_t offset_blocks,
 
 		_dif_sgl_advance(sgl, buf_len);
 		offset_in_block += buf_len;
+		data_len -= buf_len;
+	}
+
+	if (offset_in_block < ctx->guard_interval) {
+		goto end;
 	}
 
 	/* Copy the split DIF field to the temporary DIF buffer. */
@@ -629,6 +638,12 @@ _dif_verify_split(struct _dif_sgl *sgl, uint32_t offset_blocks,
 		offset_in_block += buf_len;
 	}
 
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = ctx->guard_seed;
+	}
+
+end:
+	*_guard = guard;
 	return rc;
 }
 
@@ -637,10 +652,16 @@ dif_verify_split(struct _dif_sgl *sgl, uint32_t num_blocks,
 		 const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_blocks;
+	uint16_t guard = 0;
 	int rc;
 
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = ctx->guard_seed;
+	}
+
 	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
-		rc = _dif_verify_split(sgl, offset_blocks, ctx, err_blk);
+		rc = _dif_verify_split(sgl, 0, ctx->block_size, &guard, offset_blocks,
+				       ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
