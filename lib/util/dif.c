@@ -314,23 +314,22 @@ dif_generate(struct _dif_sgl *sgl, uint32_t num_blocks, const struct spdk_dif_ct
 	}
 }
 
-static void
-_dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_blocks,
-		    const struct spdk_dif_ctx *ctx)
+static uint16_t
+_dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_t data_len,
+		    uint16_t guard, uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
 {
-	uint32_t offset_in_block, offset_in_dif, buf_len;
+	uint32_t offset_in_dif, buf_len;
 	void *buf;
-	uint16_t guard = 0;
 	struct spdk_dif dif = {};
 
-	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
-		guard = ctx->guard_seed;
-	}
-	offset_in_block = 0;
+	assert(offset_in_block < ctx->guard_interval);
+	assert(offset_in_block + data_len < ctx->guard_interval ||
+	       offset_in_block + data_len == ctx->block_size);
 
 	/* Compute CRC over split logical block data. */
-	while (offset_in_block < ctx->guard_interval) {
+	while (data_len != 0 && offset_in_block < ctx->guard_interval) {
 		_dif_sgl_get_buf(sgl, &buf, &buf_len);
+		buf_len = spdk_min(buf_len, data_len);
 		buf_len = spdk_min(buf_len, ctx->guard_interval - offset_in_block);
 
 		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
@@ -339,6 +338,11 @@ _dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_blocks,
 
 		_dif_sgl_advance(sgl, buf_len);
 		offset_in_block += buf_len;
+		data_len -= buf_len;
+	}
+
+	if (offset_in_block < ctx->guard_interval) {
+		return guard;
 	}
 
 	/* If a whole logical block data is parsed, generate DIF
@@ -364,6 +368,12 @@ _dif_generate_split(struct _dif_sgl *sgl, uint32_t offset_blocks,
 		_dif_sgl_advance(sgl, buf_len);
 		offset_in_block += buf_len;
 	}
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = ctx->guard_seed;
+	}
+
+	return guard;
 }
 
 static void
@@ -371,9 +381,14 @@ dif_generate_split(struct _dif_sgl *sgl, uint32_t num_blocks,
 		   const struct spdk_dif_ctx *ctx)
 {
 	uint32_t offset_blocks;
+	uint16_t guard = 0;
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = ctx->guard_seed;
+	}
 
 	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
-		_dif_generate_split(sgl, offset_blocks, ctx);
+		_dif_generate_split(sgl, 0, ctx->block_size, guard, offset_blocks, ctx);
 	}
 }
 
@@ -1453,6 +1468,7 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			 const struct spdk_dif_ctx *ctx)
 {
 	uint32_t data_block_size, offset_blocks, num_blocks, i;
+	uint16_t guard = 0;
 	struct _dif_sgl sgl;
 
 	if (iovs == NULL || iovcnt == 0) {
@@ -1460,6 +1476,10 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 	}
 
 	data_block_size = ctx->block_size - ctx->md_size;
+
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = ctx->guard_seed;
+	}
 
 	offset_blocks = data_offset / data_block_size;
 	data_len += data_offset % data_block_size;
@@ -1476,7 +1496,7 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 	_dif_sgl_advance(&sgl, data_offset);
 
 	for (i = 0; i < num_blocks; i++) {
-		_dif_generate_split(&sgl, offset_blocks + i, ctx);
+		_dif_generate_split(&sgl, 0, ctx->block_size, guard, offset_blocks + i, ctx);
 	}
 
 	return 0;
