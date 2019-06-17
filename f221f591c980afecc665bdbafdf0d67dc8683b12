@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ebede57c_0aad6fa5",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-06-17T05:28:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8664d9a3_960073bc",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 39
+      },
+      "revId": "f221f591c980afecc665bdbafdf0d67dc8683b12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "59d3769d_87c403d7",
         "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-17T04:20:38Z",
       "side": 1,
       "message": "according to the last patch, we may be able to replace them by conn.pg_tag \u003d 0",
+      "range": {
+        "startLine": 174,
+        "startChar": 1,
+        "endLine": 176,
+        "endChar": 29
+      },
+      "revId": "f221f591c980afecc665bdbafdf0d67dc8683b12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20259895_7589819f",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-06-17T05:28:11Z",
+      "side": 1,
+      "message": "Just abandoned its parent patch and will keep it in this way. Thanks for the suggestion.",
+      "parentUuid": "59d3769d_87c403d7",
       "range": {
         "startLine": 174,
         "startChar": 1,
