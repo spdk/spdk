@@ -703,7 +703,7 @@ _spdk_nvmf_ctrlr_free_from_qpair(void *ctx)
 }
 
 static void
-_spdk_nvmf_qpair_destroy(void *ctx, int status)
+_spdk_nvmf_qpair_do_destroy(void *ctx)
 {
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
@@ -756,6 +756,20 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	qpair_ctx->ctrlr = ctrlr;
 	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx);
 
+}
+
+static void
+_spdk_nvmf_qpair_destroy(void *ctx, int status)
+{
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
+
+	if (spdk_get_thread() != qpair->group->thread) {
+		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_do_destroy, ctx);
+		return;
+	}
+
+	_spdk_nvmf_qpair_do_destroy(ctx);
 }
 
 int
