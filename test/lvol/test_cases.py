@@ -2078,6 +2078,9 @@ class TestCases(object):
         self.c.construct_aio_bdev(aio_bdev0, base_name_1M, 4096)
         self.c.construct_aio_bdev(aio_bdev1, base_name_32M, 4096)
 
+        # wait 1 second to allow time for lvolstore tasting
+        sleep(1)
+
         # Check if configuration was properly loaded after tasting
         # get all info all lvs and lvol bdevs, compare with previous info
         new_bdevs = sorted(self.c.get_lvol_bdevs(), key=lambda x: x["name"])
