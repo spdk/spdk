@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c072b900_b3239210",
+        "filename": "examples/nvme/hello_world/hello_world.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-17T22:19:52Z",
+      "side": 1,
+      "message": "this comment probably doesn\u0027t belong in the code, maybe the commit msg if anywhere",
+      "revId": "1df30dddecd6a0b5d3d5cc00064fe651a035ad54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
