@@ -95,7 +95,7 @@ struct spdk_ioat_registers {
 	uint8_t		reserved2[0x8];	/* 0xA0 */
 	uint32_t	chanerr;	/* 0xA8 */
 	uint32_t	chanerrmask;	/* 0xAC */
-} __attribute__((packed));
+} __attribute__((packed)) __attribute__((aligned));
 
 #define SPDK_IOAT_CHANCMD_RESET			0x20
 #define SPDK_IOAT_CHANCMD_SUSPEND		0x04
