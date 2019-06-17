@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "0260c9ea_cf7ea8ab",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-17T03:15:44Z",
+      "side": 1,
+      "message": "hi karol,\n   This works on virtualbox 5.2, I found that host power loss , and this time VM force to power off, then if want to start, it report vagrant errors.\nIt\u0027s vagrant related , why need  to put it vm_setup.sh?",
+      "parentUuid": "381c2d85_e595c2ef",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 3
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "750525fb_a903af4a",
         "filename": "scripts/vagrant/vagrant_auto.sh",
         "patchSetId": 41
@@ -144,6 +168,30 @@
     },
     {
       "key": {
+        "uuid": "6e082f2f_9e3b3df3",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-17T03:15:44Z",
+      "side": 1,
+      "message": "vagrant halt means shut down, why need to halt a halted machine ? that likes your physical machine, you have already turned off you machine, why need to turn off it again?\nand before I met issue , so add this.",
+      "parentUuid": "313f3142_867be255",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3cb729c8_787bf7cf",
         "filename": "scripts/vagrant/vagrant_auto.sh",
         "patchSetId": 41
@@ -203,6 +251,30 @@
       "side": 1,
       "message": "Mutli terminal? I\u0027m a bit confused now. Does that mean these scripts are for manual testing, or for CI?\nWhy do we need multiple provider support at the same time?",
       "parentUuid": "3f5d9f11_7c2c909b",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 1
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "152bf2c2_499bbb54",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-17T03:15:44Z",
+      "side": 1,
+      "message": "1.vagrant_auto.sh, I put it in this vagrant folder, it not only be used to do auto test, nut also can be used by a developer.\n2. if I don\u0027t have a NVMe device , I use this scripts  to create a VM with the system that I want to verify something.And then use ./vagrant_auto.sh to run base check to verify my revision.\n3. It takes me over ten minutes to  create a VM , with SoftRoCE/NVMe... ,but destroy it with several seconds ,It\u0027s too wasteful.\n4. we usually use these tools (putty/MobaXterm...) to connect server ,and with several windows to manipulate host machine to run  Vagrant_auto.sh.\n5. Why need to support different providers, my script use the least code to do this. \n   you know that virtualbox and libvirt are different ,and they have their own advantages.\n   libvirt don\u0027t care about the NVMe list, but virtualbox always care about nvme device that are registered.\n   Vagrant 2.1 can both support these well. \n6. As a auto script, I don\u0027t want to limit the usage of personal preferences. \n   As a auto script, It\u0027s different from that manual scripts, it could deal with exceptions as \n   much as possible. Otherwise, I think it\u0027s not very auto. \n   Originally, this kind of script takes a long time to create, and if it exits with exceptions \n  , that would be a bad experience. So here adds some workarounds, may be it\u0027s not perfect.\n\nif for autotest only at the beginning . we use ./vagrant_auto.sh -e, it executes this life cycle:\n create-test-destory, confirm demo cases are ok, due to test failure not related to env.\nif want to keep the VMs, ./vagrant_auto.sh -r\nif want to re-test( already had this vm) ./vagrant_auto.sh",
+      "parentUuid": "82a107a9_41579af3",
       "range": {
         "startLine": 110,
         "startChar": 0,
@@ -509,6 +581,30 @@
       "side": 1,
       "message": "Re-use - I asked this question a few lines before: does that mean you use these scripts for manual tests?\nIf you remove the trap here, then we won\u0027t be able to do a proper clean-up routine if we run automated tests in CI.",
       "parentUuid": "dd00dec8_4e94635e",
+      "range": {
+        "startLine": 291,
+        "startChar": 1,
+        "endLine": 291,
+        "endChar": 26
+      },
+      "revId": "7539ef6d538f941cf17a5f1229420f6def7013d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8be057fa_d4d23d79",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-17T03:15:44Z",
+      "side": 1,
+      "message": "As I said before ,if you want to clean at test, please use ./vagrant_auto -e.\nNot only manual test, but also can reuse for developer.",
+      "parentUuid": "b5ac029f_e3458d3f",
       "range": {
         "startLine": 291,
         "startChar": 1,

@@ -45,6 +45,30 @@
       "revId": "a4d4e7bccdb5a0fc7c1186e454c88e08ea50a926",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d3f87eb_6866b557",
+        "filename": "scripts/vagrant/vagrant_auto.sh",
+        "patchSetId": 43
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-17T03:15:44Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "0e7983d7_6e0123ce",
+      "range": {
+        "startLine": 156,
+        "startChar": 0,
+        "endLine": 159,
+        "endChar": 1
+      },
+      "revId": "a4d4e7bccdb5a0fc7c1186e454c88e08ea50a926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
