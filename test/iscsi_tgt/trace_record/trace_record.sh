@@ -68,6 +68,7 @@ sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+waitforiscsidevices $(( $CONNECTION_NUMBER + 1 ))
 
 mkdir -p ${TRACE_TMP_FOLDER}
 ./app/trace_record/spdk_trace_record -s iscsi -p ${iscsi_pid} -f ${TRACE_RECORD_OUTPUT} -q 1>${TRACE_RECORD_NOTICE_LOG} &
