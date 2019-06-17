@@ -64,15 +64,15 @@ sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+waitforiscsidevices 1
 
 trap "remove_backends; umount /mnt/device; rm -rf /mnt/device; iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
-
-sleep 1
 
 mkdir -p /mnt/device
 
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
+waitforfile /dev/$dev
 parted -s /dev/$dev mklabel msdos
 parted -s /dev/$dev mkpart primary '0%' '100%'
 sleep 1
@@ -91,10 +91,13 @@ for fstype in "ext4" "btrfs" "xfs"; do
 		umount /mnt/device
 
 		iscsiadm -m node --logout
-		sleep 1
+		waitforiscsidevices 0
 		iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
-		sleep 1
+		waitforiscsidevices 1
+
 		dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
+
+		waitforfile /dev/${dev}1
 		mount -o rw /dev/${dev}1 /mnt/device
 		if [ -f "/mnt/device/test" ]; then
 			echo "File existed."
@@ -112,10 +115,13 @@ for fstype in "ext4" "btrfs" "xfs"; do
 		umount /mnt/device
 
 		iscsiadm -m node --logout
-		sleep 1
+		waitforiscsidevices 0
 		iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
-		sleep 1
+		waitforiscsidevices 1
+
 		dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
+
+		waitforfile /dev/${dev}1
 		mount -o rw /dev/${dev}1 /mnt/device
 
 		if [ -f "/mnt/device/aaa" ]; then

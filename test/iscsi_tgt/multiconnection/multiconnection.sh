@@ -70,6 +70,7 @@ sleep 1
 echo "Logging into iSCSI target."
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+waitforiscsidevices $CONNECTION_NUMBER
 
 echo "Running FIO"
 $fio_py -p iscsi -i 131072 -d 64 -t randrw -r 5
