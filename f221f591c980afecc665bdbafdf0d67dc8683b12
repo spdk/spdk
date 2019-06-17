@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8664d9a3_960073bc",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-17T04:20:38Z",
+      "side": 1,
+      "message": "simply defining g_tgt as global variable and referring g_tgt in spdk_iscsi_find_tgt_node() is OK?",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 39
+      },
+      "revId": "f221f591c980afecc665bdbafdf0d67dc8683b12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59d3769d_87c403d7",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-17T04:20:38Z",
+      "side": 1,
+      "message": "according to the last patch, we may be able to replace them by conn.pg_tag \u003d 0",
+      "range": {
+        "startLine": 174,
+        "startChar": 1,
+        "endLine": 176,
+        "endChar": 29
+      },
+      "revId": "f221f591c980afecc665bdbafdf0d67dc8683b12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
