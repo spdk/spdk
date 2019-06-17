@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16de5d65_2e0d6a64",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-17T15:18:47Z",
+      "side": 1,
+      "message": "Variable expansion doesn\u0027t work in single quotes. This tries to remove a bdev named $malloc_bdev (with a dollar in name). I was curious how this passed the tests, so I looked up the relevant log part:\n\n```\nfio: pid\u003d2261609, err\u003d5/file:io_u.c:1833, func\u003dio_u error, error\u003dInput/output error\n./test/iscsi_tgt/fio/fio.sh: line 139: `$malloc_bdev\u0027: not a valid identifier\n 10:44:18\t# fio_status\u003d0\n```\n\nIt would start triggerting ERR if we enforced `set -o pipefail`.",
+      "range": {
+        "startLine": 138,
+        "startChar": 27,
+        "endLine": 138,
+        "endChar": 42
+      },
+      "revId": "8a494d8b5dda6e714783a634d12ead836864eacb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
