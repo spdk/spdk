@@ -77,6 +77,9 @@ def main(io_size, protocol, queue_depth, test_type, runtime, num_jobs, verify):
 
 
 def get_iscsi_target_devices():
+    # Sometimes list of sessions doesn't valid immediately after login, so we
+    # need to wait a while.
+    time.sleep(1)
     output = check_output('iscsiadm -m session -P 3', shell=True)
     return re.findall("Attached scsi disk (sd[a-z]+)", output.decode("ascii"))
 
