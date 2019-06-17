@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f1d9c557_90901e17",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-06-17T02:44:26Z",
+      "side": 1,
+      "message": "Hi, Karol\nRPC get_notifications is closely related to JSON config, it is also the basic way to verify saving/loading JSON config files.\nSo it should be a right place for this test.",
+      "parentUuid": "7234d19f_0e3dedae",
+      "range": {
+        "startLine": 51,
+        "startChar": 9,
+        "endLine": 51,
+        "endChar": 37
+      },
+      "revId": "81b0cb45dd57f18aec16f6bf5276e6c488fd3094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da2ab0af_cdfa9bf1",
         "filename": "test/json_config/json_config.sh",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-07T05:51:11Z",
       "side": 1,
       "message": "Backticks in bash are deprecated and should be avoided. Please use $() instead.",
+      "range": {
+        "startLine": 61,
+        "startChar": 7,
+        "endLine": 61,
+        "endChar": 8
+      },
+      "revId": "81b0cb45dd57f18aec16f6bf5276e6c488fd3094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae60eb59_1716c6a1",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-06-17T02:44:26Z",
+      "side": 1,
+      "message": "applied",
+      "parentUuid": "da2ab0af_cdfa9bf1",
       "range": {
         "startLine": 61,
         "startChar": 7,
