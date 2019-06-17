@@ -1778,6 +1778,85 @@ set_md_interleave_iovs_alignment_test(void)
 	CU_ASSERT(_iov_check(&dif_iovs[1], (void *)0xC0FFEE, 24) ==  true);
 }
 
+static void
+_dif_generate_split_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct iovec iov;
+	uint8_t *buf1, *buf2;
+	struct _dif_sgl sgl;
+	uint16_t guard = 0, prev_guard;
+	uint32_t dif_flags;
+	int rc;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
+			       dif_flags, 0, 0, 0, 0, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	buf1 = calloc(1, 4096 + 128);
+	SPDK_CU_ASSERT_FATAL(buf1 != NULL);
+	_iov_set_buf(&iov, buf1, 4096 + 128);
+
+	rc = ut_data_pattern_generate(&iov, 1, 4096 + 128, 128, 1);
+	CU_ASSERT(rc == 0);
+
+	_dif_sgl_init(&sgl, &iov, 1);
+
+	guard = GUARD_SEED;
+	prev_guard = GUARD_SEED;
+
+	guard = _dif_generate_split(&sgl, 0, 1000, guard, 0, &ctx);
+	CU_ASSERT(sgl.iov_offset == 1000);
+	CU_ASSERT(guard == spdk_crc16_t10dif(prev_guard, buf1, 1000));
+
+	prev_guard = guard;
+
+	guard = _dif_generate_split(&sgl, 1000, 3000, guard, 0, &ctx);
+	CU_ASSERT(sgl.iov_offset == 4000);
+	CU_ASSERT(guard == spdk_crc16_t10dif(prev_guard, buf1 + 1000, 3000));
+
+	guard = _dif_generate_split(&sgl, 4000, 96 + 128, guard, 0, &ctx);
+	CU_ASSERT(guard == GUARD_SEED);
+	CU_ASSERT(sgl.iov_offset == 0);
+	CU_ASSERT(sgl.iovcnt == 0);
+
+	rc = ut_data_pattern_verify(&iov, 1, 4096 + 128, 128, 1);
+	CU_ASSERT(rc == 0);
+
+	_dif_sgl_init(&sgl, &iov, 1);
+
+	rc = dif_verify(&sgl, 1, &ctx, NULL);
+	CU_ASSERT(rc == 0);
+
+	buf2 = calloc(1, 4096 + 128);
+	SPDK_CU_ASSERT_FATAL(buf2 != NULL);
+	_iov_set_buf(&iov, buf2, 4096 + 128);
+
+	rc = ut_data_pattern_generate(&iov, 1, 4096 + 128, 128, 1);
+	CU_ASSERT(rc == 0);
+
+	_dif_sgl_init(&sgl, &iov, 1);
+
+	dif_generate(&sgl, 1, &ctx);
+
+	rc = ut_data_pattern_verify(&iov, 1, 4096 + 128, 128, 1);
+	CU_ASSERT(rc == 0);
+
+	_dif_sgl_init(&sgl, &iov, 1);
+
+	rc = dif_verify(&sgl, 1, &ctx, NULL);
+	CU_ASSERT(rc == 0);
+
+	rc = memcmp(buf1, buf2, 4096 + 128);
+	CU_ASSERT(rc == 0);
+
+	free(buf1);
+	free(buf2);
+}
+
 #define UT_CRC32C_XOR	0xffffffffUL
 
 static void
@@ -1961,6 +2040,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "dif_generate_stream_test", dif_generate_stream_test) == NULL ||
 		CU_add_test(suite, "set_md_interleave_iovs_alignment_test",
 			    set_md_interleave_iovs_alignment_test) == NULL ||
+		CU_add_test(suite, "_dif_generate_split_test", _dif_generate_split_test) == NULL ||
 		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL
 	) {
 		CU_cleanup_registry();
