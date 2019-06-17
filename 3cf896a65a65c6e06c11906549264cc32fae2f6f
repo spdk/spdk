@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d3e07ecd_ef7bf1da",
+        "filename": "test/openstack/openstack_versus_spdk.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-17T22:16:58Z",
+      "side": 1,
+      "message": "On jenkins can be useless. But could be helpful to test it locally.",
+      "parentUuid": "85d96e89_3cfc18f8",
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f0685afc_b93d3e98",
         "filename": "test/openstack/openstack_versus_spdk.sh",
         "patchSetId": 1
@@ -30,6 +48,30 @@
       "writtenOn": "2019-06-10T13:40:47Z",
       "side": 1,
       "message": "For future reference - we moved all dependencies to sys_sgci home dir. sys_sgsw is deprecated.",
+      "range": {
+        "startLine": 9,
+        "startChar": 16,
+        "endLine": 9,
+        "endChar": 24
+      },
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc965bcb_760c5e5a",
+        "filename": "test/openstack/openstack_versus_spdk.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-17T22:16:58Z",
+      "side": 1,
+      "message": "I will fix it later.",
+      "parentUuid": "f0685afc_b93d3e98",
       "range": {
         "startLine": 9,
         "startChar": 16,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "121d6052_f2aa2330",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-17T22:16:58Z",
+      "side": 1,
+      "message": "We need spdk sources to run spdk target.",
+      "parentUuid": "df65c2f8_1f77a9d0",
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d033f7fd_0dd6476d",
         "filename": "test/openstack/run_openstack_tests.sh",
         "patchSetId": 1
@@ -82,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "b7ee754c_3cefdc0b",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-17T22:16:58Z",
+      "side": 1,
+      "message": "I will fix it later.",
+      "parentUuid": "d033f7fd_0dd6476d",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 30
+      },
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b87de007_eb01db24",
         "filename": "test/openstack/run_openstack_tests.sh",
         "patchSetId": 1
@@ -93,6 +177,30 @@
       "writtenOn": "2019-06-10T13:40:47Z",
       "side": 1,
       "message": "Use tabs",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 8
+      },
+      "revId": "3cf896a65a65c6e06c11906549264cc32fae2f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "278f3e25_b46bb5da",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-17T22:16:58Z",
+      "side": 1,
+      "message": "I will fix it later",
+      "parentUuid": "b87de007_eb01db24",
       "range": {
         "startLine": 13,
         "startChar": 0,
