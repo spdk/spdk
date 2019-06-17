@@ -671,13 +671,13 @@ function waitforblk_disconnect()
 function waitforfile()
 {
 	local i=0
-	while [ ! -f $1 ]; do
+	while [ ! -e $1 ]; do
 		[ $i -lt 200 ] || break
 		i=$[$i+1]
 		sleep 0.1
 	done
 
-	if [ ! -f $1 ]; then
+	if [ ! -e $1 ]; then
 		return 1
 	fi
 

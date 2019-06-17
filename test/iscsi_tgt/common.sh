@@ -64,6 +64,21 @@ function iscsitestinit() {
 	fi
 }
 
+function waitforiscsidevices() {
+	local num=$1
+
+	for ((i=1; i<=20; i++)); do
+		n=$( iscsiadm -m session -P 3 | grep "Attached scsi disk sd[a-z]*" | wc -l )
+		if [ $n -ne $num ]; then
+			sleep 0.1
+		else
+			return 0
+		fi
+	done
+
+	return 1
+}
+
 function iscsitestfini() {
 	if [ "$1" == "iso" ]; then
 		if [ ! -z "$2" ]; then
