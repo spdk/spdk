@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "310898c9_03f610f1",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-17T07:41:25Z",
+      "side": 1,
+      "message": "Please provide short justification in commit message on this patch.",
+      "range": {
+        "startLine": 224,
+        "startChar": 25,
+        "endLine": 224,
+        "endChar": 104
+      },
+      "revId": "c5c9a8d37e09b0043a55185f79aa9041955eea9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
