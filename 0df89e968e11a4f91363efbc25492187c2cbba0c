@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a2e41525_b2e76abd",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-06-17T02:51:40Z",
+      "side": 1,
+      "message": "Good catch, applied, Jim",
+      "parentUuid": "d6030d00_03c7917e",
+      "revId": "0df89e968e11a4f91363efbc25492187c2cbba0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ad978839_aec3573b",
         "filename": "test/iscsi_tgt/rpc_config/rpc_config.sh",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-06-05T20:46:17Z",
       "side": 1,
       "message": "same here - I think you can remove -v and move rpc_wait_pid\u003d$! to next line",
+      "revId": "0df89e968e11a4f91363efbc25492187c2cbba0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92deb0d7_91c47fa6",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-06-17T02:51:40Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "ad978839_aec3573b",
       "revId": "0df89e968e11a4f91363efbc25492187c2cbba0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
