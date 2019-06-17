@@ -1857,6 +1857,164 @@ _dif_generate_split_test(void)
 	free(buf2);
 }
 
+static void
+set_md_interleave_iovs_multi_segments_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct spdk_dif_error err_blk = {};
+	struct iovec iov1 = {}, iov2 = {}, dif_iovs[4] = {};
+	uint32_t dif_check_flags, data_len, read_len, data_offset, read_offset, mapped_len = 0;
+	uint8_t *buf1, *buf2;
+	int rc;
+
+	dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+			  SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
+			       dif_check_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	/* The first data buffer:
+	 * - Data buffer is split into multi data segments
+	 * - For each data segment,
+	 *  - Create iovec array to Leave a space for metadata for each block
+	 *  - Split vectored read and so creating iovec array is done before every vectored read.
+	 */
+	buf1 = calloc(1, (4096 + 128) * 4);
+	SPDK_CU_ASSERT_FATAL(buf1 != NULL);
+	_iov_set_buf(&iov1, buf1, (4096 + 128) * 4);
+
+	/* 1st data segment */
+	data_offset = 0;
+	data_len = 1024;
+
+	spdk_dif_ctx_set_data_offset(&ctx, data_offset);
+
+	read_offset = 0;
+
+	/* 1st read in 1st data segment */
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
+					     read_offset, data_len - read_offset,
+					     &mapped_len, &ctx);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(mapped_len == 1024);
+	CU_ASSERT(_iov_check(&dif_iovs[0], buf1, 1024) == true);
+
+	read_len = ut_readv(data_offset + read_offset, 1024, dif_iovs, 4);
+	CU_ASSERT(read_len == 1024);
+
+	rc = spdk_dif_generate_stream(&iov1, 1, read_offset, read_len, &ctx);
+	CU_ASSERT(rc == 0);
+
+	read_offset += read_len;
+	CU_ASSERT(read_offset == data_len);
+
+	/* 2nd data segment */
+	data_offset += data_len;
+	data_len = 3072 + 4096 * 2 + 512;
+
+	spdk_dif_ctx_set_data_offset(&ctx, data_offset);
+	_iov_set_buf(&iov1, buf1 + 1024, 3072 + 128 + (4096 + 128) * 3 + 512);
+
+	read_offset = 0;
+
+	/* 1st read in 2nd data segment */
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
+					     read_offset, data_len - read_offset,
+					     &mapped_len, &ctx);
+	CU_ASSERT(rc == 4);
+	CU_ASSERT(mapped_len == 3072 + 4096 * 2 + 512);
+	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 1024, 3072) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], buf1 + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 512) == true);
+
+	read_len = ut_readv(data_offset + read_offset, 3071, dif_iovs, 4);
+	CU_ASSERT(read_len == 3071);
+
+	rc = spdk_dif_generate_stream(&iov1, 1, read_offset, read_len, &ctx);
+	CU_ASSERT(rc == 0);
+
+	read_offset += read_len;
+
+	/* 2nd read in 2nd data segment */
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
+					     read_offset, data_len - read_offset,
+					     &mapped_len, &ctx);
+	CU_ASSERT(rc == 4);
+	CU_ASSERT(mapped_len == 1 + 4096 * 2 + 512);
+	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 4095, 1) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], buf1 + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 512) == true);
+
+	read_len = ut_readv(data_offset + read_offset, 1 + 4096 * 2 + 512, dif_iovs, 4);
+	CU_ASSERT(read_len == 1 + 4096 * 2 + 512);
+
+	rc = spdk_dif_generate_stream(&iov1, 1, read_offset, read_len, &ctx);
+	CU_ASSERT(rc == 0);
+
+	read_offset += read_len;
+	CU_ASSERT(read_offset == data_len);
+
+	/* 3rd data segment */
+	data_offset += data_len;
+	data_len = 3584;
+
+	spdk_dif_ctx_set_data_offset(&ctx, data_offset);
+	_iov_set_buf(&iov1, buf1 + (4096 + 128) * 3 + 512, 3584 + 128);
+
+	read_offset = 0;
+
+	/* 1st read in 3rd data segment */
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, &iov1, 1,
+					     read_offset, data_len - read_offset,
+					     &mapped_len, &ctx);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(mapped_len == 3584);
+	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + (4096 + 128) * 3 + 512, 3584) == true);
+
+	read_len = ut_readv(data_offset + read_offset, 3584, dif_iovs, 1);
+	CU_ASSERT(read_len == 3584);
+
+	rc = spdk_dif_generate_stream(&iov1, 1, read_offset, read_len, &ctx);
+	CU_ASSERT(rc == 0);
+
+	read_offset += read_len;
+	CU_ASSERT(read_offset == data_len);
+	data_offset += data_len;
+	CU_ASSERT(data_offset == 4096 * 4);
+
+	spdk_dif_ctx_set_data_offset(&ctx, 0);
+	_iov_set_buf(&iov1, buf1, (4096 + 128) * 4);
+
+	/* The second data buffer:
+	 * - Set data pattern with a space for metadata for each block.
+	 */
+	buf2 = calloc(1, (4096 + 128) * 4);
+	SPDK_CU_ASSERT_FATAL(buf2 != NULL);
+	_iov_set_buf(&iov2, buf2, (4096 + 128) * 4);
+
+	rc = ut_data_pattern_generate(&iov2, 1, 4096 + 128, 128, 4);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iov2, 1, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(&iov1, 1, 4, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(&iov2, 1, 4, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	/* Compare the first and the second data buffer by byte. */
+	rc = memcmp(buf1, buf2, (4096 + 128) * 4);
+	CU_ASSERT(rc == 0);
+
+	free(buf1);
+	free(buf2);
+}
+
 #define UT_CRC32C_XOR	0xffffffffUL
 
 static void
@@ -2041,6 +2199,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "set_md_interleave_iovs_alignment_test",
 			    set_md_interleave_iovs_alignment_test) == NULL ||
 		CU_add_test(suite, "_dif_generate_split_test", _dif_generate_split_test) == NULL ||
+		CU_add_test(suite, "set_md_interleave_iovs_multi_segments_test",
+			    set_md_interleave_iovs_multi_segments_test) == NULL ||
 		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL
 	) {
 		CU_cleanup_registry();

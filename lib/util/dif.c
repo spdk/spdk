@@ -1435,7 +1435,7 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 				uint32_t *_mapped_len,
 				const struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, buf_len, buf_offset, len;
+	uint32_t data_block_size, data_unalign, buf_len, buf_offset, len;
 	struct _dif_sgl dif_sgl;
 	struct _dif_sgl buf_sgl;
 
@@ -1445,8 +1445,11 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	buf_len = ((data_offset + data_len) / data_block_size) * ctx->block_size +
-		  ((data_offset + data_len) % data_block_size);
+	data_unalign = ctx->data_offset % data_block_size;
+
+	buf_len = ((data_unalign + data_offset + data_len) / data_block_size) * ctx->block_size +
+		  ((data_unalign + data_offset + data_len) % data_block_size);
+	buf_len -= data_unalign;
 
 	_dif_sgl_init(&dif_sgl, iovs, iovcnt);
 	_dif_sgl_init(&buf_sgl, buf_iovs, buf_iovcnt);
@@ -1456,14 +1459,14 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 		return -ERANGE;
 	}
 
-	buf_offset = (data_offset / data_block_size) * ctx->block_size +
-		     (data_offset % data_block_size);
+	buf_offset = ((data_unalign + data_offset) / data_block_size) * ctx->block_size +
+		     ((data_unalign + data_offset) % data_block_size);
+	buf_offset -= data_unalign;
 
 	_dif_sgl_advance(&buf_sgl, buf_offset);
 
 	while (data_len != 0) {
-		len = spdk_min(data_len, _to_next_boundary(data_offset, data_block_size));
-
+		len = spdk_min(data_len, _to_next_boundary(ctx->data_offset + data_offset, data_block_size));
 		if (!_dif_sgl_append_split(&dif_sgl, &buf_sgl, len)) {
 			break;
 		}
@@ -1484,7 +1487,7 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 			 uint32_t data_offset, uint32_t data_len,
 			 struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, buf_len, buf_offset;
+	uint32_t data_block_size, data_unalign, buf_len, buf_offset;
 	uint32_t len, offset_in_block, offset_blocks;
 	uint16_t guard = 0;
 	struct _dif_sgl sgl;
@@ -1499,11 +1502,14 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 		guard = ctx->last_guard;
 	}
 
+	data_unalign = ctx->data_offset % data_block_size;
+
 	/* If the last data block is complete, DIF of the data block is
 	 * inserted in this function.
 	 */
-	buf_len = ((data_offset + data_len) / data_block_size) * ctx->block_size +
-		  ((data_offset + data_len) % data_block_size);
+	buf_len = ((data_unalign + data_offset + data_len) / data_block_size) * ctx->block_size +
+		  ((data_unalign + data_offset + data_len) % data_block_size);
+	buf_len -= data_unalign;
 
 	_dif_sgl_init(&sgl, iovs, iovcnt);
 
@@ -1511,11 +1517,14 @@ spdk_dif_generate_stream(struct iovec *iovs, int iovcnt,
 		return -ERANGE;
 	}
 
-	buf_offset = (data_offset / data_block_size) * ctx->block_size +
-		     (data_offset % data_block_size);
+	buf_offset = ((data_unalign + data_offset) / data_block_size) * ctx->block_size +
+		     ((data_unalign + data_offset) % data_block_size);
+	buf_offset -= data_unalign;
 
 	_dif_sgl_advance(&sgl, buf_offset);
 	buf_len -= buf_offset;
+
+	buf_offset += data_unalign;
 
 	while (buf_len != 0) {
 		len = spdk_min(buf_len, _to_next_boundary(buf_offset, ctx->block_size));
