@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8c8d216_149ade1d",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-17T17:51:51Z",
+      "side": 1,
+      "message": "Let\u0027s change this to \n\"The script uses the config.json configuration file in the scripts/perf/nvmf directory by default. You can specify a different configuration file at runtime as shown below:\nsudo PYTHONPATH\u003d$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py /path/to/config file/json config file\"",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 11
+      },
+      "revId": "43cc7580b5ce4dbc5cf0e00a49b56b330c7feb1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
