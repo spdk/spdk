@@ -3,6 +3,7 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
+source $testdir/common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
@@ -28,6 +29,23 @@ trap "at_ftl_exit" SIGINT SIGTERM EXIT
 # OCSSD is blacklisted so bind it to vfio/uio driver before testing
 PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="" ./scripts/setup.sh
 
+# Use first regular NVMe disk (non-OC) as non-volatile cache
+nvme_disks=$($rootdir/scripts/gen_nvme.sh --json | jq -r \
+	   "[.config[] | select(.params.traddr != \"$device\")] | .[].params.traddr")
+
+for disk in $nvme_disks; do
+	if has_separate_md $disk; then
+		nv_cache=$disk
+		break
+	fi
+done
+
+if [ -z "$nv_cache" ]; then
+	# TODO: once CI has devices with separate metadata support fail the test here
+	echo "Couldn't find NVMe device to be used as non-volatile cache"
+	exit 1
+fi
+
 timing_enter ftl
 timing_enter bdevperf
 
@@ -37,11 +55,16 @@ timing_exit bdevperf
 
 timing_enter restore
 run_test suite $testdir/restore.sh $device
+if [ -n "$nv_cache" ]; then
+	run_test suite $testdir/restore.sh -c $nv_cache $device
+fi
 timing_exit restore
 
-timing_enter dirty_shutdown
-run_test suite $testdir/dirty_shutdown.sh $device
-timing_exit dirty_shutdown
+if [ -n "$nv_cache" ]; then
+	timing_enter dirty_shutdown
+	run_test suite $testdir/dirty_shutdown.sh -c $nv_cache $device
+	timing_exit dirty_shutdown
+fi
 
 timing_enter json
 run_test suite $testdir/json.sh $device
