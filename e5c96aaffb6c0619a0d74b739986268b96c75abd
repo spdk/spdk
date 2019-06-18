@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c53c29e4_10154257",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-18T11:36:33Z",
+      "side": 1,
+      "message": "I don\u0027t think this fix is addressing the root cause of the problem. I think the flow is the following:\n\n1) reset tool submits a bunch of commands\n2) reset tool calls spdk_nvme_ctrlr_reset, which disables all qpairs (qpair-\u003eis_enabled \u003d false)\n3) The nvme layer aborts all I/O back to the reset tool, which immediately resubmits them\n4) The nvme layer queues all submitted I/O during the reset (in qpair-\u003equeued_req).\n5) Reset completes and releases all of the requests. Except, sq_head wasn\u0027t ever reset back to 0 so it triggers a warning message. This automatically corrects itself once the first completion arrives, but during a reset test this ends up generating a lot of spam.\n\nGiven that, I think the only required change here is the one you have up on line 967. Can you confirm that only that part of the change fixes the problem?",
+      "revId": "e5c96aaffb6c0619a0d74b739986268b96c75abd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
