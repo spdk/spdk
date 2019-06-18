@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8397310a_e57f0cad",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-18T03:40:40Z",
+      "side": 1,
+      "message": "When is it going to be unset?\n\nSetting traps in common functions like this one is tricky. You might end up overriding the trap from the caller.",
+      "range": {
+        "startLine": 40,
+        "startChar": 2,
+        "endLine": 40,
+        "endChar": 6
+      },
+      "revId": "f9c0b1cc75fe34944a059bb5f2f7568f218f362e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
