@@ -40,7 +40,7 @@ APP = bdevperf
 C_SRCS := bdevperf.c
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy
+SPDK_LIB_LIST += event_bdev event_copy event_vmd
 SPDK_LIB_LIST += bdev copy event trace log conf thread util rpc bdev_rpc jsonrpc json sock notify
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
