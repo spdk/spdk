@@ -4387,25 +4387,26 @@ blob_thin_prov_alloc(void)
 	CU_ASSERT(blob->active.num_clusters == 5);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 5);
 
-	/* Grow it to 1TB - still unallocated */
-	spdk_blob_resize(blob, 262144, blob_op_complete, NULL);
+	/* Grow it to 60GB - still unallocated */
+	/* Limited by 64MB device size and max overprovisioning factor of 1024 */
+	spdk_blob_resize(blob, 61440, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob->active.num_clusters == 262144);
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 262144);
+	CU_ASSERT(blob->active.num_clusters == 61440);
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 61440);
 
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	/* Sync must not change anything */
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob->active.num_clusters == 262144);
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 262144);
+	CU_ASSERT(blob->active.num_clusters == 61440);
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 61440);
 	/* Since clusters are not allocated,
 	 * number of metadata pages is expected to be minimal.
 	 */
-	CU_ASSERT(blob->active.num_pages == 2);
+	CU_ASSERT(blob->active.num_pages == 62);
 
 	/* Shrink the blob to 3 clusters - still unallocated */
 	spdk_blob_resize(blob, 3, blob_op_complete, NULL);
