@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "30870a73_e0523091",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-18T12:46:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a8ef8bb_86f2805d",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e74ece5_d1f4aa98",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 5
@@ -33,6 +51,24 @@
       "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "312599e1_11be2d68",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-18T12:46:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1e74ece5_d1f4aa98",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c4afcb34_617b5a4c",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-18T12:46:08Z",
+      "side": 1,
+      "message": "Empty struct returns warning, so I will do it with just one struct for now.",
+      "parentUuid": "0a5e4c20_1b382611",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd6a006a_2a170001",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 5
@@ -67,6 +121,24 @@
       "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09138c07_eccaa2de",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-18T12:46:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd6a006a_2a170001",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "3415445b_3f2b76db",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-18T12:46:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "890af3b8_d2a5d0e2",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f1148b21_314f6d60",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -101,6 +191,24 @@
       "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad56a87b_a1f1cf55",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4209,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-18T12:46:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1148b21_314f6d60",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -156,6 +264,24 @@
       "side": 1,
       "message": "My bad, this is per-bdev mutex. In this case we should introduce another global mutex protecting g_bdev_mgr.bdevs everywhere throughout the code.",
       "parentUuid": "a71238b1_f0bbc0f6",
+      "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4841b76_8878c528",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4296,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-18T12:46:08Z",
+      "side": 1,
+      "message": "I will do this as a separate patch after this one.",
+      "parentUuid": "b571ac46_d214b560",
       "revId": "0c249bf0f521961608286a06e3b87304b5dda16f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
