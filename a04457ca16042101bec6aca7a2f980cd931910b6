@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03ec8243_292c7ef9",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-18T14:27:15Z",
+      "side": 1,
+      "message": "When is this not true? By visual inspection I think it\u0027s always the case already. Maybe this should instead be an assert?",
+      "revId": "a04457ca16042101bec6aca7a2f980cd931910b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
