@@ -103,6 +103,10 @@ Added thread_get_stats RPC method to retrieve existing statistics.
 
 Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
 
+### blobstore
+
+A snapshot can now be deleted if there is only a single clone on top of it.
+
 ## v19.04:
 
 ### nvme
