@@ -554,7 +554,7 @@ static void
 bootstrap_fn(void *arg1)
 {
 	if (g_spdk_app.json_config_file) {
-		g_delay_subsystem_init = false;
+		g_delay_subsystem_init = true;
 		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, spdk_app_start_rpc,
 					  NULL);
 	} else {
