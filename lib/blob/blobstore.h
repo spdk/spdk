@@ -264,7 +264,6 @@ struct spdk_blob_md_descriptor_extent {
 
 	struct {
 		uint32_t        cluster_idx;
-		uint32_t        length; /* In units of clusters */
 	} extents[0];
 };
 
