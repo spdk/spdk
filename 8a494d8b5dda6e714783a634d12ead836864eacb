@@ -22,6 +22,30 @@
       "revId": "8a494d8b5dda6e714783a634d12ead836864eacb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc53c534_769c03ed",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-18T02:26:09Z",
+      "side": 1,
+      "message": "Will it work with \"$malloc_bdev\"",
+      "parentUuid": "16de5d65_2e0d6a64",
+      "range": {
+        "startLine": 138,
+        "startChar": 27,
+        "endLine": 138,
+        "endChar": 42
+      },
+      "revId": "8a494d8b5dda6e714783a634d12ead836864eacb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
