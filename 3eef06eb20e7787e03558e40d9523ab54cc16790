@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "fd35e829_349ff495",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1806,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T09:12:38Z",
+      "side": 1,
+      "message": "I agree with Changpeng. About SGL support in iSCSI, I\u0027m learning and working on SGL in NVMe/TCP, and may be able to utilize the asset of NVMe/TCP to iSCSI target. I\u0027ll share my investigation soon with you.",
+      "parentUuid": "080f14dc_95a824e5",
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2afa0633_fc1f4b60",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
