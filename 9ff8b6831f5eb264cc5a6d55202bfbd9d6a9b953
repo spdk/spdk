@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92d82f10_fdf63df6",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-18T03:51:17Z",
+      "side": 1,
+      "message": "can you increment those counters unconditionally? It would significantly reduce the number of lines in this patch.",
+      "revId": "9ff8b6831f5eb264cc5a6d55202bfbd9d6a9b953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
