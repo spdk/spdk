@@ -1053,7 +1053,9 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 		spdk_bit_array_set(vol->allocated_backing_io_units, req->chunk->io_unit_index[i]);
 	}
 	while (i < vol->backing_io_units_per_chunk) {
-		req->chunk->io_unit_index[i++] = REDUCE_EMPTY_MAP_ENTRY;
+		spdk_bit_array_clear(vol->allocated_backing_io_units, req->chunk->io_unit_index[i]);
+		req->chunk->io_unit_index[i] = REDUCE_EMPTY_MAP_ENTRY;
+		i++;
 	}
 
 	_issue_backing_ops(req, vol, next_fn, true /* write */);
