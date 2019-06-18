@@ -106,6 +106,8 @@ struct spdk_bdev_mgr {
 	bool init_complete;
 	bool module_init_complete;
 
+	pthread_mutex_t mutex;
+
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
 #endif
@@ -116,7 +118,9 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 	.init_complete = false,
 	.module_init_complete = false,
+	.mutex = PTHREAD_MUTEX_INITIALIZER,
 };
+
 
 static struct spdk_bdev_opts	g_bdev_opts = {
 	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
@@ -1111,6 +1115,7 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 	g_fini_cb_arg = NULL;
 	g_bdev_mgr.init_complete = false;
 	g_bdev_mgr.module_init_complete = false;
+	pthread_mutex_destroy(&g_bdev_mgr.mutex);
 }
 
 static void
@@ -4182,9 +4187,11 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 		return;
 	}
 
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
 	pthread_mutex_lock(&bdev->internal.mutex);
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
 		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 		if (cb_fn) {
 			cb_fn(cb_arg, -EBUSY);
 		}
@@ -4198,6 +4205,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	/* Call under lock. */
 	rc = spdk_bdev_unregister_unsafe(bdev);
 	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
 	if (rc == 0) {
 		spdk_bdev_fini(bdev);
@@ -4287,15 +4295,19 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	spdk_bdev_callbacks callback;
 	int rc;
 
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+
 	bdev = spdk_bdev_get_by_name(bdev_name);
 
 	if (bdev == NULL) {
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 		return -EINVAL;
 	}
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
 		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 		return -EBUSY;
 	}
 
@@ -4306,6 +4318,7 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	rc = _spdk_bdev_open(bdev, write, callback, _desc);
 
 	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
 	return rc;
 }
