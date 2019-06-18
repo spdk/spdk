@@ -1060,9 +1060,6 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 		assert(req->chunk->io_unit_index[i] != UINT32_MAX);
 		spdk_bit_array_set(vol->allocated_backing_io_units, req->chunk->io_unit_index[i]);
 	}
-	while (i < vol->backing_io_units_per_chunk) {
-		req->chunk->io_unit_index[i++] = REDUCE_EMPTY_MAP_ENTRY;
-	}
 
 	_issue_backing_ops(req, vol, next_fn, true /* write */);
 }
