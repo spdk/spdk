@@ -1873,7 +1873,9 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 	rsp_pdu->data = calloc(1, *alloc_len);
 	if (!rsp_pdu->data) {
 		SPDK_ERRLOG("calloc() failed for data segment\n");
-		return -ENOMEM;
+		rsph->status_class = ISCSI_CLASS_TARGET_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_STATUS_NO_RESOURCES;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
 
 	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
@@ -1922,6 +1924,8 @@ iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 	if (ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags) &&
 	    ISCSI_BHS_LOGIN_GET_CBIT(rsph->flags)) {
 		SPDK_ERRLOG("transit error\n");
+		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+		rsph->status_detail = ISCSI_LOGIN_INITIATOR_ERROR;
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
 	/* make sure reqh->version_max < ISCSI_VERSION */
