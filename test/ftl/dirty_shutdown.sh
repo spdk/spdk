@@ -3,19 +3,27 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
+source $testdir/common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 pu_start=0
 pu_end=3
-additional_blocks=16
+uuid=
+nv_cache=
+
+while getopts ':u:c:' opt; do
+	case $opt in
+		u) uuid=$OPTARG ;;
+		c) nv_cache=$OPTARG ;;
+		?) echo "Usage: $0 [-u UUID] [-c NV_CACHE_PCI_BDF] OCSSD_PCI_BDF" && exit 1 ;;
+	esac
+done
+shift $((OPTIND -1))
 
 device=$1
-uuid=$2
 
 restore_kill() {
 	rm -f $testdir/config/ftl.json
-	rm -f $testdir/empty
-	rm -f $testdir/testblock
 	rm -f $testdir/testfile.md5
 	rm -f $testdir/testfile2.md5
 
@@ -26,21 +34,24 @@ restore_kill() {
 
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
-# Extract chunk size
-chunk_size=$($rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:$device" |
-grep 'Logical blks per chunk' | sed 's/[^0-9]//g')
+chunk_size=$(get_chunk_size $device)
 
-band_size=$(($chunk_size*($pu_end-$pu_start+1)))
+# Write one band worth of data + one extra chunk
+data_size=$(($chunk_size*($pu_end-$pu_start + 1) + $chunk_size))
 
 $rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
-# Wait until spdk_tgt starts
 waitforlisten $svcpid
 
-if [ -n "$uuid" ]; then
-	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l $pu_start-$pu_end -u $uuid -o
-else
-	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l $pu_start-$pu_end -o
+if [ -n "$nv_cache" ]; then
+	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache 4)
 fi
+
+ftl_construct_args="construct_ftl_bdev -b nvme0 -a $device -l $pu_start-$pu_end -o"
+
+[ -n "$nvc_bdev" ] && ftl_construct_args+=" -c $nvc_bdev"
+[ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
+
+$rpc_py $ftl_construct_args
 
 # Load the nbd driver
 modprobe nbd
@@ -49,53 +60,32 @@ waitfornbd nbd0
 
 $rpc_py save_config > $testdir/config/ftl.json
 
-# Send band worth of data in 2 steps (some data should be written to 2nd band due to metadata overhead)
-dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$(($band_size - $chunk_size)) oflag=dsync
-offset=$(($band_size - $chunk_size))
-
-dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$chunk_size seek=$offset oflag=dsync
-offset=$(($offset + $chunk_size))
-
-# Save md5 data of first batch (which should be fully on a closed band and recoverable)
-dd if=/dev/nbd0 bs=4K count=$(($band_size - $chunk_size)) | md5sum > $testdir/testfile.md5
-
-# Make sure the third batch of written data is fully on the second band
-dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$additional_blocks seek=$offset oflag=dsync
-offset=$(($offset + $additional_blocks))
-
+dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$data_size oflag=dsync
+# Calculate checksum of the data written
+dd if=/dev/nbd0 bs=4K count=$data_size | md5sum > $testdir/testfile.md5
 $rpc_py stop_nbd_disk /dev/nbd0
 
 # Force kill bdev service (dirty shutdown) and start it again
 kill -9 $svcpid
 rm -f /dev/shm/spdk_tgt_trace.pid$svcpid
-# TODO Adapt this after waitforlisten is expanded
-sleep 5
 
-$rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
-# Wait until spdk_tgt starts
+$rootdir/app/spdk_tgt/spdk_tgt -L ftl_init & svcpid=$!
 waitforlisten $svcpid
 
-# Ftl should recover, though with a loss of data (-o config option)
 $rpc_py load_config < $testdir/config/ftl.json
 waitfornbd nbd0
 
 # Write extra data after restore
-dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$chunk_size seek=$offset oflag=dsync
+dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$chunk_size seek=$data_size oflag=dsync
 # Save md5 data
-dd if=/dev/nbd0 bs=4K count=$chunk_size skip=$offset | md5sum > $testdir/testfile2.md5
+dd if=/dev/nbd0 bs=4K count=$chunk_size skip=$data_size | md5sum > $testdir/testfile2.md5
 
 # Make sure all data will be read from disk
 echo 3 > /proc/sys/vm/drop_caches
 
-# Without persistent cache, first batch of data should be recoverable
-dd if=/dev/nbd0 bs=4K count=$(($band_size - $chunk_size)) | md5sum -c $testdir/testfile.md5
-
-dd if=/dev/nbd0 of=$testdir/testblock bs=4k count=$additional_blocks skip=$band_size
-# Last 4k blocks from before restore should be on second band, and return as 0s
-dd if=/dev/zero of=$testdir/empty bs=4k count=$additional_blocks
-cmp $testdir/empty $testdir/testblock
-# Verify data written after restore is still there
-dd if=/dev/nbd0 bs=4K count=$chunk_size skip=$(($band_size + $additional_blocks)) | md5sum -c $testdir/testfile2.md5
+# Verify that the checksum matches and the data is consistent
+dd if=/dev/nbd0 bs=4K count=$data_size | md5sum -c $testdir/testfile.md5
+dd if=/dev/nbd0 bs=4K count=$chunk_size skip=$data_size | md5sum -c $testdir/testfile2.md5
 
 report_test_completion ftl_dirty_shutdown
 
