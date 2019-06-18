@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfcd8427_8fa7708d",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-18T04:20:08Z",
+      "side": 1,
+      "message": "static?",
+      "range": {
+        "startLine": 155,
+        "startChar": 0,
+        "endLine": 155,
+        "endChar": 5
+      },
+      "revId": "f2fb7b004b4ed15db4955337bb99ed58d3a2848e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e93d48d2_c9f78e10",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-18T04:20:08Z",
+      "side": 1,
+      "message": "why do we use 3 bools if only of them can be set at a time?\n\ncan we use an enum here?\n\nenum compress_bdev_pmd {\n  COMPRESS_PMD_AUTO\u003d0,\n  COMPRESS_PMD_QAT_ONLY,\n  COMPRESS_PMD_ISAL_ONLY,\n}",
+      "revId": "f2fb7b004b4ed15db4955337bb99ed58d3a2848e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "879bf9a1_36f029f3",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-18T04:20:08Z",
+      "side": 1,
+      "message": "This isn\u0027t a public API, so it shouldn\u0027t have the spdk_ prefix in name. Probably set_compress_pmd() would do.",
+      "revId": "f2fb7b004b4ed15db4955337bb99ed58d3a2848e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
