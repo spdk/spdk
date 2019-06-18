@@ -3,12 +3,23 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
+source $testdir/common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
 
 mount_dir=$(mktemp -d)
+uuid=
+nv_cache=
+
+while getopts ':u:c:' opt; do
+	case $opt in
+		u) uuid=$OPTARG ;;
+		c) nv_cache=$OPTARG ;;
+		?) echo "Usage: $0 [-u UUID] [-c NV_CACHE_PCI_BDF] OCSSD_PCI_BDF" && exit 1 ;;
+	esac
+done
+shift $((OPTIND -1))
 device=$1
-uuid=$2
 
 restore_kill() {
 	if mount | grep $mount_dir; then
@@ -30,11 +41,16 @@ $rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
 # Wait until bdev_svc starts
 waitforlisten $svcpid
 
-if [ -n "$uuid" ]; then
-	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3 -u $uuid
-else
-	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3
+if [ -n "$nv_cache" ]; then
+	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache 4)
 fi
+
+ftl_construct_args="construct_ftl_bdev -b nvme0 -a $device -l 0-3"
+
+[ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
+[ -n "$nv_cache" ] && ftl_construct_args+=" -c $nvc_bdev"
+
+$rpc_py $ftl_construct_args
 
 # Load the nbd driver
 modprobe nbd
@@ -55,7 +71,7 @@ md5sum $mount_dir/testfile > $testdir/testfile.md5
 umount $mount_dir
 killprocess $svcpid
 
-$rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
+$rootdir/test/app/bdev_svc/bdev_svc -L ftl_init & svcpid=$!
 # Wait until bdev_svc starts
 waitforlisten $svcpid
 
