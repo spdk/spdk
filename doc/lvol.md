@@ -57,6 +57,9 @@ The write operation is performed as shown in the diagram below:
 User may also create clone of existing snapshot that will be thin provisioned and it will behave in the same way as logical volume from which snapshot is created.
 There is no limit of clones and snapshots that may be created as long as there is enough space on logical volume store. Snapshots are read only. Clones may be created only from snapshots or read only logical volumes.
 
+Snapshot can be removed only if there is no more than one clone on top of it. Relation chain will be updated accordingly. Cluster map of clone and snapshot will be merged - map entries for unallocated clusters in clone
+will be updated with addresses from snapshot clusters map. Whole operation is done only on metadata - no user data is being copied during this process.
+
 ## Inflation {#lvol_inflation}
 
 Blobs can be inflated to copy data from backing devices (e.g. snapshots) and allocate all remaining clusters. As a result of this operation all dependencies for the blob are removed.

@@ -99,6 +99,10 @@ spdk_sock_group_create() is updated to allow input the user provided ctx.
 
 Added thread_get_stats RPC method to retrieve existing statistics.
 
+### blobstore
+
+Snapshot can be removed if there is no more than one clone on top of it.
+
 ## v19.04:
 
 ### nvme
