@@ -106,6 +106,8 @@ struct spdk_bdev_mgr {
 	bool init_complete;
 	bool module_init_complete;
 
+	pthread_mutex_t mutex;
+
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
 #endif
@@ -116,7 +118,9 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 	.init_complete = false,
 	.module_init_complete = false,
+	.mutex = PTHREAD_MUTEX_INITIALIZER,
 };
+
 
 static struct spdk_bdev_opts	g_bdev_opts = {
 	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
@@ -787,6 +791,8 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 		}
 	}
 
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+
 	TAILQ_FOREACH(bdev, &g_bdev_mgr.bdevs, internal.link) {
 		if (bdev->fn_table->write_config_json) {
 			bdev->fn_table->write_config_json(bdev, w);
@@ -794,6 +800,8 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 
 		spdk_bdev_qos_config_json(bdev, w);
 	}
+
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
 	spdk_json_write_array_end(w);
 }
@@ -1112,6 +1120,7 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 	g_fini_cb_arg = NULL;
 	g_bdev_mgr.init_complete = false;
 	g_bdev_mgr.module_init_complete = false;
+	pthread_mutex_destroy(&g_bdev_mgr.mutex);
 }
 
 static void
@@ -4205,9 +4214,11 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 		return;
 	}
 
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
 	pthread_mutex_lock(&bdev->internal.mutex);
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
 		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 		if (cb_fn) {
 			cb_fn(cb_arg, -EBUSY);
 		}
@@ -4221,6 +4232,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	/* Call under lock. */
 	rc = spdk_bdev_unregister_unsafe(bdev);
 	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
 	if (rc == 0) {
 		spdk_bdev_fini(bdev);
