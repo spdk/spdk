@@ -353,7 +353,6 @@ ftl_restore_l2p(struct ftl_band *band)
 		ftl_l2p_set(dev, lba, ppa);
 	}
 
-	band->lba_map.map = NULL;
 	return 0;
 }
 
@@ -505,13 +504,13 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 
 	/* Check if some chunks are not closed */
 	if (ftl_pad_chunk_pad_finish(rband, false)) {
-		/* If we're here, end meta wasn't recognized, but the whole band is written */
-		/* Assume the band was padded and ignore it */
+		/*
+		 * If we're here, end meta wasn't recognized, but the whole band is written
+		 * Assume the band was padded and ignore it
+		 */
 		return;
 	}
 
-	/* The LBA map was assigned from restore pool */
-	band->lba_map.map = NULL;
 	band->state = FTL_BAND_STATE_OPEN;
 	rc = ftl_band_set_direct_access(band, true);
 	if (rc) {
@@ -590,6 +589,13 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 		ftl_restore_complete(restore, -ENOTRECOVERABLE);
 		return;
 	}
+
+	/*
+	 * The LBA map for bands is assigned from ftl_restore->lba_map and needs to be set to NULL
+	 * before successful restore, otherwise ftl_band_alloc_lba_map will fail after
+	 * initialization finalizes.
+	 */
+	rband->band->lba_map.map = NULL;
 
 	rband = ftl_restore_next_band(restore);
 	if (!rband) {
