@@ -35,6 +35,8 @@
 #include "spdk/nvme.h"
 #include "spdk/io_channel.h"
 #include "spdk/bdev_module.h"
+#include "spdk/string.h"
+#include "spdk/likely.h"
 #include "spdk_internal/log.h"
 #include "spdk/ftl.h"
 #include "ftl_core.h"
@@ -208,11 +210,14 @@ ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 	uint32_t nsid = spdk_nvme_ns_get_id(dev->ns);
 	uint64_t offset = (ppa.grp * dev->geo.num_pu + ppa.pu) *
 			  dev->geo.num_chk + ppa.chk;
+	int rc;
 
-	if (spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_OCSSD_LOG_CHUNK_INFO, nsid,
-					     info, num_entries * sizeof(*info),
-					     offset * sizeof(*info),
-					     ftl_admin_cb, (void *)&cmpl)) {
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_OCSSD_LOG_CHUNK_INFO, nsid,
+					      info, num_entries * sizeof(*info),
+					      offset * sizeof(*info),
+					      ftl_admin_cb, (void *)&cmpl);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("spdk_nvme_ctrlr_cmd_get_log_page: %s\n", spdk_strerror(-rc));
 		return -1;
 	}
 
@@ -236,6 +241,7 @@ ftl_retrieve_punit_chunk_info(struct spdk_ftl_dev *dev, const struct ftl_punit *
 	uint32_t i = 0;
 	unsigned int num_entries = FTL_BLOCK_SIZE / sizeof(*info);
 	struct ftl_ppa chunk_ppa = punit->start_ppa;
+	char ppa_buf[128];
 
 	for (i = 0; i < dev->geo.num_chk; i += num_entries, chunk_ppa.chk += num_entries) {
 		if (num_entries > dev->geo.num_chk - i) {
@@ -243,6 +249,8 @@ ftl_retrieve_punit_chunk_info(struct spdk_ftl_dev *dev, const struct ftl_punit *
 		}
 
 		if (ftl_retrieve_chunk_info(dev, chunk_ppa, &info[i], num_entries)) {
+			SPDK_ERRLOG("Failed to retrieve chunk information @ppa: %s\n",
+				    ftl_ppa2str(chunk_ppa, ppa_buf, sizeof(ppa_buf)));
 			return -1;
 		}
 	}
