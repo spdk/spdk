@@ -988,6 +988,7 @@ opal_take_ownership(struct dev *iter)
 				ret = spdk_opal_cmd_take_ownership(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("Take ownership failure: %d\n", ret);
+					spdk_opal_close(iter->opal_dev);
 					return;
 				}
 				printf("...\n...\nTake Ownership Success\n");
@@ -1024,6 +1025,7 @@ opal_revert_tper(struct dev *iter)
 				ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("Revert TPer failure: %d\n", ret);
+					spdk_opal_close(iter->opal_dev);
 					return;
 				}
 				printf("...\n...\nRevert TPer Success\n");
