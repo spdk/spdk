@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c84ffef_75a1314a",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-18T03:28:00Z",
+      "side": 1,
+      "message": "space missing here. malloc_bdevs might be set to \"Malloc1 Malloc2Malloc3\"",
+      "range": {
+        "startLine": 84,
+        "startChar": 84,
+        "endLine": 84,
+        "endChar": 85
+      },
+      "revId": "adff5656acd4c6d2a2b7059f6461a1c29bac335a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "996e0b69_dbf227bd",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-18T03:28:00Z",
+      "side": 1,
+      "message": "This is not valid bash syntax.",
+      "range": {
+        "startLine": 137,
+        "startChar": 0,
+        "endLine": 137,
+        "endChar": 16
+      },
+      "revId": "adff5656acd4c6d2a2b7059f6461a1c29bac335a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
