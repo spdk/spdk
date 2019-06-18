@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97802aa2_757930dd",
+        "filename": "lib/log/log.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-18T03:55:17Z",
+      "side": 1,
+      "message": "This could be probably exported to a function and put into g_log as a default callback value. Let\u0027s do it later though.",
+      "revId": "3fa0e00e21f32597ff72f98351650e0a039a6bf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
