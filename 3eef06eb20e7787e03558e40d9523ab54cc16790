@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "55ced2e1_73a0c018",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1806,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T22:55:57Z",
+      "side": 1,
+      "message": "Hi Changpeng, Darek,\n\nSupporting SGL in iSCSI target will be very complex.\n\niSCSI target pass an empty single iovec to read I/O and bdev layer fills the iovec by allocating a single contiguous read data buffer.\n\nWe can pass an empty multiple entries iovec array and its number of entries to read I/O and bdev layer fills the multiple entries iovec array within the passed number instead. But bdev layer can\u0027t let iSCSI target know the number of entries it filled actually.\nThis strategy has been used not only by iSCSI but also by bdevperf.\n\nSo the current strategy Changeng is doing is the only practical way?",
+      "parentUuid": "fd35e829_349ff495",
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2afa0633_fc1f4b60",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
