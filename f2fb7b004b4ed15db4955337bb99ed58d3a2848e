@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "79f6b7eb_b853553a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-18T23:28:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bfcd8427_8fa7708d",
+      "range": {
+        "startLine": 155,
+        "startChar": 0,
+        "endLine": 155,
+        "endChar": 5
+      },
+      "revId": "f2fb7b004b4ed15db4955337bb99ed58d3a2848e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e93d48d2_c9f78e10",
         "filename": "lib/bdev/compress/vbdev_compress.h",
         "patchSetId": 16
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "74c6854e_806f6a75",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-18T23:28:33Z",
+      "side": 1,
+      "message": "welcome to how my mind works :)  Thanks, will change",
+      "parentUuid": "e93d48d2_c9f78e10",
+      "revId": "f2fb7b004b4ed15db4955337bb99ed58d3a2848e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "879bf9a1_36f029f3",
         "filename": "lib/bdev/compress/vbdev_compress.h",
         "patchSetId": 16
@@ -53,6 +95,24 @@
       "writtenOn": "2019-06-18T04:20:08Z",
       "side": 1,
       "message": "This isn\u0027t a public API, so it shouldn\u0027t have the spdk_ prefix in name. Probably set_compress_pmd() would do.",
+      "revId": "f2fb7b004b4ed15db4955337bb99ed58d3a2848e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc658bf6_2c628d36",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-18T23:28:33Z",
+      "side": 1,
+      "message": "Oh yeah, I was modeling after the nvme global options which shouldn\u0027t really have the spdk_ in front either I suppose.  Will fix",
+      "parentUuid": "879bf9a1_36f029f3",
       "revId": "f2fb7b004b4ed15db4955337bb99ed58d3a2848e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
