@@ -22,6 +22,30 @@
       "revId": "15fe9294c7743e2776dfc7354a15e892c71626b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a13db562_c0f8d703",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-18T06:28:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5032fb0d_92820e12",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 5
+      },
+      "revId": "15fe9294c7743e2776dfc7354a15e892c71626b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
