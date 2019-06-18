@@ -42,6 +42,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <sys/syscall.h>
+#include <asm/unistd.h>
 #ifdef RTE_LIBRTE_VHOST_NUMA
 #include <numaif.h>
 #endif
@@ -55,6 +57,15 @@
 
 #define VIRTIO_MIN_MTU 68
 #define VIRTIO_MAX_MTU 65535
+
+#define INFLIGHT_ALIGNMENT 64
+#define INFLIGHT_VERSION 0xabcd
+#define VIRTQUEUE_MAX_SIZE 1024
+
+#define CLOEXEC 0x0001U
+
+#define ALIGN_DOWN(n, m) ((n) / (m) * (m))
+#define ALIGN_UP(n, m) ALIGN_DOWN((n) + (m) - 1, (m))
 
 static const char *vhost_message_str[VHOST_USER_MAX] = {
 	[VHOST_USER_NONE] = "VHOST_USER_NONE",
@@ -80,6 +91,8 @@ static const char *vhost_message_str[VHOST_USER_MAX] = {
 	[VHOST_USER_NET_SET_MTU]  = "VHOST_USER_NET_SET_MTU",
 	[VHOST_USER_GET_CONFIG] = "VHOST_USER_GET_CONFIG",
 	[VHOST_USER_SET_CONFIG] = "VHOST_USER_SET_CONFIG",
+	[VHOST_USER_GET_INFLIGHT_FD] = "VHOST_USER_GET_INFLIGHT_FD",
+	[VHOST_USER_SET_INFLIGHT_FD] = "VHOST_USER_SET_INFLIGHT_FD",
 	[VHOST_USER_NVME_ADMIN] = "VHOST_USER_NVME_ADMIN",
 	[VHOST_USER_NVME_SET_CQ_CALL] = "VHOST_USER_NVME_SET_CQ_CALL",
 	[VHOST_USER_NVME_GET_CAP] = "VHOST_USER_NVME_GET_CAP",
@@ -143,6 +156,14 @@ vhost_backend_cleanup(struct virtio_net *dev)
 		munmap((void *)(uintptr_t)dev->bar_addr, dev->bar_size);
 		dev->bar_addr = NULL;
 		dev->bar_size = 0;
+	}
+	if (dev->inflight_info.addr) {
+		munmap(dev->inflight_info.addr, dev->inflight_info.size);
+		dev->inflight_info.addr = NULL;
+	}
+	if (dev->inflight_info.fd > 0) {
+		close(dev->inflight_info.fd);
+		dev->inflight_info.fd = -1;
 	}
 }
 
@@ -743,6 +764,178 @@ virtio_is_ready(struct virtio_net *dev)
 	return 0;
 }
 
+static int mem_create(const char *name, unsigned int flags)
+{
+#ifdef __NR_memfd_create
+	return syscall(__NR_memfd_create, name, flags);
+#else
+	return -1;
+#endif
+}
+
+void *inflight_mem_alloc(const char *name, size_t size, int *fd)
+{
+	void *ptr;
+	int mfd = -1;
+	char fname[20] = "/tmp/memfd-XXXXXX";
+
+	*fd = -1;
+	mfd = mem_create(name, CLOEXEC);
+	if (mfd != -1) {
+		if (ftruncate(mfd, size) == -1) {
+			RTE_LOG(ERR, VHOST_CONFIG,
+				"ftruncate fail for alloc inflight buffer\n");
+			close(mfd);
+			return NULL;
+		}
+	} else {
+		mfd = mkstemp(fname);
+		unlink(fname);
+
+		if (mfd == -1) {
+			RTE_LOG(ERR, VHOST_CONFIG,
+				"mkstemp fail for alloc inflight buffer\n");
+			return NULL;
+		}
+
+		if (ftruncate(mfd, size) == -1) {
+			RTE_LOG(ERR, VHOST_CONFIG,
+				"ftruncate fail for alloc inflight buffer\n");
+			close(mfd);
+			return NULL;
+		}
+	}
+
+	ptr = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, mfd, 0);
+	if (ptr == MAP_FAILED) {
+		RTE_LOG(ERR, VHOST_CONFIG,
+			"mmap fail for alloc inflight buffer\n");
+		close(mfd);
+		return NULL;
+	}
+
+	*fd = mfd;
+	return ptr;
+}
+
+static uint32_t get_pervq_shm_size(uint16_t queue_size)
+{
+	return ALIGN_UP(sizeof(struct inflight_desc) * queue_size +
+		sizeof(uint64_t) * 1 + sizeof(uint16_t) * 4, INFLIGHT_ALIGNMENT);
+}
+
+static int
+vhost_user_get_inflight_fd(struct virtio_net *dev, VhostUserMsg *msg)
+{
+	int fd;
+	uint64_t mmap_size;
+	void *addr;
+	uint16_t num_queues, queue_size;
+
+	if (msg->size != sizeof(msg->payload.inflight)) {
+		RTE_LOG(ERR, VHOST_CONFIG,
+			"Invalid get_inflight_fd message size is %d",
+			msg->size);
+		return -1;
+	}
+
+	num_queues = msg->payload.inflight.num_queues;
+	queue_size = msg->payload.inflight.queue_size;
+
+	RTE_LOG(INFO, VHOST_CONFIG, "get_inflight_fd num_queues: %u\n",
+			msg->payload.inflight.num_queues);
+	RTE_LOG(INFO, VHOST_CONFIG, "get_inflight_fd queue_size: %u\n",
+			msg->payload.inflight.queue_size);
+	mmap_size = num_queues * get_pervq_shm_size(queue_size);
+
+	addr = inflight_mem_alloc("vhost-inflight", mmap_size, &fd);
+	if (!addr) {
+		RTE_LOG(ERR, VHOST_CONFIG, "Failed to alloc vhost inflight area");
+			msg->payload.inflight.mmap_size = 0;
+                return -1;
+	}
+	memset(addr, 0, mmap_size);
+
+	dev->inflight_info.addr = addr;
+	dev->inflight_info.size = msg->payload.inflight.mmap_size = mmap_size;
+	dev->inflight_info.fd = msg->fds[0] = fd;
+	msg->payload.inflight.mmap_offset = 0;
+
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"send inflight mmap_size: %lu\n",
+		msg->payload.inflight.mmap_size);
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"send inflight mmap_offset: %lu\n",
+		msg->payload.inflight.mmap_offset);
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"send inflight fd: %d\n", msg->fds[0]);
+	return 0;
+}
+
+static int
+vhost_user_set_inflight_fd(struct virtio_net *dev, VhostUserMsg *msg)
+{
+	int fd, i;
+	uint64_t mmap_size, mmap_offset;
+	uint16_t num_queues, queue_size;
+	uint32_t pervq_inflight_size;
+	void *rc;
+	struct vhost_virtqueue *vq;
+
+	fd = msg->fds[0];
+	if (msg->size != sizeof(msg->payload.inflight) || fd < 0) {
+		RTE_LOG(ERR, VHOST_CONFIG, "Invalid set_inflight_fd message size is %d,fd is %d\n",
+			msg->size, fd);
+		return -1;
+	}
+
+	mmap_size = msg->payload.inflight.mmap_size;
+	mmap_offset = msg->payload.inflight.mmap_offset;
+	num_queues = msg->payload.inflight.num_queues;
+	queue_size = msg->payload.inflight.queue_size;
+	pervq_inflight_size = get_pervq_shm_size(queue_size);
+
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"set_inflight_fd mmap_size: %lu\n", mmap_size);
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"set_inflight_fd mmap_offset: %lu\n", mmap_offset);
+	RTE_LOG(INFO, VHOST_CONFIG,
+        "set_inflight_fd num_queues: %u\n", num_queues);
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"set_inflight_fd queue_size: %u\n", queue_size);
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"set_inflight_fd fd: %d\n", fd);
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"set_inflight_fd pervq_inflight_size: %d\n",
+		pervq_inflight_size);
+
+	if (dev->inflight_info.addr)
+		munmap(dev->inflight_info.addr, dev->inflight_info.size);
+
+	rc = mmap(0, mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+			fd, mmap_offset);
+	if (rc == MAP_FAILED) {
+		RTE_LOG(ERR, VHOST_CONFIG, "failed to mmap share memory.\n");
+		return -1;
+	}
+
+	if (dev->inflight_info.fd)
+		close(dev->inflight_info.fd);
+
+	dev->inflight_info.fd = fd;
+	dev->inflight_info.addr = rc;
+	dev->inflight_info.size = mmap_size;
+
+	for (i = 0; i < num_queues; i++) {
+		vq = dev->virtqueue[i];
+		vq->inflight = (struct inflight_info *)rc;
+		vq->inflight->desc_num = queue_size;
+		rc = (void *)((char *)rc + pervq_inflight_size);
+	}
+
+	return 0;
+}
+
 static void
 vhost_user_set_vring_call(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 {
@@ -770,6 +963,89 @@ vhost_user_set_vring_call(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 	vq->callfd = file.fd;
 }
 
+static int
+resubmit_desc_compare(const void *a, const void *b)
+{
+	const struct resubmit_desc *desc0 = (const struct resubmit_desc *)a;
+	const struct resubmit_desc *desc1 = (const struct resubmit_desc *)b;
+
+	if (desc1->counter > desc0->counter &&
+		(desc1->counter - desc0->counter) < VIRTQUEUE_MAX_SIZE * 2)
+		return 1;
+	return -1;
+}
+
+static int
+vhost_check_queue_inflights(struct virtio_net *dev, struct vhost_virtqueue *vq)
+{
+	struct vring_used *used = vq->used;
+	uint16_t i = 0;
+	uint16_t resubmit_num = 0;
+	struct resubmit_info *resubmit = NULL;
+
+	if (!(dev->features &
+		(1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD)))
+		return 0;
+
+	if ((!vq->inflight))
+		return -1;
+
+	if (!vq->inflight->version) {
+		vq->inflight->version = INFLIGHT_VERSION;
+		return 0;
+	}
+
+	vq->resubmit = NULL;
+	vq->counter = 0;
+
+	if (vq->inflight->used_idx != used->idx) {
+		vq->inflight->desc[vq->inflight->last_inflight_io].inflight = 0;
+		rte_compiler_barrier();
+		vq->inflight->used_idx = used->idx;
+        }
+
+	for (i = 0; i < vq->inflight->desc_num; i++) {
+		if (vq->inflight->desc[i].inflight == 1)
+			resubmit_num++;
+        }
+
+	vq->last_avail_idx += resubmit_num;
+
+	if (resubmit_num) {
+		resubmit  = calloc(1, sizeof(struct resubmit_info));
+		if (!resubmit) {
+			RTE_LOG(ERR, VHOST_CONFIG, "Failed to allocate memory for resubmit info.\n");
+			return -1;
+                }
+
+		resubmit->resubmit_list = calloc(resubmit_num,
+			sizeof(struct resubmit_desc));
+		if (!resubmit->resubmit_list) {
+			RTE_LOG(ERR, VHOST_CONFIG, "Failed to allocate memory for inflight desc.\n");
+			free(resubmit);
+			return -1;
+                }
+
+		for (i = 0; i < vq->inflight->desc_num; i++) {
+			if (vq->inflight->desc[i].inflight == 1) {
+				resubmit->resubmit_list[resubmit->resubmit_num].index = i;
+				resubmit->resubmit_list[resubmit->resubmit_num].counter =
+					vq->inflight->desc[i].counter;
+				resubmit->resubmit_num++;
+                        }
+                }
+
+		if (resubmit->resubmit_num > 1)
+			qsort(resubmit->resubmit_list, resubmit->resubmit_num,
+				sizeof(struct resubmit_desc), resubmit_desc_compare);
+
+		vq->counter = resubmit->resubmit_list[0].counter + 1;
+		vq->resubmit = resubmit;
+	}
+
+	return 0;
+}
+
 static void
 vhost_user_set_vring_kick(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 {
@@ -794,6 +1070,8 @@ vhost_user_set_vring_kick(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 	if (vq->kickfd >= 0)
 		close(vq->kickfd);
 	vq->kickfd = file.fd;
+
+	vhost_check_queue_inflights(dev, vq);
 }
 
 static void
@@ -1043,6 +1321,25 @@ send_vhost_message(int sockfd, struct VhostUserMsg *msg)
 
 	ret = send_fd_message(sockfd, (char *)msg,
 		VHOST_USER_HDR_SIZE + msg->size, NULL, 0);
+
+	return ret;
+}
+
+static int
+send_vhost_message_fd(int sockfd, struct VhostUserMsg *msg)
+{
+	int ret;
+
+	if (!msg)
+		return 0;
+
+	msg->flags &= ~VHOST_USER_VERSION_MASK;
+	msg->flags &= ~VHOST_USER_NEED_REPLY;
+	msg->flags |= VHOST_USER_VERSION;
+	msg->flags |= VHOST_USER_REPLY_MASK;
+
+	ret = send_fd_message(sockfd, (char *)msg,
+		VHOST_USER_HDR_SIZE + msg->size, msg->fds, 1);
 
 	return ret;
 }
@@ -1364,6 +1661,15 @@ vhost_user_msg_handler(int vid, int fd)
 		vhost_user_get_vring_base(dev, &msg);
 		msg.size = sizeof(msg.payload.state);
 		send_vhost_message(fd, &msg);
+		break;
+
+	case VHOST_USER_GET_INFLIGHT_FD:
+		vhost_user_get_inflight_fd(dev, &msg);
+		send_vhost_message_fd(fd, &msg);
+		break;
+
+	case VHOST_USER_SET_INFLIGHT_FD:
+		vhost_user_set_inflight_fd(dev, &msg);
 		break;
 
 	case VHOST_USER_SET_VRING_KICK:

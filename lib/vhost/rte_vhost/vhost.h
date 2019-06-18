@@ -107,6 +107,11 @@ struct vhost_virtqueue {
 	/* Physical address of used ring, for logging */
 	uint64_t		log_guest_addr;
 
+	/* Inflight share memory info */
+	struct inflight_info    *inflight;
+	struct resubmit_info    *resubmit;
+	uint64_t counter;
+
 	uint16_t		nr_zmbuf;
 	uint16_t		zmbuf_size;
 	uint16_t		last_zmbuf_idx;
@@ -174,6 +179,12 @@ struct ether_addr {
 } __attribute__((__packed__));
 #endif
 
+struct inflight_mem_info {
+        int fd;
+        void *addr;
+        uint64_t size;
+};
+
 /**
  * Device structure contains all configuration information relating
  * to the device.
@@ -193,6 +204,7 @@ struct virtio_net {
 	uint32_t		nr_vring;
 	int			dequeue_zero_copy;
 	struct vhost_virtqueue	*virtqueue[VHOST_MAX_QUEUE_PAIRS * 2];
+	struct inflight_mem_info inflight_info;
 #define IF_NAME_SZ (PATH_MAX > IFNAMSIZ ? PATH_MAX : IFNAMSIZ)
 	char			ifname[IF_NAME_SZ];
 	uint64_t		log_size;

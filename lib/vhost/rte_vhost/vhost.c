@@ -71,6 +71,17 @@ cleanup_vq(struct vhost_virtqueue *vq, int destroy)
 		close(vq->callfd);
 	if (vq->kickfd >= 0)
 		close(vq->kickfd);
+	if (vq->inflight)
+		vq->inflight = NULL;
+	if (vq->resubmit->resubmit_list) {
+		free(vq->resubmit->resubmit_list);
+		vq->resubmit->resubmit_list = NULL;
+	}
+	if (vq->resubmit) {
+		free(vq->resubmit);
+		vq->resubmit = NULL;
+	}
+
 }
 
 /*
@@ -387,6 +398,9 @@ rte_vhost_get_vhost_vring(int vid, uint16_t vring_idx,
 	vring->kickfd  = vq->kickfd;
 	vring->size    = vq->size;
 
+	vring->inflight = vq->inflight;
+	vring->resubmit = vq->resubmit;
+
 	return 0;
 }
 
@@ -527,4 +541,96 @@ rte_vhost_vring_call(int vid, uint16_t vring_idx)
 	}
 
 	return -1;
+}
+
+int
+rte_vhost_set_inflight_desc(int vid, uint16_t vring_idx, uint16_t idx)
+{
+	struct virtio_net *dev;
+	struct vhost_virtqueue *vq;
+
+	dev = get_device(vid);
+	if (!dev)
+		return -1;
+
+	if (!(dev->features &
+		(1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD)))
+		return 0;
+
+	if (vring_idx >= VHOST_MAX_VRING)
+		return -1;
+
+	vq = dev->virtqueue[vring_idx];
+	if (!vq)
+		return -1;
+
+	if (unlikely(!vq->inflight))
+		return -1;
+
+	vq->inflight->desc[idx].counter = vq->counter++;
+	vq->inflight->desc[idx].inflight = 1;
+	return 0;
+}
+
+int
+rte_vhost_clr_inflight_desc(int vid, uint16_t vring_idx,
+	uint16_t last_used_idx, uint16_t idx)
+{
+	struct virtio_net *dev;
+	struct vhost_virtqueue *vq;
+
+	dev = get_device(vid);
+	if (!dev)
+		return -1;
+
+	if (!(dev->features &
+		(1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD)))
+		return 0;
+
+	if (vring_idx >= VHOST_MAX_VRING)
+		return -1;
+
+	vq = dev->virtqueue[vring_idx];
+	if (!vq)
+		return -1;
+
+	if (unlikely(!vq->inflight))
+		return -1;
+
+	rte_compiler_barrier();
+
+	vq->inflight->desc[idx].inflight = 0;
+
+	rte_compiler_barrier();
+
+	vq->inflight->used_idx = last_used_idx;
+	return 0;
+}
+
+int
+rte_vhost_set_last_inflight_io(int vid, uint16_t vring_idx, uint16_t idx)
+{
+	struct virtio_net *dev;
+	struct vhost_virtqueue *vq;
+
+	dev = get_device(vid);
+	if (!dev)
+		return -1;
+
+	if (!(dev->features &
+		(1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD)))
+		return 0;
+
+	if (vring_idx >= VHOST_MAX_VRING)
+		return -1;
+
+	vq = dev->virtqueue[vring_idx];
+	if (!vq)
+		return -1;
+
+	if (unlikely(!vq->inflight))
+		return -1;
+
+	vq->inflight->last_inflight_io = idx;
+	return 0;
 }
