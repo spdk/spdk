@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04ce6d08_ca13b10c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T05:05:39Z",
+      "side": 1,
+      "message": "Oh, this part was out-of-date, but I will keep this patch until other critical comment comes.",
+      "range": {
+        "startLine": 12,
+        "startChar": 38,
+        "endLine": 14,
+        "endChar": 0
+      },
+      "revId": "a4f8e140b011ce505b120804a1ec3478af734357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
