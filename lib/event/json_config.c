@@ -128,7 +128,10 @@ static void
 spdk_app_json_config_load_done(struct load_json_config_ctx *ctx, int rc)
 {
 	spdk_poller_unregister(&ctx->client_conn_poller);
-	spdk_jsonrpc_client_close(ctx->client_conn);
+	if (ctx->client_conn != NULL) {
+		spdk_jsonrpc_client_close(ctx->client_conn);
+	}
+
 	spdk_rpc_finish();
 
 	if (rc) {
