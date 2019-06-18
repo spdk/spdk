@@ -22,6 +22,30 @@
       "revId": "f9c0b1cc75fe34944a059bb5f2f7568f218f362e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b044145_3489b764",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-18T06:28:14Z",
+      "side": 1,
+      "message": "Fixed.\nThis function is not common, just called once. Will probably refactor it later to be \u0027inline\u0027.",
+      "parentUuid": "8397310a_e57f0cad",
+      "range": {
+        "startLine": 40,
+        "startChar": 2,
+        "endLine": 40,
+        "endChar": 6
+      },
+      "revId": "f9c0b1cc75fe34944a059bb5f2f7568f218f362e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
