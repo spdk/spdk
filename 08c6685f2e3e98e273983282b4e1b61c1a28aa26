@@ -16,6 +16,24 @@
       "revId": "08c6685f2e3e98e273983282b4e1b61c1a28aa26",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b88f3cd4_5f5d9954",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-06-18T15:20:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5649bea9_a2b30a06",
+      "revId": "08c6685f2e3e98e273983282b4e1b61c1a28aa26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
