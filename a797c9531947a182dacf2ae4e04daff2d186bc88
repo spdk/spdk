@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d80b565_031559d9",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-18T04:11:15Z",
+      "side": 1,
+      "message": "should be static",
+      "revId": "a797c9531947a182dacf2ae4e04daff2d186bc88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
