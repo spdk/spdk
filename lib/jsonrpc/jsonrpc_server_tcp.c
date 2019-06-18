@@ -98,12 +98,39 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 	return server;
 }
 
+static struct spdk_jsonrpc_request *
+spdk_jsonrpc_server_dequeue_request(struct spdk_jsonrpc_server_conn *conn)
+{
+	struct spdk_jsonrpc_request *request = NULL;
+
+	pthread_spin_lock(&conn->queue_lock);
+	request = STAILQ_FIRST(&conn->send_queue);
+	if (request) {
+		STAILQ_REMOVE_HEAD(&conn->send_queue, link);
+	}
+	pthread_spin_unlock(&conn->queue_lock);
+	return request;
+}
+
+static void
+spdk_jsonrpc_server_free_conn_request(struct spdk_jsonrpc_server_conn *conn)
+{
+	struct spdk_jsonrpc_request *request;
+
+	spdk_jsonrpc_free_request(conn->send_request);
+	conn->send_request = NULL ;
+	while ((request = spdk_jsonrpc_server_dequeue_request(conn)) != NULL) {
+		spdk_jsonrpc_free_request(request);
+	}
+}
+
 static void
 spdk_jsonrpc_server_conn_close(struct spdk_jsonrpc_server_conn *conn)
 {
 	conn->closed = true;
 
 	if (conn->sockfd >= 0) {
+		spdk_jsonrpc_server_free_conn_request(conn);
 		close(conn->sockfd);
 		conn->sockfd = -1;
 
@@ -315,20 +342,6 @@ spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 	pthread_spin_unlock(&conn->queue_lock);
 }
 
-static struct spdk_jsonrpc_request *
-spdk_jsonrpc_server_dequeue_request(struct spdk_jsonrpc_server_conn *conn)
-{
-	struct spdk_jsonrpc_request *request = NULL;
-
-	pthread_spin_lock(&conn->queue_lock);
-	request = STAILQ_FIRST(&conn->send_queue);
-	if (request) {
-		STAILQ_REMOVE_HEAD(&conn->send_queue, link);
-	}
-	pthread_spin_unlock(&conn->queue_lock);
-	return request;
-}
-
 
 static int
 spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
@@ -392,27 +405,8 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 			spdk_jsonrpc_server_conn_close(conn);
 		}
 
-		if (conn->sockfd == -1) {
-			struct spdk_jsonrpc_request *request;
-
-			/*
-			 * The client closed the connection, but there may still be requests
-			 * outstanding; we have no way to cancel outstanding requests, so wait until
-			 * each outstanding request sends a response (which will be discarded, since
-			 * the connection is closed).
-			 */
-
-			spdk_jsonrpc_free_request(conn->send_request);
-			conn->send_request = NULL;
-
-			while ((request = spdk_jsonrpc_server_dequeue_request(conn)) != NULL) {
-				spdk_jsonrpc_free_request(request);
-			}
-
-			if (conn->outstanding_requests == 0) {
-				SPDK_DEBUGLOG(SPDK_LOG_RPC, "all outstanding requests completed\n");
-				spdk_jsonrpc_server_conn_remove(conn);
-			}
+		if (conn->sockfd == -1 && conn->outstanding_requests == 0) {
+			spdk_jsonrpc_server_conn_remove(conn);
 		}
 	}
 
