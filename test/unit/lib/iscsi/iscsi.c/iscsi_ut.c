@@ -220,6 +220,7 @@ op_login_session_normal_test(void)
 	g_spdk_iscsi.session[UT_ISCSI_TSIH - 1] = &sess;
 	sess.tsih = UT_ISCSI_TSIH;
 	rsph->tsih = UT_ISCSI_TSIH >> 8; /* to append the session */
+	sess.tag = 1;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
 					   &param, &target, 0);
 	CU_ASSERT(conn.target_port == NULL);
