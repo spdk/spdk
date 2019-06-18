@@ -476,7 +476,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
 			struct spdk_blob_md_descriptor_extent	*desc_extent;
-			unsigned int				i, j;
+			unsigned int				i;
 			unsigned int				cluster_count = blob->active.num_clusters;
 
 			desc_extent = (struct spdk_blob_md_descriptor_extent *)desc;
@@ -487,15 +487,12 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			}
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
-				for (j = 0; j < desc_extent->extents[i].length; j++) {
-					if (desc_extent->extents[i].cluster_idx != 0) {
-						if (!spdk_bit_array_get(blob->bs->used_clusters,
-									desc_extent->extents[i].cluster_idx + j)) {
-							return -EINVAL;
-						}
+				if (desc_extent->extents[i].cluster_idx != 0) {
+					if (!spdk_bit_array_get(blob->bs->used_clusters, desc_extent->extents[i].cluster_idx)) {
+						return -EINVAL;
 					}
-					cluster_count++;
 				}
+				cluster_count++;
 			}
 
 			if (cluster_count == 0) {
@@ -509,15 +506,12 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			blob->active.cluster_array_size = cluster_count;
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
-				for (j = 0; j < desc_extent->extents[i].length; j++) {
-					if (desc_extent->extents[i].cluster_idx != 0) {
-						blob->active.clusters[blob->active.num_clusters++] = _spdk_bs_cluster_to_lba(blob->bs,
-								desc_extent->extents[i].cluster_idx + j);
-					} else if (spdk_blob_is_thin_provisioned(blob)) {
-						blob->active.clusters[blob->active.num_clusters++] = 0;
-					} else {
-						return -EINVAL;
-					}
+				if (desc_extent->extents[i].cluster_idx != 0) {
+					blob->active.clusters[blob->active.num_clusters++] = _spdk_bs_cluster_to_lba(blob->bs, desc_extent->extents[i].cluster_idx);
+				} else if (spdk_blob_is_thin_provisioned(blob)) {
+					blob->active.clusters[blob->active.num_clusters++] = 0;
+				} else {
+					return -EINVAL;
 				}
 			}
 
@@ -680,7 +674,7 @@ _spdk_blob_serialize_extent(const struct spdk_blob *blob,
 	struct spdk_blob_md_descriptor_extent *desc;
 	size_t cur_sz;
 	uint64_t i, extent_idx;
-	uint64_t lba, lba_per_cluster, lba_count;
+	uint64_t lba, lba_per_cluster;
 
 	/* The buffer must have room for at least one extent */
 	cur_sz = sizeof(struct spdk_blob_md_descriptor) + sizeof(desc->extents[0]);
@@ -695,18 +689,9 @@ _spdk_blob_serialize_extent(const struct spdk_blob *blob,
 	lba_per_cluster = _spdk_bs_cluster_to_lba(blob->bs, 1);
 
 	lba = blob->active.clusters[start_cluster];
-	lba_count = lba_per_cluster;
 	extent_idx = 0;
 	for (i = start_cluster + 1; i < blob->active.num_clusters; i++) {
-		if ((lba + lba_count) == blob->active.clusters[i]) {
-			lba_count += lba_per_cluster;
-			continue;
-		} else if (lba == 0 && blob->active.clusters[i] == 0) {
-			lba_count += lba_per_cluster;
-			continue;
-		}
 		desc->extents[extent_idx].cluster_idx = lba / lba_per_cluster;
-		desc->extents[extent_idx].length = lba_count / lba_per_cluster;
 		extent_idx++;
 
 		cur_sz += sizeof(desc->extents[extent_idx]);
@@ -719,11 +704,9 @@ _spdk_blob_serialize_extent(const struct spdk_blob *blob,
 		}
 
 		lba = blob->active.clusters[i];
-		lba_count = lba_per_cluster;
 	}
 
 	desc->extents[extent_idx].cluster_idx = lba / lba_per_cluster;
-	desc->extents[extent_idx].length = lba_count / lba_per_cluster;
 	extent_idx++;
 
 	desc->length = sizeof(desc->extents[0]) * extent_idx;
@@ -3011,28 +2994,26 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
 			struct spdk_blob_md_descriptor_extent	*desc_extent;
-			unsigned int				i, j;
+			unsigned int				i;
 			unsigned int				cluster_count = 0;
 			uint32_t				cluster_idx;
 
 			desc_extent = (struct spdk_blob_md_descriptor_extent *)desc;
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
-				for (j = 0; j < desc_extent->extents[i].length; j++) {
-					cluster_idx = desc_extent->extents[i].cluster_idx;
-					/*
-					 * cluster_idx = 0 means an unallocated cluster - don't mark that
-					 * in the used cluster map.
-					 */
-					if (cluster_idx != 0) {
-						spdk_bit_array_set(bs->used_clusters, cluster_idx + j);
-						if (bs->num_free_clusters == 0) {
-							return -ENOSPC;
-						}
-						bs->num_free_clusters--;
+				cluster_idx = desc_extent->extents[i].cluster_idx;
+				/*
+				 * cluster_idx = 0 means an unallocated cluster - don't mark that
+				 * in the used cluster map.
+				 */
+				if (cluster_idx != 0) {
+					spdk_bit_array_set(bs->used_clusters, cluster_idx);
+					if (bs->num_free_clusters == 0) {
+						return -ENOSPC;
 					}
-					cluster_count++;
+					bs->num_free_clusters--;
 				}
+				cluster_count++;
 			}
 			if (cluster_count == 0) {
 				return -EINVAL;
@@ -3448,9 +3429,8 @@ _spdk_bs_dump_print_md_page(struct spdk_bs_dump_ctx *ctx)
 					fprintf(ctx->fp, "Allocated Extent - Start: %" PRIu32,
 						desc_extent->extents[i].cluster_idx);
 				} else {
-					fprintf(ctx->fp, "Unallocated Extent - ");
+					fprintf(ctx->fp, "Unallocated Extent");
 				}
-				fprintf(ctx->fp, " Length: %" PRIu32, desc_extent->extents[i].length);
 				fprintf(ctx->fp, "\n");
 			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
@@ -3727,7 +3707,17 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		 * of usable clusters. This can be addressed with
 		 * more complex math in the future.
 		 */
-		bs->md_len = bs->total_clusters;
+		/* Temporarily increase md_len due to removed
+		 * run-length encoding. Each extent in metadata
+		 * can hold up to 512 LBA entries (clusters).
+		 * For device with x clusters to allow overprovisioning
+		 * by factor of 1024 means that extents will describe
+		 * x * 1024 thin-provisioned clusters and require
+		 * at least x * 1024 / 512 pages of md.
+		 * Resulting in need of at least 2 times of md pages
+		 * as there are clusters.
+		 */
+		bs->md_len = bs->total_clusters * 2;
 	} else {
 		bs->md_len = opts.num_md_pages;
 	}
