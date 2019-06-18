@@ -59,6 +59,10 @@ The parameter `free_space` has been added to spdk_ring_enqueue() to wait when
 the ring is almost full and resume when there is enough space available in
 the ring.
 
+### blobstore
+
+Snapshot can be removed if there is no more than one clone on top of it.
+
 ## v19.04:
 
 ### nvme
