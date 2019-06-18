@@ -59,6 +59,13 @@ The parameter `free_space` has been added to spdk_ring_enqueue() to wait when
 the ring is almost full and resume when there is enough space available in
 the ring.
 
+### blobstore
+
+Snapshot can be removed now if there is no more than one clone on top of it. Relation chain
+will be updated accordingly. Cluster map of clone and snapshot will be merged - map entries for
+unallocated clusters in clone will be updated with addresses from snapshot clusters map.
+Whole operation is done only on metadata - no user data is being copied during this process.
+
 ## v19.04:
 
 ### nvme
