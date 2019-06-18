@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7fd80c07_cd218dd6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1764,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-18T09:04:01Z",
+      "side": 1,
+      "message": "Separate metadata buffer is not supported for now, and it must be passed via the caller, bdev layer will not allocate the buffer for now.",
+      "parentUuid": "350992c3_9e34a184",
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "13a74497_5bdbab23",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2019-06-17T13:56:37Z",
       "side": 1,
       "message": "why is this done in bdev layer? Can\u0027t we call _copy_iovs_to_buf() in iscsi?",
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "080f14dc_95a824e5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1806,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-18T09:04:01Z",
+      "side": 1,
+      "message": "It can, but I think existing code is better.",
+      "parentUuid": "13a74497_5bdbab23",
       "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "4feb6b6d_cd3bc1c2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1815,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-18T09:04:01Z",
+      "side": 1,
+      "message": "I can move this part to the children completion callback.",
+      "parentUuid": "2afa0633_fc1f4b60",
+      "range": {
+        "startLine": 1815,
+        "startChar": 0,
+        "endLine": 1815,
+        "endChar": 56
+      },
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "50c89864_0daecd48",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
@@ -70,6 +130,30 @@
       "writtenOn": "2019-06-17T13:56:37Z",
       "side": 1,
       "message": "Introducing this array adds at least a few MBs of memory usage on each spdk instance. Isn\u0027t there any way to avoid that? Can\u0027t we point those split I/Os to `\u0026parent_io-\u003echild_iov[i]` as soon as we send them?",
+      "range": {
+        "startLine": 1838,
+        "startChar": 58,
+        "endLine": 1838,
+        "endChar": 70
+      },
+      "revId": "3eef06eb20e7787e03558e40d9523ab54cc16790",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98900308_337af9b2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1838,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-18T09:04:01Z",
+      "side": 1,
+      "message": "No, parent request must record each child request\u0027s offset so that we can put the right data buffer, e.g.: one parent request may have 5 children requests, and each child request may be completed out of order.",
+      "parentUuid": "50c89864_0daecd48",
       "range": {
         "startLine": 1838,
         "startChar": 58,
