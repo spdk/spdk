@@ -3238,14 +3238,16 @@ get_rdma_qpair_from_wc(struct spdk_nvmf_rdma_poller *rpoller, struct ibv_wc *wc)
 	return NULL;
 }
 
-#ifdef DEBUG
 static int
 spdk_nvmf_rdma_req_is_completing(struct spdk_nvmf_rdma_request *rdma_req)
 {
+#ifdef DEBUG
 	return rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST ||
 	       rdma_req->state == RDMA_REQUEST_STATE_COMPLETING;
-}
+#else
+	return 1;
 #endif
+}
 
 static void
 _poller_reset_failed_recvs(struct spdk_nvmf_rdma_poller *rpoller, struct ibv_recv_wr *bad_recv_wr,
