@@ -22,6 +22,30 @@
       "revId": "68c6c84b23fffaba77736e2ff85f4f02ca15b34e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f97a3d1_2472cb18",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-18T00:19:32Z",
+      "side": 1,
+      "message": "oh geeze, I\u0027ll pick this up on the next reduce update :)",
+      "parentUuid": "dd576dd5_2d2ee3ac",
+      "range": {
+        "startLine": 246,
+        "startChar": 62,
+        "endLine": 246,
+        "endChar": 63
+      },
+      "revId": "68c6c84b23fffaba77736e2ff85f4f02ca15b34e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
