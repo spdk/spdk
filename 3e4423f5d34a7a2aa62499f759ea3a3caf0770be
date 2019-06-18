@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "621a0b45_d93210fc",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-18T07:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8c5b0fa_4ca29b27",
+      "revId": "3e4423f5d34a7a2aa62499f759ea3a3caf0770be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e670c679_6e4a27f7",
         "filename": "test/ftl/dirty_shutdown.sh",
         "patchSetId": 10
@@ -33,6 +51,24 @@
       "revId": "3e4423f5d34a7a2aa62499f759ea3a3caf0770be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cbec87f_43de72ca",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-18T07:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e670c679_6e4a27f7",
+      "revId": "3e4423f5d34a7a2aa62499f759ea3a3caf0770be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -56,6 +92,30 @@
       "revId": "3e4423f5d34a7a2aa62499f759ea3a3caf0770be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8db2438_dc367cf6",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-18T07:25:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b16a52b9_523dd006",
+      "range": {
+        "startLine": 36,
+        "startChar": 1,
+        "endLine": 36,
+        "endChar": 34
+      },
+      "revId": "3e4423f5d34a7a2aa62499f759ea3a3caf0770be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
