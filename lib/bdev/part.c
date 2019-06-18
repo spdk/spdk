@@ -218,17 +218,35 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
-		rc = spdk_bdev_readv_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
-					    bdev_io->u.bdev.iovcnt, offset,
-					    bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
-					    bdev_io);
+		if (bdev_io->u.bdev.md_buf == NULL) {
+			rc = spdk_bdev_readv_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
+						    bdev_io->u.bdev.iovcnt, offset,
+						    bdev_io->u.bdev.num_blocks,
+						    spdk_bdev_part_complete_io, bdev_io);
+		} else {
+			rc = spdk_bdev_readv_blocks_with_md(base_desc, base_ch,
+							    bdev_io->u.bdev.iovs,
+							    bdev_io->u.bdev.iovcnt,
+							    bdev_io->u.bdev.md_buf, offset,
+							    bdev_io->u.bdev.num_blocks,
+							    spdk_bdev_part_complete_io, bdev_io);
+		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
-		rc = spdk_bdev_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
-					     bdev_io->u.bdev.iovcnt, offset,
-					     bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
-					     bdev_io);
+		if (bdev_io->u.bdev.md_buf == NULL) {
+			rc = spdk_bdev_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
+						     bdev_io->u.bdev.iovcnt, offset,
+						     bdev_io->u.bdev.num_blocks,
+						     spdk_bdev_part_complete_io, bdev_io);
+		} else {
+			rc = spdk_bdev_writev_blocks_with_md(base_desc, base_ch,
+							     bdev_io->u.bdev.iovs,
+							     bdev_io->u.bdev.iovcnt,
+							     bdev_io->u.bdev.md_buf, offset,
+							     bdev_io->u.bdev.num_blocks,
+							     spdk_bdev_part_complete_io, bdev_io);
+		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
@@ -345,6 +363,12 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 	part->internal.bdev.ctxt = part;
 	part->internal.bdev.module = base->module;
 	part->internal.bdev.fn_table = base->fn_table;
+
+	part->internal.bdev.md_interleave = base->bdev->md_interleave;
+	part->internal.bdev.md_len = base->bdev->md_len;
+	part->internal.bdev.dif_type = base->bdev->dif_type;
+	part->internal.bdev.dif_is_head_of_md = base->bdev->dif_is_head_of_md;
+	part->internal.bdev.dif_check_flags = base->bdev->dif_check_flags;
 
 	part->internal.bdev.name = strdup(name);
 	part->internal.bdev.product_name = strdup(product_name);
