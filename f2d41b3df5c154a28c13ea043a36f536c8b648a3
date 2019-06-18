@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c73245e2_050ffef3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-18T08:54:04Z",
+      "side": 1,
+      "message": "Let\u0027s explicitly say this is a workaround for a bug in QEMU, that will be removed once QEMU is working properly.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 0
+      },
+      "revId": "f2d41b3df5c154a28c13ea043a36f536c8b648a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b539d840_89bc7600",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-18T08:54:04Z",
+      "side": 1,
+      "message": "Could you please explain why we need to do that? Can this be sometimes NULL?",
+      "range": {
+        "startLine": 509,
+        "startChar": 0,
+        "endLine": 510,
+        "endChar": 27
+      },
+      "revId": "f2d41b3df5c154a28c13ea043a36f536c8b648a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2c58868_2cc72baa",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-18T08:54:04Z",
+      "side": 1,
+      "message": "Same here, let\u0027s explicitly say this is just a workaround.",
+      "range": {
+        "startLine": 538,
+        "startChar": 0,
+        "endLine": 539,
+        "endChar": 45
+      },
+      "revId": "f2d41b3df5c154a28c13ea043a36f536c8b648a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
