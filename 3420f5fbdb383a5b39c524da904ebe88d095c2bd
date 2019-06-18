@@ -1,0 +1,326 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b91ba90_fd099b8f",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "No poll group is found?",
+      "range": {
+        "startLine": 422,
+        "startChar": 15,
+        "endLine": 422,
+        "endChar": 51
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac96a597_65a14216",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "just fc_req-\u003ereq.data \u003d fc_req-\u003ereq.iov[0].iov_base should be OK (please see spdk_nvmf_tcp_req_parse_sgl in lib/nvmf/tcp.c).",
+      "range": {
+        "startLine": 1235,
+        "startChar": 0,
+        "endLine": 1240,
+        "endChar": 0
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7d57db1_4fcc04b1",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1251,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "this can be removed.",
+      "range": {
+        "startLine": 1251,
+        "startChar": 3,
+        "endLine": 1251,
+        "endChar": 12
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85bedf2d_357de546",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1262,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "is this normal case? Will you explain what case this is necessary?",
+      "range": {
+        "startLine": 1259,
+        "startChar": 3,
+        "endLine": 1262,
+        "endChar": 0
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0343a77_c3cd8496",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1504,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "if ls_rqst-\u003exchg !\u003d 0 is normal case, swapping the order of if and else may be easier to read.",
+      "range": {
+        "startLine": 1504,
+        "startChar": 0,
+        "endLine": 1504,
+        "endChar": 23
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8445f454_b13d9800",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1888,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "can we move this to the place which can do this once?\nIf not possible, spdk_unlikely(!start_lld) may be better.",
+      "range": {
+        "startLine": 1884,
+        "startChar": 0,
+        "endLine": 1888,
+        "endChar": 0
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6b49cc1_f387f3a8",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "just return -EINVAL is enough?",
+      "range": {
+        "startLine": 143,
+        "startChar": 2,
+        "endLine": 144,
+        "endChar": 11
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c713363e_a025e19f",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "just return -EINVAL is enough?",
+      "range": {
+        "startLine": 172,
+        "startChar": 2,
+        "endLine": 172,
+        "endChar": 14
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cba6ce28_64571a2d",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "Then can we remove the label err and just return 0 here?",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 176,
+        "endChar": 12
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "178d7740_5e0cbf90",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "LS poller of LLD?",
+      "range": {
+        "startLine": 211,
+        "startChar": 19,
+        "endLine": 211,
+        "endChar": 29
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8dbf43f6_cb181898",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "Should we add any comment on this? (e.g. Initialize the IO queue poller of LLD?)",
+      "range": {
+        "startLine": 223,
+        "startChar": 2,
+        "endLine": 223,
+        "endChar": 24
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ade5e47f_8c8ef3da",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "Please write static and int on the same line.",
+      "range": {
+        "startLine": 747,
+        "startChar": 0,
+        "endLine": 748,
+        "endChar": 3
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "130ebd84_e228cb9b",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1043,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "can we move this to the line 1054 and change to the following?\nThe following makes the code longer but may be easier to follow.\n\nsubsystem \u003d spdk_nvmf_tgt_find_subsystem(ls_rqst-\u003envmf_tgt, rqst-\u003eassoc_cmd.subnqn);\nif (subsystem \u003d\u003d NULL) {\n  errmsg_ind \u003d VERR_SUBNQN;\n  (snip)\n  goto rjt_class;\n}\n\nhost \u003d nvmf_fc_lst_dup_host(subsystem, (const char *)rqst-\u003eassoc_cmd.hostnqn, transport, \u0026errmsg_ind);\nif (host \u003d\u003d NULL) {\n  if (errmsg_ind \u003d\u003d -ENOMEM) {\n    (snip)\n  } else {\n    (snip)\n  }\n  goto rjt_class;\n}",
+      "range": {
+        "startLine": 1028,
+        "startChar": 3,
+        "endLine": 1043,
+        "endChar": 3
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48a022d2_69056b85",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1194,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T06:54:53Z",
+      "side": 1,
+      "message": "can we move this to the above if-else blocks? this check looks independent from assoc?",
+      "range": {
+        "startLine": 1189,
+        "startChar": 3,
+        "endLine": 1194,
+        "endChar": 2
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
