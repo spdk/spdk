@@ -16,6 +16,24 @@
       "revId": "a797c9531947a182dacf2ae4e04daff2d186bc88",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5efa7de4_3194f208",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-18T09:07:24Z",
+      "side": 1,
+      "message": "this may be a nitpick, but I agree with Darek. We should fix in this patch.",
+      "parentUuid": "7d80b565_031559d9",
+      "revId": "a797c9531947a182dacf2ae4e04daff2d186bc88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
