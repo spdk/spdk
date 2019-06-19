@@ -218,7 +218,7 @@ ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 
 	ftl_band_set_next_state(band);
 	if (band->state == FTL_BAND_STATE_CLOSED) {
-		if (nv_cache->bdev_desc) {
+		if (ftl_dev_has_nv_cache(dev)) {
 			pthread_spin_lock(&nv_cache->lock);
 			nv_cache->num_available += ftl_band_user_lbks(band);
 
@@ -1652,7 +1652,7 @@ ftl_rwb_fill(struct ftl_io *io)
 	}
 
 	if (ftl_io_done(io)) {
-		if (dev->nv_cache.bdev_desc && !(io->flags & FTL_IO_BYPASS_CACHE)) {
+		if (ftl_dev_has_nv_cache(dev) && !(io->flags & FTL_IO_BYPASS_CACHE)) {
 			ftl_write_nv_cache(io);
 		} else {
 			ftl_io_complete(io);
