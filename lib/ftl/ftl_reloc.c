@@ -783,7 +783,7 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 		breloc->num_lbks++;
 	}
 
-	if (!prev_lbks && !prio) {
+	if (!prev_lbks && !prio && !breloc->active) {
 		TAILQ_INSERT_HEAD(&reloc->pending_queue, breloc, entry);
 	}
 
