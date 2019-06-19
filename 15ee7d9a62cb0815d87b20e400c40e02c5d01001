@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6771badb_b5200ae2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1016332
+      },
+      "writtenOn": "2019-06-19T07:16:59Z",
+      "side": 1,
+      "message": "the max accuracy of all data in VTune for IO analysis is 1 millisecond. It is better to use the same time frame for reporting the mem pool data to avoid extra overhead. You can define environment variable to settup better accuracy for internal usage.",
+      "revId": "15ee7d9a62cb0815d87b20e400c40e02c5d01001",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
