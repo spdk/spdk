@@ -132,7 +132,7 @@ function start_vpp() {
 	# Start VPP process in SPDK target network namespace
 	$TARGET_NS_CMD vpp \
 		unix { nodaemon cli-listen /run/vpp/cli.sock } \
-		dpdk { no-pci num-mbufs 128000 } \
+		dpdk { no-pci } \
 		session { evt_qs_memfd_seg } \
 		socksvr { socket-name /run/vpp-api.sock } \
 		plugins { \
