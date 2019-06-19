@@ -668,6 +668,12 @@ struct spdk_pci_device {
 		struct spdk_pci_driver		*driver;
 		bool				attached;
 		bool				pending_removal;
+		/* The device was successfully removed on a DPDK interrupt thread,
+		 * but to prevent data races we couldn't remove it from the global
+		 * device list right away. It'll be removed as soon as possible
+		 * on a regular thread when any public pci function is called.
+		 */
+		bool				removed;
 		TAILQ_ENTRY(spdk_pci_device)	tailq;
 	} internal;
 };
