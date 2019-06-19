@@ -1740,6 +1740,10 @@ _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 }
 
 static void
+_spdk_bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+			       bool success);
+
+static void
 spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	assert(_spdk_bdev_io_type_can_split(bdev_io->type));
@@ -1749,7 +1753,13 @@ spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	bdev_io->u.bdev.split_outstanding = 0;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	_spdk_bdev_io_split(bdev_io);
+	if (_is_buf_allocated(bdev_io->u.bdev.iovs)) {
+		_spdk_bdev_io_split(bdev_io);
+	} else {
+		assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
+		spdk_bdev_io_get_buf(bdev_io, _spdk_bdev_io_split_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+	}
 }
 
 static void
@@ -1812,12 +1822,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev->split_on_optimal_io_boundary && _spdk_bdev_io_should_split(bdev_io)) {
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			spdk_bdev_io_get_buf(bdev_io, _spdk_bdev_io_split_get_buf_cb,
-					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
-		} else {
-			spdk_bdev_io_split(NULL, bdev_io);
-		}
+		spdk_bdev_io_split(NULL, bdev_io);
 		return;
 	}
 
