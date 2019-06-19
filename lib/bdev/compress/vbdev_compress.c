@@ -51,8 +51,7 @@
 #include <rte_compressdev.h>
 #include <rte_comp.h>
 
-/* TODO: valdiate these are good starting values */
-#define NUM_MAX_XFORMS 16
+#define NUM_MAX_XFORMS 2
 #define NUM_MAX_INFLIGHT_OPS 128
 #define DEFAULT_WINDOW_SIZE 15
 #define MAX_MBUFS_PER_OP 16
@@ -256,19 +255,24 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 		goto err;
 	}
 
-	rc = rte_compressdev_private_xform_create(cdev_id, &g_comp_xform,
-			&device->comp_xform);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to create private comp xform device %u: error %d\n",
-			    cdev_id, rc);
-		goto err;
-	}
+	if (device->cdev_info.capabilities->comp_feature_flags & RTE_COMP_FF_SHAREABLE_PRIV_XFORM) {
+		rc = rte_compressdev_private_xform_create(cdev_id, &g_comp_xform,
+				&device->comp_xform);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to create private comp xform device %u: error %d\n",
+				    cdev_id, rc);
+			goto err;
+		}
 
-	rc = rte_compressdev_private_xform_create(cdev_id, &g_decomp_xform,
-			&device->decomp_xform);
-	if (rc) {
-		SPDK_ERRLOG("Failed to create private decomp xform device %u: error %d\n",
-			    cdev_id, rc);
+		rc = rte_compressdev_private_xform_create(cdev_id, &g_decomp_xform,
+				&device->decomp_xform);
+		if (rc) {
+			SPDK_ERRLOG("Failed to create private decomp xform device %u: error %d\n",
+				    cdev_id, rc);
+			goto err;
+		}
+	} else {
+		SPDK_ERRLOG("PMD does not support shared transforms\n");
 		goto err;
 	}
 
