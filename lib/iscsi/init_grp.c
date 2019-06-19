@@ -64,9 +64,11 @@ iscsi_init_grp_find_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 {
 	struct spdk_iscsi_initiator_name *iname;
 
-	TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
-		if (!strcmp(iname->name, name)) {
-			return iname;
+	if (!TAILQ_EMPTY(&ig->initiator_head)) {
+		TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
+			if (!strcmp(iname->name, name)) {
+				return iname;
+			}
 		}
 	}
 	return NULL;
@@ -203,9 +205,11 @@ iscsi_init_grp_find_netmask(struct spdk_iscsi_init_grp *ig, const char *mask)
 {
 	struct spdk_iscsi_initiator_netmask *netmask;
 
-	TAILQ_FOREACH(netmask, &ig->netmask_head, tailq) {
-		if (!strcmp(netmask->mask, mask)) {
-			return netmask;
+	if (!TAILQ_EMPTY(&ig->netmask_head)) {
+		TAILQ_FOREACH(netmask, &ig->netmask_head, tailq) {
+			if (!strcmp(netmask->mask, mask)) {
+				return netmask;
+			}
 		}
 	}
 	return NULL;
