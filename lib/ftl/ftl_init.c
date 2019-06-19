@@ -941,7 +941,7 @@ ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
-	if (!nv_cache->bdev_desc) {
+	if (!ftl_dev_has_nv_cache(dev)) {
 		ftl_init_complete(dev);
 	} else {
 		ioch = spdk_io_channel_get_ctx(dev->ioch);
@@ -987,7 +987,7 @@ ftl_restore_device_cb(struct spdk_ftl_dev *dev, struct ftl_restore *restore, int
 		return;
 	}
 
-	if (!dev->nv_cache.bdev_desc) {
+	if (!ftl_dev_has_nv_cache(dev)) {
 		ftl_init_complete(dev);
 		return;
 	}
@@ -1053,7 +1053,7 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 		return -1;
 	}
 
-	if (dev->nv_cache.bdev_desc) {
+	if (ftl_dev_has_nv_cache(dev)) {
 		ioch->cache_ioch = spdk_bdev_get_io_channel(dev->nv_cache.bdev_desc);
 		if (!ioch->cache_ioch) {
 			SPDK_ERRLOG("Failed to create cache IO channel\n");

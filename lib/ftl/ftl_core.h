@@ -490,6 +490,12 @@ ftl_vld_map_size(const struct spdk_ftl_dev *dev)
 	return (size_t)spdk_divide_round_up(ftl_num_band_lbks(dev), CHAR_BIT);
 }
 
+static inline bool
+ftl_dev_has_nv_cache(const struct spdk_ftl_dev *dev)
+{
+	return dev->nv_cache.bdev_desc != NULL;
+}
+
 #define FTL_NV_CACHE_HEADER_VERSION	(1)
 #define FTL_NV_CACHE_DATA_OFFSET	(1)
 #define FTL_NV_CACHE_PHASE_OFFSET	(62)
