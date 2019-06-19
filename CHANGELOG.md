@@ -4,9 +4,16 @@
 
 ### NVMe-oF Target
 
+Increased default maximum number of queue pairs to 128 in order to match
+Linux kernel target. Users can still decrease this default when
+creating the transport (i.e. -p option for nvmf_create_transport in rpc.py).
+
 Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.
+
+### DPDK
+Added DPDK 19.05 support
 
 ## v19.04:
 
