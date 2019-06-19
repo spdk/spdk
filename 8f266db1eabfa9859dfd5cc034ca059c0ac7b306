@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ea0133ac_d2615a1c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-19T09:15:35Z",
+      "side": 1,
+      "message": "Yea, that was \u0027merge\u0027 conflict from the release post :)",
+      "parentUuid": "552e6649_2af66dd2",
+      "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4aff46c3_aa7a7497",
         "filename": "CHANGELOG.md",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-06-19T08:38:48Z",
       "side": 1,
       "message": "You probably don\u0027t need to include this one. I think our Changelog only includes new features and API changes generally.",
+      "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3cd6fbc_9d0eb76e",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-19T09:15:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4aff46c3_aa7a7497",
       "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "1814b151_b66e63d5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-19T09:15:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d463e875_766103b4",
+      "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0f8f491a_6d5099c5",
         "filename": "CHANGELOG.md",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2019-06-19T08:38:48Z",
       "side": 1,
       "message": "Have we historically done this for .1 releases? I\u0027m fine with it, but we don\u0027t do this for major releases.",
+      "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2cd4531_55600716",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-19T09:15:35Z",
+      "side": 1,
+      "message": "We did for last one, I could keep it to the post on release rather than CHANGELOG if you prefer.\n\nhttps://github.com/spdk/spdk/commit/c58f0e9117029f7d99bf9f102207a48719a54b16",
+      "parentUuid": "0f8f491a_6d5099c5",
       "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
