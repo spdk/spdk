@@ -714,6 +714,32 @@ struct nvme_driver {
 	struct spdk_uuid		default_extended_host_id;
 };
 
+enum spdk_nvme_directive_type {
+	IDENTIFY_DIRECTIVE	= 0x00,
+	STREAMS_DIRECTIVE	= 0x01,
+};
+
+enum identify_directive_receive_operation {
+	IDENTIFY_DIRECTIVE_RECEIVE_RETURN_PARAMETERS	= 0x01,
+	IDENTIFY_DIRECTIVE_RECEIVE_RESERVED		= 0x02,
+};
+
+enum identify_directive_send_operation {
+	IDENTIFY_DIRECTIVE_SEND_ENABLE_DIRECTIVE	= 0x01,
+	IDENTIFY_DIRECTIVE_SEND_RESERVED		= 0x02,
+};
+
+enum streams_directive_receive_operation {
+	STREAMS_DIRECTIVE_RECEIVE_RETURN_PARAMETERS	= 0x01,
+	STREAMS_DIRECTIVE_RECEIVE_GET_STATUS		= 0x02,
+	STREAMS_DIRECTIVE_RECEIVE_ALLOCATE_RESOURCES	= 0x03,
+};
+
+enum streams_directive_send_operation {
+	STREAMS_DIRECTIVE_SEND_RELEASE_IDENTIFY		= 0x01,
+	STREAMS_DIRECTIVE_SEND_RELEASE_RESOURCES	= 0x02,
+};
+
 extern struct nvme_driver *g_spdk_nvme_driver;
 
 int nvme_driver_init(void);

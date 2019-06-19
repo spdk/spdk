@@ -323,6 +323,8 @@ struct spdk_nvme_host_id {
 enum spdk_nvme_ctrlr_flags {
 	SPDK_NVME_CTRLR_SGL_SUPPORTED			= 0x1, /**< The SGL is supported */
 	SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED	= 0x2, /**< security send/receive is supported */
+	SPDK_NVME_CTRLR_DIRECTIVES_SUPPORTED		= 0x4,
+	SPDK_NVME_CTRLR_STRAEMS_DIRECTIVES_SUPPORTED	= 0x8,
 };
 
 /**
@@ -1540,6 +1542,122 @@ int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload
 				    struct spdk_nvme_status *completion_status);
 
 /**
+ * Determine the Directive Types that the controller supports.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
+ * commands submitted through this function.
+ *
+ * \sa nvme_ctrlr_cmd_identify_directive_send().
+ *
+ * \param ctrlr NVMe controller to manipulate.
+ * \param doper The directive Opration value.
+ * \param cdw11 as defined by the specification for this command.
+ * \param cdw12 as defined by the specification for this command.
+ * \param cdw13 as defined by the specification for this command.
+ * \param nsid namespace ID of NVMe.
+ * \param payload The pointer to the payload buffer.
+ * \param len The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been set.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be
+ * allocated for this request.
+ */
+int nvme_ctrlr_cmd_identify_directive_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper,
+		uint32_t cdw12, uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * enable use of the supported Directives.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
+ * commands submitted through this function.
+ *
+ * \sa nvme_ctrlr_cmd_identify_directive_send().
+ *
+ * \param ctrlr NVMe controller to manipulate.
+ * \param doper The directive Opration value.
+ * \param cdw11 as defined by the specification for this command.
+ * \param cdw12 as defined by the specification for this command.
+ * \param cdw13 as defined by the specification for this command.
+ * \param nsid namespace ID of NVMe.
+ * \param payload The pointer to the payload buffer.
+ * \param len The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been set.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be
+ * allocated for this request.
+ */
+int nvme_ctrlr_cmd_identify_directive_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper,
+		uint32_t cdw12, uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Get the streams status or resource of namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
+ * commands submitted through this function.
+ *
+ * \sa nvme_ctrlr_cmd_identify_directive_send().
+ *
+ * \param ctrlr NVMe controller to manipulate.
+ * \param doper The directive Opration value.
+ * \param cdw11 as defined by the specification for this command.
+ * \param cdw12 as defined by the specification for this command.
+ * \param cdw13 as defined by the specification for this command.
+ * \param nsid namespace ID of NVMe.
+ * \param payload The pointer to the payload buffer.
+ * \param len The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been set.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be
+ * allocated for this request.
+ */
+int nvme_ctrlr_cmd_streams_directive_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper,
+		uint32_t cdw12, uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Release the streams resource of namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
+ * commands submitted through this function.
+ *
+ * \sa nvme_ctrlr_cmd_identify_directive_send().
+ *
+ * \param ctrlr NVMe controller to manipulate.
+ * \param doper The directive Opration value.
+ * \param cdw11 as defined by the specification for this command.
+ * \param cdw12 as defined by the specification for this command.
+ * \param cdw13 as defined by the specification for this command.
+ * \param nsid namespace ID of NVMe.
+ * \param payload The pointer to the payload buffer.
+ * \param len The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been set.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if resources could not be
+ * allocated for this request.
+ */
+int nvme_ctrlr_cmd_streams_directive_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper,
+		uint32_t cdw12, uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * Return virtual address of PCIe NVM I/O registers
  *
  * This function returns a pointer to the PCIe I/O registers for a controller
@@ -1786,6 +1904,7 @@ enum spdk_nvme_ns_flags {
 	SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED	= 0x20, /**< The extended lba format is supported,
 							      metadata is transferred as a contiguous
 							      part of the logical block that it is associated with */
+	SPDK_NVME_NS_STEAMS_DIRECTIVE_ENABLED	= 0x40,
 };
 
 /**

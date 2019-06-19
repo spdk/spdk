@@ -745,3 +745,183 @@ nvme_ctrlr_cmd_sanitize(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 
 	return rc;
 }
+
+static int
+nvme_ctrlr_cmd_directive_receive(struct spdk_nvme_ctrlr *ctrlr, uint32_t cdw11, uint32_t cdw12,
+				 uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+	int rc;
+	uint32_t num_dwords;
+
+	if (len % 4 != 0) {
+		return -EINVAL;
+	}
+	num_dwords = len / 4;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	req = nvme_allocate_request_user_copy(ctrlr->adminq, payload, len,
+					      cb_fn, cb_arg, false);
+	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_DIRECTIVE_RECEIVE;
+	cmd->nsid = nsid;
+	cmd->cdw10 = num_dwords;
+	cmd->cdw11 = cdw11;
+	cmd->cdw12 = cdw12;
+	cmd->cdw13 = cdw13;
+
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+}
+
+static int
+nvme_ctrlr_cmd_directive_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t cdw11, uint32_t cdw12,
+			      uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+			      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+	int rc;
+	uint32_t num_dwords;
+
+	if (len % 4 != 0) {
+		return -EINVAL;
+	}
+	num_dwords = len / 4;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	req = nvme_allocate_request_user_copy(ctrlr->adminq, payload, len,
+					      cb_fn, cb_arg, true);
+	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_DIRECTIVE_SEND;
+	cmd->nsid = nsid;
+	cmd->cdw10 = num_dwords;
+	cmd->cdw11 = cdw11;
+	cmd->cdw12 = cdw12;
+	cmd->cdw13 = cdw13;
+
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+}
+
+int
+nvme_ctrlr_cmd_identify_directive_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper,
+		uint32_t cdw12, uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	uint32_t cdw11;
+	int rc;
+
+	if (ctrlr->num_ns < nsid) {
+		SPDK_ERRLOG("nsid is wrong\n");
+		return -EINVAL;
+	}
+
+	if (!(ctrlr->flags & SPDK_NVME_CTRLR_DIRECTIVES_SUPPORTED)) {
+		SPDK_ERRLOG("Controller don't support directive\n");
+		return -EINVAL;
+	}
+
+	cdw11 = ((uint32_t)IDENTIFY_DIRECTIVE << 8) | (uint32_t)doper;
+
+	rc = nvme_ctrlr_cmd_directive_receive(ctrlr, cdw11, cdw12, cdw13, nsid, payload,
+					      len, cb_fn, cb_arg);
+
+	return rc;
+}
+
+int
+nvme_ctrlr_cmd_identify_directive_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper,
+				       uint32_t cdw12, uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	uint32_t cdw11;
+	int rc;
+
+	if (ctrlr->num_ns < nsid) {
+		SPDK_ERRLOG("nsid is wrong\n");
+		return -EINVAL;
+	}
+
+	if (!(ctrlr->flags & SPDK_NVME_CTRLR_DIRECTIVES_SUPPORTED)) {
+		SPDK_ERRLOG("Controller don't support directive\n");
+		return -EINVAL;
+	}
+
+	cdw11 = ((uint32_t)IDENTIFY_DIRECTIVE << 8) | (uint32_t)doper;
+
+	rc = nvme_ctrlr_cmd_directive_send(ctrlr, cdw11, cdw12, cdw13, nsid, payload,
+					   len, cb_fn, cb_arg);
+
+	return rc;
+}
+
+int
+nvme_ctrlr_cmd_streams_directive_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper,
+		uint32_t cdw12, uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	uint32_t cdw11;
+	int rc;
+
+	if (ctrlr->num_ns < nsid) {
+		SPDK_ERRLOG("nsid is wrong\n");
+		return -EINVAL;
+	}
+
+	if (!(ctrlr->flags & SPDK_NVME_CTRLR_STRAEMS_DIRECTIVES_SUPPORTED) ||
+	    !(ctrlr->ns[nsid - 1].flags & SPDK_NVME_NS_STEAMS_DIRECTIVE_ENABLED)) {
+		SPDK_ERRLOG("streams directive is't supported or enabled\n");
+		return -EINVAL;
+	}
+
+	cdw11 = ((uint32_t)STREAMS_DIRECTIVE << 8) | (uint32_t)doper;
+
+	rc = nvme_ctrlr_cmd_directive_receive(ctrlr, cdw11, cdw12, cdw13, nsid, payload,
+					      len, cb_fn, cb_arg);
+
+	return rc;
+}
+
+int
+nvme_ctrlr_cmd_streams_directive_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper,
+				      uint32_t cdw12, uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+				      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	uint32_t cdw11;
+	int rc;
+
+	if (ctrlr->num_ns < nsid) {
+		SPDK_ERRLOG("nsid is wrong\n");
+		return -EINVAL;
+	}
+
+	if (!(ctrlr->flags & SPDK_NVME_CTRLR_STRAEMS_DIRECTIVES_SUPPORTED) ||
+	    !(ctrlr->ns[nsid - 1].flags & SPDK_NVME_NS_STEAMS_DIRECTIVE_ENABLED)) {
+		SPDK_ERRLOG("streams directive is't supported or enabled\n");
+		return -EINVAL;
+	}
+
+	cdw11 = ((uint32_t)STREAMS_DIRECTIVE << 8) | (uint32_t)doper;
+
+	rc = nvme_ctrlr_cmd_directive_send(ctrlr, cdw11, cdw12, cdw13, nsid, payload,
+					   len, cb_fn, cb_arg);
+
+	return rc;
+}
