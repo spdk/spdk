@@ -34,6 +34,24 @@
       "revId": "5cd0347ee76dfab0b66ec7d5a65eb715ab1ae2fd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73f95b80_e7dc2c13",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-19T07:06:05Z",
+      "side": 1,
+      "message": "lba_pool and lba_request_pool are related and they are allocated together in ftl_init_lba_map_pools() so it is cleaner to free them one after another. You can just move it to line 1119.",
+      "parentUuid": "c8b76518_5dd93db1",
+      "revId": "5cd0347ee76dfab0b66ec7d5a65eb715ab1ae2fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
