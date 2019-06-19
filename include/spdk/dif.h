@@ -162,6 +162,28 @@ int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md
 void spdk_dif_ctx_set_data_offset(struct spdk_dif_ctx *ctx, uint32_t data_offset);
 
 /**
+ * Convert size from LBA payload to extended LBA payload.
+ *
+ * \param size Size of LBA payload
+ * \param ctx DIF context.
+ * 
+ * \return size of extended LBA payload.
+ */
+static inline uint32_t
+spdk_dif_ctx_get_size_with_md(uint32_t size, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t data_block_size;
+
+	if (ctx->md_interleave) {
+		data_block_size = ctx->block_size - ctx->md_size;
+
+		return (size / data_block_size) * ctx->block_size;
+	} else {
+		return size;
+	}
+}
+
+/**
  * Generate DIF for extended LBA payload.
  *
  * \param iovs iovec array describing the extended LBA payload.
