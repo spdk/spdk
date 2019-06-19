@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1037c35_ae02af8b",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-19T23:29:32Z",
+      "side": 1,
+      "message": "Adding NUM_COMPRESS_PMD_OPTS or anything and using req.pmd \u003e\u003d NUM_COMPRESS_OPTS at the line 65 may avoid changing even if another PMD is supported. But I don\u0027t see the pattern, and this enum and check at the line 65 is nice!",
+      "revId": "12337568cdf6ed4ab945a23fb80bcf75eb34f2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0dd1791_f0b8b0ac",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-19T23:29:32Z",
+      "side": 1,
+      "message": "I think parameter is required and so this NULL check is not necessary. (If params is NULL, req.pmd will be accessed at the line 65 without initialization.)",
+      "range": {
+        "startLine": 56,
+        "startChar": 5,
+        "endLine": 56,
+        "endChar": 15
+      },
+      "revId": "12337568cdf6ed4ab945a23fb80bcf75eb34f2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
