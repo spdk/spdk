@@ -4,9 +4,31 @@
 
 ### NVMe-oF Target
 
+Increased default maximum number of queue pairs to 128 in order to match
+Linux kernel target. Users can still decrease this default when
+creating the transport (i.e. -p option for nvmf_create_transport in rpc.py).
+
 Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.
+DK 19.04.1 is a bug fix and maintenance release.
+
+### iSCSI
+Fixed hang on high QD large reads.
+
+### DPDK
+Added DPDK 19.05 support
+
+### raid bdev
+Fixed race when issuing multiple destroy RPC for the same raid bdevs.
+
+### GitHub issues
+ #798: rpc: fix segfault on get_spdk_version request with extra params
+ #789: test/json_config: wait for clean config
+ #279: blobfs: ensure length xattr is written even if all data is flushed
+ #777: test/raid: switch from config file to RPC
+ #781: build: add full version to SONAME for shared libraries
+ #801: test/lvol: wait for bdevs to be examined
 
 ## v19.04:
 
