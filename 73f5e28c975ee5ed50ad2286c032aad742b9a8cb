@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1775f59_0cc7908e",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-19T21:45:17Z",
+      "side": 1,
+      "message": "solid clean up for sure!  QQ, why put this here as oppose to where the other images vars are set?",
+      "revId": "73f5e28c975ee5ed50ad2286c032aad742b9a8cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
