@@ -7,7 +7,7 @@ packet processing graph (see [What is VPP?](https://wiki.fd.io/view/VPP/What_is_
 Detailed instructions for **simplified steps 1-3** below, can be found on
 VPP [Quick Start Guide](https://wiki.fd.io/view/VPP).
 
-*SPDK supports VPP version 19.01.1.*
+*SPDK supports VPP version 19.04.2.*
 
 #  1. Building VPP (optional) {#vpp_build}
 
@@ -16,22 +16,12 @@ VPP [Quick Start Guide](https://wiki.fd.io/view/VPP).
 Clone and checkout VPP
 ~~~
 git clone https://gerrit.fd.io/r/vpp && cd vpp
-git checkout v19.01.1
-git cherry-pick 97dcf5bd26ca6de580943f5d39681f0144782c3d
+git checkout v19.04.2-rc0
 git cherry-pick f5dc9fbf814865b31b52b20f5bf959e9ff818b25
 ~~~
 
 NOTE: Cherry-picks are required for better integration with SPDK. They are
 already merged to VPP 19.04.
-
-NOTE: We have noticed that VPP tries to close connections to the non existing,
-already closed applications, after timeout. It causes intermittent VPP application
-segfaults when few instances of VPP clients connects and disconnects several times.
-The following workaround for this issue helps to create more stable environment
-for VPP v19.01.1. This issue should be solved in the next release of VPP.
-~~~
-git apply test/common/config/patch/vpp/workaround-dont-notify-transport-closing.patch
-~~~
 
 Install VPP build dependencies
 ~~~
@@ -93,8 +83,6 @@ DPDK section (`dpdk`):
 - `num-rx-queues <num>` -- number of receive queues.
 - `num-tx-queues <num>` -- number of transmit queues.
 - `dev <PCI address>` -- whitelisted device.
-- `num-mbufs` -- numbers of allocated buffers. For the most of our scenarios this
-parameter requires to be increased over default value.
 
 Session section (`session`):
 - `evt_qs_memfd_seg` -- uses a memfd segment for event queues. This is required for SPDK.
@@ -114,9 +102,6 @@ unix {
 }
 cpu {
 	main-core 1
-}
-dpdk {
-	num-mbufs 128000
 }
 session {
 	evt_qs_memfd_seg

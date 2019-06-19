@@ -225,18 +225,8 @@ function install_vpp()
             fi
         else
             git clone "${GIT_REPO_VPP}"
-            git -C ./vpp checkout v19.01.1
-            git -C ./vpp cherry-pick 97dcf5bd26ca6de580943f5d39681f0144782c3d
+            git -C ./vpp checkout v19.04.2-rc0
             git -C ./vpp cherry-pick f5dc9fbf814865b31b52b20f5bf959e9ff818b25
-
-            # Following patch for VPP is required due to the VPP tries to close
-            # connections to the non existing applications after timeout.
-            # It causes intermittent VPP application segfaults in our tests
-            # when few instances of VPP clients connects and disconnects several
-            # times.
-            # This workaround is only for VPP v19.01.1 and should be solved in
-            # the next release.
-            git -C ./vpp apply ${VM_SETUP_PATH}/patch/vpp/workaround-dont-notify-transport-closing.patch
 
             # Installing required dependencies for building VPP
             yes | make -C ./vpp install-dep
