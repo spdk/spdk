@@ -986,6 +986,10 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->flags |= SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED;
 	}
 
+	if (ctrlr->cdata.oacs.directives) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_DIRECTIVES_SUPPORTED;
+	}
+
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
 			     ctrlr->opts.admin_timeout_ms);
 }
@@ -1086,6 +1090,108 @@ fail:
 	return rc;
 }
 
+struct return_parameters {
+	uint8_t identify_directive_support	: 1;
+	uint8_t streams_directive_support	: 1;
+	uint8_t reserved0			: 6;
+	uint8_t reserved1[31];
+	uint8_t identify_directive_enabled	: 1;
+	uint8_t streams_directive_enabled	: 1;
+	uint8_t reserved2			: 6;
+	uint8_t reserved3[31];
+	uint8_t reserved4[4032];
+};
+
+struct identify_directive_arg {
+	void *payload;
+	struct spdk_nvme_ns *ns;
+};
+
+static void
+nvme_ctrlr_ns_enable_streams_directive_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ns *ns = arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Fail to enable the streams directive of namespace %d\n", ns->id);
+		return;
+	}
+
+	ns->flags |= SPDK_NVME_NS_STEAMS_DIRECTIVE_ENABLED;
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "namespace has successfully enabled streams directive\n");
+}
+
+static void
+nvme_ctrlr_ns_identify_streams_directive_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct identify_directive_arg *cb_arg = arg;
+	struct spdk_nvme_ns *ns = cb_arg->ns;
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	struct return_parameters *payload = cb_arg->payload;
+	int rc;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("Fail to identify if the streams directive is supported\n");
+		free(payload);
+		free(cb_arg);
+		return;
+	}
+
+	if (payload->streams_directive_support) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_STRAEMS_DIRECTIVES_SUPPORTED;
+
+		if (payload->streams_directive_enabled) {
+			ns->flags |= SPDK_NVME_NS_STEAMS_DIRECTIVE_ENABLED;
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "namespace already enabled streams directive\n");
+		} else {
+			uint32_t cdw12 = ((uint32_t)STREAMS_DIRECTIVE << 8) | ((uint32_t)1);
+			rc = nvme_ctrlr_cmd_identify_directive_send(ctrlr, IDENTIFY_DIRECTIVE_SEND_ENABLE_DIRECTIVE,
+					cdw12, 0, ns->id, NULL, 0,
+					nvme_ctrlr_ns_enable_streams_directive_done, ns);
+			if (rc) {
+				SPDK_ERRLOG("fail to submit Identify directive send\n");
+			}
+		}
+	}
+
+	free(payload);
+	free(cb_arg);
+}
+
+static void
+nvme_ctrlr_ns_identify_streams_directive(struct spdk_nvme_ns *ns)
+{
+	struct return_parameters *payload;
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	struct identify_directive_arg *arg;
+	int rc;
+
+	if (ctrlr->flags & SPDK_NVME_CTRLR_DIRECTIVES_SUPPORTED) {
+		payload = calloc(1, sizeof(struct return_parameters));
+		if (payload == NULL) {
+			SPDK_ERRLOG("Fail to allocate memory\n");
+			return;
+		}
+
+		arg = calloc(1, sizeof(struct identify_directive_arg));
+		if (arg == NULL) {
+			SPDK_ERRLOG("Fail to allocate memory\n");
+			free(payload);
+			return;
+		}
+
+		arg->payload = payload;
+		arg->ns = ns;
+
+		rc = nvme_ctrlr_cmd_identify_directive_receive(ctrlr, IDENTIFY_DIRECTIVE_RECEIVE_RETURN_PARAMETERS,
+				0, 0, ns->id, payload, sizeof(*payload),
+				nvme_ctrlr_ns_identify_streams_directive_done, arg);
+		if (rc) {
+			SPDK_ERRLOG("fail to submit Identify directive receive\n");
+		}
+	}
+}
+
 static void
 nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -1099,6 +1205,8 @@ nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	} else {
 		nvme_ns_set_identify_data(ns);
+		/* identify if the streams directive is supported */
+		nvme_ctrlr_ns_identify_streams_directive(ns);
 	}
 
 	/* move on to the next active NS */
