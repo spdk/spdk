@@ -1,6 +1,6 @@
 # Changelog
 
-## v19.04.1: (Upcoming Release)
+## v19.04.1:
 
 ### NVMe-oF Target
 
