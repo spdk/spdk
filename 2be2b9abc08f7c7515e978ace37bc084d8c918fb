@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "474a1f22_9654595c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1329,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-19T02:12:53Z",
+      "side": 1,
+      "message": "We may be able to merge the line 1316 to 1320 and the line 1329 to 1337, but separate drv_name and required_alignment and placing them by current ordering will be fine as you do.",
+      "range": {
+        "startLine": 1329,
+        "startChar": 1,
+        "endLine": 1329,
+        "endChar": 49
+      },
+      "revId": "2be2b9abc08f7c7515e978ace37bc084d8c918fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
