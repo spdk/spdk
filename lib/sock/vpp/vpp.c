@@ -141,56 +141,6 @@ struct spdk_vpp_sock_group_impl {
 #define __vpp_session(sock) ((struct spdk_vpp_session *)sock)
 #define __vpp_group_impl(group) ((struct spdk_vpp_sock_group_impl *)group)
 
-static int
-vpp_queue_poller(void *ctx)
-{
-	uword msg;
-
-	if (g_svm.vl_output_queue->cursize > 0 &&
-	    !svm_queue_sub_raw(g_svm.vl_output_queue, (u8 *)&msg)) {
-		vl_msg_api_handler((void *)msg);
-	}
-
-	return 0;
-}
-
-static int
-app_queue_poller(void *ctx)
-{
-	svm_msg_q_msg_t msg;
-	if (!svm_msg_q_is_empty(g_svm.app_event_queue)) {
-		svm_msg_q_sub(g_svm.app_event_queue, &msg, SVM_Q_WAIT, 0);
-		svm_msg_q_free_msg(g_svm.app_event_queue, &msg);
-	}
-
-	return 0;
-}
-
-/* This is required until sock.c API changes to asynchronous */
-static int
-_wait_for_session_state_change(struct spdk_vpp_session *session, enum spdk_vpp_session_state state)
-{
-	time_t start = time(NULL);
-	while (time(NULL) - start < 10) {
-		if (session->app_session.session_state == VPP_SESSION_STATE_FAILED) {
-			errno = EADDRNOTAVAIL;
-			return -1;
-		}
-		if (session->app_session.session_state == state) {
-			errno = 0;
-			return 0;
-		}
-		if (spdk_get_thread() == g_svm.init_thread) {
-			usleep(100000);
-			app_queue_poller(NULL);
-			vpp_queue_poller(NULL);
-		}
-	}
-	/* timeout */
-	errno = ETIMEDOUT;
-	return -1;
-}
-
 /******************************************************************************
  * Session management
  */
@@ -325,227 +275,13 @@ enum spdk_vpp_create_type {
 };
 
 /******************************************************************************
- * Connect
+ * VPP message handlers
  */
 static void
-vl_api_connect_session_reply_t_handler(vl_api_connect_session_reply_t *mp)
-{
-	struct spdk_vpp_session *session;
-	svm_fifo_t *rx_fifo, *tx_fifo;
-
-	session = _spdk_vpp_session_get(mp->context);
-	if (session == NULL) {
-		return;
-	}
-
-	if (mp->retval) {
-		SPDK_ERRLOG("Connection failed (%d).\n", ntohl(mp->retval));
-		session->app_session.session_state = VPP_SESSION_STATE_FAILED;
-		return;
-	}
-
-	session->app_session.vpp_evt_q = uword_to_pointer(mp->vpp_event_queue_address,
-					 svm_msg_q_t *);
-
-	rx_fifo = uword_to_pointer(mp->server_rx_fifo, svm_fifo_t *);
-	rx_fifo->client_session_index = session->id;
-	tx_fifo = uword_to_pointer(mp->server_tx_fifo, svm_fifo_t *);
-	tx_fifo->client_session_index = session->id;
-
-	session->app_session.rx_fifo = rx_fifo;
-	session->app_session.tx_fifo = tx_fifo;
-	session->handle = mp->handle;
-
-	/* Set lcl addr */
-	session->app_session.transport.is_ip4 = mp->is_ip4;
-	memcpy(&session->app_session.transport.lcl_ip, mp->lcl_ip, sizeof(mp->lcl_ip));
-	session->app_session.transport.lcl_port = mp->lcl_port;
-
-	session->app_session.session_state = VPP_SESSION_STATE_READY;
-}
-
-static int
-_spdk_vpp_session_connect(struct spdk_vpp_session *session)
-{
-	vl_api_connect_sock_t *cmp;
-	cmp = vl_msg_api_alloc(sizeof(*cmp));
-	memset(cmp, 0, sizeof(*cmp));
-
-	cmp->_vl_msg_id = ntohs(VL_API_CONNECT_SOCK);
-	cmp->client_index = g_svm.my_client_index;
-	cmp->context = session->id;
-
-	cmp->vrf = 0 /* VPPCOM_VRF_DEFAULT */;
-	cmp->is_ip4 = (session->app_session.transport.is_ip4);
-	memcpy(cmp->ip, &session->app_session.transport.rmt_ip, sizeof(cmp->ip));
-	cmp->port = session->app_session.transport.rmt_port;
-	cmp->proto = TRANSPORT_PROTO_TCP;
-	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&cmp);
-
-	return _wait_for_session_state_change(session, VPP_SESSION_STATE_READY);
-}
-
-static void
-vl_api_disconnect_session_reply_t_handler(vl_api_disconnect_session_reply_t *mp)
-{
-	struct spdk_vpp_session *session;
-
-	if (mp->retval) {
-		SPDK_ERRLOG("Disconnecting session failed (%d).\n", ntohl(mp->retval));
-		return;
-	}
-
-	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
-	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Session disconnected %p (%d)\n", session, session->id);
-	session->app_session.session_state = VPP_SESSION_STATE_CLOSE;
-}
-
-static void
-vl_api_disconnect_session_t_handler(vl_api_disconnect_session_t *mp)
-{
-	struct spdk_vpp_session *session = 0;
-
-	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
-	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Disconnect session %p (%d) handler\n", session, session->id);
-
-	/* We need to postpone session deletion to inform upper layer */
-	session->app_session.session_state = VPP_SESSION_STATE_DISCONNECT;
-}
-
-static int
-_spdk_vpp_session_disconnect(struct spdk_vpp_session *session)
-{
-	int rv = 0;
-	vl_api_disconnect_session_t *dmp;
-	vl_api_disconnect_session_reply_t *rmp;
-
-	if (session->app_session.session_state == VPP_SESSION_STATE_DISCONNECT) {
-		SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Session is already in disconnecting state %p (%d)\n",
-			      session, session->id);
-
-		rmp = vl_msg_api_alloc(sizeof(*rmp));
-		memset(rmp, 0, sizeof(*rmp));
-
-		rmp->_vl_msg_id = ntohs(VL_API_DISCONNECT_SESSION_REPLY);
-		rmp->retval = rv;
-		rmp->handle = session->handle;
-		vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&rmp);
-		return 0;
-	}
-	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Disconnect session %p (%d)\n", session, session->id);
-
-	dmp = vl_msg_api_alloc(sizeof(*dmp));
-	memset(dmp, 0, sizeof(*dmp));
-	dmp->_vl_msg_id = ntohs(VL_API_DISCONNECT_SESSION);
-	dmp->client_index = g_svm.my_client_index;
-	dmp->handle = session->handle;
-	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&dmp);
-
-	return _wait_for_session_state_change(session, VPP_SESSION_STATE_CLOSE);
-}
-
-static void
-vl_api_reset_session_t_handler(vl_api_reset_session_t *mp)
-{
-	vl_api_reset_session_reply_t *rmp;
-	int rv = 0;
-	struct spdk_vpp_session *session = 0;
-
-	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
-	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Reset session %p (%d) handler\n", session, session->id);
-
-	session->app_session.session_state = VPP_SESSION_STATE_DISCONNECT;
-
-	rmp = vl_msg_api_alloc(sizeof(*rmp));
-	memset(rmp, 0, sizeof(*rmp));
-	rmp->_vl_msg_id = ntohs(VL_API_RESET_SESSION_REPLY);
-	rmp->retval = rv;
-	rmp->handle = mp->handle;
-	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&rmp);
-}
-
-/******************************************************************************
- * Bind
- */
-static void
-vl_api_bind_sock_reply_t_handler(vl_api_bind_sock_reply_t *mp)
-{
-	struct spdk_vpp_session *session;
-
-	/* Context should be set to the session index */
-	session = _spdk_vpp_session_get(mp->context);
-
-	if (mp->retval) {
-		SPDK_ERRLOG("Bind failed (%d).\n", ntohl(mp->retval));
-		session->app_session.session_state = VPP_SESSION_STATE_FAILED;
-		return;
-	}
-
-	/* Set local address */
-	session->app_session.transport.is_ip4 = mp->lcl_is_ip4;
-	memcpy(&session->app_session.transport.lcl_ip, mp->lcl_ip, sizeof(mp->lcl_ip));
-	session->app_session.transport.lcl_port = mp->lcl_port;
-
-	/* Register listener */
-	session->handle = mp->handle;
-
-	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Bind session %p (%d/%" PRIu64 ")\n",
-		      session, session->id, session->handle);
-
-	/* Session binded, set listen state */
-	session->is_listen = true;
-	session->app_session.session_state = VPP_SESSION_STATE_READY;
-}
-
-static void
-vl_api_unbind_sock_reply_t_handler(vl_api_unbind_sock_reply_t *mp)
-{
-	struct spdk_vpp_session *session;
-
-	if (mp->retval != 0) {
-		SPDK_ERRLOG("Cannot unbind socket\n");
-		return;
-	}
-
-	session = _spdk_vpp_session_get(mp->context);
-	if (session == NULL) {
-		SPDK_ERRLOG("Cannot find a session by context\n");
-		return;
-	}
-	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Unbind session %p (%d)\n", session, session->id);
-
-	session->app_session.session_state = VPP_SESSION_STATE_CLOSE;
-}
-
-static int
-_spdk_send_unbind_sock(struct spdk_vpp_session *session)
-{
-	vl_api_unbind_sock_t *ump;
-
-	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Unbind session %p (%d) request\n", session, session->id);
-
-	ump = vl_msg_api_alloc(sizeof(*ump));
-	memset(ump, 0, sizeof(*ump));
-
-	ump->_vl_msg_id = ntohs(VL_API_UNBIND_SOCK);
-	ump->client_index = g_svm.my_client_index;
-	ump->handle = session->handle;
-	ump->context = session->id;
-	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&ump);
-
-	return _wait_for_session_state_change(session, VPP_SESSION_STATE_CLOSE);
-}
-
-/******************************************************************************
- * Accept session
- */
-static void
-vl_api_accept_session_t_handler(vl_api_accept_session_t *mp)
+session_accepted_handler(session_accepted_msg_t *mp)
 {
 	svm_fifo_t *rx_fifo, *tx_fifo;
 	struct spdk_vpp_session *client_session, *listen_session;
-
-	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "listeners handle is %" PRIu64 "\n", mp->listener_handle);
 
 	listen_session = _spdk_vpp_session_get_by_handle(mp->listener_handle, true);
 	if (!listen_session) {
@@ -590,6 +326,309 @@ vl_api_accept_session_t_handler(vl_api_accept_session_t *mp)
 		       client_session->id);
 
 	pthread_mutex_unlock(&listen_session->accept_session_lock);
+}
+
+static void
+session_connected_handler(session_connected_msg_t *mp)
+{
+	struct spdk_vpp_session *session;
+	svm_fifo_t *rx_fifo, *tx_fifo;
+
+	session = _spdk_vpp_session_get(mp->context);
+	if (session == NULL) {
+		return;
+	}
+
+	if (mp->retval) {
+		SPDK_ERRLOG("Connection failed (%d).\n", ntohl(mp->retval));
+		session->app_session.session_state = VPP_SESSION_STATE_FAILED;
+		return;
+	}
+
+	session->app_session.vpp_evt_q = uword_to_pointer(mp->vpp_event_queue_address,
+					 svm_msg_q_t *);
+
+	rx_fifo = uword_to_pointer(mp->server_rx_fifo, svm_fifo_t *);
+	rx_fifo->client_session_index = session->id;
+	tx_fifo = uword_to_pointer(mp->server_tx_fifo, svm_fifo_t *);
+	tx_fifo->client_session_index = session->id;
+
+	session->app_session.rx_fifo = rx_fifo;
+	session->app_session.tx_fifo = tx_fifo;
+	session->handle = mp->handle;
+
+	/* Set lcl addr */
+	session->app_session.transport.is_ip4 = mp->is_ip4;
+	memcpy(&session->app_session.transport.lcl_ip, mp->lcl_ip, sizeof(mp->lcl_ip));
+	session->app_session.transport.lcl_port = mp->lcl_port;
+
+	session->app_session.session_state = VPP_SESSION_STATE_READY;
+}
+
+static void
+session_reset_handler(session_reset_msg_t *mp)
+{
+	int rv = 0;
+	struct spdk_vpp_session *session = NULL;
+	app_session_evt_t app_evt;
+	session_reset_reply_msg_t *rmp;
+
+	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
+	if (session == NULL) {
+		SPDK_ERRLOG("Session with handle=%" PRIu64 " not found.\n",
+			    mp->handle);
+		return;
+	}
+	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Reset session %p (%d) handler\n", session, session->id);
+
+	session->app_session.session_state = VPP_SESSION_STATE_DISCONNECT;
+
+	app_alloc_ctrl_evt_to_vpp(session->app_session.vpp_evt_q, &app_evt,
+				  SESSION_CTRL_EVT_RESET_REPLY);
+	rmp = (session_reset_reply_msg_t *) app_evt.evt->data;
+	rmp->retval = rv;
+	rmp->handle = mp->handle;
+	app_send_ctrl_evt_to_vpp(session->app_session.vpp_evt_q, &app_evt);
+}
+
+static void
+session_disconnected_handler(session_disconnected_msg_t *mp)
+{
+	struct spdk_vpp_session *session = 0;
+
+	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
+	if (session == NULL) {
+		SPDK_ERRLOG("Session with handle=%" PRIu64 " not found.\n",
+			    mp->handle);
+		return;
+	}
+	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Disconnect session %p (%d) handler\n", session, session->id);
+
+	/* We need to postpone session deletion to inform upper layer */
+	session->app_session.session_state = VPP_SESSION_STATE_DISCONNECT;
+}
+
+static void
+session_bound_handler(session_bound_msg_t *mp)
+{
+	struct spdk_vpp_session *session;
+
+	/* Context should be set to the session index */
+	session = _spdk_vpp_session_get(mp->context);
+
+	if (mp->retval) {
+		SPDK_ERRLOG("Bind failed (%d).\n", ntohl(mp->retval));
+		session->app_session.session_state = VPP_SESSION_STATE_FAILED;
+		return;
+	}
+
+	/* Set local address */
+	session->app_session.transport.is_ip4 = mp->lcl_is_ip4;
+	memcpy(&session->app_session.transport.lcl_ip, mp->lcl_ip, sizeof(mp->lcl_ip));
+	session->app_session.transport.lcl_port = mp->lcl_port;
+
+	/* Register listener */
+	session->handle = mp->handle;
+
+	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Bind session %p (%d/%" PRIu64 ")\n",
+		      session, session->id, session->handle);
+
+	/* Session binded, set listen state */
+	session->is_listen = true;
+	session->app_session.session_state = VPP_SESSION_STATE_READY;
+}
+
+static void
+handle_mq_event(session_event_t *e)
+{
+	switch (e->event_type) {
+	case SESSION_CTRL_EVT_BOUND:
+		session_bound_handler((session_bound_msg_t *) e->data);
+		break;
+	case SESSION_CTRL_EVT_ACCEPTED:
+		session_accepted_handler((session_accepted_msg_t *) e->data);
+		break;
+	case SESSION_CTRL_EVT_CONNECTED:
+		session_connected_handler((session_connected_msg_t *) e->data);
+		break;
+	case SESSION_CTRL_EVT_DISCONNECTED:
+		session_disconnected_handler((session_disconnected_msg_t *) e->data);
+		break;
+	case SESSION_CTRL_EVT_RESET:
+		session_reset_handler((session_reset_msg_t *) e->data);
+		break;
+	default:
+		SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Unhandled event %u\n", e->event_type);
+	}
+}
+
+static int
+vpp_queue_poller(void *ctx)
+{
+	uword msg;
+
+	if (g_svm.vl_output_queue->cursize > 0 &&
+	    !svm_queue_sub_raw(g_svm.vl_output_queue, (u8 *)&msg)) {
+		vl_msg_api_handler((void *)msg);
+	}
+
+	return 0;
+}
+
+static int
+app_queue_poller(void *ctx)
+{
+	session_event_t *e;
+	svm_msg_q_msg_t msg;
+
+	if (!svm_msg_q_is_empty(g_svm.app_event_queue)) {
+		svm_msg_q_sub(g_svm.app_event_queue, &msg, SVM_Q_WAIT, 0);
+		e = svm_msg_q_msg_data(g_svm.app_event_queue, &msg);
+		handle_mq_event(e);
+		svm_msg_q_free_msg(g_svm.app_event_queue, &msg);
+	}
+	return 0;
+}
+
+/* This is required until sock.c API changes to asynchronous */
+static int
+_wait_for_session_state_change(struct spdk_vpp_session *session, enum spdk_vpp_session_state state)
+{
+	time_t start = time(NULL);
+	while (time(NULL) - start < 10) {
+		if (session->app_session.session_state == VPP_SESSION_STATE_FAILED) {
+			errno = EADDRNOTAVAIL;
+			return -1;
+		}
+		if (session->app_session.session_state == state) {
+			errno = 0;
+			return 0;
+		}
+		if (spdk_get_thread() == g_svm.init_thread) {
+			usleep(100000);
+			app_queue_poller(NULL);
+			vpp_queue_poller(NULL);
+		}
+	}
+	/* timeout */
+	errno = ETIMEDOUT;
+	return -1;
+}
+
+static int
+_spdk_vpp_session_connect(struct spdk_vpp_session *session)
+{
+	vl_api_connect_sock_t *cmp;
+	cmp = vl_msg_api_alloc(sizeof(*cmp));
+	memset(cmp, 0, sizeof(*cmp));
+
+	cmp->_vl_msg_id = ntohs(VL_API_CONNECT_SOCK);
+	cmp->client_index = g_svm.my_client_index;
+	cmp->context = session->id;
+
+	cmp->vrf = 0 /* VPPCOM_VRF_DEFAULT */;
+	cmp->is_ip4 = (session->app_session.transport.is_ip4);
+	memcpy(cmp->ip, &session->app_session.transport.rmt_ip, sizeof(cmp->ip));
+	cmp->port = session->app_session.transport.rmt_port;
+	cmp->proto = TRANSPORT_PROTO_TCP;
+	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&cmp);
+
+	return _wait_for_session_state_change(session, VPP_SESSION_STATE_READY);
+}
+
+static void
+vl_api_disconnect_session_reply_t_handler(vl_api_disconnect_session_reply_t *mp)
+{
+	struct spdk_vpp_session *session;
+
+	if (mp->retval) {
+		SPDK_ERRLOG("Disconnecting session failed (%d).\n", ntohl(mp->retval));
+		return;
+	}
+
+	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
+	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Session disconnected %p (%d)\n", session, session->id);
+	session->app_session.session_state = VPP_SESSION_STATE_CLOSE;
+}
+
+static int
+_spdk_vpp_session_disconnect(struct spdk_vpp_session *session)
+{
+	int rv = 0;
+	vl_api_disconnect_session_t *dmp;
+	vl_api_disconnect_session_reply_t *rmp;
+
+	if (session->app_session.session_state == VPP_SESSION_STATE_DISCONNECT) {
+		SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Session is already in disconnecting state %p (%d)\n",
+			      session, session->id);
+
+		rmp = vl_msg_api_alloc(sizeof(*rmp));
+		memset(rmp, 0, sizeof(*rmp));
+
+		rmp->_vl_msg_id = ntohs(VL_API_DISCONNECT_SESSION_REPLY);
+		rmp->retval = rv;
+		rmp->handle = session->handle;
+		vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&rmp);
+		return 0;
+	}
+	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Disconnect session %p (%d)\n", session, session->id);
+
+	dmp = vl_msg_api_alloc(sizeof(*dmp));
+	memset(dmp, 0, sizeof(*dmp));
+	dmp->_vl_msg_id = ntohs(VL_API_DISCONNECT_SESSION);
+	dmp->client_index = g_svm.my_client_index;
+	dmp->handle = session->handle;
+	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&dmp);
+
+	return _wait_for_session_state_change(session, VPP_SESSION_STATE_CLOSE);
+}
+
+/******************************************************************************
+ * Bind
+ */
+static void
+vl_api_bind_sock_reply_t_handler(vl_api_bind_sock_reply_t *mp)
+{
+	/* It should be done on MQ */
+}
+
+static void
+vl_api_unbind_sock_reply_t_handler(vl_api_unbind_sock_reply_t *mp)
+{
+	struct spdk_vpp_session *session;
+
+	if (mp->retval != 0) {
+		SPDK_ERRLOG("Cannot unbind socket\n");
+		return;
+	}
+
+	session = _spdk_vpp_session_get(mp->context);
+	if (session == NULL) {
+		SPDK_ERRLOG("Cannot find a session by context\n");
+		return;
+	}
+	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Unbind session %p (%d)\n", session, session->id);
+
+	session->app_session.session_state = VPP_SESSION_STATE_CLOSE;
+}
+
+static int
+_spdk_send_unbind_sock(struct spdk_vpp_session *session)
+{
+	vl_api_unbind_sock_t *ump;
+
+	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Unbind session %p (%d) request\n", session, session->id);
+
+	ump = vl_msg_api_alloc(sizeof(*ump));
+	memset(ump, 0, sizeof(*ump));
+
+	ump->_vl_msg_id = ntohs(VL_API_UNBIND_SOCK);
+	ump->client_index = g_svm.my_client_index;
+	ump->handle = session->handle;
+	ump->context = session->id;
+	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&ump);
+
+	return _wait_for_session_state_change(session, VPP_SESSION_STATE_CLOSE);
 }
 
 static int
@@ -703,8 +742,8 @@ spdk_vpp_sock_accept(struct spdk_sock *_sock)
 	struct spdk_vpp_session *client_session = NULL;
 	u32 client_session_index = ~0;
 	uword elts = 0;
-	int rv = 0;
-	vl_api_accept_session_reply_t *rmp;
+	app_session_evt_t app_evt;
+	session_accepted_reply_msg_t *rmp;
 
 	assert(listen_session != NULL);
 	assert(g_svm.vpp_initialized);
@@ -746,13 +785,12 @@ spdk_vpp_sock_accept(struct spdk_sock *_sock)
 	/*
 	 * Send accept session reply
 	 */
-	rmp = vl_msg_api_alloc(sizeof(*rmp));
-	memset(rmp, 0, sizeof(*rmp));
-	rmp->_vl_msg_id = ntohs(VL_API_ACCEPT_SESSION_REPLY);
-	rmp->retval = htonl(rv);
-	rmp->context = client_session->context;
+	app_alloc_ctrl_evt_to_vpp(client_session->app_session.vpp_evt_q, &app_evt,
+				  SESSION_CTRL_EVT_ACCEPTED_REPLY);
+	rmp = (session_accepted_reply_msg_t *) app_evt.evt->data;
 	rmp->handle = client_session->handle;
-	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&rmp);
+	rmp->context = client_session->context;
+	app_send_ctrl_evt_to_vpp(client_session->app_session.vpp_evt_q, &app_evt);
 
 	return &client_session->base;
 }
@@ -796,6 +834,8 @@ spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 	if (bytes == 0) {
 		if (session->app_session.session_state == VPP_SESSION_STATE_DISCONNECT) {
 			/* Socket is disconnected */
+			SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Client %p(%" PRIu32 ") is disconnected.\n",
+				      session, session->id);
 			errno = 0;
 			return 0;
 		}
@@ -854,7 +894,7 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	assert(g_svm.vpp_initialized);
 
 	tx_fifo = session->app_session.tx_fifo;
-	et = FIFO_EVENT_APP_TX;
+	et = SESSION_IO_EVT_TX;
 
 	for (i = 0; i < iovcnt; ++i) {
 		if (svm_fifo_is_full(tx_fifo)) {
@@ -864,7 +904,14 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 
 		/* We use only stream connection for now */
 		rc = app_send_stream_raw(tx_fifo, session->app_session.vpp_evt_q,
-					 iov[i].iov_base, iov[i].iov_len, et, SVM_Q_WAIT);
+					 iov[i].iov_base, iov[i].iov_len, et,
+					 0 /* do_evt */, SVM_Q_WAIT);
+
+		if (svm_fifo_set_event(tx_fifo)) {
+			app_send_io_evt_to_vpp(session->app_session.vpp_evt_q, tx_fifo->master_session_index,
+					       et, SVM_Q_WAIT);
+		}
+
 		if (rc < 0) {
 			if (total > 0) {
 				break;
@@ -1037,7 +1084,9 @@ _spdk_vpp_app_attach(void)
 	bmp->client_index = g_svm.my_client_index;
 	bmp->context = ntohl(0xfeedface);
 
-	bmp->options[APP_OPTIONS_FLAGS] = APP_OPTIONS_FLAGS_ADD_SEGMENT;
+	bmp->options[APP_OPTIONS_FLAGS] = APP_OPTIONS_FLAGS_ACCEPT_REDIRECT;
+	bmp->options[APP_OPTIONS_FLAGS] |= APP_OPTIONS_FLAGS_ADD_SEGMENT;
+
 	bmp->options[APP_OPTIONS_PREALLOC_FIFO_PAIRS] = 16;
 	bmp->options[APP_OPTIONS_RX_FIFO_SIZE] = fifo_size;
 	bmp->options[APP_OPTIONS_TX_FIFO_SIZE] = fifo_size;
@@ -1240,11 +1289,7 @@ spdk_vpp_net_framework_set_handlers(void)
 	_(SESSION_ENABLE_DISABLE_REPLY, session_enable_disable_reply)   \
 	_(BIND_SOCK_REPLY, bind_sock_reply)                     \
 	_(UNBIND_SOCK_REPLY, unbind_sock_reply)                 \
-	_(ACCEPT_SESSION, accept_session)                       \
-	_(CONNECT_SESSION_REPLY, connect_session_reply)         \
-	_(DISCONNECT_SESSION, disconnect_session)               \
 	_(DISCONNECT_SESSION_REPLY, disconnect_session_reply)   \
-	_(RESET_SESSION, reset_session)                         \
 	_(APPLICATION_ATTACH_REPLY, application_attach_reply)   \
 	_(APPLICATION_DETACH_REPLY, application_detach_reply)	\
 	_(MAP_ANOTHER_SEGMENT, map_another_segment)
