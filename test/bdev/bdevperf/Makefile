@@ -41,6 +41,11 @@ C_SRCS := bdevperf.c
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += event_bdev event_copy event_vmd
-SPDK_LIB_LIST += bdev copy event trace log conf thread util rpc bdev_rpc jsonrpc json sock notify
+SPDK_LIB_LIST += bdev copy event trace log conf thread util sock notify
+SPDK_LIB_LIST += rpc jsonrpc json app_rpc log_rpc trace_rpc bdev_rpc
+
+ifeq ($(OS),Linux)
+SPDK_LIB_LIST += event_nbd nbd
+endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
