@@ -22,6 +22,30 @@
       "revId": "b8bd7edd847526cfb394398df838312f3418670a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0827265_af97f091",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1014,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-19T17:13:33Z",
+      "side": 1,
+      "message": "So here we are writing a chunk but not using all of the backing IO units. Jim was already setting the unused io_unit_index entries to FF. I don\u0027t believe its an issue to not clear the corresponding array bits because they weren\u0027t set. The lines you reference are for overwrites so yes any overwrite will correctly set both the io_unit_index as well as the array bits. Actually I don\u0027t see the need to set the io_unit_index values to FF here but Jim had it in here so to make sure things are consistent I added the clearing of them in the array.  Make sense? I can\u0027t prove that this is needed, I just think it\u0027s clearer.",
+      "parentUuid": "5eb5ba1d_69a9e344",
+      "range": {
+        "startLine": 1013,
+        "startChar": 2,
+        "endLine": 1014,
+        "endChar": 86
+      },
+      "revId": "b8bd7edd847526cfb394398df838312f3418670a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
