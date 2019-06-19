@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d60da347_20074d70",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1852,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-19T11:36:08Z",
+      "side": 1,
+      "message": "I think it would be useful to have possibility to close rpc.py daemon. Then we should call: s.close(), to close and remove socket. I think command could look like: echo \"exit_daemon\" | nc -U /tmp/socketnam. Other way to close rpc.py is to handle kill command for SIGINT and SIGTERM signals.",
+      "range": {
+        "startLine": 1851,
+        "startChar": 7,
+        "endLine": 1852,
+        "endChar": 19
+      },
+      "revId": "1c9e0f517c8c0ec8d39dde4b87c7ec2d87caf619",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
