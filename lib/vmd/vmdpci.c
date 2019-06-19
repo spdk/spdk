@@ -123,12 +123,6 @@ uint64_t vmd_allocate_base_addr(vmd_adapter  *vmd, vmd_pci_device *dev, uint32_t
 	 *  if a free range exists that satisfy the input request.  If a free range cannot be found,
 	 *  get a buffer from the  unused chunk. First fit algorithm, is used.
 	 */
-	if (dev) {
-		vmd_pci_bus *hp_bus = is_dev_in_hotplug_path(dev);
-		if (hp_bus && hp_bus->self) {
-			return hp_allocate_base_addr(hp_bus->self->hp, size);
-		}
-	}
 
 	/* Ensure physical membar allocated is size aligned */
 	if (vmd->physical_addr & (size - 1)) {

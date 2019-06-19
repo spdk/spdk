@@ -36,6 +36,7 @@
 #include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
+#include "spdk/vmd.h"
 #include "spdk/nvme_ocssd.h"
 #include "spdk/env.h"
 #include "spdk/nvme_intel.h"
@@ -1772,6 +1773,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		return 1;
 	}
+
+	spdk_vmd_probe(NULL);
 
 	/* A specific trid is required. */
 	if (strlen(g_trid.traddr) != 0) {
