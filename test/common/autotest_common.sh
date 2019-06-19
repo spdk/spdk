@@ -177,7 +177,7 @@ if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ] && [ $SPDK_TEST_RBD -eq
 fi
 
 if [ $SPDK_TEST_VPP -eq 1 ]; then
-	VPP_PATH="/usr/local/src/vpp/build-root/install-vpp_debug-native/vpp/"
+	VPP_PATH="/usr/local/src/vpp-19.04/build-root/install-vpp_debug-native/vpp/"
 	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${VPP_PATH}/lib/
 	export PATH=${PATH}:${VPP_PATH}/bin/
 	config_params+=" --with-vpp=${VPP_PATH}"
