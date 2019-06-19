@@ -935,7 +935,7 @@ enum spdk_nvme_flush_broadcast {
 	SPDK_NVME_FLUSH_BROADCAST_SUPPORTED		= 3
 };
 
-struct __attribute__((packed)) spdk_nvme_ctrlr_data {
+struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
 	/** pci vendor id */
@@ -1853,7 +1853,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_critical_warning_state) == 1, "Incorre
 /**
  * SMART / health information page (\ref SPDK_NVME_LOG_HEALTH_INFORMATION)
  */
-struct __attribute__((packed)) spdk_nvme_health_information_page {
+struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_health_information_page {
 	union spdk_nvme_critical_warning_state	critical_warning;
 
 	uint16_t		temperature;
