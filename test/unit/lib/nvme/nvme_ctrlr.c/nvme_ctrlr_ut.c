@@ -68,6 +68,23 @@ DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 DEFINE_STUB_V(nvme_ns_set_identify_data, (struct spdk_nvme_ns *ns));
 
+int
+nvme_ctrlr_cmd_identify_directive_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper,
+		uint32_t cdw12,
+		uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_identify_directive_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t doper, uint32_t cdw12,
+				       uint32_t cdw13, uint32_t nsid, void *payload, uint32_t len,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)
