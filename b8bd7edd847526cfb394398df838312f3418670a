@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5eb5ba1d_69a9e344",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1014,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-19T02:20:55Z",
+      "side": 1,
+      "message": "Hi Paul, is this correct? Please see the line 925 to 927.",
+      "range": {
+        "startLine": 1013,
+        "startChar": 2,
+        "endLine": 1014,
+        "endChar": 86
+      },
+      "revId": "b8bd7edd847526cfb394398df838312f3418670a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
