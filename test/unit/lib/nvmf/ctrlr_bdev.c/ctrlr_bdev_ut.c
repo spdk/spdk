@@ -35,22 +35,16 @@
 
 #include "spdk_cunit.h"
 
+#include "spdk_internal/mock.h"
+
 #include "nvmf/ctrlr_bdev.c"
 
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
-int
-spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
+DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), -1);
 
-const char *
-spdk_bdev_get_name(const struct spdk_bdev *bdev)
-{
-	return "test";
-}
+DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test");
 
 uint32_t
 spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
@@ -73,100 +67,69 @@ spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
 	return 0;
 }
 
-struct spdk_io_channel *
-spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
+	    (struct spdk_bdev_desc *desc), NULL);
 
-int
-spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		       uint64_t offset_blocks, uint64_t num_blocks,
-		       spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_flush_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
 
-int
-spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		       uint64_t offset_blocks, uint64_t num_blocks,
-		       spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_unmap_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
 
-bool
-spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
-{
-	return false;
-}
+DEFINE_STUB(spdk_bdev_io_type_supported, bool,
+	    (struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type), false);
 
-int
-spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-			struct spdk_bdev_io_wait_entry *entry)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_queue_io_wait, int,
+	    (struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+	     struct spdk_bdev_io_wait_entry *entry),
+	    0);
 
-int
-spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, void *buf,
-		       uint64_t offset_blocks, uint64_t num_blocks,
-		       spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_write_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, void *buf,
+	     uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
 
-int
-spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			struct iovec *iov, int iovcnt,
-			uint64_t offset_blocks, uint64_t num_blocks,
-			spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_writev_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
 
-int
-spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, void *buf,
-		      uint64_t offset_blocks, uint64_t num_blocks,
-		      spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_read_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, void *buf,
+	     uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
 
-int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			   struct iovec *iov, int iovcnt,
-			   uint64_t offset_blocks, uint64_t num_blocks,
-			   spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_readv_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
 
-int
-spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			      uint64_t offset_blocks, uint64_t num_blocks,
-			      spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_write_zeroes_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
 
-int
-spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc,
-			   struct spdk_io_channel *ch,
-			   const struct spdk_nvme_cmd *cmd,
-			   void *buf, size_t nbytes,
-			   spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_nvme_io_passthru, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
 
-void spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
-{
-}
+DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 
-const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
+	    (struct spdk_nvmf_subsystem *subsystem), NULL);
 
 struct spdk_nvmf_ns *
 spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
@@ -189,9 +152,8 @@ spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem, struct sp
 	return NULL;
 }
 
-void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *sc)
-{
-}
+DEFINE_STUB_V(spdk_bdev_io_get_nvme_status,
+	      (const struct spdk_bdev_io *bdev_io, int *sct, int *sc));
 
 static void
 test_get_rw_params(void)
