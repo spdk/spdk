@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a91e0fd_f4bab30a",
+        "filename": "scripts/vagrant/VAGRANT_AUTO.md",
+        "patchSetId": 45
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-19T10:04:08Z",
+      "side": 1,
+      "message": "This document does not generate properly in markdown, please see comparison between:\nhttps://github.com/spdk/spdk/blob/25eb948645ce98a555a4939218905f4edf33819d/scripts/vagrant/VAGRANT_AUTO.md\nhttps://github.com/spdk/spdk/blob/25eb948645ce98a555a4939218905f4edf33819d/scripts/vagrant/README.md",
+      "revId": "25eb948645ce98a555a4939218905f4edf33819d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
