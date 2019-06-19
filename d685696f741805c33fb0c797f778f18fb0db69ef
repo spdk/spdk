@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "458e0911_7df15e89",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-19T07:46:31Z",
+      "side": 1,
+      "message": "vm_setup.sh is a bash script, so you can\u0027t import it into Python script.\nAlso, it\u0027s rather a one-time use script used to install all of SPDK test dependencies on a fresh OS.",
+      "parentUuid": "1df1b01f_73320bd9",
+      "range": {
+        "startLine": 55,
+        "startChar": 75,
+        "endLine": 56,
+        "endChar": 51
+      },
+      "revId": "d685696f741805c33fb0c797f778f18fb0db69ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6bd7a5e5_b54d3090",
         "filename": "scripts/perf/nvmf/config.json",
         "patchSetId": 6
@@ -187,6 +211,29 @@
       "revId": "d685696f741805c33fb0c797f778f18fb0db69ef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "986e2cce_9e305211",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-19T07:46:31Z",
+      "side": 1,
+      "message": "You removed the whole block instead of simplifying it. I can\u0027t see anything assigned to self.fio_dir, but in PS7 you still use this variable, this will case exceptions",
+      "range": {
+        "startLine": 190,
+        "startChar": 1,
+        "endLine": 193,
+        "endChar": 41
+      },
+      "revId": "d685696f741805c33fb0c797f778f18fb0db69ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {

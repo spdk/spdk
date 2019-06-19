@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d490c92_042a2af5",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-06-19T07:46:31Z",
+      "side": 1,
+      "message": "Like before: we should change this sentence and mention /usr/src/fio used as default installed by vm_setup.sh provisioning script, since that is the default path you have in the .py script",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 31
+      },
+      "revId": "0abc73d8dcb424681af55c8e8a95c5597c7802d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
