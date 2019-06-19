@@ -319,14 +319,14 @@ nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 		_nvme_tcp_sgl_append(sgl, pdu->data_digest, SPDK_NVME_TCP_DIGEST_LEN);
 	}
 
-end:
-	if (_mapped_length != NULL) {
-		*_mapped_length = sgl->total_size;
-	}
-
 	/* check the plen for the first time constructing iov */
 	if (!pdu->writev_offset) {
 		assert(plen == pdu->hdr.common.plen);
+	}
+
+end:
+	if (_mapped_length != NULL) {
+		*_mapped_length = sgl->total_size;
 	}
 
 	return iovcnt - sgl->iovcnt;
