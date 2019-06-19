@@ -636,7 +636,7 @@ _iscsi_sgl_append_with_md(struct _iscsi_sgl *s,
 	struct iovec buf_iov;
 
 	if (s->iov_offset >= data_len) {
-		s->iov_offset -= buf_len;
+		s->iov_offset -= data_len;
 	} else {
 		buf_iov.iov_base = buf;
 		buf_iov.iov_len = buf_len;

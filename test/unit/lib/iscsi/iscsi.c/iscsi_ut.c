@@ -1440,6 +1440,81 @@ build_iovs_test(void)
 	free(data);
 }
 
+static void
+build_iovs_with_md_test(void)
+{
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct iovec iovs[6] = {};
+	uint8_t *data;
+	uint32_t mapped_length = 0;
+	int rc;
+
+	conn.header_digest = true;
+	conn.data_digest = true;
+
+	DSET24(&pdu.bhs.data_segment_len, 4096 * 2);
+	data = calloc(1, (4096 + 128) * 2);
+	SPDK_CU_ASSERT_FATAL(data != NULL);
+	pdu.data = data;
+	pdu.data_buf_len = (4096 + 128) * 2;
+
+	pdu.bhs.total_ahs_len = 0;
+	pdu.bhs.opcode = ISCSI_OP_SCSI;
+
+	rc = spdk_dif_ctx_init(&pdu.dif_ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
+			       0, 0, 0, 0, 0, 0);
+	CU_ASSERT(rc == 0);
+
+	pdu.dif_insert_or_strip = true;
+
+	pdu.writev_offset = 0;
+	rc = spdk_iscsi_build_iovs(&conn, iovs, 6, &pdu, &mapped_length);
+	CU_ASSERT(rc == 5);
+	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
+	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
+	CU_ASSERT(iovs[1].iov_base == (void *)pdu.header_digest);
+	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(iovs[2].iov_base == (void *)pdu.data);
+	CU_ASSERT(iovs[2].iov_len == 4096);
+	CU_ASSERT(iovs[3].iov_base == (void *)(pdu.data + 4096 + 128));
+	CU_ASSERT(iovs[3].iov_len == 4096);
+	CU_ASSERT(iovs[4].iov_base == (void *)pdu.data_digest);
+	CU_ASSERT(iovs[4].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(mapped_length == ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 4096 * 2 + ISCSI_DIGEST_LEN);
+
+	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 2048;
+	rc = spdk_iscsi_build_iovs(&conn, iovs, 6, &pdu, &mapped_length);
+	CU_ASSERT(rc == 3);
+	CU_ASSERT(iovs[0].iov_base == (void *)(pdu.data + 2048));
+	CU_ASSERT(iovs[0].iov_len == 2048);
+	CU_ASSERT(iovs[1].iov_base == (void *)(pdu.data + 4096 + 128));
+	CU_ASSERT(iovs[1].iov_len == 4096);
+	CU_ASSERT(iovs[2].iov_base == (void *)pdu.data_digest);
+	CU_ASSERT(iovs[2].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(mapped_length == 2048 + 4096 + ISCSI_DIGEST_LEN);
+
+	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 4096 * 2;
+	rc = spdk_iscsi_build_iovs(&conn, iovs, 6, &pdu, &mapped_length);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(iovs[0].iov_base == (void *)pdu.data_digest);
+	CU_ASSERT(iovs[0].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(mapped_length == ISCSI_DIGEST_LEN);
+
+	pdu.writev_offset = 0;
+	rc = spdk_iscsi_build_iovs(&conn, iovs, 3, &pdu, &mapped_length);
+	CU_ASSERT(rc == 3);
+	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
+	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
+	CU_ASSERT(iovs[1].iov_base == (void *)pdu.header_digest);
+	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(iovs[2].iov_base == (void *)pdu.data);
+	CU_ASSERT(iovs[2].iov_len == 4096);
+	CU_ASSERT(mapped_length == ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 4096);
+
+	free(data);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1478,6 +1553,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "abort_queued_datain_tasks_test",
 			       abort_queued_datain_tasks_test) == NULL
 		|| CU_add_test(suite, "build_iovs_test", build_iovs_test) == NULL
+		|| CU_add_test(suite, "build_iovs_with_md_test", build_iovs_with_md_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
