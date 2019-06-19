@@ -46,6 +46,30 @@
       "revId": "03f9a8b7b315c33bdf3b6d71135e8f2f06ad78d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a76bb3df_772991e4",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-19T04:17:55Z",
+      "side": 1,
+      "message": "Isn\u0027t this the expected behavior..? You could preserve HOME with different sudo or su options if you want to.\n\nBesides, this patch uses $HOME/vhost_vm_image.qcow2 in a few other places, please be consistent.",
+      "parentUuid": "7f996904_b6bcf168",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 59
+      },
+      "revId": "03f9a8b7b315c33bdf3b6d71135e8f2f06ad78d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
