@@ -284,12 +284,10 @@ enum spdk_vpp_create_type {
  * VPP message handlers
  */
 static void
-vl_api_accept_session_t_handler(vl_api_accept_session_t *mp)
+session_accepted_handler(session_accepted_msg_t *mp)
 {
 	svm_fifo_t *rx_fifo, *tx_fifo;
 	struct spdk_vpp_session *client_session, *listen_session;
-
-	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "listeners handle is %" PRIu64 "\n", mp->listener_handle);
 
 	pthread_mutex_lock(&g_svm.session_get_lock);
 	listen_session = _spdk_vpp_session_get_by_handle(mp->listener_handle, true);
@@ -298,6 +296,8 @@ vl_api_accept_session_t_handler(vl_api_accept_session_t *mp)
 		SPDK_ERRLOG("Listener not found\n");
 		return;
 	}
+
+	SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Listeners handle is %" PRIu64 "\n", mp->listener_handle);
 
 	/* Allocate local session for a client and set it up */
 	client_session = _spdk_vpp_session_create();
@@ -343,7 +343,7 @@ vl_api_accept_session_t_handler(vl_api_accept_session_t *mp)
 }
 
 static void
-vl_api_connect_session_reply_t_handler(vl_api_connect_session_reply_t *mp)
+session_connected_handler(session_connected_msg_t *mp)
 {
 	struct spdk_vpp_session *session;
 	svm_fifo_t *rx_fifo, *tx_fifo;
@@ -380,14 +380,15 @@ vl_api_connect_session_reply_t_handler(vl_api_connect_session_reply_t *mp)
 }
 
 static void
-vl_api_disconnect_session_t_handler(vl_api_disconnect_session_t *mp)
+session_disconnected_handler(session_disconnected_msg_t *mp)
 {
 	struct spdk_vpp_session *session = 0;
 
 	pthread_mutex_lock(&g_svm.session_get_lock);
 	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
 	if (session == NULL) {
-		SPDK_ERRLOG("Invalid session handler (%" PRIu64 ").\n", mp->handle);
+		SPDK_ERRLOG("Session with handle=%" PRIu64 " not found.\n",
+			    mp->handle);
 		pthread_mutex_unlock(&g_svm.session_get_lock);
 		return;
 	}
@@ -399,16 +400,18 @@ vl_api_disconnect_session_t_handler(vl_api_disconnect_session_t *mp)
 }
 
 static void
-vl_api_reset_session_t_handler(vl_api_reset_session_t *mp)
+session_reset_handler(session_reset_msg_t *mp)
 {
-	vl_api_reset_session_reply_t *rmp;
 	int rv = 0;
-	struct spdk_vpp_session *session = 0;
+	struct spdk_vpp_session *session = NULL;
+	app_session_evt_t app_evt;
+	session_reset_reply_msg_t *rmp;
 
 	pthread_mutex_lock(&g_svm.session_get_lock);
 	session = _spdk_vpp_session_get_by_handle(mp->handle, false);
 	if (session == NULL) {
-		SPDK_ERRLOG("Invalid session handler (%" PRIu64 ").\n", mp->handle);
+		SPDK_ERRLOG("Session with handle=%" PRIu64 " not found.\n",
+			    mp->handle);
 		pthread_mutex_unlock(&g_svm.session_get_lock);
 		return;
 	}
@@ -417,19 +420,16 @@ vl_api_reset_session_t_handler(vl_api_reset_session_t *mp)
 	session->app_session.session_state = VPP_SESSION_STATE_DISCONNECT;
 	pthread_mutex_unlock(&g_svm.session_get_lock);
 
-	rmp = vl_msg_api_alloc(sizeof(*rmp));
-	if (rmp == NULL) {
-		return;
-	}
-	memset(rmp, 0, sizeof(*rmp));
-	rmp->_vl_msg_id = ntohs(VL_API_RESET_SESSION_REPLY);
+	app_alloc_ctrl_evt_to_vpp(session->app_session.vpp_evt_q, &app_evt,
+				  SESSION_CTRL_EVT_RESET_REPLY);
+	rmp = (session_reset_reply_msg_t *) app_evt.evt->data;
 	rmp->retval = rv;
 	rmp->handle = mp->handle;
-	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&rmp);
+	app_send_ctrl_evt_to_vpp(session->app_session.vpp_evt_q, &app_evt);
 }
 
 static void
-vl_api_bind_sock_reply_t_handler(vl_api_bind_sock_reply_t *mp)
+session_bound_handler(session_bound_msg_t *mp)
 {
 	struct spdk_vpp_session *session;
 
@@ -459,7 +459,7 @@ vl_api_bind_sock_reply_t_handler(vl_api_bind_sock_reply_t *mp)
 }
 
 static void
-vl_api_unbind_sock_reply_t_handler(vl_api_unbind_sock_reply_t *mp)
+session_unlisten_reply_handler (session_unlisten_reply_msg_t *mp)
 {
 	struct spdk_vpp_session *session;
 
@@ -478,6 +478,33 @@ vl_api_unbind_sock_reply_t_handler(vl_api_unbind_sock_reply_t *mp)
 	session->app_session.session_state = VPP_SESSION_STATE_CLOSE;
 }
 
+static void
+handle_mq_event(session_event_t *e)
+{
+	switch (e->event_type) {
+	case SESSION_CTRL_EVT_BOUND:
+		session_bound_handler((session_bound_msg_t *) e->data);
+		break;
+	case SESSION_CTRL_EVT_ACCEPTED:
+		session_accepted_handler((session_accepted_msg_t *) e->data);
+		break;
+	case SESSION_CTRL_EVT_CONNECTED:
+		session_connected_handler((session_connected_msg_t *) e->data);
+		break;
+	case SESSION_CTRL_EVT_DISCONNECTED:
+		session_disconnected_handler((session_disconnected_msg_t *) e->data);
+		break;
+	case SESSION_CTRL_EVT_RESET:
+		session_reset_handler((session_reset_msg_t *) e->data);
+		break;
+	case SESSION_CTRL_EVT_UNLISTEN_REPLY:
+		session_unlisten_reply_handler((session_unlisten_reply_msg_t *) e->data);
+		break;
+	default:
+		SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Unhandled event %u\n", e->event_type);
+	}
+}
+
 static int
 vpp_queue_poller(void *ctx)
 {
@@ -494,12 +521,15 @@ vpp_queue_poller(void *ctx)
 static int
 app_queue_poller(void *ctx)
 {
+	session_event_t *e;
 	svm_msg_q_msg_t msg;
+
 	if (!svm_msg_q_is_empty(g_svm.app_event_queue)) {
 		svm_msg_q_sub(g_svm.app_event_queue, &msg, SVM_Q_WAIT, 0);
+		e = svm_msg_q_msg_data(g_svm.app_event_queue, &msg);
+		handle_mq_event(e);
 		svm_msg_q_free_msg(g_svm.app_event_queue, &msg);
 	}
-
 	return 0;
 }
 
@@ -747,8 +777,8 @@ spdk_vpp_sock_accept(struct spdk_sock *_sock)
 	struct spdk_vpp_session *client_session = NULL;
 	u32 client_session_index = ~0;
 	uword elts = 0;
-	int rv = 0;
-	vl_api_accept_session_reply_t *rmp;
+	app_session_evt_t app_evt;
+	session_accepted_reply_msg_t *rmp;
 
 	assert(listen_session != NULL);
 	assert(g_svm.vpp_initialized);
@@ -790,16 +820,12 @@ spdk_vpp_sock_accept(struct spdk_sock *_sock)
 	/*
 	 * Send accept session reply
 	 */
-	rmp = vl_msg_api_alloc(sizeof(*rmp));
-	if (rmp == NULL) {
-		return NULL;
-	}
-	memset(rmp, 0, sizeof(*rmp));
-	rmp->_vl_msg_id = ntohs(VL_API_ACCEPT_SESSION_REPLY);
-	rmp->retval = htonl(rv);
-	rmp->context = client_session->context;
+	app_alloc_ctrl_evt_to_vpp(client_session->app_session.vpp_evt_q, &app_evt,
+				  SESSION_CTRL_EVT_ACCEPTED_REPLY);
+	rmp = (session_accepted_reply_msg_t *) app_evt.evt->data;
 	rmp->handle = client_session->handle;
-	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&rmp);
+	rmp->context = client_session->context;
+	app_send_ctrl_evt_to_vpp(client_session->app_session.vpp_evt_q, &app_evt);
 
 	return &client_session->base;
 }
@@ -843,6 +869,8 @@ spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 	if (bytes == 0) {
 		if (session->app_session.session_state == VPP_SESSION_STATE_DISCONNECT) {
 			/* Socket is disconnected */
+			SPDK_DEBUGLOG(SPDK_SOCK_VPP, "Client %p(%" PRIu32 ") is disconnected.\n",
+				      session, session->id);
 			errno = 0;
 			return 0;
 		}
@@ -850,7 +878,7 @@ spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 		return -1;
 	}
 
-	rc = svm_fifo_dequeue_nowait(rx_fifo, bytes, buf);
+	rc = app_recv_stream_raw(rx_fifo, buf, bytes, 0, 0);
 	if (rc < 0) {
 		errno = -rc;
 		return rc;
@@ -901,7 +929,7 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	assert(g_svm.vpp_initialized);
 
 	tx_fifo = session->app_session.tx_fifo;
-	et = FIFO_EVENT_APP_TX;
+	et = SESSION_IO_EVT_TX;
 
 	for (i = 0; i < iovcnt; ++i) {
 		if (svm_fifo_is_full(tx_fifo)) {
@@ -911,7 +939,9 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 
 		/* We use only stream connection for now */
 		rc = app_send_stream_raw(tx_fifo, session->app_session.vpp_evt_q,
-					 iov[i].iov_base, iov[i].iov_len, et, SVM_Q_WAIT);
+					 iov[i].iov_base, iov[i].iov_len, et,
+					 1, SVM_Q_WAIT);
+
 		if (rc < 0) {
 			if (total > 0) {
 				break;
@@ -1102,7 +1132,9 @@ _spdk_vpp_app_attach(void)
 	bmp->client_index = g_svm.my_client_index;
 	bmp->context = ntohl(0xfeedface);
 
-	bmp->options[APP_OPTIONS_FLAGS] = APP_OPTIONS_FLAGS_ADD_SEGMENT;
+	bmp->options[APP_OPTIONS_FLAGS] = APP_OPTIONS_FLAGS_ACCEPT_REDIRECT;
+	bmp->options[APP_OPTIONS_FLAGS] |= APP_OPTIONS_FLAGS_ADD_SEGMENT;
+
 	bmp->options[APP_OPTIONS_PREALLOC_FIFO_PAIRS] = 16;
 	bmp->options[APP_OPTIONS_RX_FIFO_SIZE] = fifo_size;
 	bmp->options[APP_OPTIONS_TX_FIFO_SIZE] = fifo_size;
@@ -1311,13 +1343,7 @@ spdk_vpp_net_framework_set_handlers(void)
 			vl_api_##n##_t_print,		\
 			sizeof(vl_api_##n##_t), 1);
 	_(SESSION_ENABLE_DISABLE_REPLY, session_enable_disable_reply)   \
-	_(BIND_SOCK_REPLY, bind_sock_reply)                     \
-	_(UNBIND_SOCK_REPLY, unbind_sock_reply)                 \
-	_(ACCEPT_SESSION, accept_session)                       \
-	_(CONNECT_SESSION_REPLY, connect_session_reply)         \
-	_(DISCONNECT_SESSION, disconnect_session)               \
 	_(DISCONNECT_SESSION_REPLY, disconnect_session_reply)   \
-	_(RESET_SESSION, reset_session)                         \
 	_(APPLICATION_ATTACH_REPLY, application_attach_reply)   \
 	_(APPLICATION_DETACH_REPLY, application_detach_reply)	\
 	_(MAP_ANOTHER_SEGMENT, map_another_segment)
