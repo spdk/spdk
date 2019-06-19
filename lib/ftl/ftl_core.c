@@ -76,6 +76,9 @@ struct ftl_wptr {
 	 * The PPA is not assigned by wptr, and is instead taken directly from the request.
 	 */
 	bool				direct_mode;
+
+	/* Number of outstanding write requests */
+	uint32_t			num_outstanding;
 };
 
 struct ftl_flush {
@@ -140,7 +143,6 @@ ftl_io_cmpl_cb(void *arg, const struct spdk_nvme_cpl *status)
 	ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_DISK);
 
 	ftl_io_dec_req(io);
-
 	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
 	}
@@ -576,10 +578,13 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 	}
 
 	if (band->state == FTL_BAND_STATE_FULL) {
-		if (ftl_wptr_close_band(wptr)) {
-			/* TODO: need recovery here */
-			assert(false);
+		if (wptr->num_outstanding == 0) {
+			if (ftl_wptr_close_band(wptr)) {
+				/* TODO: need recovery here */
+				assert(false);
+			}
 		}
+
 		return 0;
 	}
 
@@ -588,6 +593,7 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 			/* TODO: need recovery here */
 			assert(false);
 		}
+
 		return 0;
 	}
 
@@ -1364,9 +1370,13 @@ static void
 ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 {
 	struct ftl_chunk *chunk;
+	struct ftl_wptr *wptr;
 
 	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
+	wptr = ftl_wptr_from_band(io->band);
+
 	chunk->busy = false;
+	wptr->num_outstanding--;
 }
 
 static int
@@ -1392,16 +1402,17 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 		return -EAGAIN;
 	}
 
+	wptr->num_outstanding++;
 	rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
 					    ftl_io_iovec_addr(child), child->md,
 					    ftl_ppa_addr_pack(dev, ppa),
 					    lbk_cnt, ftl_io_cmpl_cb, child, 0, 0, 0);
 	if (rc) {
+		wptr->num_outstanding--;
 		ftl_io_fail(child, rc);
 		ftl_io_complete(child);
-		SPDK_ERRLOG("spdk_nvme_ns_cmd_write failed with status:%d, ppa:%lu\n",
+		SPDK_ERRLOG("spdk_nvme_ns_cmd_write_with_md failed with status:%d, ppa:%lu\n",
 			    rc, ppa.ppa);
-
 		return -EIO;
 	}
 
