@@ -56,12 +56,8 @@
 #define DEFAULT_WINDOW_SIZE 15
 #define MAX_MBUFS_PER_OP 16
 #define CHUNK_SIZE (1024 * 16)
-
 #define COMP_BDEV_NAME "compress"
-
-#define DEV_CHUNK_SZ (16 * 1024)
-#define DEV_LBA_SZ 512
-#define DEV_BACKING_IO_SZ (4 * 1024)
+#define BACKING_IO_SZ (4 * 1024)
 
 /* To add support for new device types, follow the examples of the following...
  * Note that the string names are defined by the DPDK PMD in question so be
@@ -1097,10 +1093,9 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 	meta_ctx->backing_dev.blocklen = bdev->blocklen;
 	meta_ctx->backing_dev.blockcnt = bdev->blockcnt;
 
-	/* TODO, configurable chunk size & logical block size */
-	meta_ctx->params.chunk_size = DEV_CHUNK_SZ;
-	meta_ctx->params.logical_block_size = DEV_LBA_SZ;
-	meta_ctx->params.backing_io_unit_size = DEV_BACKING_IO_SZ;
+	meta_ctx->params.chunk_size = CHUNK_SIZE;
+	meta_ctx->params.logical_block_size = bdev->blocklen;
+	meta_ctx->params.backing_io_unit_size = BACKING_IO_SZ;
 	return meta_ctx;
 }
 
