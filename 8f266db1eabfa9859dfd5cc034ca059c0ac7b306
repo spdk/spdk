@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "552e6649_2af66dd2",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-19T08:38:48Z",
+      "side": 1,
+      "message": "I think this line was supposed to be up top",
+      "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4aff46c3_aa7a7497",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-19T08:38:48Z",
+      "side": 1,
+      "message": "You probably don\u0027t need to include this one. I think our Changelog only includes new features and API changes generally.",
+      "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d463e875_766103b4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-19T08:38:48Z",
+      "side": 1,
+      "message": "Same with this one.",
+      "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f8f491a_6d5099c5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-19T08:38:48Z",
+      "side": 1,
+      "message": "Have we historically done this for .1 releases? I\u0027m fine with it, but we don\u0027t do this for major releases.",
+      "revId": "8f266db1eabfa9859dfd5cc034ca059c0ac7b306",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
