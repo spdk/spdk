@@ -350,6 +350,8 @@ void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
+bool spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx);
+
 void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, struct iovec *iov,
 				      uint32_t iovcnt, uint64_t offset, uint32_t length);
 
