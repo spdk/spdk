@@ -541,14 +541,15 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
 		     "  max_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
-		     "  num_shared_buffers=%d\n",
+		     "  num_shared_buffers=%d, dif_mode=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr,
 		     opts->io_unit_size,
 		     opts->in_capsule_data_size,
 		     opts->max_aq_depth,
-		     opts->num_shared_buffers);
+		     opts->num_shared_buffers,
+		     opts->dif_mode);
 
 	/* I/O unit size cannot be larger than max I/O size */
 	if (opts->io_unit_size > opts->max_io_size) {
@@ -2813,6 +2814,7 @@ spdk_nvmf_tcp_qpair_set_sq_size(struct spdk_nvmf_qpair *qpair)
 #define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS 511
 #define SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE 32
+#define SPDK_NVMF_TCP_DEFAULT_DIF_MODE SPDK_NVMF_DIF_MODE_E2E
 
 static void
 spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -2825,6 +2827,7 @@ spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_aq_depth =		SPDK_NVMF_TCP_DEFAULT_AQ_DEPTH;
 	opts->num_shared_buffers =	SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS;
 	opts->buf_cache_size =		SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE;
+	opts->dif_mode =		SPDK_NVMF_TCP_DEFAULT_DIF_MODE;
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
