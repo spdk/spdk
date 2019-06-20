@@ -395,12 +395,12 @@ cleanup(struct deallocate_context *context)
 		ns_entry = next;
 	}
 	for (i = 0; i < NUM_BLOCKS; i++) {
-		if (context->write_buf[i]) {
+		if (context->write_buf && context->write_buf[i]) {
 			spdk_dma_free(context->write_buf[i]);
 		} else {
 			break;
 		}
-		if (context->read_buf[i]) {
+		if (context->read_buf && context->read_buf[i]) {
 			spdk_dma_free(context->read_buf[i]);
 		} else {
 			break;
