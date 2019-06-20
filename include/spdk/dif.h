@@ -382,4 +382,26 @@ int spdk_dif_verify_stream(struct iovec *iovs, int iovcnt,
 int spdk_dif_update_crc32c_stream(struct iovec *iovs, int iovcnt,
 				  uint32_t data_offset, uint32_t data_len,
 				  uint32_t *crc32c, const struct spdk_dif_ctx *ctx);
+/**
+ * Convert offset and size from LBA based to extended LBA based.
+ *
+ * \param data_offset Data offset
+ * \param data_len Data length
+ * \param buf_offset Buffer offset converted from data offset.
+ * \param buf_len Buffer length converted from data length
+ * \param ctx DIF context.
+ */
+void spdk_dif_get_range_with_md(uint32_t data_offset, uint32_t data_len,
+				uint32_t *buf_offset, uint32_t *buf_len,
+				const struct spdk_dif_ctx *ctx);
+
+/**
+ * Convert length from LBA based to extended LBA based.
+ *
+ * \param data_len Data length
+ * \param ctx DIF context.
+ *
+ * \return Extended LBA based data length.
+ */
+uint32_t spdk_dif_get_length_with_md(uint32_t data_len, const struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
