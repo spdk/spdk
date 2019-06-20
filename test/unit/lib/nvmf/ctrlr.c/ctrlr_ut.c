@@ -163,6 +163,11 @@ DEFINE_STUB(spdk_nvmf_transport_req_complete,
 
 DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
 
+DEFINE_STUB(spdk_nvmf_bdev_ctrlr_get_dif_ctx, bool,
+	    (struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
+	     struct spdk_dif_ctx *dif_ctx),
+	    true);
+
 int
 spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
 {
@@ -1154,6 +1159,68 @@ test_reservation_notification_log_page(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr.num_avail_log_pages == 0);
 }
 
+static void
+test_get_dif_ctx(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_ns ns = {};
+	struct spdk_nvmf_ns *_ns = NULL;
+	struct spdk_bdev bdev = {};
+	union nvmf_h2c_msg cmd = {};
+	struct spdk_dif_ctx dif_ctx = {};
+	bool ret;
+
+	ctrlr.subsys = &subsystem;
+
+	qpair.ctrlr = &ctrlr;
+
+	req.qpair = &qpair;
+	req.cmd = &cmd;
+
+	ns.bdev = &bdev;
+
+	qpair.state = SPDK_NVMF_QPAIR_UNINITIALIZED;
+
+	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
+	CU_ASSERT(ret == false);
+
+	qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+	cmd.nvmf_cmd.opcode = SPDK_NVME_OPC_FABRIC;
+
+	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
+	CU_ASSERT(ret == false);
+
+	cmd.nvmf_cmd.opcode = SPDK_NVME_OPC_FLUSH;
+
+	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
+	CU_ASSERT(ret == false);
+
+	qpair.qid = 1;
+
+	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
+	CU_ASSERT(ret == false);
+
+	cmd.nvme_cmd.nsid = 1;
+
+	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
+	CU_ASSERT(ret == false);
+
+	subsystem.max_nsid = 1;
+	subsystem.ns = &_ns;
+	subsystem.ns[0] = &ns;
+
+	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
+	CU_ASSERT(ret == false);
+
+	cmd.nvmf_cmd.opcode = SPDK_NVME_OPC_WRITE;
+
+	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
+	CU_ASSERT(ret == true);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1182,7 +1249,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "reservation_exclusive_access_regs_only_and_all_regs",
 			    test_reservation_exclusive_access_regs_only_and_all_regs) == NULL ||
 		CU_add_test(suite, "reservation_notification_log_page",
-			    test_reservation_notification_log_page) == NULL
+			    test_reservation_notification_log_page) == NULL ||
+		CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
