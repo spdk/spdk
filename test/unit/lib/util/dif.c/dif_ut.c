@@ -2171,7 +2171,7 @@ update_crc32c_test(void)
 	_iov_alloc_buf(&iovs[3], 3 + 123);
 
 	/* data[1][511:123], md[1][5:0] */
-	_iov_alloc_buf(&iovs[4], 399 + 6);
+	_iov_alloc_buf(&iovs[4], 389 + 6);
 
 	/* md[1][7:6], data[2][511:0], md[2][7:0], data[3][431:0] */
 	_iov_alloc_buf(&iovs[5], 2 + 512 + 8 + 432);
@@ -2281,6 +2281,68 @@ _dif_update_crc32c_split_test(void)
 	free(buf);
 }
 
+static void
+dif_update_crc32c_stream_multi_segments_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct iovec iov = {};
+	uint8_t *buf;
+	uint32_t dif_flags, crc32c1, crc32c2;
+	int rc;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
+			       dif_flags, 22, 0xFFFF, 0x22, 0, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	buf = calloc(1, (4096 + 128) * 4);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
+	_iov_set_buf(&iov, buf, (4096 + 128) * 4);
+
+	rc = ut_data_pattern_generate(&iov, 1, 4096 + 128, 128, 4);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iov, 1, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	crc32c1 = UT_CRC32C_XOR;
+	crc32c2 = UT_CRC32C_XOR;
+
+	/* 1st data segment */
+	_iov_set_buf(&iov, buf, 1024);
+	spdk_dif_ctx_set_data_offset(&ctx, 0);
+
+	rc = spdk_dif_update_crc32c_stream(&iov, 1, 0, 1024, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	/* 2nd data segment */
+	_iov_set_buf(&iov, buf + 1024, (3072 + 128) + (4096 + 128) * 2 + 512);
+	spdk_dif_ctx_set_data_offset(&ctx, 1024);
+
+	rc = spdk_dif_update_crc32c_stream(&iov, 1, 0, 3072 + 4096 * 2 + 512, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	/* 3rd data segment */
+	_iov_set_buf(&iov, buf + (4096 + 128) * 3 + 512, 3584 + 128);
+	spdk_dif_ctx_set_data_offset(&ctx, 4096 * 3);
+
+	rc = spdk_dif_update_crc32c_stream(&iov, 1, 0, 3584, &crc32c1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	/* Update CRC32C for all data segments once */
+	_iov_set_buf(&iov, buf, (4096 + 128) * 4);
+	spdk_dif_ctx_set_data_offset(&ctx, 0);
+
+	rc = spdk_dif_update_crc32c(&iov, 1, 4, &crc32c2, &ctx);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(crc32c1 == crc32c2);
+
+	free(buf);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2379,7 +2441,9 @@ main(int argc, char **argv)
 			    dif_verify_stream_multi_segments_test) == NULL ||
 		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL ||
 		CU_add_test(suite, "_dif_update_crc32c_split_test",
-			    _dif_update_crc32c_split_test) == NULL
+			    _dif_update_crc32c_split_test) == NULL ||
+		CU_add_test(suite, "dif_update_crc32c_stream_multi_segments_test",
+			    dif_update_crc32c_stream_multi_segments_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
