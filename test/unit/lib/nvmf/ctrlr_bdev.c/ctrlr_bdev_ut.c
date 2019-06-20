@@ -46,11 +46,15 @@ DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), -1
 
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test");
 
+struct spdk_bdev {
+	uint32_t blocklen;
+	uint32_t md_len;
+};
+
 uint32_t
 spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 {
-	abort();
-	return 0;
+	return bdev->blocklen;
 }
 
 uint64_t
@@ -66,6 +70,22 @@ spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
 	abort();
 	return 0;
 }
+
+uint32_t
+spdk_bdev_get_md_size(const struct spdk_bdev *bdev)
+{
+	return bdev->md_len;
+}
+
+DEFINE_STUB(spdk_bdev_is_md_interleaved, bool, (const struct spdk_bdev *bdev), false);
+
+DEFINE_STUB(spdk_bdev_get_dif_type, enum spdk_dif_type,
+	    (const struct spdk_bdev *bdev), SPDK_DIF_DISABLE);
+
+DEFINE_STUB(spdk_bdev_is_dif_head_of_md, bool, (const struct spdk_bdev *bdev), false);
+
+DEFINE_STUB(spdk_bdev_is_dif_check_enabled, bool,
+	    (const struct spdk_bdev *bdev, enum spdk_dif_check_type check_type), false);
 
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
 	    (struct spdk_bdev_desc *desc), NULL);
@@ -155,6 +175,19 @@ spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem, struct sp
 DEFINE_STUB_V(spdk_bdev_io_get_nvme_status,
 	      (const struct spdk_bdev_io *bdev_io, int *sct, int *sc));
 
+int
+spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
+		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
+		  uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
+		  uint32_t data_offset, uint16_t guard_seed)
+{
+	ctx->block_size = block_size;
+	ctx->md_size = md_size;
+	ctx->init_ref_tag = init_ref_tag;
+
+	return 0;
+}
+
 static void
 test_get_rw_params(void)
 {
@@ -191,6 +224,30 @@ test_lba_in_range(void)
 	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(UINT64_MAX, UINT64_MAX, 1) == false);
 }
 
+static void
+test_get_dif_ctx(void)
+{
+	struct spdk_bdev bdev = {};
+	struct spdk_nvme_cmd cmd = {};
+	struct spdk_dif_ctx dif_ctx = {};
+	bool ret;
+
+	bdev.md_len = 0;
+
+	ret = spdk_nvmf_bdev_ctrlr_get_dif_ctx(&bdev, &cmd, &dif_ctx);
+	CU_ASSERT(ret == false);
+
+	to_le64(&cmd.cdw10, 0x1234567890ABCDEF);
+	bdev.blocklen = 520;
+	bdev.md_len = 8;
+
+	ret = spdk_nvmf_bdev_ctrlr_get_dif_ctx(&bdev, &cmd, &dif_ctx);
+	CU_ASSERT(ret == true);
+	CU_ASSERT(dif_ctx.block_size = 520);
+	CU_ASSERT(dif_ctx.md_size == 8);
+	CU_ASSERT(dif_ctx.init_ref_tag == 0x90ABCDEF);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -208,7 +265,8 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "get_rw_params", test_get_rw_params) == NULL ||
-		CU_add_test(suite, "lba_in_range", test_lba_in_range) == NULL
+		CU_add_test(suite, "lba_in_range", test_lba_in_range) == NULL ||
+		CU_add_test(suite, "get_dif_ctx", test_get_dif_ctx) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
