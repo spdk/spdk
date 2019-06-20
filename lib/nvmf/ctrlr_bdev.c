@@ -519,3 +519,38 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_d
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
+
+bool
+spdk_nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
+				 struct spdk_dif_ctx *dif_ctx)
+{
+	uint32_t init_ref_tag, dif_check_flags = 0;
+	int rc;
+
+	if (spdk_bdev_get_md_size(bdev) == 0) {
+		return false;
+	}
+
+	/* Initial Reference Tag is the lower 32 bits of the start LBA. */
+	init_ref_tag = (uint32_t)from_le64(&cmd->cdw10);
+
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
+		dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
+	}
+
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
+		dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
+	}
+
+	rc = spdk_dif_ctx_init(dif_ctx,
+			       spdk_bdev_get_block_size(bdev),
+			       spdk_bdev_get_md_size(bdev),
+			       spdk_bdev_is_md_interleaved(bdev),
+			       spdk_bdev_is_dif_head_of_md(bdev),
+			       spdk_bdev_get_dif_type(bdev),
+			       dif_check_flags,
+			       init_ref_tag, 0, 0, 0, 0);
+
+	return (rc == 0) ? true : false;
+}
+
