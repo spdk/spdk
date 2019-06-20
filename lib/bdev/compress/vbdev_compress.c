@@ -96,6 +96,8 @@ struct comp_device_qp {
 static TAILQ_HEAD(, comp_device_qp) g_comp_device_qp = TAILQ_HEAD_INITIALIZER(g_comp_device_qp);
 static pthread_mutex_t g_comp_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 
+static int g_reduce_errno;
+
 /* For queueing up compression operations that we can't submit for some reason */
 struct vbdev_comp_op {
 	struct spdk_reduce_backing_dev	*backing_dev;
@@ -926,6 +928,7 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	spdk_bdev_close(meta_ctx->base_desc);
 	meta_ctx->base_desc = NULL;
 
+	g_reduce_errno = reduce_errno;
 	if (reduce_errno == 0) {
 		meta_ctx->vol = vol;
 		vbdev_compress_claim(meta_ctx);
@@ -1101,7 +1104,7 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 }
 
 /* Call reducelib to initialize a new volume */
-static void
+static int
 vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, const char *comp_pmd)
 {
 	struct vbdev_compress *meta_ctx;
@@ -1109,7 +1112,7 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, const char *comp_
 
 	meta_ctx = _prepare_for_load_init(bdev);
 	if (meta_ctx == NULL) {
-		return;
+		return -ENOMEM;
 	}
 
 	rc = spdk_bdev_open(meta_ctx->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
@@ -1117,7 +1120,7 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, const char *comp_
 	if (rc) {
 		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
 		free(meta_ctx);
-		return;
+		return rc;
 	}
 	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
 
@@ -1129,6 +1132,7 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *pm_path, const char *comp_
 			     pm_path,
 			     vbdev_reduce_init_cb,
 			     meta_ctx);
+	return g_reduce_errno;
 }
 
 /* We provide this callback for the SPDK channel code to create a channel using
@@ -1233,8 +1237,7 @@ create_compress_bdev(const char *bdev_name, const char *pm_path, const char *com
 		return -ENODEV;
 	}
 
-	vbdev_init_reduce(bdev, pm_path, comp_pmd);
-	return 0;
+	return vbdev_init_reduce(bdev, pm_path, comp_pmd);
 }
 
 /* On init, just init the compress drivers. All metadata is stored on disk. */
