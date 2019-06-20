@@ -2233,6 +2233,54 @@ update_crc32c_test(void)
 	}
 }
 
+static void
+_dif_update_crc32c_split_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct iovec iov;
+	uint8_t *buf;
+	struct _dif_sgl sgl;
+	uint32_t dif_flags, crc32c, prev_crc32c;
+	int rc;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
+			       dif_flags, 0, 0, 0, 0, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	buf = calloc(1, 4096 + 128);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
+	_iov_set_buf(&iov, buf, 4096 + 128);
+
+	rc = ut_data_pattern_generate(&iov, 1, 4096 + 128, 128, 1);
+	CU_ASSERT(rc == 0);
+
+	_dif_sgl_init(&sgl, &iov, 1);
+
+	dif_generate(&sgl, 1, &ctx);
+
+	_dif_sgl_init(&sgl, &iov, 1);
+
+	crc32c = _dif_update_crc32c_split(&sgl, 0, 1000, UT_CRC32C_XOR, &ctx);
+	CU_ASSERT(crc32c == spdk_crc32c_update(buf, 1000, UT_CRC32C_XOR));
+
+	prev_crc32c = crc32c;
+
+	crc32c = _dif_update_crc32c_split(&sgl, 1000, 3000, prev_crc32c, &ctx);
+	CU_ASSERT(crc32c == spdk_crc32c_update(buf + 1000, 3000, prev_crc32c));
+
+	prev_crc32c = crc32c;
+
+	crc32c = _dif_update_crc32c_split(&sgl, 4000, 96 + 128, prev_crc32c, &ctx);
+	CU_ASSERT(crc32c == spdk_crc32c_update(buf + 4000, 96, prev_crc32c));
+
+	CU_ASSERT(crc32c == spdk_crc32c_update(buf, 4096, UT_CRC32C_XOR));
+
+	free(buf);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2329,7 +2377,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "_dif_verify_split_test", _dif_verify_split_test) == NULL ||
 		CU_add_test(suite, "dif_verify_stream_multi_segments_test",
 			    dif_verify_stream_multi_segments_test) == NULL ||
-		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL
+		CU_add_test(suite, "update_crc32c_test", update_crc32c_test) == NULL ||
+		CU_add_test(suite, "_dif_update_crc32c_split_test",
+			    _dif_update_crc32c_split_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
