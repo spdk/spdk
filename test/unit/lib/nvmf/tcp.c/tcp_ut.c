@@ -495,7 +495,7 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 {
 	struct spdk_nvmf_tcp_transport ttransport;
 	struct spdk_nvmf_tcp_qpair tqpair;
-	struct nvme_tcp_pdu pdu;
+	struct nvme_tcp_pdu pdu = {};
 	struct spdk_nvmf_tcp_req tcp_req;
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 
