@@ -346,7 +346,8 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 
 	if (blob->active.num_clusters) {
 		assert(blob->active.clusters);
-		clusters = calloc(blob->active.num_clusters, sizeof(*blob->active.clusters));
+		assert(blob->active.num_clusters);
+        clusters = calloc(blob->active.num_clusters, sizeof(*blob->active.clusters));
 		if (!clusters) {
 			return -ENOMEM;
 		}
