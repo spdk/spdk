@@ -499,6 +499,9 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		comp_op->private_xform = comp_bdev->device_qp->device->decomp_xform;
 	}
 
+	comp_op->op_type = RTE_COMP_OP_STATELESS;
+	comp_op->flush_flag = RTE_COMP_FLUSH_FINAL;
+
 	rc = rte_compressdev_enqueue_burst(cdev_id, comp_bdev->device_qp->qp, &comp_op, 1);
 	assert(rc <= 1);
 
