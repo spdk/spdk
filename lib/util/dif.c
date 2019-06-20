@@ -1644,3 +1644,40 @@ spdk_dif_verify_stream(struct iovec *iovs, int iovcnt,
 error:
 	return rc;
 }
+
+int
+spdk_dif_update_crc32c_stream(struct iovec *iovs, int iovcnt,
+			      uint32_t data_offset, uint32_t data_len,
+			      uint32_t *_crc32c, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t buf_len = 0, buf_offset = 0, len, offset_in_block;
+	uint32_t crc32c;
+	struct _dif_sgl sgl;
+	int rc;
+
+	if (iovs == NULL || iovcnt == 0) {
+		return -EINVAL;
+	}
+
+	crc32c = *_crc32c;
+	_dif_sgl_init(&sgl, iovs, iovcnt);
+
+	rc = _dif_sgl_setup_stream(&sgl, &buf_offset, &buf_len, data_offset, data_len, ctx);
+	if (rc != 0) {
+		return rc;
+	}
+
+	while (buf_len != 0) {
+		len = spdk_min(buf_len, _to_next_boundary(buf_offset, ctx->block_size));
+		offset_in_block = buf_offset % ctx->block_size;
+
+		crc32c = _dif_update_crc32c_split(&sgl, offset_in_block, len, crc32c, ctx);
+
+		buf_len -= len;
+		buf_offset += len;
+	}
+
+	*_crc32c = crc32c;
+
+	return 0;
+}
