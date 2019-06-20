@@ -366,4 +366,20 @@ int spdk_dif_verify_stream(struct iovec *iovs, int iovcnt,
 			   uint32_t data_offset, uint32_t data_len,
 			   struct spdk_dif_ctx *ctx,
 			   struct spdk_dif_error *err_blk);
+
+/**
+ * Calculate CRC-32C checksum of the specified range in the extended LBA payload.
+ *
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param data_offset Offset to the range
+ * \param data_len Length of the range
+ * \param crc32c Initial and updated CRC-32C value.
+ * \param ctx DIF context.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_update_crc32c_stream(struct iovec *iovs, int iovcnt,
+				  uint32_t data_offset, uint32_t data_len,
+				  uint32_t *crc32c, const struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
