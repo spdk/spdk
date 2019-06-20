@@ -175,6 +175,101 @@ test_nvme_tcp_build_iovs(void)
 	CU_ASSERT(iovs[1].iov_len == 4096 * 2);
 }
 
+static void
+test_nvme_tcp_pdu_set_data_buf_with_md(void)
+{
+	struct nvme_tcp_pdu pdu = {};
+	struct iovec iovs[7] = {};
+	struct spdk_dif_ctx dif_ctx = {};
+	int rc;
+
+	pdu.dif_ctx = &dif_ctx;
+
+	rc = spdk_dif_ctx_init(&dif_ctx, 520, 8, true, false, SPDK_DIF_DISABLE, 0,
+			       0, 0, 0, 0, 0);
+	CU_ASSERT(rc == 0);
+
+	/* Single iovec case */
+	iovs[0].iov_base = (void *)0xDEADBEEF;
+	iovs[0].iov_len = 2080;
+
+	nvme_tcp_pdu_set_data_buf(&pdu, iovs, 1, 0, 500);
+
+	CU_ASSERT(dif_ctx.data_offset == 0);
+	CU_ASSERT(pdu.data_len == 500);
+	CU_ASSERT(pdu.data_iovcnt == 1);
+	CU_ASSERT(pdu.data_iov[0].iov_base == (void *)0xDEADBEEF);
+	CU_ASSERT(pdu.data_iov[0].iov_len == 500);
+
+	nvme_tcp_pdu_set_data_buf(&pdu, iovs, 1, 500, 1000);
+
+	CU_ASSERT(dif_ctx.data_offset == 500);
+	CU_ASSERT(pdu.data_len == 1000);
+	CU_ASSERT(pdu.data_iovcnt == 1);
+	CU_ASSERT(pdu.data_iov[0].iov_base == (void *)(0xDEADBEEF + 500));
+	CU_ASSERT(pdu.data_iov[0].iov_len == 1016);
+
+	nvme_tcp_pdu_set_data_buf(&pdu, iovs, 1, 1500, 548);
+
+	CU_ASSERT(dif_ctx.data_offset == 1500);
+	CU_ASSERT(pdu.data_len == 548);
+	CU_ASSERT(pdu.data_iovcnt == 1);
+	CU_ASSERT(pdu.data_iov[0].iov_base == (void *)(0xDEADBEEF + 1516));
+	CU_ASSERT(pdu.data_iov[0].iov_len == 564);
+
+	/* Multiple iovecs case */
+	iovs[0].iov_base = (void *)0xDEADBEEF;
+	iovs[0].iov_len = 256;
+	iovs[1].iov_base = (void *)((uint8_t *)(0xDEADBEEF + 0x1000));
+	iovs[1].iov_len = 256 + 1;
+	iovs[2].iov_base = (void *)((uint8_t *)(0xDEADBEEF + 0x2000));
+	iovs[2].iov_len = 4;
+	iovs[3].iov_base = (void *)((uint8_t *)(0xDEADBEEF + 0x3000));
+	iovs[3].iov_len = 3 + 123;
+	iovs[4].iov_base = (void *)((uint8_t *)(0xDEADBEEF + 0x4000));
+	iovs[4].iov_len = 389 + 6;
+	iovs[5].iov_base = (void *)((uint8_t *)(0xDEADBEEF + 0x5000));
+	iovs[5].iov_len = 2 + 512 + 8 + 432;
+	iovs[6].iov_base = (void *)((uint8_t *)(0xDEADBEEF + 0x6000));
+	iovs[6].iov_len = 80 + 8;
+
+	nvme_tcp_pdu_set_data_buf(&pdu, iovs, 7, 0, 500);
+
+	CU_ASSERT(dif_ctx.data_offset == 0);
+	CU_ASSERT(pdu.data_len == 500);
+	CU_ASSERT(pdu.data_iovcnt == 2);
+	CU_ASSERT(pdu.data_iov[0].iov_base == (void *)0xDEADBEEF);
+	CU_ASSERT(pdu.data_iov[0].iov_len == 256);
+	CU_ASSERT(pdu.data_iov[1].iov_base == (void *)(0xDEADBEEF + 0x1000));
+	CU_ASSERT(pdu.data_iov[1].iov_len == 244);
+
+	nvme_tcp_pdu_set_data_buf(&pdu, iovs, 7, 500, 1000);
+
+	CU_ASSERT(dif_ctx.data_offset == 500);
+	CU_ASSERT(pdu.data_len == 1000);
+	CU_ASSERT(pdu.data_iovcnt == 5);
+	CU_ASSERT(pdu.data_iov[0].iov_base == (void *)(0xDEADBEEF + 0x1000 + 244));
+	CU_ASSERT(pdu.data_iov[0].iov_len == 13);
+	CU_ASSERT(pdu.data_iov[1].iov_base == (void *)(0xDEADBEEF + 0x2000));
+	CU_ASSERT(pdu.data_iov[1].iov_len == 4);
+	CU_ASSERT(pdu.data_iov[2].iov_base == (void *)(0xDEADBEEF + 0x3000));
+	CU_ASSERT(pdu.data_iov[2].iov_len == 3 + 123);
+	CU_ASSERT(pdu.data_iov[3].iov_base == (void *)(0xDEADBEEF + 0x4000));
+	CU_ASSERT(pdu.data_iov[3].iov_len == 395);
+	CU_ASSERT(pdu.data_iov[4].iov_base == (void *)(0xDEADBEEF + 0x5000));
+	CU_ASSERT(pdu.data_iov[4].iov_len == 478);
+
+	nvme_tcp_pdu_set_data_buf(&pdu, iovs, 7, 1500, 548);
+
+	CU_ASSERT(dif_ctx.data_offset == 1500);
+	CU_ASSERT(pdu.data_len == 548);
+	CU_ASSERT(pdu.data_iovcnt == 2);
+	CU_ASSERT(pdu.data_iov[0].iov_base == (void *)(0xDEADBEEF + 0x5000 + 478));
+	CU_ASSERT(pdu.data_iov[0].iov_len == 476);
+	CU_ASSERT(pdu.data_iov[1].iov_base == (void *)(0xDEADBEEF + 0x6000));
+	CU_ASSERT(pdu.data_iov[1].iov_len == 88);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -193,7 +288,9 @@ int main(int argc, char **argv)
 	if (CU_add_test(suite, "nvme_tcp_pdu_set_data_buf",
 			test_nvme_tcp_pdu_set_data_buf) == NULL ||
 	    CU_add_test(suite, "nvme_tcp_build_iovs",
-			test_nvme_tcp_build_iovs) == NULL
+			test_nvme_tcp_build_iovs) == NULL ||
+	    CU_add_test(suite, "nvme_tcp_pdu_set_data_buf_with_md",
+			test_nvme_tcp_pdu_set_data_buf_with_md) == NULL
 	   ) {
 		CU_cleanup_registry();
 		return CU_get_error();
