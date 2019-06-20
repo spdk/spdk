@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b0efadf6_e6c14235",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-20T14:22:36Z",
+      "side": 1,
+      "message": "good suggestion, thanks!",
+      "parentUuid": "d1037c35_ae02af8b",
+      "revId": "12337568cdf6ed4ab945a23fb80bcf75eb34f2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c0dd1791_f0b8b0ac",
         "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
         "patchSetId": 22
@@ -39,6 +57,30 @@
       "revId": "12337568cdf6ed4ab945a23fb80bcf75eb34f2da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21af9b88_ab116914",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-20T14:22:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c0dd1791_f0b8b0ac",
+      "range": {
+        "startLine": 56,
+        "startChar": 5,
+        "endLine": 56,
+        "endChar": 15
+      },
+      "revId": "12337568cdf6ed4ab945a23fb80bcf75eb34f2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
