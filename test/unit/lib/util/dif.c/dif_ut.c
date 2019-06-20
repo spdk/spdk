@@ -2343,6 +2343,36 @@ dif_update_crc32c_stream_multi_segments_test(void)
 	free(buf);
 }
 
+static void
+get_range_with_md_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	uint32_t buf_offset, buf_len;
+	int rc;
+
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, 0, 0, 0, 0, 0, 0, 0);
+	CU_ASSERT(rc == 0);
+
+	spdk_dif_get_range_with_md(0, 2048, &buf_offset, &buf_len, &ctx);
+	CU_ASSERT(buf_offset == 0);
+	CU_ASSERT(buf_len == 2048);
+
+	spdk_dif_get_range_with_md(2048, 4096, &buf_offset, &buf_len, &ctx);
+	CU_ASSERT(buf_offset == 2048);
+	CU_ASSERT(buf_len == 4096 + 128);
+
+	spdk_dif_get_range_with_md(4096, 10240, &buf_offset, &buf_len, &ctx);
+	CU_ASSERT(buf_offset == 4096 + 128);
+	CU_ASSERT(buf_len == 10240 + 256);
+
+	spdk_dif_get_range_with_md(10240, 2048, &buf_offset, &buf_len, &ctx);
+	CU_ASSERT(buf_offset == 10240 + 256);
+	CU_ASSERT(buf_len == 2048 + 128);
+
+	buf_len = spdk_dif_get_length_with_md(6144, &ctx);
+	CU_ASSERT(buf_len == 6144 + 128);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2443,7 +2473,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "_dif_update_crc32c_split_test",
 			    _dif_update_crc32c_split_test) == NULL ||
 		CU_add_test(suite, "dif_update_crc32c_stream_multi_segments_test",
-			    dif_update_crc32c_stream_multi_segments_test) == NULL
+			    dif_update_crc32c_stream_multi_segments_test) == NULL ||
+		CU_add_test(suite, "get_range_with_md_test", get_range_with_md_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

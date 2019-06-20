@@ -1682,3 +1682,48 @@ spdk_dif_update_crc32c_stream(struct iovec *iovs, int iovcnt,
 
 	return 0;
 }
+
+void
+spdk_dif_get_range_with_md(uint32_t data_offset, uint32_t data_len,
+			   uint32_t *_buf_offset, uint32_t *_buf_len,
+			   const struct spdk_dif_ctx *ctx)
+{
+	uint32_t data_block_size, data_unalign, buf_offset, buf_len;
+
+	if (!ctx->md_interleave) {
+		buf_offset = data_offset;
+		buf_len = data_len;
+	} else {
+		data_block_size = ctx->block_size - ctx->md_size;
+
+		data_unalign = data_offset % data_block_size;
+
+		buf_offset = (data_offset / data_block_size) * ctx->block_size +
+			     (data_offset % data_block_size);
+		buf_len = ((data_unalign + data_len) / data_block_size) * ctx->block_size +
+			  ((data_unalign + data_len) % data_block_size) - data_unalign;
+	}
+
+	if (_buf_offset != NULL) {
+		*_buf_offset = buf_offset;
+	}
+
+	if (_buf_len != NULL) {
+		*_buf_len = buf_len;
+	}
+}
+
+uint32_t
+spdk_dif_get_length_with_md(uint32_t data_len, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t data_block_size;
+
+	if (!ctx->md_interleave) {
+		return data_len;
+	} else {
+		data_block_size = ctx->block_size - ctx->md_size;
+
+		return (data_len / data_block_size) * ctx->block_size +
+		       (data_len % data_block_size);
+	}
+}
