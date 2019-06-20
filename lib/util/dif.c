@@ -712,27 +712,28 @@ dif_update_crc32c(struct _dif_sgl *sgl, uint32_t num_blocks,
 }
 
 static uint32_t
-_dif_update_crc32c_split(struct _dif_sgl *sgl, uint32_t crc32c,
-			 const struct spdk_dif_ctx *ctx)
+_dif_update_crc32c_split(struct _dif_sgl *sgl, uint32_t offset_in_block, uint32_t data_len,
+			 uint32_t crc32c, const struct spdk_dif_ctx *ctx)
 {
-	uint32_t data_block_size, offset_in_block, buf_len;
+	uint32_t data_block_size, buf_len;
 	void *buf;
 
 	data_block_size = ctx->block_size - ctx->md_size;
-	offset_in_block = 0;
 
-	while (offset_in_block < ctx->block_size) {
+	assert(offset_in_block + data_len <= ctx->block_size);
+
+	while (data_len != 0) {
 		_dif_sgl_get_buf(sgl, &buf, &buf_len);
+		buf_len = spdk_min(buf_len, data_len);
 
 		if (offset_in_block < data_block_size) {
 			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
 			crc32c = spdk_crc32c_update(buf, buf_len, crc32c);
-		} else {
-			buf_len = spdk_min(buf_len, ctx->block_size - offset_in_block);
 		}
 
 		_dif_sgl_advance(sgl, buf_len);
 		offset_in_block += buf_len;
+		data_len -= buf_len;
 	}
 
 	return crc32c;
@@ -745,7 +746,7 @@ dif_update_crc32c_split(struct _dif_sgl *sgl, uint32_t num_blocks,
 	uint32_t offset_blocks;
 
 	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
-		crc32c = _dif_update_crc32c_split(sgl, crc32c, ctx);
+		crc32c = _dif_update_crc32c_split(sgl, 0, ctx->block_size, crc32c, ctx);
 	}
 
 	return crc32c;
