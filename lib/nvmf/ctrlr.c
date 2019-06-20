@@ -2606,3 +2606,53 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		spdk_nvmf_request_complete(req);
 	}
 }
+
+static bool
+spdk_nvmf_ctrlr_get_dif_ctx(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
+			    struct spdk_dif_ctx *dif_ctx)
+{
+	struct spdk_nvmf_ns *ns;
+	struct spdk_bdev *bdev;
+
+	if (ctrlr == NULL || cmd == NULL) {
+		return false;
+	}
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		return false;
+	}
+
+	bdev = ns->bdev;
+
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_READ:
+	case SPDK_NVME_OPC_WRITE:
+	case SPDK_NVME_OPC_COMPARE:
+		return spdk_nvmf_bdev_ctrlr_get_dif_ctx(bdev, cmd, dif_ctx);
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool
+spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+
+	if (spdk_unlikely(qpair->state != SPDK_NVMF_QPAIR_ACTIVE)) {
+		return false;
+	}
+
+	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
+		return false;
+	}
+
+	if (spdk_unlikely(spdk_nvmf_qpair_is_admin_queue(qpair))) {
+		return false;
+	}
+
+	return spdk_nvmf_ctrlr_get_dif_ctx(qpair->ctrlr, &req->cmd->nvme_cmd, dif_ctx);
+}
