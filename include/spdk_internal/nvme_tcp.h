@@ -166,18 +166,32 @@ nvme_tcp_pdu_calc_header_digest(struct nvme_tcp_pdu *pdu)
 }
 
 static uint32_t
+_update_crc32c_iov(struct iovec *iov, int iovcnt, uint32_t crc32c)
+{
+	int i;
+
+	for (i = 0; i < iovcnt; i++) {
+		assert(iov[i].iov_base != NULL);
+		assert(iov[i].iov_len != 0);
+		crc32c = spdk_crc32c_update(iov[i].iov_base, iov[i].iov_len, crc32c);
+	}
+
+	return crc32c;
+}
+
+static uint32_t
 nvme_tcp_pdu_calc_data_digest(struct nvme_tcp_pdu *pdu)
 {
 	uint32_t crc32c = SPDK_CRC32C_XOR;
 	uint32_t mod;
-	uint32_t i;
 
 	assert(pdu->data_len != 0);
 
-	for (i = 0; i < pdu->data_iovcnt; i++) {
-		assert(pdu->data_iov[i].iov_base != NULL);
-		assert(pdu->data_iov[i].iov_len != 0);
-		crc32c = spdk_crc32c_update(pdu->data_iov[i].iov_base, pdu->data_iov[i].iov_len, crc32c);
+	if (spdk_likely(!pdu->dif_ctx)) {
+		crc32c = _update_crc32c_iov(pdu->data_iov, pdu->data_iovcnt, crc32c);
+	} else {
+		spdk_dif_update_crc32c_stream(pdu->data_iov, pdu->data_iovcnt,
+					      0, pdu->data_len, &crc32c, pdu->dif_ctx);
 	}
 
 	mod = pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT;
