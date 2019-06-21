@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b0c40578_c643b5b4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-21T08:05:31Z",
+      "side": 1,
+      "message": "Actually we don\u0027t want to pollute rpc.py with every test rpc definition. Tomek added test/bdev/bdevio/tests.py recently for some bdevio-specific RPCs and here we could do similarly.",
+      "revId": "9542ba6224fa100c5ce48ce5d2a738b9a0ddcd69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "67307c16_596ea3d6",
         "filename": "test/app/fuzz/vhost_fuzz/example.json",
         "patchSetId": 14
