@@ -333,6 +333,17 @@ function process_shm() {
 	return 0
 }
 
+rpc_cmdsock="/tmp/rpc_cmdsock"
+
+function rpc_cmd() {
+	set +x
+	local cmd="$@"
+	local response="$(nc -U "$rpc_cmdsock" <<< "$cmd")"
+	echo "${response:1}"
+	set -x
+	[ "${response:0:1}" = "0" ]
+}
+
 function waitforlisten() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
