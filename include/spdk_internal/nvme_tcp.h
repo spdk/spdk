@@ -35,6 +35,7 @@
 #define SPDK_INTERNAL_NVME_TCP_H
 
 #include "spdk/sock.h"
+#include "spdk/dif.h"
 
 #define SPDK_CRC32C_XOR				0xffffffffUL
 #define SPDK_NVME_TCP_DIGEST_LEN		4
@@ -117,6 +118,8 @@ struct nvme_tcp_pdu {
 	uint32_t					remaining;
 	uint32_t					padding_len;
 	struct _nvme_tcp_sgl				sgl;
+
+	struct spdk_dif_ctx				*dif_ctx;
 
 	void						*ctx; /* data tied to a tcp request */
 };
