@@ -22,6 +22,30 @@
       "revId": "1c9e0f517c8c0ec8d39dde4b87c7ec2d87caf619",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e0fb93c_b7c6f56c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1852,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-21T07:58:14Z",
+      "side": 1,
+      "message": "Done, thanks.",
+      "parentUuid": "d60da347_20074d70",
+      "range": {
+        "startLine": 1851,
+        "startChar": 7,
+        "endLine": 1852,
+        "endChar": 19
+      },
+      "revId": "1c9e0f517c8c0ec8d39dde4b87c7ec2d87caf619",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
