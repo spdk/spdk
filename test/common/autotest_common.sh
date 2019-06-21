@@ -233,6 +233,43 @@ for i in "$@"; do
 	esac
 done
 
+rpc_input_pipe="/tmp/rpc_input"
+rpc_output_pipe="/tmp/rpc_output"
+
+function rpc_cmd() {
+	echo "$@" >&$rpc_input_fd
+	exec {rpc_output_fd}<"$rpc_output_pipe"
+	read -n1 rc <&$rpc_output_fd
+	cat <&$rpc_output_fd
+	eval "exec $rpc_output_fd>&-"
+	[ "$rc" = "0" ]
+}
+
+# initialize rpc.py daemon if it's not up yet
+if [ -z "$rpc_input_fd" ]; then
+	xtrace_restore
+	rm -f "$rpc_input_pipe"
+	rm -f "$rpc_output_pipe"
+	mkfifo "$rpc_input_pipe"
+
+	$rootdir/scripts/rpc.py -i "$rpc_input_pipe" -o "$rpc_output_pipe" &
+	rpc_pid=$!
+
+	# make sure it didn't fail right away
+	sleep 0.5
+	kill -0 $rpc_pid
+
+	# rpc.py will shut down automatically once this pipe is closed
+	# (after this bash process exists)
+	exec {rpc_input_fd}>"$rpc_input_pipe"
+	export rpc_input_fd
+
+	# since input pipe is readable already, make sure output pipe
+	# is ready as well
+	ls "$rpc_output_pipe"
+	xtrace_disable
+fi
+
 function timing() {
 	direction="$1"
 	testname="$2"
@@ -800,6 +837,8 @@ function autotest_cleanup()
 		fi
 	fi
 	rm -rf "$asan_suppression_file"
+	rm -f "$rpc_input_pipe"
+	rm -f "$rpc_output_pipe"
 }
 
 function freebsd_update_contigmem_mod()
