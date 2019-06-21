@@ -1316,6 +1316,7 @@ spdk_nvmf_tcp_capsule_cmd_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	if (spdk_unlikely(ttransport->transport.opts.dif_mode == SPDK_NVMF_DIF_MODE_LOCAL)) {
 		if (spdk_nvmf_request_get_dif_ctx(&tcp_req->req, &tcp_req->dif_ctx)) {
 			tcp_req->dif_insert_or_strip = true;
+			pdu->dif_ctx = &tcp_req->dif_ctx;
 		}
 	}
 
@@ -1417,6 +1418,11 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	pdu->ctx = tcp_req;
+
+	if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
+		pdu->dif_ctx = &tcp_req->dif_ctx;
+	}
+
 	nvme_tcp_pdu_set_data_buf(pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
 				  h2c_data->datao, h2c_data->datal);
 	spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
@@ -2264,10 +2270,14 @@ spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	c2h_data->common.plen = plen;
 
+	if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
+		rsp_pdu->dif_ctx = &tcp_req->dif_ctx;
+	}
+
 	nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
 				  c2h_data->datao, c2h_data->datal);
 
-	if (spdk_unlikely(rsp_pdu->dif_ctx != NULL)) {
+	if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
 		rc = nvmf_tcp_pdu_verify_dif(rsp_pdu, rsp_pdu->dif_ctx);
 		if (rc != 0) {
 			tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
