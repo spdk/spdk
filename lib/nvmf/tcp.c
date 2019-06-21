@@ -1312,6 +1312,13 @@ spdk_nvmf_tcp_capsule_cmd_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	pdu->ctx = tcp_req;
+
+	if (spdk_unlikely(ttransport->transport.opts.dif_mode == SPDK_NVMF_DIF_MODE_LOCAL)) {
+		if (spdk_nvmf_request_get_dif_ctx(&tcp_req->req, &tcp_req->dif_ctx)) {
+			tcp_req->dif_insert_or_strip = true;
+		}
+	}
+
 	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_NEW);
 	spdk_nvmf_tcp_req_process(ttransport, tcp_req);
 	return;
