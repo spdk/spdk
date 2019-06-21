@@ -103,7 +103,8 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 void
-spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata)
+spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
+				 enum spdk_nvmf_dif_mode dif_mode)
 {
 	struct spdk_bdev *bdev = ns->bdev;
 	uint64_t num_blocks;
@@ -115,32 +116,44 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_da
 	nsdata->nuse = num_blocks;
 	nsdata->nlbaf = 0;
 	nsdata->flbas.format = 0;
-	nsdata->lbaf[0].ms = spdk_bdev_get_md_size(bdev);
-	nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_block_size(bdev));
-	if (nsdata->lbaf[0].ms != 0) {
-		nsdata->flbas.extended = 1;
-		nsdata->mc.extended = 1;
-		nsdata->mc.pointer = 0;
-		nsdata->dps.md_start = spdk_bdev_is_dif_head_of_md(bdev);
+	switch (dif_mode) {
+	case SPDK_NVMF_DIF_MODE_E2E:
+		nsdata->lbaf[0].ms = spdk_bdev_get_md_size(bdev);
+		nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_block_size(bdev));
+		if (nsdata->lbaf[0].ms != 0) {
+			nsdata->flbas.extended = 1;
+			nsdata->mc.extended = 1;
+			nsdata->mc.pointer = 0;
+			nsdata->dps.md_start = spdk_bdev_is_dif_head_of_md(bdev);
 
-		switch (spdk_bdev_get_dif_type(bdev)) {
-		case SPDK_DIF_TYPE1:
-			nsdata->dpc.pit1 = 1;
-			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
-			break;
-		case SPDK_DIF_TYPE2:
-			nsdata->dpc.pit2 = 1;
-			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE2;
-			break;
-		case SPDK_DIF_TYPE3:
-			nsdata->dpc.pit3 = 1;
-			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE3;
-			break;
-		default:
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Protection Disabled\n");
-			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
-			break;
+			switch (spdk_bdev_get_dif_type(bdev)) {
+			case SPDK_DIF_TYPE1:
+				nsdata->dpc.pit1 = 1;
+				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
+				break;
+			case SPDK_DIF_TYPE2:
+				nsdata->dpc.pit2 = 1;
+				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE2;
+				break;
+			case SPDK_DIF_TYPE3:
+				nsdata->dpc.pit3 = 1;
+				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE3;
+				break;
+			default:
+				SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Protection Disabled\n");
+				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
+				break;
+			}
 		}
+		break;
+	case SPDK_NVMF_DIF_MODE_LOCAL:
+		nsdata->lbaf[0].ms = 0;
+		nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_data_block_size(bdev));
+		break;
+	default:
+		SPDK_ERRLOG("Unknown DIF mode\n");
+		assert(false);
+		break;
 	}
 	nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
 	nsdata->nmic.can_share = 1;
