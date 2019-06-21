@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51ab56c3_08ea4cbc",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-21T08:57:37Z",
+      "side": 1,
+      "message": "From the functional perspective, this doesn\u0027t make sense.\n\nTAILQ_FOREACH can\u0027t iterate through elements that are not on the list, otherwise it would be completely broken.\n\nI\u0027m guessing the case here is that scan build gets confused by double pointers in tailqs. We should probably fix it (or work around it) on tailq level. Doing workarounds on case-by-case basis in particular modules just bloats the code and will be confusing in future.",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 52
+      },
+      "revId": "f2d8c9316de87947aeea05a9b860258f1bf5aca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
