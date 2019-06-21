@@ -177,6 +177,7 @@ cleanup_pci_devices(void)
 {
 	struct spdk_pci_device *dev, *tmp;
 
+	pthread_mutex_lock(&g_pci_mutex);
 	/* cleanup removed devices */
 	TAILQ_FOREACH_SAFE(dev, &g_pci_devices, internal.tailq, tmp) {
 		if (!dev->internal.removed) {
@@ -194,6 +195,7 @@ cleanup_pci_devices(void)
 		TAILQ_INSERT_TAIL(&g_pci_devices, dev, internal.tailq);
 		spdk_vtophys_pci_device_added(dev->dev_handle);
 	}
+	pthread_mutex_unlock(&g_pci_mutex);
 }
 
 void
@@ -340,9 +342,7 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 	dev->internal.attached = false;
 	dev->detach(dev);
 
-	pthread_mutex_lock(&g_pci_mutex);
 	cleanup_pci_devices();
-	pthread_mutex_unlock(&g_pci_mutex);
 }
 
 int
@@ -356,9 +356,7 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 
 	spdk_pci_addr_fmt(bdf, sizeof(bdf), pci_address);
 
-	pthread_mutex_lock(&g_pci_mutex);
 	cleanup_pci_devices();
-	pthread_mutex_unlock(&g_pci_mutex);
 
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		if (spdk_pci_addr_compare(&dev->addr, pci_address) == 0) {
@@ -409,9 +407,7 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	driver->cb_arg = NULL;
 	driver->cb_fn = NULL;
 
-	pthread_mutex_lock(&g_pci_mutex);
 	cleanup_pci_devices();
-	pthread_mutex_unlock(&g_pci_mutex);
 	return rc == 0 ? 0 : -1;
 }
 
@@ -427,8 +423,9 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 	struct spdk_pci_device *dev;
 	int rc;
 
-	pthread_mutex_lock(&g_pci_mutex);
 	cleanup_pci_devices();
+
+	pthread_mutex_lock(&g_pci_mutex);
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		if (dev->internal.attached ||
 		    dev->internal.driver != driver ||
@@ -463,9 +460,7 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 	driver->cb_arg = NULL;
 	driver->cb_fn = NULL;
 
-	pthread_mutex_lock(&g_pci_mutex);
 	cleanup_pci_devices();
-	pthread_mutex_unlock(&g_pci_mutex);
 	return 0;
 }
 
