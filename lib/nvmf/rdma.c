@@ -1658,6 +1658,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 
 	/* The first WR must always be the embedded data WR. This is how we unwind them later. */
 	current_wr = &rdma_req->data.wr;
+	assert(current_wr != NULL);
 
 	req->iovcnt = 0;
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
