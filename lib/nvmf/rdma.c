@@ -1672,6 +1672,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		current_wr->num_sge = 0;
 		req->length += desc->keyed.length;
 
+		assert(current_wr != NULL);
 		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, rdma_req, current_wr,
 					    desc->keyed.length);
 		if (rc != 0) {
