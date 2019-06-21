@@ -9,6 +9,7 @@ import rpc
 import sys
 import shlex
 import json
+import socket
 
 try:
     from shlex import quote
@@ -37,6 +38,8 @@ if __name__ == "__main__":
                         help="""Set verbose level. """)
     parser.add_argument('--dry_run', dest='dry_run', action='store_true', help="Display request and exit")
     parser.set_defaults(dry_run=False)
+    parser.add_argument('--daemon', dest='daemon',
+                        help="Run rpc as deamon listening for commands on the given socket", default="")
     subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name')
 
     def start_subsystem_init(args):
@@ -1804,14 +1807,27 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def check_called_name(name):
         if name in deprecated_aliases:
-            print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
+            print_string("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
 
     class mock_client:
         def call(self, method, params=None):
-            print("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
+            print_string("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
+
+    cmd_output = ""
 
     def mock_print(arg):
-        pass
+        global cmd_output
+        cmd_output = str(arg) + "\n"
+        return cmd_output
+
+    def mock_print_array(a):
+        mock_print(" ".join((quote(v) for v in a)))
+
+    def mock_print_dict(d):
+        mock_print(json.dumps(d, indent=2))
+
+    def mock_print_string(s):
+        mock_print(json.dumps(s, indent=2).strip('"'))
 
     def call_rpc_func(args):
         args.func(args)
@@ -1834,6 +1850,49 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 exit(1)
 
     args = parser.parse_args()
+    if args.daemon:
+        print_dict = mock_print_dict
+        print_string = mock_print_string
+        print_client_string = print
+        print_array = mock_print_array
+
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.bind(args.daemon)
+        s.listen(1)
+        while True:
+            conn, addr = s.accept()
+            with conn:
+                multi_cmd = ""
+                while True:
+                    try:
+                        data = conn.recv(1024)
+                    except socket.error as e:
+                        print(e)
+                        break
+
+                    if not data:
+                        break
+                    multi_cmd += data.decode()
+
+                    # Set nonblocking to fail immediately once there's nothing more to read
+                    conn.setblocking(0)
+
+                for cmd in multi_cmd.strip().split("\n"):
+                    if cmd == "exit_daemon":
+                        s.close()
+                        exit(0)
+
+                    tmp_args = parser.parse_args(cmd.split())
+                    tmp_args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
+                    try:
+                        call_rpc_func(tmp_args)
+                        cmd_output = "0" + cmd_output
+                    except JSONRPCException as ex:
+                        cmd_output = "1Exception:\n"
+                        cmd_output += cmd.strip() + "\n"
+                        cmd_output += ex.message + "\n"
+                    conn.sendall(cmd_output.encode())
+
     if args.dry_run:
         args.client = mock_client()
         print_dict = mock_print
