@@ -9,6 +9,7 @@ import rpc
 import sys
 import shlex
 import json
+import os
 
 try:
     from shlex import quote
@@ -32,6 +33,11 @@ if __name__ == "__main__":
                         help="""Set verbose level. """)
     parser.add_argument('--dry_run', dest='dry_run', action='store_true', help="Display request and exit")
     parser.set_defaults(dry_run=False)
+    parser.add_argument('-i', dest='cmd_file',
+                        help='Read commands from the provided file. Their output will be written to another'
+                        'file, see -o option. All other arguments will be ignored.', default='')
+    parser.add_argument('-o', dest='output_file',
+                        help='Named pipe to be created for each command\'s output.', default='/tmp/rpc_output')
     subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name')
 
     def start_subsystem_init(args):
@@ -1826,7 +1832,68 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 print(ex.message)
                 exit(1)
 
+    cmd_output = ""
+
+    def cmd_file_print(arg):
+        global cmd_output
+        cmd_output = str(arg) + "\n"
+        return cmd_output
+
+    def cmd_file_print_dict(d):
+        cmd_file_print(json.dumps(d, indent=2))
+
+    def cmd_file_print_json(s):
+        cmd_file_print(json.dumps(s, indent=2).strip('"'))
+
+    def cmd_file_print_array(a):
+        cmd_file_print(" ".join((quote(v) for v in a)))
+
+    def process_cmd_file_entry(cmd, outputf):
+        global cmd_output
+        try:
+            tmp_args = parser.parse_args(cmd)
+        except SystemExit as ex:
+            outputf.write("1")
+            outputf.flush()
+            return
+
+        try:
+            tmp_args.client = rpc.client.JSONRPCClient(
+                    tmp_args.server_addr, tmp_args.port, tmp_args.timeout,
+                    log_level=getattr(logging, tmp_args.verbose.upper()))
+            call_rpc_func(tmp_args)
+            outputf.write("0")
+            outputf.write(cmd_output)
+        except JSONRPCException as ex:
+            outputf.write("1")
+            outputf.write(ex.message)
+        finally:
+            outputf.flush()
+
     args = parser.parse_args()
+    if args.cmd_file:
+        print_dict = cmd_file_print_dict
+        print_json = cmd_file_print_json
+        print_array = cmd_file_print_array
+        with open(args.cmd_file, "r") as inputf:
+            while True:
+                # create fifo early so that it's readable as soon as the
+                # other side of pipe has finished writing to inputf
+                os.mkfifo(args.output_file)
+                input = inputf.readline()
+                if len(input) == 0:
+                    os.unlink(args.output_file)
+                    exit(0)
+
+                cmd = shlex.split(input)
+                # open the pipe for each command separately so that it's
+                # closed and stops being readable as soon as command output
+                # is finished
+                with open(args.output_file, "w") as outputf:
+                    process_cmd_file_entry(cmd, outputf)
+
+                os.unlink(args.output_file)
+
     if args.dry_run:
         args.client = dry_run_client()
         print_dict = null_print
