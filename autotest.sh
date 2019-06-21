@@ -152,6 +152,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	timing_enter lib
 
 	run_test "env" test/env/env.sh
+	run_test "rpc" test/rpc/rpc.sh
 	run_test "rpc_client" test/rpc_client/rpc_client.sh
 	run_test "json_config" ./test/json_config/json_config.sh
 	run_test "alias_rpc" test/json_config/alias_rpc/alias_rpc.sh

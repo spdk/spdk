@@ -123,11 +123,7 @@ fail_file=$output_dir/check_so_deps_fail
 
 rm -f $fail_file
 
-for lib in $SPDK_LIBS; do
-	confirm_deps $lib&
-done
-
-wait
+( for lib in $SPDK_LIBS; do confirm_deps $lib & done; wait )
 
 $MAKE $MAKEFLAGS clean
 git checkout "$rootdir/mk/spdk.lib.mk"

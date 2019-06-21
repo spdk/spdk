@@ -37,6 +37,14 @@ if __name__ == "__main__":
                         help="""Set verbose level. """)
     parser.add_argument('--dry_run', dest='dry_run', action='store_true', help="Display request and exit")
     parser.set_defaults(dry_run=False)
+    parser.add_argument('--server', dest='is_server', action='store_true',
+                        help="Start listening on stdin, parse each line as a regular rpc.py execution and create \
+                                a separate connection for each command. Each command's output ends with either \
+                                **STATUS=0 if the command succeeded or **STATUS=1 if it failed. --server is meant \
+                                to be used in conjunction with bash coproc, where stdin and stdout are connected to \
+                                pipes and can be used as a faster way to send RPC commands. If enabled, rpc.py \
+                                must be executed without any other parameters.")
+    parser.set_defaults(is_server=False)
     subparsers = parser.add_subparsers(help='RPC methods', dest='called_rpc_name')
 
     def framework_start_init(args):
@@ -2374,7 +2382,26 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 exit(1)
 
     args = parser.parse_args()
-    if args.dry_run:
+    if args.is_server:
+        for input in sys.stdin:
+            cmd = shlex.split(input)
+            try:
+                tmp_args = parser.parse_args(cmd)
+            except SystemExit as ex:
+                print("**STATUS=1", flush=True)
+                continue
+
+            try:
+                tmp_args.client = rpc.client.JSONRPCClient(
+                    tmp_args.server_addr, tmp_args.port, tmp_args.timeout,
+                    log_level=getattr(logging, tmp_args.verbose.upper()))
+                call_rpc_func(tmp_args)
+                print("**STATUS=0", flush=True)
+            except JSONRPCException as ex:
+                print(ex.message)
+                print("**STATUS=1", flush=True)
+        exit(0)
+    elif args.dry_run:
         args.client = dry_run_client()
         print_dict = null_print
         print_json = null_print
