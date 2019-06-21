@@ -2472,6 +2472,11 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			/* copy the cmd from the receive pdu */
 			tcp_req->cmd = tqpair->pdu_in_progress.hdr.capsule_cmd.ccsqe;
 
+			if (spdk_unlikely(spdk_nvmf_request_get_dif_ctx(&tcp_req->req, &tcp_req->dif_ctx))) {
+				tcp_req->dif_insert_or_strip = true;
+				tqpair->pdu_in_progress.dif_ctx = &tcp_req->dif_ctx;
+			}
+
 			/* The next state transition depends on the data transfer needs of this request. */
 			tcp_req->req.xfer = spdk_nvmf_tcp_req_get_xfer(tcp_req);
 
