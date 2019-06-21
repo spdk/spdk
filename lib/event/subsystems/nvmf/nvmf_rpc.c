@@ -1410,6 +1410,23 @@ spdk_rpc_set_nvmf_target_config(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("set_nvmf_target_config", spdk_rpc_set_nvmf_target_config, SPDK_RPC_STARTUP)
 
+static int
+decode_dif_mode(const struct spdk_json_val *val, void *out)
+{
+	enum spdk_nvmf_dif_mode *dif_mode = out;
+
+	if (spdk_json_strequal(val, "e2e")) {
+		*dif_mode = SPDK_NVMF_DIF_MODE_E2E;
+	} else if (spdk_json_strequal(val, "local")) {
+		*dif_mode = SPDK_NVMF_DIF_MODE_LOCAL;
+	} else {
+		SPDK_ERRLOG("Invalid DIF mode\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 struct nvmf_rpc_create_transport_ctx {
 	char				*trtype;
 	struct spdk_nvmf_transport_opts opts;
@@ -1457,6 +1474,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 	{
 		"no_srq", offsetof(struct nvmf_rpc_create_transport_ctx, opts.no_srq),
 		spdk_json_decode_bool, true
+	},
+	{
+		"dif_mode", offsetof(struct nvmf_rpc_create_transport_ctx, opts.dif_mode),
+		decode_dif_mode, true
 	},
 };
 
@@ -1595,6 +1616,8 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 		spdk_json_write_named_uint32(w, "max_srq_depth", opts->max_srq_depth);
 		spdk_json_write_named_bool(w, "no_srq", opts->no_srq);
 	}
+	spdk_json_write_named_string(w, "dif_mode",
+				     opts->dif_mode == SPDK_NVMF_DIF_MODE_E2E ? "e2e" : "local");
 
 	spdk_json_write_object_end(w);
 }
