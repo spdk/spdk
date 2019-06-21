@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "253989a8_408564b3",
+        "filename": "test/unit/lib/nvme/nvme_tcp.c/nvme_tcp_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-21T02:01:15Z",
+      "side": 1,
+      "message": "Single SGL.",
+      "range": {
+        "startLine": 114,
+        "startChar": 17,
+        "endLine": 114,
+        "endChar": 27
+      },
+      "revId": "448162d0cd2413a1e2aa5185c467cddc20693e5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd7bab03_e056c057",
+        "filename": "test/unit/lib/nvme/nvme_tcp.c/nvme_tcp_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-21T02:01:15Z",
+      "side": 1,
+      "message": "M",
+      "range": {
+        "startLine": 126,
+        "startChar": 17,
+        "endLine": 126,
+        "endChar": 18
+      },
+      "revId": "448162d0cd2413a1e2aa5185c467cddc20693e5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0d8ac38_c8aa14ba",
+        "filename": "test/unit/lib/nvme/nvme_tcp.c/nvme_tcp_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-21T02:01:15Z",
+      "side": 1,
+      "message": "FAIL",
+      "range": {
+        "startLine": 142,
+        "startChar": 55,
+        "endLine": 142,
+        "endChar": 59
+      },
+      "revId": "448162d0cd2413a1e2aa5185c467cddc20693e5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b861785b_dea97091",
+        "filename": "test/unit/lib/nvme/nvme_tcp.c/nvme_tcp_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-06-21T02:01:15Z",
+      "side": 1,
+      "message": "P",
+      "range": {
+        "startLine": 142,
+        "startChar": 17,
+        "endLine": 142,
+        "endChar": 18
+      },
+      "revId": "448162d0cd2413a1e2aa5185c467cddc20693e5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
