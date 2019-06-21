@@ -1549,7 +1549,7 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	spdk_nvmf_bdev_ctrlr_identify_ns(ns, nsdata);
+	spdk_nvmf_bdev_ctrlr_identify_ns(ns, nsdata, ctrlr->dif_insert_or_strip);
 
 	/* Due to bug in the Linux kernel NVMe driver we have to set noiob no larger than mdts */
 	max_num_blocks = ctrlr->admin_qpair->transport->opts.max_io_size /
