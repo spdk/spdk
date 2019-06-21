@@ -2172,6 +2172,23 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 	return -1;
 }
 
+static int
+nvmf_tcp_pdu_verify_dif(struct nvme_tcp_pdu *pdu,
+			const struct spdk_dif_ctx *dif_ctx)
+{
+	struct spdk_dif_error err_blk = {};
+	int rc;
+
+	rc = spdk_dif_verify_stream(pdu->data_iov, pdu->data_iovcnt,
+				    0, pdu->data_len, pdu->dif_ctx, &err_blk);
+	if (rc != 0) {
+		SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n",
+			    err_blk.err_type, err_blk.err_offset);
+	}
+
+	return rc;
+}
+
 static void
 spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 			    struct spdk_nvmf_tcp_req *tcp_req)
@@ -2179,6 +2196,7 @@ spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 	struct nvme_tcp_pdu *rsp_pdu;
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data;
 	uint32_t plen, pdo, alignment;
+	int rc;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
 
@@ -2222,6 +2240,14 @@ spdk_nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req->req.iov, tcp_req->req.iovcnt,
 				  c2h_data->datao, c2h_data->datal);
+
+	if (spdk_unlikely(rsp_pdu->dif_ctx != NULL)) {
+		rc = nvmf_tcp_pdu_verify_dif(rsp_pdu, rsp_pdu->dif_ctx);
+		if (rc != 0) {
+			tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
+			return;
+		}
+	}
 
 	tcp_req->c2h_data_offset += c2h_data->datal;
 	if (tcp_req->c2h_data_offset == tcp_req->req.length) {
