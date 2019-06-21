@@ -358,6 +358,8 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 
 	pthread_mutex_lock(&g_pci_mutex);
 	cleanup_pci_devices();
+	pthread_mutex_unlock(&g_pci_mutex);
+
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		if (spdk_pci_addr_compare(&dev->addr, pci_address) == 0) {
 			break;
@@ -365,6 +367,7 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	}
 
 	if (dev != NULL && dev->internal.driver == driver) {
+		pthread_mutex_lock(&g_pci_mutex);
 		if (dev->internal.attached || dev->internal.pending_removal) {
 			pthread_mutex_unlock(&g_pci_mutex);
 			return -1;
@@ -377,7 +380,6 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 		pthread_mutex_unlock(&g_pci_mutex);
 		return rc;
 	}
-	pthread_mutex_unlock(&g_pci_mutex);
 
 	if (!driver->is_registered) {
 		driver->is_registered = true;
