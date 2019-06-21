@@ -46,6 +46,30 @@
       "revId": "f13e26b34e9457a838548d1b0212161327fd6797",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e2bbcb0_dd20b452",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-21T03:25:11Z",
+      "side": 1,
+      "message": "!(A \u0026\u0026 B) \u003d !A || !B\n\nAs for\n`assert(start_strip \u003d\u003d end_strip || raid_bdev-\u003enum_base_bdevs \u003d\u003d 1)`\nI\u0027m reading it as follows:\nassert(request_occupies_only_one_strip || there\u0027s_just_one_base_and_we_dont_care)",
+      "parentUuid": "eaee3f7e_56c33a49",
+      "range": {
+        "startLine": 457,
+        "startChar": 8,
+        "endLine": 457,
+        "endChar": 76
+      },
+      "revId": "f13e26b34e9457a838548d1b0212161327fd6797",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
