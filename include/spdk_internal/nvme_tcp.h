@@ -278,6 +278,51 @@ _nvme_tcp_sgl_append_multi(struct _nvme_tcp_sgl *s, struct iovec *iov, int iovcn
 	return true;
 }
 
+static inline uint32_t
+_get_iov_array_size(struct iovec *iov, int iovcnt)
+{
+	int i;
+	uint32_t size = 0;
+
+	for (i = 0; i < iovcnt; i++) {
+		size += iov[i].iov_len;
+	}
+
+	return size;
+}
+
+static inline bool
+_nvme_tcp_sgl_append_multi_with_md(struct _nvme_tcp_sgl *s, struct iovec *iov, int iovcnt,
+				   uint32_t data_len, const struct spdk_dif_ctx *dif_ctx)
+{
+	int rc;
+	uint32_t mapped_len = 0;
+
+	if (s->iov_offset >= data_len) {
+		s->iov_offset -= _get_iov_array_size(iov, iovcnt);
+	} else {
+		rc = spdk_dif_set_md_interleave_iovs(s->iov, s->iovcnt, iov, iovcnt,
+						     s->iov_offset, data_len - s->iov_offset,
+						     &mapped_len, dif_ctx);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to setup iovs for DIF insert/strip.\n");
+			return false;
+		}
+
+		s->total_size += mapped_len;
+		s->iov_offset = 0;
+		assert(s->iovcnt >= rc);
+		s->iovcnt -= rc;
+		s->iov += rc;
+
+		if (s->iovcnt == 0) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 static int
 nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 		    bool hdgst_enable, bool ddgst_enable, uint32_t *_mapped_length)
@@ -326,8 +371,15 @@ nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 
 	/* Data Segment */
 	plen += pdu->data_len;
-	if (!_nvme_tcp_sgl_append_multi(sgl, pdu->data_iov, pdu->data_iovcnt)) {
-		goto end;
+	if (spdk_likely(!pdu->dif_ctx)) {
+		if (!_nvme_tcp_sgl_append_multi(sgl, pdu->data_iov, pdu->data_iovcnt)) {
+			goto end;
+		}
+	} else {
+		if (!_nvme_tcp_sgl_append_multi_with_md(sgl, pdu->data_iov, pdu->data_iovcnt,
+							pdu->data_len, pdu->dif_ctx)) {
+			goto end;
+		}
 	}
 
 	/* Data Digest */

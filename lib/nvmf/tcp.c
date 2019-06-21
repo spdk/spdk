@@ -1836,6 +1836,49 @@ err:
 }
 
 static int
+nvmf_tcp_build_payload_iovs_with_md(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
+				    bool ddgst_enable, uint32_t *_mapped_length)
+{
+	struct _nvme_tcp_sgl *sgl;
+
+	if (iovcnt == 0) {
+		return 0;
+	}
+
+	sgl = &pdu->sgl;
+	_nvme_tcp_sgl_init(sgl, iov, iovcnt, pdu->readv_offset);
+
+	if (!_nvme_tcp_sgl_append_multi_with_md(sgl, pdu->data_iov, pdu->data_iovcnt,
+						pdu->data_len, pdu->dif_ctx)) {
+		goto end;
+	}
+
+	/* Data Digest */
+	if (ddgst_enable) {
+		_nvme_tcp_sgl_append(sgl, pdu->data_digest, SPDK_NVME_TCP_DIGEST_LEN);
+	}
+
+end:
+	if (_mapped_length != NULL) {
+		*_mapped_length = sgl->total_size;
+	}
+	return iovcnt - sgl->iovcnt;
+}
+
+static int
+nvmf_tcp_read_payload_data_with_md(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
+{
+	struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
+	int iovcnt;
+
+	iovcnt = nvmf_tcp_build_payload_iovs_with_md(iov, NVME_TCP_MAX_SGL_DESCRIPTORS + 1,
+			pdu, pdu->ddgst_enable, NULL);
+	assert(iovcnt >= 0);
+
+	return nvme_tcp_readv_data(sock, iov, iovcnt);
+}
+
+static int
 spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	int rc = 0;
@@ -1936,7 +1979,11 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 				pdu->ddgst_enable = true;
 			}
 
-			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
+			if (spdk_likely(!pdu->dif_ctx)) {
+				rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
+			} else {
+				rc = nvmf_tcp_read_payload_data_with_md(tqpair->sock, pdu);
+			}
 			if (rc < 0) {
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
