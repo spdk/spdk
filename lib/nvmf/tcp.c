@@ -190,6 +190,9 @@ struct spdk_nvmf_tcp_req  {
 	enum spdk_nvmf_tcp_req_state		state;
 	bool					has_incapsule_data;
 
+	struct spdk_dif_ctx			dif_ctx;
+	bool					dif_insert_or_strip;
+
 	TAILQ_ENTRY(spdk_nvmf_tcp_req)		link;
 	TAILQ_ENTRY(spdk_nvmf_tcp_req)		state_link;
 };
@@ -363,6 +366,7 @@ spdk_nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 	tcp_req->r2tl_remain = 0;
 	tcp_req->c2h_data_offset = 0;
 	tcp_req->has_incapsule_data = false;
+	tcp_req->dif_insert_or_strip = false;
 
 	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_NEW);
 	return tcp_req;
@@ -2118,6 +2122,10 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Data requested length= 0x%x\n", length);
 
+		if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
+			length = spdk_dif_get_length_with_md(length, &tcp_req->dif_ctx);
+		}
+
 		if (spdk_nvmf_tcp_req_fill_iovs(ttransport, tcp_req, length) < 0) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No available large data buffers. Queueing request %p\n",
@@ -2160,6 +2168,10 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		tcp_req->req.data = tcp_req->buf + offset;
 		tcp_req->data_from_pool = false;
 		tcp_req->req.length = length;
+
+		if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
+			length = spdk_dif_get_length_with_md(length, &tcp_req->dif_ctx);
+		}
 
 		tcp_req->req.iov[0].iov_base = tcp_req->req.data;
 		tcp_req->req.iov[0].iov_len = length;
