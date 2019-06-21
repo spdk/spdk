@@ -2047,10 +2047,9 @@ spdk_nvmf_tcp_request_free_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 
 static int
 spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
-			    struct spdk_nvmf_tcp_req *tcp_req)
+			    struct spdk_nvmf_tcp_req *tcp_req, uint32_t length)
 {
 	void					*buf = NULL;
-	uint32_t				length = tcp_req->req.length;
 	uint32_t				i = 0;
 	struct spdk_nvmf_tcp_qpair		*tqpair;
 	struct spdk_nvmf_transport_poll_group	*group;
@@ -2097,29 +2096,32 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
+	uint32_t				length;
 
 	cmd = &tcp_req->req.cmd->nvme_cmd;
 	rsp = &tcp_req->req.rsp->nvme_cpl;
 	sgl = &cmd->dptr.sgl1;
 
+	length = sgl->unkeyed.length;
+
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK &&
 	    sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_TRANSPORT) {
-		if (sgl->unkeyed.length > ttransport->transport.opts.max_io_size) {
+		if (length > ttransport->transport.opts.max_io_size) {
 			SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
-				    sgl->unkeyed.length, ttransport->transport.opts.max_io_size);
+				    length, ttransport->transport.opts.max_io_size);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
 		}
 
 		/* fill request length and populate iovs */
-		tcp_req->req.length = sgl->unkeyed.length;
+		tcp_req->req.length = length;
 
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Data requested length= 0x%x\n",
-			      sgl->unkeyed.length);
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Data requested length= 0x%x\n", length);
 
-		if (spdk_nvmf_tcp_req_fill_iovs(ttransport, tcp_req) < 0) {
+		if (spdk_nvmf_tcp_req_fill_iovs(ttransport, tcp_req, length) < 0) {
 			/* No available buffers. Queue this request up. */
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No available large data buffers. Queueing request %p\n", tcp_req);
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No available large data buffers. Queueing request %p\n",
+				      tcp_req);
 			return 0;
 		}
 
@@ -2138,7 +2140,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		uint32_t max_len = ttransport->transport.opts.in_capsule_data_size;
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
-			      offset, sgl->unkeyed.length);
+			      offset, length);
 
 		if (offset > max_len) {
 			SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
@@ -2148,19 +2150,19 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		}
 		max_len -= (uint32_t)offset;
 
-		if (sgl->unkeyed.length > max_len) {
+		if (length > max_len) {
 			SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
-				    sgl->unkeyed.length, max_len);
+				    length, max_len);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
 		}
 
 		tcp_req->req.data = tcp_req->buf + offset;
 		tcp_req->data_from_pool = false;
-		tcp_req->req.length = sgl->unkeyed.length;
+		tcp_req->req.length = length;
 
 		tcp_req->req.iov[0].iov_base = tcp_req->req.data;
-		tcp_req->req.iov[0].iov_len = tcp_req->req.length;
+		tcp_req->req.iov[0].iov_len = length;
 		tcp_req->req.iovcnt = 1;
 
 		return 0;
