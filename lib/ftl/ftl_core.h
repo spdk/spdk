@@ -130,6 +130,17 @@ struct ftl_nv_cache {
 	pthread_spinlock_t			lock;
 };
 
+struct ftl_init_context {
+	/* User's callback */
+	spdk_ftl_init_fn			cb_fn;
+	/* Callback's argument */
+	void					*cb_arg;
+	/* Thread to call the callback on */
+	struct spdk_thread			*thread;
+	/* Poller to check if the device has been destroyed/initialized */
+	struct spdk_poller			*poller;
+};
+
 struct spdk_ftl_dev {
 	/* Device instance */
 	struct spdk_uuid			uuid;
@@ -143,17 +154,10 @@ struct spdk_ftl_dev {
 	/* Indicates the device is about to be stopped */
 	int					halt;
 
-	/* Init callback */
-	spdk_ftl_init_fn			init_cb;
-	/* Init callback's context */
-	void					*init_arg;
-
-	/* Halt callback */
-	spdk_ftl_fn				halt_cb;
-	/* Halt callback's context */
-	void					*halt_arg;
-	/* Halt poller, checks if the device has been halted */
-	struct spdk_poller			*halt_poller;
+	/* Initializaton context */
+	struct ftl_init_context			init_ctx;
+	/* Destruction context */
+	struct ftl_init_context			fini_ctx;
 
 	/* IO channel */
 	struct spdk_io_channel			*ioch;

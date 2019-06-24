@@ -216,7 +216,7 @@ int spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_f
  *
  * \return 0 if successfully scheduled free, negative errno otherwise.
  */
-int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *cb_arg);
+int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb, void *cb_arg);
 
 /**
  * Initialize FTL configuration structure with default values.
