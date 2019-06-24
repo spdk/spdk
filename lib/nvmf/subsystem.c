@@ -887,14 +887,20 @@ spdk_nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem, spdk_channe
 	return 0;
 }
 
-static void
+static int
 spdk_nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ctrlr *ctrlr;
+	int rc;
 
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-		spdk_nvmf_ctrlr_ns_changed(ctrlr, nsid);
+		rc = spdk_nvmf_ctrlr_ns_changed(ctrlr, nsid);
+		if (rc) {
+			return rc;
+		}
 	}
+
+	return 0;
 }
 
 static int
@@ -902,6 +908,7 @@ _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 {
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_registrant *reg, *reg_tmp;
+	int rc;
 
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED ||
 	       subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
@@ -933,7 +940,11 @@ _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	}
 	free(ns);
 
-	spdk_nvmf_subsystem_ns_changed(subsystem, nsid);
+	rc = spdk_nvmf_subsystem_ns_changed(subsystem, nsid);
+	if (rc != 0) {
+		SPDK_ERRLOG("Subsystem %s ns-changed event failed\n", subsystem->subnqn);
+		return rc;
+	}
 
 	return 0;
 }
@@ -1117,12 +1128,23 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		ns->ptpl_file = strdup(ptpl_file);
 	}
 
+	rc = spdk_nvmf_subsystem_ns_changed(subsystem, opts.nsid);
+	if (rc != 0) {
+		SPDK_ERRLOG("Subsystem %s ns-changed event failed\n", subsystem->subnqn);
+		subsystem->ns[opts.nsid - 1] = NULL;
+		spdk_bdev_module_release_bdev(bdev);
+		spdk_bdev_close(ns->desc);
+		if (ns->ptpl_file) {
+			free(ns->ptpl_file);
+		}
+		free(ns);
+		return 0;
+	}
+
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
 		      spdk_bdev_get_name(bdev),
 		      opts.nsid);
-
-	spdk_nvmf_subsystem_ns_changed(subsystem, opts.nsid);
 
 	return opts.nsid;
 }

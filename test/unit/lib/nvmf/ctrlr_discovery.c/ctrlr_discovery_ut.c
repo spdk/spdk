@@ -159,9 +159,10 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 	return 0;
 }
 
-void
+int
 spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 {
+	return 0;
 }
 
 void
