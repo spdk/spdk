@@ -59,6 +59,7 @@ struct ftl_wptr;
 struct ftl_flush;
 struct ftl_reloc;
 struct ftl_anm_event;
+struct ftl_band_flush;
 
 struct ftl_stats {
 	/* Number of writes scheduled directly by the user */
@@ -221,6 +222,8 @@ struct spdk_ftl_dev {
 
 	/* Flush list */
 	LIST_HEAD(, ftl_flush)			flush_list;
+	/* List of band flush requests */
+	LIST_HEAD(, ftl_band_flush)		band_flush_list;
 
 	/* Device specific md buffer */
 	struct ftl_global_md			global_md;
@@ -289,6 +292,7 @@ int	ftl_band_set_direct_access(struct ftl_band *band, bool access);
 int	ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 				struct spdk_ocssd_chunk_information_entry *info,
 				unsigned int num_entries);
+int	ftl_flush_active_bands(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
 
 #define ftl_to_ppa(addr) \
 	(struct ftl_ppa) { .ppa = (uint64_t)(addr) }
