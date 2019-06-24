@@ -1007,7 +1007,6 @@ spdk_vhost_session_send_event(struct vhost_poll_group *pg,
 	ev_ctx.cb_fn = cb_fn;
 
 	vsession->poll_group = pg;
-	vsession->event_ctx = &ev_ctx;
 	spdk_thread_send_msg(pg->thread, spdk_vhost_event_cb, &ev_ctx);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 
@@ -1021,7 +1020,6 @@ spdk_vhost_session_send_event(struct vhost_poll_group *pg,
 	}
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vsession->event_ctx = NULL;
 	return g_dpdk_response;
 }
 
