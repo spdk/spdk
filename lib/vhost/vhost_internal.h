@@ -156,8 +156,6 @@ struct spdk_vhost_session {
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
 	TAILQ_ENTRY(spdk_vhost_session) tailq;
-
-	struct spdk_vhost_session_fn_ctx *event_ctx;
 };
 
 struct spdk_vhost_dev {
