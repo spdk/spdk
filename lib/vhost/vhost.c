@@ -1023,6 +1023,68 @@ out_unlock:
 }
 
 static void
+foreach_session_continue(struct spdk_vhost_dev *vdev,
+			 struct spdk_vhost_session *vsession,
+			 spdk_vhost_session_fn fn, void *arg)
+{
+	struct spdk_vhost_session_fn_ctx *ev_ctx;
+	int rc;
+
+	if (vsession == NULL) {
+		goto out_finish_foreach;
+	}
+
+	while (!vsession->started) {
+		if (vsession->initialized) {
+			rc = fn(vdev, vsession, arg);
+			if (rc < 0) {
+				return;
+			}
+		}
+
+		vsession = spdk_vhost_session_next(vdev, vsession->id);
+		if (vsession == NULL) {
+			goto out_finish_foreach;
+		}
+	}
+
+	ev_ctx = calloc(1, sizeof(*ev_ctx));
+	if (ev_ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc vhost event.\n");
+		assert(false);
+		return;
+	}
+
+	ev_ctx->vdev = vdev;
+	ev_ctx->vsession_id = vsession->id;
+	ev_ctx->cb_fn = fn;
+	ev_ctx->user_ctx = arg;
+
+	spdk_thread_send_msg(vsession->poll_group->thread,
+			     foreach_session_continue_cb, ev_ctx);
+	return;
+
+out_finish_foreach:
+	/* there are no more sessions to iterate through, so call the
+	 * fn one last time with vsession == NULL
+	 */
+	assert(vdev->pending_async_op_num > 0);
+	vdev->pending_async_op_num--;
+	fn(vdev, NULL, arg);
+}
+
+void
+spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
+			       spdk_vhost_session_fn fn, void *arg)
+{
+	struct spdk_vhost_session *vsession = TAILQ_FIRST(&vdev->vsessions);
+
+	assert(vdev->pending_async_op_num < UINT32_MAX);
+	vdev->pending_async_op_num++;
+	foreach_session_continue(vdev, vsession, fn, arg);
+}
+
+static void
 _stop_session(struct spdk_vhost_session *vsession)
 {
 	struct spdk_vhost_dev *vdev = vsession->vdev;
@@ -1333,68 +1395,6 @@ destroy_connection(int vid)
 	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);
 	free(vsession);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
-}
-
-static void
-foreach_session_continue(struct spdk_vhost_dev *vdev,
-			 struct spdk_vhost_session *vsession,
-			 spdk_vhost_session_fn fn, void *arg)
-{
-	struct spdk_vhost_session_fn_ctx *ev_ctx;
-	int rc;
-
-	if (vsession == NULL) {
-		goto out_finish_foreach;
-	}
-
-	while (!vsession->started) {
-		if (vsession->initialized) {
-			rc = fn(vdev, vsession, arg);
-			if (rc < 0) {
-				return;
-			}
-		}
-
-		vsession = spdk_vhost_session_next(vdev, vsession->id);
-		if (vsession == NULL) {
-			goto out_finish_foreach;
-		}
-	}
-
-	ev_ctx = calloc(1, sizeof(*ev_ctx));
-	if (ev_ctx == NULL) {
-		SPDK_ERRLOG("Failed to alloc vhost event.\n");
-		assert(false);
-		return;
-	}
-
-	ev_ctx->vdev = vdev;
-	ev_ctx->vsession_id = vsession->id;
-	ev_ctx->cb_fn = fn;
-	ev_ctx->user_ctx = arg;
-
-	spdk_thread_send_msg(vsession->poll_group->thread,
-			     foreach_session_continue_cb, ev_ctx);
-	return;
-
-out_finish_foreach:
-	/* there are no more sessions to iterate through, so call the
-	 * fn one last time with vsession == NULL
-	 */
-	assert(vdev->pending_async_op_num > 0);
-	vdev->pending_async_op_num--;
-	fn(vdev, NULL, arg);
-}
-
-void
-spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
-			       spdk_vhost_session_fn fn, void *arg)
-{
-	struct spdk_vhost_session *vsession = TAILQ_FIRST(&vdev->vsessions);
-
-	assert(vdev->pending_async_op_num < UINT32_MAX);
-	vdev->pending_async_op_num++;
-	foreach_session_continue(vdev, vsession, fn, arg);
 }
 
 void
