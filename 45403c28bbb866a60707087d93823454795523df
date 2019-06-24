@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7f10c62f_0ca27235",
+        "filename": "test/openstack/openstack_versus_spdk.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-24T15:13:36Z",
+      "side": 1,
+      "message": "Uncommented this line",
+      "parentUuid": "90245301_6924812f",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 48
+      },
+      "revId": "45403c28bbb866a60707087d93823454795523df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46b78220_fb2cd2fd",
         "filename": "test/openstack/openstack_versus_spdk.sh",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "45403c28bbb866a60707087d93823454795523df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b34d159_4d5115de",
+        "filename": "test/openstack/openstack_versus_spdk.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-24T15:13:36Z",
+      "side": 1,
+      "message": "Uncommented this line",
+      "parentUuid": "46b78220_fb2cd2fd",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 16
+      },
+      "revId": "45403c28bbb866a60707087d93823454795523df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9ecb521b_2f602396",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-24T15:13:36Z",
+      "side": 1,
+      "message": "I think this command ends when cinder service is fully started. Delay is not needed.",
+      "parentUuid": "b19a09f0_ffeb0b2e",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 35
+      },
+      "revId": "45403c28bbb866a60707087d93823454795523df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91e320db_8fb8f29b",
         "filename": "test/openstack/run_openstack_tests.sh",
         "patchSetId": 4
@@ -85,6 +157,24 @@
       "revId": "45403c28bbb866a60707087d93823454795523df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60ba296c_517c69ff",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-24T15:13:36Z",
+      "side": 1,
+      "message": "Some tests are disabled because currently they do not work on vm. Need to investigate why.",
+      "parentUuid": "91e320db_8fb8f29b",
+      "revId": "45403c28bbb866a60707087d93823454795523df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
