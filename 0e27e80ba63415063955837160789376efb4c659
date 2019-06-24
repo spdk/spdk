@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "072018a4_26c42fb5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-06-24T18:47:32Z",
+      "side": 1,
+      "message": "Delete \"now\". The sentence will sound better without it.",
+      "range": {
+        "startLine": 64,
+        "startChar": 24,
+        "endLine": 64,
+        "endChar": 27
+      },
+      "revId": "0e27e80ba63415063955837160789376efb4c659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
