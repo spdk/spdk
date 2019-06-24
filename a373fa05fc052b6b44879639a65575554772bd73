@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2418725c_e1e9be10",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-24T09:41:21Z",
+      "side": 1,
+      "message": "Remove \"fixing issue #834\" - this does not fix the issue. It just makes it easier to debug.",
+      "revId": "a373fa05fc052b6b44879639a65575554772bd73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
