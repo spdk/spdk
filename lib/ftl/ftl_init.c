@@ -648,6 +648,7 @@ ftl_init_wptr_list(struct spdk_ftl_dev *dev)
 {
 	LIST_INIT(&dev->wptr_list);
 	LIST_INIT(&dev->flush_list);
+	LIST_INIT(&dev->band_flush_list);
 }
 
 static size_t
