@@ -798,6 +798,17 @@ ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 }
 
 static void
+ftl_call_init_complete_cb(void *_ctx)
+{
+	struct ftl_init_context *ctx = _ctx;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(ctx, struct spdk_ftl_dev, init_ctx);
+
+	if (ctx->cb_fn != NULL) {
+		ctx->cb_fn(dev, ctx->cb_arg, 0);
+	}
+}
+
+static void
 ftl_init_complete(struct spdk_ftl_dev *dev)
 {
 	pthread_mutex_lock(&g_ftl_queue_lock);
@@ -806,44 +817,34 @@ ftl_init_complete(struct spdk_ftl_dev *dev)
 
 	dev->initialized = 1;
 
-	if (dev->init_cb) {
-		dev->init_cb(dev, dev->init_arg, 0);
-	}
-
-	dev->init_cb = NULL;
-	dev->init_arg = NULL;
+	spdk_thread_send_msg(dev->init_ctx.thread, ftl_call_init_complete_cb, &dev->init_ctx);
 }
-
-struct ftl_init_fail_ctx {
-	spdk_ftl_init_fn	cb;
-	void			*arg;
-};
 
 static void
-ftl_init_fail_cb(void *ctx, int status)
+ftl_init_fail_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
 {
-	struct ftl_init_fail_ctx *fail_cb = ctx;
+	struct ftl_init_context *ctx = _ctx;
 
-	fail_cb->cb(NULL, fail_cb->arg, -ENODEV);
-	free(fail_cb);
+	ctx->cb_fn(NULL, ctx->cb_arg, -ENODEV);
+	free(ctx);
 }
+
+static int _spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg,
+			      struct spdk_thread *thread);
 
 static void
 ftl_init_fail(struct spdk_ftl_dev *dev)
 {
-	struct ftl_init_fail_ctx *fail_cb;
+	struct ftl_init_context *ctx;
 
-	fail_cb = malloc(sizeof(*fail_cb));
-	if (!fail_cb) {
+	ctx = malloc(sizeof(*ctx));
+	if (!ctx) {
 		SPDK_ERRLOG("Unable to allocate context to free the device\n");
 		return;
 	}
 
-	fail_cb->cb = dev->init_cb;
-	fail_cb->arg = dev->init_arg;
-	dev->halt_cb = NULL;
-
-	if (spdk_ftl_dev_free(dev, ftl_init_fail_cb, fail_cb)) {
+	*ctx = dev->init_ctx;
+	if (_spdk_ftl_dev_free(dev, ftl_init_fail_cb, ctx, ctx->thread)) {
 		SPDK_ERRLOG("Unable to free the device\n");
 		assert(0);
 	}
@@ -1094,7 +1095,7 @@ ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 }
 
 int
-spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn cb, void *cb_arg)
+spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn cb_fn, void *cb_arg)
 {
 	struct spdk_ftl_dev *dev;
 	struct spdk_ftl_dev_init_opts opts = *_opts;
@@ -1110,8 +1111,9 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 
 	TAILQ_INIT(&dev->retry_queue);
 	dev->conf = *opts.conf;
-	dev->init_cb = cb;
-	dev->init_arg = cb_arg;
+	dev->init_ctx.cb_fn = cb_fn;
+	dev->init_ctx.cb_arg = cb_arg;
+	dev->init_ctx.thread = spdk_get_thread();
 	dev->range = opts.range;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
 
@@ -1273,25 +1275,33 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	free(dev);
 }
 
+static void
+ftl_call_fini_complete_cb(void *_ctx)
+{
+	struct spdk_ftl_dev *dev = _ctx;
+	struct ftl_init_context ctx = dev->fini_ctx;
+
+	ftl_dev_free_sync(dev);
+
+	if (ctx.cb_fn != NULL) {
+		ctx.cb_fn(NULL, ctx.cb_arg, 0);
+	}
+}
+
 static int
 ftl_halt_poller(void *ctx)
 {
 	struct spdk_ftl_dev *dev = ctx;
-	spdk_ftl_fn halt_cb = dev->halt_cb;
-	void *halt_arg = dev->halt_arg;
 
 	if (!dev->core_thread.poller && !dev->read_thread.poller) {
-		spdk_poller_unregister(&dev->halt_poller);
+		spdk_poller_unregister(&dev->fini_ctx.poller);
 
 		ftl_dev_free_thread(dev, &dev->read_thread);
 		ftl_dev_free_thread(dev, &dev->core_thread);
 
 		ftl_anm_unregister_device(dev);
-		ftl_dev_free_sync(dev);
 
-		if (halt_cb) {
-			halt_cb(halt_arg, 0);
-		}
+		spdk_thread_send_msg(dev->fini_ctx.thread, ftl_call_fini_complete_cb, dev);
 	}
 
 	return 0;
@@ -1304,25 +1314,33 @@ ftl_add_halt_poller(void *ctx)
 
 	_ftl_halt_defrag(dev);
 
-	assert(!dev->halt_poller);
-	dev->halt_poller = spdk_poller_register(ftl_halt_poller, dev, 100);
+	assert(!dev->fini_ctx.poller);
+	dev->fini_ctx.poller = spdk_poller_register(ftl_halt_poller, dev, 100);
 }
 
-int
-spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *cb_arg)
+static int
+_spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg,
+		   struct spdk_thread *thread)
 {
-	if (dev->halt_cb) {
+	if (dev->fini_ctx.cb_fn != NULL) {
 		return -EBUSY;
 	}
 
-	dev->halt_cb = cb;
-	dev->halt_arg = cb_arg;
+	dev->fini_ctx.cb_fn = cb_fn;
+	dev->fini_ctx.cb_arg = cb_arg;
+	dev->fini_ctx.thread = thread;
 	dev->halt = 1;
 
 	ftl_rwb_disable_interleaving(dev->rwb);
 
 	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_add_halt_poller, dev);
 	return 0;
+}
+
+int
+spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb_fn, void *cb_arg)
+{
+	return _spdk_ftl_dev_free(dev, cb_fn, cb_arg, spdk_get_thread());
 }
 
 int
