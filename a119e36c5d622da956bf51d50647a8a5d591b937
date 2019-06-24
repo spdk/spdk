@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb13d574_9c461335",
+        "filename": "app/spdk_lspci/spdk_lspci.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-24T10:56:02Z",
+      "side": 1,
+      "message": "For this case we should probably return \"0\".",
+      "range": {
+        "startLine": 73,
+        "startChar": 2,
+        "endLine": 73,
+        "endChar": 11
+      },
+      "revId": "a119e36c5d622da956bf51d50647a8a5d591b937",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36f1d48a_145787e8",
+        "filename": "app/spdk_lspci/spdk_lspci.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-24T10:56:02Z",
+      "side": 1,
+      "message": "You are mixing fprintf and printf. Let\u0027s stick to one type.",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 84,
+        "endChar": 9
+      },
+      "revId": "a119e36c5d622da956bf51d50647a8a5d591b937",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
