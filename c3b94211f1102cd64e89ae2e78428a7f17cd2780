@@ -34,6 +34,24 @@
       "revId": "c3b94211f1102cd64e89ae2e78428a7f17cd2780",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43c5dc91_ea1f5811",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T01:50:50Z",
+      "side": 1,
+      "message": "using spdk_min avoids that type of error and most variables are unsigned now. So I think using signed is not critical. _dif_verify_split and _dif_generate_split have used spdk_min too.",
+      "parentUuid": "019cbe10_82e1c079",
+      "revId": "c3b94211f1102cd64e89ae2e78428a7f17cd2780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
