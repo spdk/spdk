@@ -984,9 +984,8 @@ spdk_vhost_session_send_event(struct vhost_poll_group *pg,
 	return g_dpdk_response;
 }
 
-static void foreach_session_continue(struct spdk_vhost_dev *vdev,
-				     struct spdk_vhost_session *vsession,
-				     spdk_vhost_session_fn fn, void *arg);
+static void foreach_session_continue(struct spdk_vhost_session_fn_ctx *ev_ctx,
+				     struct spdk_vhost_session *vsession);
 
 static void
 foreach_session_finish_cb(void *arg1)
@@ -1045,28 +1044,27 @@ foreach_session_continue_cb(void *arg1)
 
 	rc = ctx->cb_fn(vdev, vsession, ctx->user_ctx);
 	if (rc < 0) {
-		goto out_unlock;
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		free(ctx);
+		return;
 	}
 
 out_unlock_continue:
 	vsession = spdk_vhost_session_next(vdev, ctx->vsession_id);
-	foreach_session_continue(vdev, vsession, ctx->cb_fn, ctx->user_ctx);
-out_unlock:
+	foreach_session_continue(ctx, vsession);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
-	free(ctx);
 }
 
 static void
-foreach_session_continue(struct spdk_vhost_dev *vdev,
-			 struct spdk_vhost_session *vsession,
-			 spdk_vhost_session_fn fn, void *arg)
+foreach_session_continue(struct spdk_vhost_session_fn_ctx *ev_ctx,
+			 struct spdk_vhost_session *vsession)
 {
-	struct spdk_vhost_session_fn_ctx *ev_ctx;
+	struct spdk_vhost_dev *vdev = ev_ctx->vdev;
 	int rc;
 
 	while (vsession != NULL && !vsession->started) {
 		if (vsession->initialized) {
-			rc = fn(vdev, vsession, arg);
+			rc = ev_ctx->cb_fn(vdev, vsession, ev_ctx->user_ctx);
 			if (rc < 0) {
 				return;
 			}
@@ -1074,18 +1072,6 @@ foreach_session_continue(struct spdk_vhost_dev *vdev,
 
 		vsession = spdk_vhost_session_next(vdev, vsession->id);
 	}
-
-	ev_ctx = calloc(1, sizeof(*ev_ctx));
-	if (ev_ctx == NULL) {
-		SPDK_ERRLOG("Failed to alloc vhost event.\n");
-		assert(false);
-		return;
-	}
-
-	ev_ctx->vdev = vdev;
-	ev_ctx->vsession_id = vsession->id;
-	ev_ctx->cb_fn = fn;
-	ev_ctx->user_ctx = arg;
 
 	if (vsession != NULL) {
 		ev_ctx->vsession_id = vsession->id;
@@ -1103,10 +1089,22 @@ spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 			       spdk_vhost_session_fn fn, void *arg)
 {
 	struct spdk_vhost_session *vsession = TAILQ_FIRST(&vdev->vsessions);
+	struct spdk_vhost_session_fn_ctx *ev_ctx;
+
+	ev_ctx = calloc(1, sizeof(*ev_ctx));
+	if (ev_ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc vhost event.\n");
+		assert(false);
+		return;
+	}
+
+	ev_ctx->vdev = vdev;
+	ev_ctx->cb_fn = fn;
+	ev_ctx->user_ctx = arg;
 
 	assert(vdev->pending_async_op_num < UINT32_MAX);
 	vdev->pending_async_op_num++;
-	foreach_session_continue(vdev, vsession, fn, arg);
+	foreach_session_continue(ev_ctx, vsession);
 }
 
 static void
