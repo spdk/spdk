@@ -45,6 +45,30 @@
       "revId": "a18391df807844bfea2f207a1c5ffa69d01ccefd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc0f23f7_fbee8ff3",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 6
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-24T13:16:22Z",
+      "side": 1,
+      "message": "I will fix the type, re tcp only, I have added it in the TCP transport section do you still want this comment to be made here?",
+      "parentUuid": "99e26a40_b54e2af8",
+      "range": {
+        "startLine": 137,
+        "startChar": 40,
+        "endLine": 137,
+        "endChar": 50
+      },
+      "revId": "a18391df807844bfea2f207a1c5ffa69d01ccefd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
