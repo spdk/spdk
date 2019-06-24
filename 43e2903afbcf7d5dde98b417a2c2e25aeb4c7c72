@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9aa7b35_9b1a99e0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-24T09:37:00Z",
+      "side": 1,
+      "message": "This patch should have a title reflecting that it\u0027s adding functions to print errors, commands, and completions as human readables strings. That\u0027s the \"feature\" here.",
+      "revId": "43e2903afbcf7d5dde98b417a2c2e25aeb4c7c72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3da0081b_5c20b1a8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-24T09:37:00Z",
+      "side": 1,
+      "message": "This function should always work. If it\u0027s not working for inactive namespaces, I would prefer we don\u0027t work around the bug but instead figure out why and fix it.",
+      "revId": "43e2903afbcf7d5dde98b417a2c2e25aeb4c7c72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f3cbb2f_eb9d9f3c",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 2329,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-24T09:37:00Z",
+      "side": 1,
+      "message": "This doesn\u0027t format it - it prints it via SPDK_NOTICELOG.",
+      "revId": "43e2903afbcf7d5dde98b417a2c2e25aeb4c7c72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f74428b_2aed3b88",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 2338,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-24T09:37:00Z",
+      "side": 1,
+      "message": "See above.",
+      "revId": "43e2903afbcf7d5dde98b417a2c2e25aeb4c7c72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
