@@ -62,6 +62,16 @@ static struct spdk_thread *g_vhost_init_thread;
 
 static spdk_vhost_fini_cb g_fini_cpl_cb;
 
+/**
+ * DPDK calls our callbacks synchronously but the work those callbacks
+ * perform needs to be async. Luckily, all DPDK callbacks are called on
+ * a DPDK-internal pthread, so we'll just wait on a semaphore in there.
+ */
+static sem_t g_dpdk_sem;
+
+/** Return code for the current DPDK callback */
+static int g_dpdk_response;
+
 struct spdk_vhost_session_fn_ctx {
 	/** Device pointer obtained before enqueuing the event */
 	struct spdk_vhost_dev *vdev;
@@ -71,12 +81,6 @@ struct spdk_vhost_session_fn_ctx {
 
 	/** User callback function to be executed on given thread. */
 	spdk_vhost_session_fn cb_fn;
-
-	/** Semaphore used to signal that event is done. */
-	sem_t sem;
-
-	/** Response to be written by enqueued event. */
-	int response;
 
 	/** Custom user context */
 	void *user_ctx;
@@ -891,15 +895,6 @@ spdk_vhost_put_poll_group(struct vhost_poll_group *pg)
 	pg->ref--;
 }
 
-static void
-complete_session_event(struct spdk_vhost_session *vsession, int response)
-{
-	struct spdk_vhost_session_fn_ctx *ctx = vsession->event_ctx;
-
-	ctx->response = response;
-	sem_post(&ctx->sem);
-}
-
 void
 spdk_vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 {
@@ -908,7 +903,9 @@ spdk_vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 		assert(vsession->vdev->active_session_num < UINT32_MAX);
 		vsession->vdev->active_session_num++;
 	}
-	complete_session_event(vsession, response);
+
+	g_dpdk_response = response;
+	sem_post(&g_dpdk_sem);
 }
 
 void
@@ -919,7 +916,9 @@ spdk_vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
 		assert(vsession->vdev->active_session_num > 0);
 		vsession->vdev->active_session_num--;
 	}
-	complete_session_event(vsession, response);
+
+	g_dpdk_response = response;
+	sem_post(&g_dpdk_sem);
 }
 
 static void
@@ -1000,12 +999,6 @@ spdk_vhost_session_send_event(struct vhost_poll_group *pg,
 	struct timespec timeout;
 	int rc;
 
-	rc = sem_init(&ev_ctx.sem, 0, 0);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
-		return -errno;
-	}
-
 	ev_ctx.vdev = vsession->vdev;
 	ev_ctx.vsession_id = vsession->id;
 	ev_ctx.cb_fn = cb_fn;
@@ -1018,16 +1011,15 @@ spdk_vhost_session_send_event(struct vhost_poll_group *pg,
 	clock_gettime(CLOCK_REALTIME, &timeout);
 	timeout.tv_sec += timeout_sec;
 
-	rc = sem_timedwait(&ev_ctx.sem, &timeout);
+	rc = sem_timedwait(&g_dpdk_sem, &timeout);
 	if (rc != 0) {
 		SPDK_ERRLOG("Timeout waiting for event: %s.\n", errmsg);
-		sem_wait(&ev_ctx.sem);
+		sem_wait(&g_dpdk_sem);
 	}
 
-	sem_destroy(&ev_ctx.sem);
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	vsession->event_ctx = NULL;
-	return ev_ctx.response;
+	return g_dpdk_response;
 }
 
 static int
@@ -1514,6 +1506,14 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		goto err_out;
 	}
 
+	ret = sem_init(&g_dpdk_sem, 0, 0);
+	if (ret != 0) {
+		SPDK_ERRLOG("Failed to initialize semaphore for rte_vhost pthread.\n");
+		spdk_cpuset_free(g_tmp_cpuset);
+		ret = -1;
+		goto err_out;
+	}
+
 	spdk_for_each_thread(vhost_create_poll_group,
 			     init_cb,
 			     vhost_create_poll_group_done);
@@ -1539,6 +1539,7 @@ _spdk_vhost_fini(void *arg1)
 	spdk_vhost_unlock();
 
 	/* All devices are removed now. */
+	sem_destroy(&g_dpdk_sem);
 	spdk_cpuset_free(g_tmp_cpuset);
 	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, tailq, tpg) {
 		TAILQ_REMOVE(&g_poll_groups, pg, tailq);
