@@ -94,6 +94,30 @@
       "revId": "b8bd7edd847526cfb394398df838312f3418670a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98650bba_8bb0ca86",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1014,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-24T15:47:25Z",
+      "side": 1,
+      "message": "I\u0027m not sure I follow, can you paste it in here what you believe is needed;",
+      "parentUuid": "d84d9dc8_7cc577ea",
+      "range": {
+        "startLine": 1013,
+        "startChar": 2,
+        "endLine": 1014,
+        "endChar": 86
+      },
+      "revId": "b8bd7edd847526cfb394398df838312f3418670a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
