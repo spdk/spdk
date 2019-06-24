@@ -887,14 +887,20 @@ spdk_nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem, spdk_channe
 	return 0;
 }
 
-static void
+static int
 spdk_nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ctrlr *ctrlr;
+	int rc;
 
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-		spdk_nvmf_ctrlr_ns_changed(ctrlr, nsid);
+		rc = spdk_nvmf_ctrlr_ns_changed(ctrlr, nsid);
+		if (rc) {
+			return rc;
+		}
 	}
+
+	return 0;
 }
 
 static int
@@ -933,7 +939,9 @@ _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	}
 	free(ns);
 
-	spdk_nvmf_subsystem_ns_changed(subsystem, nsid);
+	if (spdk_nvmf_subsystem_ns_changed(subsystem, nsid)) {
+		return -1;
+	}
 
 	return 0;
 }
@@ -1122,7 +1130,9 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		      spdk_bdev_get_name(bdev),
 		      opts.nsid);
 
-	spdk_nvmf_subsystem_ns_changed(subsystem, opts.nsid);
+	if (spdk_nvmf_subsystem_ns_changed(subsystem, opts.nsid)) {
+		return 0;
+	}
 
 	return opts.nsid;
 }

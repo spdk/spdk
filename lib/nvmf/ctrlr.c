@@ -1287,9 +1287,17 @@ spdk_nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t len
 	}
 }
 
-void
-spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+struct spdk_nvmf_ctrlr_ns_changed_ctx {
+	struct spdk_nvmf_ctrlr *ctrlr;
+	uint32_t nsid;
+};
+
+static void
+_spdk_nvmf_ctrlr_ns_changed(void *ctx)
 {
+	struct spdk_nvmf_ctrlr_ns_changed_ctx *ns_ctx = (struct spdk_nvmf_ctrlr_ns_changed_ctx *)ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = ns_ctx->ctrlr;
+	uint32_t nsid = ns_ctx->nsid;
 	uint16_t max_changes = SPDK_COUNTOF(ctrlr->changed_ns_list.ns_list);
 	uint16_t i;
 	bool found = false;
@@ -1315,6 +1323,24 @@ spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 	}
 
 	spdk_nvmf_ctrlr_async_event_ns_notice(ctrlr);
+}
+
+int
+spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct spdk_nvmf_ctrlr_ns_changed_ctx *ctx;
+
+	ctx = calloc(sizeof(*ctx), 1);
+	if (!ctx) {
+		SPDK_ERRLOG("Can't calloc spdk_nvmf_ctrlr_ns_changed_ctx");
+		return -ENOMEM;
+	}
+
+	ctx->ctrlr = ctrlr;
+	ctx->nsid = nsid;
+
+	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_ns_changed, ctx);
+	return 0;
 }
 
 static void
