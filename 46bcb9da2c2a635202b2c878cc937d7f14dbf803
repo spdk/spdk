@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff237390_008aeb07",
+        "filename": "test/unit/lib/nvme/nvme_tcp.c/nvme_tcp_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T23:13:47Z",
+      "side": 1,
+      "message": "Can we change the line here?",
+      "range": {
+        "startLine": 58,
+        "startChar": 11,
+        "endLine": 58,
+        "endChar": 12
+      },
+      "revId": "46bcb9da2c2a635202b2c878cc937d7f14dbf803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ddbc200c_469e32ae",
+        "filename": "test/unit/lib/nvme/nvme_tcp.c/nvme_tcp_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T23:13:47Z",
+      "side": 1,
+      "message": "If we set this assumption, we should add two more asserts.\n\n\tfor (bio-\u003eiovpos \u003d 0; bio-\u003eiovpos \u003c MAX; bio-\u003eiovpos++) {\n\t\tiov \u003d \u0026bio-\u003eiovs[bio-\u003eiovpos];\n\n\t\tif (offset \u003d\u003d 0) {\n\t\t\tbreak;\n\t\t}\n\n\t\tSPDK_CU_ASSERT_FATAL(offset \u003e\u003d iov-\u003eiov_len);\n\t\toffset -\u003d iov-\u003eiov_len;\n\t}\n\n\tSPDK_CU_ASSERT_FATAL(offset \u003d\u003d 0);\n\tSPDK_CU_ASSERT_FATAL(bio-\u003eiovpos \u003c MAX);\n\n\nAnd the comment may be better to be \"Offset must be aligned with the start of any SGL entry\" ?",
+      "range": {
+        "startLine": 65,
+        "startChar": 2,
+        "endLine": 65,
+        "endChar": 55
+      },
+      "revId": "46bcb9da2c2a635202b2c878cc937d7f14dbf803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "adef7a78_66e637b8",
+        "filename": "test/unit/lib/nvme/nvme_tcp.c/nvme_tcp_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T23:13:47Z",
+      "side": 1,
+      "message": "This could be very large value if iov-\u003eiov_len \u003e offset. So I added the above comment.",
+      "range": {
+        "startLine": 70,
+        "startChar": 2,
+        "endLine": 70,
+        "endChar": 9
+      },
+      "revId": "46bcb9da2c2a635202b2c878cc937d7f14dbf803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7bb8cac_40329662",
+        "filename": "test/unit/lib/nvme/nvme_tcp.c/nvme_tcp_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T23:13:47Z",
+      "side": 1,
+      "message": "Can we change the line here?",
+      "range": {
+        "startLine": 76,
+        "startChar": 10,
+        "endLine": 76,
+        "endChar": 11
+      },
+      "revId": "46bcb9da2c2a635202b2c878cc937d7f14dbf803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7674ccf1_0f764f52",
+        "filename": "test/unit/lib/nvme/nvme_tcp.c/nvme_tcp_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T23:13:47Z",
+      "side": 1,
+      "message": "0xDEADBEEF + i * 0x1000 or 0xFEEDBEEF + i * 0x1000 may be better.\n\ni * 0x1000 may be OK but is unlikely to be any actual address.",
+      "range": {
+        "startLine": 110,
+        "startChar": 33,
+        "endLine": 110,
+        "endChar": 34
+      },
+      "revId": "46bcb9da2c2a635202b2c878cc937d7f14dbf803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
