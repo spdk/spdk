@@ -57,7 +57,9 @@ static struct spdk_cpuset *g_tmp_cpuset;
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
-static struct spdk_thread *g_fini_thread;
+/* Thread performing all vhost management operations */
+static struct spdk_thread *g_vhost_init_thread;
+
 static spdk_vhost_fini_cb g_fini_cpl_cb;
 
 struct spdk_vhost_session_fn_ctx {
@@ -1489,6 +1491,9 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 	size_t len;
 	int ret;
 
+	g_vhost_init_thread = spdk_get_thread();
+	assert(g_vhost_init_thread != NULL);
+
 	if (dev_dirname[0] == '\0') {
 		if (getcwd(dev_dirname, sizeof(dev_dirname) - 1) == NULL) {
 			SPDK_ERRLOG("getcwd failed (%d): %s\n", errno, spdk_strerror(errno));
@@ -1553,7 +1558,7 @@ session_shutdown(void *arg)
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Exiting\n");
-	spdk_thread_send_msg(g_fini_thread, _spdk_vhost_fini, NULL);
+	spdk_thread_send_msg(g_vhost_init_thread, _spdk_vhost_fini, NULL);
 	return NULL;
 }
 
@@ -1563,7 +1568,7 @@ spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 	pthread_t tid;
 	int rc;
 
-	g_fini_thread = spdk_get_thread();
+	assert(spdk_get_thread() == g_vhost_init_thread);
 	g_fini_cpl_cb = fini_cb;
 
 	/* rte_vhost API for removing sockets is not asynchronous. Since it may call SPDK
