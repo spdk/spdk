@@ -2,6 +2,121 @@
   "comments": [
     {
       "key": {
+        "uuid": "1d1a27a3_f04404ac",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "a single space may be better.",
+      "range": {
+        "startLine": 163,
+        "startChar": 6,
+        "endLine": 163,
+        "endChar": 7
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37e26d08_a16bb53a",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "this is normal case?",
+      "range": {
+        "startLine": 249,
+        "startChar": 1,
+        "endLine": 252,
+        "endChar": 0
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "645d0e73_c688a19e",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "Can we manage all free requests by a linked list of hwqp? TAILQ_REMOVE and TAILQ_INSERT_TAIL will have lower cost than spdk_mempool_get/put?",
+      "range": {
+        "startLine": 274,
+        "startChar": 41,
+        "endLine": 274,
+        "endChar": 81
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e789ddd_f3f40ef0",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "All requests in the pool should have the same state SPDK_NVMF_FC_REQ_INIT? It\u0027s not easy to understand free requests have different state depending on the case.",
+      "range": {
+        "startLine": 291,
+        "startChar": 2,
+        "endLine": 291,
+        "endChar": 32
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4ca2770_749fa998",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "This patch is OK but will you consider to introduce buffer cache for each hwqp like rdma and tcp transport as an enhancement?",
+      "range": {
+        "startLine": 317,
+        "startChar": 3,
+        "endLine": 317,
+        "endChar": 19
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b91ba90_fd099b8f",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 30
@@ -82,6 +197,30 @@
       "writtenOn": "2019-06-18T06:54:53Z",
       "side": 1,
       "message": "is this normal case? Will you explain what case this is necessary?",
+      "range": {
+        "startLine": 1259,
+        "startChar": 3,
+        "endLine": 1262,
+        "endChar": 0
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7c39cf4_faa8413a",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1262,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "\u003e is this normal case? Will you explain what case this is necessary?\n\nwhen req.data is NULL and req.iovcnt is 0?, and the case is normal?",
+      "parentUuid": "85bedf2d_357de546",
       "range": {
         "startLine": 1259,
         "startChar": 3,
@@ -317,6 +456,121 @@
         "startChar": 3,
         "endLine": 1194,
         "endChar": 2
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2161752c_6432a736",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "this 0 should be replaced by SPDK_NVMF_FC_POLLER_API_SUCCESS?",
+      "range": {
+        "startLine": 123,
+        "startChar": 49,
+        "endLine": 123,
+        "endChar": 50
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83a64847_b7196a9c",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "this return is not necessary.",
+      "range": {
+        "startLine": 144,
+        "startChar": 1,
+        "endLine": 144,
+        "endChar": 7
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d6e8897_1843b72e",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "this is referenced only at the line 178, and so writing SUCCESS directly there will be enough and easier to understand.",
+      "range": {
+        "startLine": 151,
+        "startChar": 1,
+        "endLine": 151,
+        "endChar": 72
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0f496af_35eb68fb",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "a single space?",
+      "range": {
+        "startLine": 222,
+        "startChar": 38,
+        "endLine": 222,
+        "endChar": 39
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc14e9fe_570f41b8",
+        "filename": "lib/nvmf/fc_poller_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T02:13:25Z",
+      "side": 1,
+      "message": "this is referenced only at the line 262. and so writing NOT_FOUND there directly will be enough and easier to understand.",
+      "range": {
+        "startLine": 248,
+        "startChar": 1,
+        "endLine": 248,
+        "endChar": 79
       },
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
