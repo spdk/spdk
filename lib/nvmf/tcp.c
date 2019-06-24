@@ -1869,13 +1869,21 @@ static int
 nvmf_tcp_read_payload_data_with_md(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
 {
 	struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
-	int iovcnt;
+	int iovcnt, rc, _rc;
 
 	iovcnt = nvmf_tcp_build_payload_iovs_with_md(iov, NVME_TCP_MAX_SGL_DESCRIPTORS + 1,
 			pdu, pdu->ddgst_enable, NULL);
 	assert(iovcnt >= 0);
 
-	return nvme_tcp_readv_data(sock, iov, iovcnt);
+	rc = nvme_tcp_readv_data(sock, iov, iovcnt);
+	if (rc > 0) {
+		_rc = spdk_dif_generate_stream(iov, iovcnt, pdu->readv_offset, rc, pdu->dif_ctx);
+		if (_rc != 0) {
+			SPDK_ERRLOG("DIF generate failed\n");
+			rc = _rc;
+		}
+	}
+	return rc;
 }
 
 static int
