@@ -49,6 +49,18 @@
 #include "ftl_debug.h"
 #include "ftl_reloc.h"
 
+struct ftl_band_flush {
+	struct spdk_ftl_dev		*dev;
+	/* Number of bands left to be flushed */
+	size_t				num_bands;
+	/* User callbacks */
+	spdk_ftl_fn			cb_fn;
+	/* Callback's argument */
+	void				*cb_arg;
+	/* List link */
+	LIST_ENTRY(ftl_band_flush)	list_entry;
+};
+
 struct ftl_wptr {
 	/* Owner device */
 	struct spdk_ftl_dev		*dev;
@@ -79,6 +91,9 @@ struct ftl_wptr {
 
 	/* Number of outstanding write requests */
 	uint32_t			num_outstanding;
+
+	/* Marks that the band related to this wptr needs to be closed as soon as possible */
+	bool				flush;
 };
 
 struct ftl_flush {
@@ -127,6 +142,20 @@ ftl_wptr_free(struct ftl_wptr *wptr)
 static void
 ftl_remove_wptr(struct ftl_wptr *wptr)
 {
+	struct spdk_ftl_dev *dev = wptr->dev;
+	struct ftl_band_flush *flush, *tmp;
+
+	if (spdk_unlikely(wptr->flush)) {
+		LIST_FOREACH_SAFE(flush, &dev->band_flush_list, list_entry, tmp) {
+			assert(flush->num_bands > 0);
+			if (--flush->num_bands == 0) {
+				flush->cb_fn(flush->cb_arg, 0);
+				LIST_REMOVE(flush, list_entry);
+				free(flush);
+			}
+		}
+	}
+
 	LIST_REMOVE(wptr, list_entry);
 	ftl_wptr_free(wptr);
 }
@@ -600,6 +629,33 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 	return 1;
 }
 
+int
+ftl_flush_active_bands(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	struct ftl_wptr *wptr;
+	struct ftl_band_flush *flush;
+
+	assert(ftl_get_core_thread(dev) == spdk_get_thread());
+
+	flush = calloc(1, sizeof(*flush));
+	if (spdk_unlikely(!flush)) {
+		return -ENOMEM;
+	}
+
+	LIST_INSERT_HEAD(&dev->band_flush_list, flush, list_entry);
+
+	flush->cb_fn = cb_fn;
+	flush->cb_arg = cb_arg;
+	flush->dev = dev;
+
+	LIST_FOREACH(wptr, &dev->wptr_list, list_entry) {
+		wptr->flush = true;
+		flush->num_bands++;
+	}
+
+	return 0;
+}
+
 static const struct spdk_ftl_limit *
 ftl_get_limit(const struct spdk_ftl_dev *dev, int type)
 {
@@ -694,13 +750,28 @@ ftl_remove_free_bands(struct spdk_ftl_dev *dev)
 }
 
 static void
+ftl_wptr_pad_band(struct ftl_wptr *wptr)
+{
+	struct spdk_ftl_dev *dev = wptr->dev;
+	size_t size = ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_INTERNAL) +
+		      ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_USER);
+	size_t blocks_left, rwb_size, pad_size;
+
+	blocks_left = ftl_wptr_user_lbks_left(wptr);
+	rwb_size = ftl_rwb_size(dev->rwb) - size;
+	pad_size = spdk_min(blocks_left, rwb_size);
+
+	/* Pad write buffer until band is full */
+	ftl_rwb_pad(dev, pad_size);
+}
+
+static void
 ftl_wptr_process_shutdown(struct ftl_wptr *wptr)
 {
 	struct spdk_ftl_dev *dev = wptr->dev;
 	size_t size = ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_INTERNAL) +
 		      ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_USER);
 	size_t num_active = dev->xfer_size * ftl_rwb_get_active_batches(dev->rwb);
-	size_t band_length, rwb_free_space, pad_length;
 
 	num_active = num_active ? num_active : dev->xfer_size;
 	if (size >= num_active) {
@@ -713,12 +784,7 @@ ftl_wptr_process_shutdown(struct ftl_wptr *wptr)
 		ftl_remove_free_bands(dev);
 	}
 
-	band_length = ftl_wptr_user_lbks_left(wptr);
-	rwb_free_space = ftl_rwb_size(dev->rwb) - size;
-	pad_length = spdk_min(band_length, rwb_free_space);
-
-	/* Pad write buffer until band is full */
-	ftl_rwb_pad(dev, pad_length);
+	ftl_wptr_pad_band(wptr);
 }
 
 static int
@@ -1508,6 +1574,10 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 
 	if (dev->halt) {
 		ftl_wptr_process_shutdown(wptr);
+	}
+
+	if (spdk_unlikely(wptr->flush)) {
+		ftl_wptr_pad_band(wptr);
 	}
 
 	batch = ftl_rwb_pop(dev->rwb);
