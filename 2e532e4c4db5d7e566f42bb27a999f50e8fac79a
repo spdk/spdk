@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "064586e9_b13dcd27",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1117,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-24T04:39:41Z",
+      "side": 1,
+      "message": "Hi Takeshi,\n\nThis patch is certainly pushing SPDK\u0027s mem management in the right direction, but it needs adjustments.\n\nMemory can be only mapped to specific VFIO-bound devices, which practically means you cannot make memory \"DMA-able\" if there are no PCI devices attached to SPDK at the time. rte_vfio_dma_map() follows this logic and it fails if there are no devices attached. spdk_mem_register(), on the other hand, always allows user to map the memory. The difference comes from the fact that spdk_mem_register() makes memory DMA-able on all available DMA transports (PCI, RDMA, Virtio) and non-critical failure like this shouldn\u0027t fail the entire registration - after all, the memory might be still DMA-able for RDMA or Virtio, which is enough.\n\nWe already have a list of all spdk_mem_register-ed mappings (g_vfio.maps) and whenever the first PCI device is hotplugged, we register all of those to VFIO. Also, once the last PCI device is hotremoved, all VFIO mappings are lost, so we need to register them again as soon as the first PCI device is hotplugged. For this reason rte_vfio_dma_map() also keeps an internal list of mappings, but in order to verify that memory can be made DMA-able at all, it still requires the user to have at least one PCI device attached at the time of rte_vfio_dma_map() call. (It will send the VFIO ioctl right away and rc will tell if it\u0027s a valid address range). It also turns out that this list in DPDK has a maximum size of roughly 256 entries. Since you call rte_vfio_dma_map() for each 2MB chunk now, it will start failing if you try to register more than 512MB.\n\nTo sum up, the following still needs to be done if we want to switch to rte_vfio_dma_map():\n * register memory in bigger segments, don\u0027t split it into singular 2MB pages\n * keep g_vfio.maps and g_vfio.device_ref, but remove any mappings from there once they\u0027re passed to rte_vfio_dma_map()\n * don\u0027t call rte_vfio_dma_map() if there are no devices (or call it every time, but ignore this particular(?) error code)\n\nThanks,\nD.",
+      "revId": "2e532e4c4db5d7e566f42bb27a999f50e8fac79a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
