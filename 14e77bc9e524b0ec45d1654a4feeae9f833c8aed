@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47366d97_1a851bd2",
+        "filename": "scripts/vagrant/Vagrantfile_vhost_vm",
+        "patchSetId": 8
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-24T08:38:57Z",
+      "side": 1,
+      "message": "Why won\u0027t we use our pkgdep.sh script?",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 151
+      },
+      "revId": "14e77bc9e524b0ec45d1654a4feeae9f833c8aed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
