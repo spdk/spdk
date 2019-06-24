@@ -181,7 +181,7 @@ out:
 }
 
 static void
-bdev_ftl_free_cb(void *ctx, int status)
+bdev_ftl_free_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
 	struct ftl_bdev *ftl_bdev = ctx;
 	bool finish_done;
