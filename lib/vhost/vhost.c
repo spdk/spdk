@@ -1023,30 +1023,6 @@ spdk_vhost_session_send_event(struct vhost_poll_group *pg,
 	return g_dpdk_response;
 }
 
-static int
-spdk_vhost_event_async_send_foreach_continue(struct spdk_vhost_session *vsession,
-		spdk_vhost_session_fn cb_fn, void *arg)
-{
-	struct spdk_vhost_dev *vdev = vsession->vdev;
-	struct spdk_vhost_session_fn_ctx *ev_ctx;
-
-	ev_ctx = calloc(1, sizeof(*ev_ctx));
-	if (ev_ctx == NULL) {
-		SPDK_ERRLOG("Failed to alloc vhost event.\n");
-		assert(false);
-		return -ENOMEM;
-	}
-
-	ev_ctx->vdev = vdev;
-	ev_ctx->vsession_id = vsession->id;
-	ev_ctx->cb_fn = cb_fn;
-	ev_ctx->user_ctx = arg;
-
-	spdk_thread_send_msg(vsession->poll_group->thread,
-			     spdk_vhost_event_async_foreach_fn, ev_ctx);
-	return 0;
-}
-
 static void
 _stop_session(struct spdk_vhost_session *vsession)
 {
@@ -1365,6 +1341,7 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_session *vsession,
 		spdk_vhost_session_fn fn, void *arg)
 {
+	struct spdk_vhost_session_fn_ctx *ev_ctx;
 	int rc;
 
 	if (vsession == NULL) {
@@ -1385,7 +1362,20 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 		}
 	}
 
-	spdk_vhost_event_async_send_foreach_continue(vsession, fn, arg);
+	ev_ctx = calloc(1, sizeof(*ev_ctx));
+	if (ev_ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc vhost event.\n");
+		assert(false);
+		return;
+	}
+
+	ev_ctx->vdev = vdev;
+	ev_ctx->vsession_id = vsession->id;
+	ev_ctx->cb_fn = fn;
+	ev_ctx->user_ctx = arg;
+
+	spdk_thread_send_msg(vsession->poll_group->thread,
+			     spdk_vhost_event_async_foreach_fn, ev_ctx);
 	return;
 
 out_finish_foreach:
