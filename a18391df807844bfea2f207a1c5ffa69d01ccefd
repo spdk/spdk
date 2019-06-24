@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7658e3af_7a8039cb",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-24T19:28:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a1d6662a_a581167c",
+      "range": {
+        "startLine": 12,
+        "startChar": 42,
+        "endLine": 12,
+        "endChar": 48
+      },
+      "revId": "a18391df807844bfea2f207a1c5ffa69d01ccefd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99e26a40_b54e2af8",
         "filename": "etc/spdk/nvmf.conf.in",
         "patchSetId": 6
@@ -69,6 +93,30 @@
       "revId": "a18391df807844bfea2f207a1c5ffa69d01ccefd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c65c22e0_582eecc4",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 6
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1016578
+      },
+      "writtenOn": "2019-06-24T19:28:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cc0f23f7_fbee8ff3",
+      "range": {
+        "startLine": 137,
+        "startChar": 40,
+        "endLine": 137,
+        "endChar": 50
+      },
+      "revId": "a18391df807844bfea2f207a1c5ffa69d01ccefd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
