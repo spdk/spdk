@@ -940,12 +940,12 @@ spdk_vhost_event_cb(void *arg1)
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
-static void spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
-		struct spdk_vhost_session *vsession,
-		spdk_vhost_session_fn fn, void *arg);
+static void foreach_session_continue(struct spdk_vhost_dev *vdev,
+				     struct spdk_vhost_session *vsession,
+				     spdk_vhost_session_fn fn, void *arg);
 
 static void
-spdk_vhost_event_async_foreach_fn(void *arg1)
+foreach_session_continue_cb(void *arg1)
 {
 	struct spdk_vhost_session_fn_ctx *ctx = arg1;
 	struct spdk_vhost_session *vsession = NULL;
@@ -954,7 +954,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1)
 
 	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
 		spdk_thread_send_msg(spdk_get_thread(),
-				     spdk_vhost_event_async_foreach_fn, arg1);
+				     foreach_session_continue_cb, arg1);
 		return;
 	}
 
@@ -966,7 +966,6 @@ spdk_vhost_event_async_foreach_fn(void *arg1)
 		goto out_unlock_continue;
 	}
 
-
 	if (vsession->started && vsession->poll_group->thread != spdk_get_thread()) {
 		/* if session has been relocated to other thread, it is no longer thread-safe
 		 * to access its contents here. Even though we're running under the global
@@ -974,7 +973,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1)
 		 * the session thread as many times as necessary.
 		 */
 		spdk_thread_send_msg(vsession->poll_group->thread,
-				     spdk_vhost_event_async_foreach_fn, arg1);
+				     foreach_session_continue_cb, arg1);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
@@ -986,7 +985,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1)
 
 out_unlock_continue:
 	vsession = spdk_vhost_session_next(vdev, ctx->vsession_id);
-	spdk_vhost_external_event_foreach_continue(vdev, vsession, ctx->cb_fn, ctx->user_ctx);
+	foreach_session_continue(vdev, vsession, ctx->cb_fn, ctx->user_ctx);
 out_unlock:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	free(ctx);
@@ -1337,9 +1336,9 @@ destroy_connection(int vid)
 }
 
 static void
-spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
-		struct spdk_vhost_session *vsession,
-		spdk_vhost_session_fn fn, void *arg)
+foreach_session_continue(struct spdk_vhost_dev *vdev,
+			 struct spdk_vhost_session *vsession,
+			 spdk_vhost_session_fn fn, void *arg)
 {
 	struct spdk_vhost_session_fn_ctx *ev_ctx;
 	int rc;
@@ -1375,7 +1374,7 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 	ev_ctx->user_ctx = arg;
 
 	spdk_thread_send_msg(vsession->poll_group->thread,
-			     spdk_vhost_event_async_foreach_fn, ev_ctx);
+			     foreach_session_continue_cb, ev_ctx);
 	return;
 
 out_finish_foreach:
@@ -1395,7 +1394,7 @@ spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 
 	assert(vdev->pending_async_op_num < UINT32_MAX);
 	vdev->pending_async_op_num++;
-	spdk_vhost_external_event_foreach_continue(vdev, vsession, fn, arg);
+	foreach_session_continue(vdev, vsession, fn, arg);
 }
 
 void
