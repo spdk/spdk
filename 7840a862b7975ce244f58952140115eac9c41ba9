@@ -16,6 +16,24 @@
       "revId": "7840a862b7975ce244f58952140115eac9c41ba9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa90b6ed_f8a3af0f",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1450,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-24T08:04:25Z",
+      "side": 1,
+      "message": "I want data_unalign to be less than data_block_size.\n\nctx-\u003edata_offset is the start of the current data segment in the whole payload.\ndata_offset (which is a parameter of spdk_dif_set_md_interleave_iovs()) is the offset in the current data segment.\n\nIf ctx-\u003edata_offset is not aligned with data_block_size, we have to leave a metadata space to the end of the data block (in which ctx-\u003edata_offset is included),\n\nPlease see the line 1946 and 1947 in test/unit/lib/util/dif.c/dif_ut.c. This means that the previous read couldn\u0027t read the last 1 byte of a data block and so we must leave 128 byte after 1 byte and continue to read the next data block.\n\nI hope this make sense to you.",
+      "parentUuid": "6ab22559_0e49236a",
+      "revId": "7840a862b7975ce244f58952140115eac9c41ba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
