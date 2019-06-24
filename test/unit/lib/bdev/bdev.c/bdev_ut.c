@@ -1751,7 +1751,7 @@ static void
 bdev_histograms(void)
 {
 	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *ch;
 	struct spdk_histogram_data *histogram;
 	uint8_t buf[4096];
