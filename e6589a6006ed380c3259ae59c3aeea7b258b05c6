@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72cd7c7e_fec68741",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-24T13:43:51Z",
+      "side": 1,
+      "message": "Should waitforfile be added here ?",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 6
+      },
+      "revId": "e6589a6006ed380c3259ae59c3aeea7b258b05c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74e0298d_9332275e",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-24T13:43:51Z",
+      "side": 1,
+      "message": "Should there be waitforfile added here as well ?",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 33
+      },
+      "revId": "e6589a6006ed380c3259ae59c3aeea7b258b05c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64965c4a_daaf09e1",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-24T13:43:51Z",
+      "side": 1,
+      "message": "Should waitforfile be added here ?",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 36
+      },
+      "revId": "e6589a6006ed380c3259ae59c3aeea7b258b05c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f18f63c_e7abd1d8",
+        "filename": "test/iscsi_tgt/reset/reset.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-06-24T13:43:51Z",
+      "side": 1,
+      "message": "Should waitforfile be added here ?",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 78
+      },
+      "revId": "e6589a6006ed380c3259ae59c3aeea7b258b05c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
