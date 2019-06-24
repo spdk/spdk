@@ -22,6 +22,30 @@
       "revId": "f2d8c9316de87947aeea05a9b860258f1bf5aca9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8608dbe_ed4dfa24",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-24T02:01:29Z",
+      "side": 1,
+      "message": "you are right, I found that the compiler was a little crazy, if do var-\u003evalue in this loop whatever is TAILQ_FOREACH or TAILQ_FOREACH_SAFE, \"var-\u003e\" will get warning.\nFeel a little strange, the same warning report, but the similar workaround can not fit other\nerrors.",
+      "parentUuid": "51ab56c3_08ea4cbc",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 52
+      },
+      "revId": "f2d8c9316de87947aeea05a9b860258f1bf5aca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
