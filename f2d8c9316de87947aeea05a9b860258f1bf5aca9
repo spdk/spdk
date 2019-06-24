@@ -46,6 +46,30 @@
       "revId": "f2d8c9316de87947aeea05a9b860258f1bf5aca9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35475bce_01d4d238",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-24T09:48:12Z",
+      "side": 1,
+      "message": "Yeah if we can fix the TAILQ macros to make scan-build behave better, we should. It gets very confused.\n\nA simpler fix here may have been this:\n\nTAILQ_FOREACH(iname, \u0026ig-\u003einitiator_head, tailq) {\n    assert(iname !\u003d NULL);\n    if (!strcmp(iname-\u003ename, name)) {\n...\n\n\nWe only run scan-build on debug builds, so the asserts help hint to it.",
+      "parentUuid": "f8608dbe_ed4dfa24",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 52
+      },
+      "revId": "f2d8c9316de87947aeea05a9b860258f1bf5aca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
