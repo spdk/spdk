@@ -385,9 +385,9 @@ spdk_vhost_session_set_coalescing(struct spdk_vhost_dev *vdev,
 	return 0;
 }
 
-int
-spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
-			  uint32_t iops_threshold)
+static int
+vhost_dev_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			 uint32_t iops_threshold)
 {
 	uint64_t delay_time_base = delay_base_us * spdk_get_ticks_hz() / 1000000ULL;
 	uint32_t io_rate = iops_threshold * SPDK_VHOST_STATS_CHECK_INTERVAL_MS / 1000U;
@@ -403,6 +403,19 @@ spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 
 	vdev->coalescing_delay_us = delay_base_us;
 	vdev->coalescing_iops_threshold = iops_threshold;
+	return 0;
+}
+
+int
+spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			  uint32_t iops_threshold)
+{
+	int rc;
+
+	rc = vhost_dev_set_coalescing(vdev, delay_base_us, iops_threshold);
+	if (rc != 0) {
+		return rc;
+	}
 
 	spdk_vhost_dev_foreach_session(vdev, spdk_vhost_session_set_coalescing, NULL);
 	return 0;
@@ -777,8 +790,8 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	TAILQ_INIT(&vdev->vsessions);
 	TAILQ_INSERT_TAIL(&g_spdk_vhost_devices, vdev, tailq);
 
-	spdk_vhost_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
-				  SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
+	vhost_dev_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
+				 SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
 
 	spdk_vhost_dev_install_rte_compat_hooks(vdev);
 
