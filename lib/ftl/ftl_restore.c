@@ -456,28 +456,10 @@ ftl_nv_cache_restore_complete(struct ftl_nv_cache_restore *restore, int status)
 static void ftl_nv_cache_block_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 static void
-ftl_nv_cache_recovery_done(struct ftl_nv_cache_restore *restore)
+ftl_nv_cache_restore_done(struct ftl_nv_cache_restore *restore, uint64_t current_addr)
 {
 	struct ftl_nv_cache *nv_cache = restore->nv_cache;
-	struct ftl_nv_cache_range *range;
-	struct spdk_bdev *bdev;
 	unsigned int phase = nv_cache->phase;
-	uint64_t current_addr;
-
-	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-
-	/* The latest phase is the one written in the header (set in nvc_cache->phase) */
-	range = &restore->range[phase];
-	current_addr = range->last_addr + 1;
-
-	/*
-	 * The first range might be empty (only the header was written) or the range might
-	 * end at the last available address, in which case set current address to the
-	 * beginning of the device.
-	 */
-	if (range->num_blocks == 0 || current_addr >= spdk_bdev_get_num_blocks(bdev)) {
-		current_addr = FTL_NV_CACHE_DATA_OFFSET;
-	}
 
 	pthread_spin_lock(&nv_cache->lock);
 	nv_cache->current_addr = current_addr;
@@ -488,6 +470,138 @@ ftl_nv_cache_recovery_done(struct ftl_nv_cache_restore *restore)
 		      PRIu64")\n", phase, current_addr);
 
 	ftl_nv_cache_restore_complete(restore, 0);
+}
+
+static void
+ftl_nv_cache_write_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_nv_cache_restore *restore = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Scrubbing non-volatile cache failed\n");
+		ftl_nv_cache_restore_complete(restore, -EIO);
+		return;
+	}
+
+	ftl_nv_cache_restore_done(restore, FTL_NV_CACHE_DATA_OFFSET);
+}
+
+static void
+ftl_nv_cache_scrub_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_nv_cache_restore *restore = cb_arg;
+	struct ftl_nv_cache *nv_cache = restore->nv_cache;
+	int rc;
+
+	spdk_bdev_free_io(bdev_io);
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Scrubbing non-volatile cache failed\n");
+		ftl_nv_cache_restore_complete(restore, -EIO);
+		return;
+	}
+
+	nv_cache->phase = 1;
+	rc = ftl_nv_cache_write_header(nv_cache, ftl_nv_cache_write_header_cb, restore);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Unable to write the non-volatile cache metadata header: %s\n",
+			    spdk_strerror(-rc));
+		ftl_nv_cache_restore_complete(restore, -EIO);
+	}
+}
+
+static void
+ftl_nv_cache_scrub_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_nv_cache_restore *restore = cb_arg;
+	struct ftl_nv_cache *nv_cache = restore->nv_cache;
+	int rc;
+
+	spdk_bdev_free_io(bdev_io);
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Unable to write non-volatile cache metadata header\n");
+		ftl_nv_cache_restore_complete(restore, -EIO);
+		return;
+	}
+
+	rc = ftl_nv_cache_scrub(nv_cache, ftl_nv_cache_scrub_cb, restore);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Unable to scrub the non-volatile cache: %s\n", spdk_strerror(-rc));
+		ftl_nv_cache_restore_complete(restore, rc);
+	}
+}
+
+static void
+ftl_nv_cache_band_flush_cb(void *ctx, int status)
+{
+	struct ftl_nv_cache_restore *restore = ctx;
+	struct ftl_nv_cache *nv_cache = restore->nv_cache;
+	int rc;
+
+	if (spdk_unlikely(status != 0)) {
+		SPDK_ERRLOG("Flushing active bands failed: %s\n", spdk_strerror(-status));
+		ftl_nv_cache_restore_complete(restore, status);
+		return;
+	}
+
+	/*
+	 * Use phase 0 to indicate that the cache is being scrubbed. If the power is lost during
+	 * this process, we'll know it needs to be resumed.
+	 */
+	nv_cache->phase = 0;
+	rc = ftl_nv_cache_write_header(nv_cache, ftl_nv_cache_scrub_header_cb, restore);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Unable to write non-volatile cache metadata header: %s\n",
+			    spdk_strerror(-rc));
+		ftl_nv_cache_restore_complete(restore, rc);
+	}
+}
+
+static void
+ftl_nv_cache_recovery_done(struct ftl_nv_cache_restore *restore)
+{
+	struct ftl_nv_cache *nv_cache = restore->nv_cache;
+	struct ftl_nv_cache_range *range_prev, *range_current;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct spdk_bdev *bdev;
+	uint64_t current_addr;
+	int rc;
+
+	range_prev = &restore->range[ftl_nv_cache_prev_phase(nv_cache->phase)];
+	range_current = &restore->range[nv_cache->phase];
+	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+
+	/*
+	 * If there are more than two ranges or the ranges overlap, scrub the non-volatile cache to
+	 * make sure that any subsequent power loss will find the cache in usable state
+	 */
+	if ((range_prev->num_blocks + range_current->num_blocks < nv_cache->num_data_blocks) ||
+	    (range_prev->start_addr < range_current->last_addr &&
+	     range_current->start_addr < range_prev->last_addr)) {
+		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Non-volatile cache incosistency detected\n");
+
+		rc = ftl_flush_active_bands(dev, ftl_nv_cache_band_flush_cb, restore);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to flush active bands: %s\n", spdk_strerror(-rc));
+			ftl_nv_cache_restore_complete(restore, rc);
+		}
+
+		return;
+	}
+
+	/* The latest phase is the one written in the header (set in nvc_cache->phase) */
+	current_addr = range_current->last_addr + 1;
+
+	/*
+	 * The first range might be empty (only the header was written) or the range might
+	 * end at the last available address, in which case set current address to the
+	 * beginning of the device.
+	 */
+	if (range_current->num_blocks == 0 || current_addr >= spdk_bdev_get_num_blocks(bdev)) {
+		current_addr = FTL_NV_CACHE_DATA_OFFSET;
+	}
+
+	ftl_nv_cache_restore_done(restore, current_addr);
 }
 
 static void
@@ -761,7 +875,7 @@ ftl_nv_cache_scan_block(struct ftl_nv_cache_block *block)
 }
 
 static void
-ftl_nv_cache_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+ftl_nv_cache_read_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct ftl_restore *restore = cb_arg;
 	struct spdk_ftl_dev *dev = restore->dev;
@@ -769,7 +883,7 @@ ftl_nv_cache_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	struct ftl_nv_cache_header *hdr;
 	struct iovec *iov = NULL;
-	int iov_cnt = 0, i;
+	int iov_cnt = 0, i, rc;
 	uint32_t checksum;
 
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
@@ -811,8 +925,21 @@ ftl_nv_cache_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	if (!ftl_nv_cache_phase_is_valid(hdr->phase)) {
-		SPDK_ERRLOG("Invalid phase of the non-volatile cache (%u)\n", hdr->phase);
-		ftl_restore_complete(restore, -ENOTRECOVERABLE);
+		/* If the phase equals zero, we lost power during recovery. We need to finish it up
+		 * by scrubbing the device once again.
+		 */
+		if (hdr->phase != 0) {
+			ftl_restore_complete(restore, -ENOTRECOVERABLE);
+		} else {
+			SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Detected phase 0, restarting scrub\n");
+			rc = ftl_nv_cache_scrub(nv_cache, ftl_nv_cache_scrub_cb, restore);
+			if (spdk_unlikely(rc != 0)) {
+				SPDK_ERRLOG("Unable to scrub the non-volatile cache: %s\n",
+					    spdk_strerror(-rc));
+				ftl_restore_complete(restore, -ENOTRECOVERABLE);
+			}
+		}
+
 		goto out;
 	}
 
@@ -877,7 +1004,7 @@ ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb)
 	}
 
 	rc = spdk_bdev_read_blocks(nv_cache->bdev_desc, ioch->cache_ioch, nvc_restore->block[0].buf,
-				   0, 1, ftl_nv_cache_header_cb, restore);
+				   0, 1, ftl_nv_cache_read_header_cb, restore);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Failed to read non-volatile cache metadata header: %s\n",
 			    spdk_strerror(-rc));
