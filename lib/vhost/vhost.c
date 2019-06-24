@@ -940,6 +940,37 @@ spdk_vhost_event_cb(void *arg1)
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
+int
+spdk_vhost_session_send_event(struct vhost_poll_group *pg,
+			      struct spdk_vhost_session *vsession,
+			      spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
+			      const char *errmsg)
+{
+	struct spdk_vhost_session_fn_ctx ev_ctx = {0};
+	struct timespec timeout;
+	int rc;
+
+	ev_ctx.vdev = vsession->vdev;
+	ev_ctx.vsession_id = vsession->id;
+	ev_ctx.cb_fn = cb_fn;
+
+	vsession->poll_group = pg;
+	spdk_thread_send_msg(pg->thread, spdk_vhost_event_cb, &ev_ctx);
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += timeout_sec;
+
+	rc = sem_timedwait(&g_dpdk_sem, &timeout);
+	if (rc != 0) {
+		SPDK_ERRLOG("Timeout waiting for event: %s.\n", errmsg);
+		sem_wait(&g_dpdk_sem);
+	}
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	return g_dpdk_response;
+}
+
 static void foreach_session_continue(struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_session *vsession,
 		spdk_vhost_session_fn fn, void *arg);
@@ -989,37 +1020,6 @@ out_unlock_continue:
 out_unlock:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	free(ctx);
-}
-
-int
-spdk_vhost_session_send_event(struct vhost_poll_group *pg,
-			      struct spdk_vhost_session *vsession,
-			      spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
-			      const char *errmsg)
-{
-	struct spdk_vhost_session_fn_ctx ev_ctx = {0};
-	struct timespec timeout;
-	int rc;
-
-	ev_ctx.vdev = vsession->vdev;
-	ev_ctx.vsession_id = vsession->id;
-	ev_ctx.cb_fn = cb_fn;
-
-	vsession->poll_group = pg;
-	spdk_thread_send_msg(pg->thread, spdk_vhost_event_cb, &ev_ctx);
-	pthread_mutex_unlock(&g_spdk_vhost_mutex);
-
-	clock_gettime(CLOCK_REALTIME, &timeout);
-	timeout.tv_sec += timeout_sec;
-
-	rc = sem_timedwait(&g_dpdk_sem, &timeout);
-	if (rc != 0) {
-		SPDK_ERRLOG("Timeout waiting for event: %s.\n", errmsg);
-		sem_wait(&g_dpdk_sem);
-	}
-
-	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	return g_dpdk_response;
 }
 
 static void
