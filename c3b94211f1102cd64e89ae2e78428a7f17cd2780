@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54294f32_66339e84",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-06-24T01:14:03Z",
+      "side": 1,
+      "message": "had you thought about making data_len and int and check \u003e\u003d0 here to avoid an infinite loop if there\u0027s a bug elsewhere that causes data_len to be decremented too far?",
+      "revId": "c3b94211f1102cd64e89ae2e78428a7f17cd2780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
