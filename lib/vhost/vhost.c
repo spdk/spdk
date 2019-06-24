@@ -989,6 +989,27 @@ static void foreach_session_continue(struct spdk_vhost_dev *vdev,
 				     spdk_vhost_session_fn fn, void *arg);
 
 static void
+foreach_session_finish_cb(void *arg1)
+{
+	struct spdk_vhost_session_fn_ctx *ctx = arg1;
+	struct spdk_vhost_dev *vdev = ctx->vdev;
+
+	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
+		spdk_thread_send_msg(spdk_get_thread(),
+				     foreach_session_finish_cb, arg1);
+		return;
+	}
+
+	assert(vdev->pending_async_op_num > 0);
+	vdev->pending_async_op_num--;
+	/* Call fn one last time with vsession == NULL */
+	ctx->cb_fn(vdev, NULL, ctx->user_ctx);
+
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+	free(ctx);
+}
+
+static void
 foreach_session_continue_cb(void *arg1)
 {
 	struct spdk_vhost_session_fn_ctx *ctx = arg1;
@@ -1043,11 +1064,7 @@ foreach_session_continue(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_session_fn_ctx *ev_ctx;
 	int rc;
 
-	if (vsession == NULL) {
-		goto out_finish_foreach;
-	}
-
-	while (!vsession->started) {
+	while (vsession != NULL && !vsession->started) {
 		if (vsession->initialized) {
 			rc = fn(vdev, vsession, arg);
 			if (rc < 0) {
@@ -1056,9 +1073,6 @@ foreach_session_continue(struct spdk_vhost_dev *vdev,
 		}
 
 		vsession = spdk_vhost_session_next(vdev, vsession->id);
-		if (vsession == NULL) {
-			goto out_finish_foreach;
-		}
 	}
 
 	ev_ctx = calloc(1, sizeof(*ev_ctx));
@@ -1069,21 +1083,18 @@ foreach_session_continue(struct spdk_vhost_dev *vdev,
 	}
 
 	ev_ctx->vdev = vdev;
-	ev_ctx->vsession_id = vsession->id;
 	ev_ctx->cb_fn = fn;
 	ev_ctx->user_ctx = arg;
 
-	spdk_thread_send_msg(vsession->poll_group->thread,
-			     foreach_session_continue_cb, ev_ctx);
-	return;
-
-out_finish_foreach:
-	/* there are no more sessions to iterate through, so call the
-	 * fn one last time with vsession == NULL
-	 */
-	assert(vdev->pending_async_op_num > 0);
-	vdev->pending_async_op_num--;
-	fn(vdev, NULL, arg);
+	if (vsession != NULL) {
+		ev_ctx->vsession_id = vsession->id;
+		spdk_thread_send_msg(vsession->poll_group->thread,
+				     foreach_session_continue_cb, ev_ctx);
+	} else {
+		ev_ctx->vsession_id = UINT32_MAX;
+		spdk_thread_send_msg(g_vhost_init_thread,
+				     foreach_session_finish_cb, ev_ctx);
+	}
 }
 
 void
