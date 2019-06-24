@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c12f894_98a4664e",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-24T04:52:04Z",
+      "side": 1,
+      "message": "I\u0027m fine with the patch overall but this part bothers me. See comments on the previous patch.",
+      "range": {
+        "startLine": 42,
+        "startChar": 105,
+        "endLine": 42,
+        "endChar": 128
+      },
+      "revId": "e9b4da683fe9559a8fa50c6d0795f045d82401e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
