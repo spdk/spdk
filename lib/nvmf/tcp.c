@@ -1834,6 +1834,20 @@ err:
 	spdk_nvmf_tcp_send_c2h_term_req(tqpair, pdu, fes, error_offset);
 }
 
+static int
+nvmf_tcp_pdu_payload_insert_dif(struct nvme_tcp_pdu *pdu, int read_len)
+{
+	int rc;
+
+	rc = spdk_dif_generate_stream(pdu->data_iov, pdu->data_iovcnt,
+				      pdu->readv_offset, read_len, pdu->dif_ctx);
+	if (rc != 0) {
+		SPDK_ERRLOG("DIF generate failed\n");
+	}
+
+	return rc;
+}
+
 #define MAX_NVME_TCP_PDU_LOOP_COUNT 32
 
 static int
@@ -1944,8 +1958,15 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			if (rc < 0) {
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
-
 			pdu->readv_offset += rc;
+
+			if (spdk_unlikely(pdu->dif_ctx != NULL)) {
+				rc = nvmf_tcp_pdu_payload_insert_dif(pdu, rc);
+				if (rc != 0) {
+					return NVME_TCP_PDU_FATAL;
+				}
+			}
+
 			if (pdu->readv_offset < data_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
