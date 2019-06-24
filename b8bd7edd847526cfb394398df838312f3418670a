@@ -70,6 +70,30 @@
       "revId": "b8bd7edd847526cfb394398df838312f3418670a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d84d9dc8_7cc577ea",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1014,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-24T13:17:41Z",
+      "side": 1,
+      "message": "The second argument here is the bit index - not the value. This will always set the bit at the maximum index to 0. Instead, I think you want to flip this line around with the one above it. Maybe there is some way we can expose this via a test?",
+      "parentUuid": "397d9b1c_c71bd1ac",
+      "range": {
+        "startLine": 1013,
+        "startChar": 2,
+        "endLine": 1014,
+        "endChar": 86
+      },
+      "revId": "b8bd7edd847526cfb394398df838312f3418670a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
