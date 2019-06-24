@@ -4300,10 +4300,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
 
-	if (desc->thread != spdk_get_thread()) {
-		SPDK_ERRLOG("Descriptor %p for bdev %s closed on wrong thread (%p, expected %p)\n",
-			    desc, bdev->name, spdk_get_thread(), desc->thread);
-	}
+	assert(desc->thread == spdk_get_thread());
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 
