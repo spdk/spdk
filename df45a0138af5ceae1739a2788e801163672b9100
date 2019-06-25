@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "3fd9db60_ad01b4d9",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T08:24:01Z",
+      "side": 1,
+      "message": "We *do* have this pattern in FTL code - if the function is operating on ftl_band, we\u0027re passing ftl_band, if it\u0027s in ftl_reloc - we pass ftl_reloc.",
+      "parentUuid": "64325782_135ae579",
+      "revId": "df45a0138af5ceae1739a2788e801163672b9100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e403a69_29f28992",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "We have already ftl_io_init_internal() which set io-\u003emd. This allocation should take place somwhere in  ftl_alloc_io_nv_cache not in ftl_reserve_nv_cache()",
       "parentUuid": "995953d7_c9ad5d42",
+      "revId": "df45a0138af5ceae1739a2788e801163672b9100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e48dc42_ace99fc1",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T08:24:01Z",
+      "side": 1,
+      "message": "I don\u0027t think there are any advantages in moving this to ftl_alloc_io_nv_cache. First of all, you\u0027d have to free it in one more place - in case ftl_reserve_nv_cache wasn\u0027t able to reserve anything. Secondly, a function called ftl_reserve_nv_cache reserving all the necessary resources related to the non-volatile cache (whether it\u0027s space on the device or metadata buffer) makes sense.",
+      "parentUuid": "7468b9b4_62833fe0",
       "revId": "df45a0138af5ceae1739a2788e801163672b9100",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
