@@ -22,6 +22,30 @@
       "revId": "fd00b228deb8d58aa671999fe3639165d4d1c527",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d659fa4_f5c8d155",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-25T13:39:46Z",
+      "side": 1,
+      "message": "Wptr is waiting for the 1st chunk to finish erase using ftl_chunk_is_writable in ftl_wptr_ready, before writing head md. This should mean that only this check is really necessary to handle dirty shutdown case.",
+      "parentUuid": "293f07ef_5a04c8d5",
+      "range": {
+        "startLine": 366,
+        "startChar": 0,
+        "endLine": 370,
+        "endChar": 4
+      },
+      "revId": "fd00b228deb8d58aa671999fe3639165d4d1c527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
