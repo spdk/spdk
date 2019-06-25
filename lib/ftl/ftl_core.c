@@ -1277,6 +1277,21 @@ ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion
 				      cb_fn, cb_arg);
 }
 
+int
+ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_fn, void *cb_arg)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_io_channel *ioch;
+	struct spdk_bdev *bdev;
+
+	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+
+	return spdk_bdev_write_zeroes_blocks(nv_cache->bdev_desc, ioch->cache_ioch, 1,
+					     spdk_bdev_get_num_blocks(bdev) - 1,
+					     cb_fn, cb_arg);
+}
+
 static void
 ftl_write_fail(struct ftl_io *io, int status)
 {
