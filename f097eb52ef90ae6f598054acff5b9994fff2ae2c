@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1dc82c4c_6b8609ea",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-25T14:34:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a08aca57_dd9f544f",
+      "revId": "f097eb52ef90ae6f598054acff5b9994fff2ae2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b88f819_7b390e63",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-06-24T12:49:57Z",
       "side": 1,
       "message": "This can be private (also don\u0027t typedef).\n\nYou can probably just copy this struct into the descriptor struct.",
+      "revId": "f097eb52ef90ae6f598054acff5b9994fff2ae2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b745e422_4dec9498",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-25T14:34:08Z",
+      "side": 1,
+      "message": "I will make it privet and remove typedef, but I still need it as a separate structure because I\u0027m using it as an argument for _spdk_bdev_open function.",
+      "parentUuid": "7b88f819_7b390e63",
       "revId": "f097eb52ef90ae6f598054acff5b9994fff2ae2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "3722f00c_a52c81d4",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-25T14:34:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b72118c6_576880c1",
+      "revId": "f097eb52ef90ae6f598054acff5b9994fff2ae2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68c5134c_ef6a1bf4",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -67,6 +121,24 @@
       "revId": "f097eb52ef90ae6f598054acff5b9994fff2ae2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fbda2b3_6b90ff61",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4289,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-25T14:34:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "68c5134c_ef6a1bf4",
+      "revId": "f097eb52ef90ae6f598054acff5b9994fff2ae2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
