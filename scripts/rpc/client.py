@@ -14,6 +14,10 @@ def print_json(s):
     print(json.dumps(s, indent=2).strip('"'))
 
 
+def print_array(a):
+    print(" ".join((quote(v) for v in a)))
+
+
 class JSONRPCException(Exception):
     def __init__(self, message):
         self.message = message

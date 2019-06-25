@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from rpc.client import print_dict, print_json, JSONRPCException
+from rpc.client import print_dict, print_json, print_array, JSONRPCException
 from rpc.helpers import deprecated_aliases
 
 import logging
@@ -14,11 +14,6 @@ try:
     from shlex import quote
 except ImportError:
     from pipes import quote
-
-
-def print_array(a):
-    print(" ".join((quote(v) for v in a)))
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
