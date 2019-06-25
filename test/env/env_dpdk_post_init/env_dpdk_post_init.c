@@ -77,10 +77,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	dev->ctrlr = ctrlr;
 	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
 	dev->ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-	if (dev->ns == NULL) {
-		g_failed = 1;
-		return;
-	}
+
 	dev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
 	if (dev->qpair == NULL) {
 		g_failed = 1;
