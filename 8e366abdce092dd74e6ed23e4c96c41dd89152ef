@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e3b54111_2888324d",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1170,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T13:45:45Z",
+      "side": 1,
+      "message": "I need to use ftl_lba_map_set_segment_state.",
+      "parentUuid": "39bb2cc7_7ad5f88c",
+      "range": {
+        "startLine": 1170,
+        "startChar": 0,
+        "endLine": 1170,
+        "endChar": 22
+      },
+      "revId": "8e366abdce092dd74e6ed23e4c96c41dd89152ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1b5415dc_adedf55b",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-25T13:02:01Z",
       "side": 1,
       "message": "So why do we do it without checking if the band is open? We should either check it (if we allow this function to be called for non-open bands) or assert that the band is open (if we don\u0027t).",
+      "range": {
+        "startLine": 1178,
+        "startChar": 4,
+        "endLine": 1178,
+        "endChar": 57
+      },
+      "revId": "8e366abdce092dd74e6ed23e4c96c41dd89152ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00bda758_7f51f4f6",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1178,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T13:45:45Z",
+      "side": 1,
+      "message": "ftl_band_clear_lba_map() is only called from ftl_wptr_open_band.",
+      "parentUuid": "1b5415dc_adedf55b",
       "range": {
         "startLine": 1178,
         "startChar": 4,
@@ -68,6 +116,30 @@
       "revId": "8e366abdce092dd74e6ed23e4c96c41dd89152ef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42879f4f_c12f0afe",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T13:45:45Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e5ff2c05_7b2b7172",
+      "range": {
+        "startLine": 1179,
+        "startChar": 15,
+        "endLine": 1179,
+        "endChar": 16
+      },
+      "revId": "8e366abdce092dd74e6ed23e4c96c41dd89152ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
