@@ -378,7 +378,7 @@ fi
 
 cd ~
 
-: ${GIT_REPO_SPDK=https://review.gerrithub.io/spdk/spdk}; export GIT_REPO_SPDK
+: ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}; export GIT_REPO_SPDK
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}; export GIT_REPO_DPDK
 : ${GIT_REPO_LIBRXE=https://github.com/SoftRoCE/librxe-dev.git}; export GIT_REPO_LIBRXE
 : ${GIT_REPO_OPEN_ISCSI=https://github.com/open-iscsi/open-iscsi}; export GIT_REPO_OPEN_ISCSI
