@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2053fd6f_f2ed2d72",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 795,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T14:43:43Z",
+      "side": 1,
+      "message": "I don\u0027t think you can do that. What if we didn\u0027t set any blocks, but the band was on one of the queues, but this time it\u0027s called with high_prio \u003d 1? It should still be removed from the appropriate queues and added onto the high_prio queue.",
+      "range": {
+        "startLine": 792,
+        "startChar": 0,
+        "endLine": 795,
+        "endChar": 2
+      },
+      "revId": "cdf9cc7ee95e23a57926492c7a273547b69f1af2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
