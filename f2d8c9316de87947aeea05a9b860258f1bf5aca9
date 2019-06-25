@@ -70,6 +70,30 @@
       "revId": "f2d8c9316de87947aeea05a9b860258f1bf5aca9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "896966f3_93101fc9",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-25T02:17:10Z",
+      "side": 1,
+      "message": "hi all, for this one,\n--- a/lib/iscsi/init_grp.c\n+++ b/lib/iscsi/init_grp.c\n@@ -65,6 +65,7 @@ iscsi_init_grp_find_initiator(struct spdk_iscsi_init_grp *ig, char *name)\n        struct spdk_iscsi_initiator_name *iname;\n\n        TAILQ_FOREACH(iname, \u0026ig-\u003einitiator_head, tailq) {\n+               assert(iname !\u003d NULL);\n                if (!strcmp(iname-\u003ename, name)) {\n                        return iname;\n                }\n\ninit_grp.c:69:15: warning: Use of memory after it is freed\n                if (!strcmp(iname-\u003ename, name)) {\n                            ^~~~~~~~~~~\n\nthis one error is at ./lib/iscsi/tgt_node.c, other method is useless.",
+      "parentUuid": "35475bce_01d4d238",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 52
+      },
+      "revId": "f2d8c9316de87947aeea05a9b860258f1bf5aca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
