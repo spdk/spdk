@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "64325782_135ae579",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T07:50:38Z",
+      "side": 1,
+      "message": "We are not using such pattern in FTL, this is just static function in core module, I don\u0027t see any benefit of this.",
+      "parentUuid": "093b4aac_5f65160c",
+      "revId": "df45a0138af5ceae1739a2788e801163672b9100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e403a69_29f28992",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "No, because it\u0027s not tied to every IO. It only makes sense to do that for the IOs that go to the non-volatile cache.",
       "parentUuid": "5e403a69_29f28992",
+      "revId": "df45a0138af5ceae1739a2788e801163672b9100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7468b9b4_62833fe0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T07:50:38Z",
+      "side": 1,
+      "message": "We have already ftl_io_init_internal() which set io-\u003emd. This allocation should take place somwhere in  ftl_alloc_io_nv_cache not in ftl_reserve_nv_cache()",
+      "parentUuid": "995953d7_c9ad5d42",
       "revId": "df45a0138af5ceae1739a2788e801163672b9100",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
