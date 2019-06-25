@@ -362,6 +362,16 @@ ftl_unpack_tail_md(struct ftl_band *band)
 		return rc;
 	}
 
+	/*
+	 * When restoring from a dirty shutdown it's possible old tail meta wasn't yet cleared -
+	 * band had saved head meta, but didn't manage to send erase to all chunks.
+	 * The already found tail md header is valid, but inconsistent with the head meta. Treat
+	 * such a band as open/without valid tail md.
+	 */
+	if (band->seq != tail->hdr.seq) {
+		return FTL_MD_NO_MD;
+	}
+
 	if (tail->num_lbks != ftl_num_band_lbks(dev)) {
 		return FTL_MD_INVALID_SIZE;
 	}
@@ -374,7 +384,6 @@ ftl_unpack_tail_md(struct ftl_band *band)
 		memcpy(lba_map->map, map_offset, map_size);
 	}
 
-	band->seq = tail->hdr.seq;
 	return FTL_MD_SUCCESS;
 }
 
