@@ -209,15 +209,15 @@ iscsi_init_grp_allow_iscsi_name(struct spdk_iscsi_init_grp *igp,
 
 	TAILQ_FOREACH(iname, &igp->initiator_head, tailq) {
 		/* denied if iqn is matched */
-		if ((iname->name[0] == '!')
+		if (iname->name && (iname->name[0] == '!')
 		    && (strcasecmp(&iname->name[1], "ANY") == 0
 			|| strcasecmp(&iname->name[1], iqn) == 0)) {
 			*result = false;
 			return 0;
 		}
 		/* allowed if iqn is matched */
-		if (strcasecmp(iname->name, "ANY") == 0
-		    || strcasecmp(iname->name, iqn) == 0) {
+		if (iname->name && (strcasecmp(iname->name, "ANY") == 0
+				    || strcasecmp(iname->name, iqn) == 0)) {
 			*result = true;
 			return 0;
 		}
