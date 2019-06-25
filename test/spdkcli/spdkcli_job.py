@@ -15,14 +15,13 @@ def execute_command(cmd, element=None, element_exists=False):
     if ls_tree and element:
         child.sendline("ls %s" % ls_tree)
         child.expect("/>")
-        print("child: %s" % child.before.decode())
         if element_exists:
             if element not in child.before.decode():
-                print("Element %s not in list" % element)
+                print("Element %s not in list:\n%s" % (element, child.before.decode()))
                 exit(1)
         else:
             if element in child.before.decode():
-                print("Element %s is in list" % element)
+                print("Element %s is in list:\n%s" % (element, child.before.decode()))
                 exit(1)
 
 
