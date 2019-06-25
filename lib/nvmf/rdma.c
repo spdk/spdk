@@ -1515,16 +1515,19 @@ nvmf_request_alloc_wrs(struct spdk_nvmf_rdma_transport *rtransport,
 static int
 nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 		       struct spdk_nvmf_rdma_poll_group *rgroup,
-		       struct spdk_nvmf_rdma_device *device,
 		       struct spdk_nvmf_rdma_request *rdma_req,
 		       struct ibv_send_wr *wr,
 		       uint32_t length)
 {
+	struct      spdk_nvmf_rdma_qpair    *rqpair;
+	struct      spdk_mem_map *map = NULL;
 	uint64_t	translation_len;
 	uint32_t	remaining_length = length;
 	uint32_t	iovcnt;
 	uint32_t	i = 0;
 
+	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	map = rqpair->port->device->map;
 
 	while (remaining_length) {
 		iovcnt = rdma_req->req.iovcnt;
@@ -1539,10 +1542,10 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 		translation_len = rdma_req->req.iov[iovcnt].iov_len;
 
 		if (!g_nvmf_hooks.get_rkey) {
-			wr->sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+			wr->sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(map,
 					       (uint64_t)rdma_req->buffers[iovcnt], &translation_len))->lkey;
 		} else {
-			wr->sg_list[i].lkey = spdk_mem_map_translate(device->map,
+			wr->sg_list[i].lkey = spdk_mem_map_translate(map,
 					      (uint64_t)rdma_req->buffers[iovcnt], &translation_len);
 		}
 
@@ -1585,7 +1588,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	rdma_req->req.iovcnt = 0;
 
-	rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, rdma_req, &rdma_req->data.wr,
+	rc = nvmf_rdma_fill_buffers(rtransport, rgroup, rdma_req, &rdma_req->data.wr,
 				    rdma_req->req.length);
 	if (rc != 0) {
 		goto err_exit;
@@ -1672,7 +1675,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		current_wr->num_sge = 0;
 		req->length += desc->keyed.length;
 
-		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, rdma_req, current_wr,
+		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, rdma_req, current_wr,
 					    desc->keyed.length);
 		if (rc != 0) {
 			rc = -ENOMEM;
