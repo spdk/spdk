@@ -294,6 +294,8 @@ int	ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 				unsigned int num_entries);
 bool	ftl_ppa_is_written(struct ftl_band *band, struct ftl_ppa ppa);
 int	ftl_flush_active_bands(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
+int	ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_fn,
+				  void *cb_arg);
 
 #define ftl_to_ppa(addr) \
 	(struct ftl_ppa) { .ppa = (uint64_t)(addr) }
