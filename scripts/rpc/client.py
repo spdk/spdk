@@ -10,7 +10,7 @@ def print_dict(d):
     print(json.dumps(d, indent=2))
 
 
-def print_string(s):
+def print_json(s):
     print(json.dumps(s, indent=2).strip('"'))
 
 
