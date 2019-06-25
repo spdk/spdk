@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "19201b0f_13b15952",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T15:11:53Z",
+      "side": 1,
+      "message": "I don\u0027t think we\u0027ll be able to easily remove those allocations, as we\u0027re moving those events around different threads. Having a separate error code is just an ugly workaround. Let\u0027s fix it properly the way I\u0027ve described earlier, it\u0027s not that much work anyway.",
+      "parentUuid": "1ba14eb3_306b73b2",
+      "range": {
+        "startLine": 185,
+        "startChar": 3,
+        "endLine": 185,
+        "endChar": 13
+      },
+      "revId": "83d4c71d6bb5b3a357eeb80d987e54fd05ffed48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "03aecc5a_04666165",
         "filename": "lib/ftl/ftl_anm.h",
         "patchSetId": 39
