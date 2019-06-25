@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1db7db93_d967a635",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T14:26:19Z",
+      "side": 0,
+      "message": "Why did you remove this? Let\u0027s test that we don\u0027t relocate anything in case the band is empty.",
+      "range": {
+        "startLine": 484,
+        "startChar": 0,
+        "endLine": 508,
+        "endChar": 0
+      },
+      "revId": "aa5a8b2fa80ef3908e41c8c9e2bcd2f0aa9a4864",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
