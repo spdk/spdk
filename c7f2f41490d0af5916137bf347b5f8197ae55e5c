@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "330c50d1_228a74be",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T13:52:55Z",
+      "side": 1,
+      "message": "This doesn\u0027t really describe a size, but an offset. This should be an uint64_t.",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 67,
+        "endChar": 7
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8f359a9_58e9f64d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1890,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T13:52:55Z",
+      "side": 1,
+      "message": "Most of stuff like this is defined as inlines in ftl_core.h, let\u0027s move it there as well.",
+      "range": {
+        "startLine": 1890,
+        "startChar": 0,
+        "endLine": 1890,
+        "endChar": 18
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "466c2ddc_c3ea729f",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T13:52:55Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we get this from info[j]?",
+      "range": {
+        "startLine": 358,
+        "startChar": 25,
+        "endLine": 358,
+        "endChar": 52
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cdd7d789_00444132",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T13:52:55Z",
+      "side": 1,
+      "message": "Let\u0027s either incorporate that condition into the return statement:\nreturn ftl_ppa_is_written(breloc-\u003eband, ppa) \u0026\u0026\n       spdk_bit_array_get(breloc-\u003ereloc_map, lbkoff) \u0026\u0026\n       ftl_band_lbkoff_valid(breloc-\u003eband, lbkoff);\nor have each check being a separate condition:\n\nif (!ftl_ppa_is_written())\n     return 0;\nif (!spdk_bit_array_get())\n     return 0;\n...\n\nreturn 1;",
+      "range": {
+        "startLine": 308,
+        "startChar": 0,
+        "endLine": 314,
+        "endChar": 52
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
