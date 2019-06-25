@@ -2,6 +2,91 @@
   "comments": [
     {
       "key": {
+        "uuid": "d27a5ee4_a0213e1b",
+        "filename": ".gitignore",
+        "patchSetId": 30
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "This isn\u0027t necessary.",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52f10119_7c3b1fed",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "Move up to 19.07 section",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96d5e1a2_15c5f24c",
+        "filename": "app/nvmf_tgt/Makefile",
+        "patchSetId": 30
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "We don\u0027t want the nvmf target to depend on scsi, right? There must be a way to use NVMe over FC without linking to the scsi library.",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8696464b_ab9cf945",
+        "filename": "configure",
+        "patchSetId": 30
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "Instead, let the user specify which directory the fc code is in. For an example of how to do this, see --with-pmdk.",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a13e307_2caffc68",
+        "filename": "include/spdk_internal/fc_adm_api.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "What does FCT stand for?",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1d1a27a3_f04404ac",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 30
@@ -279,6 +364,23 @@
     },
     {
       "key": {
+        "uuid": "f0b55cb5_affeeeb3",
+        "filename": "lib/nvmf/fc_adm_api/Makefile",
+        "patchSetId": 30
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "Why does fc_adm_api need to be a separate library? I could see you creating a lib/fc that is the generic wrapper around vendor-specific low level drivers as one option, or just dumping all of the fc code into lib/nvmf/fc.c as another option. But right now there seems to be a lot of files in a structure that I don\u0027t entirely follow.",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f6b49cc1_f387f3a8",
         "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
         "patchSetId": 30
@@ -388,6 +490,74 @@
         "endLine": 223,
         "endChar": 24
       },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2233b05c_5783180c",
+        "filename": "lib/nvmf/fc_lld.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "Are these functions just supposed to exist in the lld library that gets linked in? Shouldn\u0027t they be either function pointers or part of the public header file of that lld library?",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9893fc45_c7bcaffe",
+        "filename": "lib/nvmf/fc_lld.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "Where is spdk_nvmf_fc_lld_ops defined?",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a665784_02c5de95",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "I\u0027d prefer not to redefine SPDK\u0027s big endian operators",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a8d9b16_7e079cd9",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "What are all of these externs?",
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -572,6 +742,57 @@
         "endLine": 248,
         "endChar": 79
       },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d806a49_67f01821",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "Does this need to be in the generic header?",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f4fb4f1_75a57b80",
+        "filename": "test/app/bdev_svc/Makefile",
+        "patchSetId": 30
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "Is this a fix that can go in as a separate patch?",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c11da30_f8c58d8c",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T15:37:34Z",
+      "side": 1,
+      "message": "This is a merge error",
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
