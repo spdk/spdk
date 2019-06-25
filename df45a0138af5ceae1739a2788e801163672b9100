@@ -109,6 +109,24 @@
     },
     {
       "key": {
+        "uuid": "e648c033_beed2073",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T09:36:13Z",
+      "side": 1,
+      "message": "I had impression that this pattern is used in SPDK when we want to have inheritance. I don\u0027t really see the point to introduce it to FTL lib if we never used this before. If you want to emphasize that nv_cache is separate module maybe it should go to separate file. I\u0027m also not saying that something wrong is with SPDK_CONTAINEROF I just think that we should be consistent with using such things. We could look on our struct relations and probably remove some unnecessary spdk_ftl_dev and replace them with SPDK_CONTAINEROF but at this point is better to just pass dev.",
+      "parentUuid": "0212cb5d_5ffda9f1",
+      "revId": "df45a0138af5ceae1739a2788e801163672b9100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e403a69_29f28992",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -210,6 +228,24 @@
       "side": 1,
       "message": "Making the allocations / frees more scattered certainly isn\u0027t a good idea. And it isn\u0027t true that we allocate internal IO buffers in our IO related functions - the data buffers going to the OC device, passed down to the IO functions are always already allocated (for regular writes: from rwb, for metadata writes: buffer tied to a band, for reads: user allocated).",
       "parentUuid": "5988229b_7c24f4aa",
+      "revId": "df45a0138af5ceae1739a2788e801163672b9100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abedc605_e4027688",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T09:36:13Z",
+      "side": 1,
+      "message": "So we should try to get md_buf from md_pool and then pass it to ftl_alloc_io_nv_cache(). ftl_reserve_nv_cache() dosen\u0027t look like good place for it - it should check and reserve space on persistent cache only.",
+      "parentUuid": "ce04d6e9_716aa1ac",
       "revId": "df45a0138af5ceae1739a2788e801163672b9100",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
