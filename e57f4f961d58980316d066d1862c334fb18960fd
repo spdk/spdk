@@ -1,0 +1,445 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8376533e_7695d075",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "Will you use braces {} here?",
+      "range": {
+        "startLine": 205,
+        "startChar": 83,
+        "endLine": 205,
+        "endChar": 84
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce15c99c_855597b2",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "Should we check if i \u003d\u003d SPDK_VPP_SESSION_MAX here instead?",
+      "range": {
+        "startLine": 206,
+        "startChar": 5,
+        "endLine": 206,
+        "endChar": 76
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "466f6d67_afc82287",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "Please unlock when no free session is found.",
+      "range": {
+        "startLine": 208,
+        "startChar": 2,
+        "endLine": 208,
+        "endChar": 14
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7e0053b_16157811",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "Should we check if id is less than SPDK_VPP_SESSION_MAX first?",
+      "range": {
+        "startLine": 226,
+        "startChar": 31,
+        "endLine": 226,
+        "endChar": 33
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "828300d4_20ae8974",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "getting/freeing mutex in the caller and calling this function with holding mutex are necessary?",
+      "range": {
+        "startLine": 245,
+        "startChar": 1,
+        "endLine": 245,
+        "endChar": 19
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85487e5b_4fa20eb8",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "Should we do this state change when holding mutex?",
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8ad2f60_4900e358",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "Will you insert an empty line here?",
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da78b8ec_74e7a2d1",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we check if cmp is not NULL?",
+      "range": {
+        "startLine": 371,
+        "startChar": 1,
+        "endLine": 371,
+        "endChar": 5
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7153298d_5a10bb05",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we check if session is not NULL?",
+      "range": {
+        "startLine": 398,
+        "startChar": 1,
+        "endLine": 398,
+        "endChar": 9
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3da11b6b_aed44f04",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we enclose getting session and updating state by mutex?",
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d7fd7dc_91255128",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we check if session is not NULL?",
+      "range": {
+        "startLine": 408,
+        "startChar": 1,
+        "endLine": 408,
+        "endChar": 9
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79e6151a_c376b87f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we enclose getting session and updating state by mutex?",
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1903b86_61f33c28",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we check if rmp is not NULL here? (assert if it\u0027s NULL?)",
+      "range": {
+        "startLine": 426,
+        "startChar": 2,
+        "endLine": 426,
+        "endChar": 6
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "673ba2e8_5ffe4f83",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we check if dmp is not NULL here?",
+      "range": {
+        "startLine": 437,
+        "startChar": 1,
+        "endLine": 437,
+        "endChar": 5
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef0dce2d_28fcb549",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we enclose getting state and updating state by mutex like the following?\n\nget_mutex\nsession \u003d _get_session();\nsession-\u003estate \u003d DISCONNECT;\nfree_mutex",
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d65c403_03a1263a",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we check if rmp is not NULL here?",
+      "range": {
+        "startLine": 459,
+        "startChar": 1,
+        "endLine": 459,
+        "endChar": 5
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37ed38de_93063bdc",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we check if rmp is not NULL here?",
+      "range": {
+        "startLine": 749,
+        "startChar": 1,
+        "endLine": 749,
+        "endChar": 5
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "93bf6f1a_805360d4",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 1032,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "Will you insert an empty line after definition here?",
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23865e4d_08722c0d",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "Should we check if bmp is not NULL here?",
+      "range": {
+        "startLine": 1033,
+        "startChar": 1,
+        "endLine": 1033,
+        "endChar": 5
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35b5d43e_7f2629b0",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "Will you insert an empty line after definition here?",
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76429dc2_8d19f58f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 1196,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-25T03:57:17Z",
+      "side": 1,
+      "message": "should we check if bmp is not NULL here?",
+      "range": {
+        "startLine": 1196,
+        "startChar": 1,
+        "endLine": 1196,
+        "endChar": 5
+      },
+      "revId": "e57f4f961d58980316d066d1862c334fb18960fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
