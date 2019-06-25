@@ -39,7 +39,6 @@
 #include "spdk/ftl.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
-#include "spdk/crc32.h"
 
 #include "ftl_core.h"
 #include "ftl_anm.h"
@@ -854,13 +853,8 @@ static void
 ftl_write_nv_cache_md_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_ftl_dev *dev = cb_arg;
-	struct iovec *iovs = NULL;
-	int iov_cnt = 0;
 
-	spdk_bdev_io_get_iovec(bdev_io, &iovs, &iov_cnt);
-	spdk_dma_free(iovs[0].iov_base);
 	spdk_bdev_free_io(bdev_io);
-
 	if (spdk_unlikely(!success)) {
 		SPDK_ERRLOG("Writing non-volatile cache's metadata header failed\n");
 		ftl_init_fail(dev);
@@ -875,40 +869,18 @@ static void
 ftl_clear_nv_cache_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_ftl_dev *dev = cb_arg;
-	struct spdk_bdev *bdev;
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
-	struct ftl_io_channel *ioch;
-	struct ftl_nv_cache_header *hdr;
 
 	spdk_bdev_free_io(bdev_io);
-
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
-	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-
 	if (spdk_unlikely(!success)) {
 		SPDK_ERRLOG("Unable to clear the non-volatile cache bdev\n");
 		ftl_init_fail(dev);
 		return;
 	}
 
-	assert(sizeof(*hdr) <= spdk_bdev_get_block_size(bdev));
-	hdr = spdk_dma_zmalloc(spdk_bdev_get_block_size(bdev), spdk_bdev_get_buf_align(bdev), NULL);
-	if (spdk_unlikely(!hdr)) {
-		SPDK_ERRLOG("Memory allocation failure\n");
-		ftl_init_fail(dev);
-		return;
-	}
-
-	hdr->uuid = dev->uuid;
-	hdr->size = spdk_bdev_get_num_blocks(bdev);
-	hdr->version = FTL_NV_CACHE_HEADER_VERSION;
-	hdr->phase = dev->nv_cache.phase = 1;
-	hdr->checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
-
-	if (spdk_bdev_write_blocks(nv_cache->bdev_desc, ioch->cache_ioch, hdr, 0, 1,
-				   ftl_write_nv_cache_md_cb, dev)) {
+	nv_cache->phase = 1;
+	if (ftl_nv_cache_write_header(nv_cache, ftl_write_nv_cache_md_cb, dev)) {
 		SPDK_ERRLOG("Unable to write non-volatile cache metadata header\n");
-		spdk_dma_free(hdr);
 		ftl_init_fail(dev);
 	}
 }

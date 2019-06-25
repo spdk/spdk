@@ -1061,24 +1061,10 @@ ftl_nv_cache_wrap_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 static void
 ftl_nv_cache_wrap(void *ctx)
 {
-	struct spdk_ftl_dev *dev = ctx;
-	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
-	struct ftl_nv_cache_header *hdr = nv_cache->dma_buf;
-	struct ftl_io_channel *ioch;
-	struct spdk_bdev *bdev;
+	struct ftl_nv_cache *nv_cache = ctx;
 	int rc;
 
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
-	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-
-	hdr->uuid = dev->uuid;
-	hdr->size = spdk_bdev_get_num_blocks(bdev);
-	hdr->version = FTL_NV_CACHE_HEADER_VERSION;
-	hdr->phase = (uint8_t)nv_cache->phase;
-	hdr->checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
-
-	rc = spdk_bdev_write_blocks(nv_cache->bdev_desc, ioch->cache_ioch, hdr, 0, 1,
-				    ftl_nv_cache_wrap_cb, nv_cache);
+	rc = ftl_nv_cache_write_header(nv_cache, ftl_nv_cache_wrap_cb, nv_cache);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Unable to write non-volatile cache metadata header: %s\n",
 			    spdk_strerror(-rc));
@@ -1119,7 +1105,7 @@ ftl_reserve_nv_cache(struct ftl_nv_cache *nv_cache, size_t *num_lbks, unsigned i
 		nv_cache->current_addr = FTL_NV_CACHE_DATA_OFFSET;
 		nv_cache->phase = ftl_nv_cache_next_phase(nv_cache->phase);
 		nv_cache->ready = false;
-		spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_nv_cache_wrap, dev);
+		spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_nv_cache_wrap, nv_cache);
 	}
 out:
 	pthread_spin_unlock(&nv_cache->lock);
@@ -1265,6 +1251,30 @@ ftl_write_nv_cache(struct ftl_io *parent)
 	ftl_io_reset(parent);
 	parent->flags |= FTL_IO_CACHE;
 	_ftl_write_nv_cache(parent);
+}
+
+int
+ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_fn,
+			  void *cb_arg)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_nv_cache_header *hdr = nv_cache->dma_buf;
+	struct spdk_bdev *bdev;
+	struct ftl_io_channel *ioch;
+
+	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+	ioch = spdk_io_channel_get_ctx(dev->ioch);
+
+	memset(hdr, 0, spdk_bdev_get_block_size(bdev));
+
+	hdr->phase = (uint8_t)nv_cache->phase;
+	hdr->size = spdk_bdev_get_num_blocks(bdev);
+	hdr->uuid = dev->uuid;
+	hdr->version = FTL_NV_CACHE_HEADER_VERSION;
+	hdr->checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
+
+	return spdk_bdev_write_blocks(nv_cache->bdev_desc, ioch->cache_ioch, hdr, 0, 1,
+				      cb_fn, cb_arg);
 }
 
 static void
