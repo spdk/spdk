@@ -1763,8 +1763,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 uint32_t
 nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
-	/* Todo, which should get from the NVMF target */
-	return NVME_RDMA_RW_BUFFER_SIZE;
+	return spdk_max(ctrlr->opts.max_xfer_size, NVME_RDMA_RW_BUFFER_SIZE);
 }
 
 uint16_t
