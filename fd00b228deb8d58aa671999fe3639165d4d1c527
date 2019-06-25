@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "293f07ef_5a04c8d5",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T12:52:44Z",
+      "side": 1,
+      "message": "From the code I\u0027ve check it seems that this happens because we\u0027re not waiting until the erase completion when erasing a band and immediately start writing head md. I think that needs to change as well. I propose to add a check to wait until all the chunks are free, before scheduling metadata write.",
+      "range": {
+        "startLine": 366,
+        "startChar": 0,
+        "endLine": 370,
+        "endChar": 4
+      },
+      "revId": "fd00b228deb8d58aa671999fe3639165d4d1c527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
