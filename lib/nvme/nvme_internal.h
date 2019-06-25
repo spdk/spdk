@@ -150,6 +150,8 @@ extern pid_t g_spdk_nvme_pid;
 						sizeof(struct spdk_nvme_cmd), \
 						sizeof(struct spdk_nvme_cpl)))
 
+#define DEFAULT_MAX_XFER_SIZE		(131072)
+
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
 
