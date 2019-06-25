@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c33f7e2_40f6f63c",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T07:56:51Z",
+      "side": 1,
+      "message": "I assume that we want to skip header here, please add some comment for this.",
+      "revId": "14c24be1d2d49522182edf3da2402a9805a30849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5ef5f42_78085248",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T07:56:51Z",
+      "side": 1,
+      "message": "Just call it num_blocks.",
+      "revId": "14c24be1d2d49522182edf3da2402a9805a30849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94a13ddb_3a552674",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T07:56:51Z",
+      "side": 1,
+      "message": "I think that we should keep this \"1\" as some define - e. g. HEADER_OFFSET",
+      "revId": "14c24be1d2d49522182edf3da2402a9805a30849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
