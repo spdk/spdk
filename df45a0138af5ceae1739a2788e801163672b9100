@@ -50,6 +50,24 @@
       "revId": "df45a0138af5ceae1739a2788e801163672b9100",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3702834_d8cafff1",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1092,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-25T07:14:56Z",
+      "side": 1,
+      "message": "Ok, I see that FTL_LBA_INVALID is return when allocation fails - but it not so intuitive.",
+      "parentUuid": "87cb84d6_df2e78aa",
+      "revId": "df45a0138af5ceae1739a2788e801163672b9100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
