@@ -90,6 +90,13 @@ function install_iscsi_adm()
 
 function install_qat()
 {
+
+    if [ "$PACKAGEMNG" = "dnf" ]; then
+        sudo dnf install -y libudev-devel
+    elif [ "$PACKAGEMNG" = "apt-get" ]; then
+        sudo apt-get install -y libudev-dev
+    fi
+
     if echo $CONF | grep -q qat; then
         qat_tarball=$(basename $DRIVER_LOCATION_QAT)
         kernel_maj=$(uname -r | cut -d'.' -f1)
