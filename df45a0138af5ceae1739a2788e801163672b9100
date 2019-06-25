@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "0212cb5d_5ffda9f1",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T08:47:40Z",
+      "side": 1,
+      "message": "There\u0027s no need to add spdk_ftl_dev to ftl_nv_cache - that\u0027s one to one relation. For e.g. bands we need to have a pointer to the device it\u0027s part of, because there are multiple bands and it isn\u0027t possible to easily get the device out of that. What\u0027s wrong with SPDK_CONTAINEROF?",
+      "parentUuid": "7afe7607_364fb1c2",
+      "revId": "df45a0138af5ceae1739a2788e801163672b9100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e403a69_29f28992",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -174,6 +192,24 @@
       "side": 1,
       "message": "io-\u003emd is related to our internal FTL resources just like our io pool. We should alloc/free internal io buffers in our IO related functions and ftl_alloc_io_nv_cache() looks like good candidate for that.",
       "parentUuid": "9e48dc42_ace99fc1",
+      "revId": "df45a0138af5ceae1739a2788e801163672b9100",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce04d6e9_716aa1ac",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T08:47:40Z",
+      "side": 1,
+      "message": "Making the allocations / frees more scattered certainly isn\u0027t a good idea. And it isn\u0027t true that we allocate internal IO buffers in our IO related functions - the data buffers going to the OC device, passed down to the IO functions are always already allocated (for regular writes: from rwb, for metadata writes: buffer tied to a band, for reads: user allocated).",
+      "parentUuid": "5988229b_7c24f4aa",
       "revId": "df45a0138af5ceae1739a2788e801163672b9100",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
