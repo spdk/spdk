@@ -889,9 +889,6 @@ static int
 ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 {
 	struct spdk_ftl_conf *conf = &dev->conf;
-	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
-	struct spdk_bdev *bdev;
-	struct ftl_io_channel *ioch;
 	size_t i;
 	int rc;
 
@@ -917,12 +914,7 @@ ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 	if (!ftl_dev_has_nv_cache(dev)) {
 		ftl_init_complete(dev);
 	} else {
-		ioch = spdk_io_channel_get_ctx(dev->ioch);
-		bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-
-		rc = spdk_bdev_write_zeroes_blocks(nv_cache->bdev_desc, ioch->cache_ioch,
-						   1, spdk_bdev_get_num_blocks(bdev) - 1,
-						   ftl_clear_nv_cache_cb, dev);
+		rc = ftl_nv_cache_scrub(&dev->nv_cache, ftl_clear_nv_cache_cb, dev);
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_ERRLOG("Unable to clear the non-volatile cache bdev: %s\n",
 				    spdk_strerror(-rc));
