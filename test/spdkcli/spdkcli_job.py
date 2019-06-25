@@ -15,7 +15,6 @@ def execute_command(cmd, element=None, element_exists=False):
     if ls_tree and element:
         child.sendline("ls %s" % ls_tree)
         child.expect("/>")
-        print("child: %s" % child.before.decode())
         if element_exists:
             if element not in child.before.decode():
                 print("Element %s not in list" % element)
