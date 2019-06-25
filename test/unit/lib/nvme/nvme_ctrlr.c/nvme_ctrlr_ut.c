@@ -1568,6 +1568,7 @@ test_ctrlr_get_default_ctrlr_opts(void)
 	CU_ASSERT(strlen(opts.src_addr) == 0);
 	CU_ASSERT(strlen(opts.src_svcid) == 0);
 	CU_ASSERT_EQUAL(opts.admin_timeout_ms, NVME_MAX_ADMIN_TIMEOUT_IN_SECS * 1000);
+	CU_ASSERT_EQUAL(opts.max_xfer_size, DEFAULT_MAX_XFER_SIZE);
 }
 
 static void

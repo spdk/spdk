@@ -188,6 +188,13 @@ struct spdk_nvme_ctrlr_opts {
 	 * Defaults to 'false' (errors are logged).
 	 */
 	bool disable_error_logging;
+
+	/**
+	 * The max I/O size in bytes
+	 *
+	 * This is ignored for PCIe transport.
+	 */
+	uint32_t max_xfer_size;
 };
 
 /**

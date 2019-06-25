@@ -171,6 +171,10 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	if (FIELD_OK(disable_error_logging)) {
 		opts->disable_error_logging = false;
 	}
+
+	if (FIELD_OK(max_xfer_size)) {
+		opts->max_xfer_size = DEFAULT_MAX_XFER_SIZE;
+	}
 #undef FIELD_OK
 }
 
