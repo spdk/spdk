@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c397f8e1_b5a01a10",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T14:22:30Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it make more sense to keep track of the band\u0027s state instead of keeping the active flag? If we had three states: pending, active, high_prio and inactive, we could easily track which list the band belongs to instead of having to track several different variables (high_prio, num_lbks and active).",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 16
+      },
+      "revId": "aa5a8b2fa80ef3908e41c8c9e2bcd2f0aa9a4864",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b682d7e8_809201aa",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-25T14:22:30Z",
+      "side": 1,
+      "message": "Let\u0027s move this to the place we put the band onto the active list. As it is now, it\u0027s a bit hard to follow.",
+      "range": {
+        "startLine": 203,
+        "startChar": 0,
+        "endLine": 203,
+        "endChar": 20
+      },
+      "revId": "aa5a8b2fa80ef3908e41c8c9e2bcd2f0aa9a4864",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
