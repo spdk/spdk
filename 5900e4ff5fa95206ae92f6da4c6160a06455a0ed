@@ -16,6 +16,24 @@
       "revId": "5900e4ff5fa95206ae92f6da4c6160a06455a0ed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7bb4567_fe5b8499",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-25T07:59:10Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "26707e48_34de81cc",
+      "revId": "5900e4ff5fa95206ae92f6da4c6160a06455a0ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
