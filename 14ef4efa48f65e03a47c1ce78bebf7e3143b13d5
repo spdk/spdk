@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6692b5a4_2c880537",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1414,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-25T13:58:54Z",
+      "side": 1,
+      "message": "This function builds up a temporary structure (info) and then immediately writes that structure to json. Can\u0027t you simply write the JSON as you go here, without building this intermediate struct? You may need to put a couple of uuids on the stack, but wouldn\u0027t that be simpler?",
+      "revId": "14ef4efa48f65e03a47c1ce78bebf7e3143b13d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
