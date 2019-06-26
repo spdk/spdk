@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31f3b041_72aa09a0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T13:16:17Z",
+      "side": 1,
+      "message": "This name is confusing - why you are call it callback, this is just a function for seting header. Also, will be possiable to have one function for calling spdk_bdev_write_blocks() that sets all this ioch and bdev stuff?",
+      "revId": "0727651ee12ab41d583cf4db90559169c0a85eb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
