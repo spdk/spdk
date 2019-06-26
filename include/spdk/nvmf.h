@@ -75,6 +75,7 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	max_srq_depth;
 	bool		no_srq;
 	bool		c2h_success;
+	bool		dif_insert_or_strip;
 };
 
 /**
