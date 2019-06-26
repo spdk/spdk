@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9315e03f_0e2928cb",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-26T01:20:12Z",
+      "side": 1,
+      "message": "Done. thanks！",
+      "parentUuid": "a963df85_031b5da7",
+      "revId": "8fa2b401f953387f170d1128f94d7f3b775e7206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "19539b9a_b8e1b363",
         "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-06-25T14:10:31Z",
       "side": 1,
       "message": "Don\u0027t you still need to call spdk_json_free_conn_request here? Where does this now happen?",
+      "revId": "8fa2b401f953387f170d1128f94d7f3b775e7206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5c5936c_0ba9b8d4",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-26T01:20:12Z",
+      "side": 1,
+      "message": "put spdk_json_free_conn_request before close(conn-\u003esockfd), already executed spdk_json_free_conn_request in spdk_jsonrpc_server_conn_close .\nsome rpc method call spdk_jsonrpc_server_conn_remove directly, but spdk_jsonrpc_server_conn_remove includes spdk_jsonrpc_server_conn_close. \nremove this former log, that would leads misunderstanding .",
+      "parentUuid": "19539b9a_b8e1b363",
       "revId": "8fa2b401f953387f170d1128f94d7f3b775e7206",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
