@@ -16,6 +16,24 @@
       "revId": "14ef4efa48f65e03a47c1ce78bebf7e3143b13d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a97275b_fca45982",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1414,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-26T01:04:18Z",
+      "side": 1,
+      "message": "It\u0027s fine for this patch only, there is a following patch which will load the configuration information from a JSON file, we still need a data structure to store the loaded information.",
+      "parentUuid": "6692b5a4_2c880537",
+      "revId": "14ef4efa48f65e03a47c1ce78bebf7e3143b13d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
