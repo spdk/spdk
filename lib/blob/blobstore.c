@@ -1149,6 +1149,7 @@ _spdk_blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 		blob->active.cluster_array_size = blob->active.num_clusters;
 	}
 
+	ctx->blob = blob;
 	_spdk_blob_persist_complete(seq, ctx, bserrno);
 }
 
