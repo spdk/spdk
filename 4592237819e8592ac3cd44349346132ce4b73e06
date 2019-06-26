@@ -16,6 +16,24 @@
       "revId": "4592237819e8592ac3cd44349346132ce4b73e06",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b00dcc8_e8008580",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-26T06:34:36Z",
+      "side": 1,
+      "message": "Thank you. Nice suggestion Changpeng. I will take your suggestion.",
+      "parentUuid": "092628ca_474f9854",
+      "revId": "4592237819e8592ac3cd44349346132ce4b73e06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
