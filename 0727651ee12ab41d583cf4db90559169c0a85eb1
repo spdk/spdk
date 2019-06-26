@@ -34,6 +34,24 @@
       "revId": "0727651ee12ab41d583cf4db90559169c0a85eb1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05d28a1b_4d57eca0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T14:27:28Z",
+      "side": 1,
+      "message": "I\u0027ve given it a second thought after offline discussion and I agree with you, I\u0027ll get rid of the _cb part.",
+      "parentUuid": "a9f37468_5d9c085e",
+      "revId": "0727651ee12ab41d583cf4db90559169c0a85eb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
