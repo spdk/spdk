@@ -111,7 +111,6 @@ def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
             # bdev_lvol_create - positive tests
-            50: 'construct_logical_volume_positive',
             51: 'construct_multi_logical_volumes_positive',
             52: 'bdev_lvol_create_using_name_positive',
             53: 'bdev_lvol_create_duplicate_names_positive',
@@ -311,43 +310,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.bdev_lvol_get_lvstores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case50(self):
-        """
-        construct_logical_volume_positive
-
-        Positive test for constructing a new logical volume.
-        Call bdev_lvol_create with correct lvol store UUID and size in MiB for this bdev
-        """
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Create lvol store on correct, exisitng malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        # Check correct uuid values in response bdev_lvol_get_lvstores command
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-
-        lvs_size = self.get_lvs_size()
-        # Construct lvol bdev on correct lvs_uuid and size
-        uuid_bdev = self.c.bdev_lvol_create(uuid_store,
-                                            self.lbd_name,
-                                            lvs_size)
-        # Check correct uuid values in response bdev_get_bdevs command
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev,
-                                                          lvs_size)
-        self.c.bdev_lvol_delete(uuid_bdev)
-        self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.bdev_malloc_delete(base_name)
-
-        # Expected result:
-        # - call successful, return code = 0
-        # - get_lvol_store: backend used for bdev_lvol_create has name
-        #   field set with the same name as returned from RPC call for all repeat
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case51(self):
