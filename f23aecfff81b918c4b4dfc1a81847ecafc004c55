@@ -36,6 +36,42 @@
     },
     {
       "key": {
+        "uuid": "8d57f332_55bd6319",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T14:28:52Z",
+      "side": 1,
+      "message": "Why would we want to do that? I think we\u0027re better off keeping the size as it actually is (we\u0027ll have less problems if we ever wanted to support different block sizes).",
+      "parentUuid": "2d369b1a_e264ee3d",
+      "revId": "f23aecfff81b918c4b4dfc1a81847ecafc004c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c383adc2_e6ecb6c9",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T14:28:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5a40d4f_c325dda5",
+      "revId": "f23aecfff81b918c4b4dfc1a81847ecafc004c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4e42367_69f3270b",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 3
@@ -56,6 +92,30 @@
       "revId": "f23aecfff81b918c4b4dfc1a81847ecafc004c55",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12fbe38b_1d0f0222",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T14:28:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4e42367_69f3270b",
+      "range": {
+        "startLine": 518,
+        "startChar": 0,
+        "endLine": 519,
+        "endChar": 39
+      },
+      "revId": "f23aecfff81b918c4b4dfc1a81847ecafc004c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
