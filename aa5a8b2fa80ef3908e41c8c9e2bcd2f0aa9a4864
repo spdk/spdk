@@ -22,6 +22,30 @@
       "revId": "aa5a8b2fa80ef3908e41c8c9e2bcd2f0aa9a4864",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eac4cb90_16681543",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:40:29Z",
+      "side": 0,
+      "message": "test_reloc_iter_empty is already checking this - this test will look same at this moment.",
+      "parentUuid": "1db7db93_d967a635",
+      "range": {
+        "startLine": 484,
+        "startChar": 0,
+        "endLine": 508,
+        "endChar": 0
+      },
+      "revId": "aa5a8b2fa80ef3908e41c8c9e2bcd2f0aa9a4864",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
