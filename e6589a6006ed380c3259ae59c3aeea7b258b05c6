@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "5f8b84b8_72d46c45",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-06-26T12:22:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "72cd7c7e_fec68741",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 6
+      },
+      "revId": "e6589a6006ed380c3259ae59c3aeea7b258b05c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74e0298d_9332275e",
         "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
         "patchSetId": 4
@@ -81,6 +105,30 @@
         "id": 1011221
       },
       "writtenOn": "2019-06-26T08:03:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "74e0298d_9332275e",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 33
+      },
+      "revId": "e6589a6006ed380c3259ae59c3aeea7b258b05c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8360a800_22426608",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-06-26T12:22:30Z",
       "side": 1,
       "message": "Ack",
       "parentUuid": "74e0298d_9332275e",
@@ -143,6 +191,30 @@
     },
     {
       "key": {
+        "uuid": "2b2e2b76_b4974126",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-06-26T12:22:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "64965c4a_daaf09e1",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 36
+      },
+      "revId": "e6589a6006ed380c3259ae59c3aeea7b258b05c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f18f63c_e7abd1d8",
         "filename": "test/iscsi_tgt/reset/reset.sh",
         "patchSetId": 4
@@ -177,6 +249,30 @@
       "writtenOn": "2019-06-26T08:03:39Z",
       "side": 1,
       "message": "\u003e Should waitforfile be added here ?",
+      "parentUuid": "3f18f63c_e7abd1d8",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 78
+      },
+      "revId": "e6589a6006ed380c3259ae59c3aeea7b258b05c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6132de79_c320587e",
+        "filename": "test/iscsi_tgt/reset/reset.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-06-26T12:22:30Z",
+      "side": 1,
+      "message": "fio.py waits for device.",
       "parentUuid": "3f18f63c_e7abd1d8",
       "range": {
         "startLine": 55,
