@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3184e58c_a9d1e555",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:39:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "330c50d1_228a74be",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 67,
+        "endChar": 7
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e8f359a9_58e9f64d",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "a8701b5d_bba2bf37",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1890,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:39:50Z",
+      "side": 1,
+      "message": "This use ftl_band_chunk_from_ppa() and operates on chunk which requires band.h definitions. Also it complicate unit tests.",
+      "parentUuid": "e8f359a9_58e9f64d",
+      "range": {
+        "startLine": 1890,
+        "startChar": 0,
+        "endLine": 1890,
+        "endChar": 18
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "466c2ddc_c3ea729f",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 4
@@ -59,6 +107,30 @@
       "writtenOn": "2019-06-25T13:52:55Z",
       "side": 1,
       "message": "Shouldn\u0027t we get this from info[j]?",
+      "range": {
+        "startLine": 358,
+        "startChar": 25,
+        "endLine": 358,
+        "endChar": 52
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9101e8d3_9ce74936",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:39:50Z",
+      "side": 1,
+      "message": "Probably, but there is bug in QEMU which report wrong WPTR. This approach is safer.",
+      "parentUuid": "466c2ddc_c3ea729f",
       "range": {
         "startLine": 358,
         "startChar": 25,
@@ -91,6 +163,30 @@
       "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3806abe5_69472b0b",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:39:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cdd7d789_00444132",
+      "range": {
+        "startLine": 308,
+        "startChar": 0,
+        "endLine": 314,
+        "endChar": 52
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
