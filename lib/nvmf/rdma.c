@@ -702,9 +702,9 @@ nvmf_rdma_resources_destroy(struct spdk_nvmf_rdma_resources *resources)
 		ibv_dereg_mr(resources->bufs_mr);
 	}
 
-	spdk_dma_free(resources->cmds);
-	spdk_dma_free(resources->cpls);
-	spdk_dma_free(resources->bufs);
+	spdk_free(resources->cmds);
+	spdk_free(resources->cpls);
+	spdk_free(resources->bufs);
 	free(resources->reqs);
 	free(resources->recvs);
 	free(resources);
@@ -730,15 +730,15 @@ nvmf_rdma_resources_create(struct spdk_nvmf_rdma_resource_opts *opts)
 
 	resources->reqs = calloc(opts->max_queue_depth, sizeof(*resources->reqs));
 	resources->recvs = calloc(opts->max_queue_depth, sizeof(*resources->recvs));
-	resources->cmds = spdk_dma_zmalloc(opts->max_queue_depth * sizeof(*resources->cmds),
-					   0x1000, NULL);
-	resources->cpls = spdk_dma_zmalloc(opts->max_queue_depth * sizeof(*resources->cpls),
-					   0x1000, NULL);
+	resources->cmds = spdk_zmalloc(opts->max_queue_depth * sizeof(*resources->cmds),
+				       0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	resources->cpls = spdk_zmalloc(opts->max_queue_depth * sizeof(*resources->cpls),
+				       0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 
 	if (opts->in_capsule_data_size > 0) {
-		resources->bufs = spdk_dma_zmalloc(opts->max_queue_depth *
-						   opts->in_capsule_data_size,
-						   0x1000, NULL);
+		resources->bufs = spdk_zmalloc(opts->max_queue_depth * opts->in_capsule_data_size,
+					       0x1000, NULL, SPDK_ENV_LCORE_ID_ANY,
+					       SPDK_MALLOC_DMA);
 	}
 
 	if (!resources->reqs || !resources->recvs || !resources->cmds ||
