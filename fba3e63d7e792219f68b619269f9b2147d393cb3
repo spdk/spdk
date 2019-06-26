@@ -98,6 +98,30 @@
       "revId": "fba3e63d7e792219f68b619269f9b2147d393cb3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f79d20c_4bc060c2",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 47
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T10:45:58Z",
+      "side": 1,
+      "message": "I didn\u0027t - some gerrit issue.",
+      "parentUuid": "aac4079f_50dabed9",
+      "range": {
+        "startLine": 427,
+        "startChar": 0,
+        "endLine": 432,
+        "endChar": 0
+      },
+      "revId": "fba3e63d7e792219f68b619269f9b2147d393cb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
