@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a979ca0d_ad33c617",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-26T13:33:36Z",
+      "side": 1,
+      "message": "recovered",
+      "range": {
+        "startLine": 652,
+        "startChar": 10,
+        "endLine": 652,
+        "endChar": 20
+      },
+      "revId": "fab37d0c56b8cb9a59767c9b9b2ce046f9fd52cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f564d712_4d32fc0e",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-26T13:33:36Z",
+      "side": 1,
+      "message": "reordering",
+      "range": {
+        "startLine": 678,
+        "startChar": 47,
+        "endLine": 678,
+        "endChar": 55
+      },
+      "revId": "fab37d0c56b8cb9a59767c9b9b2ce046f9fd52cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
