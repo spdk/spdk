@@ -63,6 +63,16 @@ struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 struct spdk_nvmf_transport;
 
+enum spdk_nvmf_dif_mode {
+	/* End-to-end mode (DIF pass-through) */
+	SPDK_NVMF_DIF_MODE_E2E = 0,
+
+	/* Local mode (DIF insert and strip) */
+	SPDK_NVMF_DIF_MODE_LOCAL,
+
+	NUM_SPDK_NVMF_DIF_MODE,
+};
+
 struct spdk_nvmf_transport_opts {
 	uint16_t	max_queue_depth;
 	uint16_t	max_qpairs_per_ctrlr;
@@ -75,6 +85,7 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	max_srq_depth;
 	bool		no_srq;
 	bool		c2h_success;
+	enum spdk_nvmf_dif_mode	dif_mode;
 };
 
 /**
