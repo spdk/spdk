@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bff131d9_96a9a338",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-26T02:46:30Z",
+      "side": 1,
+      "message": "although the effect is same, but it\u0027s still to be nice using calloc(1, sizeof(*ctx));",
+      "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed6c2228_60884e6e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 943,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-26T02:46:30Z",
+      "side": 1,
+      "message": "It\u0027s nice to return the errno here instead of hardcoded -1.",
+      "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82e35b85_58f0c293",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1134,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-26T02:46:30Z",
+      "side": 1,
+      "message": "You need to clean up the allocated resources here.",
+      "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
