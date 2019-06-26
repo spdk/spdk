@@ -121,6 +121,24 @@
       "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8115abc_f1be53b5",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1134,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-26T04:17:13Z",
+      "side": 1,
+      "message": "I mean you may need to add:\n\nspdk_bdev_close(ns-\u003edesc);\nfree(ns);\nfree(ns-\u003eptpl_file);\nsubsystem-\u003ens[opts.nsid - 1] \u003d NULL;\n\nin line 1134.",
+      "parentUuid": "778a6a23_c66c6dcd",
+      "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
