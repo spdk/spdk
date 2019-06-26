@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "beafb2a9_9677a22d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T13:38:19Z",
+      "side": 1,
+      "message": "Do we need to initilize it since it is set in ftl_reserve_nv_cache()?",
+      "revId": "a15a5c1970a6e83165e6deae1d1efb87022d78cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
