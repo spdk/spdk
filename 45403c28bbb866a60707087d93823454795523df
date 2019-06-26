@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "d57d5aec_b090c2e8",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-26T12:18:22Z",
+      "side": 1,
+      "message": "Cinder service is restarted, but it does not loaded all the divers and other components after reset yet. Usually that take few seconds after this command finishes.",
+      "parentUuid": "9ecb521b_2f602396",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 35
+      },
+      "revId": "45403c28bbb866a60707087d93823454795523df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91e320db_8fb8f29b",
         "filename": "test/openstack/run_openstack_tests.sh",
         "patchSetId": 4
