@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "399e05fe_f2bf270e",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:40:03Z",
+      "side": 1,
+      "message": "We should never reach condition where we have high_prio and we end up with not relocated blocks. But you are right, it is safer to check this.",
+      "parentUuid": "8430a24d_5e2be67a",
+      "range": {
+        "startLine": 545,
+        "startChar": 5,
+        "endLine": 545,
+        "endChar": 45
+      },
+      "revId": "1e67e35739e6874c5cf7fc636509b1d9a9d5e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "52606e94_063e60b3",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-06-25T14:12:56Z",
       "side": 1,
       "message": "Can we move the conditions on line 545-550 down here and merge it with this one?",
+      "range": {
+        "startLine": 559,
+        "startChar": 0,
+        "endLine": 562,
+        "endChar": 2
+      },
+      "revId": "1e67e35739e6874c5cf7fc636509b1d9a9d5e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66ad7bc8_e88ed114",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:40:03Z",
+      "side": 1,
+      "message": "In 545-550 i remove band from one of the queues and here it goes back to pending. If I merge it I will end up with another remove.",
+      "parentUuid": "52606e94_063e60b3",
       "range": {
         "startLine": 559,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "c19f316b_7a1222a5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:40:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a20bacd_d0e02151",
+      "range": {
+        "startLine": 791,
+        "startChar": 2,
+        "endLine": 791,
+        "endChar": 81
+      },
+      "revId": "1e67e35739e6874c5cf7fc636509b1d9a9d5e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46067000_ad177204",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 5
@@ -91,6 +163,30 @@
       "revId": "1e67e35739e6874c5cf7fc636509b1d9a9d5e25b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "732b2840_4838ebe0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 792,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:40:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46067000_ad177204",
+      "range": {
+        "startLine": 792,
+        "startChar": 2,
+        "endLine": 792,
+        "endChar": 44
+      },
+      "revId": "1e67e35739e6874c5cf7fc636509b1d9a9d5e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "e2dc913d_ee1b5598",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 793,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:40:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "360dcd39_fb1b34c5",
+      "range": {
+        "startLine": 793,
+        "startChar": 2,
+        "endLine": 793,
+        "endChar": 20
+      },
+      "revId": "1e67e35739e6874c5cf7fc636509b1d9a9d5e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db270636_743e6159",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 5
@@ -137,6 +257,30 @@
       "revId": "1e67e35739e6874c5cf7fc636509b1d9a9d5e25b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3ac0717_a5808dcf",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:40:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db270636_743e6159",
+      "range": {
+        "startLine": 799,
+        "startChar": 2,
+        "endLine": 799,
+        "endChar": 20
+      },
+      "revId": "1e67e35739e6874c5cf7fc636509b1d9a9d5e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
