@@ -77,6 +77,7 @@ waitforlisten $svcpid
 
 # Ftl should recover, though with a loss of data (-o config option)
 $rpc_py load_config < $testdir/config/ftl.json
+waitfornbd nbd0
 
 # Write extra data after restore
 dd if=/dev/urandom of=/dev/nbd0 bs=4K count=$chunk_size seek=$offset oflag=dsync
