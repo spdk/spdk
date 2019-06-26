@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "092628ca_474f9854",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-26T05:52:30Z",
+      "side": 1,
+      "message": "Can we put after line 621 after line 631, I don\u0027t see any dependency, If any can you point me out?",
+      "revId": "4592237819e8592ac3cd44349346132ce4b73e06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
