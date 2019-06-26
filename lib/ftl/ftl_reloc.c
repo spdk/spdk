@@ -757,6 +757,11 @@ ftl_reloc(struct ftl_reloc *reloc)
 			break;
 		}
 
+		/* TODO: Add handling relocation on open bands */
+		if (breloc->band->state != FTL_BAND_STATE_CLOSED) {
+			continue;
+		}
+
 		ftl_reloc_add_active_queue(breloc);
 	}
 
