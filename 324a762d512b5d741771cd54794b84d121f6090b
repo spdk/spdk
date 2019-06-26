@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7d29429_8c5704f0",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-26T08:36:20Z",
+      "side": 1,
+      "message": "please enclose this by mutex?\n\npthread_mutex_lock(\u0026g_svm.session_get_lock);\nlisten_session \u003d _spdk_vpp_session_get_by_handle(mp-\u003elistner_handle, true);\npthred_mutex_unlock(\u0026g_svm.session_get_lock);",
+      "range": {
+        "startLine": 593,
+        "startChar": 18,
+        "endLine": 593,
+        "endChar": 49
+      },
+      "revId": "324a762d512b5d741771cd54794b84d121f6090b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b8ec7c8_5a21df7b",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-26T08:36:20Z",
+      "side": 1,
+      "message": "should we add assert(client_session !\u003d NULL) or return if client_session is NULL here?\nYou are adding the check in spdk_vpp_sock_create.",
+      "range": {
+        "startLine": 600,
+        "startChar": 1,
+        "endLine": 600,
+        "endChar": 16
+      },
+      "revId": "324a762d512b5d741771cd54794b84d121f6090b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3106de3e_719c2e93",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-26T08:36:20Z",
+      "side": 1,
+      "message": "please add null check here.",
+      "range": {
+        "startLine": 651,
+        "startChar": 1,
+        "endLine": 651,
+        "endChar": 5
+      },
+      "revId": "324a762d512b5d741771cd54794b84d121f6090b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f762b04_469882d0",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 1117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-26T08:36:20Z",
+      "side": 1,
+      "message": "please check if bmp is not NULL here.",
+      "revId": "324a762d512b5d741771cd54794b84d121f6090b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e1b6f6c_6e98839c",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 107
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-26T08:36:20Z",
+      "side": 1,
+      "message": "should we call vl_socket_client_disconnect() here?",
+      "revId": "324a762d512b5d741771cd54794b84d121f6090b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
