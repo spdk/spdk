@@ -384,7 +384,7 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, void **rx_pkts,
 			   uint32_t *len, uint16_t num)
 {
 	struct vring_used_elem *uep;
-	struct virtio_req *cookie;
+	void *cookie;
 	uint16_t used_idx, desc_idx;
 	uint16_t i;
 
@@ -394,7 +394,7 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, void **rx_pkts,
 		uep = &vq->vq_ring.used->ring[used_idx];
 		desc_idx = (uint16_t) uep->id;
 		len[i] = uep->len;
-		cookie = (struct virtio_req *)vq->vq_descx[desc_idx].cookie;
+		cookie = vq->vq_descx[desc_idx].cookie;
 
 		if (spdk_unlikely(cookie == NULL)) {
 			SPDK_WARNLOG("vring descriptor with no mbuf cookie at %"PRIu16"\n",
