@@ -1411,7 +1411,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        buf_cache_size=args.buf_cache_size,
                                        max_srq_depth=args.max_srq_depth,
                                        no_srq=args.no_srq,
-                                       c2h_success=args.c2h_success)
+                                       c2h_success=args.c2h_success,
+                                       dif_mode=args.dif_mode)
 
     p = subparsers.add_parser('nvmf_create_transport', help='Create NVMf transport')
     p.add_argument('-t', '--trtype', help='Transport type (ex. RDMA)', type=str, required=True)
@@ -1426,6 +1427,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-s', '--max-srq-depth', help='Max number of outstanding I/O per SRQ. Relevant only for RDMA transport', type=int)
     p.add_argument('-r', '--no-srq', action='store_true', help='Disable per-thread shared receive queue. Relevant only for RDMA transport')
     p.add_argument('-o', '--c2h-success', help='Enable C2H success optimization. Relevant only for TCP transport', type=bool)
+    p.add_argument('-f', '--dif-mode', help="""'e2e' - End-to-end mode (DIF pass-through) (Default).
+    'local' - Local mode (DIF insert and strip). Local mode is available only for TCP transport.""")
     p.set_defaults(func=nvmf_create_transport)
 
     def get_nvmf_transports(args):
