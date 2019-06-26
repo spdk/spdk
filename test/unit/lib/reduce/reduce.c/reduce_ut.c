@@ -1002,7 +1002,7 @@ destroy(void)
 	CU_ASSERT(g_reduce_errno == 0);
 
 	g_reduce_errno = -1;
-	MOCK_CLEAR(spdk_dma_zmalloc);
+	MOCK_CLEAR(spdk_zmalloc);
 	MOCK_CLEAR(spdk_malloc);
 	MOCK_CLEAR(spdk_zmalloc);
 	spdk_reduce_vol_destroy(&backing_dev, destroy_cb, NULL);

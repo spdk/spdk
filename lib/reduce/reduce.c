@@ -325,14 +325,15 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	/* Allocate 2x since we need buffers for both read/write and compress/decompress
 	 *  intermediate buffers.
 	 */
-	vol->buf_mem = spdk_dma_malloc(2 * REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size, 64, NULL);
+	vol->buf_mem = spdk_malloc(2 * REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size,
+				   64, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (vol->buf_mem == NULL) {
 		return -ENOMEM;
 	}
 
 	vol->request_mem = calloc(REDUCE_NUM_VOL_REQUESTS, sizeof(*req));
 	if (vol->request_mem == NULL) {
-		spdk_dma_free(vol->buf_mem);
+		spdk_free(vol->buf_mem);
 		vol->buf_mem = NULL;
 		return -ENOMEM;
 	}
@@ -344,7 +345,7 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 				  2 * sizeof(struct iovec) * vol->backing_io_units_per_chunk);
 	if (vol->buf_iov_mem == NULL) {
 		free(vol->request_mem);
-		spdk_dma_free(vol->buf_mem);
+		spdk_free(vol->buf_mem);
 		vol->request_mem = NULL;
 		vol->buf_mem = NULL;
 		return -ENOMEM;
@@ -366,7 +367,7 @@ static void
 _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx)
 {
 	if (ctx != NULL) {
-		spdk_dma_free(ctx->path);
+		spdk_free(ctx->path);
 		free(ctx);
 	}
 
@@ -375,12 +376,12 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 			pmem_unmap(vol->pm_file.pm_buf, vol->pm_file.size);
 		}
 
-		spdk_dma_free(vol->backing_super);
+		spdk_free(vol->backing_super);
 		spdk_bit_array_free(&vol->allocated_chunk_maps);
 		spdk_bit_array_free(&vol->allocated_backing_io_units);
 		free(vol->request_mem);
 		free(vol->buf_iov_mem);
-		spdk_dma_free(vol->buf_mem);
+		spdk_free(vol->buf_mem);
 		free(vol);
 	}
 }
@@ -506,7 +507,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	TAILQ_INIT(&vol->executing_requests);
 	TAILQ_INIT(&vol->queued_requests);
 
-	vol->backing_super = spdk_dma_zmalloc(sizeof(*vol->backing_super), 0, NULL);
+	vol->backing_super = spdk_zmalloc(sizeof(*vol->backing_super), 0, NULL,
+					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (vol->backing_super == NULL) {
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		_init_load_cleanup(vol, NULL);
@@ -520,7 +522,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	init_ctx->path = spdk_dma_zmalloc(REDUCE_PATH_MAX, 0, NULL);
+	init_ctx->path = spdk_zmalloc(REDUCE_PATH_MAX, 0, NULL,
+				      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (init_ctx->path == NULL) {
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		_init_load_cleanup(vol, init_ctx);
@@ -715,7 +718,8 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 	TAILQ_INIT(&vol->executing_requests);
 	TAILQ_INIT(&vol->queued_requests);
 
-	vol->backing_super = spdk_dma_zmalloc(sizeof(*vol->backing_super), 64, NULL);
+	vol->backing_super = spdk_zmalloc(sizeof(*vol->backing_super), 64, NULL,
+					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (vol->backing_super == NULL) {
 		_init_load_cleanup(vol, NULL);
 		cb_fn(cb_arg, NULL, -ENOMEM);
@@ -731,7 +735,8 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 		return;
 	}
 
-	load_ctx->path = spdk_dma_zmalloc(REDUCE_PATH_MAX, 64, NULL);
+	load_ctx->path = spdk_zmalloc(REDUCE_PATH_MAX, 64, NULL,
+				      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (load_ctx->path == NULL) {
 		_init_load_cleanup(vol, load_ctx);
 		cb_fn(cb_arg, NULL, -ENOMEM);
@@ -797,7 +802,7 @@ destroy_unload_cpl(void *cb_arg, int reduce_errno)
 	 * actually destroyed.
 	 */
 	destroy_ctx->cb_fn(destroy_ctx->cb_arg, destroy_ctx->reduce_errno);
-	spdk_dma_free(destroy_ctx->super);
+	spdk_free(destroy_ctx->super);
 	free(destroy_ctx);
 }
 
@@ -818,7 +823,7 @@ destroy_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 
 	if (reduce_errno != 0) {
 		destroy_ctx->cb_fn(destroy_ctx->cb_arg, reduce_errno);
-		spdk_dma_free(destroy_ctx->super);
+		spdk_free(destroy_ctx->super);
 		free(destroy_ctx);
 		return;
 	}
@@ -846,7 +851,8 @@ spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev,
 		return;
 	}
 
-	destroy_ctx->super = spdk_dma_zmalloc(sizeof(*destroy_ctx->super), 64, NULL);
+	destroy_ctx->super = spdk_zmalloc(sizeof(*destroy_ctx->super), 64, NULL,
+					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (destroy_ctx->super == NULL) {
 		free(destroy_ctx);
 		cb_fn(cb_arg, -ENOMEM);
