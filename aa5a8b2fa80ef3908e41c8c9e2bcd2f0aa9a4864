@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "3f392358_b59bd2a9",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T08:01:10Z",
+      "side": 1,
+      "message": "I would really prefer to do that immediately. Or just disable any relocations performed on an open band until we have this states implemented here. Moving the bands between different lists relying on several different variables makes it really hard to follow. I think dropping open band relocations should be fine for now.",
+      "parentUuid": "46e4011c_69970653",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 16
+      },
+      "revId": "aa5a8b2fa80ef3908e41c8c9e2bcd2f0aa9a4864",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b682d7e8_809201aa",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 1
@@ -93,6 +117,30 @@
       "revId": "aa5a8b2fa80ef3908e41c8c9e2bcd2f0aa9a4864",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7c69fe4_a292d5b2",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T08:01:10Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e4c82929_7714f032",
+      "range": {
+        "startLine": 203,
+        "startChar": 0,
+        "endLine": 203,
+        "endChar": 20
+      },
+      "revId": "aa5a8b2fa80ef3908e41c8c9e2bcd2f0aa9a4864",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
