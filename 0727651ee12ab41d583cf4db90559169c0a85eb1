@@ -16,6 +16,24 @@
       "revId": "0727651ee12ab41d583cf4db90559169c0a85eb1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9f37468_5d9c085e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T14:05:42Z",
+      "side": 1,
+      "message": "I\u0027m calling it a callback, because it is sent via spdk_thread_send_msg from a user thread whenever the cache is wrapped.\nAs for a function that would merge some of the stuff here, I have a couple of patches that add functions for writing the header / scrubbing the cache. I\u0027ll post them soon.",
+      "parentUuid": "31f3b041_72aa09a0",
+      "revId": "0727651ee12ab41d583cf4db90559169c0a85eb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
