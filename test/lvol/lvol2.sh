@@ -61,6 +61,67 @@ function test_construct_lvol_basic() {
 	rpc_cmd delete_malloc_bdev "$malloc_name"
 }
 
+# create lvs + multiple lvols, verify their params
+function test_construct_multi_lvols_basic() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd construct_lvol_store "$malloc_name" lvs_test)
+
+	# create 4 lvols
+	lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB / 4 ))
+	# round down lvol size to the nearest cluster size boundary
+	lvol_size_mb=$(( lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
+	for i in $(seq 1 4); do
+		lvol_uuid=$(rpc_cmd construct_lvol_bdev -u "$lvs_uuid" "lvol_test${i}" "$lvol_size_mb")
+		lvol=$(rpc_cmd get_bdevs -b "$lvol_uuid")
+
+		[ "$(jq -r '.[0].name' <<< "$lvol")" = "$lvol_uuid" ]
+		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
+		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test${i}" ]
+		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+	done
+
+	lvols=$(rpc_cmd get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
+	[ "$(jq length <<< "$lvols")" == "4" ]
+
+	# remove all lvols
+	for i in $(seq 0 3); do
+		lvol_uuid=$(jq -r ".[$i].name" <<< "$lvols")
+		rpc_cmd destroy_lvol_bdev "$lvol_uuid"
+	done
+	lvols=$(rpc_cmd get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
+	[ "$(jq length <<< "$lvols")" == "0" ]
+
+	# create the same 4 lvols again and perform the same checks
+	for i in $(seq 1 4); do
+		lvol_uuid=$(rpc_cmd construct_lvol_bdev -u "$lvs_uuid" "lvol_test${i}" "$lvol_size_mb")
+		lvol=$(rpc_cmd get_bdevs -b "$lvol_uuid")
+
+		[ "$(jq -r '.[0].name' <<< "$lvol")" = "$lvol_uuid" ]
+		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
+		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test${i}" ]
+		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
+	done
+
+	lvols=$(rpc_cmd get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
+	[ "$(jq length <<< "$lvols")" == "4" ]
+
+	# clean up
+	for i in $(seq 0 3); do
+		lvol_uuid=$(jq -r ".[$i].name" <<< "$lvols")
+		rpc_cmd destroy_lvol_bdev "$lvol_uuid"
+	done
+	lvols=$(rpc_cmd get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
+	[ "$(jq length <<< "$lvols")" == "0" ]
+
+	rpc_cmd destroy_lvol_store -u "$lvs_uuid"
+	! rpc_cmd get_lvol_stores -u "$lvs_uuid"
+	rpc_cmd delete_malloc_bdev "$malloc_name"
+}
+
 function run_test() {
 	$@
 
@@ -77,6 +138,7 @@ waitforlisten $spdk_pid
 
 run_test test_construct_lvs_basic
 run_test test_construct_lvol_basic
+run_test test_construct_multi_lvols_basic
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
