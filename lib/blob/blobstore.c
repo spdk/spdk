@@ -49,6 +49,8 @@
 
 #define BLOB_CRC32C_INITIAL    0xffffffffUL
 
+static void *tmp_clusters = NULL;
+
 static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
@@ -351,6 +353,7 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 			return -ENOMEM;
 		}
 		memcpy(clusters, blob->active.clusters, blob->active.num_clusters * sizeof(*clusters));
+		free(tmp_clusters);
 	}
 
 	if (blob->active.num_pages) {
@@ -1143,8 +1146,9 @@ _spdk_blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 		blob->active.clusters = NULL;
 		blob->active.cluster_array_size = 0;
 	} else if (blob->active.num_clusters != blob->active.cluster_array_size) {
-		tmp = realloc(blob->active.clusters, sizeof(uint64_t) * blob->active.num_clusters);
+		tmp = malloc(sizeof(uint64_t) * blob->active.num_clusters);
 		assert(tmp != NULL);
+		tmp_clusters = blob->active.clusters;
 		blob->active.clusters = tmp;
 		blob->active.cluster_array_size = blob->active.num_clusters;
 	}
