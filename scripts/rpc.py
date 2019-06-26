@@ -1804,11 +1804,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
 
-    class mock_client:
+    class dry_run_client:
         def call(self, method, params=None):
             print("Request:\n" + json.dumps({"method": method, "params": params}, indent=2))
 
-    def mock_print(arg):
+    def null_print(arg):
         pass
 
     def call_rpc_func(args):
@@ -1833,10 +1833,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     args = parser.parse_args()
     if args.dry_run:
-        args.client = mock_client()
-        print_dict = mock_print
-        print_json = mock_print
-        print_array = mock_print
+        args.client = dry_run_client()
+        print_dict = null_print
+        print_json = null_print
+        print_array = null_print
     else:
         args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
     if hasattr(args, 'func'):
