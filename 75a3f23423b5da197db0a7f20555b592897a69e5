@@ -16,6 +16,24 @@
       "revId": "75a3f23423b5da197db0a7f20555b592897a69e5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ff108c4_5c66ccc5",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-26T09:35:02Z",
+      "side": 1,
+      "message": "It\u0027s the first patch in a big series, so I\u0027m going to merge this now as is. We can do adjustments later.",
+      "parentUuid": "c55d7f9b_976d0389",
+      "revId": "75a3f23423b5da197db0a7f20555b592897a69e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
