@@ -60,6 +60,7 @@ $rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
 waitforlisten $svcpid
 
 $rpc_py load_config < $testdir/config/ftl.json
+waitfornbd nbd0
 
 mount /dev/nbd0 $mount_dir
 
