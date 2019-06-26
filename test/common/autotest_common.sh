@@ -836,7 +836,7 @@ function autotest_cleanup()
 			modprobe -r uio_pci_generic
 		fi
 	fi
-	rm -rf "$asan_suppression_file"
+	rm -f "$asan_suppression_file"
 	rm -f "$rpc_input_pipe"
 	rm -f "$rpc_output_pipe"
 }
