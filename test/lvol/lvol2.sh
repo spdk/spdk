@@ -37,6 +37,30 @@ function test_construct_lvs_basic() {
 	rpc_cmd delete_malloc_bdev "$malloc_name"
 }
 
+# create lvs + lvol on top, verify lvol's parameters
+function test_construct_lvol_basic() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd construct_lvol_store "$malloc_name" lvs_test)
+
+	# create an lvol on top
+	lvol_uuid=$(rpc_cmd construct_lvol_bdev -u "$lvs_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+	lvol=$(rpc_cmd get_bdevs -b "$lvol_uuid")
+
+	[ "$(jq -r '.[0].name' <<< "$lvol")" = "$lvol_uuid" ]
+	[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
+	[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test" ]
+	[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+
+	# clean up
+	rpc_cmd destroy_lvol_bdev "$lvol_uuid"
+	! rpc_cmd get_bdevs -b "$lvol_uuid"
+	rpc_cmd destroy_lvol_store -u "$lvs_uuid"
+	! rpc_cmd get_lvol_stores -u "$lvs_uuid"
+	rpc_cmd delete_malloc_bdev "$malloc_name"
+}
+
 function run_test() {
 	$@
 
@@ -52,6 +76,7 @@ trap "killprocess $spdk_pid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
 run_test test_construct_lvs_basic
+run_test test_construct_lvol_basic
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
