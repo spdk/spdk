@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58d581e4_452fa1e0",
+        "filename": "app/spdk_lspci/spdk_lspci.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-26T07:03:51Z",
+      "side": 1,
+      "message": "spdk_pci_enumerate(nvme_drv) actually calls rte_bus_probe() underneath and enumerates all matching pci devices - vmd, nvme, ioat, or virtio. It goes through all of them, but rejects any devices whose driver !\u003d nvme_drv\n\nI wonder if we can make this driver param optional - then we could list out all pci devices here - ioat, virtio, etc.\nLet\u0027s do it later though.",
+      "revId": "c26483d5b501724f3d709d8cc2d52e1824d812c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
