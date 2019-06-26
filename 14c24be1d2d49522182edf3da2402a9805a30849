@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8e68ee28_2a4c5301",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T06:46:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7c33f7e2_40f6f63c",
+      "revId": "14c24be1d2d49522182edf3da2402a9805a30849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5ef5f42_78085248",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-06-25T07:56:51Z",
       "side": 1,
       "message": "Just call it num_blocks.",
+      "revId": "14c24be1d2d49522182edf3da2402a9805a30849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e22d71d5_e27ce0a5",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T06:46:27Z",
+      "side": 1,
+      "message": "num_blocks indicates that it\u0027s total number of blocks, while this is the number of available data blocks (reduced by the size of the metadata header).",
+      "parentUuid": "a5ef5f42_78085248",
       "revId": "14c24be1d2d49522182edf3da2402a9805a30849",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "14c24be1d2d49522182edf3da2402a9805a30849",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcdb6478_ec08a073",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T06:46:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "94a13ddb_3a552674",
+      "revId": "14c24be1d2d49522182edf3da2402a9805a30849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
