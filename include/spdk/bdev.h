@@ -63,6 +63,7 @@ extern "C" {
 /** Event type registered while opening bdev */
 enum spdk_bdev_event_type {
 	SPDK_BDEV_EVENT_REMOVE,
+	SPDK_BDEV_EVENT_RESIZE,
 };
 
 /**
@@ -70,7 +71,13 @@ enum spdk_bdev_event_type {
  */
 struct spdk_bdev_event {
 	enum spdk_bdev_event_type type; /* Type of the event */
-	/* Add required stuctures for new event types here */
+	union {
+		struct {
+			uint64_t old_size; /* Old size value in number of blocks for resize event */
+			uint64_t new_size; /* New size value in number of blocks for resize event */
+		} resize; /* Use with SPDK_BDEV_EVENT_RESIZE type */
+		/* Add required stuctures for new event types here */
+	} data;
 };
 
 /**
