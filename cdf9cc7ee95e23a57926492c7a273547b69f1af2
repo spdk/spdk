@@ -22,6 +22,30 @@
       "revId": "cdf9cc7ee95e23a57926492c7a273547b69f1af2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c3cc429_e333521f",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 795,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-26T07:40:39Z",
+      "side": 1,
+      "message": "Yes, this would be extremely rare - we need to have ANM event that cover all valid blocks and then get high_prio band. I will filter high_prio bands.",
+      "parentUuid": "2053fd6f_f2ed2d72",
+      "range": {
+        "startLine": 792,
+        "startChar": 0,
+        "endLine": 795,
+        "endChar": 2
+      },
+      "revId": "cdf9cc7ee95e23a57926492c7a273547b69f1af2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
