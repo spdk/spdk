@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5a4aed4_f0088a6e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 930,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-26T06:34:01Z",
+      "side": 1,
+      "message": "why not using pg-\u003ethread here?",
+      "revId": "3698bc3fb97adbcee52b3acc5b809e3883b7c691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75d0609d_2ed07f09",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-26T06:34:01Z",
+      "side": 1,
+      "message": "ditto.",
+      "revId": "3698bc3fb97adbcee52b3acc5b809e3883b7c691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
