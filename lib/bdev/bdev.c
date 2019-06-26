@@ -2629,6 +2629,8 @@ spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period)
 int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 {
+	struct spdk_bdev_desc *desc, *tmp;
+	struct spdk_bdev_event event = {};
 	int ret;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
@@ -2638,6 +2640,17 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 	    bdev->blockcnt > size) {
 		ret = -EBUSY;
 	} else {
+		/* Notify each descriptor about resize */
+		event.type = SPDK_BDEV_EVENT_RESIZE;
+		event.data.resize.old_size = bdev->blockcnt;
+		event.data.resize.new_size = size;
+
+		TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
+			if (desc->callback->event.fn) {
+				desc->callback->event.fn(event, bdev, desc->callback->ctx);
+			}
+		}
+
 		bdev->blockcnt = size;
 		ret = 0;
 	}
