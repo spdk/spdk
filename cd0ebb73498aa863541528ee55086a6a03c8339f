@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4e5378b2_cf1615f7",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-06-26T03:17:31Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bff131d9_96a9a338",
+      "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ed6c2228_60884e6e",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 3
@@ -36,6 +54,41 @@
     },
     {
       "key": {
+        "uuid": "852b604b_38f2d3dd",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 943,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-06-26T03:17:31Z",
+      "side": 1,
+      "message": "Based on the doc (https://spdk.io/doc/nvmf_8h.html#a7fafa9106b94d650f0c1daa5c6d7090e), `spdk_nvmf_subsystem_remove_ns returns 0 on success, -1 on failure`, so I take -1 as return value here.\n\nBut the line 964 also returns -ENOMEM, maybe we should return the actual errno and update the doc.",
+      "parentUuid": "ed6c2228_60884e6e",
+      "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "829a180c_3a27ab91",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-06-26T03:17:31Z",
+      "side": 1,
+      "message": "This line also returns `-ENOMEM`.",
+      "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "82e35b85_58f0c293",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 3
@@ -47,6 +100,24 @@
       "writtenOn": "2019-06-26T02:46:30Z",
       "side": 1,
       "message": "You need to clean up the allocated resources here.",
+      "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "778a6a23_c66c6dcd",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1134,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-06-26T03:17:31Z",
+      "side": 1,
+      "message": "Free resource is done in line 1327 in ctrlr.c, after ctrlr handling ns-changed event.",
+      "parentUuid": "82e35b85_58f0c293",
       "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
