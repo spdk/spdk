@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5a40d4f_c325dda5",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-26T08:45:28Z",
+      "side": 1,
+      "message": "We probably want a) header size and/or version and b) checksum of the header",
+      "revId": "f23aecfff81b918c4b4dfc1a81847ecafc004c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4e42367_69f3270b",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-26T08:45:28Z",
+      "side": 1,
+      "message": "Add the required number of blocks to the print.",
+      "range": {
+        "startLine": 518,
+        "startChar": 0,
+        "endLine": 519,
+        "endChar": 39
+      },
+      "revId": "f23aecfff81b918c4b4dfc1a81847ecafc004c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
