@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f943cf4_90e7949a",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-26T08:14:28Z",
+      "side": 1,
+      "message": "Do you even need to be holding the lock while you call this?",
+      "revId": "7525c27911ba9d6ba12c02ee0f67243e3d8d4743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
