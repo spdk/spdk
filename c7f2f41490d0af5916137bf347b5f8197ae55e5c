@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "6e2e5cef_e0f32782",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1890,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T09:01:57Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a8701b5d_bba2bf37",
+      "range": {
+        "startLine": 1890,
+        "startChar": 0,
+        "endLine": 1890,
+        "endChar": 18
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "466c2ddc_c3ea729f",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 4
@@ -131,6 +155,30 @@
       "side": 1,
       "message": "Probably, but there is bug in QEMU which report wrong WPTR. This approach is safer.",
       "parentUuid": "466c2ddc_c3ea729f",
+      "range": {
+        "startLine": 358,
+        "startChar": 25,
+        "endLine": 358,
+        "endChar": 52
+      },
+      "revId": "c7f2f41490d0af5916137bf347b5f8197ae55e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16544d9f_1677b091",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-26T09:01:57Z",
+      "side": 1,
+      "message": "What values does QEMU report? Are they ever correct?",
+      "parentUuid": "9101e8d3_9ce74936",
       "range": {
         "startLine": 358,
         "startChar": 25,
