@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c55d7f9b_976d0389",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-26T08:34:07Z",
+      "side": 1,
+      "message": "Maybe the pool name could be a combination of ftl and cache device? Would it be possible (in the future) for one ftl device to use multiple caches (or one cache device to serve multiple ftls)?",
+      "revId": "75a3f23423b5da197db0a7f20555b592897a69e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
