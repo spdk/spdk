@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74f295e8_e0a23893",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1765,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-26T09:46:39Z",
+      "side": 1,
+      "message": "This will already get reduced to whatever the mdts value is that the target sets in the generic layer. I think the problem is that we were returning an artificially small value here. Couldn\u0027t we solve this in a simpler way by just setting the value to be the value in ibv_device_attr.max_mr_size?",
+      "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9429444_2daa7f63",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1771,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-26T09:46:39Z",
+      "side": 1,
+      "message": "I think we need to clean this up a bit - taking the minimum of the transport returned value and the target value (in ctrlr-\u003ecdata.nvmf_specific.msdbd) should be done in the generic nvme code like it\u0027s done for the maximum transfer size.\n\nThis function should return the minimum of NVME_RDMA_MAX_SGL_DESCRIPTORS, ibv_device_attr.max_sge, and ibv_device_attr.max_sge_rd.",
+      "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8d0cf96_10c80ccb",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1869,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-26T09:46:39Z",
+      "side": 1,
+      "message": "For TCP, there isn\u0027t any actual limit on the size of a buffer for the local transport. Can we instead just return MAXUINT32 here? The generic code above this will reduce the value to whatever the target says is the maximum.",
+      "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
