@@ -139,6 +139,24 @@
       "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ea442f8_9b811e18",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1134,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-06-26T06:50:59Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nNow I\u0027ve got what you mean. The newly-added ns needs to be removed since one part of the adding fails.",
+      "parentUuid": "f8115abc_f1be53b5",
+      "revId": "cd0ebb73498aa863541528ee55086a6a03c8339f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
