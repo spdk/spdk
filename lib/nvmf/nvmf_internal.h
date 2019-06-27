@@ -117,6 +117,7 @@ struct spdk_nvmf_transport_poll_group {
 
 struct spdk_nvmf_subsystem_pg_ns_info {
 	struct spdk_io_channel		*channel;
+	struct spdk_uuid		uuid;
 	/* current reservation key, no reservation if the value is 0 */
 	uint64_t			crkey;
 	/* reservation type */
