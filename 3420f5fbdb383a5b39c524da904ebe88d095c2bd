@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "0c0c7b81_90e79ea3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52f10119_7c3b1fed",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "96d5e1a2_15c5f24c",
         "filename": "app/nvmf_tgt/Makefile",
         "patchSetId": 30
@@ -47,6 +65,24 @@
       "writtenOn": "2019-06-25T15:37:34Z",
       "side": 1,
       "message": "We don\u0027t want the nvmf target to depend on scsi, right? There must be a way to use NVMe over FC without linking to the scsi library.",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d1a4fd2_1edb1271",
+        "filename": "app/nvmf_tgt/Makefile",
+        "patchSetId": 30
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "Broadcom devices does support both SCSI \u0026 NVMe and our partners like to support them simultaneously. However for SPDK upstream code we are only targeting NVMe. So looking at code changes to completely remove scsi library dependency. Stay tuned.",
+      "parentUuid": "96d5e1a2_15c5f24c",
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "441594e7_a1c189e6",
+        "filename": "configure",
+        "patchSetId": 30
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "FC LLD driver needs reference to SPDK root dir. FC LLD Makefile gets it as \"SPDK_ROOT_DIR :\u003d $(abspath $(CURDIR)/../../../..)\". Made changes which works as long as LLD dir is under spdk root directory. Wondering is there is a way to make it work if FC LLD code resides outside spdk dir?. Also FC LLD has dependency on DPDK includes. Is it OK if we takes this up as an enhancement later?.",
+      "parentUuid": "8696464b_ab9cf945",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1a13e307_2caffc68",
         "filename": "include/spdk_internal/fc_adm_api.h",
         "patchSetId": 30
@@ -81,6 +135,24 @@
       "writtenOn": "2019-06-25T15:37:34Z",
       "side": 1,
       "message": "What does FCT stand for?",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "882713a8_39051718",
+        "filename": "include/spdk_internal/fc_adm_api.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "FCT \u003d FC Target",
+      "parentUuid": "1a13e307_2caffc68",
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -597,6 +669,24 @@
     },
     {
       "key": {
+        "uuid": "46435a03_29ce0400",
+        "filename": "lib/nvmf/fc_adm_api/Makefile",
+        "patchSetId": 30
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "Is it OK if this change is handled after initial merge?. We are only asking for an exception because of time left in 19.07 merge window.",
+      "parentUuid": "f0b55cb5_affeeeb3",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f6b49cc1_f387f3a8",
         "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
         "patchSetId": 30
@@ -849,6 +939,24 @@
     },
     {
       "key": {
+        "uuid": "508eba49_0a636164",
+        "filename": "lib/nvmf/fc_lld.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "Yes, these api calls will be folded into spdk_nvmf_fc_lld_ops structure.",
+      "parentUuid": "2233b05c_5783180c",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9893fc45_c7bcaffe",
         "filename": "lib/nvmf/fc_lld.h",
         "patchSetId": 30
@@ -860,6 +968,24 @@
       "writtenOn": "2019-06-25T15:37:34Z",
       "side": 1,
       "message": "Where is spdk_nvmf_fc_lld_ops defined?",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a3458bb_ab997faf",
+        "filename": "lib/nvmf/fc_lld.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "In LLD driver.",
+      "parentUuid": "9893fc45_c7bcaffe",
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -883,6 +1009,24 @@
     },
     {
       "key": {
+        "uuid": "0b504ae8_7ed54aee",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a665784_02c5de95",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a8d9b16_7e079cd9",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 30
@@ -894,6 +1038,24 @@
       "writtenOn": "2019-06-25T15:37:34Z",
       "side": 1,
       "message": "What are all of these externs?",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c07bdc0_446eb81f",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "Will make changes to expose these lld api\u0027s as part of spdk_nvmf_fc_lld_ops struct.",
+      "parentUuid": "6a8d9b16_7e079cd9",
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -1293,6 +1455,24 @@
     },
     {
       "key": {
+        "uuid": "0c4df660_c2f79533",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "4d806a49_67f01821",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f4fb4f1_75a57b80",
         "filename": "test/app/bdev_svc/Makefile",
         "patchSetId": 30
@@ -1304,6 +1484,24 @@
       "writtenOn": "2019-06-25T15:37:34Z",
       "side": 1,
       "message": "Is this a fix that can go in as a separate patch?",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37d88852_9ae430b2",
+        "filename": "test/app/bdev_svc/Makefile",
+        "patchSetId": 30
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "Yes. Will generate a separate patch.",
+      "parentUuid": "1f4fb4f1_75a57b80",
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -1324,6 +1522,24 @@
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56c3b351_8ed801ae",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-06-27T01:10:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4c11da30_f8c58d8c",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
