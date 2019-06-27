@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8949df98_b893b79f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1765,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-27T05:30:04Z",
+      "side": 1,
+      "message": "Thank you for nice suggestion. Done.",
+      "parentUuid": "74f295e8_e0a23893",
+      "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a9429444_2daa7f63",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "8c053bf2_13bae3ba",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1771,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-27T05:30:04Z",
+      "side": 1,
+      "message": "I\u0027ll do this in a separate patch.",
+      "parentUuid": "a9429444_2daa7f63",
+      "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d8d0cf96_10c80ccb",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 3
@@ -47,6 +83,23 @@
       "writtenOn": "2019-06-26T09:46:39Z",
       "side": 1,
       "message": "For TCP, there isn\u0027t any actual limit on the size of a buffer for the local transport. Can we instead just return MAXUINT32 here? The generic code above this will reduce the value to whatever the target says is the maximum.",
+      "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb7a2550_1a914370",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1869,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-27T05:30:04Z",
+      "side": 1,
+      "message": "Thank you for reasonable suggestion, Done.",
       "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
