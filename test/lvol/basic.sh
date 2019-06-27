@@ -29,12 +29,30 @@ function test_construct_lvs() {
 	[ "$(( total_clusters * cluster_size ))" = "$LVS_DEFAULT_CAPACITY" ]
 
 	# make sure we can't create another lvs on the same bdev
-	! rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test2
+	rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test2 && false
 
 	# remove the lvs and verify it's gone
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
 	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
+# try to create two lvs with conflicting aliases
+function test_construct_lvs_conflict_alias() {
+	# create the first one
+	malloc1_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs1_uuid=$(rpc_cmd construct_lvol_store "$malloc1_name" lvs_test)
+
+	# second one
+	malloc2_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	rpc_cmd construct_lvol_store "$malloc2_name" lvs_test && false
+
+	# clean up
+	rpc_cmd destroy_lvol_store -u "$lvs1_uuid"
+	rpc_cmd get_lvol_stores -u "$lvs1_uuid" && false
+	rpc_cmd delete_malloc_bdev "$malloc1_name"
+	rpc_cmd delete_malloc_bdev "$malloc2_name"
 	check_leftover_devices
 }
 
@@ -254,6 +272,7 @@ trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
 run_test "test_construct_lvs" test_construct_lvs
+run_test "test_construct_lvs_conflict_alias" test_construct_lvs_conflict_alias
 run_test "test_construct_lvol" test_construct_lvol
 run_test "test_construct_multi_lvols" test_construct_multi_lvols
 run_test "test_construct_lvols_conflict_alias" test_construct_lvols_conflict_alias
