@@ -135,7 +135,7 @@ test_free_ftl_band(struct ftl_band *band)
 	spdk_bit_array_free(&band->lba_map.vld);
 	free(band->chunk_buf);
 	free(band->lba_map.map);
-	spdk_dma_free(band->lba_map.dma_buf);
+	spdk_free(band->lba_map.dma_buf);
 }
 
 uint64_t
