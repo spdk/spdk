@@ -132,7 +132,7 @@ static void build_io_request_0(struct io_request *req)
 {
 	req->nseg = 1;
 
-	req->iovs[0].base = spdk_dma_zmalloc(0x800, 4, NULL);
+	req->iovs[0].base = spdk_zmalloc(0x800, 4, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[0].len = 0x800;
 }
 
@@ -141,7 +141,7 @@ static void build_io_request_1(struct io_request *req)
 	req->nseg = 1;
 
 	/* 512B for 1st sge */
-	req->iovs[0].base = spdk_dma_zmalloc(0x200, 0x200, NULL);
+	req->iovs[0].base = spdk_zmalloc(0x200, 0x200, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[0].len = 0x200;
 }
 
@@ -150,7 +150,7 @@ static void build_io_request_2(struct io_request *req)
 	req->nseg = 1;
 
 	/* 256KB for 1st sge */
-	req->iovs[0].base = spdk_dma_zmalloc(0x40000, 0x1000, NULL);
+	req->iovs[0].base = spdk_zmalloc(0x40000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[0].len = 0x40000;
 }
 
@@ -160,16 +160,16 @@ static void build_io_request_3(struct io_request *req)
 
 	/* 2KB for 1st sge, make sure the iov address start at 0x800 boundary,
 	 *  and end with 0x1000 boundary */
-	req->iovs[0].base = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	req->iovs[0].base = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[0].offset = 0x800;
 	req->iovs[0].len = 0x800;
 
 	/* 4KB for 2th sge */
-	req->iovs[1].base = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	req->iovs[1].base = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[1].len = 0x1000;
 
 	/* 12KB for 3th sge */
-	req->iovs[2].base = spdk_dma_zmalloc(0x3000, 0x1000, NULL);
+	req->iovs[2].base = spdk_zmalloc(0x3000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[2].len = 0x3000;
 }
 
@@ -180,12 +180,12 @@ static void build_io_request_4(struct io_request *req)
 	req->nseg = 32;
 
 	/* 4KB for 1st sge */
-	req->iovs[0].base = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	req->iovs[0].base = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[0].len = 0x1000;
 
 	/* 8KB for the rest 31 sge */
 	for (i = 1; i < req->nseg; i++) {
-		req->iovs[i].base = spdk_dma_zmalloc(0x2000, 0x1000, NULL);
+		req->iovs[i].base = spdk_zmalloc(0x2000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		req->iovs[i].len = 0x2000;
 	}
 }
@@ -195,7 +195,7 @@ static void build_io_request_5(struct io_request *req)
 	req->nseg = 1;
 
 	/* 8KB for 1st sge */
-	req->iovs[0].base = spdk_dma_zmalloc(0x2000, 0x1000, NULL);
+	req->iovs[0].base = spdk_zmalloc(0x2000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[0].len = 0x2000;
 }
 
@@ -204,11 +204,11 @@ static void build_io_request_6(struct io_request *req)
 	req->nseg = 2;
 
 	/* 4KB for 1st sge */
-	req->iovs[0].base = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	req->iovs[0].base = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[0].len = 0x1000;
 
 	/* 4KB for 2st sge */
-	req->iovs[1].base = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	req->iovs[1].base = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[1].len = 0x1000;
 }
 
@@ -222,7 +222,7 @@ static void build_io_request_7(struct io_request *req)
 	 * Create a 64KB sge, but ensure it is *not* aligned on a 4KB
 	 *  boundary.  This is valid for single element buffers with PRP.
 	 */
-	base = spdk_dma_zmalloc(0x11000, 0x1000, NULL);
+	base = spdk_zmalloc(0x11000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->misalign = 64;
 	req->iovs[0].base = base + req->misalign;
 	req->iovs[0].len = 0x10000;
@@ -236,7 +236,7 @@ static void build_io_request_8(struct io_request *req)
 	 * 1KB for 1st sge, make sure the iov address does not start and end
 	 * at 0x1000 boundary
 	 */
-	req->iovs[0].base = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	req->iovs[0].base = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[0].offset = 0x400;
 	req->iovs[0].len = 0x400;
 
@@ -244,7 +244,7 @@ static void build_io_request_8(struct io_request *req)
 	 * 1KB for 1st sge, make sure the iov address does not start and end
 	 * at 0x1000 boundary
 	 */
-	req->iovs[1].base = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	req->iovs[1].base = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	req->iovs[1].offset = 0x400;
 	req->iovs[1].len = 0x400;
 }
@@ -264,7 +264,8 @@ static void build_io_request_9(struct io_request *req)
 	assert(SPDK_COUNTOF(req_len) == SPDK_COUNTOF(req_off));
 
 	for (i = 0; i < req->nseg; i++) {
-		iovs[i].base = spdk_dma_zmalloc(req_off[i] + req_len[i], 0x4000, NULL);
+		iovs[i].base = spdk_zmalloc(req_off[i] + req_len[i], 0x4000, NULL, SPDK_ENV_LCORE_ID_ANY,
+					    SPDK_MALLOC_DMA);
 		iovs[i].offset = req_off[i];
 		iovs[i].len = req_len[i];
 	}
@@ -284,7 +285,8 @@ static void build_io_request_10(struct io_request *req)
 	assert(SPDK_COUNTOF(req_len) == SPDK_COUNTOF(req_off));
 
 	for (i = 0; i < req->nseg; i++) {
-		iovs[i].base = spdk_dma_zmalloc(req_off[i] + req_len[i], 0x4000, NULL);
+		iovs[i].base = spdk_zmalloc(req_off[i] + req_len[i], 0x4000, NULL, SPDK_ENV_LCORE_ID_ANY,
+					    SPDK_MALLOC_DMA);
 		iovs[i].offset = req_off[i];
 		iovs[i].len = req_len[i];
 	}
@@ -301,7 +303,8 @@ static void build_io_request_11(struct io_request *req)
 	assert(SPDK_COUNTOF(req_len) == SPDK_COUNTOF(req_off));
 
 	for (i = 0; i < req->nseg; i++) {
-		iovs[i].base = spdk_dma_zmalloc(req_off[i] + req_len[i], 0x4000, NULL);
+		iovs[i].base = spdk_zmalloc(req_off[i] + req_len[i], 0x4000, NULL, SPDK_ENV_LCORE_ID_ANY,
+					    SPDK_MALLOC_DMA);
 		iovs[i].offset = req_off[i];
 		iovs[i].len = req_len[i];
 	}
@@ -319,10 +322,10 @@ free_req(struct io_request *req)
 	}
 
 	for (i = 0; i < req->nseg; i++) {
-		spdk_dma_free(req->iovs[i].base - req->misalign);
+		spdk_free(req->iovs[i].base - req->misalign);
 	}
 
-	spdk_dma_free(req);
+	spdk_free(req);
 }
 
 static int
@@ -353,7 +356,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 		return 0;
 	}
 
-	req = spdk_dma_zmalloc(sizeof(*req), 0, NULL);
+	req = spdk_zmalloc(sizeof(*req), 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!req) {
 		fprintf(stderr, "Allocate request failed\n");
 		return 0;
