@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "6dbfb7e6_f3edceed",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-27T08:45:40Z",
+      "side": 1,
+      "message": "Please add skip_response call here.",
+      "revId": "86e361c076dbcd98eb1e24cab3c518847ac29d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "89e3c991_9b79c9f2",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 2
