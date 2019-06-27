@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee840a14_cff70b6d",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-27T12:48:49Z",
+      "side": 1,
+      "message": "Lets name it num_reloc_lbks - we are using \"lbk\" all over in FTL.",
+      "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3bafa41_4339be50",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-27T12:48:49Z",
+      "side": 1,
+      "message": "We should call FTL_IO_WEAK something like FTL_IO_RELOC_WRITE and use it to bypass cache and in l2p update.",
+      "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f4430bb_b4a86675",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1522,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-27T12:48:49Z",
+      "side": 1,
+      "message": "You could get band from entry.",
+      "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6882f3fb_28813264",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-27T12:48:49Z",
+      "side": 1,
+      "message": "This should be set only for writes in ftl_reloc_write().",
+      "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
