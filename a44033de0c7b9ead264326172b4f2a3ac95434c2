@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aece4d60_9aa32659",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1700,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-27T01:06:26Z",
+      "side": 1,
+      "message": "Can we define a macro or inline function for the calculation, of course this can be a separate patch through.",
+      "revId": "a44033de0c7b9ead264326172b4f2a3ac95434c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
