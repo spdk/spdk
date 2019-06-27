@@ -953,6 +953,8 @@ _xfer_test(bool bdev_io_pool_full)
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
 	CU_ASSERT(g_scsi_cb_called == 1);
 	g_scsi_cb_called = 0;
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_io_queue));
+
 	ut_put_task(&task);
 }
 
