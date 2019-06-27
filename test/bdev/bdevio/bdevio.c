@@ -195,7 +195,7 @@ static bool g_completion_success;
 static void
 initialize_buffer(char **buf, int pattern, int size)
 {
-	*buf = spdk_dma_zmalloc(size, 0x1000, NULL);
+	*buf = spdk_zmalloc(size, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	memset(*buf, pattern, size);
 }
 
@@ -347,8 +347,8 @@ blockdev_write_read_data_match(char *rx_buf, char *tx_buf, int data_length)
 	int rc;
 	rc = memcmp(rx_buf, tx_buf, data_length);
 
-	spdk_dma_free(rx_buf);
-	spdk_dma_free(tx_buf);
+	spdk_free(rx_buf);
+	spdk_free(tx_buf);
 
 	return rc;
 }
@@ -890,7 +890,7 @@ blockdev_test_nvme_passthru_rw(void)
 	pt_req.cmd.cdw12 = 0;
 
 	pt_req.len = spdk_bdev_get_block_size(target->bdev);
-	write_buf = spdk_dma_malloc(pt_req.len, 0, NULL);
+	write_buf = spdk_malloc(pt_req.len, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	memset(write_buf, 0xA5, pt_req.len);
 	pt_req.buf = write_buf;
 
@@ -901,7 +901,7 @@ blockdev_test_nvme_passthru_rw(void)
 	CU_ASSERT(pt_req.sc == SPDK_NVME_SC_SUCCESS);
 
 	pt_req.cmd.opc = SPDK_NVME_OPC_READ;
-	read_buf = spdk_dma_zmalloc(pt_req.len, 0, NULL);
+	read_buf = spdk_zmalloc(pt_req.len, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	pt_req.buf = read_buf;
 
 	pt_req.sct = SPDK_NVME_SCT_VENDOR_SPECIFIC;
@@ -911,8 +911,8 @@ blockdev_test_nvme_passthru_rw(void)
 	CU_ASSERT(pt_req.sc == SPDK_NVME_SC_SUCCESS);
 
 	CU_ASSERT(!memcmp(read_buf, write_buf, pt_req.len));
-	spdk_dma_free(read_buf);
-	spdk_dma_free(write_buf);
+	spdk_free(read_buf);
+	spdk_free(write_buf);
 }
 
 static void
@@ -973,7 +973,7 @@ blockdev_test_nvme_admin_passthru(void)
 	*(uint64_t *)&pt_req.cmd.cdw10 = SPDK_NVME_IDENTIFY_CTRLR;
 
 	pt_req.len = sizeof(struct spdk_nvme_ctrlr_data);
-	pt_req.buf = spdk_dma_malloc(pt_req.len, 0, NULL);
+	pt_req.buf = spdk_malloc(pt_req.len, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 
 	pt_req.sct = SPDK_NVME_SCT_GENERIC;
 	pt_req.sc = SPDK_NVME_SC_SUCCESS;
