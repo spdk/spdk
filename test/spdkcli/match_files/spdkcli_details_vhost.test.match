@@ -15,6 +15,7 @@
     }
   },
   "name": "Nvme0n1p0",
+  "uuid": $(S),
   "num_blocks": $(N),
   "product_name": "Split Disk",
   "supported_io_types": {
