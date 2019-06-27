@@ -1770,7 +1770,7 @@ nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 uint16_t
 nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return spdk_min(ctrlr->cdata.nvmf_specific.msdbd, NVME_RDMA_MAX_SGL_DESCRIPTORS);
+	return NVME_RDMA_MAX_SGL_DESCRIPTORS;
 }
 
 volatile struct spdk_nvme_registers *

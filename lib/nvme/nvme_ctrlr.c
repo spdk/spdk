@@ -979,7 +979,13 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 
 	if (ctrlr->cdata.sgls.supported) {
 		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
+		/*
+		 * Use MSDBD to ensure our max_sges doesn't exceed what the
+		 *  controller supports.
+		 */
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "transport max_sges %u\n", ctrlr->max_sges);
+		ctrlr->max_sges = spdk_min(ctrlr->cdata.nvmf_specific.msdbd, ctrlr->max_sges);
 	}
 
 	if (ctrlr->cdata.oacs.security) {
