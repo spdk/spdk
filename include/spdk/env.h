@@ -658,6 +658,7 @@ struct spdk_pci_id {
 };
 
 struct spdk_pci_device {
+	struct spdk_pci_device		*parent;
 	void				*dev_handle;
 	struct spdk_pci_addr		addr;
 	struct spdk_pci_id		id;
