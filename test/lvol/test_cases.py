@@ -126,7 +126,6 @@ def case_message(func):
             300: 'destroy_lvol_store_nonexistent_lvs_uuid',
             301: 'delete_lvol_store_underlying_bdev',
             # construct_lvol_store - negative tests
-            451: 'construct_lvs_on_bdev_twice',
             452: 'construct_lvs_name_twice',
             # nested construct_lvol_bdev - test negative
             500: 'nested_construct_lvol_bdev_on_full_lvol_store',
@@ -717,32 +716,6 @@ class TestCases(object):
         # - destroy_lvol_store return code != 0
         # - Error code: ENODEV ("No such device") response printed to stdout
         # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case451(self):
-        """
-        construct_lvs_on_bdev_twice
-
-        Negative test for constructing a new lvol store.
-        Call construct_lvol_store with base bdev name twice.
-        """
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Construct lvol store on created malloc bdev
-        uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name)
-        # Check correct uuid values in response get_lvol_stores command
-        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
-                                                  self.cluster_size)
-        # Try construct_lvol_store on the same bdev as in last step
-        # This call should fail as base bdev is already claimed by lvol store
-        if self.c.construct_lvol_store(base_name,
-                                       self.lvs_name) == 0:
-            fail_count += 1
-        self.c.destroy_lvol_store(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
         return fail_count
 
     @case_message
