@@ -7,8 +7,10 @@ source $rootdir/test/lvol/common.sh
 
 # create empty lvol store and verify its parameters
 function test_construct_lvs() {
-	# create an lvol store
+	# create a malloc bdev
 	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+
+	# create a valid lvs
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
 
@@ -29,6 +31,14 @@ function test_construct_lvs() {
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 	check_leftover_devices
+}
+
+# call bdev_lvol_create_lvstore with base bdev name which does not
+# exist in configuration
+function test_construct_lvs_nonexistent_bdev() {
+	# make sure we can't create lvol store on nonexistent bdev
+	rpc_cmd bdev_lvol_create_lvstore NotMalloc lvs_test && false
+	return 0
 }
 
 # create lvs + lvol on top, verify lvol's parameters
@@ -247,6 +257,7 @@ trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
 run_test "test_construct_lvs" test_construct_lvs
+run_test "test_construct_lvs_nonexistent_bdev" test_construct_lvs_nonexistent_bdev
 run_test "test_construct_lvol" test_construct_lvol
 run_test "test_construct_multi_lvols" test_construct_multi_lvols
 run_test "test_construct_lvols_conflict_alias" test_construct_lvols_conflict_alias
