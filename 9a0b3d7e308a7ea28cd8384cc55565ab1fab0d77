@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a07aedfb_922d7b9d",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 10
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-27T09:44:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f64e652_4a82f429",
+      "range": {
+        "startLine": 29,
+        "startChar": 40,
+        "endLine": 29,
+        "endChar": 42
+      },
+      "revId": "9a0b3d7e308a7ea28cd8384cc55565ab1fab0d77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15400b13_7f45da65",
         "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
         "patchSetId": 10
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "42e567de_689eca69",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 10
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-27T09:44:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "15400b13_7f45da65",
+      "range": {
+        "startLine": 30,
+        "startChar": 55,
+        "endLine": 30,
+        "endChar": 60
+      },
+      "revId": "9a0b3d7e308a7ea28cd8384cc55565ab1fab0d77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "583f82f1_61aa1841",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 10
@@ -68,6 +116,30 @@
       "revId": "9a0b3d7e308a7ea28cd8384cc55565ab1fab0d77",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae834673_a76ab1f0",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-27T09:44:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "583f82f1_61aa1841",
+      "range": {
+        "startLine": 28,
+        "startChar": 37,
+        "endLine": 28,
+        "endChar": 41
+      },
+      "revId": "9a0b3d7e308a7ea28cd8384cc55565ab1fab0d77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
