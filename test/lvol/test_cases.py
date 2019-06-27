@@ -110,8 +110,6 @@ def test_counter():
 def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
-            # bdev_lvol_create - positive tests
-            53: 'bdev_lvol_create_duplicate_names_positive',
             # bdev_lvol_create - negative tests
             100: 'construct_logical_volume_nonexistent_lvs_uuid',
             101: 'bdev_lvol_create_on_full_lvol_store',
@@ -308,57 +306,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.bdev_lvol_get_lvstores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case53(self):
-        """
-        bdev_lvol_create_duplicate_names_positive
-
-        Positive test for constructing a logical volumes using friendly names.
-        Verify that logical volumes can use the same argument for friendly names
-        if they are created on separate logical volume stores.
-        """
-        # Construct two malloc bdevs
-        base_name_1 = self.c.bdev_malloc_create(self.total_size,
-                                                self.block_size)
-        base_name_2 = self.c.bdev_malloc_create(self.total_size,
-                                                self.block_size)
-        # Create logical volume stores on created malloc bdevs
-        uuid_store_1 = self.c.bdev_lvol_create_lvstore(base_name_1,
-                                                       self.lvs_name + "1")
-        uuid_store_2 = self.c.bdev_lvol_create_lvstore(base_name_2,
-                                                       self.lvs_name + "2")
-        # Verify stores were created correctly
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name_1, uuid_store_1,
-                                                         self.cluster_size)
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name_2, uuid_store_2,
-                                                         self.cluster_size)
-
-        lvs_size = self.get_lvs_size(self.lvs_name + "1")
-        # Create logical volume on first lvol store
-        uuid_bdev_1 = self.c.bdev_lvol_create(uuid_store_1,
-                                              self.lbd_name,
-                                              lvs_size)
-        # Using the same friendly name argument create logical volume on second
-        # lvol store
-        uuid_bdev_2 = self.c.bdev_lvol_create(uuid_store_2,
-                                              self.lbd_name,
-                                              lvs_size)
-        # Verify two lvol bdevs were correctly created
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev_1, lvs_size)
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev_2, lvs_size)
-
-        fail_count += self.c.bdev_lvol_delete(uuid_bdev_1)
-        fail_count += self.c.bdev_lvol_delete(uuid_bdev_2)
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store_1)
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store_2)
-        fail_count += self.c.bdev_malloc_delete(base_name_1)
-        fail_count += self.c.bdev_malloc_delete(base_name_2)
-
-        # Expected result:
-        # - calls successful, return code = 0
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case100(self):
