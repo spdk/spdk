@@ -33,6 +33,24 @@
       "revId": "3698bc3fb97adbcee52b3acc5b809e3883b7c691",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d7584d1_8f30ea1e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-27T14:13:25Z",
+      "side": 1,
+      "message": "To get vsession object I need a lock which I just failed to get.",
+      "parentUuid": "75d0609d_2ed07f09",
+      "revId": "3698bc3fb97adbcee52b3acc5b809e3883b7c691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
