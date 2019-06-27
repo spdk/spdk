@@ -86,6 +86,8 @@ struct nvme_rdma_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
 
 	struct ibv_pd				*pd;
+
+	uint16_t				max_sge;
 };
 
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
@@ -1461,7 +1463,9 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	struct nvme_rdma_ctrlr *rctrlr;
 	union spdk_nvme_cap_register cap;
 	union spdk_nvme_vs_register vs;
-	int rc;
+	struct ibv_context **contexts;
+	struct ibv_device_attr dev_attr;
+	int i, rc;
 
 	rctrlr = calloc(1, sizeof(struct nvme_rdma_ctrlr));
 	if (rctrlr == NULL) {
@@ -1472,6 +1476,30 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	rctrlr->ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	rctrlr->ctrlr.opts = *opts;
 	memcpy(&rctrlr->ctrlr.trid, trid, sizeof(rctrlr->ctrlr.trid));
+
+	contexts = rdma_get_devices(NULL);
+	if (contexts == NULL) {
+		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		free(rctrlr);
+		return NULL;
+	}
+
+	i = 0;
+	rctrlr->max_sge = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+
+	while (contexts[i] != NULL) {
+		rc = ibv_query_device(contexts[i], &dev_attr);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
+			rdma_free_devices(contexts);
+			free(rctrlr);
+			return NULL;
+		}
+		rctrlr->max_sge = spdk_min(rctrlr->max_sge, (uint16_t)dev_attr.max_sge);
+		i++;
+	}
+
+	rdma_free_devices(contexts);
 
 	rc = nvme_ctrlr_construct(&rctrlr->ctrlr);
 	if (rc != 0) {
@@ -1763,14 +1791,22 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 uint32_t
 nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
-	/* Todo, which should get from the NVMF target */
-	return NVME_RDMA_RW_BUFFER_SIZE;
+	/* max_mr_size by ibv_query_device indicates the largest value that we can
+	 * set for a registered memory region.  It is independent from the actual
+	 * I/O size and is very likely to be larger than 2 MiB which is the
+	 * granularity we currently register memory regions.  Hence return
+	 * UINT32_MAX here and let the generic layer use the controller data to
+	 * moderate this value.
+	 */
+	return UINT32_MAX;
 }
 
 uint16_t
 nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	struct nvme_rdma_ctrlr *rctrlr = nvme_rdma_ctrlr(ctrlr);
+
+	return rctrlr->max_sge;
 }
 
 volatile struct spdk_nvme_registers *
