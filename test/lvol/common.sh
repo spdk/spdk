@@ -10,9 +10,19 @@ function rpc_cmd() {
 	$rootdir/scripts/rpc.py "$@"
 }
 
+function rpc_cmd_negative() {
+	if $rootdir/scripts/rpc.py "$@"; then
+		return 1
+	fi
+}
+
 function check_leftover_devices() {
 	leftover_bdevs=$(rpc_cmd bdev_get_bdevs)
 	[ "$(jq length <<< "$leftover_bdevs")" == "0" ]
 	leftover_lvs=$(rpc_cmd bdev_lvol_get_lvstores)
 	[ "$(jq length <<< "$leftover_lvs")" == "0" ]
+}
+
+function round_down() {
+	echo $(( $1 / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
 }
