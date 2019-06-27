@@ -225,8 +225,8 @@ bdevperf_free_target(struct io_target *target)
 
 	TAILQ_FOREACH_SAFE(task, &target->task_list, link, tmp) {
 		TAILQ_REMOVE(&target->task_list, task, link);
-		spdk_dma_free(task->buf);
-		spdk_dma_free(task->md_buf);
+		spdk_free(task->buf);
+		spdk_free(task->md_buf);
 		free(task);
 	}
 
@@ -894,7 +894,8 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 		return NULL;
 	}
 
-	task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
+	task->buf = spdk_zmalloc(g_io_size, g_min_alignment, NULL, SPDK_ENV_LCORE_ID_ANY,
+				 SPDK_MALLOC_DMA);
 	if (!task->buf) {
 		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
 		free(task);
@@ -902,8 +903,9 @@ static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target 
 	}
 
 	if (spdk_bdev_is_md_separate(target->bdev)) {
-		task->md_buf = spdk_dma_zmalloc(target->io_size_blocks *
-						spdk_bdev_get_md_size(target->bdev), 0, NULL);
+		task->md_buf = spdk_zmalloc(target->io_size_blocks *
+					    spdk_bdev_get_md_size(target->bdev), 0, NULL,
+					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!task->md_buf) {
 			fprintf(stderr, "Cannot allocate md buf for task=%p\n", task);
 			free(task->buf);
