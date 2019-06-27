@@ -28,7 +28,10 @@ function test_construct_lvs() {
 	[ "$(jq -r '.[0].free_clusters' <<< "$lvs")" = "$total_clusters" ]
 	[ "$(( total_clusters * cluster_size ))" = "$LVS_DEFAULT_CAPACITY" ]
 
-	# remove it and verify it's gone
+	# make sure we can't create another lvs on the same bdev
+	! rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test2
+
+	# remove the lvs and verify it's gone
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
 	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
 	rpc_cmd bdev_malloc_delete "$malloc_name"
