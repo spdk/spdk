@@ -684,15 +684,15 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	g_task = spdk_dma_zmalloc(sizeof(struct perf_task), 0, NULL);
+	g_task = spdk_zmalloc(sizeof(struct perf_task), 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (g_task == NULL) {
 		fprintf(stderr, "g_task alloc failed\n");
 		exit(1);
 	}
 
-	g_task->buf = spdk_dma_zmalloc(g_io_size_bytes, 0x1000, NULL);
+	g_task->buf = spdk_zmalloc(g_io_size_bytes, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (g_task->buf == NULL) {
-		fprintf(stderr, "g_task->buf spdk_dma_zmalloc failed\n");
+		fprintf(stderr, "g_task->buf spdk_zmalloc failed\n");
 		exit(1);
 	}
 
