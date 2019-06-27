@@ -132,6 +132,52 @@ function test_construct_multi_lvols() {
 	check_leftover_devices
 }
 
+# create 2 lvolstores, each with a single lvol on top.
+# use a single alias for both lvols, there should be no conflict
+# since they're in different lvolstores
+function test_construct_lvols_conflict_alias() {
+	# create an lvol store 1
+	malloc1_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs1_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc1_name" lvs_test1)
+
+	# create an lvol on lvs1
+	lvol1_uuid=$(rpc_cmd bdev_lvol_create -l lvs_test1 lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+	lvol1=$(rpc_cmd bdev_get_bdevs -b "$lvol1_uuid")
+
+	# use a different size for second malloc to keep those differentiable
+	malloc2_size_mb=$(( MALLOC_SIZE_MB / 2 ))
+
+	# create an lvol store 2
+	malloc2_name=$(rpc_cmd bdev_malloc_create $malloc2_size_mb $MALLOC_BS)
+	lvs2_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs_test2)
+
+	lvol2_size_mb=$(round_down $(( LVS_DEFAULT_CAPACITY_MB / 2 )) )
+
+	# create an lvol on lvs2
+	lvol2_uuid=$(rpc_cmd bdev_lvol_create -l lvs_test2 lvol_test "$lvol2_size_mb")
+	lvol2=$(rpc_cmd bdev_get_bdevs -b "$lvol2_uuid")
+
+	[ "$(jq -r '.[0].name' <<< "$lvol1")" = "$lvol1_uuid" ]
+	[ "$(jq -r '.[0].uuid' <<< "$lvol1")" = "$lvol1_uuid" ]
+	[ "$(jq -r '.[0].aliases[0]' <<< "$lvol1")" = "lvs_test1/lvol_test" ]
+	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol1")" = "$lvs1_uuid" ]
+
+	[ "$(jq -r '.[0].name' <<< "$lvol2")" = "$lvol2_uuid" ]
+	[ "$(jq -r '.[0].uuid' <<< "$lvol2")" = "$lvol2_uuid" ]
+	[ "$(jq -r '.[0].aliases[0]' <<< "$lvol2")" = "lvs_test2/lvol_test" ]
+	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol2")" = "$lvs2_uuid" ]
+
+	# clean up
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs1_uuid"
+	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs1_uuid"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs2_uuid"
+	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs2_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc1_name"
+	! rpc_cmd bdev_get_bdevs -b "$malloc1_name"
+	rpc_cmd bdev_malloc_delete "$malloc2_name"
+	check_leftover_devices
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -140,6 +186,7 @@ waitforlisten $spdk_pid
 run_test "case" "test_construct_lvs" test_construct_lvs
 run_test "case" "test_construct_lvol" test_construct_lvol
 run_test "case" "test_construct_multi_lvols" test_construct_multi_lvols
+run_test "case" "test_construct_lvols_conflict_alias" test_construct_lvols_conflict_alias
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
