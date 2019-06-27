@@ -7,8 +7,12 @@ source $rootdir/test/lvol/common.sh
 
 # create empty lvol store and verify its parameters
 function test_construct_lvs() {
-	# create an lvol store
+	# create a dummy bdev
 	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	# make sure we can't create lvol store on inexistent bdev
+	! rpc_cmd construct_lvol_store NotMalloc lvs_test
+
+	# create a valid lvs
 	lvs_uuid=$(rpc_cmd construct_lvol_store "$malloc_name" lvs_test)
 	lvs=$(rpc_cmd get_lvol_stores -u "$lvs_uuid")
 
