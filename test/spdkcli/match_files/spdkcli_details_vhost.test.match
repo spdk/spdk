@@ -26,5 +26,6 @@
     "unmap": $(S),
     "write": $(S),
     "write_zeroes": $(S)
-  }
+  },
+  "uuid": "$(S)"
 }
