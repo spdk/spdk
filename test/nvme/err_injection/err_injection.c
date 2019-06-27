@@ -158,7 +158,7 @@ read_test_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	struct dev *dev = cb_arg;
 
 	outstanding_commands--;
-	spdk_dma_free(dev->data);
+	spdk_free(dev->data);
 
 	if (spdk_nvme_cpl_is_error(cpl) && dev->error_expected) {
 		if (cpl->status.sct != SPDK_NVME_SCT_MEDIA_ERROR ||
@@ -184,7 +184,7 @@ read_test(bool error_expected)
 
 	foreach_dev(dev) {
 		dev->error_expected = error_expected;
-		dev->data = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+		dev->data = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!dev->data) {
 			failed = 1;
 			goto cleanup;
