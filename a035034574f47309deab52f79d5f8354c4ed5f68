@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "7c80cc68_c6e2b47e",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-27T14:21:34Z",
+      "side": 1,
+      "message": "So don\u0027t you think that will be easier if we will keep consitent names until we start moving to ZNS?",
+      "parentUuid": "c2316c2c_e88404b3",
+      "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e3bafa41_4339be50",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 5
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "I don\u0027t think I understand your point. Could you elaborate?",
       "parentUuid": "e3bafa41_4339be50",
+      "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96c9c983_12b06e81",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-27T14:21:34Z",
+      "side": 1,
+      "message": "I think that we should merge FTL_IO_WEAK and FTL_IO_BYPASS_CACHE into e. g. FTL_IO_RELOC_WRITE. I think we had already too much flags in our IO struct. Both flags are only valid for reloc writes and we need some extra handling for that - we will not bypassing and set to weak anything else then reloc writes so naming this flag in such way will describe better our intentions in the code.",
+      "parentUuid": "a2901d43_e33e544b",
       "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
