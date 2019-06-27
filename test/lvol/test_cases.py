@@ -125,8 +125,6 @@ def case_message(func):
             # destroy_lvol_store - negative tests
             300: 'destroy_lvol_store_nonexistent_lvs_uuid',
             301: 'delete_lvol_store_underlying_bdev',
-            # construct_lvol_store - negative tests
-            452: 'construct_lvs_name_twice',
             # nested construct_lvol_bdev - test negative
             500: 'nested_construct_lvol_bdev_on_full_lvol_store',
             550: 'delete_bdev_positive',
@@ -716,42 +714,6 @@ class TestCases(object):
         # - destroy_lvol_store return code != 0
         # - Error code: ENODEV ("No such device") response printed to stdout
         # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case452(self):
-        """
-        construct_lvs_name_twice
-
-        Negative test for constructing a new lvol store using the same
-        friendly name twice.
-        """
-        fail_count = 0
-        # Create malloc bdev
-        base_name_1 = self.c.construct_malloc_bdev(self.total_size,
-                                                   self.block_size)
-        # Construct second malloc bdev
-        base_name_2 = self.c.construct_malloc_bdev(self.total_size,
-                                                   self.block_size)
-        # Construct lvol store on first malloc
-        uuid_store_1 = self.c.construct_lvol_store(base_name_1,
-                                                   self.lvs_name)
-        # using get_lvol_stores verify that logical volume store was correctly created
-        # and has arguments as provided in step earlier (cluster size, friendly name, base bdev)
-        fail_count += self.c.check_get_lvol_stores(base_name_1,
-                                                   uuid_store_1,
-                                                   self.cluster_size)
-        # Try to create another logical volume store on second malloc bdev using the
-        # same friendly name as before. This step is expected to fail as lvol stores
-        # cannot have the same name
-        if self.c.construct_lvol_store(base_name_2,
-                                       self.lvs_name) == 0:
-            fail_count += 1
-
-        fail_count += self.c.destroy_lvol_store(uuid_store_1)
-        fail_count += self.c.delete_malloc_bdev(base_name_1)
-        fail_count += self.c.delete_malloc_bdev(base_name_2)
-
         return fail_count
 
     @case_message
