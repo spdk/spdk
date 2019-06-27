@@ -578,13 +578,10 @@ uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struc
  *
  * \param subsystem Subsystem the namespace belong to.
  * \param nsid Namespace ID to be removed.
- * \param cb_fn Function to call when all thread local ns information has been updated
- * \param cb_arg Context for the above cb_fn
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid,
-				  spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg);
+int spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid);
 
 /**
  * Get the first allocated namespace in a subsystem.

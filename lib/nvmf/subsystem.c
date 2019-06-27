@@ -311,8 +311,6 @@ _spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, struct s
 	free(host);
 }
 
-static int _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid);
-
 static void
 _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 				struct spdk_nvmf_listener *listener)
@@ -360,7 +358,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	while (ns != NULL) {
 		struct spdk_nvmf_ns *next_ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns);
 
-		_spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid);
+		spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid);
 		ns = next_ns;
 	}
 
@@ -897,8 +895,8 @@ spdk_nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	}
 }
 
-static int
-_spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+int
+spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_registrant *reg, *reg_tmp;
@@ -938,50 +936,19 @@ _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	return 0;
 }
 
-int
-spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid,
-			      spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg)
-{
-	int rc;
-	struct subsystem_update_ns_ctx *ctx;
-
-	rc = _spdk_nvmf_subsystem_remove_ns(subsystem, nsid);
-	if (rc < 0) {
-		return rc;
-	}
-
-	ctx = calloc(1, sizeof(*ctx));
-
-	if (ctx == NULL) {
-		return -ENOMEM;
-	}
-
-	ctx->subsystem = subsystem;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
-
-	spdk_nvmf_subsystem_update_ns(subsystem, subsystem_update_ns_done, ctx);
-
-	return 0;
-}
-
-static void
-_spdk_nvmf_ns_hot_remove_done(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
-{
-	if (status != 0) {
-		SPDK_ERRLOG("Failed to make changes to NVMe-oF subsystem with id %u\n", subsystem->id);
-	}
-	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
-}
-
 static void
 _spdk_nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 			 void *cb_arg, int status)
 {
 	struct spdk_nvmf_ns *ns = cb_arg;
+	int rc;
 
-	spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid, _spdk_nvmf_ns_hot_remove_done,
-				      subsystem);
+	rc = spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to make changes to NVME-oF subsystem with id: %u\n", subsystem->id);
+	}
+
+	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
 }
 
 static void
