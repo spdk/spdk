@@ -18,3 +18,9 @@ function run_lvol_test() {
 	leftover_lvs=$(rpc_cmd bdev_lvol_get_lvstores)
 	[ "$(jq length <<< "$leftover_lvs")" == "0" ]
 }
+
+function round_down() {
+	local lvol_size_mb=$1
+	lvol_size_mb=$(( lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	echo $lvol_size_mb
+}
