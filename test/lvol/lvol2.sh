@@ -221,6 +221,30 @@ function test_construct_lvol_full_lvs() {
 	rpc_cmd delete_malloc_bdev "$malloc_name"
 }
 
+# try to create two lvols with conflicting aliases
+function test_construct_lvol_alias_conflict() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd construct_lvol_store "$malloc_name" lvs_test)
+
+	lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB / 2 ))
+	# round down lvol size to the nearest cluster size boundary
+	lvol_size_mb=$(( lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+
+	# create valid lvol
+	lvol1_uuid=$(rpc_cmd construct_lvol_bdev -l lvs_test lvol_test "$lvol_size_mb")
+	lvol1=$(rpc_cmd get_bdevs -b "$lvol1_uuid")
+
+	# try to create another lvol with a name that's already taken
+	! rpc_cmd construct_lvol_bdev -l lvs_test lvol_test "$lvol_size_mb"
+
+	# clean up
+	rpc_cmd destroy_lvol_store -u "$lvs_uuid"
+	! rpc_cmd get_lvol_stores -u "$lvs_uuid"
+	rpc_cmd delete_malloc_bdev "$malloc_name"
+	! rpc_cmd get_bdevs -b "$malloc_name"
+}
+
 function run_test() {
 	$@
 
@@ -241,6 +265,7 @@ run_test test_construct_multi_lvols_basic
 run_test test_construct_lvols_conflict_alias
 run_test test_construct_lvol_inexistent_lvs
 run_test test_construct_lvol_full_lvs
+run_test test_construct_lvol_alias_conflict
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
