@@ -16,6 +16,24 @@
       "revId": "ca06785b19ee90c8b31c6552e70f191a0fe6d533",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8550968_336d509f",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-27T10:07:14Z",
+      "side": 1,
+      "message": "Yes, I think we do need to keep a separate versioning for this. These metadata structures are not connected so versioning them both doesn\u0027t make sense. We want to know whether the code knows how to parse this particular structure, we don\u0027t care about the layout of any other metadata.",
+      "parentUuid": "b8338244_664e4d2e",
+      "revId": "ca06785b19ee90c8b31c6552e70f191a0fe6d533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
