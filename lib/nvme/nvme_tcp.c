@@ -51,8 +51,6 @@
 
 #include "spdk_internal/nvme_tcp.h"
 
-#define NVME_TCP_RW_BUFFER_SIZE 131072
-
 #define NVME_TCP_HPDA_DEFAULT			0
 #define NVME_TCP_MAX_R2T_DEFAULT		1
 #define NVME_TCP_PDU_H2C_MIN_DATA_SIZE		4096
@@ -1867,7 +1865,8 @@ struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transpor
 uint32_t
 nvme_tcp_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return NVME_TCP_RW_BUFFER_SIZE;
+	/* TCP transport limit maximum IO size. */
+	return UINT32_MAX;
 }
 
 uint16_t

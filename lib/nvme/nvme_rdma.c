@@ -55,7 +55,6 @@
 #include "nvme_internal.h"
 
 #define NVME_RDMA_TIME_OUT_IN_MS 2000
-#define NVME_RDMA_RW_BUFFER_SIZE 131072
 
 /*
  * NVME RDMA qpair Resource Defaults
@@ -1763,8 +1762,31 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 uint32_t
 nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
-	/* Todo, which should get from the NVMF target */
-	return NVME_RDMA_RW_BUFFER_SIZE;
+	struct ibv_context	**contexts;
+	struct ibv_device_attr	dev_attr;
+	uint32_t		max_mr_size = UINT32_MAX;
+	int			i = 0, rc;
+
+	contexts = rdma_get_devices(NULL);
+	if (contexts == NULL) {
+		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		return 0;
+	}
+
+	i = 0;
+	while (contexts[i] != 0) {
+		rc = ibv_query_device(contexts[i], &dev_attr);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
+			return 0;
+		}
+		max_mr_size = spdk_min(max_mr_size, dev_attr.max_mr_size);
+		i++;
+	}
+
+	rdma_free_devices(contexts);
+
+	return max_mr_size;
 }
 
 uint16_t
