@@ -87,6 +87,8 @@ struct spdk_reduce_chunk_map {
 	uint64_t		io_unit_index[0];
 };
 
+#define REDUCE_MAX_IOVECS	32
+
 struct spdk_reduce_vol_request {
 	/**
 	 *  Scratch buffer used for uncompressed chunk.  This is used for:
@@ -97,6 +99,15 @@ struct spdk_reduce_vol_request {
 	 */
 	uint8_t					*decomp_buf;
 	struct iovec				*decomp_buf_iov;
+
+	/**
+	 * These are used to construct the iovecs that are sent to
+	 *  the decomp engine, they point to a mix of the scratch buffer
+	 *  and user buffer
+	 */
+	struct iovec				decomp_iov[REDUCE_MAX_IOVECS];
+	int					decomp_iovcnt;
+
 	/**
 	 *  Scratch buffer used for compressed chunk.  This is used for:
 	 *   1) destination buffer for compression operations
@@ -106,6 +117,9 @@ struct spdk_reduce_vol_request {
 	 */
 	uint8_t					*comp_buf;
 	struct iovec				*comp_buf_iov;
+	struct iovec				comp_iov[REDUCE_MAX_IOVECS];
+	int					comp_iovcnt;
+
 	struct iovec				*iov;
 	struct spdk_reduce_vol			*vol;
 	int					type;
@@ -1057,6 +1071,38 @@ static void
 _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
 {
 	struct spdk_reduce_vol *vol = req->vol;
+	uint64_t chunk_offset, remainder = 0;
+	uint64_t ttl_len = 0;
+	int i;
+
+	req->decomp_iovcnt = 0;
+	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
+
+	if (chunk_offset) {
+		/* first iov point to our scratch buffer for any offset into the chunk */
+		req->decomp_iov[0].iov_base = req->decomp_buf;
+		req->decomp_iov[0].iov_len = chunk_offset * vol->params.logical_block_size;
+		ttl_len += req->decomp_iov[0].iov_len;
+		req->decomp_iovcnt = 1;
+	}
+
+	/* now the user data iov, direct to the user buffer */
+	for (i = 0; i < req->iovcnt; i++) {
+		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
+		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
+		ttl_len += req->decomp_iov[i + req->decomp_iovcnt].iov_len;
+		req->decomp_iovcnt++;
+	}
+
+	/* send the rest of the chunk to our scratch buffer */
+	remainder = vol->params.chunk_size - ttl_len;
+	if (remainder) {
+		req->decomp_iov[req->decomp_iovcnt].iov_base = req->decomp_buf + ttl_len;
+		req->decomp_iov[req->decomp_iovcnt].iov_len = remainder;
+		ttl_len += req->decomp_iov[req->decomp_iovcnt].iov_len;
+		req->decomp_iovcnt++;
+	}
+	assert(ttl_len == vol->params.chunk_size);
 
 	req->backing_cb_args.cb_fn = next_fn;
 	req->backing_cb_args.cb_arg = req;
@@ -1065,7 +1111,7 @@ _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request
 	req->decomp_buf_iov[0].iov_base = req->decomp_buf;
 	req->decomp_buf_iov[0].iov_len = vol->params.chunk_size;
 	vol->backing_dev->decompress(vol->backing_dev,
-				     req->comp_buf_iov, 1, req->decomp_buf_iov, 1,
+				     req->comp_buf_iov, 1, &req->decomp_iov[0], req->decomp_iovcnt,
 				     &req->backing_cb_args);
 }
 
@@ -1134,9 +1180,6 @@ _read_decompress_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t chunk_offset;
-	uint8_t *buf;
-	int i;
 
 	/* Negative reduce_errno indicates failure for compression operations. */
 	if (reduce_errno < 0) {
@@ -1153,12 +1196,6 @@ _read_decompress_done(void *_req, int reduce_errno)
 		return;
 	}
 
-	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
-	buf = req->decomp_buf + chunk_offset * vol->params.logical_block_size;
-	for (i = 0; i < req->iovcnt; i++) {
-		memcpy(req->iov[i].iov_base, buf, req->iov[i].iov_len);
-		buf += req->iov[i].iov_len;
-	}
 	_reduce_vol_complete_req(req, 0);
 }
 

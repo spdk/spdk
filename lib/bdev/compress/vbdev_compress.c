@@ -51,18 +51,13 @@
 #include <rte_compressdev.h>
 #include <rte_comp.h>
 
-/* TODO: valdiate these are good starting values */
-#define NUM_MAX_XFORMS 16
+#define NUM_MAX_XFORMS 2
 #define NUM_MAX_INFLIGHT_OPS 128
 #define DEFAULT_WINDOW_SIZE 15
 #define MAX_MBUFS_PER_OP 16
 #define CHUNK_SIZE (1024 * 16)
-
 #define COMP_BDEV_NAME "compress"
-
-#define DEV_CHUNK_SZ (16 * 1024)
-#define DEV_LBA_SZ 512
-#define DEV_BACKING_IO_SZ (4 * 1024)
+#define BACKING_IO_SZ (4 * 1024)
 
 #define ISAL_PMD "compress_isal"
 #define QAT_PMD "compress_qat"
@@ -254,19 +249,24 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 		goto err;
 	}
 
-	rc = rte_compressdev_private_xform_create(cdev_id, &g_comp_xform,
-			&device->comp_xform);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to create private comp xform device %u: error %d\n",
-			    cdev_id, rc);
-		goto err;
-	}
+	if (device->cdev_info.capabilities->comp_feature_flags & RTE_COMP_FF_SHAREABLE_PRIV_XFORM) {
+		rc = rte_compressdev_private_xform_create(cdev_id, &g_comp_xform,
+				&device->comp_xform);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to create private comp xform device %u: error %d\n",
+				    cdev_id, rc);
+			goto err;
+		}
 
-	rc = rte_compressdev_private_xform_create(cdev_id, &g_decomp_xform,
-			&device->decomp_xform);
-	if (rc) {
-		SPDK_ERRLOG("Failed to create private decomp xform device %u: error %d\n",
-			    cdev_id, rc);
+		rc = rte_compressdev_private_xform_create(cdev_id, &g_decomp_xform,
+				&device->decomp_xform);
+		if (rc) {
+			SPDK_ERRLOG("Failed to create private decomp xform device %u: error %d\n",
+				    cdev_id, rc);
+			goto err;
+		}
+	} else {
+		SPDK_ERRLOG("PMD does not support shared transforms\n");
 		goto err;
 	}
 
@@ -507,6 +507,9 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	} else {
 		comp_op->private_xform = comp_bdev->device_qp->device->decomp_xform;
 	}
+
+	comp_op->op_type = RTE_COMP_OP_STATELESS;
+	comp_op->flush_flag = RTE_COMP_FLUSH_FINAL;
 
 	rc = rte_compressdev_enqueue_burst(cdev_id, comp_bdev->device_qp->qp, &comp_op, 1);
 	assert(rc <= 1);
@@ -1102,10 +1105,9 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 	meta_ctx->backing_dev.blocklen = bdev->blocklen;
 	meta_ctx->backing_dev.blockcnt = bdev->blockcnt;
 
-	/* TODO, configurable chunk size & logical block size */
-	meta_ctx->params.chunk_size = DEV_CHUNK_SZ;
-	meta_ctx->params.logical_block_size = DEV_LBA_SZ;
-	meta_ctx->params.backing_io_unit_size = DEV_BACKING_IO_SZ;
+	meta_ctx->params.chunk_size = CHUNK_SIZE;
+	meta_ctx->params.logical_block_size = bdev->blocklen;
+	meta_ctx->params.backing_io_unit_size = BACKING_IO_SZ;
 	return meta_ctx;
 }
 
