@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a75dee3_5ef3a93b",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-27T12:04:57Z",
+      "side": 1,
+      "message": "We know iname-\u003ename isn\u0027t NULL or the code wouldn\u0027t have created the iname and put it on the list. So instead of adding runtime checks, can you just put this at the top of each loop iteration:\n\nassert(iname-\u003ename !\u003d NULL);",
+      "revId": "fa11b14861214726fd7f6e47add6f39fa26c9853",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
