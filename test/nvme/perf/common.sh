@@ -5,6 +5,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 PLUGIN_DIR_NVME=$ROOT_DIR/examples/nvme/fio_plugin
 PLUGIN_DIR_BDEV=$ROOT_DIR/examples/bdev/fio_plugin
+BDEVPERF_DIR=$ROOT_DIR/test/bdev/bdevperf
 . $ROOT_DIR/scripts/common.sh || exit 1
 . $ROOT_DIR/test/common/autotest_common.sh
 NVME_FIO_RESULTS=$BASE_DIR/result.json
@@ -50,7 +51,7 @@ function get_numa_node(){
 				echo $(cat /sys/bus/pci/devices/$bdf/numa_node)
 			fi
 		done
-	elif [ "$plugin" = "bdev" ]; then
+	elif [ "$plugin" = "bdev" ] || [ "$plugin" = "bdevperf" ]; then
 		local bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 		for name in $disks; do
 			local bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme.pci_address" <<< $bdevs)
@@ -72,7 +73,7 @@ function get_disks(){
 				echo "$bdf"
 			fi
 		done
-	elif [ "$plugin" = "bdev" ]; then
+	elif [ "$plugin" = "bdev" ] || [ "$plugin" = "bdevperf" ]; then
 		local bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 		echo $(jq -r '.[].name' <<< $bdevs)
 	else
@@ -239,6 +240,21 @@ function get_results(){
 	esac
 }
 
+function get_bdevperf_results(){
+	case "$1" in
+		iops)
+		iops=$(grep Total $NVME_FIO_RESULTS | awk -F 'Total' '{print $2}' | awk '{print $2}')
+		iops=${iops%.*}
+		echo $iops
+		;;
+		bw_Kibs)
+		bw_MBs=$(grep Total $NVME_FIO_RESULTS | awk -F 'Total' '{print $2}' | awk '{print $4}')
+		bw_MBs=${bw_MBs%.*}
+		echo $(( $bw_MBs * 8 * 1000 ))
+		;;
+	esac
+}
+
 function run_spdk_nvme_fio(){
 	local plugin=$1
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
@@ -256,6 +272,12 @@ function run_spdk_nvme_fio(){
 function run_nvme_fio(){
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
 	$FIO_BIN $BASE_DIR/config.fio --output-format=json "$@"
+	sleep 1
+}
+
+function run_bdevperf(){
+	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
+	echo $($BDEVPERF_DIR/bdevperf -c $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME)
 	sleep 1
 }
 
@@ -316,7 +338,7 @@ done
 trap 'rm -f *.state $BASE_DIR/bdev.conf; print_backtrace' ERR SIGTERM SIGABRT
 mkdir -p $BASE_DIR/results
 date="$(date +'%m_%d_%Y_%H%M%S')"
-if [ $PLUGIN = "bdev" ]; then
+if [[ $PLUGIN == "bdev" ]] || [[ $PLUGIN == "bdevperf" ]]; then
 	$ROOT_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
 fi
 
