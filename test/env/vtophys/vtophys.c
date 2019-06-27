@@ -81,7 +81,7 @@ vtophys_spdk_malloc_test(void)
 
 	/* Test vtophys on memory allocated through SPDK */
 	for (i = 0; i < 31; i++) {
-		buf = spdk_dma_zmalloc(size, buf_align, NULL);
+		buf = spdk_zmalloc(size, buf_align, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (buf == NULL) {
 			continue;
 		}
@@ -146,7 +146,7 @@ vtophys_spdk_malloc_test(void)
 			tmpsize = UINT64_MAX;
 		}
 
-		spdk_dma_free(buf);
+		spdk_free(buf);
 		size = size << 1;
 	}
 }
