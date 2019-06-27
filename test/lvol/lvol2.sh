@@ -47,6 +47,21 @@ function test_construct_lvs_inexistent_bdev() {
 	rpc_cmd delete_malloc_bdev "$malloc_name"
 }
 
+# try to create two lvolstores on the same base bdev
+function test_construct_two_lvs_on_one_bdev() {
+	# create an lvol store 1
+	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs1_uuid=$(rpc_cmd construct_lvol_store "$malloc_name" lvs_test1)
+
+	# malloc should be already occupied
+	! rpc_cmd construct_lvol_store "$malloc_name" lvs_test2
+
+	# clean up
+	rpc_cmd destroy_lvol_store -u "$lvs1_uuid"
+	! rpc_cmd get_lvol_stores -u "$lvs1_uuid"
+	rpc_cmd delete_malloc_bdev "$malloc_name"
+}
+
 # create lvs + lvol on top, verify lvol's parameters
 function test_construct_lvol_basic() {
 	# create an lvol store
@@ -271,6 +286,7 @@ waitforlisten $spdk_pid
 
 run_test test_construct_lvs_basic
 run_test test_construct_lvs_inexistent_bdev
+run_test test_construct_two_lvs_on_one_bdev
 run_test test_construct_lvol_basic
 run_test test_construct_multi_lvols_basic
 run_test test_construct_lvols_conflict_alias
