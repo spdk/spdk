@@ -1867,7 +1867,8 @@ struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transpor
 uint32_t
 nvme_tcp_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return NVME_TCP_RW_BUFFER_SIZE;
+	/* TCP transport doens't limit maximum IO transfer size. */
+	return UINT32_MAX;
 }
 
 uint16_t
