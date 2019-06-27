@@ -88,34 +88,41 @@ do
 			qd=$IODEPTH
 		fi
 
-		create_fio_config $k $PLUGIN "$disk_names" "$disks_numa" "$cores"
-		desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
-
-		if [ $PLUGIN = "nvme" ] || [ $PLUGIN = "bdev" ]; then
-			run_spdk_nvme_fio $PLUGIN "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
-			"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
-			"--numjobs=$NUMJOBS" "--description=$desc" "-log_avg_msec=250"\
-			"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_$${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}_${k}disks_${j}"
+		if [ $PLUGIN = "bdevperf" ]; then
+			run_bdevperf > $NVME_FIO_RESULTS
+			iops_disks[$k]=$((${iops_disks[$k]} + $(get_bdevperf_results iops)))
+			bw[$k]=$((${bw[$k]} + $(get_bdevperf_results bw_Kibs)))
+			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${no_cores}cpus_${date}_${k}_disks_${j}.output
 		else
-			run_nvme_fio $fio_ioengine_opt "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
-			"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
-			"--numjobs=$NUMJOBS" "--description=$desc" "-log_avg_msec=250"\
-			"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}_${k}disks_${j}"
+			create_fio_config $k $PLUGIN "$disk_names" "$disks_numa" "$cores"
+			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
+
+			if [ $PLUGIN = "nvme" ] || [ $PLUGIN = "bdev" ]; then
+				run_spdk_nvme_fio $PLUGIN "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
+				"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
+				"--numjobs=$NUMJOBS" "--description=$desc" "-log_avg_msec=250"\
+				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_$${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}_${k}disks_${j}"
+			else
+				run_nvme_fio $fio_ioengine_opt "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
+				"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
+				"--numjobs=$NUMJOBS" "--description=$desc" "-log_avg_msec=250"\
+				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}_${k}disks_${j}"
+			fi
+
+			#Store values for every number of used disks
+			iops_disks[$k]=$((${iops_disks[$k]} + $(get_results iops $MIX)))
+			mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} + $(get_results mean_lat_usec $MIX)))
+			p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} + $(get_results p99_lat_usec $MIX)))
+			p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} + $(get_results p99_99_lat_usec $MIX)))
+			stdev_disks_usec[$k]=$((${stdev_disks_usec[$k]} + $(get_results stdev_usec $MIX)))
+
+			mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} + $(get_results mean_slat_usec $MIX)))
+			mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} + $(get_results mean_clat_usec $MIX)))
+			bw[$k]=$((${bw[$k]} + $(get_results bw_Kibs $MIX)))
+			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${no_cores}cpus_${date}_${k}_disks_${j}.json
+			cp $BASE_DIR/config.fio $BASE_DIR/results/$result_dir/config_${MIX}_${PLUGIN}_${no_cores}cpus_${date}_${k}_disks_${j}.fio
+			rm -f $BASE_DIR/config.fio
 		fi
-
-		#Store values for every number of used disks
-		iops_disks[$k]=$((${iops_disks[$k]} + $(get_results iops $MIX)))
-		mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} + $(get_results mean_lat_usec $MIX)))
-		p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} + $(get_results p99_lat_usec $MIX)))
-		p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} + $(get_results p99_99_lat_usec $MIX)))
-		stdev_disks_usec[$k]=$((${stdev_disks_usec[$k]} + $(get_results stdev_usec $MIX)))
-
-		mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} + $(get_results mean_slat_usec $MIX)))
-		mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} + $(get_results mean_clat_usec $MIX)))
-		bw[$k]=$((${bw[$k]} + $(get_results bw_Kibs $MIX)))
-		cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${no_cores}cpus_${date}_${k}_disks_${j}.json
-		cp $BASE_DIR/config.fio $BASE_DIR/results/$result_dir/config_${MIX}_${PLUGIN}_${no_cores}cpus_${date}_${k}_disks_${j}.fio
-		rm -f $BASE_DIR/config.fio
 
 		#if tested on only one number of disk
 		if $ONEWORKLOAD; then
@@ -127,12 +134,23 @@ done
 for (( k=$DISKNO; k >= 1; k-=2 ))
 do
 	iops_disks[$k]=$((${iops_disks[$k]} / $REPEAT_NO))
-	mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} / $REPEAT_NO))
-	p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} / $REPEAT_NO))
-	p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} / $REPEAT_NO))
-	stdev_disks_usec[$k]=$((${stdev_disks_usec[$k]} / $REPEAT_NO))
-	mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} / $REPEAT_NO))
-	mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} / $REPEAT_NO))
+
+	if [ $PLUGIN != "bdevperf" ]; then
+		mean_lat_disks_usec[$k]=$((${mean_lat_disks_usec[$k]} / $REPEAT_NO))
+		p99_lat_disks_usec[$k]=$((${p99_lat_disks_usec[$k]} / $REPEAT_NO))
+		p99_99_lat_disks_usec[$k]=$((${p99_99_lat_disks_usec[$k]} / $REPEAT_NO))
+		stdev_disks_usec[$k]=$((${stdev_disks_usec[$k]} / $REPEAT_NO))
+		mean_slat_disks_usec[$k]=$((${mean_slat_disks_usec[$k]} / $REPEAT_NO))
+		mean_clat_disks_usec[$k]=$((${mean_clat_disks_usec[$k]} / $REPEAT_NO))
+	else
+		mean_lat_disks_usec[$k]=0
+		p99_lat_disks_usec[$k]=0
+		p99_99_lat_disks_usec[$k]=0
+		stdev_disks_usec[$k]=0
+		mean_slat_disks_usec[$k]=0
+		mean_clat_disks_usec[$k]=0
+	fi
+
 	bw[$k]=$((${bw[$k]} / $REPEAT_NO))
 
 	printf "%s,%s,%s,%s,%s,%s,%s,%s,%s\n" ${k} ${iops_disks[$k]} ${mean_lat_disks_usec[$k]} ${p99_lat_disks_usec[$k]}\
