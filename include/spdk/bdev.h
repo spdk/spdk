@@ -411,8 +411,8 @@ bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
  * \param bdev Block device to query.
  * \return Pointer to UUID.
  *
- * Not all bdevs will have a UUID; in this case, the returned UUID will be
- * the nil UUID (all bytes zero).
+ * All bdevs will have a UUID, but not all UUIDs will be persistent across
+ * application runs.
  */
 const struct spdk_uuid *spdk_bdev_get_uuid(const struct spdk_bdev *bdev);
 
