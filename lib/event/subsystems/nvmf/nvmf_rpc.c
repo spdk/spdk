@@ -998,13 +998,14 @@ nvmf_rpc_remove_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-nvmf_rpc_remove_ns_remove_done(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
+nvmf_rpc_remove_ns_paused(struct spdk_nvmf_subsystem *subsystem,
+			  void *cb_arg, int status)
 {
-	struct nvmf_rpc_remove_ns_ctx *ctx;
+	struct nvmf_rpc_remove_ns_ctx *ctx = cb_arg;
+	int ret;
 
-	ctx = cb_arg;
-
-	if (status != 0) {
+	ret = spdk_nvmf_subsystem_remove_ns(subsystem, ctx->nsid);
+	if (ret < 0) {
 		SPDK_ERRLOG("Unable to remove namespace ID %u\n", ctx->nsid);
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -1012,26 +1013,11 @@ nvmf_rpc_remove_ns_remove_done(struct spdk_nvmf_subsystem *subsystem, void *cb_a
 	}
 
 	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_remove_ns_resumed, ctx)) {
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		if (!ctx->response_sent) {
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
 		nvmf_rpc_remove_ns_ctx_free(ctx);
 		return;
-	}
-}
-
-static void
-nvmf_rpc_remove_ns_paused(struct spdk_nvmf_subsystem *subsystem,
-			  void *cb_arg, int status)
-{
-	struct nvmf_rpc_remove_ns_ctx *ctx = cb_arg;
-	int ret;
-
-	ret = spdk_nvmf_subsystem_remove_ns(subsystem, ctx->nsid, nvmf_rpc_remove_ns_remove_done, ctx);
-	if (ret < 0) {
-		SPDK_ERRLOG("Unable to remove namespace ID %u\n", ctx->nsid);
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
-		ctx->response_sent = true;
-		spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_remove_ns_resumed, ctx);
 	}
 }
 
