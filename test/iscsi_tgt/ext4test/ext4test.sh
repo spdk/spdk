@@ -20,7 +20,7 @@ $ISCSI_APP --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 4 -b $node_base
@@ -71,8 +71,7 @@ $rpc_py delete_target_node $node_base:Target0
 echo "Error injection test done"
 
 if [ -z "$NO_NVME" ]; then
-	$rpc_py construct_split_vbdev Nvme0n1 2 -s 10000
-	$rpc_py construct_target_node Target1 Target1_alias Nvme0n1p0:0 1:2 64 -d
+	$rpc_py construct_target_node Target1 Target1_alias Nvme0n1:0 1:2 64 -d
 fi
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
@@ -117,7 +116,6 @@ done
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
-$rpc_py destruct_split_vbdev Nvme0n1
 $rpc_py delete_error_bdev EE_Malloc0
 
 if [ -z "$NO_NVME" ]; then
