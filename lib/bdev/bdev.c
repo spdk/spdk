@@ -3983,6 +3983,7 @@ static int
 spdk_bdev_init(struct spdk_bdev *bdev)
 {
 	char *bdev_name;
+	struct spdk_uuid zero_uuid = {};
 
 	assert(bdev->module != NULL);
 
@@ -4009,6 +4010,11 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 	bdev->internal.claim_module = NULL;
 	bdev->internal.qd_poller = NULL;
 	bdev->internal.qos = NULL;
+
+	/* If the user didn't specify a uuid, generate one. */
+	if (spdk_uuid_compare(&bdev->uuid, &zero_uuid) == 0) {
+		spdk_uuid_generate(&bdev->uuid);
+	}
 
 	if (spdk_bdev_get_buf_align(bdev) > 1) {
 		if (bdev->split_on_optimal_io_boundary) {
