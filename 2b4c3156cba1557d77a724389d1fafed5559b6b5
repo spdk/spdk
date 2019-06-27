@@ -172,6 +172,24 @@
     },
     {
       "key": {
+        "uuid": "6f9c5ba4_6cac09f2",
+        "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-06-27T23:12:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0504807c_00569f64",
+      "revId": "2b4c3156cba1557d77a724389d1fafed5559b6b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e8ec8491_d53d2fce",
         "filename": "test/app/fuzz/vhost_fuzz/vhost_fuzz.c",
         "patchSetId": 10
