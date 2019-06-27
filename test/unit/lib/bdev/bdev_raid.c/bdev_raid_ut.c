@@ -81,7 +81,6 @@ uint8_t g_ignore_io_output;
 uint8_t g_rpc_err;
 char *g_get_raids_output[MAX_RAIDS];
 uint32_t g_get_raids_count;
-uint8_t g_json_beg_res_ret_err;
 uint8_t g_json_decode_obj_err;
 uint8_t g_json_decode_obj_construct;
 uint8_t g_config_level_create = 0;
@@ -179,7 +178,6 @@ set_globals(void)
 	TAILQ_INIT(&g_io_waitq);
 	rpc_req = NULL;
 	rpc_req_size = 0;
-	g_json_beg_res_ret_err = 0;
 	g_json_decode_obj_err = 0;
 	g_json_decode_obj_construct = 0;
 	g_lba_offset = 0;
@@ -561,11 +559,7 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 struct spdk_json_write_ctx *
 spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 {
-	if (g_json_beg_res_ret_err) {
-		return NULL;
-	} else {
-		return (void *)1;
-	}
+	return (void *)1;
 }
 
 int
@@ -1281,7 +1275,6 @@ test_construct_raid_invalid_args(void)
 
 	create_test_req(&req, "raid2", g_max_base_drives, false);
 	g_rpc_err = 0;
-	g_json_beg_res_ret_err = 1;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
@@ -1290,7 +1283,6 @@ test_construct_raid_invalid_args(void)
 	verify_raid_bdev_present("raid2", true);
 	verify_raid_config_present("raid1", true);
 	verify_raid_bdev_present("raid1", true);
-	g_json_beg_res_ret_err = 0;
 
 	destroy_req.name = strdup("raid1");
 	rpc_req = &destroy_req;
@@ -2097,12 +2089,14 @@ test_multi_raid_no_io(void)
 	rpc_req = &get_raids_req;
 	rpc_req_size = sizeof(get_raids_req);
 	g_rpc_err = 0;
-	g_json_beg_res_ret_err = 1;
 	g_json_decode_obj_construct = 0;
 	spdk_rpc_get_raid_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
-	g_json_beg_res_ret_err = 0;
-	CU_ASSERT(g_get_raids_count == 0);
+	CU_ASSERT(g_get_raids_count == g_max_raids);
+	for (i = 0; i < g_get_raids_count; i++) {
+		free(g_get_raids_output[i]);
+	}
+	g_get_raids_count = 0;
 
 	for (i = 0; i < g_max_raids; i++) {
 		SPDK_CU_ASSERT_FATAL(construct_req[i].name != NULL);
