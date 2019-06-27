@@ -105,13 +105,11 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint
 	return buf;
 }
 
-DEFINE_RETURN_MOCK(spdk_dma_malloc, void *);
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	HANDLE_RETURN_MOCK(spdk_dma_malloc);
-
-	return spdk_malloc(size, align, phys_addr, -1, 1);
+	fprintf(stderr, "DEPRECATED");
+	abort();
 }
 
 DEFINE_RETURN_MOCK(spdk_realloc, void *);
@@ -123,40 +121,32 @@ spdk_realloc(void *buf, size_t size, size_t align)
 	return realloc(buf, size);
 }
 
-DEFINE_RETURN_MOCK(spdk_dma_zmalloc, void *);
 void *
 spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	HANDLE_RETURN_MOCK(spdk_dma_zmalloc);
-
-	return spdk_zmalloc(size, align, phys_addr, -1, 1);
+	fprintf(stderr, "DEPRECATED");
+	abort();
 }
 
-DEFINE_RETURN_MOCK(spdk_dma_malloc_socket, void *);
 void *
 spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
 {
-	HANDLE_RETURN_MOCK(spdk_dma_malloc_socket);
-
-	return spdk_dma_malloc(size, align, phys_addr);
+	fprintf(stderr, "DEPRECATED");
+	abort();
 }
 
-DEFINE_RETURN_MOCK(spdk_dma_zmalloc_socket, void *);
 void *
 spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
 {
-	HANDLE_RETURN_MOCK(spdk_dma_zmalloc_socket);
-
-	return spdk_dma_zmalloc(size, align, phys_addr);
+	fprintf(stderr, "DEPRECATED");
+	abort();
 }
 
-DEFINE_RETURN_MOCK(spdk_dma_realloc, void *);
 void *
 spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 {
-	HANDLE_RETURN_MOCK(spdk_dma_realloc);
-
-	return realloc(buf, size);
+	fprintf(stderr, "DEPRECATED");
+	abort();
 }
 
 void
@@ -170,7 +160,8 @@ spdk_free(void *buf)
 void
 spdk_dma_free(void *buf)
 {
-	return spdk_free(buf);
+	fprintf(stderr, "DEPRECATED");
+	abort();
 }
 
 #ifndef UNIT_TEST_NO_VTOPHYS
