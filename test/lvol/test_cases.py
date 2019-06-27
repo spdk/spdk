@@ -126,7 +126,6 @@ def case_message(func):
             300: 'bdev_lvol_delete_lvstore_nonexistent_lvs_uuid',
             301: 'delete_lvol_store_underlying_bdev',
             # bdev_lvol_create_lvstore - negative tests
-            450: 'construct_lvs_nonexistent_bdev',
             451: 'construct_lvs_on_bdev_twice',
             452: 'construct_lvs_name_twice',
             # nested bdev_lvol_create - test negative
@@ -722,6 +721,7 @@ class TestCases(object):
         # - no other operation fails
         return fail_count
 
+<<<<<<< HEAD
     # negative tests
     @case_message
     def test_case450(self):
@@ -741,6 +741,8 @@ class TestCases(object):
             fail_count += 1
         return fail_count
 
+=======
+>>>>>>> bb4b74d... test/lvol: rewrite construct_lvs_nonexistent_bdev to bash
     @case_message
     def test_case451(self):
         """
