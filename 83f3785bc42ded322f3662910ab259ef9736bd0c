@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "adeaec76_2e833981",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-27T07:31:47Z",
+      "side": 0,
+      "message": "Please reorder this function in a separate patch before this one.\n\nYou can leave the commit msg empty and I will fill it out later.",
+      "revId": "83f3785bc42ded322f3662910ab259ef9736bd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
