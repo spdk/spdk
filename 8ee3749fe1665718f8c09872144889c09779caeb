@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6f8d54ec_abac7cd8",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-06-27T07:32:12Z",
+      "side": 1,
+      "message": "Hi Changpeng, thanks for your review. RWLOCK means read and write are locked. READWRITE means read and write are unlocked.",
+      "parentUuid": "4964052f_56bf73e7",
+      "range": {
+        "startLine": 123,
+        "startChar": 1,
+        "endLine": 124,
+        "endChar": 23
+      },
+      "revId": "8ee3749fe1665718f8c09872144889c09779caeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9ec283d8_d64e66a4",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 9
