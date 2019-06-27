@@ -102,6 +102,42 @@ invalid:
 	spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 }
 
+static int
+spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
+{
+	struct spdk_jsonrpc_request *request = cb_ctx;
+	size_t new_size = request->send_buf_size;
+
+	while (new_size - request->send_len < size) {
+		if (new_size >= SPDK_JSONRPC_SEND_BUF_SIZE_MAX) {
+			SPDK_ERRLOG("Send buf exceeded maximum size (%zu)\n",
+				(size_t)SPDK_JSONRPC_SEND_BUF_SIZE_MAX);
+			return -1;
+		}
+
+		new_size *= 2;
+	}
+
+	if (new_size != request->send_buf_size) {
+		uint8_t *new_buf;
+
+		new_buf = realloc(request->send_buf, new_size);
+		if (new_buf == NULL) {
+			SPDK_ERRLOG("Resizing send_buf failed (current size %zu, new size %zu)\n",
+				request->send_buf_size, new_size);
+			return -1;
+		}
+
+		request->send_buf = new_buf;
+		request->send_buf_size = new_size;
+	}
+
+	memcpy(request->send_buf + request->send_len, data, size);
+	request->send_len += size;
+
+	return 0;
+}
+
 int
 spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, size_t size)
 {
@@ -198,42 +234,6 @@ struct spdk_jsonrpc_server_conn *
 spdk_jsonrpc_get_conn(struct spdk_jsonrpc_request *request)
 {
 	return request->conn;
-}
-
-static int
-spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
-{
-	struct spdk_jsonrpc_request *request = cb_ctx;
-	size_t new_size = request->send_buf_size;
-
-	while (new_size - request->send_len < size) {
-		if (new_size >= SPDK_JSONRPC_SEND_BUF_SIZE_MAX) {
-			SPDK_ERRLOG("Send buf exceeded maximum size (%zu)\n",
-				    (size_t)SPDK_JSONRPC_SEND_BUF_SIZE_MAX);
-			return -1;
-		}
-
-		new_size *= 2;
-	}
-
-	if (new_size != request->send_buf_size) {
-		uint8_t *new_buf;
-
-		new_buf = realloc(request->send_buf, new_size);
-		if (new_buf == NULL) {
-			SPDK_ERRLOG("Resizing send_buf failed (current size %zu, new size %zu)\n",
-				    request->send_buf_size, new_size);
-			return -1;
-		}
-
-		request->send_buf = new_buf;
-		request->send_buf_size = new_size;
-	}
-
-	memcpy(request->send_buf + request->send_len, data, size);
-	request->send_len += size;
-
-	return 0;
 }
 
 static struct spdk_json_write_ctx *
