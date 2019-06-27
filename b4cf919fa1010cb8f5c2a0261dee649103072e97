@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6aa32893_9492216c",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-27T07:41:22Z",
+      "side": 1,
+      "message": "I think it\u0027d be better to put the version at the top of the structure. Less chance someone will change it\u0027s position when adding new fields. It\u0027s not critical though.",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 245,
+        "endChar": 21
+      },
+      "revId": "b4cf919fa1010cb8f5c2a0261dee649103072e97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
