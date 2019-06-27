@@ -506,7 +506,7 @@ apply_firmware_cleanup(void *cb_arg)
 	}
 
 	if (firm_ctx->fw_image) {
-		spdk_dma_free(firm_ctx->fw_image);
+		spdk_free(firm_ctx->fw_image);
 	}
 
 	if (firm_ctx->req) {
@@ -749,7 +749,8 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	firm_ctx->fw_image = spdk_dma_zmalloc(firm_ctx->size, 4096, NULL);
+	firm_ctx->fw_image = spdk_zmalloc(firm_ctx->size, 4096, NULL,
+					  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!firm_ctx->fw_image) {
 		close(fd);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

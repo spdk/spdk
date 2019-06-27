@@ -81,8 +81,8 @@ free_rpc_send_nvme_cmd_ctx(struct rpc_send_nvme_cmd_ctx *ctx)
 
 	free(ctx->req.name);
 	free(ctx->req.cmdbuf);
-	spdk_dma_free(ctx->req.data);
-	spdk_dma_free(ctx->req.md);
+	spdk_free(ctx->req.data);
+	spdk_free(ctx->req.md);
 	free(ctx->resp.cpl_text);
 	free(ctx->resp.data_text);
 	free(ctx->resp.md_text);
@@ -319,7 +319,8 @@ rpc_decode_data(const struct spdk_json_val *val, void *out)
 		}
 	} else {
 		req->data_len = spdk_base64_get_decoded_len(text_strlen);
-		req->data = spdk_dma_malloc(req->data_len > 0x1000 ? req->data_len : 0x1000, 0x1000, NULL);
+		req->data = spdk_malloc(req->data_len > 0x1000 ? req->data_len : 0x1000, 0x1000,
+					NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!req->data) {
 			rc = -ENOMEM;
 			goto out;
@@ -352,7 +353,8 @@ rpc_decode_data_len(const struct spdk_json_val *val, void *out)
 		}
 	} else {
 		req->data_len = data_len;
-		req->data = spdk_dma_malloc(req->data_len > 0x1000 ? req->data_len : 0x1000, 0x1000, NULL);
+		req->data = spdk_malloc(req->data_len > 0x1000 ? req->data_len : 0x1000, 0x1000,
+					NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!req->data) {
 			rc = -ENOMEM;
 		}
@@ -383,7 +385,8 @@ rpc_decode_metadata(const struct spdk_json_val *val, void *out)
 		}
 	} else {
 		req->md_len = spdk_base64_get_decoded_len(text_strlen);
-		req->md = spdk_dma_malloc(req->md_len, 0x1000, NULL);
+		req->md = spdk_malloc(req->md_len, 0x1000, NULL,
+				      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!req->md) {
 			rc = -ENOMEM;
 			goto out;
@@ -416,7 +419,8 @@ rpc_decode_metadata_len(const struct spdk_json_val *val, void *out)
 		}
 	} else {
 		req->md_len = md_len;
-		req->md = spdk_dma_malloc(req->md_len, 0x1000, NULL);
+		req->md = spdk_malloc(req->md_len, 0x1000, NULL,
+				      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!req->md) {
 			rc = -ENOMEM;
 		}
