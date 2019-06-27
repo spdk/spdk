@@ -31,36 +31,17 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += bdev blob blobfs conf copy event json jsonrpc \
-          log lvol net rpc sock thread trace util nvme vmd nvmf scsi ioat \
-          ut_mock iscsi notify
-          
-DIRS-y += slab
+APP = slab_test
 
-ifeq ($(OS),Linux)
-DIRS-y += nbd ftl
-DIRS-$(CONFIG_VHOST) += vhost
-DIRS-$(CONFIG_VIRTIO) += virtio
-endif
+C_SRCS := slab_test.c
 
-DIRS-$(CONFIG_REDUCE) += reduce
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SPDK_LIB_LIST += event_bdev event_copy
+SPDK_LIB_LIST += bdev copy event thread util conf trace \
+		log jsonrpc json rpc sock notify slab
 
-# If CONFIG_ENV is pointing at a directory in lib, build it.
-# Out-of-tree env implementations must be built separately by the user.
-ENV_NAME := $(notdir $(CONFIG_ENV))
-ifeq ($(abspath $(CONFIG_ENV)),$(SPDK_ROOT_DIR)/lib/$(ENV_NAME))
-DIRS-y += $(ENV_NAME)
-endif
-
-DEPDIRS-iscsi := scsi
-DEPDIRS-bdev := notify
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
