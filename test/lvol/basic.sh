@@ -179,6 +179,26 @@ function test_construct_lvols_conflict_alias() {
 	rpc_cmd bdev_malloc_delete "$malloc2_name"
 }
 
+# try to create an lvol on inexistent lvs uuid
+function test_construct_lvol_inexistent_lvs() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# try to create an lvol on inexistent lvs
+	dummy_uuid="00000000-0000-0000-0000-000000000000"
+	! rpc_cmd bdev_lvol_create -u "$dummy_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB"
+
+	lvols=$(rpc_cmd bdev_get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
+	[ "$(jq length <<< "$lvols")" == "0" ]
+
+	# clean up
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+}
+
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -188,6 +208,7 @@ run_test "case" "test_construct_lvs" test_construct_lvs
 run_test "case" "test_construct_lvol" test_construct_lvol
 run_test "case" "test_construct_multi_lvols" test_construct_multi_lvols
 run_test "case" "test_construct_lvols_conflict_alias" test_construct_lvols_conflict_alias
+run_test "case" "test_construct_lvol_inexistent_lvs" test_construct_lvol_inexistent_lvs
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
