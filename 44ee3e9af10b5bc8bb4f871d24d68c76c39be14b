@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "ddcecc2f_c17b00ec",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1765,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-27T05:32:36Z",
+      "side": 1,
+      "message": "Oh, I will update more because dev_attr can be used below. So I will cache dev_attr to nvme_rdma_ctrlr and use in both cases.",
+      "parentUuid": "8949df98_b893b79f",
+      "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a9429444_2daa7f63",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
