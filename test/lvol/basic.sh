@@ -45,6 +45,20 @@ function test_construct_lvol() {
 	[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test" ]
 	[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
 	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid" ]
+
+	# clean up and create another lvol, this time use lvs alias instead of uuid
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	! rpc_cmd bdev_get_bdevs -b "$lvol_uuid"
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -l lvs_test lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+
+	[ "$(jq -r '.[0].name' <<< "$lvol")" = "$lvol_uuid" ]
+	[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
+	[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test" ]
+	[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$lvol")" = "$lvs_uuid" ]
 
 	# clean up
 	rpc_cmd bdev_lvol_delete "$lvol_uuid"
