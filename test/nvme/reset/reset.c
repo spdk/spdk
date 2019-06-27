@@ -170,10 +170,10 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 		exit(1);
 	}
 
-	task->buf = spdk_dma_zmalloc(g_io_size_bytes, 0x200, NULL);
+	task->buf = spdk_zmalloc(g_io_size_bytes, 0x200, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!task->buf) {
-		spdk_dma_free(task->buf);
-		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
+		spdk_free(task->buf);
+		fprintf(stderr, "task->buf spdk_zmalloc failed\n");
 		exit(1);
 	}
 
@@ -221,7 +221,7 @@ task_complete(struct reset_task *task, const struct spdk_nvme_cpl *completion)
 		ns_ctx->io_completed++;
 	}
 
-	spdk_dma_free(task->buf);
+	spdk_free(task->buf);
 	spdk_mempool_put(task_pool, task);
 
 	/*
