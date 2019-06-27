@@ -40,7 +40,7 @@ APP = nvmf_tgt
 C_SRCS := nvmf_main.c
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy event_nvmf event_net
+SPDK_LIB_LIST += event_bdev event_copy event_nvmf event_net event_vmd
 SPDK_LIB_LIST += nvmf event log trace conf thread util bdev copy rpc jsonrpc json net sock
 SPDK_LIB_LIST += app_rpc log_rpc trace_rpc bdev_rpc notify
 
