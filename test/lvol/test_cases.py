@@ -126,8 +126,6 @@ def case_message(func):
             # bdev_lvol_delete_lvstore - negative tests
             300: 'bdev_lvol_delete_lvstore_nonexistent_lvs_uuid',
             301: 'delete_lvol_store_underlying_bdev',
-            # bdev_lvol_create_lvstore - negative tests
-            452: 'construct_lvs_name_twice',
             # nested bdev_lvol_create - test negative
             500: 'nested_bdev_lvol_create_on_full_lvol_store',
             550: 'delete_bdev_positive',
@@ -725,42 +723,6 @@ class TestCases(object):
         return fail_count
 
     # negative tests
-    @case_message
-    def test_case452(self):
-        """
-        construct_lvs_name_twice
-
-        Negative test for constructing a new lvol store using the same
-        friendly name twice.
-        """
-        fail_count = 0
-        # Create malloc bdev
-        base_name_1 = self.c.bdev_malloc_create(self.total_size,
-                                                self.block_size)
-        # Construct second malloc bdev
-        base_name_2 = self.c.bdev_malloc_create(self.total_size,
-                                                self.block_size)
-        # Construct lvol store on first malloc
-        uuid_store_1 = self.c.bdev_lvol_create_lvstore(base_name_1,
-                                                       self.lvs_name)
-        # using bdev_lvol_get_lvstores verify that logical volume store was correctly created
-        # and has arguments as provided in step earlier (cluster size, friendly name, base bdev)
-        fail_count += self.c.check_bdev_lvol_get_lvstores(base_name_1,
-                                                          uuid_store_1,
-                                                          self.cluster_size)
-        # Try to create another logical volume store on second malloc bdev using the
-        # same friendly name as before. This step is expected to fail as lvol stores
-        # cannot have the same name
-        if self.c.bdev_lvol_create_lvstore(base_name_2,
-                                           self.lvs_name) == 0:
-            fail_count += 1
-
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store_1)
-        fail_count += self.c.bdev_malloc_delete(base_name_1)
-        fail_count += self.c.bdev_malloc_delete(base_name_2)
-
-        return fail_count
-
     @case_message
     def test_case500(self):
         """
