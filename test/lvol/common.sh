@@ -16,3 +16,7 @@ function check_leftover_devices() {
 	leftover_lvs=$(rpc_cmd bdev_lvol_get_lvstores)
 	[ "$(jq length <<< "$leftover_lvs")" == "0" ]
 }
+
+function round_down() {
+	echo $(( $1 / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+}
