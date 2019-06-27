@@ -64,11 +64,6 @@ DEFINE_STUB(spdk_nvmf_transport_stop_listen,
 	    (struct spdk_nvmf_transport *transport,
 	     const struct spdk_nvme_transport_id *trid), 0);
 
-static void
-subsystem_ns_remove_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
-{
-}
-
 uint32_t
 spdk_env_get_current_core(void)
 {
@@ -255,6 +250,7 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	struct spdk_bdev bdev1 = {}, bdev2 = {};
 	struct spdk_nvmf_ns_opts ns_opts;
 	uint32_t nsid;
+	int rc;
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
@@ -293,10 +289,10 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	CU_ASSERT(nsid == 0);
 	CU_ASSERT(subsystem.max_nsid == 5);
 
-	spdk_nvmf_subsystem_remove_ns(&subsystem, 1, subsystem_ns_remove_cb, NULL);
-	poll_threads();
-	spdk_nvmf_subsystem_remove_ns(&subsystem, 5, subsystem_ns_remove_cb, NULL);
-	poll_threads();
+	rc = spdk_nvmf_subsystem_remove_ns(&subsystem, 1);
+	CU_ASSERT(rc == 0);
+	rc = spdk_nvmf_subsystem_remove_ns(&subsystem, 5);
+	CU_ASSERT(rc == 0);
 
 	free(subsystem.ns);
 	free(tgt.subsystems);
