@@ -244,10 +244,10 @@ cleanup(void)
 
 	foreach_dev(dev) {
 		if (dev->health_page) {
-			spdk_dma_free(dev->health_page);
+			spdk_free(dev->health_page);
 		}
 		if (dev->changed_ns_list) {
-			spdk_dma_free(dev->changed_ns_list);
+			spdk_free(dev->changed_ns_list);
 		}
 	}
 }
@@ -383,12 +383,14 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	printf("Attached to %s\n", dev->name);
 
-	dev->health_page = spdk_dma_zmalloc(sizeof(*dev->health_page), 4096, NULL);
+	dev->health_page = spdk_zmalloc(sizeof(*dev->health_page), 4096, NULL, SPDK_ENV_LCORE_ID_ANY,
+					SPDK_MALLOC_DMA);
 	if (dev->health_page == NULL) {
 		printf("Allocation error (health page)\n");
 		g_failed = 1;
 	}
-	dev->changed_ns_list = spdk_dma_zmalloc(sizeof(*dev->changed_ns_list), 4096, NULL);
+	dev->changed_ns_list = spdk_zmalloc(sizeof(*dev->changed_ns_list), 4096, NULL,
+					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (dev->changed_ns_list == NULL) {
 		printf("Allocation error (changed namespace list page)\n");
 		g_failed = 1;
