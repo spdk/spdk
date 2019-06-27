@@ -202,6 +202,25 @@ function test_construct_lvol_inexistent_lvs() {
 	rpc_cmd delete_malloc_bdev "$malloc_name"
 }
 
+# try to create lvol on full lvs
+function test_construct_lvol_full_lvs() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd construct_lvol_store "$malloc_name" lvs_test)
+
+	# create valid lvol
+	lvol1_uuid=$(rpc_cmd construct_lvol_bdev -l lvs_test lvol_test1 "$LVS_DEFAULT_CAPACITY_MB")
+	lvol1=$(rpc_cmd get_bdevs -b "$lvol1_uuid")
+
+	# try to create an lvol on lvs without enough free clusters
+	! rpc_cmd construct_lvol_bdev -l lvs_test lvol_test2 "$lvol_size_mb"
+
+	# clean up
+	rpc_cmd destroy_lvol_store -u "$lvs_uuid"
+	! rpc_cmd get_lvol_stores -u "$lvs_uuid"
+	rpc_cmd delete_malloc_bdev "$malloc_name"
+}
+
 function run_test() {
 	$@
 
@@ -221,6 +240,7 @@ run_test test_construct_lvol_basic
 run_test test_construct_multi_lvols_basic
 run_test test_construct_lvols_conflict_alias
 run_test test_construct_lvol_inexistent_lvs
+run_test test_construct_lvol_full_lvs
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid

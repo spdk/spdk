@@ -111,7 +111,6 @@ def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
             # construct_lvol_bdev - negative tests
-            101: 'construct_lvol_bdev_on_full_lvol_store',
             102: 'construct_lvol_bdev_name_twice',
             # resize_lvol_store - positive tests
             150: 'resize_lvol_bdev_positive',
@@ -303,50 +302,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.get_lvol_stores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case101(self):
-        """
-        construct_lvol_bdev_on_full_lvol_store
-
-        Negative test for constructing a new lvol bdev.
-        Call construct_lvol_bdev on a full lvol store.
-        """
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Create logical volume store on malloc bdev
-        uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name)
-        # Check correct uuid values in response from get_lvol_stores command
-        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
-                                                  self.cluster_size)
-        lvs_size = self.get_lvs_size()
-        # Construct lvol bdev on correct lvs_uuid
-        uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
-                                               self.lbd_name,
-                                               lvs_size)
-        # Verify if lvol bdev was correctly created
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     lvs_size)
-        # Try construct lvol bdev on the same lvs_uuid as in last step
-        # This call should fail as lvol store space is taken by previously
-        # created bdev
-        if self.c.construct_lvol_bdev(uuid_store,
-                                      self.lbd_name + "_1",
-                                      lvs_size) == 0:
-            fail_count += 1
-
-        self.c.destroy_lvol_bdev(uuid_bdev)
-        self.c.destroy_lvol_store(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
-
-        # Expected result:
-        # - first call successful
-        # - second construct_lvol_bdev call return code != 0
-        # - EEXIST response printed to stdout
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case102(self):
