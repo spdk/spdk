@@ -1461,6 +1461,12 @@ _to_next_boundary(uint32_t offset, uint32_t boundary)
 	return boundary - (offset % boundary);
 }
 
+static uint32_t
+_to_size_with_md(uint32_t size, uint32_t data_block_size, uint32_t block_size)
+{
+	return (size / data_block_size) * block_size + (size % data_block_size);
+}
+
 int
 spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 				struct iovec *buf_iovs, int buf_iovcnt,
@@ -1480,8 +1486,8 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 
 	data_unalign = ctx->data_offset % data_block_size;
 
-	buf_len = ((data_unalign + data_offset + data_len) / data_block_size) * ctx->block_size +
-		  ((data_unalign + data_offset + data_len) % data_block_size);
+	buf_len = _to_size_with_md(data_unalign + data_offset + data_len, data_block_size,
+				   ctx->block_size);
 	buf_len -= data_unalign;
 
 	_dif_sgl_init(&dif_sgl, iovs, iovcnt);
@@ -1492,8 +1498,7 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int iovcnt,
 		return -ERANGE;
 	}
 
-	buf_offset = ((data_unalign + data_offset) / data_block_size) * ctx->block_size +
-		     ((data_unalign + data_offset) % data_block_size);
+	buf_offset = _to_size_with_md(data_unalign + data_offset, data_block_size, ctx->block_size);
 	buf_offset -= data_unalign;
 
 	_dif_sgl_advance(&buf_sgl, buf_offset);
@@ -1529,16 +1534,15 @@ _dif_sgl_setup_stream(struct _dif_sgl *sgl, uint32_t *_buf_offset, uint32_t *_bu
 	/* If the last data block is complete, DIF of the data block is
 	 * inserted or verified in this turn.
 	 */
-	buf_len = ((data_unalign + data_offset + data_len) / data_block_size) * ctx->block_size +
-		  ((data_unalign + data_offset + data_len) % data_block_size);
+	buf_len = _to_size_with_md(data_unalign + data_offset + data_len, data_block_size,
+				   ctx->block_size);
 	buf_len -= data_unalign;
 
 	if (!_dif_sgl_is_valid(sgl, buf_len)) {
 		return -ERANGE;
 	}
 
-	buf_offset = ((data_unalign + data_offset) / data_block_size) * ctx->block_size +
-		     ((data_unalign + data_offset) % data_block_size);
+	buf_offset = _to_size_with_md(data_unalign + data_offset, data_block_size, ctx->block_size);
 	buf_offset -= data_unalign;
 
 	_dif_sgl_advance(sgl, buf_offset);
@@ -1697,10 +1701,9 @@ spdk_dif_get_range_with_md(uint32_t data_offset, uint32_t data_len,
 
 		data_unalign = data_offset % data_block_size;
 
-		buf_offset = (data_offset / data_block_size) * ctx->block_size +
-			     (data_offset % data_block_size);
-		buf_len = ((data_unalign + data_len) / data_block_size) * ctx->block_size +
-			  ((data_unalign + data_len) % data_block_size) - data_unalign;
+		buf_offset = _to_size_with_md(data_offset, data_block_size, ctx->block_size);
+		buf_len = _to_size_with_md(data_unalign + data_len, data_block_size, ctx->block_size) -
+			  data_unalign;
 	}
 
 	if (_buf_offset != NULL) {
@@ -1722,7 +1725,6 @@ spdk_dif_get_length_with_md(uint32_t data_len, const struct spdk_dif_ctx *ctx)
 	} else {
 		data_block_size = ctx->block_size - ctx->md_size;
 
-		return (data_len / data_block_size) * ctx->block_size +
-		       (data_len % data_block_size);
+		return _to_size_with_md(data_len, data_block_size, ctx->block_size);
 	}
 }
