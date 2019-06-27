@@ -531,7 +531,7 @@ test_nvme_user_copy_cmd_complete(void)
 	SPDK_CU_ASSERT_FATAL(req.user_buffer != NULL);
 	memset(req.user_buffer, 0, buff_size);
 	req.payload_size = buff_size;
-	buff = spdk_dma_zmalloc(buff_size, 0x100, NULL);
+	buff = spdk_zmalloc(buff_size, 0x100, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	SPDK_CU_ASSERT_FATAL(buff != NULL);
 	req.payload = NVME_PAYLOAD_CONTIG(buff, NULL);
 	memcpy(buff, &test_data, buff_size);
@@ -551,7 +551,7 @@ test_nvme_user_copy_cmd_complete(void)
 	 */
 	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
 	memset(req.user_buffer, 0, buff_size);
-	buff = spdk_dma_zmalloc(buff_size, 0x100, NULL);
+	buff = spdk_zmalloc(buff_size, 0x100, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	SPDK_CU_ASSERT_FATAL(buff != NULL);
 	req.payload = NVME_PAYLOAD_CONTIG(buff, NULL);
 	memcpy(buff, &test_data, buff_size);
@@ -690,7 +690,7 @@ test_nvme_allocate_request_user_copy(void)
 	CU_ASSERT(req->user_buffer == buffer);
 	CU_ASSERT(req->cb_arg == req);
 	CU_ASSERT(memcmp(req->payload.contig_or_cb_arg, buffer, payload_size) == 0);
-	spdk_dma_free(req->payload.contig_or_cb_arg);
+	spdk_free(req->payload.contig_or_cb_arg);
 
 	/* same thing but additional path coverage, no copy */
 	host_to_controller = false;
@@ -704,16 +704,16 @@ test_nvme_allocate_request_user_copy(void)
 	CU_ASSERT(req->user_buffer == buffer);
 	CU_ASSERT(req->cb_arg == req);
 	CU_ASSERT(memcmp(req->payload.contig_or_cb_arg, buffer, payload_size) != 0);
-	spdk_dma_free(req->payload.contig_or_cb_arg);
+	spdk_free(req->payload.contig_or_cb_arg);
 
-	/* good buffer and valid payload size but make spdk_dma_zmalloc fail */
-	/* set the mock pointer to NULL for spdk_dma_zmalloc */
-	MOCK_SET(spdk_dma_zmalloc, NULL);
+	/* good buffer and valid payload size but make spdk_zmalloc fail */
+	/* set the mock pointer to NULL for spdk_zmalloc */
+	MOCK_SET(spdk_zmalloc, NULL);
 	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
 					      cb_arg, host_to_controller);
 	CU_ASSERT(req == NULL);
 	free(buffer);
-	MOCK_CLEAR(spdk_dma_zmalloc);
+	MOCK_CLEAR(spdk_zmalloc);
 }
 
 static void
