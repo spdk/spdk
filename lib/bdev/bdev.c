@@ -4370,6 +4370,7 @@ spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 struct spdk_bdev *
 spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc)
 {
+	assert(desc != NULL);
 	return desc->bdev;
 }
 
