@@ -34,7 +34,6 @@ function usage() {
                                     301: 'delete_lvol_store_underlying_bdev',
                                     350: 'nested_destroy_logical_volume_negative',
                                     400: 'nested_construct_logical_volume_positive',
-                                    450: 'construct_lvs_nonexistent_bdev',
                                     451: 'construct_lvs_on_bdev_twice',
                                     452: 'construct_lvs_name_twice',
                                     500: 'nested_construct_lvol_bdev_on_full_lvol_store',
