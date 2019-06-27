@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b2326b76_a89dae0b",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1763,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-06-27T12:02:51Z",
+      "side": 1,
+      "message": "I think the better fix for this one is to insert this line here:\n\nSPDK_CU_ASSERT_FATAL(bdev !\u003d NULL);\n\nThen you shouldn\u0027t need any of the other changes.",
+      "revId": "c2efba902f0cc6cac06ceaca9278bcdec4cd0c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
