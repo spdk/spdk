@@ -77,13 +77,15 @@ iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 {
 	struct spdk_iscsi_initiator_name *iname;
 	char *p;
+	size_t len;
 
 	if (ig->ninitiators >= MAX_INITIATOR) {
 		SPDK_ERRLOG("> MAX_INITIATOR(=%d) is not allowed\n", MAX_INITIATOR);
 		return -EPERM;
 	}
 
-	if (strlen(name) > MAX_INITIATOR_NAME) {
+	len = strlen(name);
+	if (len > MAX_INITIATOR_NAME) {
 		SPDK_ERRLOG("Initiator Name is larger than 223 bytes\n");
 		return -EINVAL;
 	}
@@ -93,18 +95,13 @@ iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 		return -EEXIST;
 	}
 
-	iname = malloc(sizeof(*iname));
+	iname = calloc(1, sizeof(*iname));
 	if (iname == NULL) {
 		SPDK_ERRLOG("malloc() failed for initiator name str\n");
 		return -ENOMEM;
 	}
 
-	iname->name = strdup(name);
-	if (iname->name == NULL) {
-		SPDK_ERRLOG("strdup() failed for initiator name\n");
-		free(iname);
-		return -ENOMEM;
-	}
+	memcpy(iname->name, name, len);
 
 	/* Replace "ALL" by "ANY" if set */
 	p = strstr(iname->name, "ALL");
@@ -133,7 +130,6 @@ iscsi_init_grp_delete_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 
 	TAILQ_REMOVE(&ig->initiator_head, iname, tailq);
 	ig->ninitiators--;
-	free(iname->name);
 	free(iname);
 	return 0;
 }
@@ -168,7 +164,6 @@ iscsi_init_grp_delete_all_initiators(struct spdk_iscsi_init_grp *ig)
 	TAILQ_FOREACH_SAFE(iname, &ig->initiator_head, tailq, tmp) {
 		TAILQ_REMOVE(&ig->initiator_head, iname, tailq);
 		ig->ninitiators--;
-		free(iname->name);
 		free(iname);
 	}
 }
