@@ -37,6 +37,16 @@ function test_construct_lvs_basic() {
 	rpc_cmd delete_malloc_bdev "$malloc_name"
 }
 
+# try to create lvs on inexistent base bdev
+function test_construct_lvs_inexistent_bdev() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	! rpc_cmd construct_lvol_store NotMalloc lvs_test
+
+	# clean up
+	rpc_cmd delete_malloc_bdev "$malloc_name"
+}
+
 # create lvs + lvol on top, verify lvol's parameters
 function test_construct_lvol_basic() {
 	# create an lvol store
@@ -260,6 +270,7 @@ trap "killprocess $spdk_pid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
 run_test test_construct_lvs_basic
+run_test test_construct_lvs_inexistent_bdev
 run_test test_construct_lvol_basic
 run_test test_construct_multi_lvols_basic
 run_test test_construct_lvols_conflict_alias
