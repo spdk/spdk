@@ -26,7 +26,7 @@ function test_construct_lvs() {
 	[ "$(jq -r '.[0].free_clusters' <<< "$lvs")" = "$total_clusters" ]
 	[ "$(( total_clusters * cluster_size ))" = "$LVS_DEFAULT_CAPACITY" ]
 
-	# remove it and verify it's gone
+	# remove the lvs and verify it's gone
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
 	rpc_cmd bdev_malloc_delete "$malloc_name"
@@ -40,6 +40,24 @@ function test_construct_lvs_nonexistent_bdev() {
 	rpc_cmd bdev_lvol_create_lvstore NotMalloc lvs_test && false
 	return 0
 }
+
+# try to create two lvol stores on the same bdev
+function test_construct_two_lvs_on_the_same_bdev() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# try to create another lvs on the same malloc bdev
+	rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test2 && false
+
+	# clean up
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	rpc_cmd bdev_get_bdevs -b "$malloc_name" && false
+	check_leftover_devices
+}
+
 
 # create lvs + lvol on top, verify lvol's parameters
 function test_construct_lvol() {
@@ -258,6 +276,7 @@ waitforlisten $spdk_pid
 
 run_test "test_construct_lvs" test_construct_lvs
 run_test "test_construct_lvs_nonexistent_bdev" test_construct_lvs_nonexistent_bdev
+run_test "test_construct_two_lvs_on_the_same_bdev" test_construct_two_lvs_on_the_same_bdev
 run_test "test_construct_lvol" test_construct_lvol
 run_test "test_construct_multi_lvols" test_construct_multi_lvols
 run_test "test_construct_lvols_conflict_alias" test_construct_lvols_conflict_alias

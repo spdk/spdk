@@ -127,7 +127,6 @@ def case_message(func):
             300: 'bdev_lvol_delete_lvstore_nonexistent_lvs_uuid',
             301: 'delete_lvol_store_underlying_bdev',
             # bdev_lvol_create_lvstore - negative tests
-            451: 'construct_lvs_on_bdev_twice',
             452: 'construct_lvs_name_twice',
             # nested bdev_lvol_create - test negative
             500: 'nested_bdev_lvol_create_on_full_lvol_store',
@@ -726,32 +725,6 @@ class TestCases(object):
         return fail_count
 
     # negative tests
-    @case_message
-    def test_case451(self):
-        """
-        construct_lvs_on_bdev_twice
-
-        Negative test for constructing a new lvol store.
-        Call bdev_lvol_create_lvstore with base bdev name twice.
-        """
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store on created malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        # Check correct uuid values in response bdev_lvol_get_lvstores command
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        # Try bdev_lvol_create_lvstore on the same bdev as in last step
-        # This call should fail as base bdev is already claimed by lvol store
-        if self.c.bdev_lvol_create_lvstore(base_name,
-                                           self.lvs_name) == 0:
-            fail_count += 1
-        self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.bdev_malloc_delete(base_name)
-        return fail_count
-
     @case_message
     def test_case452(self):
         """
