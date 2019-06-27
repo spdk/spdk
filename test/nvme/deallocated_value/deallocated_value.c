@@ -242,7 +242,8 @@ deallocate_test(void)
 	memset(context.FFh_buf, 0xFF, max_block_size);
 
 	for (i = 0; i < NUM_BLOCKS; i++) {
-		context.write_buf[i] = spdk_dma_zmalloc(0x1000, max_block_size, NULL);
+		context.write_buf[i] = spdk_zmalloc(0x1000, max_block_size, NULL, SPDK_ENV_LCORE_ID_ANY,
+						    SPDK_MALLOC_DMA);
 		if (context.write_buf[i] == NULL) {
 			printf("could not allocate buffer for test.\n");
 			cleanup(&context);
@@ -250,7 +251,8 @@ deallocate_test(void)
 		}
 
 		fill_random(context.write_buf[i], 0x1000);
-		context.read_buf[i] = spdk_dma_zmalloc(0x1000, max_block_size, NULL);
+		context.read_buf[i] = spdk_zmalloc(0x1000, max_block_size, NULL, SPDK_ENV_LCORE_ID_ANY,
+						   SPDK_MALLOC_DMA);
 		if (context.read_buf[i] == NULL) {
 			printf("could not allocate buffer for test.\n");
 			cleanup(&context);
@@ -396,12 +398,12 @@ cleanup(struct deallocate_context *context)
 	}
 	for (i = 0; i < NUM_BLOCKS; i++) {
 		if (context->write_buf && context->write_buf[i]) {
-			spdk_dma_free(context->write_buf[i]);
+			spdk_free(context->write_buf[i]);
 		} else {
 			break;
 		}
 		if (context->read_buf && context->read_buf[i]) {
-			spdk_dma_free(context->read_buf[i]);
+			spdk_free(context->read_buf[i]);
 		} else {
 			break;
 		}
