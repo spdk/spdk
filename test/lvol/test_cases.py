@@ -111,7 +111,6 @@ def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
             # construct_lvol_bdev - negative tests
-            100: 'construct_logical_volume_nonexistent_lvs_uuid',
             101: 'construct_lvol_bdev_on_full_lvol_store',
             102: 'construct_lvol_bdev_name_twice',
             # resize_lvol_store - positive tests
@@ -304,27 +303,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.get_lvol_stores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case100(self):
-        """
-        construct_logical_volume_nonexistent_lvs_uuid
-
-        Negative test for constructing a new logical_volume.
-        Call construct_lvol_bdev with lvs_uuid which does not
-        exist in configuration.
-        """
-        fail_count = 0
-        # Try to call construct_lvol_bdev with lvs_uuid which does not exist
-        if self.c.construct_lvol_bdev(self._gen_lvs_uuid(),
-                                      self.lbd_name,
-                                      32) == 0:
-            fail_count += 1
-
-        # Expected result:
-        # - return code != 0
-        # - ENODEV response printed to stdout
-        return fail_count
 
     @case_message
     def test_case101(self):
