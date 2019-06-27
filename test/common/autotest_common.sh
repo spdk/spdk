@@ -60,6 +60,7 @@ export RUN_NIGHTLY_FAILING
 : ${SPDK_TEST_BDEV_FTL=0}; export SPDK_TEST_BDEV_FTL
 : ${SPDK_TEST_OCF=0}; export SPDK_TEST_OCF
 : ${SPDK_TEST_FTL_EXTENDED=0}; export SPDK_TEST_FTL_EXTENDED
+: ${SPDK_TEST_VMD=0}; export SPDK_TEST_VMD
 : ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
 
 # Export PYTHONPATH with addition of RPC framework. New scripts can be created
