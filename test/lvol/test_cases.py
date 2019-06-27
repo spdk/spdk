@@ -111,7 +111,6 @@ def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
             # bdev_lvol_create - positive tests
-            52: 'bdev_lvol_create_using_name_positive',
             53: 'bdev_lvol_create_duplicate_names_positive',
             # bdev_lvol_create - negative tests
             100: 'construct_logical_volume_nonexistent_lvs_uuid',
@@ -309,43 +308,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.bdev_lvol_get_lvstores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case52(self):
-        """
-        bdev_lvol_create_using_name_positive
-
-        Positive test for constructing a logical volume using friendly names.
-        Verify that logical volumes can be created by using a friendly name
-        instead of uuid when referencing to lvol store.
-        """
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        # Check correct uuid values in response bdev_lvol_get_lvstores command
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        lvs_size = self.get_lvs_size()
-        # Create logical volume on lvol store by using a friendly name
-        # as a reference
-        uuid_bdev = self.c.bdev_lvol_create(self.lvs_name,
-                                            self.lbd_name,
-                                            lvs_size)
-        # Verify logical volume was correctly created
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev,
-                                                          lvs_size)
-
-        fail_count += self.c.bdev_lvol_delete(uuid_bdev)
-        fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-        fail_count += self.c.bdev_malloc_delete(base_name)
-
-        # Expected result:
-        # - calls successful, return code = 0
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case53(self):
