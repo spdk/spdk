@@ -954,13 +954,23 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				return -ENOMEM;
 			}
 			ns_info->channel = ch;
-		} else {
-			/* A namespace was present before and didn't change. */
+		} else if (spdk_uuid_compare(&ns_info->uuid, spdk_bdev_get_uuid(ns->bdev)) != 0) {
+			/* A namespace was here before, but was replaced by a new one. */
+			spdk_put_io_channel(ns_info->channel);
+			memset(ns_info, 0, sizeof(*ns_info));
+
+			ch = spdk_bdev_get_io_channel(ns->desc);
+			if (ch == NULL) {
+				SPDK_ERRLOG("Could not allocate I/O channel.\n");
+				return -ENOMEM;
+			}
+			ns_info->channel = ch;
 		}
 
 		if (ns == NULL) {
 			memset(ns_info, 0, sizeof(*ns_info));
 		} else {
+			ns_info->uuid = *spdk_bdev_get_uuid(ns->bdev);
 			ns_info->crkey = ns->crkey;
 			ns_info->rtype = ns->rtype;
 			if (ns->holder) {
