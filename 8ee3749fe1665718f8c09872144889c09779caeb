@@ -63,6 +63,24 @@
       "revId": "8ee3749fe1665718f8c09872144889c09779caeb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9a52751_af655333",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1302,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-06-27T07:32:45Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "9ec283d8_d64e66a4",
+      "revId": "8ee3749fe1665718f8c09872144889c09779caeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
