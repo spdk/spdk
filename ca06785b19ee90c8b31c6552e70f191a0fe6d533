@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8338244_664e4d2e",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-27T09:53:37Z",
+      "side": 1,
+      "message": "We have already FTL_MD_VER - do we need to keep separate version for this?",
+      "revId": "ca06785b19ee90c8b31c6552e70f191a0fe6d533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
