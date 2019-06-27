@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff4f69e6_6055152c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 1519,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-27T08:11:59Z",
+      "side": 1,
+      "message": "For arguments that have short and long version we usually use \"-\" instead of \"_\" between words in long versions. I know that not all RPCs follow this rule, but let\u0027s keep it this way for new one.",
+      "range": {
+        "startLine": 1519,
+        "startChar": 26,
+        "endLine": 1519,
+        "endChar": 37
+      },
+      "revId": "c959bc04846059a26c5577b8b9617abb59329cf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
