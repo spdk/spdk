@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "78d309f0_d2665255",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-06-27T09:48:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d57d5aec_b090c2e8",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 35
+      },
+      "revId": "45403c28bbb866a60707087d93823454795523df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91e320db_8fb8f29b",
         "filename": "test/openstack/run_openstack_tests.sh",
         "patchSetId": 4
