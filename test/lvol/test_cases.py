@@ -127,7 +127,6 @@ def case_message(func):
             300: 'bdev_lvol_delete_lvstore_nonexistent_lvs_uuid',
             301: 'delete_lvol_store_underlying_bdev',
             # bdev_lvol_create_lvstore - negative tests
-            450: 'construct_lvs_nonexistent_bdev',
             451: 'construct_lvs_on_bdev_twice',
             452: 'construct_lvs_name_twice',
             # nested bdev_lvol_create - test negative
@@ -727,24 +726,6 @@ class TestCases(object):
         return fail_count
 
     # negative tests
-    @case_message
-    def test_case450(self):
-        """
-        construct_lvs_nonexistent_bdev
-
-        Negative test for constructing a new lvol store.
-        Call bdev_lvol_create_lvstore with base bdev name which does not
-        exist in configuration.
-        """
-        fail_count = 0
-        bad_bdev_id = random.randrange(999999999)
-        # Try bdev_lvol_create_lvstore on bdev which does not exist
-        if self.c.bdev_lvol_create_lvstore(bad_bdev_id,
-                                           self.lvs_name,
-                                           self.cluster_size) == 0:
-            fail_count += 1
-        return fail_count
-
     @case_message
     def test_case451(self):
         """
