@@ -118,7 +118,7 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 	assert(host != NULL);
 	assert(port != NULL);
 
-	if (strlen(host) > MAX_PORTAL_ADDR) {
+	if (strlen(host) > MAX_PORTAL_ADDR || strlen(port) > MAX_PORTAL_PORT) {
 		return NULL;
 	}
 
@@ -143,11 +143,7 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 		memcpy(p->host, host, strlen(host));
 	}
 
-	p->port = strdup(port);
-	if (!p->port) {
-		SPDK_ERRLOG("strdup() failed for host\n");
-		goto error_out;
-	}
+	memcpy(p->port, port, strlen(port));
 
 	core_mask = spdk_cpuset_alloc();
 	if (!core_mask) {
@@ -191,7 +187,6 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 
 error_out:
 	spdk_cpuset_free(core_mask);
-	free(p->port);
 	free(p);
 
 	return NULL;
@@ -208,7 +203,6 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 	TAILQ_REMOVE(&g_spdk_iscsi.portal_head, p, g_tailq);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-	free(p->port);
 	spdk_cpuset_free(p->cpumask);
 	free(p);
 
