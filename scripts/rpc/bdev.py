@@ -596,7 +596,7 @@ def destruct_split_vbdev(client, base_bdev):
     return client.call('destruct_split_vbdev', params)
 
 
-def construct_ftl_bdev(client, name, trtype, traddr, punits, allow_open_bands, uuid=None, cache=None):
+def construct_ftl_bdev(client, name, trtype, traddr, punits, allow_open_bands=None, uuid=None, cache=None):
     """Construct FTL bdev
 
     Args:
@@ -611,12 +611,13 @@ def construct_ftl_bdev(client, name, trtype, traddr, punits, allow_open_bands, u
     params = {'name': name,
               'trtype': trtype,
               'traddr': traddr,
-              'punits': punits,
-              'allow_open_bands': allow_open_bands}
+              'punits': punits}
     if uuid:
         params['uuid'] = uuid
     if cache:
         params['cache'] = cache
+    if allow_open_bands:
+        params['allow_open_bands'] = allow_open_bands
 
     return client.call('construct_ftl_bdev', params)
 
