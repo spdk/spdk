@@ -53,4 +53,74 @@
 		}				\
 	} while (0)
 
+#undef CU_ASSERT
+#define CU_ASSERT(cond) 			\
+	do {					\
+		int result_ = !!(cond);		\
+		CU_ASSERT_FATAL(result_);	\
+		if (!result_) {			\
+			abort();		\
+		}				\
+	} while (0)
+
+#undef CU_TEST
+#define CU_TEST(cond)				\
+	do {					\
+		int result_ = !!(cond);		\
+		CU_TEST_FATAL(result_)		\
+		if (!result_) {			\
+			abort();		\
+		}				\
+	} while (0)
+
+#undef CU_FAIL
+#define CU_FAIL(cond)				\
+	do {					\
+		int result_ = !!(cond);		\
+		CU_FAIL_FATAL(result_)		\
+		if (!result_) {			\
+			abort();		\
+		}				\
+	} while (0)
+
+#undef CU_ASSERT_TRUE
+#define CU_ASSERT_TRUE(cond)			\
+	do {					\
+		int result_ = !!(cond);		\
+		CU_ASSERT_TRUE_FATAL(result_)	\
+		if (!result_) {			\
+			abort();		\
+		}				\
+	} while (0)
+
+#undef CU_ASSERT_FALSE
+#define CU_ASSERT_FALSE(cond)			\
+	do {					\
+		int result_ = !!(cond);		\
+		CU_ASSERT_FALSE_FATAL(result_)	\
+		if (!result_) {			\
+			abort();		\
+		}				\
+	} while (0)
+
+#undef CU_ASSERT_PTR_NULL
+#define CU_ASSERT_PTR_NULL(cond)			\
+	do {						\
+		int result_ = !!(cond);			\
+		CU_ASSERT_PTR_NULL_FATAL(result_)	\
+		if (!result_) {				\
+			abort();			\
+		}					\
+	} while (0)
+
+#undef CU_ASSERT_PTR_NOT_NULL
+#define CU_ASSERT_PTR_NOT_NULL(cond)			\
+	do {						\
+		int result_ = !!(cond);			\
+		CU_ASSERT_PTR_NOT_NULL_FATAL(result_)	\
+		if (!result_) {				\
+			abort();			\
+		}					\
+	} while (0)
+
 #endif /* SPDK_CUNIT_H */
