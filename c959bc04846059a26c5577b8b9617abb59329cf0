@@ -46,6 +46,30 @@
       "revId": "c959bc04846059a26c5577b8b9617abb59329cf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5563ada_492b1120",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 1519,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-06-28T06:15:37Z",
+      "side": 1,
+      "message": "Yes and yes :)",
+      "parentUuid": "a708f38f_835f493d",
+      "range": {
+        "startLine": 1519,
+        "startChar": 26,
+        "endLine": 1519,
+        "endChar": 37
+      },
+      "revId": "c959bc04846059a26c5577b8b9617abb59329cf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
