@@ -782,12 +782,7 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *
 	struct spdk_bdev *cache_bdev = NULL;
 	struct nvme_bdev_ctrlr *ftl_ctrlr;
 	struct spdk_ftl_dev_init_opts opts = {};
-	struct spdk_ftl_conf conf = {};
 	int rc;
-
-	spdk_ftl_conf_init_defaults(&conf);
-
-	conf.allow_open_bands = bdev_opts->allow_open_bands;
 
 	ftl_ctrlr = bdev_ftl_add_ctrlr(ctrlr, &bdev_opts->trid);
 	if (!ftl_ctrlr) {
@@ -842,7 +837,7 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *
 	opts.uuid = bdev_opts->uuid;
 	opts.name = ftl_bdev->bdev.name;
 	opts.cache_bdev_desc = ftl_bdev->cache_bdev_desc;
-	opts.conf = &conf;
+	opts.conf = &bdev_opts->ftl_conf;
 
 	/* TODO: set threads based on config */
 	opts.core_thread = opts.read_thread = spdk_get_thread();
