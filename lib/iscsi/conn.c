@@ -229,7 +229,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->pg_tag = portal->group->tag;
 	conn->portal_host = strdup(portal->host);
 	conn->portal_port = strdup(portal->port);
-	conn->portal_cpumask = portal->cpumask;
+	conn->portal_cpumask = &portal->cpumask;
 	conn->sock = sock;
 
 	conn->state = ISCSI_CONN_STATE_INVALID;
@@ -1446,7 +1446,7 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 		lcore = g_next_core;
 		g_next_core = spdk_env_get_next_core(g_next_core);
 
-		if (!spdk_cpuset_get_cpu(conn->portal->cpumask, lcore)) {
+		if (!spdk_cpuset_get_cpu(&conn->portal->cpumask, lcore)) {
 			continue;
 		}
 
