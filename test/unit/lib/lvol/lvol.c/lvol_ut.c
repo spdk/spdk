@@ -1091,6 +1091,7 @@ lvs_load(void)
 	spdk_bs_opts_init(&bs_opts);
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
+	SPDK_CU_ASSERT_FATAL(dev.bs != NULL);
 
 	/* Fail on bs load */
 	dev.load_status = -1;
