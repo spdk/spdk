@@ -1390,7 +1390,7 @@ set_md_interleave_iovs_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
-	struct iovec iov1, iov2, dif_iovs[4];
+	struct iovec iov1, iov2, dif_iovs[4] = {};
 	uint32_t dif_check_flags, data_len, read_len, data_offset, mapped_len = 0;
 	uint8_t *buf1, *buf2;
 	int rc;
@@ -1519,7 +1519,7 @@ set_md_interleave_iovs_split_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
-	struct iovec iovs1[7], iovs2[7], dif_iovs[8];
+	struct iovec iovs1[7], iovs2[7], dif_iovs[8] = {};
 	uint32_t dif_check_flags, data_len, read_len, data_offset, mapped_len = 0;
 	int rc, i;
 
@@ -1722,7 +1722,7 @@ dif_generate_stream_test(void)
 static void
 set_md_interleave_iovs_alignment_test(void)
 {
-	struct iovec iovs[3], dif_iovs[5];
+	struct iovec iovs[3], dif_iovs[5] = {};
 	uint32_t mapped_len = 0;
 	int rc;
 	struct spdk_dif_ctx ctx;
