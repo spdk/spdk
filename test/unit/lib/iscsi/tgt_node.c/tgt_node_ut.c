@@ -390,7 +390,7 @@ node_access_allowed(void)
 	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
 	portal.group = &pg;
 	snprintf(portal.host, sizeof(portal.host), "192.168.2.0");
-	portal.port = "3260";
+	snprintf(portal.port, sizeof(portal.port), "3260");
 
 	/* input for UT */
 	memset(&conn, 0, sizeof(struct spdk_iscsi_conn));
@@ -452,7 +452,7 @@ node_access_denied_by_empty_netmask(void)
 	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
 	portal.group = &pg;
 	snprintf(portal.host, sizeof(portal.host), "192.168.2.0");
-	portal.port = "3260";
+	snprintf(portal.port, sizeof(portal.port), "3260");
 
 	/* input for UT */
 	memset(&conn, 0, sizeof(struct spdk_iscsi_conn));
@@ -533,7 +533,7 @@ node_access_multi_initiator_groups_cases(void)
 	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
 	portal.group = &pg;
 	snprintf(portal.host, sizeof(portal.host), IP1);
-	portal.port = "3260";
+	snprintf(portal.port, sizeof(portal.port), "3260");
 
 	/* connection initialization */
 	memset(&conn, 0, sizeof(struct spdk_iscsi_conn));
