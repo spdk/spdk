@@ -43,6 +43,7 @@
 #include "iscsi/portal_grp.h"
 #include "iscsi/conn.h"
 #include "iscsi/task.h"
+#include "iscsi/tgt_node.h"
 
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
