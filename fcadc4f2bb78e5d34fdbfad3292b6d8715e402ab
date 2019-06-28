@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "81306afd_cb26f220",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1661,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-28T04:51:52Z",
+      "side": 1,
+      "message": "I think to_last_block_bytes should be just \u003d (to_next_boundary_bytes % blocklen). I can show a case that\u0027s broken right now:\n\nto_next_boundary_bytes \u003d 28k + 3k + 512;\nblocklen \u003d 4k;\nto_last_block_bytes \u003d _to_next_boundary(28k + 3k + 512, 4k) \u003d 4k - 3k - 512 \u003d 512;\n\nSo you end up unwinding 512 bytes, which gives you an I/O of size 31k, still not aligned to 4k.",
+      "revId": "fcadc4f2bb78e5d34fdbfad3292b6d8715e402ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4177de91_cc788f3b",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 19
