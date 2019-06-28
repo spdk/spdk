@@ -192,7 +192,7 @@ parse_portal_ipv4_normal_case(void)
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
+	CU_ASSERT(spdk_cpuset_equal(&p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
@@ -220,7 +220,7 @@ parse_portal_ipv6_normal_case(void)
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
+	CU_ASSERT(spdk_cpuset_equal(&p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
@@ -245,7 +245,7 @@ parse_portal_ipv4_skip_cpumask_case(void)
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
+	CU_ASSERT(spdk_cpuset_equal(&p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
@@ -268,7 +268,7 @@ parse_portal_ipv6_skip_cpumask_case(void)
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
+	CU_ASSERT(spdk_cpuset_equal(&p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
@@ -291,7 +291,7 @@ parse_portal_ipv4_skip_port_and_cpumask_case(void)
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
+	CU_ASSERT(spdk_cpuset_equal(&p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
@@ -314,7 +314,7 @@ parse_portal_ipv6_skip_port_and_cpumask_case(void)
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
+	CU_ASSERT(spdk_cpuset_equal(&p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
