@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b0d80da_c2cd9b97",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1171,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T07:25:16Z",
+      "side": 1,
+      "message": "I got it. This is block offset and length of each iovec is a single block.",
+      "range": {
+        "startLine": 1171,
+        "startChar": 47,
+        "endLine": 1171,
+        "endChar": 54
+      },
+      "revId": "ed0554b9b77c77464f9da366e31d5686a0d3ac1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
