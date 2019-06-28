@@ -370,7 +370,7 @@ node_access_allowed(void)
 	TAILQ_INSERT_TAIL(&ig.initiator_head, &iname, tailq);
 
 	ig.nnetmasks = 1;
-	imask.mask = "192.168.2.0/24";
+	snprintf(imask.mask, sizeof(imask.mask), "192.168.2.0/24");
 	TAILQ_INIT(&ig.netmask_head);
 	TAILQ_INSERT_TAIL(&ig.netmask_head, &imask, tailq);
 
@@ -483,7 +483,7 @@ node_access_multi_initiator_groups_cases(void)
 	struct spdk_iscsi_portal portal;
 	struct spdk_iscsi_init_grp ig1, ig2;
 	struct spdk_iscsi_initiator_name iname1 = {}, iname2 = {};
-	struct spdk_iscsi_initiator_netmask imask1, imask2;
+	struct spdk_iscsi_initiator_netmask imask1 = {}, imask2 = {};
 	struct spdk_scsi_dev scsi_dev;
 	struct spdk_iscsi_pg_map *pg_map;
 	char *iqn, *addr;
@@ -508,7 +508,6 @@ node_access_multi_initiator_groups_cases(void)
 	TAILQ_INSERT_TAIL(&ig1.initiator_head, &iname1, tailq);
 
 	ig1.nnetmasks = 1;
-	imask1.mask = NULL;
 	TAILQ_INSERT_TAIL(&ig1.netmask_head, &imask1, tailq);
 
 	memset(&ig2, 0, sizeof(struct spdk_iscsi_init_grp));
@@ -520,7 +519,6 @@ node_access_multi_initiator_groups_cases(void)
 	TAILQ_INSERT_TAIL(&ig2.initiator_head, &iname2, tailq);
 
 	ig2.nnetmasks = 1;
-	imask2.mask = NULL;
 	TAILQ_INSERT_TAIL(&ig2.netmask_head, &imask2, tailq);
 
 	/* portal group initialization */
@@ -572,7 +570,7 @@ node_access_multi_initiator_groups_cases(void)
 	 * +-------------------------------------------+---------+
 	 */
 	snprintf(iname1.name, sizeof(iname1.name), IQN1);
-	imask1.mask = IP1;
+	snprintf(imask1.mask, sizeof(imask1.mask), IP1);
 
 	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
 	CU_ASSERT(result == true);
@@ -589,7 +587,7 @@ node_access_multi_initiator_groups_cases(void)
 	 * +-------------------------------------------+---------+
 	 */
 	snprintf(iname1.name, sizeof(iname1.name), IQN1);
-	imask1.mask = IP2;
+	snprintf(imask1.mask, sizeof(imask1.mask), IP2);
 	snprintf(iname2.name, sizeof(iname2.name), NO_IQN1);
 
 	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
@@ -607,9 +605,9 @@ node_access_multi_initiator_groups_cases(void)
 	 * +-------------------------------------------+---------+
 	 */
 	snprintf(iname1.name, sizeof(iname1.name), IQN1);
-	imask1.mask = IP2;
+	snprintf(imask1.mask, sizeof(imask1.mask), IP2);
 	snprintf(iname2.name, sizeof(iname2.name), IQN1);
-	imask2.mask = IP1;
+	snprintf(imask2.mask, sizeof(imask2.mask), IP1);
 
 	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
 	CU_ASSERT(result == true);
@@ -626,9 +624,9 @@ node_access_multi_initiator_groups_cases(void)
 	 * +---------------------------------------------+---------+
 	 */
 	snprintf(iname1.name, sizeof(iname1.name), IQN1);
-	imask1.mask = IP2;
+	snprintf(imask1.mask, sizeof(imask1.mask), IP2);
 	snprintf(iname2.name, sizeof(iname2.name), IQN1);
-	imask2.mask = IP2;
+	snprintf(imask2.mask, sizeof(imask2.mask), IP2);
 
 	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
 	CU_ASSERT(result == false);
@@ -645,7 +643,7 @@ node_access_multi_initiator_groups_cases(void)
 	 * +---------------------------------------------+---------+
 	 */
 	snprintf(iname1.name, sizeof(iname1.name), IQN1);
-	imask1.mask = IP2;
+	snprintf(imask1.mask, sizeof(imask1.mask), IP2);
 	snprintf(iname2.name, sizeof(iname2.name), IQN2);
 
 	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
@@ -681,7 +679,7 @@ node_access_multi_initiator_groups_cases(void)
 	 */
 	snprintf(iname1.name, sizeof(iname1.name), IQN2);
 	snprintf(iname2.name, sizeof(iname2.name), IQN1);
-	imask2.mask = IP1;
+	snprintf(imask2.mask, sizeof(imask2.mask), IP1);
 
 	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
 	CU_ASSERT(result == true);
@@ -699,7 +697,7 @@ node_access_multi_initiator_groups_cases(void)
 	 */
 	snprintf(iname1.name, sizeof(iname1.name), IQN2);
 	snprintf(iname2.name, sizeof(iname2.name), IQN1);
-	imask2.mask = IP2;
+	snprintf(imask2.mask, sizeof(imask2.mask), IP2);
 
 	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
 	CU_ASSERT(result == false);
