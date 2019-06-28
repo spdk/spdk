@@ -1143,7 +1143,7 @@ test_reservation_notification_log_page(void)
 	spdk_nvmf_ctrlr_reservation_notice_log(&ctrlr, &ns,
 					       SPDK_NVME_RESERVATION_PREEMPTED);
 	poll_threads();
-	event.raw = rsp.nvme_cpl.cdw0;
+	(&event)->raw = rsp.nvme_cpl.cdw0;
 	SPDK_CU_ASSERT_FATAL(event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_IO);
 	SPDK_CU_ASSERT_FATAL(event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL);
 	SPDK_CU_ASSERT_FATAL(event.bits.log_page_identifier == SPDK_NVME_LOG_RESERVATION_NOTIFICATION);
