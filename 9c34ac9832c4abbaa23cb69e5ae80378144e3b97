@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d9b021a_ad2981b5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1678,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T04:06:27Z",
+      "side": 1,
+      "message": "Thank you Changpeng. I saw the necessity of this flag due to rewiding.  Simply child_iov_run_out may match this case.",
+      "range": {
+        "startLine": 1678,
+        "startChar": 3,
+        "endLine": 1678,
+        "endChar": 14
+      },
+      "revId": "9c34ac9832c4abbaa23cb69e5ae80378144e3b97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a05c5c6b_9add66c8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1703,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T04:06:27Z",
+      "side": 1,
+      "message": "maybe simply \"stop splitting until child_iov is available\" ?",
+      "range": {
+        "startLine": 1703,
+        "startChar": 6,
+        "endLine": 1703,
+        "endChar": 38
+      },
+      "revId": "9c34ac9832c4abbaa23cb69e5ae80378144e3b97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
