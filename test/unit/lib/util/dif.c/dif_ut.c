@@ -1390,7 +1390,7 @@ set_md_interleave_iovs_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
-	struct iovec iov1, iov2, dif_iovs[4];
+	struct iovec iov1, iov2, dif_iovs[4] = {}, *p;
 	uint32_t dif_check_flags, data_len, read_len, data_offset, mapped_len = 0;
 	uint8_t *buf1, *buf2;
 	int rc;
@@ -1418,10 +1418,11 @@ set_md_interleave_iovs_test(void)
 					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 4096 * 4);
-	CU_ASSERT(_iov_check(&dif_iovs[0], buf1, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], buf1 + 4096 + 128, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 4096) == true);
+	p = &dif_iovs[0];
+	CU_ASSERT(_iov_check(p, buf1, 4096) == true);
+	CU_ASSERT(_iov_check(p + 1, buf1 + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(p + 2, buf1 + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(p + 3, buf1 + (4096 + 128) * 3, 4096) == true);
 
 	read_len = ut_readv(data_offset, 1024, dif_iovs, 4);
 	CU_ASSERT(read_len == 1024);
@@ -1437,10 +1438,10 @@ set_md_interleave_iovs_test(void)
 					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 3072 + 4096 * 3);
-	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 1024, 3072) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], buf1 + 4096 + 128, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 4096) == true);
+	CU_ASSERT(_iov_check(p, buf1 + 1024, 3072) == true);
+	CU_ASSERT(_iov_check(p + 1, buf1 + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(p + 2, buf1 + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(p + 3, buf1 + (4096 + 128) * 3, 4096) == true);
 
 	read_len = ut_readv(data_offset, 3071, dif_iovs, 4);
 	CU_ASSERT(read_len == 3071);
@@ -1456,10 +1457,10 @@ set_md_interleave_iovs_test(void)
 					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 1 + 4096 * 3);
-	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 4095, 1) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], buf1 + 4096 + 128, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 4096) == true);
+	CU_ASSERT(_iov_check(p, buf1 + 4095, 1) == true);
+	CU_ASSERT(_iov_check(p + 1, buf1 + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(p + 2, buf1 + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(p + 3, buf1 + (4096 + 128) * 3, 4096) == true);
 
 	read_len = ut_readv(data_offset, 1 + 4096 * 2 + 512, dif_iovs, 4);
 	CU_ASSERT(read_len == 1 + 4096 * 2 + 512);
@@ -1475,7 +1476,7 @@ set_md_interleave_iovs_test(void)
 					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(mapped_len == 3584);
-	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + (4096 + 128) * 3 + 512, 3584) == true);
+	CU_ASSERT(_iov_check(p, buf1 + (4096 + 128) * 3 + 512, 3584) == true);
 
 	read_len = ut_readv(data_offset, 3584, dif_iovs, 1);
 	CU_ASSERT(read_len == 3584);
@@ -1519,7 +1520,7 @@ set_md_interleave_iovs_split_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
-	struct iovec iovs1[7], iovs2[7], dif_iovs[8];
+	struct iovec iovs1[7], iovs2[7], dif_iovs[8] = {}, *p;
 	uint32_t dif_check_flags, data_len, read_len, data_offset, mapped_len = 0;
 	int rc, i;
 
@@ -1550,14 +1551,15 @@ set_md_interleave_iovs_split_test(void)
 					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 8);
 	CU_ASSERT(mapped_len == 512 * 4);
-	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base, 512) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], iovs1[0].iov_base + 512 + 8, 128) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], iovs1[1].iov_base, 128) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[3], iovs1[2].iov_base, 256) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[4], iovs1[3].iov_base, 100) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[5], iovs1[4].iov_base, 412) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[6], iovs1[5].iov_base + 3, 300) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[7], iovs1[6].iov_base, 212) == true);
+	p = &dif_iovs[0];
+	CU_ASSERT(_iov_check(p, iovs1[0].iov_base, 512) == true);
+	CU_ASSERT(_iov_check(p + 1, iovs1[0].iov_base + 512 + 8, 128) == true);
+	CU_ASSERT(_iov_check(p + 2, iovs1[1].iov_base, 128) == true);
+	CU_ASSERT(_iov_check(p + 3, iovs1[2].iov_base, 256) == true);
+	CU_ASSERT(_iov_check(p + 4, iovs1[3].iov_base, 100) == true);
+	CU_ASSERT(_iov_check(p + 5, iovs1[4].iov_base, 412) == true);
+	CU_ASSERT(_iov_check(p + 6, iovs1[5].iov_base + 3, 300) == true);
+	CU_ASSERT(_iov_check(p + 7, iovs1[6].iov_base, 212) == true);
 
 	read_len = ut_readv(data_offset, 128, dif_iovs, 8);
 	CU_ASSERT(read_len == 128);
@@ -1573,14 +1575,14 @@ set_md_interleave_iovs_split_test(void)
 					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 8);
 	CU_ASSERT(mapped_len == 384 + 512 * 3);
-	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base + 128, 384) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], iovs1[0].iov_base + 512 + 8, 128) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], iovs1[1].iov_base, 128) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[3], iovs1[2].iov_base, 256) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[4], iovs1[3].iov_base, 100) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[5], iovs1[4].iov_base, 412) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[6], iovs1[5].iov_base + 3, 300) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[7], iovs1[6].iov_base, 212) == true);
+	CU_ASSERT(_iov_check(p, iovs1[0].iov_base + 128, 384) == true);
+	CU_ASSERT(_iov_check(p + 1, iovs1[0].iov_base + 512 + 8, 128) == true);
+	CU_ASSERT(_iov_check(p + 2, iovs1[1].iov_base, 128) == true);
+	CU_ASSERT(_iov_check(p + 3, iovs1[2].iov_base, 256) == true);
+	CU_ASSERT(_iov_check(p + 4, iovs1[3].iov_base, 100) == true);
+	CU_ASSERT(_iov_check(p + 5, iovs1[4].iov_base, 412) == true);
+	CU_ASSERT(_iov_check(p + 6, iovs1[5].iov_base + 3, 300) == true);
+	CU_ASSERT(_iov_check(p + 7, iovs1[6].iov_base, 212) == true);
 
 	read_len = ut_readv(data_offset, 383, dif_iovs, 8);
 	CU_ASSERT(read_len == 383);
@@ -1596,14 +1598,14 @@ set_md_interleave_iovs_split_test(void)
 					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 8);
 	CU_ASSERT(mapped_len == 1 + 512 * 3);
-	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[0].iov_base + 511, 1) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], iovs1[0].iov_base + 512 + 8, 128) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], iovs1[1].iov_base, 128) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[3], iovs1[2].iov_base, 256) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[4], iovs1[3].iov_base, 100) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[5], iovs1[4].iov_base, 412) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[6], iovs1[5].iov_base + 3, 300) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[7], iovs1[6].iov_base, 212) == true);
+	CU_ASSERT(_iov_check(p, iovs1[0].iov_base + 511, 1) == true);
+	CU_ASSERT(_iov_check(p + 1, iovs1[0].iov_base + 512 + 8, 128) == true);
+	CU_ASSERT(_iov_check(p + 2, iovs1[1].iov_base, 128) == true);
+	CU_ASSERT(_iov_check(p + 3, iovs1[2].iov_base, 256) == true);
+	CU_ASSERT(_iov_check(p + 4, iovs1[3].iov_base, 100) == true);
+	CU_ASSERT(_iov_check(p + 5, iovs1[4].iov_base, 412) == true);
+	CU_ASSERT(_iov_check(p + 6, iovs1[5].iov_base + 3, 300) == true);
+	CU_ASSERT(_iov_check(p + 7, iovs1[6].iov_base, 212) == true);
 
 	read_len = ut_readv(data_offset, 1 + 512 * 2 + 128, dif_iovs, 8);
 	CU_ASSERT(read_len == 1 + 512 * 2 + 128);
@@ -1619,8 +1621,8 @@ set_md_interleave_iovs_split_test(void)
 					     data_offset, data_len, &mapped_len, &ctx);
 	CU_ASSERT(rc == 2);
 	CU_ASSERT(mapped_len == 384);
-	CU_ASSERT(_iov_check(&dif_iovs[0], iovs1[5].iov_base + 3 + 128, 172) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], iovs1[6].iov_base, 212) == true);
+	CU_ASSERT(_iov_check(p, iovs1[5].iov_base + 3 + 128, 172) == true);
+	CU_ASSERT(_iov_check(p + 1, iovs1[6].iov_base, 212) == true);
 
 	read_len = ut_readv(data_offset, 384, dif_iovs, 8);
 	CU_ASSERT(read_len == 384);
@@ -1722,7 +1724,7 @@ dif_generate_stream_test(void)
 static void
 set_md_interleave_iovs_alignment_test(void)
 {
-	struct iovec iovs[3], dif_iovs[5];
+	struct iovec iovs[3], dif_iovs[5] = {}, *p;
 	uint32_t mapped_len = 0;
 	int rc;
 	struct spdk_dif_ctx ctx;
@@ -1746,36 +1748,37 @@ set_md_interleave_iovs_alignment_test(void)
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 0, 500, &mapped_len, &ctx);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(mapped_len == 500);
-	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)0xDEADBEEF, 500) == true);
+	p = &dif_iovs[0];
+	CU_ASSERT(_iov_check(p, (void *)0xDEADBEEF, 500) == true);
 
 	/* Pass enough number of iovecs */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 500, 1000, &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 1000);
-	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)(0xDEADBEEF + 500), 12) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], (void *)(0xDEADBEEF + 520), 504) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], (void *)0xFEEDBEEF, 8) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[3], (void *)(0xFEEDBEEF + 16), 476) == true);
+	CU_ASSERT(_iov_check(p, (void *)(0xDEADBEEF + 500), 12) == true);
+	CU_ASSERT(_iov_check(p + 1, (void *)(0xDEADBEEF + 520), 504) == true);
+	CU_ASSERT(_iov_check(p + 2, (void *)0xFEEDBEEF, 8) == true);
+	CU_ASSERT(_iov_check(p + 3, (void *)(0xFEEDBEEF + 16), 476) == true);
 
 	/* Pass iovecs smaller than necessary */
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 3, iovs, 3, 500, 1000, &mapped_len, &ctx);
 	CU_ASSERT(rc == 3);
 	CU_ASSERT(mapped_len == 524);
-	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)(0xDEADBEEF + 500), 12) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], (void *)(0xDEADBEEF + 520), 504) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], (void *)0xFEEDBEEF, 8) == true);
+	CU_ASSERT(_iov_check(p, (void *)(0xDEADBEEF + 500), 12) == true);
+	CU_ASSERT(_iov_check(p + 1, (void *)(0xDEADBEEF + 520), 504) == true);
+	CU_ASSERT(_iov_check(p + 2, (void *)0xFEEDBEEF, 8) == true);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 1500, 500, &mapped_len, &ctx);
 	CU_ASSERT(rc == 2);
 	CU_ASSERT(mapped_len == 500);
-	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)(0xFEEDBEEF + 492), 36) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], (void *)(0xFEEDBEEF + 536), 464) == true);
+	CU_ASSERT(_iov_check(p, (void *)(0xFEEDBEEF + 492), 36) == true);
+	CU_ASSERT(_iov_check(p + 1, (void *)(0xFEEDBEEF + 536), 464) == true);
 
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 2000, 48, &mapped_len, &ctx);
 	CU_ASSERT(rc == 2);
 	CU_ASSERT(mapped_len == 48);
-	CU_ASSERT(_iov_check(&dif_iovs[0], (void *)0xFEEDBEEF + 1000, 24) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], (void *)0xC0FFEE, 24) ==  true);
+	CU_ASSERT(_iov_check(p, (void *)0xFEEDBEEF + 1000, 24) == true);
+	CU_ASSERT(_iov_check(p + 1, (void *)0xC0FFEE, 24) ==  true);
 }
 
 static void
@@ -1862,7 +1865,7 @@ set_md_interleave_iovs_multi_segments_test(void)
 {
 	struct spdk_dif_ctx ctx = {};
 	struct spdk_dif_error err_blk = {};
-	struct iovec iov1 = {}, iov2 = {}, dif_iovs[4] = {};
+	struct iovec iov1 = {}, iov2 = {}, dif_iovs[4] = {}, *p;
 	uint32_t dif_check_flags, data_len, read_len, data_offset, read_offset, mapped_len = 0;
 	uint8_t *buf1, *buf2;
 	int rc;
@@ -1898,7 +1901,8 @@ set_md_interleave_iovs_multi_segments_test(void)
 					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(mapped_len == 1024);
-	CU_ASSERT(_iov_check(&dif_iovs[0], buf1, 1024) == true);
+	p = &dif_iovs[0];
+	CU_ASSERT(_iov_check(p, buf1, 1024) == true);
 
 	read_len = ut_readv(data_offset + read_offset, 1024, dif_iovs, 4);
 	CU_ASSERT(read_len == 1024);
@@ -1924,10 +1928,10 @@ set_md_interleave_iovs_multi_segments_test(void)
 					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 3072 + 4096 * 2 + 512);
-	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 1024, 3072) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], buf1 + 4096 + 128, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 512) == true);
+	CU_ASSERT(_iov_check(p, buf1 + 1024, 3072) == true);
+	CU_ASSERT(_iov_check(p + 1, buf1 + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(p + 2, buf1 + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(p + 3, buf1 + (4096 + 128) * 3, 512) == true);
 
 	read_len = ut_readv(data_offset + read_offset, 3071, dif_iovs, 4);
 	CU_ASSERT(read_len == 3071);
@@ -1943,10 +1947,10 @@ set_md_interleave_iovs_multi_segments_test(void)
 					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(mapped_len == 1 + 4096 * 2 + 512);
-	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + 4095, 1) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[1], buf1 + 4096 + 128, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[2], buf1 + (4096 + 128) * 2, 4096) == true);
-	CU_ASSERT(_iov_check(&dif_iovs[3], buf1 + (4096 + 128) * 3, 512) == true);
+	CU_ASSERT(_iov_check(p, buf1 + 4095, 1) == true);
+	CU_ASSERT(_iov_check(p + 1, buf1 + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(p + 2, buf1 + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(p + 3, buf1 + (4096 + 128) * 3, 512) == true);
 
 	read_len = ut_readv(data_offset + read_offset, 1 + 4096 * 2 + 512, dif_iovs, 4);
 	CU_ASSERT(read_len == 1 + 4096 * 2 + 512);
@@ -1972,7 +1976,7 @@ set_md_interleave_iovs_multi_segments_test(void)
 					     &mapped_len, &ctx);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(mapped_len == 3584);
-	CU_ASSERT(_iov_check(&dif_iovs[0], buf1 + (4096 + 128) * 3 + 512, 3584) == true);
+	CU_ASSERT(_iov_check(p, buf1 + (4096 + 128) * 3 + 512, 3584) == true);
 
 	read_len = ut_readv(data_offset + read_offset, 3584, dif_iovs, 1);
 	CU_ASSERT(read_len == 3584);
