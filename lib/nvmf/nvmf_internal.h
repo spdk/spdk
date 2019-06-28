@@ -90,7 +90,7 @@ struct spdk_nvmf_tgt {
 };
 
 struct spdk_nvmf_host {
-	char				*nqn;
+	char				nqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	TAILQ_ENTRY(spdk_nvmf_host)	link;
 };
 

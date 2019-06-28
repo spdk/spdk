@@ -308,7 +308,6 @@ static void
 _spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_host *host)
 {
 	TAILQ_REMOVE(&subsystem->hosts, host, link);
-	free(host->nqn);
 	free(host);
 }
 
@@ -648,11 +647,8 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	if (!host) {
 		return -ENOMEM;
 	}
-	host->nqn = strdup(hostnqn);
-	if (!host->nqn) {
-		free(host);
-		return -ENOMEM;
-	}
+
+	snprintf(host->nqn, sizeof(host->nqn), "%s", hostnqn);
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 	subsystem->tgt->discovery_genctr++;
