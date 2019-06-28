@@ -43,6 +43,7 @@
 #include "spdk_internal/thread.h"
 
 #define SPDK_MSG_BATCH_SIZE		8
+#define SPDK_MAX_THREAD_NAME_LEN	256
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -103,7 +104,7 @@ struct spdk_poller {
 struct spdk_thread {
 	TAILQ_HEAD(, spdk_io_channel)	io_channels;
 	TAILQ_ENTRY(spdk_thread)	tailq;
-	char				*name;
+	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
 
 	bool				exit;
 
@@ -227,7 +228,6 @@ _free_thread(struct spdk_thread *thread)
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	spdk_cpuset_free(thread->cpumask);
-	free(thread->name);
 
 	msg = SLIST_FIRST(&thread->msg_cache);
 	while (msg != NULL) {
@@ -300,9 +300,9 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 	}
 
 	if (name) {
-		thread->name = strdup(name);
+		snprintf(thread->name, sizeof(thread->name), "%s", name);
 	} else {
-		thread->name = spdk_sprintf_alloc("%p", thread);
+		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Allocating new thread %s\n", thread->name);
