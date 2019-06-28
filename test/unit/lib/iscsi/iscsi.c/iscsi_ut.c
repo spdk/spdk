@@ -160,7 +160,7 @@ op_login_session_normal_test(void)
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_portal portal;
 	struct spdk_iscsi_portal_grp group;
-	struct spdk_iscsi_pdu rsp_pdu;
+	struct spdk_iscsi_pdu rsp_pdu = {};
 	struct iscsi_bhs_login_rsp *rsph;
 	struct spdk_iscsi_sess sess;
 	struct iscsi_param param;
