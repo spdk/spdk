@@ -443,6 +443,15 @@ uint32_t spdk_mempool_obj_iter(struct spdk_mempool *mp, spdk_mempool_obj_cb_t ob
 			       void *obj_cb_arg);
 
 /**
+ * Lookup the memory pool identified by the given name.
+ *
+ * \param name Name of the memory pool.
+ *
+ * \return a pointer to the memory pool on success, or NULL on failure.
+ */
+struct spdk_mempool *spdk_mempool_lookup(const char *name);
+
+/**
  * Get the number of dedicated CPU cores utilized by this env abstraction.
  *
  * \return the number of dedicated CPU cores.
