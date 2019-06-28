@@ -870,6 +870,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_registrant *reg, *tmp;
 	struct spdk_io_channel *ch;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
 
 	/* Make sure our poll group has memory for this subsystem allocated */
 	if (subsystem->id >= group->num_sgroups) {
@@ -910,9 +911,11 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 
 		/* Free the extra I/O channels */
 		for (i = new_num_ns; i < old_num_ns; i++) {
-			if (sgroup->ns_info[i].channel) {
-				spdk_put_io_channel(sgroup->ns_info[i].channel);
-				sgroup->ns_info[i].channel = NULL;
+			ns_info = &sgroup->ns_info[i];
+
+			if (ns_info->channel) {
+				spdk_put_io_channel(ns_info->channel);
+				ns_info->channel = NULL;
 			}
 		}
 
@@ -934,42 +937,44 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	/* Detect bdevs that were added or removed */
 	for (i = 0; i < sgroup->num_ns; i++) {
 		ns = subsystem->ns[i];
-		ch = sgroup->ns_info[i].channel;
+		ns_info = &sgroup->ns_info[i];
+		ch = ns_info->channel;
 
 		if (ns == NULL && ch == NULL) {
 			/* Both NULL. Leave empty */
 		} else if (ns == NULL && ch != NULL) {
 			/* There was a channel here, but the namespace is gone. */
 			spdk_put_io_channel(ch);
-			sgroup->ns_info[i].channel = NULL;
+			ns_info->channel = NULL;
 		} else if (ns != NULL && ch == NULL) {
 			/* A namespace appeared but there is no channel yet */
-			sgroup->ns_info[i].channel = spdk_bdev_get_io_channel(ns->desc);
-			if (sgroup->ns_info[i].channel == NULL) {
+			ch = spdk_bdev_get_io_channel(ns->desc);
+			if (ch == NULL) {
 				SPDK_ERRLOG("Could not allocate I/O channel.\n");
 				return -ENOMEM;
 			}
+			ns_info->channel = ch;
 		} else {
 			/* A namespace was present before and didn't change. */
 		}
 
 		if (ns == NULL) {
-			memset(&sgroup->ns_info[i], 0, sizeof(struct spdk_nvmf_subsystem_pg_ns_info));
+			memset(ns_info, 0, sizeof(*ns_info));
 		} else {
-			sgroup->ns_info[i].crkey = ns->crkey;
-			sgroup->ns_info[i].rtype = ns->rtype;
+			ns_info->crkey = ns->crkey;
+			ns_info->rtype = ns->rtype;
 			if (ns->holder) {
-				sgroup->ns_info[i].holder_id = ns->holder->hostid;
+				ns_info->holder_id = ns->holder->hostid;
 			}
 
-			memset(&sgroup->ns_info[i].reg_hostid, 0, SPDK_NVMF_MAX_NUM_REGISTRANTS * sizeof(struct spdk_uuid));
+			memset(&ns_info->reg_hostid, 0, SPDK_NVMF_MAX_NUM_REGISTRANTS * sizeof(struct spdk_uuid));
 			j = 0;
 			TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
 				if (j >= SPDK_NVMF_MAX_NUM_REGISTRANTS) {
 					SPDK_ERRLOG("Maximum %u registrants can support.\n", SPDK_NVMF_MAX_NUM_REGISTRANTS);
 					return -EINVAL;
 				}
-				sgroup->ns_info[i].reg_hostid[j++] = reg->hostid;
+				ns_info->reg_hostid[j++] = reg->hostid;
 			}
 		}
 	}
