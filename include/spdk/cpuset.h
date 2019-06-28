@@ -151,6 +151,15 @@ bool spdk_cpuset_get_cpu(const struct spdk_cpuset *set, uint32_t cpu);
 uint32_t spdk_cpuset_count(const struct spdk_cpuset *set);
 
 /**
+ * Get the first bit index of CPUs that are set in CPU set.
+ *
+ * \param set CPU set object.
+ *
+ * \return the first bit index of CPUs; -1 if the set has no CPU
+ */
+int spdk_cpuset_first_index(const struct spdk_cpuset *set);
+
+/**
  * Convert a CPU set to hex string.
  *
  * \param set CPU set.

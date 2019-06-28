@@ -153,6 +153,23 @@ spdk_cpuset_count(const struct spdk_cpuset *set)
 	return count;
 }
 
+int
+spdk_cpuset_first_index(const struct spdk_cpuset *set)
+{
+	uint32_t index = 0;
+	uint8_t n;
+	unsigned int i;
+
+	for (i = 0; i < sizeof(set->cpus); i++) {
+		n = set->cpus[i];
+		while (n) {
+			n = n >> 1;
+			index++;
+		}
+	}
+	return index - 1;
+}
+
 const char *
 spdk_cpuset_fmt(struct spdk_cpuset *set)
 {
