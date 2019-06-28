@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78e08cdc_774ca174",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T07:02:07Z",
+      "side": 1,
+      "message": "I should remove this.",
+      "range": {
+        "startLine": 915,
+        "startChar": 2,
+        "endLine": 915,
+        "endChar": 18
+      },
+      "revId": "58a113a60a164a4fe2ad15e070f9271c6bedb150",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
