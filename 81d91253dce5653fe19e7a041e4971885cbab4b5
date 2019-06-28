@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "821744a4_0d29fdd7",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1463,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T08:55:00Z",
+      "side": 1,
+      "message": "In this case res.regs.reg[0 : res.regs.num_regs - 1].host_uuid are not freed?\nres.bdev_uuid and res.holder_uuid are not freed too?",
+      "range": {
+        "startLine": 1463,
+        "startChar": 7,
+        "endLine": 1463,
+        "endChar": 11
+      },
+      "revId": "81d91253dce5653fe19e7a041e4971885cbab4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c9fea82b_65b4e8c2",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 10
