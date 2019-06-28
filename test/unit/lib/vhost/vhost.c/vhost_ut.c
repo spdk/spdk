@@ -403,7 +403,7 @@ vq_avail_ring_get_test(void)
 	ret = spdk_vhost_vq_avail_ring_get(&vq, reqs, reqs_len);
 	CU_ASSERT(ret == 5);
 	CU_ASSERT(vq.last_avail_idx == 4);
-	CU_ASSERT(reqs[0] == vq.vring.avail->ring[31])
+	CU_ASSERT(reqs[0] == vq.vring.avail->ring[31]);
 	for (i = 1; i < ret; i++) {
 		CU_ASSERT(reqs[i] == vq.vring.avail->ring[i - 1]);
 	}

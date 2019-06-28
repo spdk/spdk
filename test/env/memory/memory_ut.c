@@ -237,7 +237,7 @@ test_mem_map_translation(void)
 	mapping_length = VALUE_2MB * 3;
 	addr = spdk_mem_map_translate(map, 0, &mapping_length);
 	CU_ASSERT(addr == 0);
-	CU_ASSERT(mapping_length == VALUE_2MB * 3)
+	CU_ASSERT(mapping_length == VALUE_2MB * 3);
 
 	/* Translate an unaligned address */
 	mapping_length = VALUE_2MB * 3;
@@ -257,13 +257,13 @@ test_mem_map_translation(void)
 	mapping_length = VALUE_2MB * 3;
 	addr = spdk_mem_map_translate(map, 0, &mapping_length);
 	CU_ASSERT(addr == 0);
-	CU_ASSERT(mapping_length == VALUE_2MB)
+	CU_ASSERT(mapping_length == VALUE_2MB);
 
 	/* Get translation for an unallocated block. Make sure size is 0 */
 	mapping_length = VALUE_2MB * 3;
 	addr = spdk_mem_map_translate(map, VALUE_2MB, &mapping_length);
 	CU_ASSERT(addr == default_translation);
-	CU_ASSERT(mapping_length == VALUE_2MB)
+	CU_ASSERT(mapping_length == VALUE_2MB);
 
 	/* Verify translation for 2nd page is the default */
 	addr = spdk_mem_map_translate(map, VALUE_2MB, NULL);
@@ -343,7 +343,7 @@ test_mem_map_translation(void)
 	mapping_length = VALUE_2MB * 3;
 	addr = spdk_mem_map_translate(map, 0, &mapping_length);
 	CU_ASSERT(addr == 0);
-	CU_ASSERT(mapping_length == VALUE_2MB)
+	CU_ASSERT(mapping_length == VALUE_2MB);
 
 	/* Translate only a subset of a 2MB page */
 	mapping_length = 543;

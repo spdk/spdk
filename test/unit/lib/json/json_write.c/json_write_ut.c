@@ -62,24 +62,24 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 	memset(g_buf, 0, sizeof(g_buf)); \
 	g_write_pos = g_buf; \
 	w = spdk_json_write_begin(write_cb, NULL, 0); \
-	SPDK_CU_ASSERT_FATAL(w != NULL)
+	SPDK_CU_ASSERT_FATAL(w != NULL);
 
 #define END(json) \
 	CU_ASSERT(spdk_json_write_end(w) == 0); \
 	CU_ASSERT(g_write_pos - g_buf == sizeof(json) - 1); \
-	CU_ASSERT(memcmp(json, g_buf, sizeof(json) - 1) == 0)
+	CU_ASSERT(memcmp(json, g_buf, sizeof(json) - 1) == 0);
 
 #define END_NOCMP() \
-	CU_ASSERT(spdk_json_write_end(w) == 0)
+	CU_ASSERT(spdk_json_write_end(w) == 0);
 
 #define END_FAIL() \
-	CU_ASSERT(spdk_json_write_end(w) < 0)
+	CU_ASSERT(spdk_json_write_end(w) < 0);
 
 #define VAL_STRING(str) \
-	CU_ASSERT(spdk_json_write_string_raw(w, str, sizeof(str) - 1) == 0)
+	CU_ASSERT(spdk_json_write_string_raw(w, str, sizeof(str) - 1) == 0);
 
 #define VAL_STRING_FAIL(str) \
-	CU_ASSERT(spdk_json_write_string_raw(w, str, sizeof(str) - 1) < 0)
+	CU_ASSERT(spdk_json_write_string_raw(w, str, sizeof(str) - 1) < 0);
 
 #define STR_PASS(in, out) \
 	BEGIN(); VAL_STRING(in); END("\"" out "\"")
@@ -88,10 +88,10 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 	BEGIN(); VAL_STRING_FAIL(in); END_FAIL()
 
 #define VAL_STRING_UTF16LE(str) \
-	CU_ASSERT(spdk_json_write_string_utf16le_raw(w, (const uint16_t *)str, sizeof(str) / sizeof(uint16_t) - 1) == 0)
+	CU_ASSERT(spdk_json_write_string_utf16le_raw(w, (const uint16_t *)str, sizeof(str) / sizeof(uint16_t) - 1) == 0);
 
 #define VAL_STRING_UTF16LE_FAIL(str) \
-	CU_ASSERT(spdk_json_write_string_utf16le_raw(w, (const uint16_t *)str, sizeof(str) / sizeof(uint16_t) - 1) < 0)
+	CU_ASSERT(spdk_json_write_string_utf16le_raw(w, (const uint16_t *)str, sizeof(str) / sizeof(uint16_t) - 1) < 0);
 
 #define STR_UTF16LE_PASS(in, out) \
 	BEGIN(); VAL_STRING_UTF16LE(in); END("\"" out "\"")
@@ -100,11 +100,11 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 	BEGIN(); VAL_STRING_UTF16LE_FAIL(in); END_FAIL()
 
 #define VAL_NAME(name) \
-	CU_ASSERT(spdk_json_write_name_raw(w, name, sizeof(name) - 1) == 0)
+	CU_ASSERT(spdk_json_write_name_raw(w, name, sizeof(name) - 1) == 0);
 
-#define VAL_NULL() CU_ASSERT(spdk_json_write_null(w) == 0)
-#define VAL_TRUE() CU_ASSERT(spdk_json_write_bool(w, true) == 0)
-#define VAL_FALSE() CU_ASSERT(spdk_json_write_bool(w, false) == 0)
+#define VAL_NULL() CU_ASSERT(spdk_json_write_null(w) == 0);
+#define VAL_TRUE() CU_ASSERT(spdk_json_write_bool(w, true) == 0);
+#define VAL_FALSE() CU_ASSERT(spdk_json_write_bool(w, false) == 0);
 
 #define VAL_INT32(i) CU_ASSERT(spdk_json_write_int32(w, i) == 0);
 #define VAL_UINT32(u) CU_ASSERT(spdk_json_write_uint32(w, u) == 0);
@@ -112,13 +112,13 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 #define VAL_INT64(i) CU_ASSERT(spdk_json_write_int64(w, i) == 0);
 #define VAL_UINT64(u) CU_ASSERT(spdk_json_write_uint64(w, u) == 0);
 
-#define VAL_ARRAY_BEGIN() CU_ASSERT(spdk_json_write_array_begin(w) == 0)
-#define VAL_ARRAY_END() CU_ASSERT(spdk_json_write_array_end(w) == 0)
+#define VAL_ARRAY_BEGIN() CU_ASSERT(spdk_json_write_array_begin(w) == 0);
+#define VAL_ARRAY_END() CU_ASSERT(spdk_json_write_array_end(w) == 0);
 
-#define VAL_OBJECT_BEGIN() CU_ASSERT(spdk_json_write_object_begin(w) == 0)
-#define VAL_OBJECT_END() CU_ASSERT(spdk_json_write_object_end(w) == 0)
+#define VAL_OBJECT_BEGIN() CU_ASSERT(spdk_json_write_object_begin(w) == 0);
+#define VAL_OBJECT_END() CU_ASSERT(spdk_json_write_object_end(w) == 0);
 
-#define VAL(v) CU_ASSERT(spdk_json_write_val(w, v) == 0)
+#define VAL(v) CU_ASSERT(spdk_json_write_val(w, v) == 0);
 
 static void
 test_write_literal(void)

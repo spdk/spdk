@@ -86,7 +86,7 @@ _get_xattr_value(void *arg, const char *name,
 
 	SPDK_CU_ASSERT_FATAL(value_len != NULL);
 	SPDK_CU_ASSERT_FATAL(value != NULL);
-	CU_ASSERT(arg == &g_ctx)
+	CU_ASSERT(arg == &g_ctx);
 
 	for (i = 0; i < sizeof(g_xattr_names); i++) {
 		if (!strcmp(name, g_xattr_names[i])) {
@@ -103,7 +103,7 @@ _get_xattr_value_null(void *arg, const char *name,
 {
 	SPDK_CU_ASSERT_FATAL(value_len != NULL);
 	SPDK_CU_ASSERT_FATAL(value != NULL);
-	CU_ASSERT(arg == NULL)
+	CU_ASSERT(arg == NULL);
 
 	*value_len = 0;
 	*value = NULL;
@@ -329,7 +329,7 @@ blob_create(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -351,7 +351,7 @@ blob_create(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0)
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -370,7 +370,7 @@ blob_create(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0)
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -608,7 +608,7 @@ blob_snapshot(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 
 	/* Create snapshot from blob */
 	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 0);
@@ -624,11 +624,11 @@ blob_snapshot(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	snapshot = g_blob;
-	CU_ASSERT(snapshot->data_ro == true)
-	CU_ASSERT(snapshot->md_ro == true)
-	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 10)
+	CU_ASSERT(snapshot->data_ro == true);
+	CU_ASSERT(snapshot->md_ro == true);
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 10);
 
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 	CU_ASSERT(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
 	CU_ASSERT(spdk_mem_all_zero(blob->active.clusters,
 				    blob->active.num_clusters * sizeof(blob->active.clusters[0])));
@@ -649,9 +649,9 @@ blob_snapshot(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	snapshot2 = g_blob;
-	CU_ASSERT(snapshot2->data_ro == true)
-	CU_ASSERT(snapshot2->md_ro == true)
-	CU_ASSERT(spdk_blob_get_num_clusters(snapshot2) == 10)
+	CU_ASSERT(snapshot2->data_ro == true);
+	CU_ASSERT(snapshot2->md_ro == true);
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot2) == 10);
 
 	/* Confirm that blob is backed by snapshot2 and snapshot2 is backed by snapshot */
 	CU_ASSERT(snapshot->back_bs_dev == NULL);
@@ -863,7 +863,7 @@ blob_clone(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 
 	/* Create snapshot */
 	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
@@ -877,8 +877,8 @@ blob_clone(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	snapshot = g_blob;
-	CU_ASSERT(snapshot->data_ro == true)
-	CU_ASSERT(snapshot->md_ro == true)
+	CU_ASSERT(snapshot->data_ro == true);
+	CU_ASSERT(snapshot->md_ro == true);
 	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 10);
 
 	spdk_blob_close(snapshot, blob_op_complete, NULL);
@@ -902,8 +902,8 @@ blob_clone(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	clone = g_blob;
-	CU_ASSERT(clone->data_ro == false)
-	CU_ASSERT(clone->md_ro == false)
+	CU_ASSERT(clone->data_ro == false);
+	CU_ASSERT(clone->md_ro == false);
 	CU_ASSERT(spdk_blob_get_num_clusters(clone) == 10);
 
 	rc = spdk_blob_get_xattr_value(clone, g_xattr_names[0], &value, &value_len);
@@ -953,8 +953,8 @@ blob_clone(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	clone = g_blob;
-	CU_ASSERT(clone->data_ro == false)
-	CU_ASSERT(clone->md_ro == false)
+	CU_ASSERT(clone->data_ro == false);
+	CU_ASSERT(clone->md_ro == false);
 	CU_ASSERT(spdk_blob_get_num_clusters(clone) == 10);
 
 	spdk_blob_close(clone, blob_op_complete, NULL);
@@ -1012,7 +1012,7 @@ _blob_inflate(bool decouple_parent)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == true);
 
 	/* 1) Blob with no parent */
@@ -1036,15 +1036,15 @@ _blob_inflate(bool decouple_parent)
 	snapshotid = g_blobid;
 
 	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == true);
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 
 	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	snapshot = g_blob;
-	CU_ASSERT(snapshot->data_ro == true)
-	CU_ASSERT(snapshot->md_ro == true)
+	CU_ASSERT(snapshot->data_ro == true);
+	CU_ASSERT(snapshot->md_ro == true);
 	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 10);
 
 	spdk_blob_close(snapshot, blob_op_complete, NULL);
@@ -1075,7 +1075,7 @@ _blob_inflate(bool decouple_parent)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 
-	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == decouple_parent);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
@@ -2488,7 +2488,7 @@ blob_xattr(void)
 	CU_ASSERT(rc != 0);
 	/* Check if SPDK_BLOB_INTERNAL_XATTR is set */
 	CU_ASSERT((blob->invalid_flags & SPDK_BLOB_INTERNAL_XATTR) ==
-		  SPDK_BLOB_INTERNAL_XATTR)
+		  SPDK_BLOB_INTERNAL_XATTR);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
@@ -4957,10 +4957,10 @@ blob_snapshot_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	snapshot = g_blob;
-	CU_ASSERT(snapshot->data_ro == true)
-	CU_ASSERT(snapshot->md_ro == true)
+	CU_ASSERT(snapshot->data_ro == true);
+	CU_ASSERT(snapshot->md_ro == true);
 
-	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 5)
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 5);
 
 	write_bytes = g_dev_write_bytes;
 	read_bytes = g_dev_read_bytes;
@@ -5076,8 +5076,8 @@ blob_snapshot_rw_iov(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	snapshot = g_blob;
-	CU_ASSERT(snapshot->data_ro == true)
-	CU_ASSERT(snapshot->md_ro == true)
+	CU_ASSERT(snapshot->data_ro == true);
+	CU_ASSERT(snapshot->md_ro == true);
 	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 5);
 
 	/* Payload should be all zeros from unallocated clusters */
@@ -5271,10 +5271,10 @@ _blob_inflate_rw(bool decouple_parent)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	snapshot = g_blob;
-	CU_ASSERT(snapshot->data_ro == true)
-	CU_ASSERT(snapshot->md_ro == true)
+	CU_ASSERT(snapshot->data_ro == true);
+	CU_ASSERT(snapshot->md_ro == true);
 
-	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 5)
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 5);
 
 	/* Write every second cluster with a pattern.
 	 *
@@ -5321,10 +5321,10 @@ _blob_inflate_rw(bool decouple_parent)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	snapshot2 = g_blob;
-	CU_ASSERT(snapshot2->data_ro == true)
-	CU_ASSERT(snapshot2->md_ro == true)
+	CU_ASSERT(snapshot2->data_ro == true);
+	CU_ASSERT(snapshot2->md_ro == true);
 
-	CU_ASSERT(spdk_blob_get_num_clusters(snapshot2) == 5)
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot2) == 5);
 
 	CU_ASSERT(snapshot2->parent_id == snapshotid);
 

@@ -201,7 +201,7 @@ list_negotiation_test(void)
 	}
 
 #define EXPECT_NULL(key) \
-	CU_ASSERT(spdk_iscsi_param_get_val(params, key) == NULL)
+	CU_ASSERT(spdk_iscsi_param_get_val(params, key) == NULL);
 
 static void
 parse_valid_test(void)
