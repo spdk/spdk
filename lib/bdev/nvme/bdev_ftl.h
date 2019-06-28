@@ -64,8 +64,8 @@ struct ftl_bdev_init_opts {
 	uint32_t				mode;
 	/* UUID if device is restored from SSD */
 	struct spdk_uuid			uuid;
-	/* Allow for partial restore after dirty shutdown */
-	bool					allow_open_bands;
+	/* FTL library configuration */
+	struct spdk_ftl_conf			ftl_conf;
 };
 
 typedef void (*ftl_bdev_init_fn)(const struct ftl_bdev_info *, void *, int);
