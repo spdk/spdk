@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9c43d537_e5fd39a8",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-06-28T08:16:13Z",
+      "side": 1,
+      "message": "Maciek, you need to elaborate why. This code just handles allocation failure just like rest of the checks above.",
+      "parentUuid": "6dbfb7e6_f3edceed",
+      "revId": "86e361c076dbcd98eb1e24cab3c518847ac29d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "89e3c991_9b79c9f2",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 2
