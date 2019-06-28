@@ -108,6 +108,30 @@
     },
     {
       "key": {
+        "uuid": "a2fb1d80_70af46da",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-28T09:04:57Z",
+      "side": 1,
+      "message": "Come on, this function is only 50 lines long and most of it is code doing the initialization. If I did extract the initialization to a separate function we\u0027d be left with one function with an equal size to this one and the other just sending a request to read metadata. I really don\u0027t think it\u0027ll make the code any more readable.",
+      "parentUuid": "23d6b0a8_6c004ccf",
+      "range": {
+        "startLine": 653,
+        "startChar": 1,
+        "endLine": 673,
+        "endChar": 2
+      },
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d3e352de_0957f50a",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 6
