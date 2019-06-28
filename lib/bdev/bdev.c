@@ -1596,11 +1596,12 @@ _spdk_bdev_io_split(void *_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io = _bdev_io;
 	uint64_t current_offset, remaining;
-	uint32_t blocklen, to_next_boundary, to_next_boundary_bytes;
+	uint32_t blocklen, to_next_boundary, to_next_boundary_bytes, to_last_block_bytes;
 	struct iovec *parent_iov, *iov;
 	uint64_t parent_iov_offset, iov_len;
 	uint32_t parent_iovpos, parent_iovcnt, child_iovcnt, iovcnt;
 	void *md_buf = NULL;
+	bool child_iov_run_out = false;
 	int rc;
 
 	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
@@ -1652,18 +1653,29 @@ _spdk_bdev_io_split(void *_bdev_io)
 
 		if (to_next_boundary_bytes > 0) {
 			/* We had to stop this child I/O early because we ran out of
-			 *  child_iov space.  Make sure the iovs collected are valid and
-			 *  then adjust to_next_boundary before starting the child I/O.
+			 * child_iov space.  Ensure the iovs to be aligned with block
+			 * size and then adjust to_next_boundary before starting the
+			 * child I/O.
 			 */
 			if ((to_next_boundary_bytes % blocklen) != 0) {
-				SPDK_ERRLOG("Remaining %" PRIu32 " is not multiple of block size %" PRIu32 "\n",
-					    to_next_boundary_bytes, blocklen);
-				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-				if (bdev_io->u.bdev.split_outstanding == 0) {
-					bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+				to_last_block_bytes = _to_next_boundary(to_next_boundary_bytes, blocklen);
+				assert(to_last_block_bytes != 0);
+				to_next_boundary_bytes += to_last_block_bytes;
+
+				while (to_last_block_bytes > 0 && iovcnt > 0) {
+					iov_len = spdk_min(to_last_block_bytes,
+							   bdev_io->child_iov[child_iovcnt - 1].iov_len);
+					bdev_io->child_iov[child_iovcnt - 1].iov_len -= iov_len;
+					if (bdev_io->child_iov[child_iovcnt - 1].iov_len == 0) {
+						child_iovcnt--;
+						iovcnt--;
+					}
+					to_last_block_bytes -= iov_len;
 				}
-				return;
+
+				assert(to_last_block_bytes == 0);
 			}
+			child_iov_run_out = true;
 			to_next_boundary -= to_next_boundary_bytes / blocklen;
 		}
 
@@ -1688,6 +1700,10 @@ _spdk_bdev_io_split(void *_bdev_io)
 			remaining -= to_next_boundary;
 			bdev_io->u.bdev.split_current_offset_blocks = current_offset;
 			bdev_io->u.bdev.split_remaining_num_blocks = remaining;
+			/* stop splitting until child_iov is available */
+			if (spdk_unlikely(child_iov_run_out)) {
+				return;
+			}
 		} else {
 			bdev_io->u.bdev.split_outstanding--;
 			if (rc == -ENOMEM) {
