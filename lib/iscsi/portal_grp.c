@@ -118,6 +118,9 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 	assert(host != NULL);
 	assert(port != NULL);
 
+	if (strlen(host) > MAX_PORTAL_ADDR) {
+		return NULL;
+	}
 
 	p = calloc(1, sizeof(*p));
 	if (!p) {
@@ -130,18 +133,14 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 		SPDK_WARNLOG("Please use \"[::]\" as IPv6 wildcard\n");
 		SPDK_WARNLOG("Convert \"[*]\" to \"[::]\" automatically\n");
 		SPDK_WARNLOG("(Use of \"[*]\" will be deprecated in a future release)");
-		p->host = strdup("[::]");
+		snprintf(p->host, sizeof(p->host), "[::]");
 	} else if (strcasecmp(host, "*") == 0) {
 		SPDK_WARNLOG("Please use \"0.0.0.0\" as IPv4 wildcard\n");
 		SPDK_WARNLOG("Convert \"*\" to \"0.0.0.0\" automatically\n");
 		SPDK_WARNLOG("(Use of \"[*]\" will be deprecated in a future release)");
-		p->host = strdup("0.0.0.0");
+		snprintf(p->host, sizeof(p->host), "0.0.0.0");
 	} else {
-		p->host = strdup(host);
-	}
-	if (!p->host) {
-		SPDK_ERRLOG("strdup() failed for host\n");
-		goto error_out;
+		memcpy(p->host, host, strlen(host));
 	}
 
 	p->port = strdup(port);
@@ -193,7 +192,6 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 error_out:
 	spdk_cpuset_free(core_mask);
 	free(p->port);
-	free(p->host);
 	free(p);
 
 	return NULL;
@@ -210,7 +208,6 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 	TAILQ_REMOVE(&g_spdk_iscsi.portal_head, p, g_tailq);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-	free(p->host);
 	free(p->port);
 	spdk_cpuset_free(p->cpumask);
 	free(p);

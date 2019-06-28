@@ -38,11 +38,13 @@
 #include "spdk/conf.h"
 #include "spdk/cpuset.h"
 
+#define MAX_PORTAL_ADDR	256
+
 struct spdk_json_write_ctx;
 
 struct spdk_iscsi_portal {
 	struct spdk_iscsi_portal_grp	*group;
-	char				*host;
+	char				host[MAX_PORTAL_ADDR + 1];
 	char				*port;
 	struct spdk_sock		*sock;
 	struct spdk_cpuset		*cpumask;
