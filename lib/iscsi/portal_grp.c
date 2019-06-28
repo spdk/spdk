@@ -112,7 +112,6 @@ struct spdk_iscsi_portal *
 spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask)
 {
 	struct spdk_iscsi_portal *p = NULL, *tmp;
-	struct spdk_cpuset *core_mask = NULL;
 	int rc;
 
 	assert(host != NULL);
@@ -145,28 +144,20 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 
 	memcpy(p->port, port, strlen(port));
 
-	core_mask = spdk_cpuset_alloc();
-	if (!core_mask) {
-		SPDK_ERRLOG("spdk_cpuset_alloc() failed for host\n");
-		goto error_out;
-	}
-
 	if (cpumask != NULL) {
-		rc = spdk_app_parse_core_mask(cpumask, core_mask);
+		rc = spdk_app_parse_core_mask(cpumask, &p->cpumask);
 		if (rc < 0) {
 			SPDK_ERRLOG("cpumask (%s) is invalid\n", cpumask);
 			goto error_out;
 		}
-		if (spdk_cpuset_count(core_mask) == 0) {
+		if (spdk_cpuset_count(&p->cpumask) == 0) {
 			SPDK_ERRLOG("cpumask (%s) does not contain core mask (0x%s)\n",
 				    cpumask, spdk_cpuset_fmt(spdk_app_get_core_mask()));
 			goto error_out;
 		}
 	} else {
-		spdk_cpuset_copy(core_mask, spdk_app_get_core_mask());
+		spdk_cpuset_copy(&p->cpumask, spdk_app_get_core_mask());
 	}
-
-	p->cpumask = core_mask;
 
 	p->sock = NULL;
 	p->group = NULL; /* set at a later time by caller */
@@ -186,7 +177,6 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 	return p;
 
 error_out:
-	spdk_cpuset_free(core_mask);
 	free(p);
 
 	return NULL;
@@ -203,7 +193,6 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 	TAILQ_REMOVE(&g_spdk_iscsi.portal_head, p, g_tailq);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-	spdk_cpuset_free(p->cpumask);
 	free(p);
 
 }
@@ -677,7 +666,7 @@ spdk_iscsi_portal_grps_config_text(FILE *fp)
 		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 			if (NULL == p) { continue; }
 			fprintf(fp, PORTAL_TMPL, p->host, p->port,
-				spdk_cpuset_fmt(p->cpumask));
+				spdk_cpuset_fmt(&p->cpumask));
 		}
 	}
 }
@@ -699,7 +688,7 @@ iscsi_portal_grp_info_json(struct spdk_iscsi_portal_grp *pg,
 		spdk_json_write_named_string(w, "host", portal->host);
 		spdk_json_write_named_string(w, "port", portal->port);
 		spdk_json_write_named_string_fmt(w, "cpumask", "0x%s",
-						 spdk_cpuset_fmt(portal->cpumask));
+						 spdk_cpuset_fmt(&portal->cpumask));
 
 		spdk_json_write_object_end(w);
 	}
