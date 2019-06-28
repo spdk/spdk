@@ -107,7 +107,7 @@ struct spdk_thread {
 
 	bool				exit;
 
-	struct spdk_cpuset		*cpumask;
+	struct spdk_cpuset		cpumask;
 
 	uint64_t			tsc_last;
 	struct spdk_thread_stats	stats;
@@ -226,7 +226,6 @@ _free_thread(struct spdk_thread *thread)
 	TAILQ_REMOVE(&g_threads, thread, tailq);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	spdk_cpuset_free(thread->cpumask);
 	free(thread->name);
 
 	msg = SLIST_FIRST(&thread->msg_cache);
@@ -259,17 +258,10 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 		return NULL;
 	}
 
-	thread->cpumask = spdk_cpuset_alloc();
-	if (!thread->cpumask) {
-		free(thread);
-		SPDK_ERRLOG("Unable to allocate memory for CPU mask\n");
-		return NULL;
-	}
-
 	if (cpumask) {
-		spdk_cpuset_copy(thread->cpumask, cpumask);
+		spdk_cpuset_copy(&thread->cpumask, cpumask);
 	} else {
-		spdk_cpuset_negate(thread->cpumask);
+		spdk_cpuset_negate(&thread->cpumask);
 	}
 
 	TAILQ_INIT(&thread->io_channels);
@@ -283,7 +275,6 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 	thread->messages = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	if (!thread->messages) {
 		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
-		spdk_cpuset_free(thread->cpumask);
 		free(thread);
 		return NULL;
 	}
@@ -366,7 +357,7 @@ spdk_thread_get_ctx(struct spdk_thread *thread)
 struct spdk_cpuset *
 spdk_thread_get_cpumask(struct spdk_thread *thread)
 {
-	return thread->cpumask;
+	return &thread->cpumask;
 }
 
 struct spdk_thread *
