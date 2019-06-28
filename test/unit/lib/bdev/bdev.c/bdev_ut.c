@@ -1149,8 +1149,8 @@ bdev_io_split(void)
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
 
 	/* Test multi vector command that needs to be split by strip and then needs to be
-	 * split further due to the capacity of child iovs, but fails to split. The cause
-	 * of failure of split is that the length of an iovec is not multiple of block size.
+	 * split further due to the capacity of child iovs, the child request offset should
+	 * be rewind to last aligned offset and go success without error.
 	 */
 	for (i = 0; i < BDEV_IO_NUM_CHILD_IOV - 1; i++) {
 		iov[i].iov_base = (void *)((i + 1) * 0x10000);
@@ -1159,15 +1159,51 @@ bdev_io_split(void)
 	iov[BDEV_IO_NUM_CHILD_IOV - 1].iov_base = (void *)(BDEV_IO_NUM_CHILD_IOV * 0x10000);
 	iov[BDEV_IO_NUM_CHILD_IOV - 1].iov_len = 256;
 
+	iov[BDEV_IO_NUM_CHILD_IOV].iov_base = (void *)((BDEV_IO_NUM_CHILD_IOV + 1) * 0x10000);
+	iov[BDEV_IO_NUM_CHILD_IOV].iov_len = 256;
+
+	iov[BDEV_IO_NUM_CHILD_IOV + 1].iov_base = (void *)((BDEV_IO_NUM_CHILD_IOV + 2) * 0x10000);
+	iov[BDEV_IO_NUM_CHILD_IOV + 1].iov_len = 512;
+
 	bdev->optimal_io_boundary = BDEV_IO_NUM_CHILD_IOV;
 	g_io_done = false;
 	g_io_status = 0;
+	/* The first expected io should be start from offset 0 to BDEV_IO_NUM_CHILD_IOV - 1 */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 0,
+					   BDEV_IO_NUM_CHILD_IOV - 1, BDEV_IO_NUM_CHILD_IOV - 1);
+	for (i = 0; i < BDEV_IO_NUM_CHILD_IOV - 1; i++) {
+		ut_expected_io_set_iov(expected_io, i,
+				       (void *)((i + 1) * 0x10000), 512);
+	}
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	/* The second expected io should be start from offset BDEV_IO_NUM_CHILD_IOV - 1 to BDEV_IO_NUM_CHILD_IOV */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, BDEV_IO_NUM_CHILD_IOV - 1,
+					   1, 2);
+	ut_expected_io_set_iov(expected_io, 0,
+			       (void *)(BDEV_IO_NUM_CHILD_IOV * 0x10000), 256);
+	ut_expected_io_set_iov(expected_io, 1,
+			       (void *)((BDEV_IO_NUM_CHILD_IOV + 1) * 0x10000), 256);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	/* The third expected io should be start from offset BDEV_IO_NUM_CHILD_IOV to BDEV_IO_NUM_CHILD_IOV + 1 */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, BDEV_IO_NUM_CHILD_IOV,
+					   1, 1);
+	ut_expected_io_set_iov(expected_io, 0,
+			       (void *)((BDEV_IO_NUM_CHILD_IOV + 2) * 0x10000), 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_readv_blocks(desc, io_ch, iov, BDEV_IO_NUM_CHILD_IOV * 2, 0,
-				    BDEV_IO_NUM_CHILD_IOV * 2, io_done, NULL);
+				    BDEV_IO_NUM_CHILD_IOV + 1, io_done, NULL);
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
 	CU_ASSERT(g_io_done == true);
-	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
 
 	/* Test a WRITE_ZEROES that would span an I/O boundary.  WRITE_ZEROES should not be
 	 * split, so test that.
