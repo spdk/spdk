@@ -22,6 +22,30 @@
       "revId": "78c45896932aa0f6b70cb4135fe2fe86d04f2523",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "372aa1ac_3a251399",
+        "filename": "test/unit/lib/util/dif.c/dif_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1393,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-06-28T05:13:03Z",
+      "side": 1,
+      "message": "Thank you, your reminder is right. *p is not necessary.",
+      "parentUuid": "31ea049b_838332fb",
+      "range": {
+        "startLine": 1393,
+        "startChar": 37,
+        "endLine": 1393,
+        "endChar": 46
+      },
+      "revId": "78c45896932aa0f6b70cb4135fe2fe86d04f2523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
