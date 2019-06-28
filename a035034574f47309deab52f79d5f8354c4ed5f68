@@ -144,6 +144,24 @@
     },
     {
       "key": {
+        "uuid": "58ecb858_767c4fb5",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-28T13:38:34Z",
+      "side": 1,
+      "message": "If you really want to leave it at least add some comment here that this is case for data from reloc - I don\u0027t think it fits to all FTL_IO_WEAK cases. But I will prefer to merge it and add FTL_IO_BYPASS_CACHE  flag in the future if we have another use case for it.",
+      "parentUuid": "273f5fa6_93313c07",
+      "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2f4430bb_b4a86675",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 5
