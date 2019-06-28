@@ -211,10 +211,17 @@ iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 {
 	struct spdk_iscsi_initiator_netmask *imask;
 	char *p;
+	size_t len;
 
 	if (ig->nnetmasks >= MAX_NETMASK) {
 		SPDK_ERRLOG("> MAX_NETMASK(=%d) is not allowed\n", MAX_NETMASK);
 		return -EPERM;
+	}
+
+	len = strlen(mask);
+	if (len > MAX_INITIATOR_ADDR) {
+		SPDK_ERRLOG("Initiator Name is larger than %d bytes\n", MAX_INITIATOR_ADDR);
+		return -EINVAL;
 	}
 
 	imask = iscsi_init_grp_find_netmask(ig, mask);
@@ -222,18 +229,13 @@ iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 		return -EEXIST;
 	}
 
-	imask = malloc(sizeof(*imask));
+	imask = calloc(1, sizeof(*imask));
 	if (imask == NULL) {
 		SPDK_ERRLOG("malloc() failed for inititator mask str\n");
 		return -ENOMEM;
 	}
 
-	imask->mask = strdup(mask);
-	if (imask->mask == NULL) {
-		SPDK_ERRLOG("strdup() failed for initiator mask\n");
-		free(imask);
-		return -ENOMEM;
-	}
+	memcpy(imask->mask, mask, len);
 
 	/* Replace "ALL" by "ANY" if set */
 	p = strstr(imask->mask, "ALL");
@@ -262,7 +264,6 @@ iscsi_init_grp_delete_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 
 	TAILQ_REMOVE(&ig->netmask_head, imask, tailq);
 	ig->nnetmasks--;
-	free(imask->mask);
 	free(imask);
 	return 0;
 }
@@ -296,7 +297,6 @@ iscsi_init_grp_delete_all_netmasks(struct spdk_iscsi_init_grp *ig)
 	TAILQ_FOREACH_SAFE(imask, &ig->netmask_head, tailq, tmp) {
 		TAILQ_REMOVE(&ig->netmask_head, imask, tailq);
 		ig->nnetmasks--;
-		free(imask->mask);
 		free(imask);
 	}
 }
