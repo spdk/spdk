@@ -43,6 +43,7 @@
 #include "spdk_internal/thread.h"
 
 #define SPDK_MSG_BATCH_SIZE		8
+#define SPDK_MAX_DEVICE_NAME_LEN	256
 #define SPDK_MAX_THREAD_NAME_LEN	256
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -52,7 +53,7 @@ static size_t g_ctx_sz = 0;
 
 struct io_device {
 	void				*io_device;
-	char				*name;
+	char				name[SPDK_MAX_DEVICE_NAME_LEN + 1];
 	spdk_io_channel_create_cb	create_cb;
 	spdk_io_channel_destroy_cb	destroy_cb;
 	spdk_io_device_unregister_cb	unregister_cb;
@@ -855,9 +856,9 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 
 	dev->io_device = io_device;
 	if (name) {
-		dev->name = strdup(name);
+		snprintf(dev->name, sizeof(dev->name), "%s", name);
 	} else {
-		dev->name = spdk_sprintf_alloc("%p", dev);
+		snprintf(dev->name, sizeof(dev->name), "%p", dev);
 	}
 	dev->create_cb = create_cb;
 	dev->destroy_cb = destroy_cb;
@@ -894,7 +895,6 @@ _finish_unregister(void *arg)
 		      dev->name, dev->io_device, dev->unregister_thread->name);
 
 	dev->unregister_cb(dev->io_device);
-	free(dev->name);
 	free(dev);
 }
 
