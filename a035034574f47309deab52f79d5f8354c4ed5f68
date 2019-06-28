@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "74700e4e_23a1ae71",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-28T13:19:19Z",
+      "side": 1,
+      "message": "I think we could start slowly changing the code to accommodate for that right now. After all, we can\u0027t do that in a single patch.",
+      "parentUuid": "7c80cc68_c6e2b47e",
+      "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e3bafa41_4339be50",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 5
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "I think that we should merge FTL_IO_WEAK and FTL_IO_BYPASS_CACHE into e. g. FTL_IO_RELOC_WRITE. I think we had already too much flags in our IO struct. Both flags are only valid for reloc writes and we need some extra handling for that - we will not bypassing and set to weak anything else then reloc writes so naming this flag in such way will describe better our intentions in the code.",
       "parentUuid": "a2901d43_e33e544b",
+      "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "273f5fa6_93313c07",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-28T13:19:19Z",
+      "side": 1,
+      "message": "We might want to merge these in the future, but I think keeping them separate for now should be OK for now, as we have quite enough bits left for the flags. I believe having the flags describe the desired behavior (i.e. weak - less priority over other writes, bypass cache, etc.) is better than grouping them together (reloc - data moved from one place to another). Moreover, there are more requests that we might want to bypass the cache other than those coming from reloc (e.g. padding), so keeping a separate flag for that makes sense.",
+      "parentUuid": "96c9c983_12b06e81",
       "revId": "a035034574f47309deab52f79d5f8354c4ed5f68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
