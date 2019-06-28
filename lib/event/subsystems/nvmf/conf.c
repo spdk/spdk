@@ -560,9 +560,6 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 	bval = spdk_conf_section_get_boolval(ctx->sp, "C2HSuccess", true);
 	if (trtype == SPDK_NVME_TRANSPORT_TCP) {
 		opts.c2h_success = bval;
-	} else {
-		SPDK_ERRLOG("C2HSuccess is relevant only for TCP transport '%s'\n", type);
-		goto error_out;
 	}
 
 	transport = spdk_nvmf_transport_create(trtype, &opts);
