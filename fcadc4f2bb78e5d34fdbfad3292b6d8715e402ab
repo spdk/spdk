@@ -34,6 +34,24 @@
       "revId": "fcadc4f2bb78e5d34fdbfad3292b6d8715e402ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cb1bfd9_c74865a9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1705,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T04:49:56Z",
+      "side": 1,
+      "message": "When we rewind, child_iovcnt becomes positive again, and we enter the while loop from the line 1622 again. This will be an infinite loop, and so we need forceful exiting and Changpeng added the flag child_iov_run_out.\n\nSo it looks good to me.",
+      "parentUuid": "f13af7ce_407bb6dc",
+      "revId": "fcadc4f2bb78e5d34fdbfad3292b6d8715e402ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
