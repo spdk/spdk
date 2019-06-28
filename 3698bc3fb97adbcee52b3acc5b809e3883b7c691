@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "ce8a35eb_e60f2d09",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 869,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T12:31:29Z",
+      "side": 1,
+      "message": "you want to do if (!(cpumask \u0026 (1 \u003c\u003c thread-\u003ecpu))) ?",
+      "revId": "3698bc3fb97adbcee52b3acc5b809e3883b7c691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e5a4aed4_f0088a6e",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 12

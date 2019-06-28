@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "e9e4292f_31eafd92",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T12:31:29Z",
+      "side": 1,
+      "message": "I had the same idea with Jim recently. I\u0027m asking puting struct spdk_cpuset to header file to Tomek K.",
+      "parentUuid": "3bfc16b7_3357e262",
+      "revId": "c0252508a2f0da373d443229f6e18d977b787d44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "42a63f31_7045c583",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 9
