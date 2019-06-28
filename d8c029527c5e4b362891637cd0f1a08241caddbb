@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1564487_047a0374",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1062,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-06-28T13:38:51Z",
+      "side": 1,
+      "message": "Just a thought for a separate patch - I think we should be able to separate the nv_cache logic and put it in a different file.",
+      "revId": "d8c029527c5e4b362891637cd0f1a08241caddbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
