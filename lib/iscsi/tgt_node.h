@@ -37,6 +37,8 @@
 
 #include "spdk/stdinc.h"
 
+#include "iscsi/iscsi.h"
+
 struct spdk_iscsi_conn;
 struct spdk_iscsi_init_grp;
 struct spdk_iscsi_portal_grp;
@@ -62,8 +64,8 @@ struct spdk_iscsi_pg_map {
 
 struct spdk_iscsi_tgt_node {
 	int num;
-	char *name;
-	char *alias;
+	char name[MAX_TARGET_NAME + 1];
+	char alias[MAX_TARGET_NAME + 1];
 
 	pthread_mutex_t mutex;
 

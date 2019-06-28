@@ -638,9 +638,6 @@ _iscsi_tgt_node_destruct(void *cb_arg, int rc)
 		return;
 	}
 
-	free(target->name);
-	free(target->alias);
-
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	iscsi_tgt_node_delete_all_pg_maps(target);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
@@ -962,13 +959,11 @@ spdk_iscsi_tgt_node_construct(int target_index,
 		return NULL;
 	}
 
-	target = malloc(sizeof(*target));
+	target = calloc(1, sizeof(*target));
 	if (!target) {
 		SPDK_ERRLOG("could not allocate target\n");
 		return NULL;
 	}
-
-	memset(target, 0, sizeof(*target));
 
 	rc = pthread_mutex_init(&target->mutex, NULL);
 	if (rc != 0) {
@@ -979,22 +974,14 @@ spdk_iscsi_tgt_node_construct(int target_index,
 
 	target->num = target_index;
 
-	target->name = strdup(fullname);
-	if (!target->name) {
-		SPDK_ERRLOG("Could not allocate TargetName\n");
-		iscsi_tgt_node_destruct(target, NULL, NULL);
-		return NULL;
-	}
+	memcpy(target->name, fullname, strlen(fullname));
 
-	if (alias == NULL) {
-		target->alias = NULL;
-	} else {
-		target->alias = strdup(alias);
-		if (!target->alias) {
-			SPDK_ERRLOG("Could not allocate TargetAlias\n");
+	if (alias != NULL) {
+		if (strlen(alias) > MAX_TARGET_NAME) {
 			iscsi_tgt_node_destruct(target, NULL, NULL);
 			return NULL;
 		}
+		memcpy(target->alias, alias, strlen(alias));
 	}
 
 	target->dev = spdk_scsi_dev_construct(fullname, bdev_name_list, lun_id_list, num_luns,
@@ -1546,7 +1533,7 @@ iscsi_tgt_node_info_json(struct spdk_iscsi_tgt_node *target,
 
 	spdk_json_write_named_string(w, "name", target->name);
 
-	if (target->alias) {
+	if (target->alias[0] != '\0') {
 		spdk_json_write_named_string(w, "alias_name", target->alias);
 	}
 
