@@ -68,7 +68,7 @@ static int g_cur_val;
 
 #define PARSE_FAIL_FLAGS(in, retval, flags) \
 	BUF_SETUP(in); \
-	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, NULL, 0, &g_end, flags) == retval)
+	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, NULL, 0, &g_end, flags) == retval);
 
 #define PARSE_FAIL(in, retval) \
 	PARSE_FAIL_FLAGS(in, retval, 0)

@@ -67,7 +67,7 @@ vtophys_malloc_test(void)
 
 	/* Test addresses that are not in the valid x86-64 usermode range */
 	paddr = spdk_vtophys((void *)0x0000800000000000ULL, NULL);
-	CU_ASSERT(paddr == SPDK_VTOPHYS_ERROR)
+	CU_ASSERT(paddr == SPDK_VTOPHYS_ERROR);
 }
 
 static void

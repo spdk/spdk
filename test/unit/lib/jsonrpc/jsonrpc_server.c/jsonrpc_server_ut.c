@@ -47,7 +47,7 @@ const struct spdk_json_val *g_cur_param;
 #define PARSE_PASS(in, trailing) \
 	CU_ASSERT(g_cur_param == NULL); \
 	g_cur_param = NULL; \
-	CU_ASSERT(spdk_jsonrpc_parse_request(conn, in, sizeof(in) - 1) == sizeof(in) - sizeof(trailing))
+	CU_ASSERT(spdk_jsonrpc_parse_request(conn, in, sizeof(in) - 1) == sizeof(in) - sizeof(trailing));
 
 #define REQ_BEGIN(expected_error) \
 	if (expected_error != 0 ) { \
@@ -70,28 +70,28 @@ const struct spdk_json_val *g_cur_param;
 
 
 #define REQ_METHOD(name) \
-	CU_ASSERT(g_method && spdk_json_strequal(g_method, name) == true)
+	CU_ASSERT(g_method && spdk_json_strequal(g_method, name) == true);
 
 #define REQ_METHOD_MISSING() \
-	CU_ASSERT(g_method == NULL)
+	CU_ASSERT(g_method == NULL);
 
 #define REQ_ID_NUM(num) \
 	CU_ASSERT(g_request->id && g_request->id->type == SPDK_JSON_VAL_NUMBER); \
-	CU_ASSERT(g_request->id && memcmp(g_request->id->start, num, sizeof(num) - 1) == 0)
+	CU_ASSERT(g_request->id && memcmp(g_request->id->start, num, sizeof(num) - 1) == 0);
 
 
 #define REQ_ID_STRING(str) \
 	CU_ASSERT(g_request->id && g_request->id->type == SPDK_JSON_VAL_STRING); \
-	CU_ASSERT(g_request->id && memcmp(g_request->id->start, num, strlen(num) - 1) == 0))
+	CU_ASSERT(g_request->id && memcmp(g_request->id->start, num, strlen(num) - 1) == 0);
 
 #define REQ_ID_NULL() \
-	CU_ASSERT(g_request->id && g_request->id->type == SPDK_JSON_VAL_NULL)
+	CU_ASSERT(g_request->id && g_request->id->type == SPDK_JSON_VAL_NULL);
 
 #define REQ_ID_MISSING() \
-	CU_ASSERT(g_request->id == NULL)
+	CU_ASSERT(g_request->id == NULL);
 
 #define REQ_PARAMS_MISSING() \
-	CU_ASSERT(g_params == NULL)
+	CU_ASSERT(g_params == NULL);
 
 #define REQ_PARAMS_BEGIN() \
 	SPDK_CU_ASSERT_FATAL(g_params != NULL); \
