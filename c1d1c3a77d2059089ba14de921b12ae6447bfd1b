@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72476672_e1246d56",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-28T08:08:31Z",
+      "side": 1,
+      "message": "Why this is set to 1? Shouldn\u0027t be HEADER_OFFSET?",
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aedbfd68_bb9c239d",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-28T08:08:31Z",
+      "side": 1,
+      "message": "I think it should be moved to some ftl_nv_cache_restore_init() function.",
+      "range": {
+        "startLine": 653,
+        "startChar": 1,
+        "endLine": 673,
+        "endChar": 2
+      },
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3e352de_0957f50a",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-28T08:08:31Z",
+      "side": 1,
+      "message": "We should increase restore-\u003enum_outstanding here.",
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1f64489_8cf8fedc",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-28T08:08:31Z",
+      "side": 1,
+      "message": "Lets use HEADER_OFFSET instead 1",
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
