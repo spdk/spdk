@@ -355,7 +355,7 @@ test_decode_int32(void)
 	v.len = 2;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
-	CU_ASSERT(i == 33)
+	CU_ASSERT(i == 33);
 
 	/* correct type and invalid value (float) */
 	v.start = "32.45";
@@ -423,7 +423,7 @@ test_decode_int32(void)
 	v.len = 7;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
-	CU_ASSERT(i == -4)
+	CU_ASSERT(i == -4);
 
 	/* invalid exponent (overflow) */
 	v.start = "-2e32";
@@ -436,7 +436,7 @@ test_decode_int32(void)
 	v.len = 6;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
-	CU_ASSERT(i == 213)
+	CU_ASSERT(i == 213);
 
 	/* invalid exponent with decimal */
 	v.start = "2.134e2";
@@ -627,7 +627,7 @@ test_decode_uint32(void)
 	v.len = 5;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_uint32(&v, &i) == 0);
-	CU_ASSERT(i == 1)
+	CU_ASSERT(i == 1);
 }
 
 static void
@@ -716,7 +716,7 @@ test_decode_uint64(void)
 	v.len = 6;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_uint64(&v, &i) == 0);
-	CU_ASSERT(i == 4)
+	CU_ASSERT(i == 4);
 }
 
 static void
@@ -798,7 +798,7 @@ test_find(void)
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(key != NULL && spdk_json_strequal(key, "string") == true);
-	CU_ASSERT(val != NULL && spdk_json_strequal(val, "Some string data") == true)
+	CU_ASSERT(val != NULL && spdk_json_strequal(val, "Some string data") == true);
 
 	key = val = NULL;
 	rc = spdk_json_find(values, "object", &key, &val, SPDK_JSON_VAL_OBJECT_BEGIN);
