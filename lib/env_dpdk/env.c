@@ -296,6 +296,12 @@ spdk_mempool_obj_iter(struct spdk_mempool *mp, spdk_mempool_obj_cb_t obj_cb,
 				    obj_cb_arg);
 }
 
+struct spdk_mempool *
+spdk_mempool_lookup(const char *name)
+{
+	return (struct spdk_mempool *)rte_mempool_lookup(name);
+}
+
 bool
 spdk_process_is_primary(void)
 {

@@ -62,6 +62,9 @@ The parameter `free_space` has been added to spdk_ring_enqueue() to wait when
 the ring is almost full and resume when there is enough space available in
 the ring.
 
+A new API `spdk_mempool_lookup` has been added to lookup the memory pool created
+by the primary process.
+
 ## v19.04:
 
 ### nvme
