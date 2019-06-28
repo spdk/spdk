@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d14bcf3_edfca9b9",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1146,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-06-28T04:35:34Z",
+      "side": 1,
+      "message": "wrong solution, hold here.",
+      "revId": "a3daa87c7d065fb0ce48ba8a20be7ef05453838d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
