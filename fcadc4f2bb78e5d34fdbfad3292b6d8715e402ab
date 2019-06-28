@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "39261f7c_1d378b3f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1661,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T05:01:17Z",
+      "side": 1,
+      "message": "Thank you, Darek is correct.\n\nThe following reminded to me.\n\nI thought first in my code yesterday that blocklen - _to_next_boundary(to_next_boundary_bytes, block_len) but that was too complicated and didn\u0027t sit well on me.\n\nChangpeng, could you address the point Darek says in UT?",
+      "parentUuid": "81306afd_cb26f220",
+      "revId": "fcadc4f2bb78e5d34fdbfad3292b6d8715e402ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4177de91_cc788f3b",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 19
