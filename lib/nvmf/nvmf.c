@@ -869,6 +869,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	uint32_t i, j;
 	struct spdk_nvmf_ns *ns;
 	struct spdk_nvmf_registrant *reg, *tmp;
+	struct spdk_io_channel *ch;
 
 	/* Make sure our poll group has memory for this subsystem allocated */
 	if (subsystem->id >= group->num_sgroups) {
@@ -933,13 +934,15 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	/* Detect bdevs that were added or removed */
 	for (i = 0; i < sgroup->num_ns; i++) {
 		ns = subsystem->ns[i];
-		if (ns == NULL && sgroup->ns_info[i].channel == NULL) {
+		ch = sgroup->ns_info[i].channel;
+
+		if (ns == NULL && ch == NULL) {
 			/* Both NULL. Leave empty */
-		} else if (ns == NULL && sgroup->ns_info[i].channel != NULL) {
+		} else if (ns == NULL && ch != NULL) {
 			/* There was a channel here, but the namespace is gone. */
-			spdk_put_io_channel(sgroup->ns_info[i].channel);
+			spdk_put_io_channel(ch);
 			sgroup->ns_info[i].channel = NULL;
-		} else if (ns != NULL && sgroup->ns_info[i].channel == NULL) {
+		} else if (ns != NULL && ch == NULL) {
 			/* A namespace appeared but there is no channel yet */
 			sgroup->ns_info[i].channel = spdk_bdev_get_io_channel(ns->desc);
 			if (sgroup->ns_info[i].channel == NULL) {
