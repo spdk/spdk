@@ -34,11 +34,6 @@
 #include "spdk/cpuset.h"
 #include "spdk/log.h"
 
-struct spdk_cpuset {
-	char str[SPDK_CPUSET_SIZE / 4 + 1];
-	uint8_t cpus[SPDK_CPUSET_SIZE / 8];
-};
-
 struct spdk_cpuset *
 spdk_cpuset_alloc(void)
 {
