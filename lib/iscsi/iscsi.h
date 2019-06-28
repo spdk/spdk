@@ -42,8 +42,8 @@
 #include "spdk/event.h"
 #include "spdk/thread.h"
 
+#include "spdk/scsi.h"
 #include "iscsi/param.h"
-#include "iscsi/tgt_node.h"
 
 #include "spdk/assert.h"
 #include "spdk/dif.h"

@@ -37,8 +37,6 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/scsi.h"
-
 struct spdk_iscsi_conn;
 struct spdk_iscsi_init_grp;
 struct spdk_iscsi_portal_grp;
