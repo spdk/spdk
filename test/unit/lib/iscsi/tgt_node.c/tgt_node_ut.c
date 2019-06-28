@@ -376,7 +376,7 @@ node_access_allowed(void)
 
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
-	tgtnode.name = "iqn.2017-10.spdk.io:0001";
+	snprintf(tgtnode.name, sizeof(tgtnode.name), "iqn.2017-10.spdk.io:0001");
 	TAILQ_INIT(&tgtnode.pg_map_head);
 
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
@@ -438,7 +438,7 @@ node_access_denied_by_empty_netmask(void)
 
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
-	tgtnode.name = "iqn.2017-10.spdk.io:0001";
+	snprintf(tgtnode.name, sizeof(tgtnode.name), "iqn.2017-10.spdk.io:0001");
 	TAILQ_INIT(&tgtnode.pg_map_head);
 
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
@@ -491,7 +491,7 @@ node_access_multi_initiator_groups_cases(void)
 
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
-	tgtnode.name = IQN1;
+	snprintf(tgtnode.name, sizeof(tgtnode.name), IQN1);
 	TAILQ_INIT(&tgtnode.pg_map_head);
 
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
