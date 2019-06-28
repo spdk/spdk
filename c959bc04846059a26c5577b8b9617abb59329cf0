@@ -22,6 +22,30 @@
       "revId": "c959bc04846059a26c5577b8b9617abb59329cf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a708f38f_835f493d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 1519,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-06-28T03:59:17Z",
+      "side": 1,
+      "message": "Do you means I need to change \"--ptpl_file\" to \"--ptpl-file\"? so is it only applied to rpc.py file ?",
+      "parentUuid": "ff4f69e6_6055152c",
+      "range": {
+        "startLine": 1519,
+        "startChar": 26,
+        "endLine": 1519,
+        "endChar": 37
+      },
+      "revId": "c959bc04846059a26c5577b8b9617abb59329cf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
