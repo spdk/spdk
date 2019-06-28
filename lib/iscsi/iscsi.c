@@ -1703,7 +1703,7 @@ iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 	/* declarative parameters */
 	if (target != NULL) {
 		pthread_mutex_lock(&target->mutex);
-		if (target->alias != NULL) {
+		if (target->alias[0] != '\0') {
 			snprintf(buf, sizeof buf, "%s", target->alias);
 		} else {
 			snprintf(buf, sizeof buf, "%s", "");
