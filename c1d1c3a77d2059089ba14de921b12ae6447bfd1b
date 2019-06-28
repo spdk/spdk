@@ -132,6 +132,30 @@
     },
     {
       "key": {
+        "uuid": "6a352f6c_7db7a82a",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-06-28T09:08:51Z",
+      "side": 1,
+      "message": "I will not insist on that but in my opinion it will be a little cleaner.",
+      "parentUuid": "a2fb1d80_70af46da",
+      "range": {
+        "startLine": 653,
+        "startChar": 1,
+        "endLine": 673,
+        "endChar": 2
+      },
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d3e352de_0957f50a",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 6
