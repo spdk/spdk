@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbf60111_ba38e855",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1129,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T08:50:17Z",
+      "side": 1,
+      "message": "sybsystem-\u003ens[opts.nsid - 1] \u003d NULL here?",
+      "revId": "81d91253dce5653fe19e7a041e4971885cbab4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9fea82b_65b4e8c2",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1526,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T08:50:17Z",
+      "side": 1,
+      "message": "in this case, regs already added to ns-\u003eregistrants should be freed?",
+      "range": {
+        "startLine": 1526,
+        "startChar": 3,
+        "endLine": 1526,
+        "endChar": 18
+      },
+      "revId": "81d91253dce5653fe19e7a041e4971885cbab4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3c1092c_da485dbd",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1539,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T08:50:17Z",
+      "side": 1,
+      "message": "one semi-colon can be removed.",
+      "range": {
+        "startLine": 1539,
+        "startChar": 45,
+        "endLine": 1539,
+        "endChar": 46
+      },
+      "revId": "81d91253dce5653fe19e7a041e4971885cbab4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
