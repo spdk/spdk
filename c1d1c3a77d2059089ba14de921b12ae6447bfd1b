@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ad914dff_1494b836",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-28T08:28:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "72476672_e1246d56",
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aedbfd68_bb9c239d",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 6
@@ -30,6 +48,30 @@
       "writtenOn": "2019-06-28T08:08:31Z",
       "side": 1,
       "message": "I think it should be moved to some ftl_nv_cache_restore_init() function.",
+      "range": {
+        "startLine": 653,
+        "startChar": 1,
+        "endLine": 673,
+        "endChar": 2
+      },
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76aa2b57_48cf1dcc",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-28T08:28:51Z",
+      "side": 1,
+      "message": "I don\u0027t see a point in extracting it to a separate function. This is only initialized once, here as this is the initialization of nv_cache restoration. If this function gets bigger it might make sense to move this to a separate function, but right now, I don\u0027t think it\u0027s necessary.",
+      "parentUuid": "aedbfd68_bb9c239d",
       "range": {
         "startLine": 653,
         "startChar": 1,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "c0472d16_e07d1f44",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-28T08:28:51Z",
+      "side": 1,
+      "message": "We don\u0027t, num_outstanding is only used when there are multiple requests being sent at the same time. This only sends one request and the whole restoration can continue only once this request finishes.",
+      "parentUuid": "d3e352de_0957f50a",
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e1f64489_8cf8fedc",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 6
@@ -73,6 +133,24 @@
       "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01f82663_5e7e2540",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-06-28T08:28:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e1f64489_8cf8fedc",
+      "revId": "c1d1c3a77d2059089ba14de921b12ae6447bfd1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
