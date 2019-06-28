@@ -22,6 +22,30 @@
       "revId": "58a113a60a164a4fe2ad15e070f9271c6bedb150",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59c39f00_6fb55547",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-06-28T07:10:44Z",
+      "side": 1,
+      "message": "Sorry I removed this in the version 3. Please ignore.",
+      "parentUuid": "78e08cdc_774ca174",
+      "range": {
+        "startLine": 915,
+        "startChar": 2,
+        "endLine": 915,
+        "endChar": 18
+      },
+      "revId": "58a113a60a164a4fe2ad15e070f9271c6bedb150",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
