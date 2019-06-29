@@ -46,6 +46,7 @@ struct rte_comp_op g_comp_op[2];
 struct vbdev_compress g_comp_bdev;
 struct comp_device_qp g_device_qp;
 struct compress_dev g_device;
+struct rte_compressdev_capabilities g_cdev_cap;
 static struct rte_mbuf *g_src_mbufs[2];
 static struct rte_mbuf *g_dst_mbufs[2];
 static struct rte_mbuf g_expected_src_mbufs[2];
@@ -95,6 +96,8 @@ void __rte_experimental
 mock_rte_compressdev_info_get(uint8_t dev_id, struct rte_compressdev_info *dev_info)
 {
 	dev_info->max_nb_queue_pairs = ut_max_nb_queue_pairs;
+	dev_info->capabilities = &g_cdev_cap;
+	dev_info->driver_name = "compress_isal";
 }
 
 int ut_rte_compressdev_configure = 0;
@@ -452,6 +455,9 @@ test_setup(void)
 	};
 	g_device.comp_xform = &g_comp_xform;
 	g_device.decomp_xform = &g_decomp_xform;
+	g_cdev_cap.comp_feature_flags = RTE_COMP_FF_SHAREABLE_PRIV_XFORM;
+	g_device.cdev_info.driver_name = "compress_isal";
+	g_device.cdev_info.capabilities = &g_cdev_cap;
 
 	g_src_mbufs[0] = calloc(1, sizeof(struct rte_mbuf));
 	g_src_mbufs[1] = calloc(1, sizeof(struct rte_mbuf));
