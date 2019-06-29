@@ -1363,12 +1363,13 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 
 	TAILQ_INSERT_TAIL(&req->vol->executing_requests, req, tailq);
 	if (vol->pm_logical_map[req->logical_map_index] != REDUCE_EMPTY_MAP_ENTRY) {
-		/* Read old chunk, then overwrite with data from this write operation.
-		 * TODO: bypass reading old chunk if this write operation overwrites
-		 * the entire chunk.
-		 */
-		_reduce_vol_read_chunk(req, _write_read_done);
-		return;
+		if ((req->length * vol->params.logical_block_size) < vol->params.chunk_size) {
+			/* Read old chunk, then overwrite with data from this write
+			 *  operation.
+			 */
+			_reduce_vol_read_chunk(req, _write_read_done);
+			return;
+		}
 	}
 
 	lbsize = vol->params.logical_block_size;
