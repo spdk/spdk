@@ -1057,10 +1057,8 @@ _reduce_vol_compress_chunk(struct spdk_reduce_vol_request *req, reduce_request_f
 	req->backing_cb_args.cb_arg = req;
 	req->comp_buf_iov[0].iov_base = req->comp_buf;
 	req->comp_buf_iov[0].iov_len = vol->params.chunk_size;
-	req->decomp_buf_iov[0].iov_base = req->decomp_buf;
-	req->decomp_buf_iov[0].iov_len = vol->params.chunk_size;
 	vol->backing_dev->compress(vol->backing_dev,
-				   req->decomp_buf_iov, 1, req->comp_buf_iov, 1,
+				   &req->decomp_iov[0], req->decomp_iovcnt, req->comp_buf_iov, 1,
 				   &req->backing_cb_args);
 }
 
@@ -1115,8 +1113,7 @@ _write_decompress_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t chunk_offset;
-	uint8_t *buf;
+	uint64_t chunk_offset, ttl_len = 0;
 	int i;
 
 	/* Negative reduce_errno indicates failure for compression operations. */
@@ -1134,12 +1131,30 @@ _write_decompress_done(void *_req, int reduce_errno)
 		return;
 	}
 
+	req->decomp_iovcnt = 0;
 	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
-	buf = req->decomp_buf + chunk_offset * vol->params.logical_block_size;
-	for (i = 0; i < req->iovcnt; i++) {
-		memcpy(buf, req->iov[i].iov_base, req->iov[i].iov_len);
-		buf += req->iov[i].iov_len;
+
+	if (chunk_offset) {
+		req->decomp_iov[0].iov_base = req->decomp_buf;
+		req->decomp_iov[0].iov_len = chunk_offset * vol->params.logical_block_size;
+		ttl_len += req->decomp_iov[0].iov_len;
+		req->decomp_iovcnt = 1;
 	}
+
+	for (i = 0; i < req->iovcnt; i++) {
+		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
+		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
+		ttl_len += req->decomp_iov[i + req->decomp_iovcnt].iov_len;
+		req->decomp_iovcnt++;
+	}
+
+	if (ttl_len < req->vol->params.chunk_size) {
+		req->decomp_iov[req->decomp_iovcnt].iov_base = req->decomp_buf + ttl_len;
+		req->decomp_iov[req->decomp_iovcnt].iov_len = req->vol->params.chunk_size - ttl_len;
+		ttl_len += req->decomp_iov[req->decomp_iovcnt].iov_len;
+		req->decomp_iovcnt++;
+	}
+	assert(ttl_len == vol->params.chunk_size);
 
 	_reduce_vol_compress_chunk(req, _write_compress_done);
 }
@@ -1340,7 +1355,8 @@ static void
 _start_writev_request(struct spdk_reduce_vol_request *req)
 {
 	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t chunk_offset;
+	uint64_t chunk_offset, ttl_len = 0;
+	uint64_t remainder = 0;
 	uint32_t lbsize, lb_per_chunk;
 	int i;
 	uint8_t *buf;
@@ -1358,20 +1374,38 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	buf = req->decomp_buf;
 	lbsize = vol->params.logical_block_size;
 	lb_per_chunk = vol->logical_blocks_per_chunk;
+	req->decomp_iovcnt = 0;
+
 	/* Note: we must zero out parts of req->buf not specified by this write operation. */
 	chunk_offset = req->offset % lb_per_chunk;
 	if (chunk_offset != 0) {
 		memset(buf, 0, chunk_offset * lbsize);
-		buf += chunk_offset * lbsize;
+		ttl_len += chunk_offset * lbsize;
+		buf += ttl_len;
+		req->decomp_iov[0].iov_base = req->decomp_buf;
+		req->decomp_iov[0].iov_len = ttl_len;
+		req->decomp_iovcnt = 1;
 	}
+
+	/* now the user data iov, direct to the user buffer */
 	for (i = 0; i < req->iovcnt; i++) {
-		memcpy(buf, req->iov[i].iov_base, req->iov[i].iov_len);
-		buf += req->iov[i].iov_len;
+		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
+		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
+		ttl_len += req->decomp_iov[i + req->decomp_iovcnt].iov_len;
+		buf += ttl_len;
+		req->decomp_iovcnt++;
 	}
 	chunk_offset += req->length;
 	if (chunk_offset != lb_per_chunk) {
-		memset(buf, 0, (lb_per_chunk - chunk_offset) * lbsize);
+		remainder = (lb_per_chunk - chunk_offset) * lbsize;
+		memset(buf, 0, remainder);
+		req->decomp_iov[req->decomp_iovcnt].iov_base = buf;
+		req->decomp_iov[req->decomp_iovcnt].iov_len = remainder;
+		ttl_len += req->decomp_iov[req->decomp_iovcnt].iov_len;
+		req->decomp_iovcnt++;
 	}
+	assert(ttl_len == req->vol->params.chunk_size);
+
 	_reduce_vol_compress_chunk(req, _write_compress_done);
 }
 
