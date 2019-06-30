@@ -574,7 +574,15 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 	int num_events, i;
 
 #if defined(__linux__)
+#define EPOLL_WAIT_PER_CALLS 50
+
 	struct epoll_event events[MAX_EVENTS_PER_POLL];
+	static uint32_t epoll_frequency = 0;
+
+	if(epoll_frequency > 0 ) {
+		epoll_frequency--;
+		return 0;
+	}
 
 	num_events = epoll_wait(group->fd, events, max_events, 0);
 #elif defined(__FreeBSD__)
@@ -586,6 +594,9 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 
 	if (num_events == -1) {
 		return -1;
+	} else if (num_events == 0) {
+		epoll_frequency = EPOLL_WAIT_PER_CALLS;
+		return 0;
 	}
 
 	for (i = 0; i < num_events; i++) {
