@@ -81,6 +81,48 @@
       "revId": "96f5ad3bc63c3d0c7b4fb8d3000e276e287c0fea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "578957f6_6b5c0b4f",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-01T22:24:48Z",
+      "side": 1,
+      "message": "Thank you, Paul. I missed that and I could understand well now. Your patch looks fine.",
+      "parentUuid": "248e1f19_94827470",
+      "revId": "96f5ad3bc63c3d0c7b4fb8d3000e276e287c0fea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dcdd7c9c_486fdd66",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-01T22:24:48Z",
+      "side": 1,
+      "message": "Thank you Ben, very make sense to me.",
+      "parentUuid": "928c610d_2db800a5",
+      "range": {
+        "startLine": 1080,
+        "startChar": 2,
+        "endLine": 1080,
+        "endChar": 75
+      },
+      "revId": "96f5ad3bc63c3d0c7b4fb8d3000e276e287c0fea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
