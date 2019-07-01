@@ -1601,7 +1601,6 @@ _spdk_bdev_io_split(void *_bdev_io)
 	uint64_t parent_iov_offset, iov_len;
 	uint32_t parent_iovpos, parent_iovcnt, child_iovcnt, iovcnt;
 	void *md_buf = NULL;
-	bool child_iov_run_out = false;
 	int rc;
 
 	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
@@ -1657,16 +1656,19 @@ _spdk_bdev_io_split(void *_bdev_io)
 			 * size and then adjust to_next_boundary before starting the
 			 * child I/O.
 			 */
+			assert(child_iovcnt == BDEV_IO_NUM_CHILD_IOV);
 			to_last_block_bytes = to_next_boundary_bytes % blocklen;
 			if (to_last_block_bytes != 0) {
-				to_next_boundary_bytes += _to_next_boundary(to_next_boundary_bytes, blocklen);;
+				uint32_t _iov = child_iovcnt;
+				/* don't decrease child_iovcnt so the loop will naturally end */
 
+				to_next_boundary_bytes += _to_next_boundary(to_next_boundary_bytes, blocklen);
 				while (to_last_block_bytes > 0 && iovcnt > 0) {
 					iov_len = spdk_min(to_last_block_bytes,
-							   bdev_io->child_iov[child_iovcnt - 1].iov_len);
-					bdev_io->child_iov[child_iovcnt - 1].iov_len -= iov_len;
-					if (bdev_io->child_iov[child_iovcnt - 1].iov_len == 0) {
-						child_iovcnt--;
+							   bdev_io->child_iov[_iov - 1].iov_len);
+					bdev_io->child_iov[_iov - 1].iov_len -= iov_len;
+					if (bdev_io->child_iov[_iov - 1].iov_len == 0) {
+						_iov--;
 						iovcnt--;
 					}
 					to_last_block_bytes -= iov_len;
@@ -1674,7 +1676,6 @@ _spdk_bdev_io_split(void *_bdev_io)
 
 				assert(to_last_block_bytes == 0);
 			}
-			child_iov_run_out = true;
 			to_next_boundary -= to_next_boundary_bytes / blocklen;
 		}
 
@@ -1699,10 +1700,6 @@ _spdk_bdev_io_split(void *_bdev_io)
 			remaining -= to_next_boundary;
 			bdev_io->u.bdev.split_current_offset_blocks = current_offset;
 			bdev_io->u.bdev.split_remaining_num_blocks = remaining;
-			/* stop splitting until child_iov is available */
-			if (spdk_unlikely(child_iov_run_out)) {
-				return;
-			}
 		} else {
 			bdev_io->u.bdev.split_outstanding--;
 			if (rc == -ENOMEM) {
