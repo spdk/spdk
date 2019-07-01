@@ -22,6 +22,30 @@
       "revId": "e399d6a4eebfdfc36af8a0357926ee5daf41c7fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d8dbfce_7400e37b",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-01T07:50:23Z",
+      "side": 1,
+      "message": "No, a single ANM event should only be processed by one poller. In this inner loop we are looking for device on which we should process single ANM.",
+      "parentUuid": "f19ae8b0_244a982d",
+      "range": {
+        "startLine": 248,
+        "startChar": 3,
+        "endLine": 248,
+        "endChar": 8
+      },
+      "revId": "e399d6a4eebfdfc36af8a0357926ee5daf41c7fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
