@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e438a87d_3a1e95af",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T14:27:36Z",
+      "side": 1,
+      "message": "This probably needs to be `spdk_strerror(EINVAL)` as well. Sorry for not mentioning that previusly, I missed it.",
+      "range": {
+        "startLine": 114,
+        "startChar": 79,
+        "endLine": 114,
+        "endChar": 99
+      },
+      "revId": "f4d0cbbe8f33f8681d578719e043cd5cbf56a636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91c691b5_183354b2",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T14:27:36Z",
+      "side": 1,
+      "message": "I see why you removed negation, but haven\u0027t you made #169 invalid? Either make rc at #169 positive or revert this change and negate rc at #187. I prefer second option because we pass only negative error codes inside SPDK",
+      "range": {
+        "startLine": 176,
+        "startChar": 7,
+        "endLine": 176,
+        "endChar": 13
+      },
+      "revId": "f4d0cbbe8f33f8681d578719e043cd5cbf56a636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a2a98bc_bda89233",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T14:27:36Z",
+      "side": 1,
+      "message": "There are two cases here: when rc \u003d -EINVAL and rc \u003d -ENODEV. So in first case this error is wrong.\nI suggest doing `send_error_response()` before `goto invalid` so the invalid part then would only free the req. (Just like cleanup label is used in construct rpc)",
+      "range": {
+        "startLine": 187,
+        "startChar": 1,
+        "endLine": 187,
+        "endChar": 87
+      },
+      "revId": "f4d0cbbe8f33f8681d578719e043cd5cbf56a636",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
