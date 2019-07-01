@@ -68,6 +68,7 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 	struct spdk_uuid *uuid = NULL;
 	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
 				    SPDK_COUNTOF(rpc_construct_malloc_decoders),
@@ -76,15 +77,23 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	if (req.num_blocks == 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Disk num_blocks must be greater than 0");
+		goto cleanup;
+	}
+
 	if (req.uuid) {
 		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
-			goto invalid;
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Failed to parse bdev UUID");
+			goto cleanup;
 		}
 		uuid = &decoded_uuid;
 	}
 
-	bdev = create_malloc_disk(req.name, uuid, req.num_blocks, req.block_size);
-	if (bdev == NULL) {
+	rc = create_malloc_disk(&bdev, req.name, uuid, req.num_blocks, req.block_size);
+	if (rc) {
 		goto invalid;
 	}
 
@@ -100,8 +109,19 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
+	switch (rc) {
+	case -EINVAL:
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		break;
+	case -ENOMEM:
+		spdk_jsonrpc_send_error_response(request, -rc, spdk_strerror(ENOMEM));
+		break;
+	case -EEXIST:
+		spdk_jsonrpc_send_error_response_fmt(request, -rc, "Bdev %s already exists", req.name);
+		break;
+	}
+cleanup:
 	free_rpc_construct_malloc(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev, SPDK_RPC_RUNTIME)
 
@@ -153,7 +173,7 @@ spdk_rpc_delete_malloc_bdev(struct spdk_jsonrpc_request *request,
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
 		SPDK_INFOLOG(SPDK_LOG_BDEV_MALLOC, "bdev '%s' does not exist\n", req.name);
-		rc = -ENODEV;
+		rc = ENODEV;
 		goto invalid;
 	}
 
@@ -164,7 +184,7 @@ spdk_rpc_delete_malloc_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
+	spdk_jsonrpc_send_error_response_fmt(request, rc, "Bdev %s does not exist", req.name);
 	free_rpc_delete_malloc(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("delete_malloc_bdev", spdk_rpc_delete_malloc_bdev, SPDK_RPC_RUNTIME)
