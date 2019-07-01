@@ -137,6 +137,24 @@
     },
     {
       "key": {
+        "uuid": "acea13ee_ae8959bf",
+        "filename": "lib/bdev/malloc/bdev_malloc.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T14:37:19Z",
+      "side": 1,
+      "message": "I think this is good, because old API loses information about errors, so it may be the reason why we get more issues with not descriptive messages. And I am also positive for changing `create_` calls for every bdev in this way if we want API to be consistant.",
+      "parentUuid": "7c817745_96a394bd",
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f257cf70_2f92c492",
         "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
         "patchSetId": 2
