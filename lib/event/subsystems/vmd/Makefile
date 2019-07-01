@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = vmd.c
+C_SRCS = vmd.c vmd_rpc.c
 LIBNAME = event_vmd
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
