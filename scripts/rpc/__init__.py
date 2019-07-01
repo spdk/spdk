@@ -16,6 +16,7 @@ from . import pmem
 from . import subsystem
 from . import trace
 from . import vhost
+from . import vmd
 from . import client as rpc_client
 from .helpers import deprecated_alias
 
