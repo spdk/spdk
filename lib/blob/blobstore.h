@@ -321,6 +321,8 @@ struct spdk_blob_md_page {
 #define SPDK_BS_PAGE_SIZE 0x1000
 SPDK_STATIC_ASSERT(SPDK_BS_PAGE_SIZE == sizeof(struct spdk_blob_md_page), "Invalid md page size");
 
+#define SPDK_BS_MAX_DESC_SIZE sizeof(((struct spdk_blob_md_page*)0)->descriptors)
+
 #define SPDK_BS_SUPER_BLOCK_SIG "SPDKBLOB"
 
 struct spdk_bs_super_block {
