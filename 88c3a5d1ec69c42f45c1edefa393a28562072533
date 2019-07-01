@@ -22,6 +22,23 @@
       "revId": "88c3a5d1ec69c42f45c1edefa393a28562072533",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c3348c4_429a6026",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-01T12:10:37Z",
+      "side": 1,
+      "message": "Instead of defining our own error codes, can we just say that if the RPC fails we\u0027ll return a negated POSIX errno? Then we can just return rc here.",
+      "revId": "88c3a5d1ec69c42f45c1edefa393a28562072533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
