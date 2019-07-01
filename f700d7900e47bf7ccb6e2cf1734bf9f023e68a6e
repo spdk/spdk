@@ -48,6 +48,47 @@
     },
     {
       "key": {
+        "uuid": "82a6c4c5_7d9eb33f",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-01T13:50:00Z",
+      "side": 1,
+      "message": "It would be good to add this return code as some users may not use RPC and it will be easier for them to debug using logs.",
+      "parentUuid": "637c52ba_8a4f1eb8",
+      "range": {
+        "startLine": 493,
+        "startChar": 16,
+        "endLine": 493,
+        "endChar": 48
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c817745_96a394bd",
+        "filename": "lib/bdev/malloc/bdev_malloc.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-01T13:50:00Z",
+      "side": 1,
+      "message": "I\u0027m not sure if it is a good idea to change API. I would like to hear opinion on that from others.",
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f257cf70_2f92c492",
         "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
         "patchSetId": 2
@@ -94,6 +135,30 @@
     },
     {
       "key": {
+        "uuid": "29c0a331_86a667a0",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-01T13:50:00Z",
+      "side": 1,
+      "message": "Just set rc and goto invalid.",
+      "parentUuid": "e6fce6b6_58adeea4",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 84,
+        "endChar": 9
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a3e76b6c_76fdd734",
         "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
         "patchSetId": 2
@@ -105,6 +170,30 @@
       "writtenOn": "2019-07-01T13:00:47Z",
       "side": 1,
       "message": "Free is missing before return?\n`free_rpc_construct_malloc(\u0026req);`",
+      "range": {
+        "startLine": 91,
+        "startChar": 3,
+        "endLine": 91,
+        "endChar": 10
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb475fbd_57fa7c74",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-01T13:50:00Z",
+      "side": 1,
+      "message": "Just set rc and goto invalid.",
+      "parentUuid": "a3e76b6c_76fdd734",
       "range": {
         "startLine": 91,
         "startChar": 3,
