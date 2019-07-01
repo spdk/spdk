@@ -25,6 +25,47 @@
     },
     {
       "key": {
+        "uuid": "2d65a91e_f0ef5b1f",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1375,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-01T13:33:01Z",
+      "side": 1,
+      "message": "I liked it in the other patches where it didn\u0027t capture req-\u003edecomp_buf to a non-descript stack variable, and instead used it where needed directly. At a minimum give buf a more descriptive name.",
+      "parentUuid": "6bfdca4f_e870f28a",
+      "range": {
+        "startLine": 1375,
+        "startChar": 1,
+        "endLine": 1375,
+        "endChar": 23
+      },
+      "revId": "53c8c9b5e8be50507a0569aa527cce9d6346ebfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6895d258_5487214a",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-01T13:33:01Z",
+      "side": 1,
+      "message": "I don\u0027t understand this comment. We shouldn\u0027t ever have to zero out anything in req-\u003ebuf, if there even is a req-\u003ebuf. Does this mean req-\u003edecomp_buf?\n\nI do understand that you have to construct an SGL that points at 16K of total data, and the user may have given you less than that. The data you fill in has to be zeroed out. Given that, I think it may be worthwhile creating a single \"lbsize\" or \"chunk_size\" buffer pre-filled with zeroes at start up time. You can then set up the SGL to point at that page over and over without re-zeroing or allocating it whenever you need to add some zeroes in to a chunk. The memset below is expensive and my suggestion would eliminate that entirely.",
+      "revId": "53c8c9b5e8be50507a0569aa527cce9d6346ebfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a43ddd91_e2c999dc",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 3
@@ -36,6 +77,30 @@
       "writtenOn": "2019-07-01T00:19:00Z",
       "side": 1,
       "message": "what is this?",
+      "range": {
+        "startLine": 1385,
+        "startChar": 0,
+        "endLine": 1389,
+        "endChar": 0
+      },
+      "revId": "53c8c9b5e8be50507a0569aa527cce9d6346ebfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9bff4c3_da3a1456",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1389,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-01T13:33:01Z",
+      "side": 1,
+      "message": "He has to write 16k, so he needs to pad the user data with zeroed out buffers on either side if it is less than 16k.",
+      "parentUuid": "a43ddd91_e2c999dc",
       "range": {
         "startLine": 1385,
         "startChar": 0,
