@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d64d0ae_d67d193e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T20:11:31Z",
+      "side": 1,
+      "message": "\"resize event notification\" might be clearer",
+      "revId": "27fb4d31e2f8e6fdafa4a93c79b905955d9db4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2281516b_10be6c78",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T20:11:31Z",
+      "side": 1,
+      "message": "might be good to put a comment for each struct in the union that includes the specific event type that the strut is here for",
+      "revId": "27fb4d31e2f8e6fdafa4a93c79b905955d9db4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
