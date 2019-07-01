@@ -983,7 +983,7 @@ opal_take_ownership(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input the new password for ownership:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin);
+			passwd_p = getpass(new_passwd);
 			if (passwd_p) {
 				ret = spdk_opal_cmd_take_ownership(iter->opal_dev, passwd_p);
 				if (ret) {
@@ -1020,7 +1020,7 @@ opal_revert_tper(struct dev *iter)
 			printf("Please be noted this operation will erase ALL DATA on this drive\n");
 			printf("Please input password for revert TPer:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
+			passwd_p = getpass(passwd);
 			if (passwd_p) {
 				ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
 				if (ret) {
