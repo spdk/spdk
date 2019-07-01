@@ -86,6 +86,23 @@
       "revId": "3698bc3fb97adbcee52b3acc5b809e3883b7c691",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4b6ef36_2cd6d4c0",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1049,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-01T12:47:30Z",
+      "side": 1,
+      "message": "The NVMe-oF target registered the target as an io_device, then has the poll_groups be channels. That way you can iterate all poll groups by doing spdk_for_each_channel(), which is kind of slick. Something to think about in the future.",
+      "revId": "3698bc3fb97adbcee52b3acc5b809e3883b7c691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
