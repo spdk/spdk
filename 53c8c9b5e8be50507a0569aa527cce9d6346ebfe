@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "ff0a716c_01d98c50",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1375,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T17:09:02Z",
+      "side": 1,
+      "message": "For some reason I can\u0027t just open Shuhei\u0027s comment so first:\n\nwhy req-\u003edecomp_buf is used in the write path? So Jim setup these 2 scratch buffers so that they are named essentially by what they hold.  So in the write patch before the data is compressed it goes in the scratch buffer \"decomp_buf\"\n\nreq-\u003eiov and req-\u003eiovcnt are passed to compression directly through decomp_iov? The decomp_iov is a vector array passed to the vbdev module that points to potions of the scratch buffer, the actual host buffer, and potentially at the end portions of the scratch buffer again. reducelib always oepartes on chunks (16K for now) so that\u0027s why we sometimes direct data to the scratch buffer, when the host request is smaller than a chunk\n\nBen\u0027s comment: sure, I\u0027ll clean it up a bit,",
+      "parentUuid": "2d65a91e_f0ef5b1f",
+      "range": {
+        "startLine": 1375,
+        "startChar": 1,
+        "endLine": 1375,
+        "endChar": 23
+      },
+      "revId": "53c8c9b5e8be50507a0569aa527cce9d6346ebfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6895d258_5487214a",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 3
@@ -60,6 +84,24 @@
       "writtenOn": "2019-07-01T13:33:01Z",
       "side": 1,
       "message": "I don\u0027t understand this comment. We shouldn\u0027t ever have to zero out anything in req-\u003ebuf, if there even is a req-\u003ebuf. Does this mean req-\u003edecomp_buf?\n\nI do understand that you have to construct an SGL that points at 16K of total data, and the user may have given you less than that. The data you fill in has to be zeroed out. Given that, I think it may be worthwhile creating a single \"lbsize\" or \"chunk_size\" buffer pre-filled with zeroes at start up time. You can then set up the SGL to point at that page over and over without re-zeroing or allocating it whenever you need to add some zeroes in to a chunk. The memset below is expensive and my suggestion would eliminate that entirely.",
+      "revId": "53c8c9b5e8be50507a0569aa527cce9d6346ebfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e13039e5_386fb994",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T17:09:02Z",
+      "side": 1,
+      "message": "first comment, yes my comment is wrong we never zero anything in req-\u003ebuf, it should say req-\u003edecomp_buf\n\non the 0 buffer, yes indeed I talked about that with Jim. I can make that a follow on patch for sure if that works for you?",
+      "parentUuid": "6895d258_5487214a",
       "revId": "53c8c9b5e8be50507a0569aa527cce9d6346ebfe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -101,6 +143,30 @@
       "side": 1,
       "message": "He has to write 16k, so he needs to pad the user data with zeroed out buffers on either side if it is less than 16k.",
       "parentUuid": "a43ddd91_e2c999dc",
+      "range": {
+        "startLine": 1385,
+        "startChar": 0,
+        "endLine": 1389,
+        "endChar": 0
+      },
+      "revId": "53c8c9b5e8be50507a0569aa527cce9d6346ebfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c6d30e9_cb0934a7",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1389,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T17:09:02Z",
+      "side": 1,
+      "message": "exactly :)",
+      "parentUuid": "a9bff4c3_da3a1456",
       "range": {
         "startLine": 1385,
         "startChar": 0,
