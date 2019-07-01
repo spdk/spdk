@@ -160,6 +160,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->keyed.length = rtransport.transport.opts.io_unit_size / 2;
 
+	device.map = (void *)0x0;
 	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.data_from_pool == true);
