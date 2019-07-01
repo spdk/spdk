@@ -39,6 +39,30 @@
       "revId": "96f5ad3bc63c3d0c7b4fb8d3000e276e287c0fea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "928c610d_2db800a5",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-01T13:20:05Z",
+      "side": 1,
+      "message": "It\u0027s just thrown away - the data can only be read in chunks (16K), but if the user only wanted 4K it reads the full 16K (with the 4K requested going straight to the user\u0027s buffer) and then throws the other 12K away.",
+      "parentUuid": "bc95cd33_9010d463",
+      "range": {
+        "startLine": 1080,
+        "startChar": 2,
+        "endLine": 1080,
+        "endChar": 75
+      },
+      "revId": "96f5ad3bc63c3d0c7b4fb8d3000e276e287c0fea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
