@@ -46,6 +46,30 @@
       "revId": "3d557820fb3a6170dc83fabb53633ccbd303d4b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a659812_05c9229c",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 899,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-01T05:28:17Z",
+      "side": 1,
+      "message": "Thanks, I inlined it.",
+      "parentUuid": "9d97b39c_2d9f23e0",
+      "range": {
+        "startLine": 899,
+        "startChar": 23,
+        "endLine": 899,
+        "endChar": 60
+      },
+      "revId": "3d557820fb3a6170dc83fabb53633ccbd303d4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
