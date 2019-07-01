@@ -961,8 +961,8 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 	}
 
 	if (trid1->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		struct spdk_pci_addr pci_addr1;
-		struct spdk_pci_addr pci_addr2;
+		struct spdk_pci_addr pci_addr1 = {};
+		struct spdk_pci_addr pci_addr2 = {};
 
 		/* Normalize PCI addresses before comparing */
 		if (spdk_pci_addr_parse(&pci_addr1, trid1->traddr) < 0 ||
