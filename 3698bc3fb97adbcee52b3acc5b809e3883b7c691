@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1fecdf4f_88b17668",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 869,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-01T05:14:51Z",
+      "side": 1,
+      "message": "Yes, although the thread cpumask doesn\u0027t theorectically have to be a single cpu, so I need to keep the code slightly more complicated.\n\nAfter Ben\u0027s threading refactor is done, vhost will most likely spawn its own green threads with the user-specified cpumask passed as is. Then all of this code here could be removed.",
+      "parentUuid": "ce8a35eb_e60f2d09",
+      "revId": "3698bc3fb97adbcee52b3acc5b809e3883b7c691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e5a4aed4_f0088a6e",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 12
