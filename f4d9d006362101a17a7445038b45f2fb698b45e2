@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "693d1330_2061335c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 36
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T19:18:12Z",
+      "side": 1,
+      "message": "I think it\u0027d be clearer to make this two entires instead of combining them into one paragraph",
+      "revId": "f4d9d006362101a17a7445038b45f2fb698b45e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1433bb1_cda45545",
+        "filename": "doc/bdev.md",
+        "patchSetId": 36
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T19:18:12Z",
+      "side": 1,
+      "message": "replace \"that\" with \"this\"",
+      "revId": "f4d9d006362101a17a7445038b45f2fb698b45e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c6e8c41_e9bd220c",
+        "filename": "doc/lvol.md",
+        "patchSetId": 36
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T19:18:12Z",
+      "side": 1,
+      "message": "The last sentence here is either incomplete or confusing - to me at least :) If you delete the underlying bdev then what kind of \"interaction\" do you mean is possible by reloading the lvolstore?",
+      "revId": "f4d9d006362101a17a7445038b45f2fb698b45e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ec0e161_41737483",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T19:18:12Z",
+      "side": 1,
+      "message": "maybe make the i.e. more generic like (i.e. it is not possible to delete an lvol if there are other dependencies) so that this doesn\u0027t become incomplete or incorrect at some point in the future if other things change",
+      "revId": "f4d9d006362101a17a7445038b45f2fb698b45e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b589734_8043dacf",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T19:18:12Z",
+      "side": 1,
+      "message": "should these be SPDK_ERRLOG?",
+      "revId": "f4d9d006362101a17a7445038b45f2fb698b45e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
