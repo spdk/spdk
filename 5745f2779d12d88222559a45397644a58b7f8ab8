@@ -16,6 +16,24 @@
       "revId": "5745f2779d12d88222559a45397644a58b7f8ab8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebee9568_0636de60",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-01T10:15:42Z",
+      "side": 0,
+      "message": "Should be fixed now.",
+      "parentUuid": "d7476ee9_703de5b3",
+      "revId": "5745f2779d12d88222559a45397644a58b7f8ab8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
