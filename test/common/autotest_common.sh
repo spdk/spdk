@@ -363,7 +363,7 @@ function waitforlisten() {
 			break
 		fi
 
-		if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" rpc_get_methods &>/dev/null; then
+		if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" rpc_get_methods &>/tmp/rpc_err; then
 			break
 		fi
 
@@ -373,6 +373,8 @@ function waitforlisten() {
 	xtrace_restore
 	if (( i == 0 )); then
 		echo "ERROR: timeout while waiting for process (pid: $1) to start listening on '$rpc_addr'"
+		cat /tmp/rpc_err
+		rm -f /tmp/rpc_err
 		ret=1
 	fi
 	return $ret
