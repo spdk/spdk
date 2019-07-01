@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a67fce8_19082421",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-01T12:01:33Z",
+      "side": 1,
+      "message": ".ini files are obsolete now, right? Shouldn\u0027t we get rid of this?",
+      "range": {
+        "startLine": 470,
+        "startChar": 0,
+        "endLine": 497,
+        "endChar": 2
+      },
+      "revId": "88c3a5d1ec69c42f45c1edefa393a28562072533",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
