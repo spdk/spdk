@@ -1,0 +1,29 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "params": {
+            "retry_count": 4,
+            "nvme_adminq_poll_period_us": 100000,
+            "nvme_ioq_poll_period_us": 0,
+            "action_on_timeout": "none"
+          },
+          "method": "set_bdev_nvme_options"
+        }
+      ]
+    },
+    {
+      "subsystem": "vmd",
+      "config": [
+        {
+          "method": "enable_vmd",
+          "params": {
+            "enable": "True"
+          }
+        }
+      ]
+    }
+  ]
+}
