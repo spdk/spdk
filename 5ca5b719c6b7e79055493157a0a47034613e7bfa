@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aa88ec9b_908093a3",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T09:33:54Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "108d3c9a_5a4fc1bf",
+      "range": {
+        "startLine": 20,
+        "startChar": 16,
+        "endLine": 20,
+        "endChar": 57
+      },
+      "revId": "5ca5b719c6b7e79055493157a0a47034613e7bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3cd90b3_f9d8a77c",
         "filename": "test/spdkcli/spdkcli_job.py",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "5ca5b719c6b7e79055493157a0a47034613e7bfa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cdebdb22_f7a47512",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T09:33:54Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a3cd90b3_f9d8a77c",
+      "range": {
+        "startLine": 24,
+        "startChar": 16,
+        "endLine": 24,
+        "endChar": 56
+      },
+      "revId": "5ca5b719c6b7e79055493157a0a47034613e7bfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
