@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bfdca4f_e870f28a",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1375,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-01T00:19:00Z",
+      "side": 1,
+      "message": "why req-\u003edecomp_buf is used in the write path?\nreq-\u003eiov and req-\u003eiovcnt are passed to compression directly through decomp_iov?",
+      "range": {
+        "startLine": 1375,
+        "startChar": 1,
+        "endLine": 1375,
+        "endChar": 23
+      },
+      "revId": "53c8c9b5e8be50507a0569aa527cce9d6346ebfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a43ddd91_e2c999dc",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1389,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-01T00:19:00Z",
+      "side": 1,
+      "message": "what is this?",
+      "range": {
+        "startLine": 1385,
+        "startChar": 0,
+        "endLine": 1389,
+        "endChar": 0
+      },
+      "revId": "53c8c9b5e8be50507a0569aa527cce9d6346ebfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
