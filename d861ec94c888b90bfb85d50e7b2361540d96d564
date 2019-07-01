@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d76cf75f_33d7efb9",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-01T08:15:03Z",
+      "side": 1,
+      "message": "We can go further and can use DEFINE_STUB. Will you use DEFINE_STUB for spdk_jsonrpc_begin_result and insert around the line 114?",
+      "range": {
+        "startLine": 560,
+        "startChar": 0,
+        "endLine": 560,
+        "endChar": 25
+      },
+      "revId": "d861ec94c888b90bfb85d50e7b2361540d96d564",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
