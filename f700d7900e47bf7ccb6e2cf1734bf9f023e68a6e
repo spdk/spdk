@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "428c4c8e_c9fc8cdc",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T13:00:47Z",
+      "side": 1,
+      "message": "This should be -ENOMEM, right? Both cases in previus \"if\" could only fail if allocation fails.",
+      "range": {
+        "startLine": 429,
+        "startChar": 9,
+        "endLine": 429,
+        "endChar": 16
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "637c52ba_8a4f1eb8",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T13:00:47Z",
+      "side": 1,
+      "message": "Now that we know why we couldn\u0027t, maybe we should show the reason?\nLike: `SPDK_ERRLOG(\"Could not create malloc disk: %d\\n\", rc);`\nI realize that this is not directly the json/rpc messages stuff so I do not mind leaving as is",
+      "range": {
+        "startLine": 493,
+        "startChar": 16,
+        "endLine": 493,
+        "endChar": 48
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f257cf70_2f92c492",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T13:00:47Z",
+      "side": 1,
+      "message": "Why would admin need this information? I suggest leaving just the json error response.",
+      "range": {
+        "startLine": 81,
+        "startChar": 2,
+        "endLine": 81,
+        "endChar": 49
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6fce6b6_58adeea4",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T13:00:47Z",
+      "side": 1,
+      "message": "Free is missing before return?\n`free_rpc_construct_malloc(\u0026req);`",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 84,
+        "endChar": 9
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3e76b6c_76fdd734",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T13:00:47Z",
+      "side": 1,
+      "message": "Free is missing before return?\n`free_rpc_construct_malloc(\u0026req);`",
+      "range": {
+        "startLine": 91,
+        "startChar": 3,
+        "endLine": 91,
+        "endChar": 10
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbdbf198_aec348f7",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T13:00:47Z",
+      "side": 1,
+      "message": "Small nit, but I think `spdk_strerror(ENOMEM)` would be more consistant.",
+      "range": {
+        "startLine": 118,
+        "startChar": 49,
+        "endLine": 118,
+        "endChar": 60
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41973131_9408943a",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-01T13:00:47Z",
+      "side": 1,
+      "message": "Do we need this return?",
+      "range": {
+        "startLine": 125,
+        "startChar": 1,
+        "endLine": 125,
+        "endChar": 8
+      },
+      "revId": "f700d7900e47bf7ccb6e2cf1734bf9f023e68a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
