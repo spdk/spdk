@@ -390,21 +390,22 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.write_config_json	= bdev_malloc_write_json_config,
 };
 
-struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *uuid,
-				     uint64_t num_blocks, uint32_t block_size)
+int
+create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_uuid *uuid,
+		   uint64_t num_blocks, uint32_t block_size)
 {
 	struct malloc_disk	*mdisk;
-	int			rc;
+	int rc;
 
 	if (num_blocks == 0) {
-		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
-		return NULL;
+		SPDK_ERRLOG("Disk num_blocks must be greater than 0");
+		return -EINVAL;
 	}
 
 	mdisk = calloc(1, sizeof(*mdisk));
 	if (!mdisk) {
 		SPDK_ERRLOG("mdisk calloc() failed\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	/*
@@ -418,7 +419,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	if (!mdisk->malloc_buf) {
 		SPDK_ERRLOG("malloc_buf spdk_zmalloc() failed\n");
 		malloc_disk_free(mdisk);
-		return NULL;
+		return -ENOMEM;
 	}
 
 	if (name) {
@@ -430,7 +431,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	}
 	if (!mdisk->disk.name) {
 		malloc_disk_free(mdisk);
-		return NULL;
+		return -ENOMEM;
 	}
 	mdisk->disk.product_name = "Malloc disk";
 
@@ -450,12 +451,14 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	rc = spdk_bdev_register(&mdisk->disk);
 	if (rc) {
 		malloc_disk_free(mdisk);
-		return NULL;
+		return rc;
 	}
+
+	*bdev = &(mdisk->disk);
 
 	TAILQ_INSERT_TAIL(&g_malloc_disks, mdisk, link);
 
-	return &mdisk->disk;
+	return rc;
 }
 
 void
@@ -490,10 +493,9 @@ static int bdev_malloc_initialize(void)
 		}
 		size = (uint64_t)LunSizeInMB * 1024 * 1024;
 		for (i = 0; i < NumberOfLuns; i++) {
-			bdev = create_malloc_disk(NULL, NULL, size / BlockSize, BlockSize);
-			if (bdev == NULL) {
+			rc = create_malloc_disk(&bdev, NULL, NULL, size / BlockSize, BlockSize);
+			if (rc) {
 				SPDK_ERRLOG("Could not create malloc disk\n");
-				rc = EINVAL;
 				goto end;
 			}
 		}

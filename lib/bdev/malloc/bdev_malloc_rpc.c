@@ -68,24 +68,36 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 	struct spdk_uuid *uuid = NULL;
 	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
+	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
 				    SPDK_COUNTOF(rpc_construct_malloc_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_MALLOC, "spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	if (req.num_blocks == 0) {
+		spdk_jsonrpc_send_error_response(request, -EINVAL,
+						 "Disk num_blocks must be greater than 0");
+		goto cleanup;
 	}
 
 	if (req.uuid) {
 		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
-			goto invalid;
+			spdk_jsonrpc_send_error_response(request, -EINVAL,
+							 "Failed to parse bdev UUID");
+			goto cleanup;
 		}
 		uuid = &decoded_uuid;
 	}
 
-	bdev = create_malloc_disk(req.name, uuid, req.num_blocks, req.block_size);
-	if (bdev == NULL) {
-		goto invalid;
+	rc = create_malloc_disk(&bdev, req.name, uuid, req.num_blocks, req.block_size);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
 
 	free_rpc_construct_malloc(&req);
@@ -99,9 +111,8 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 	return;
 
-invalid:
+cleanup:
 	free_rpc_construct_malloc(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev, SPDK_RPC_RUNTIME)
 
@@ -140,21 +151,21 @@ spdk_rpc_delete_malloc_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_malloc req = {NULL};
 	struct spdk_bdev *bdev;
-	int rc;
 
 	if (spdk_json_decode_object(params, rpc_delete_malloc_decoders,
 				    SPDK_COUNTOF(rpc_delete_malloc_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_MALLOC, "spdk_json_decode_object failed\n");
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
 		SPDK_INFOLOG(SPDK_LOG_BDEV_MALLOC, "bdev '%s' does not exist\n", req.name);
-		rc = -ENODEV;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
 	}
 
 	delete_malloc_disk(bdev, _spdk_rpc_delete_malloc_bdev_cb, request);
@@ -163,8 +174,7 @@ spdk_rpc_delete_malloc_bdev(struct spdk_jsonrpc_request *request,
 
 	return;
 
-invalid:
+cleanup:
 	free_rpc_delete_malloc(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("delete_malloc_bdev", spdk_rpc_delete_malloc_bdev, SPDK_RPC_RUNTIME)
