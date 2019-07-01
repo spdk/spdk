@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0911744b_9fb24bbc",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-07-01T06:46:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "40022ffe_7cbd88e7",
+      "revId": "28456e5a0630d2b4cb3980a52cb377a7f7477a49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b561b335_23795ed4",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 3
@@ -33,6 +51,24 @@
       "revId": "28456e5a0630d2b4cb3980a52cb377a7f7477a49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03feb442_07cf4ca5",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-07-01T06:46:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b561b335_23795ed4",
+      "revId": "28456e5a0630d2b4cb3980a52cb377a7f7477a49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "58b97ba1_ee7bbc64",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1536,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-07-01T06:46:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0d328c6_20df1939",
+      "revId": "28456e5a0630d2b4cb3980a52cb377a7f7477a49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eba3004f_a4e8b284",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 3
@@ -64,6 +118,30 @@
       "writtenOn": "2019-06-28T00:40:16Z",
       "side": 1,
       "message": "why not using enum type here, you are using it in other places.",
+      "range": {
+        "startLine": 1559,
+        "startChar": 55,
+        "endLine": 1559,
+        "endChar": 79
+      },
+      "revId": "28456e5a0630d2b4cb3980a52cb377a7f7477a49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d163ba32_740066ef",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1559,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-07-01T06:46:52Z",
+      "side": 1,
+      "message": "Done. Thanks for your review.",
+      "parentUuid": "eba3004f_a4e8b284",
       "range": {
         "startLine": 1559,
         "startChar": 55,
