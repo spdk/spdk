@@ -186,7 +186,18 @@ function install_flamegraph()
 function install_qemu()
 {
     if echo $CONF | grep -q qemu; then
-        # Qemu is used in the vhost tests.
+        # Two versions of QEMU are used in the tests.
+        # Stock QEMU is used for vhost. A special fork
+        # is used to test OCSSDs. Install both.
+
+        # Packaged QEMU
+        if [ "$PACKAGEMNG" = "dnf" ]; then
+                sudo dnf install -y qemu-system-x86 qemu-img
+        elif [ "$PACKAGEMNG" = "apt-get" ]; then
+                sudo apt-get install -y qemu-system-x86 qemu-img
+        fi
+
+        # Forked QEMU
         SPDK_QEMU_BRANCH=spdk-3.0.0
         mkdir -p qemu
         if [ ! -d "qemu/$SPDK_QEMU_BRANCH" ]; then
