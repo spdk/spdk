@@ -16,6 +16,24 @@
       "revId": "b9d86a69394166aa700a9eda47f50739a8686c4d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ce57a85_e1cb643a",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-01T07:41:19Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "3cdce491_29740d11",
+      "revId": "b9d86a69394166aa700a9eda47f50739a8686c4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
