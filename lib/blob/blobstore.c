@@ -6061,11 +6061,19 @@ _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value
 {
 	struct spdk_xattr_tailq *xattrs;
 	struct spdk_xattr	*xattr;
+	size_t			desc_size;
 
 	_spdk_blob_verify_md_op(blob);
 
 	if (blob->md_ro) {
 		return -EPERM;
+	}
+
+	desc_size = sizeof(struct spdk_blob_md_descriptor_xattr) + strlen(name) + value_len;
+	if (desc_size > SPDK_BS_MAX_DESC_SIZE) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Xattr '%s' of size %ld does not fix into single page %ld\n", name,
+			      desc_size, SPDK_BS_MAX_DESC_SIZE);
+		return -ENOMEM;
 	}
 
 	if (internal) {
