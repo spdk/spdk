@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f19ae8b0_244a982d",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-01T07:39:09Z",
+      "side": 1,
+      "message": "shouldn\u0027t we process other callbacks as well? We always break after the first one now.",
+      "range": {
+        "startLine": 248,
+        "startChar": 3,
+        "endLine": 248,
+        "endChar": 8
+      },
+      "revId": "e399d6a4eebfdfc36af8a0357926ee5daf41c7fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
