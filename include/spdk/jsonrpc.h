@@ -60,6 +60,8 @@ extern "C" {
  * predefined errors, hence custom error codes must be outside of the range.
  */
 #define SPDK_JSONRPC_ERROR_INVALID_STATE	-1
+#define SPDK_JSONRPC_ERROR_NO_MEMORY		-32612
+#define SPDK_JSONRPC_ERROR_ALREADY_EXISTS	-32617
 
 struct spdk_jsonrpc_server;
 struct spdk_jsonrpc_request;
