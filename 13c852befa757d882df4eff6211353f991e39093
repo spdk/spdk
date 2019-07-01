@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eea6df18_d1562569",
+        "filename": "test/spdk_cunit.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-01T06:49:12Z",
+      "side": 1,
+      "message": "Can\u0027t we just call SPDK_CU_ASSERT_FATAL in every CU_ macro?",
+      "revId": "13c852befa757d882df4eff6211353f991e39093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c509155_be4787de",
+        "filename": "test/spdk_cunit.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-01T06:49:12Z",
+      "side": 1,
+      "message": "CU_FAIL accepts a string as a param and you should be able to just pass it here.",
+      "range": {
+        "startLine": 80,
+        "startChar": 16,
+        "endLine": 80,
+        "endChar": 23
+      },
+      "revId": "13c852befa757d882df4eff6211353f991e39093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
