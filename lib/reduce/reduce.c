@@ -163,6 +163,7 @@ struct spdk_reduce_vol {
 
 static void _start_readv_request(struct spdk_reduce_vol_request *req);
 static void _start_writev_request(struct spdk_reduce_vol_request *req);
+static uint8_t *g_zero_buf;
 
 /*
  * Allocate extra metadata chunks and corresponding backing io units to account for
@@ -333,17 +334,24 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	struct spdk_reduce_vol_request *req;
 	int i;
 
+	g_zero_buf = calloc(1, vol->params.chunk_size);
+	if (g_zero_buf == NULL) {
+		return -ENOMEM;
+	}
+
 	/* Allocate 2x since we need buffers for both read/write and compress/decompress
 	 *  intermediate buffers.
 	 */
 	vol->buf_mem = spdk_dma_malloc(2 * REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size, 64, NULL);
 	if (vol->buf_mem == NULL) {
+		free(g_zero_buf);
 		return -ENOMEM;
 	}
 
 	vol->request_mem = calloc(REDUCE_NUM_VOL_REQUESTS, sizeof(*req));
 	if (vol->request_mem == NULL) {
 		spdk_dma_free(vol->buf_mem);
+		free(g_zero_buf);
 		vol->buf_mem = NULL;
 		return -ENOMEM;
 	}
@@ -355,6 +363,7 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 				  2 * sizeof(struct iovec) * vol->backing_io_units_per_chunk);
 	if (vol->buf_iov_mem == NULL) {
 		free(vol->request_mem);
+		free(g_zero_buf);
 		spdk_dma_free(vol->buf_mem);
 		vol->request_mem = NULL;
 		vol->buf_mem = NULL;
@@ -393,6 +402,7 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 		free(vol->buf_iov_mem);
 		spdk_dma_free(vol->buf_mem);
 		free(vol);
+		free(g_zero_buf);
 	}
 }
 
@@ -1376,12 +1386,11 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	lb_per_chunk = vol->logical_blocks_per_chunk;
 	req->decomp_iovcnt = 0;
 
-	/* Note: we must zero out parts of req->decomp_buf not specified by this write operation. */
+	/* Note: point to our zero buf for offset into the chunk. */
 	chunk_offset = req->offset % lb_per_chunk;
 	if (chunk_offset != 0) {
-		memset(req->decomp_buf, 0, chunk_offset * lbsize);
 		ttl_len += chunk_offset * lbsize;
-		req->decomp_iov[0].iov_base = req->decomp_buf;
+		req->decomp_iov[0].iov_base = g_zero_buf;
 		req->decomp_iov[0].iov_len = ttl_len;
 		req->decomp_iovcnt = 1;
 	}
@@ -1397,8 +1406,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	chunk_offset += req->length;
 	if (chunk_offset != lb_per_chunk) {
 		remainder = (lb_per_chunk - chunk_offset) * lbsize;
-		memset(req->decomp_buf + ttl_len, 0, remainder);
-		req->decomp_iov[req->decomp_iovcnt].iov_base = req->decomp_buf + ttl_len;
+		req->decomp_iov[req->decomp_iovcnt].iov_base = g_zero_buf;
 		req->decomp_iov[req->decomp_iovcnt].iov_len = remainder;
 		ttl_len += req->decomp_iov[req->decomp_iovcnt].iov_len;
 		req->decomp_iovcnt++;
