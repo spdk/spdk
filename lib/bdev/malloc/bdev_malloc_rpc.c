@@ -68,6 +68,7 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 	struct spdk_uuid *uuid = NULL;
 	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
 				    SPDK_COUNTOF(rpc_construct_malloc_decoders),
@@ -76,15 +77,24 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	if (req.num_blocks == 0) {
+		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Disk num_blocks must be greater than 0");
+		return;
+	}
+
 	if (req.uuid) {
 		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
-			goto invalid;
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Failed to parse bdev UUID");
+			return;
 		}
 		uuid = &decoded_uuid;
 	}
 
-	bdev = create_malloc_disk(req.name, uuid, req.num_blocks, req.block_size);
-	if (bdev == NULL) {
+	rc = create_malloc_disk(&bdev, req.name, uuid, req.num_blocks, req.block_size);
+	if (rc) {
 		goto invalid;
 	}
 
@@ -100,8 +110,19 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
+	switch (rc) {
+	case -EINVAL:
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		break;
+	case -ENOMEM:
+		spdk_jsonrpc_send_error_response(request, -rc, "Mem error");
+		break;
+	case -EEXIST:
+		spdk_jsonrpc_send_error_response_fmt(request, -rc, "Bdev %s already exists", req.name);
+		break;
+	}
 	free_rpc_construct_malloc(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	return;
 }
 SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev, SPDK_RPC_RUNTIME)
 
