@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc95cd33_9010d463",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-01T08:25:10Z",
+      "side": 1,
+      "message": "Hi Paul, will you give any information where and how the scratch buffer is used after passing decomp_iov?",
+      "range": {
+        "startLine": 1080,
+        "startChar": 2,
+        "endLine": 1080,
+        "endChar": 75
+      },
+      "revId": "96f5ad3bc63c3d0c7b4fb8d3000e276e287c0fea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "840fe8fd_81fe834f",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-01T08:25:10Z",
+      "side": 1,
+      "message": "Even if the scratch buffer is necessary, the following is simpler?\n\nif (chunk_offset) {\n \treq_decomp_iov[0].iov_base \u003d ...;\n }\n\nfor (i \u003d 1; i \u003c req-\u003eiovcnt + 1; i++) {\n\treq-\u003edecomp_iov[i].iov_base \u003d ...;\n}\nremainder \u003d vol-\u003eparams.chunk_size - ttl_len;\nif (remainder) {\n\treq-\u003edecomp_iov[i].iov_base \u003d ...;\n\ti++;\n}\nreq-\u003edecomp_iovcnt \u003d i;",
+      "revId": "96f5ad3bc63c3d0c7b4fb8d3000e276e287c0fea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
