@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e280420d_5e097541",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T19:42:02Z",
+      "side": 1,
+      "message": "Maybe just \"/* Add new event types here. */\" as I read the TBD and at first was trying to figure out if you still had something left to do on this patch :)",
+      "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26b322f1_17c4cfc2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-01T19:42:02Z",
+      "side": 1,
+      "message": "not a big thing but instead of \"old_format\" maybe reference the name of the new API, something like \"open_with_ext\" or something?",
+      "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
