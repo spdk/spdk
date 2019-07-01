@@ -163,6 +163,8 @@ struct spdk_reduce_vol {
 
 static void _start_readv_request(struct spdk_reduce_vol_request *req);
 static void _start_writev_request(struct spdk_reduce_vol_request *req);
+static uint8_t *g_zero_buf;
+static int g_vol_count = 0;
 
 /*
  * Allocate extra metadata chunks and corresponding backing io units to account for
@@ -396,6 +398,26 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 	}
 }
 
+static int
+_alloc_zero_buff(struct spdk_reduce_vol *vol)
+{
+	int rc = 0;
+
+	/* The zero buffer is shared between all volumnes and just used
+	 * for reads so allocate one global instance here if not already
+	 * allocated when another vol init'd or loaded.
+	 */
+	if (g_vol_count++ == 0) {
+		g_zero_buf = spdk_zmalloc(vol->params.chunk_size,
+					  64, NULL, SPDK_ENV_LCORE_ID_ANY,
+					  SPDK_MALLOC_DMA);
+		if (g_zero_buf == NULL) {
+			rc = -ENOMEM;
+		}
+	}
+	return rc;
+}
+
 static void
 _init_write_super_cpl(void *cb_arg, int reduce_errno)
 {
@@ -403,6 +425,13 @@ _init_write_super_cpl(void *cb_arg, int reduce_errno)
 	int rc;
 
 	rc = _allocate_vol_requests(init_ctx->vol);
+	if (rc != 0) {
+		init_ctx->cb_fn(init_ctx->cb_arg, NULL, rc);
+		_init_load_cleanup(init_ctx->vol, init_ctx);
+		return;
+	}
+
+	rc = _alloc_zero_buff(init_ctx->vol);
 	if (rc != 0) {
 		init_ctx->cb_fn(init_ctx->cb_arg, NULL, rc);
 		_init_load_cleanup(init_ctx->vol, init_ctx);
@@ -690,6 +719,11 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 		}
 	}
 
+	rc = _alloc_zero_buff(vol);
+	if (rc) {
+		goto error;
+	}
+
 	load_ctx->cb_fn(load_ctx->cb_arg, vol, 0);
 	/* Only clean up the ctx - the vol has been passed to the application
 	 *  for use now that volume load was successful.
@@ -776,6 +810,9 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		return;
 	}
 
+	if (--g_vol_count == 0) {
+		spdk_free(g_zero_buf);
+	}
 	_init_load_cleanup(vol, NULL);
 	cb_fn(cb_arg, 0);
 }
@@ -1392,12 +1429,11 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	lb_per_chunk = vol->logical_blocks_per_chunk;
 	req->decomp_iovcnt = 0;
 
-	/* Note: we must zero out parts of req->decomp_buf not specified by this write operation. */
+	/* Note: point to our zero buf for offset into the chunk. */
 	chunk_offset = req->offset % lb_per_chunk;
 	if (chunk_offset != 0) {
-		memset(req->decomp_buf, 0, chunk_offset * lbsize);
 		ttl_len += chunk_offset * lbsize;
-		req->decomp_iov[0].iov_base = req->decomp_buf;
+		req->decomp_iov[0].iov_base = g_zero_buf;
 		req->decomp_iov[0].iov_len = ttl_len;
 		req->decomp_iovcnt = 1;
 	}
@@ -1413,8 +1449,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	chunk_offset += req->length;
 	if (chunk_offset != lb_per_chunk) {
 		remainder = (lb_per_chunk - chunk_offset) * lbsize;
-		memset(req->decomp_buf + ttl_len, 0, remainder);
-		req->decomp_iov[req->decomp_iovcnt].iov_base = req->decomp_buf + ttl_len;
+		req->decomp_iov[req->decomp_iovcnt].iov_base = g_zero_buf;
 		req->decomp_iov[req->decomp_iovcnt].iov_len = remainder;
 		ttl_len += req->decomp_iov[req->decomp_iovcnt].iov_len;
 		req->decomp_iovcnt++;
