@@ -1499,6 +1499,16 @@ bdev_histograms_mt(void)
 	CU_ASSERT(g_bdev.bdev.internal.histogram_enabled == false);
 
 	spdk_histogram_data_free(g_histogram);
+
+	/* Tear down the channels */
+	set_thread(0);
+	spdk_put_io_channel(ch[0]);
+	set_thread(1);
+	spdk_put_io_channel(ch[1]);
+	poll_threads();
+	set_thread(0);
+	teardown_test();
+
 }
 
 int
