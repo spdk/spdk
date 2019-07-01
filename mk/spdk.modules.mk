@@ -31,9 +31,9 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-BLOCKDEV_MODULES_LIST = bdev_lvol blobfs blob blob_bdev lvol
-BLOCKDEV_MODULES_LIST += bdev_malloc bdev_null bdev_nvme nvme bdev_passthru bdev_error bdev_gpt bdev_split bdev_delay vmd
-BLOCKDEV_MODULES_LIST += bdev_raid
+BLOCKDEV_MODULES_LIST = bdev_malloc bdev_null bdev_nvme bdev_passthru bdev_lvol
+BLOCKDEV_MODULES_LIST += bdev_raid bdev_error bdev_gpt bdev_split bdev_delay
+BLOCKDEV_MODULES_LIST += blobfs blob_bdev blob lvol vmd nvme
 
 ifeq ($(CONFIG_CRYPTO),y)
 BLOCKDEV_MODULES_LIST += bdev_crypto
