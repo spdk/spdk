@@ -4233,6 +4233,8 @@ blob_set_xattrs(void)
 	spdk_blob_id blobid;
 	const void *value;
 	size_t value_len;
+	char *xattr;
+	size_t xattr_length;
 	int rc;
 
 	dev = init_dev();
@@ -4288,6 +4290,15 @@ blob_set_xattrs(void)
 
 	rc = spdk_blob_get_xattr_value(blob, "foobar", &value, &value_len);
 	CU_ASSERT(rc == -ENOENT);
+
+	/* Try xattr exceeding maximum length of descriptor in single page */
+	xattr_length = SPDK_BS_MAX_DESC_SIZE - sizeof(struct spdk_blob_md_descriptor_xattr) -
+		       strlen("large_xattr") + 1;
+	xattr = calloc(xattr_length, sizeof(char));
+	SPDK_CU_ASSERT_FATAL(xattr != NULL);
+	rc = spdk_blob_set_xattr(blob, "large_xattr", xattr, xattr_length);
+	free(xattr);
+	SPDK_CU_ASSERT_FATAL(rc == -ENOMEM);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
