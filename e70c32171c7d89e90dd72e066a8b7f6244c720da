@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c2335ea_58b0cd75",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-01T13:05:31Z",
+      "side": 1,
+      "message": "Can you elaborate a bit here? What does locking SP mean?",
+      "revId": "e70c32171c7d89e90dd72e066a8b7f6244c720da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c738f73_cbe7e136",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-01T13:05:31Z",
+      "side": 1,
+      "message": "Lower case on \"init\" to match the others?",
+      "revId": "e70c32171c7d89e90dd72e066a8b7f6244c720da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
