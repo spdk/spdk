@@ -5,6 +5,12 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
+rpc_py=$rootdir/scripts/rpc.py
+
+vmd_kill() {
+	killprocess $svcpid
+}
+
 pci_devs=$($rootdir/app/spdk_lspci/spdk_lspci | grep "NVMe disk behind VMD" | sed 's/(.*//')
 
 timing_enter vmd
@@ -34,5 +40,20 @@ if [ -d /usr/src/fio ]; then
 	done
 	timing_exit fio_plugin
 fi
+
+trap "vmd_kill; exit 1" SIGINT SIGTERM EXIT
+
+$rootdir/test/app/bdev_svc/bdev_svc --wait-for-rpc & svcpid=$!
+# Wait until bdev_svc starts
+waitforlisten $svcpid
+
+$rpc_py enable_vmd -e
+$rpc_py start_subsystem_init
+
+for bdf in $pci_devs; do
+	$rpc_py construct_nvme_bdev -b NVMe1 -t PCIe -a $bdf
+	exit
+done
+killprocess $svcpid
 
 timing_exit vmd
