@@ -1,0 +1,320 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43b42c91_f24cb1a3",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Default provider here is set to libvirt, whereas in .sh script you operate on VBox commands and VBox paths only.",
+      "range": {
+        "startLine": 8,
+        "startChar": 2,
+        "endLine": 8,
+        "endChar": 56
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e18eded8_4a64c83a",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Do we really want to test both ubuntu16 and ubuntu18? Will we test both?\nI\u0027d suggest dropping Ubuntu16 and removing config.vm.box_version so that we always pull latest version of Ubuntu18. You can consult that with Maciek.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 41
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "593187a4_1b51cb4d",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Nitpick: Can you try to rephrase this comments so that it does not take up 4 lines?:P \nI think it could eaisly fit into 2 lines while still being readable",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 3
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57db9e0b_6c66109e",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Vhost related. Do we need that?",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 58
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee16ace0_ab9e35f1",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Vhost related. Do we need that?",
+      "range": {
+        "startLine": 70,
+        "startChar": 2,
+        "endLine": 70,
+        "endChar": 41
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbac3090_a54886b8",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Again, this was vhost-test specific.\nDo we really need to keep this for a OpenStack VM?\n\nI\u0027m almost 100% sure that scsi_mod option is not needed. The rest... maybe, but not necessarily.",
+      "range": {
+        "startLine": 81,
+        "startChar": 3,
+        "endLine": 82,
+        "endChar": 57
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1cd74a10_c230359b",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "You could add an empty line and a comment to separate pkgdep.sh, rsync and open stack provisioning scripts.",
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0542181_7ebf1f30",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Already set earlier in file",
+      "range": {
+        "startLine": 116,
+        "startChar": 2,
+        "endLine": 116,
+        "endChar": 57
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e81f7b7_5e99dc09",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "There\u0027s already apt update around line 70. Why nt group all apt operations there?",
+      "range": {
+        "startLine": 124,
+        "startChar": 40,
+        "endLine": 124,
+        "endChar": 115
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50be330a_844bcbdc",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "I know you based on my previous script for vhost VM creation, but can we try to unify that bit across all scripts?\n\nSomething like from test/vhost:\n\n```\ntestdir\u003d$(readlink -f $(dirname $0))\nrootdir\u003d$(readlink -f $testdir/../../..)\n```",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 41
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08090703_36ceb856",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Are any of these options needed? These are related to crafting a Vhost VM.",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 53
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59bca93b_0f0d566e",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Examples? What examples?:)",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 5
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76cf0c78_66983c17",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Are any of these options needed? These are related to crafting a Vhost VM.",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 37
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2e56f7a_32af2db2",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T15:57:42Z",
+      "side": 1,
+      "message": "Do we need this? Like mentioned before, these are SSH keys for VHost tests, and AFAIK OpenStack tests are focused on NVMeOF?",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 97
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
