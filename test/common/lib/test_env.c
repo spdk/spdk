@@ -44,6 +44,7 @@ DEFINE_STUB(spdk_memzone_lookup, void *, (const char *name), NULL)
 DEFINE_STUB(spdk_pci_nvme_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_ioat_get_driver, struct spdk_pci_driver *, (void), NULL)
 DEFINE_STUB(spdk_pci_virtio_get_driver, struct spdk_pci_driver *, (void), NULL)
+DEFINE_STUB(spdk_get_cache_line_size, size_t, (void), 64)
 
 /*
  * These mocks don't use the DEFINE_STUB macros because
