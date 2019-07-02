@@ -16,6 +16,24 @@
       "revId": "240d7d22628368a484607a5ffc17d2b963c73160",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3390b205_f2b60262",
+        "filename": "test/vmd/vmd.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-02T07:18:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d9949e0_9829ef0f",
+      "revId": "240d7d22628368a484607a5ffc17d2b963c73160",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
