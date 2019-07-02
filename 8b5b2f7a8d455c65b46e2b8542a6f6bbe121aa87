@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58daf7f2_522bc855",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1500,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-02T01:44:53Z",
+      "side": 1,
+      "message": "I don\u0027t think that max_mr_size is the desired value here. Max_mr_size indicates the largest value that we can set for a registered memory region with the NIC. That value is independent from actual I/O size.",
+      "revId": "8b5b2f7a8d455c65b46e2b8542a6f6bbe121aa87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

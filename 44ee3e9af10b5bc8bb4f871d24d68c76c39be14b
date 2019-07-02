@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "abccd96a_3f91b709",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1765,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-02T01:44:53Z",
+      "side": 1,
+      "message": "I don\u0027t think that using the max_mr_size value is the right thing to do here. While it\u0027s true that for a transfer containing a single buffer, we would have to split along the memory region, that is not true in the case where we are sending a request with multiple SGL elements. Each one of those elements is allowed to have it\u0027s own key (i.e. correspond to its own MR). Also, just because we know what the maximum supported memory region size is, doesn\u0027t mean that our MRs are actually registered at that granularity. I don\u0027t know, but I have a hunch that the value returned from most NICs for max_mr_size is \u003e 2MiB which is the granularity at which we currently register memory regions.\n\nI think that relying solely on the mdts value for both the rdma and tcp fabrics is the right thing to do. We should just return UINT32_MAX here and let the generic code use the controller data to moderate this value.",
+      "parentUuid": "ddcecc2f_c17b00ec",
+      "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a9429444_2daa7f63",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
