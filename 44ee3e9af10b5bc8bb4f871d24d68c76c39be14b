@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "ef7a8bb5_4366bbf8",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1765,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T02:02:44Z",
+      "side": 1,
+      "message": "Hi Seth, Thank you,\n\nI wasn\u0027t aware that max_mr_size is the largest contiguous single block, and we support multiple SGL elements now. A RDMA NIC I\u0027m using returned UINT64_MAX for max_mr_size. I don\u0027t know if other RDMA NICs similar values but max_mr_size \u003e 2MiB is very likely.\n\nOK, I\u0027ll change the patch to return UINT32_MAX simply and get review by Ben again.",
+      "parentUuid": "abccd96a_3f91b709",
+      "revId": "44ee3e9af10b5bc8bb4f871d24d68c76c39be14b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a9429444_2daa7f63",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
