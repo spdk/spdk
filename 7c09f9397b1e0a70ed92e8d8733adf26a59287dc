@@ -16,6 +16,24 @@
       "revId": "7c09f9397b1e0a70ed92e8d8733adf26a59287dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b004adc2_0acb515a",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T05:03:58Z",
+      "side": 1,
+      "message": "Hi Changpeng, this patch includes only code movement. That will be by another patch but should we ensure the minimum value of ctrlr-\u003emax_sges is 1?",
+      "parentUuid": "d5fbc78e_d16a0946",
+      "revId": "7c09f9397b1e0a70ed92e8d8733adf26a59287dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
