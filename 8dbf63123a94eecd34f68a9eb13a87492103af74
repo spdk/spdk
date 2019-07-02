@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c34eb2d9_3630c9f3",
+        "filename": "include/spdk/queue.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-07-02T10:00:38Z",
+      "side": 1,
+      "message": "maybe should add assert((elm)-\u003efield.tqe_prev);  \n       __typeof__(elm) _elm;                                           \\\n+      assert( (elm)-\u003efield.tqe_prev);                                 \\\n       if (((elm)-\u003efield.tqe_next) !\u003d NULL)                            \\\n\nthat all issues nealy resolved",
+      "revId": "8dbf63123a94eecd34f68a9eb13a87492103af74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
