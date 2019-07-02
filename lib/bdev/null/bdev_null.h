@@ -41,8 +41,8 @@ typedef void (*spdk_delete_null_complete)(void *cb_arg, int bdeverrno);
 struct spdk_bdev;
 struct spdk_uuid;
 
-struct spdk_bdev *create_null_bdev(const char *name, const struct spdk_uuid *uuid,
-				   uint64_t num_blocks, uint32_t block_size);
+int create_null_bdev(struct spdk_bdev **bdev, const char *name, const struct spdk_uuid *uuid,
+		     uint64_t num_blocks, uint32_t block_size);
 
 /**
  * Delete null bdev.
