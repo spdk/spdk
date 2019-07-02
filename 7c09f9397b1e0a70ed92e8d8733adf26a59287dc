@@ -70,6 +70,24 @@
       "revId": "7c09f9397b1e0a70ed92e8d8733adf26a59287dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7e0eda6_2efa6ddf",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-02T05:54:05Z",
+      "side": 1,
+      "message": "I see the logic, let\u0027s also add one more check here:\nif (ctrlr-\u003ecdata.nvmf_specific.msdbd \u003e 0), as 0 means unlimited.",
+      "parentUuid": "a36d73d6_4924ed93",
+      "revId": "7c09f9397b1e0a70ed92e8d8733adf26a59287dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
