@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4003335d_f3257a3b",
+        "filename": ".gitignore",
+        "patchSetId": 30
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-02T21:11:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d27a5ee4_a0213e1b",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52f10119_7c3b1fed",
         "filename": "CHANGELOG.md",
         "patchSetId": 30
@@ -89,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "be084a9e_f5b19cb0",
+        "filename": "app/nvmf_tgt/Makefile",
+        "patchSetId": 30
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-02T21:11:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d1a4fd2_1edb1271",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8696464b_ab9cf945",
         "filename": "configure",
         "patchSetId": 30
@@ -156,6 +192,24 @@
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92fb0a73_7805b9d6",
+        "filename": "include/spdk_internal/fc_adm_api.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-02T21:11:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "882713a8_39051718",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -957,6 +1011,24 @@
     },
     {
       "key": {
+        "uuid": "53547798_ef383dd0",
+        "filename": "lib/nvmf/fc_lld.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-02T21:11:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "508eba49_0a636164",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9893fc45_c7bcaffe",
         "filename": "lib/nvmf/fc_lld.h",
         "patchSetId": 30
@@ -1059,6 +1131,24 @@
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16476554_fcfaa609",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-02T21:11:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8c07bdc0_446eb81f",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -1473,6 +1563,24 @@
     },
     {
       "key": {
+        "uuid": "85f0ee1b_44d26822",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-02T21:11:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0c4df660_c2f79533",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f4fb4f1_75a57b80",
         "filename": "test/app/bdev_svc/Makefile",
         "patchSetId": 30
@@ -1505,6 +1613,24 @@
       "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "026fe7c8_4ca32e30",
+        "filename": "test/app/bdev_svc/Makefile",
+        "patchSetId": 30
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-02T21:11:56Z",
+      "side": 1,
+      "message": "https://review.gerrithub.io/c/spdk/spdk/+/460038",
+      "parentUuid": "37d88852_9ae430b2",
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
