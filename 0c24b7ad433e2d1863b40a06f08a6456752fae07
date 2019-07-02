@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f552489e_9dbd6ddd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T18:21:36Z",
+      "side": 1,
+      "message": "Not sure if this will trigger Github issues hook.\nYou can consider changing commit message to something like:\n\ntest/nvmf: remove nvme_tcp module before nvme_fabrics\n\nFixes #846\n\nBut like I say, I\u0027m not 100% for the phrase we look for in GH issues:)",
+      "range": {
+        "startLine": 7,
+        "startChar": 8,
+        "endLine": 7,
+        "endChar": 66
+      },
+      "revId": "0c24b7ad433e2d1863b40a06f08a6456752fae07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af060195_e7cefae5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T18:21:36Z",
+      "side": 1,
+      "message": "Most times we use scheme like directory/feature to describe changes, e.g. test/nvmf: (subject)",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 7
+      },
+      "revId": "0c24b7ad433e2d1863b40a06f08a6456752fae07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a69dab1c_ab2b48d2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T18:21:36Z",
+      "side": 1,
+      "message": "Use Intel-provided e-mail to submit work related commits.",
+      "range": {
+        "startLine": 11,
+        "startChar": 30,
+        "endLine": 11,
+        "endChar": 47
+      },
+      "revId": "0c24b7ad433e2d1863b40a06f08a6456752fae07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3762a55b_5e47ce89",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-02T18:21:36Z",
+      "side": 1,
+      "message": "Mixed tabs and spaces for indentation.\nNotice that this file uses only tabs.",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 144,
+        "endChar": 16
+      },
+      "revId": "0c24b7ad433e2d1863b40a06f08a6456752fae07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
