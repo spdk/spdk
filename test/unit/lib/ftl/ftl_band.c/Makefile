@@ -33,6 +33,8 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
+CFLAGS += -DRTE_CACHE_LINE_SIZE=64
+
 TEST_FILE = ftl_band_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
