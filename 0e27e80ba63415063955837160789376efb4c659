@@ -22,6 +22,29 @@
       "revId": "0e27e80ba63415063955837160789376efb4c659",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4429cd2f_6aa9bbbd",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-02T16:29:22Z",
+      "side": 1,
+      "message": "I don\u0027t think this whole description needs to be in CHANGELOG, usually we try to inform on API changes and their effects on users.\nChange from previous functionality is that now we can remove snapshot with a single clone on top - we could always delete snapshots without clones.",
+      "range": {
+        "startLine": 64,
+        "startChar": 77,
+        "endLine": 67,
+        "endChar": 92
+      },
+      "revId": "0e27e80ba63415063955837160789376efb4c659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
