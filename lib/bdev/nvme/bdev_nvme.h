@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -52,6 +52,7 @@ struct spdk_bdev_nvme_opts {
 	uint32_t retry_count;
 	uint64_t nvme_adminq_poll_period_us;
 	uint64_t nvme_ioq_poll_period_us;
+	uint64_t rdma_wr_batch_size;
 };
 
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, int rc);

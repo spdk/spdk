@@ -109,6 +109,11 @@ structure to allow caller to override the virtual and optionally physical addres
 of the submission and completion queue pair to be created.  This is supported on
 the PCIe transport only.
 
+Added RDMA WR batching to NVMf RDMA initiator. Send and receive WRs are chained
+together till configured limit or till the next call of qpair completion processing
+function and then are posted together with a single call to ibv_post_send(receive).
+Batch size is defined by parameter in configuration file or RPC call.
+
 ### env
 
 The parameter `free_space` has been added to spdk_ring_enqueue() to wait when
@@ -135,6 +140,8 @@ spdk_sock_set_priority() is added to set the priority of the socket.
 Added thread_get_stats RPC method to retrieve existing statistics.
 
 Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
+
+Added rdma_wr_batch_size parameter to set_bdev_nvme_options RPC call.
 
 ### blobstore
 

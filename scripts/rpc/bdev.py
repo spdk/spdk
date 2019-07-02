@@ -276,7 +276,8 @@ def delete_aio_bdev(client, name):
 
 
 def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
-                          nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None):
+                          nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None,
+                          rdma_wr_batch_size=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -285,6 +286,7 @@ def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry
         retry_count: The number of attempts per I/O when an I/O fails (optional)
         nvme_adminq_poll_period_us: How often the admin queue is polled for asynchronous events in microseconds (optional)
         nvme_ioq_poll_period_us: How often to poll I/O queues for completions in microseconds (optional)
+        rdma_wr_batch_size: How many RDMA WRs to batch together before posting to queue (optional)
     """
     params = {}
 
@@ -302,6 +304,9 @@ def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry
 
     if nvme_ioq_poll_period_us:
         params['nvme_ioq_poll_period_us'] = nvme_ioq_poll_period_us
+
+    if rdma_wr_batch_size is not None:
+        params['rdma_wr_batch_size'] = rdma_wr_batch_size
 
     return client.call('set_bdev_nvme_options', params)
 
