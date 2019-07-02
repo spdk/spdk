@@ -115,6 +115,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 				spdk_put_io_channel(raid_ch->base_channel[j]);
 			}
 			free(raid_ch->base_channel);
+			raid_ch->base_channel = NULL;
 			SPDK_ERRLOG("Unable to create io channel for base bdev\n");
 			return -ENOMEM;
 		}
