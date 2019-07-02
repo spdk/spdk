@@ -399,7 +399,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_
 
 	if (num_blocks == 0) {
 		SPDK_ERRLOG("Disk num_blocks must be greater than 0");
-		return -EINVAL;;
+		return -EINVAL;
 	}
 
 	mdisk = calloc(1, sizeof(*mdisk));
