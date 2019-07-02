@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9b7d7bb_746242b9",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 992,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-02T19:50:49Z",
+      "side": 1,
+      "message": "Just a style question here as I don\u0027t recall seeing too many empty else classes elsewhere in the code. Seems like it would be better to remove it and put the comment above the if, I think it will still make sense.",
+      "revId": "d10d1a6c976b67ca14c40ec884243fe3570ee69c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
