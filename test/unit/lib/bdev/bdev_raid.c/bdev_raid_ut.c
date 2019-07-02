@@ -653,6 +653,7 @@ verify_reset_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 	SPDK_CU_ASSERT_FATAL(raid_bdev != NULL);
 	SPDK_CU_ASSERT_FATAL(num_base_drives != 0);
 	SPDK_CU_ASSERT_FATAL(io_status != INVALID_IO_SUBMIT);
+	SPDK_CU_ASSERT_FATAL(ch_ctx->base_channel != NULL);
 
 	CU_ASSERT(g_io_output_index == num_base_drives);
 	for (index = 0; index < g_io_output_index; index++) {
@@ -2176,7 +2177,7 @@ test_multi_raid_with_io(void)
 		ch_ctx = spdk_io_channel_get_ctx(&ch[i]);
 		SPDK_CU_ASSERT_FATAL(ch_ctx != NULL);
 		CU_ASSERT(raid_bdev_create_cb(pbdev, ch_ctx) == 0);
-		CU_ASSERT(ch_ctx->base_channel != NULL);
+		SPDK_CU_ASSERT_FATAL(ch_ctx->base_channel != NULL);
 		for (j = 0; j < construct_req[i].base_bdevs.num_base_bdevs; j++) {
 			CU_ASSERT(ch_ctx->base_channel[j] == (void *)0x1);
 		}
