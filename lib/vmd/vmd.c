@@ -335,6 +335,7 @@ vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 	struct pci_header volatile *header;
 	uint8_t header_type;
 	uint32_t rev_class;
+	uint32_t reg __attribute__((unused));
 
 	header = (struct pci_header * volatile)(bus->vmd->cfg_vaddr +
 						CONFIG_OFFSET_ADDR(bus->bus_number, devfn, 0, 0));
@@ -367,14 +368,33 @@ vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 
 	if (header_type == PCI_HEADER_TYPE_BRIDGE) {
 		dev->header->one.mem_base = 0xfff0;
+		/*
+		 * Writes to the pci config space are posted writes.
+		 * To ensure transaction reaches its destination
+		 * before another write is posted, an immediate read
+		 * of the written value should be performed.
+		 */
+		reg = dev->header->one.mem_base;
 		dev->header->one.mem_limit = 0x0;
+		reg = dev->header->one.mem_limit;
+		dev->header->one.prefetch_base = 0x0;
+		reg = dev->header->one.prefetch_base;
+		dev->header->one.prefetch_limit = 0x0;
+		reg = dev->header->one.prefetch_limit;
 		dev->header->one.prefetch_base_upper = 0x0;
+		reg = dev->header->one.prefetch_base_upper;
 		dev->header->one.prefetch_limit_upper = 0x0;
+		reg = dev->header->one.prefetch_limit_upper;
 		dev->header->one.io_base_upper = 0x0;
+		reg = dev->header->one.io_base_upper;
 		dev->header->one.io_limit_upper = 0x0;
+		reg = dev->header->one.io_limit_upper;
 		dev->header->one.primary = 0;
+		reg = dev->header->one.primary;
 		dev->header->one.secondary = 0;
+		reg = dev->header->one.secondary;
 		dev->header->one.subordinate = 0;
+		reg = dev->header->one.subordinate;
 	}
 
 	vmd_read_config_space(dev);
