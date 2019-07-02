@@ -37,6 +37,7 @@ if [ -n "$local_nvme_trid" ]; then
 fi
 
 $rootdir/examples/nvme/perf/perf -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+$rootdir/examples/nvme/perf/perf -q 128 -o 262144 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
