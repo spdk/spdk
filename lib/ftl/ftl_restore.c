@@ -127,7 +127,7 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 	md_size = spdk_max(ftl_dev_num_bands(dev) * ftl_head_md_num_lbks(dev) * FTL_BLOCK_SIZE,
 			   ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE);
 
-	restore->md_buf = spdk_dma_zmalloc(md_size, FTL_BLOCK_SIZE, NULL);
+	restore->md_buf = spdk_dma_zmalloc(md_size, 0, NULL);
 	if (!restore->md_buf) {
 		goto error;
 	}
@@ -529,14 +529,7 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 		ppa = band->chunk_buf[i].start_ppa;
 		ppa.lbk = info.wp;
 
-		/*
-		 * We need 4k alignment for lightnvm writes; otherwise, due to a bug in QEMU,
-		 * scatter gather lists to underlying block device become broken as the number of
-		 * incoming offsets (dev->xfer_size) would be smaller than the calculated size of
-		 * sgl (dev->xfer_size+1), which eventually results in some part of the write
-		 * hitting offset 0 of the drive, overwriting head_md of band 0.
-		 */
-		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, FTL_BLOCK_SIZE, NULL);
+		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, 0, NULL);
 		if (spdk_unlikely(!buffer)) {
 			rc = -ENOMEM;
 			goto error;
