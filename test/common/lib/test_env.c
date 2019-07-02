@@ -39,6 +39,8 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
+#define RTE_CACHE_LINE_SIZE 64
+
 DEFINE_STUB(spdk_process_is_primary, bool, (void), true)
 DEFINE_STUB(spdk_memzone_lookup, void *, (const char *name), NULL)
 DEFINE_STUB(spdk_pci_nvme_get_driver, struct spdk_pci_driver *, (void), NULL)
