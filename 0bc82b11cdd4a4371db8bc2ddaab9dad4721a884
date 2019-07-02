@@ -22,6 +22,30 @@
       "revId": "0bc82b11cdd4a4371db8bc2ddaab9dad4721a884",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecda235f_6b38b936",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-02T18:27:34Z",
+      "side": 1,
+      "message": "correct, this seemed like the best common point of init to allocate the mem. I don\u0027t want to add it to the vol struct because it\u0027s just a bunch of zeroes, multiple volumes can safely share this.",
+      "parentUuid": "0279c689_74cece8c",
+      "range": {
+        "startLine": 332,
+        "startChar": 0,
+        "endLine": 332,
+        "endChar": 22
+      },
+      "revId": "0bc82b11cdd4a4371db8bc2ddaab9dad4721a884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
