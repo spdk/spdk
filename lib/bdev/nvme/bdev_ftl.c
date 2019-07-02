@@ -725,8 +725,6 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	ftl_bdev->bdev.write_cache = 0;
 	ftl_bdev->bdev.blocklen = attrs.lbk_size;
 	ftl_bdev->bdev.blockcnt = attrs.lbk_cnt;
-	/* TODO: Investigate why nbd test are failing without this alignment */
-	ftl_bdev->bdev.required_alignment = spdk_u32log2(attrs.lbk_size);
 	ftl_bdev->bdev.uuid = attrs.uuid;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "Creating bdev %s:\n", ftl_bdev->bdev.name);
