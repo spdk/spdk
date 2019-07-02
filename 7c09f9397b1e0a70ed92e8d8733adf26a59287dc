@@ -34,6 +34,24 @@
       "revId": "7c09f9397b1e0a70ed92e8d8733adf26a59287dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "522b7c35_43f67d6f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-02T05:15:53Z",
+      "side": 1,
+      "message": "I think we should make nvme_transport_ctrlr_get_max_sges() do the right thing, so we don\u0027t need line 990 here.",
+      "parentUuid": "b004adc2_0acb515a",
+      "revId": "7c09f9397b1e0a70ed92e8d8733adf26a59287dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
