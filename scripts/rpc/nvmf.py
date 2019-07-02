@@ -47,7 +47,8 @@ def nvmf_create_transport(client,
                           buf_cache_size=None,
                           max_srq_depth=None,
                           no_srq=False,
-                          c2h_success=True):
+                          c2h_success=True,
+                          dif_mode=None):
     """NVMf Transport Create options.
 
     Args:
@@ -63,6 +64,7 @@ def nvmf_create_transport(client,
         max_srq_depth: Max number of outstanding I/O per shared receive queue - RDMA specific (optional)
         no_srq: Boolean flag to disable SRQ even for devices that support it - RDMA specific (optional)
         c2h_success: Boolean flag to enable/disable the C2H success optimization - TCP specific (optional)
+        dif_mode: DIF mode for read and write I/O - Local mode is available only for TCP transport. (optional)
 
     Returns:
         True or False
@@ -92,6 +94,8 @@ def nvmf_create_transport(client,
         params['no_srq'] = no_srq
     if c2h_success:
         params['c2h_success'] = c2h_success
+    if dif_mode:
+        params['dif_mode'] = dif_mode
     return client.call('nvmf_create_transport', params)
 
 
