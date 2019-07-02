@@ -115,6 +115,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 				spdk_put_io_channel(raid_ch->base_channel[j]);
 			}
 			free(raid_ch->base_channel);
+			raid_ch->base_channel = NULL;
 			SPDK_ERRLOG("Unable to create io channel for base bdev\n");
 			return -ENOMEM;
 		}
@@ -320,6 +321,8 @@ raid_bdev_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 	 * bdev lba, base bdev child io length in blocks, buffer, completion
 	 * function and function callback context
 	 */
+	assert(raid_ch != NULL);
+	assert(raid_ch->base_channel);
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		ret = spdk_bdev_readv_blocks(raid_bdev->base_bdev_info[pd_idx].desc,
 					     raid_ch->base_channel[pd_idx],
