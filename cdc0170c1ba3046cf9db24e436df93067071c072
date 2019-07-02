@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7fe7173d_45d37108",
+        "filename": "test/env/env_dpdk_post_init/env_dpdk_post_init.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-02T22:33:20Z",
+      "side": 0,
+      "message": "what would happen if you just deleted the g_failed\u003d1? It doesn\u0027t seem like it makes sense to alloc an IO qpair and attach to it if we don\u0027t have a ns. But I dunno, maybe it\u0027s required somewhere downstream in the test code?",
+      "revId": "cdc0170c1ba3046cf9db24e436df93067071c072",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
