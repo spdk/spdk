@@ -171,59 +171,61 @@ static const struct spdk_bdev_fn_table null_fn_table = {
 	.write_config_json	= bdev_null_write_config_json,
 };
 
-struct spdk_bdev *
-create_null_bdev(const char *name, const struct spdk_uuid *uuid,
+int
+create_null_bdev(struct spdk_bdev **bdev, const char *name, const struct spdk_uuid *uuid,
 		 uint64_t num_blocks, uint32_t block_size)
 {
-	struct null_bdev *bdev;
+	struct null_bdev *null_disk;
 	int rc;
 
 	if (block_size % 512 != 0) {
 		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", block_size);
-		return NULL;
+		return -EINVAL;
 	}
 
 	if (num_blocks == 0) {
 		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
-		return NULL;
+		return -EINVAL;
 	}
 
-	bdev = calloc(1, sizeof(*bdev));
-	if (!bdev) {
+	null_disk = calloc(1, sizeof(*null_disk));
+	if (!null_disk) {
 		SPDK_ERRLOG("could not allocate null_bdev\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
-	bdev->bdev.name = strdup(name);
-	if (!bdev->bdev.name) {
-		free(bdev);
-		return NULL;
+	null_disk->bdev.name = strdup(name);
+	if (!null_disk->bdev.name) {
+		free(null_disk);
+		return -ENOMEM;
 	}
-	bdev->bdev.product_name = "Null disk";
+	null_disk->bdev.product_name = "Null disk";
 
-	bdev->bdev.write_cache = 0;
-	bdev->bdev.blocklen = block_size;
-	bdev->bdev.blockcnt = num_blocks;
+	null_disk->bdev.write_cache = 0;
+	null_disk->bdev.blocklen = block_size;
+	null_disk->bdev.blockcnt = num_blocks;
 	if (uuid) {
-		bdev->bdev.uuid = *uuid;
+		null_disk->bdev.uuid = *uuid;
 	} else {
-		spdk_uuid_generate(&bdev->bdev.uuid);
+		spdk_uuid_generate(&null_disk->bdev.uuid);
 	}
 
-	bdev->bdev.ctxt = bdev;
-	bdev->bdev.fn_table = &null_fn_table;
-	bdev->bdev.module = &null_if;
+	null_disk->bdev.ctxt = null_disk;
+	null_disk->bdev.fn_table = &null_fn_table;
+	null_disk->bdev.module = &null_if;
 
-	rc = spdk_bdev_register(&bdev->bdev);
+	rc = spdk_bdev_register(&null_disk->bdev);
 	if (rc) {
-		free(bdev->bdev.name);
-		free(bdev);
-		return NULL;
+		free(null_disk->bdev.name);
+		free(null_disk);
+		return rc;
 	}
 
-	TAILQ_INSERT_TAIL(&g_null_bdev_head, bdev, tailq);
+	*bdev = &(null_disk->bdev);
 
-	return &bdev->bdev;
+	TAILQ_INSERT_TAIL(&g_null_bdev_head, null_disk, tailq);
+
+	return rc;
 }
 
 void
@@ -355,10 +357,9 @@ bdev_null_initialize(void)
 
 		num_blocks = size_in_mb * (1024 * 1024) / block_size;
 
-		bdev = create_null_bdev(name, NULL, num_blocks, block_size);
-		if (bdev == NULL) {
+		rc = create_null_bdev(&bdev, name, NULL, num_blocks, block_size);
+		if (rc) {
 			SPDK_ERRLOG("Could not create null bdev\n");
-			rc = EINVAL;
 			goto end;
 		}
 

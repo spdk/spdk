@@ -69,24 +69,44 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 	struct spdk_uuid *uuid = NULL;
 	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
+	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_construct_null_decoders,
 				    SPDK_COUNTOF(rpc_construct_null_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NULL, "spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	if (req.block_size % 512 != 0) {
+		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", req.block_size);
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+						     "Block size %u is not a multiple of 512", req.block_size);
+		goto cleanup;
+	}
+
+	if (req.num_blocks == 0) {
+		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
+		spdk_jsonrpc_send_error_response(request, -EINVAL,
+						 "Disk num_blocks must be greater than 0");
+		goto cleanup;
 	}
 
 	if (req.uuid) {
 		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
-			goto invalid;
+			spdk_jsonrpc_send_error_response(request, -EINVAL,
+							 "Failed to parse bdev UUID");
+			goto cleanup;
 		}
 		uuid = &decoded_uuid;
 	}
 
-	bdev = create_null_bdev(req.name, uuid, req.num_blocks, req.block_size);
-	if (bdev == NULL) {
-		goto invalid;
+	rc = create_null_bdev(&bdev, req.name, uuid, req.num_blocks, req.block_size);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -100,8 +120,7 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 	free_rpc_construct_null(&req);
 	return;
 
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+cleanup:
 	free_rpc_construct_null(&req);
 }
 SPDK_RPC_REGISTER("construct_null_bdev", spdk_rpc_construct_null_bdev, SPDK_RPC_RUNTIME)
@@ -141,19 +160,19 @@ spdk_rpc_delete_null_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_null req = {NULL};
 	struct spdk_bdev *bdev;
-	int rc;
 
 	if (spdk_json_decode_object(params, rpc_delete_null_decoders,
 				    SPDK_COUNTOF(rpc_delete_null_decoders),
 				    &req)) {
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
-		rc = -ENODEV;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
 	}
 
 	delete_null_bdev(bdev, _spdk_rpc_delete_null_bdev_cb, request);
@@ -162,8 +181,7 @@ spdk_rpc_delete_null_bdev(struct spdk_jsonrpc_request *request,
 
 	return;
 
-invalid:
+cleanup:
 	free_rpc_delete_null(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("delete_null_bdev", spdk_rpc_delete_null_bdev, SPDK_RPC_RUNTIME)
