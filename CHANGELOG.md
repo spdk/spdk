@@ -31,6 +31,11 @@ it for NVMe controllers.  When the option is enabled, the controller will not do
 shutdown process and just disable the controller, users can start their application
 later again to initialize the controller to the ready state.
 
+Added RDMA WR batching to NVMf RDMA initiator. Send and receive WRs are chained
+together till configured limit or till the next call of qpair completion processing
+function and then are posted together with a single call to ibv_post_send(receive).
+Batch size is defined by parameter in configuration file or RPC call.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
@@ -64,6 +69,8 @@ Added optional parameter '--md-size'to 'construct_null_bdev' RPC method.
 
 Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
 RPC method.
+
+Added rdma_wr_batch_size parameter to set_bdev_nvme_options RPC call.
 
 ## v19.07:
 

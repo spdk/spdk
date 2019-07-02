@@ -1409,6 +1409,7 @@ retry_count                | Optional | number      | The number of attempts per
 nvme_adminq_poll_period_us | Optional | number      | How often the admin queue is polled for asynchronous events in microseconds
 nvme_ioq_poll_period_us    | Optional | number      | How often I/O queues are polled for completions, in microseconds. Default: 0 (as fast as possible).
 io_queue_requests          | Optional | number      | The number of requests allocated for each NVMe I/O queue. Default: 512.
+rdma_wr_batch_size         | Optional | number      | How many RDMA WRs to batch together before posting to queue
 
 ### Example
 
@@ -1423,6 +1424,7 @@ request:
     "timeout_us": 10000000,
     "action_on_timeout": "reset",
     "io_queue_requests" : 2048,
+    "rdma_wr_batch_size": 0
   },
   "jsonrpc": "2.0",
   "method": "set_bdev_nvme_options",
