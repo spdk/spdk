@@ -1354,7 +1354,7 @@ iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 		if (rc == 0) {
 			break;
 		} else if (rc < 0) {
-			SPDK_ERRLOG("Failed to read pdu, error=%d\n", rc);
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Failed to read pdu, error=%d\n", rc);
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
 
