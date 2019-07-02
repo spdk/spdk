@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0279c689_74cece8c",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T06:39:13Z",
+      "side": 1,
+      "message": "This function is called only once globally? Adding zero_buf to struct spdK_reduce_vol and allocating it here may be reasonable?",
+      "range": {
+        "startLine": 332,
+        "startChar": 0,
+        "endLine": 332,
+        "endChar": 22
+      },
+      "revId": "0bc82b11cdd4a4371db8bc2ddaab9dad4721a884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
