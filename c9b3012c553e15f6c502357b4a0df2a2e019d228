@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b46d8693_0e6b7131",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T08:18:13Z",
+      "side": 1,
+      "message": "I couldn\u0027t find where this is freed. Should we add hwqps to struct spdk_nvmf_fc_abts_ctx and free it in nvmf_fc_abts_handled_cb?",
+      "range": {
+        "startLine": 646,
+        "startChar": 1,
+        "endLine": 646,
+        "endChar": 7
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9012a9d_696d2f46",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1685,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T08:18:13Z",
+      "side": 1,
+      "message": "this indicates rsp-\u003ecdw0 !\u003d 0?\n\"valid\" is correct?",
+      "range": {
+        "startLine": 1685,
+        "startChar": 35,
+        "endLine": 1685,
+        "endChar": 62
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b028652c_58ef0514",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1686,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T08:18:13Z",
+      "side": 1,
+      "message": "this indicates rsp-\u003ersvd1 !\u003d 0 ?",
+      "range": {
+        "startLine": 1686,
+        "startChar": 4,
+        "endLine": 1686,
+        "endChar": 22
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35171ea6_ff2de5f3",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T08:18:13Z",
+      "side": 1,
+      "message": "Please insert a line between the line 368 and 369.",
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
