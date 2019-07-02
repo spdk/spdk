@@ -3574,6 +3574,7 @@ buf_cache_size              | Optional | number  | The number of shared buffers 
 max_srq_depth               | Optional | number  | The number of elements in a per-thread shared receive queue (RDMA only)
 no_srq                      | Optional | boolean | Disable shared receive queue even for devices that support it. (RDMA only)
 c2h_success                 | Optional | boolean | Enable C2H success optimization (TCP only)
+dif_mode                    | Optional | string  | DIF mode for read and write I/O (Local mode is available only for TCP transport)
 
 ### Example:
 
