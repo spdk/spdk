@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "877a877b_d1f24fe6",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1016066
+      },
+      "writtenOn": "2019-07-02T18:25:23Z",
+      "side": 1,
+      "message": "These added reads are HW requirements under VMD to unsure the config writes actually reaches the destination.",
+      "revId": "fc1830bb17644cbb612cd6be9ae7b310c7a76f4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
