@@ -46,6 +46,30 @@
       "revId": "0bc82b11cdd4a4371db8bc2ddaab9dad4721a884",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29c8005e_187b4c1d",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-02T18:30:26Z",
+      "side": 1,
+      "message": "oh wait, I think you may have identified for me that this isn\u0027t the best place to alloc this as it will happen per vol. I don\u0027t think there is a non-per-vol init opportunity, but I can init this to NULL and only allocate it once",
+      "parentUuid": "ecda235f_6b38b936",
+      "range": {
+        "startLine": 332,
+        "startChar": 0,
+        "endLine": 332,
+        "endChar": 22
+      },
+      "revId": "0bc82b11cdd4a4371db8bc2ddaab9dad4721a884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
