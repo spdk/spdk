@@ -52,6 +52,24 @@
       "revId": "7c09f9397b1e0a70ed92e8d8733adf26a59287dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a36d73d6_4924ed93",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T05:22:12Z",
+      "side": 1,
+      "message": "Please see the line 961 and 962.\nThis patch follows ctrlr-\u003emax_xfer_size. We separate generic part and transport dependent part in this patch.\n\nRegardless of our decision, We should stick to either one. So we need to change anyway. Should we change the line 961 and 962 in this patch instead?",
+      "parentUuid": "522b7c35_43f67d6f",
+      "revId": "7c09f9397b1e0a70ed92e8d8733adf26a59287dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
