@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5fbc78e_d16a0946",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-02T04:45:39Z",
+      "side": 1,
+      "message": "This value may be set to zero for PCIe SSDs.",
+      "revId": "7c09f9397b1e0a70ed92e8d8733adf26a59287dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
