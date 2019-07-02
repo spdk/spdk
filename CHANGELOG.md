@@ -30,6 +30,10 @@ has been added. The public API is available at `include/spdk/pipe.h`.
 `delayed_pcie_doorbell` parameter in `spdk_nvme_io_qpair_opts` was renamed to `delay_cmd_submit`
 to allow reuse in other transports.
 
+Added RDMA WR batching to NVMf RDMA initiator. Send and receive WRs are chained together
+and posted with a single call to ibv_post_send(receive) in the next call to qpair completion
+processing function. Batching is controlled by 'delay_cmd_submit' qpair option.
+
 ### rpc
 
 Added optional 'delay_cmd_submit' parameter to 'bdev_nvme_set_options' RPC method.
