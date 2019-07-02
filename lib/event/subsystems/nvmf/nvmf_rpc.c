@@ -1462,6 +1462,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 		"c2h_success", offsetof(struct nvmf_rpc_create_transport_ctx, opts.c2h_success),
 		spdk_json_decode_bool, true
 	},
+	{
+		"dif_insert_or_strip", offsetof(struct nvmf_rpc_create_transport_ctx, opts.dif_insert_or_strip),
+		spdk_json_decode_bool, true
+	},
 };
 
 static void
@@ -1600,6 +1604,7 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 		spdk_json_write_named_bool(w, "no_srq", opts->no_srq);
 	} else if (type == SPDK_NVME_TRANSPORT_TCP) {
 		spdk_json_write_named_bool(w, "c2h_success", opts->c2h_success);
+		spdk_json_write_named_bool(w, "dif_insert_or_strip", opts->dif_insert_or_strip);
 	}
 
 	spdk_json_write_object_end(w);
