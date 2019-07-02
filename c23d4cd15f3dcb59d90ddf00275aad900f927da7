@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0715f070_906ea921",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-02T11:51:18Z",
+      "side": 1,
+      "message": ";)",
+      "range": {
+        "startLine": 402,
+        "startChar": 16,
+        "endLine": 402,
+        "endChar": 18
+      },
+      "revId": "c23d4cd15f3dcb59d90ddf00275aad900f927da7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
