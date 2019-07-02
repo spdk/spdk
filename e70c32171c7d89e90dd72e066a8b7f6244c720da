@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ee6e6b56_aeb23729",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-07-02T04:33:17Z",
+      "side": 1,
+      "message": "Thanks for your review. Added more contents.",
+      "parentUuid": "2c2335ea_58b0cd75",
+      "revId": "e70c32171c7d89e90dd72e066a8b7f6244c720da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1c738f73_cbe7e136",
         "filename": "examples/nvme/nvme_manage/nvme_manage.c",
         "patchSetId": 21
@@ -30,6 +48,24 @@
       "writtenOn": "2019-07-01T13:05:31Z",
       "side": 1,
       "message": "Lower case on \"init\" to match the others?",
+      "revId": "e70c32171c7d89e90dd72e066a8b7f6244c720da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1d3ec23_5ce97d98",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-07-02T04:33:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1c738f73_cbe7e136",
       "revId": "e70c32171c7d89e90dd72e066a8b7f6244c720da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
