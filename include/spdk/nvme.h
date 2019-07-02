@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -47,6 +47,17 @@ extern "C" {
 #include "spdk/env.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf_spec.h"
+
+/* For ARM platforms unlimited batch size gives better performance and
+ * is used by default. For x86 we use batch size of 1 by default to
+ * keep legacy behavior.
+ */
+#if defined(__aarch64__) || defined(__AARCH64__)
+#define SPDK_NVME_RDMA_DEFAULT_WR_BATCH_SIZE 0
+#else
+#define SPDK_NVME_RDMA_DEFAULT_WR_BATCH_SIZE 1
+#endif
+
 
 /**
  * Opaque handle to a controller. Returned by spdk_nvme_probe()'s attach_cb.
@@ -215,6 +226,13 @@ struct spdk_nvme_ctrlr_opts {
 	 * Defaults to 'false' (errors are logged).
 	 */
 	bool disable_error_logging;
+
+	/**
+	 * It is used for RDMA transport.
+	 *
+	 * Maximum number of send or receive WRs to batch before posting them to queue.
+	 */
+	uint64_t rdma_wr_batch_size;
 };
 
 /**

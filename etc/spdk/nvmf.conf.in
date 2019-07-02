@@ -199,6 +199,11 @@
   # Default: No
   HotplugEnable No
 
+  # Set how many RDMA work requests will be batched together before
+  # posting them to queue. Zero means unlimited, i.e. batch all WRs
+  # submitted between calls to NVMe RDMA poller. Default value is 1.
+  RdmaWrBatchSize 1
+
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]
   # Syntax:

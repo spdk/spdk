@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -132,6 +132,7 @@ struct nvme_rdma_qpair {
 
 	struct ibv_recv_wr			*rsp_recv_wrs;
 
+	uint64_t				wr_batch_size;
 	/* Memory region describing all rsps for this qpair */
 	struct ibv_mr				*rsp_mr;
 
@@ -1422,6 +1423,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	rqpair->num_entries = qsize;
+	rqpair->wr_batch_size = ctrlr->opts.rdma_wr_batch_size;
 
 	qpair = &rqpair->qpair;
 

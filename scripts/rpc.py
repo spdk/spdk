@@ -337,7 +337,8 @@ if __name__ == "__main__":
                                        high_priority_weight=args.high_priority_weight,
                                        nvme_adminq_poll_period_us=args.nvme_adminq_poll_period_us,
                                        nvme_ioq_poll_period_us=args.nvme_ioq_poll_period_us,
-                                       io_queue_requests=args.io_queue_requests)
+                                       io_queue_requests=args.io_queue_requests,
+                                       rdma_wr_batch_size=args.rdma_wr_batch_size)
 
     p = subparsers.add_parser('bdev_nvme_set_options', aliases=['set_bdev_nvme_options'],
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -361,6 +362,8 @@ if __name__ == "__main__":
                    help='How often to poll I/O queues for completions', type=int)
     p.add_argument('-s', '--io-queue-requests',
                    help='The number of requests allocated for each NVMe I/O queue. Default: 512', type=int)
+    p.add_argument('-b', '--rdma-wr-batch-size',
+                   help='How many RDMA WRs to batch together before posting to queue', type=int)
     p.set_defaults(func=bdev_nvme_set_options)
 
     def bdev_nvme_set_hotplug(args):

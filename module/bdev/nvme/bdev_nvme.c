@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -112,6 +112,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.nvme_adminq_poll_period_us = 1000000ULL,
 	.nvme_ioq_poll_period_us = 0,
 	.io_queue_requests = 0,
+	.rdma_wr_batch_size = SPDK_NVME_RDMA_DEFAULT_WR_BATCH_SIZE,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -1341,6 +1342,8 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		snprintf(ctx->opts.src_svcid, sizeof(ctx->opts.src_svcid), "%s", hostid->hostsvcid);
 	}
 
+	ctx->opts.rdma_wr_batch_size = g_opts.rdma_wr_batch_size;
+
 	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->opts, connect_attach_cb);
 	if (ctx->probe_ctx == NULL) {
 		SPDK_ERRLOG("No controller was found with provided trid (traddr: %s)\n", trid->traddr);
@@ -1459,6 +1462,11 @@ bdev_nvme_library_init(void)
 	g_nvme_hostnqn = spdk_conf_section_get_val(sp, "HostNQN");
 	probe_ctx->hostnqn = g_nvme_hostnqn;
 
+	intval = spdk_conf_section_get_intval(sp, "RdmaWrBatchSize");
+	if (intval >= 0) {
+		g_opts.rdma_wr_batch_size = intval;
+	}
+
 	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
 		if (val == NULL) {
@@ -1531,6 +1539,8 @@ bdev_nvme_library_init(void)
 			if (probe_ctx->hostids[i].hostsvcid[0] != '\0') {
 				snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", probe_ctx->hostids[i].hostsvcid);
 			}
+
+			opts.rdma_wr_batch_size = g_opts.rdma_wr_batch_size;
 
 			ctrlr = spdk_nvme_connect(&probe_ctx->trids[i], &opts, sizeof(opts));
 			if (ctrlr == NULL) {
@@ -2106,6 +2116,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	if (g_nvme_hostnqn) {
 		fprintf(fp, "HostNQN %s\n",  g_nvme_hostnqn);
 	}
+	fprintf(fp, "RdmaWrBatchSize %" PRIu64"\n", g_opts.rdma_wr_batch_size);
 
 	fprintf(fp, "\n");
 }
@@ -2140,6 +2151,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint64(w, "nvme_adminq_poll_period_us", g_opts.nvme_adminq_poll_period_us);
 	spdk_json_write_named_uint64(w, "nvme_ioq_poll_period_us", g_opts.nvme_ioq_poll_period_us);
 	spdk_json_write_named_uint32(w, "io_queue_requests", g_opts.io_queue_requests);
+	spdk_json_write_named_uint64(w, "rdma_wr_batch_size", g_opts.rdma_wr_batch_size);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
