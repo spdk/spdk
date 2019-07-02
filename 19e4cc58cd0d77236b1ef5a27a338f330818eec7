@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3cf29bf6_39428cb7",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1500,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T05:08:07Z",
+      "side": 1,
+      "message": "Can we pick up the first one of RDMA devices?",
+      "parentUuid": "9eced5e9_c3f29a85",
+      "range": {
+        "startLine": 1490,
+        "startChar": 1,
+        "endLine": 1500,
+        "endChar": 2
+      },
+      "revId": "19e4cc58cd0d77236b1ef5a27a338f330818eec7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "97d5856a_9579496f",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 7
@@ -36,6 +60,24 @@
       "writtenOn": "2019-07-02T04:58:24Z",
       "side": 1,
       "message": "I think we should keep the maximum transfer size here as the real backend also has limit transfer size.",
+      "revId": "19e4cc58cd0d77236b1ef5a27a338f330818eec7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "176757b9_da4e7b2f",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1907,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T05:08:07Z",
+      "side": 1,
+      "message": "What we want to do is increase max_xfer_size larger than NVME_TCP_RW_BUFFER_SIZE.\nDo you have any recommendation how large the value is?",
+      "parentUuid": "97d5856a_9579496f",
       "revId": "19e4cc58cd0d77236b1ef5a27a338f330818eec7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
