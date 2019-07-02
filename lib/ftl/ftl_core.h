@@ -49,6 +49,8 @@
 #include "ftl_io.h"
 #include "ftl_trace.h"
 
+#define CACHE_LINE 64
+
 struct spdk_ftl_dev;
 struct ftl_band;
 struct ftl_chunk;
