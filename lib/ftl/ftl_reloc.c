@@ -497,7 +497,7 @@ ftl_reloc_process_moves(struct ftl_band_reloc *breloc)
 {
 	int rc = 0;
 	size_t i, num_moves;
-	struct ftl_reloc_move *moves[FTL_RELOC_MAX_MOVES];
+	struct ftl_reloc_move *moves[FTL_RELOC_MAX_MOVES] = {0};
 	struct ftl_reloc *reloc = breloc->parent;
 	struct ftl_reloc_move *move;
 
@@ -505,6 +505,7 @@ ftl_reloc_process_moves(struct ftl_band_reloc *breloc)
 
 	for (i = 0; i < num_moves; ++i) {
 		move = moves[i];
+		assert(move != NULL);
 		switch (move->state) {
 		case FTL_RELOC_STATE_READ_LBA_MAP:
 			rc = ftl_reloc_read_lba_map(breloc, move);
