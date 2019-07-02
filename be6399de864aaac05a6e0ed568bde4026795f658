@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e5fd970_a2e10ef6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-02T13:31:24Z",
+      "side": 1,
+      "message": "This has nothing to do with dirty shutdown tests, but rather the current way ftl_reloc moves bands across pending, active and high_prio lists.",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 30
+      },
+      "revId": "be6399de864aaac05a6e0ed568bde4026795f658",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
