@@ -3998,6 +3998,11 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 
 	assert(bdev->module != NULL);
 
+	if (!strlen(bdev->name)) {
+		SPDK_ERRLOG("Bdev name must not be an empty string\n");
+		return -EINVAL;
+	}
+
 	if (!bdev->name) {
 		SPDK_ERRLOG("Bdev name is NULL\n");
 		return -EINVAL;
