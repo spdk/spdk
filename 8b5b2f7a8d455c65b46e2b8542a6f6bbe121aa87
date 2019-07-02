@@ -39,6 +39,30 @@
       "revId": "8b5b2f7a8d455c65b46e2b8542a6f6bbe121aa87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7279768c_d652df50",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1501,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-02T02:28:07Z",
+      "side": 1,
+      "message": "I keep this in the latest patch.",
+      "parentUuid": "306e39f6_46304171",
+      "range": {
+        "startLine": 1501,
+        "startChar": 2,
+        "endLine": 1501,
+        "endChar": 74
+      },
+      "revId": "8b5b2f7a8d455c65b46e2b8542a6f6bbe121aa87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
