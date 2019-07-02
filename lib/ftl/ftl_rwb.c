@@ -161,8 +161,7 @@ ftl_rwb_batch_init(struct ftl_rwb *rwb, struct ftl_rwb_batch *batch, unsigned in
 
 	LIST_INIT(&batch->entry_list);
 
-	batch->buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * rwb->xfer_size,
-					 FTL_BLOCK_SIZE, NULL);
+	batch->buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * rwb->xfer_size, 0, NULL);
 	if (!batch->buffer) {
 		return -1;
 	}
