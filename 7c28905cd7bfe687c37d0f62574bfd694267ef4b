@@ -119,6 +119,24 @@
     },
     {
       "key": {
+        "uuid": "5690bb7d_0d2f781a",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-02T11:07:07Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "59b989f9_dc79dbe2",
+      "revId": "7c28905cd7bfe687c37d0f62574bfd694267ef4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9cd3a740_0c8e4d4b",
         "filename": "test/ftl/restore.sh",
         "patchSetId": 8
@@ -151,6 +169,24 @@
       "revId": "7c28905cd7bfe687c37d0f62574bfd694267ef4b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13d3cf29_671b16fa",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-02T11:07:07Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "90632989_7fd4b863",
+      "revId": "7c28905cd7bfe687c37d0f62574bfd694267ef4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
