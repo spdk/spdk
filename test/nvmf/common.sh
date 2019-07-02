@@ -140,6 +140,9 @@ function nvmfcleanup()
 {
 	sync
 	set +e
+	if lsmod | grep nvme_tcp &> /dev/null ; then
+                modprobe -v -r nvme_tcp
+        fi
 	for i in {1..20}; do
 		modprobe -v -r nvme-$TEST_TRANSPORT nvme-fabrics
 		if [ $? -eq 0 ]; then
