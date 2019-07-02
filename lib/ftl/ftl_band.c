@@ -697,8 +697,7 @@ ftl_band_alloc_lba_map(struct ftl_band *band)
 
 	lba_map->segments = (char *)lba_map->map + ftl_lba_map_num_lbks(dev) * FTL_BLOCK_SIZE;
 
-	lba_map->dma_buf = spdk_dma_zmalloc(ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE,
-					    FTL_BLOCK_SIZE, NULL);
+	lba_map->dma_buf = spdk_dma_zmalloc(ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE, 0, NULL);
 	if (!lba_map->dma_buf) {
 		spdk_mempool_put(dev->lba_pool, lba_map->map);
 		return -1;
