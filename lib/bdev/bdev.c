@@ -4003,6 +4003,11 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 		return -EINVAL;
 	}
 
+	if (!strlen(bdev->name)) {
+		SPDK_ERRLOG("Bdev name must not be an empty string\n");
+		return -EINVAL;
+	}
+
 	if (spdk_bdev_get_by_name(bdev->name)) {
 		SPDK_ERRLOG("Bdev name:%s already exists\n", bdev->name);
 		return -EEXIST;
