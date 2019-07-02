@@ -73,8 +73,19 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.filename == NULL) {
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -EINVAL, "Filename must not be null.");
+		goto cleanup;
+	}
+
+	if (!strlen(req.name)) {
+		spdk_jsonrpc_send_error_response(request, -EINVAL, "Bdev name must not be an empty string.");
+		goto cleanup;
+	}
+
+	if (req.block_size < 512) {
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+						     "Invalid block size %u. block_size must be at least 512.", req.block_size);
+		goto cleanup;
 	}
 
 	rc = create_aio_bdev(req.name, req.filename, req.block_size);
@@ -94,7 +105,18 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
 	goto cleanup;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+	switch (rc) {
+	case -EINVAL:
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(rc));
+		break;
+	case -EEXIST:
+		spdk_jsonrpc_send_error_response_fmt(request, rc, "Bdev %s already exists", req.name);
+		break;
+	default:
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(rc));
+		break;
+	}
+
 cleanup:
 	free_rpc_construct_aio(&req);
 }
@@ -157,7 +179,14 @@ spdk_rpc_delete_aio_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
+	switch (rc) {
+	case -EINVAL:
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+		break;
+	case -ENODEV:
+		spdk_jsonrpc_send_error_response_fmt(request, rc, "Bdev %s does not exist", req.name);
+		break;
+	}
 	free_rpc_delete_aio(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("delete_aio_bdev", spdk_rpc_delete_aio_bdev, SPDK_RPC_RUNTIME)
