@@ -45,6 +45,23 @@
       "revId": "7021f0f082514e7dc41823035f9e8fc4f4b1160d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7798b3c4_ea0b8010",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-03T08:07:42Z",
+      "side": 1,
+      "message": "Doesn\u0027t this line do the same thing? I tried doing modprobe -v -r nvme-tcp and it worked on fedora 30.\nIf $TEST_TRANSPORT is properly set, I don\u0027t think you will need those three lines from above.",
+      "revId": "7021f0f082514e7dc41823035f9e8fc4f4b1160d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
