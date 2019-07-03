@@ -28,7 +28,7 @@ if [ ! -f /home/vagrant/autorun-spdk.conf ]; then
 	chgrp vagrant /home/vagrant/autorun-spdk.conf
 fi
 
-SYSTEM=`uname -s`
+SYSTEM=$(uname -s)
 
 if [ "$SYSTEM" = "FreeBSD" ]; then
 	# Do initial setup for the system
@@ -50,7 +50,7 @@ else
 	#       get the requested number of hugepages without rebooting.
 	#       So do it here just in case
 	sysctl -w vm.nr_hugepages=1024
-	HUGEPAGES=`sysctl -n  vm.nr_hugepages`
+	HUGEPAGES=$(sysctl -n  vm.nr_hugepages)
 	if [ $HUGEPAGES != 1024 ]; then
 		echo "Warning: Unable to get 1024 hugepages, only got $HUGEPAGES"
 		echo "Warning: Adjusting HUGEMEM in /home/vagrant/autorun-spdk.conf"
@@ -64,10 +64,10 @@ else
 	elif [ -f /etc/redhat-release ];then
 		yum update -y
 		yum install -y redhat-lsb
-		DISTRIB_ID=`lsb_release -si`
-		DISTRIB_RELEASE=`lsb_release -sr`
-		DISTRIB_CODENAME=`lsb_release -sc`
-		DISTRIB_DESCRIPTION=`lsb_release -sd`
+		DISTRIB_ID=$(lsb_release -si)
+		DISTRIB_RELEASE=$(lsb_release -sr)
+		DISTRIB_CODENAME=$(lsb_release -sc)
+		DISTRIB_DESCRIPTION=$(lsb_release -sd)
 	fi
 
 	# Do initial setup for the system

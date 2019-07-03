@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-SYSTEM=`uname -s`
+SYSTEM=$(uname -s)
 size="1024M"
 name="nvme_disk.img"
 
@@ -35,7 +35,7 @@ while getopts "s:n:h-:" opt; do
 done
 
 if [ ! "${SYSTEM}" = "FreeBSD" ]; then
-	WHICH_OS=`lsb_release -i | awk '{print $3}'`
+	WHICH_OS=$(lsb_release -i | awk '{print $3}')
 	nvme_disk="/var/lib/libvirt/images/$name"
 
 	qemu-img create -f raw $nvme_disk ${size}
