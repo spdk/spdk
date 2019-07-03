@@ -83,6 +83,7 @@ static const char *g_target_bdev_name;
 static struct spdk_poller *g_perf_timer = NULL;
 
 static void bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task);
+static void performance_dump(uint64_t io_time_in_usec, uint64_t ema_period);
 
 struct io_target {
 	char				*name;
@@ -401,6 +402,20 @@ end_run(void *arg1, void *arg2)
 		if (g_show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer);
 		}
+		if (g_shutdown) {
+			g_time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();
+			printf("Received shutdown signal, test time is about %.6f seconds\n",
+			       (double)g_time_in_usec / 1000000);
+		}
+
+		if (g_time_in_usec) {
+			if (!g_run_failed) {
+				performance_dump(g_time_in_usec, 0);
+			}
+		} else {
+			printf("Test time less than one microsecond, no performance data will be shown\n");
+		}
+
 		if (g_run_failed) {
 			spdk_app_stop(1);
 		} else {
@@ -1304,20 +1319,6 @@ main(int argc, char **argv)
 	rc = spdk_app_start(&opts, bdevperf_run, NULL);
 	if (rc) {
 		g_run_failed = true;
-	}
-
-	if (g_shutdown) {
-		g_time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();
-		printf("Received shutdown signal, test time is about %.6f seconds\n",
-		       (double)g_time_in_usec / 1000000);
-	}
-
-	if (g_time_in_usec) {
-		if (!g_run_failed) {
-			performance_dump(g_time_in_usec, 0);
-		}
-	} else {
-		printf("Test time less than one microsecond, no performance data will be shown\n");
 	}
 
 	blockdev_heads_destroy();
