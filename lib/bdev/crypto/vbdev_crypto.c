@@ -38,7 +38,7 @@
 #include "spdk/endian.h"
 #include "spdk/io_channel.h"
 #include "spdk/bdev_module.h"
-
+#include "spdk_internal/log.h"
 
 #include <rte_config.h>
 #include <rte_version.h>
@@ -127,6 +127,7 @@ static void _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, 
 static void _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void vbdev_crypto_examine(struct spdk_bdev *bdev);
 static int vbdev_crypto_claim(struct spdk_bdev *bdev);
+static void vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 /* list of crypto_bdev names and their base bdevs via configuration file.
  * Used so we can parse the conf once at init and use this list in examine().
@@ -192,6 +193,10 @@ struct crypto_bdev_io {
 	uint64_t cry_num_blocks;			/* num of blocks for the contiguous buffer */
 	uint64_t cry_offset_blocks;			/* block offset on media */
 	struct iovec cry_iov;				/* iov representing contig write buffer */
+
+	/* for bdev_io_wait */
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+	struct spdk_io_channel *ch;
 };
 
 /* Called by vbdev_crypto_init_crypto_drivers() to init each discovered crypto device */
@@ -902,6 +907,32 @@ _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	spdk_bdev_free_io(bdev_io);
 }
 
+static void
+vbdev_crypto_resubmit_io(void *arg)
+{
+	struct spdk_bdev_io *bdev_io = (struct spdk_bdev_io *)arg;
+	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
+
+	vbdev_crypto_submit_request(io_ctx->ch, bdev_io);
+}
+
+static void
+vbdev_crypto_queue_io(struct spdk_bdev_io *bdev_io)
+{
+	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
+	int rc;
+
+	io_ctx->bdev_io_wait.bdev = bdev_io->bdev;
+	io_ctx->bdev_io_wait.cb_fn = vbdev_crypto_resubmit_io;
+	io_ctx->bdev_io_wait.cb_arg = bdev_io;
+
+	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, io_ctx->ch, &io_ctx->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in vbdev_crypto_queue_io, rc=%d.\n", rc);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
 /* Callback for getting a buf from the bdev pool in the event that the caller passed
  * in NULL, we need to own the buffer so it doesn't get freed by another vbdev module
  * beneath us before we're done with it.
@@ -913,6 +944,7 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	struct vbdev_crypto *crypto_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_crypto,
 					   crypto_bdev);
 	struct crypto_io_channel *crypto_ch = spdk_io_channel_get_ctx(ch);
+	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
 	int rc;
 
 	if (!success) {
@@ -925,8 +957,14 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 				    bdev_io->u.bdev.num_blocks, _complete_internal_read,
 				    bdev_io);
 	if (rc != 0) {
-		SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		if (rc == -ENOMEM) {
+			SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "No memory, queue the IO.\n");
+			io_ctx->ch = ch;
+			vbdev_crypto_queue_io(bdev_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
 	}
 }
 
@@ -983,8 +1021,14 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 	}
 
 	if (rc != 0) {
-		SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		if (rc == -ENOMEM) {
+			SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "No memory, queue the IO.\n");
+			io_ctx->ch = ch;
+			vbdev_crypto_queue_io(bdev_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
 	}
 }
 
@@ -1475,7 +1519,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		if (strcmp(name->bdev_name, bdev->name) != 0) {
 			continue;
 		}
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_crypto, "Match on %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "Match on %s\n", bdev->name);
 
 		vbdev = calloc(1, sizeof(struct vbdev_crypto));
 		if (!vbdev) {
@@ -1616,7 +1660,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			rc = -EINVAL;
 			goto error_bdev_register;
 		}
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_crypto, "registered io_device and virtual bdev for: %s\n",
+		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "registered io_device and virtual bdev for: %s\n",
 			      name->vbdev_name);
 		break;
 	}
@@ -1693,4 +1737,4 @@ vbdev_crypto_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&crypto_if);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_crypto", SPDK_LOG_VBDEV_crypto)
+SPDK_LOG_REGISTER_COMPONENT("vbdev_crypto", SPDK_LOG_CRYPTO)
