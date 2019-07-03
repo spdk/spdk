@@ -46,6 +46,8 @@
  */
 #define DPDK_HOTPLUG_RETRY_COUNT 4
 
+/* DPDK alarm/interrupt thread */
+static pthread_t g_dpdk_tid;
 static pthread_mutex_t g_pci_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, spdk_pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pci_devices);
 /* devices hotplugged on a dpdk thread */
@@ -125,7 +127,7 @@ spdk_detach_rte(struct spdk_pci_device *dev)
 	 * again while we go asynchronous, so we explicitly forbid that.
 	 */
 	dev->internal.pending_removal = true;
-	if (spdk_process_is_primary()) {
+	if (spdk_process_is_primary() && !pthread_equal(g_dpdk_tid, pthread_self())) {
 		rte_eal_alarm_set(10, spdk_detach_rte_cb, dev->dev_handle);
 	} else {
 		spdk_detach_rte_cb(dev->dev_handle);
@@ -198,6 +200,12 @@ cleanup_pci_devices(void)
 	pthread_mutex_unlock(&g_pci_mutex);
 }
 
+static void
+_get_alarm_thread_cb(void *unused)
+{
+	g_dpdk_tid = pthread_self();
+}
+
 void
 spdk_pci_init(void)
 {
@@ -230,6 +238,11 @@ spdk_pci_init(void)
 		rte_dev_event_callback_register(NULL, spdk_pci_device_rte_hotremove, NULL);
 	}
 #endif
+
+	rte_eal_alarm_set(1, _get_alarm_thread_cb, NULL);
+	/* alarms are executed in order, so this one will be always executed
+	 * before any real hotremove alarms and we don't need to wait for it.
+	 */
 }
 
 void
