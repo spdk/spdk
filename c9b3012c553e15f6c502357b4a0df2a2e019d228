@@ -201,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "d1706176_fe2bc48a",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T20:52:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "838159cc_617b6bd3",
+      "range": {
+        "startLine": 197,
+        "startChar": 3,
+        "endLine": 197,
+        "endChar": 36
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd021d96_a972969f",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 35
@@ -224,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "ffce1cbc_b3a76112",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T20:52:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dd021d96_a972969f",
+      "range": {
+        "startLine": 313,
+        "startChar": 0,
+        "endLine": 316,
+        "endChar": 0
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "62ec2d10_a77f902d",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 35
@@ -238,6 +286,24 @@
       "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39083295_dba44a41",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 887,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T20:52:43Z",
+      "side": 1,
+      "message": "Good idea. Implemented with minor modification.",
+      "parentUuid": "62ec2d10_a77f902d",
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -299,6 +365,30 @@
     },
     {
       "key": {
+        "uuid": "4c6e452f_592f7abf",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1029,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T20:52:43Z",
+      "side": 1,
+      "message": "Removed spdk_nvmf_host as NQN is already captured in spdk_nvmf_fc_association.host_nqn",
+      "parentUuid": "a2db1e70_14ea9b02",
+      "range": {
+        "startLine": 1029,
+        "startChar": 8,
+        "endLine": 1029,
+        "endChar": 27
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81f2452a_ee0f3041",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 35
@@ -352,6 +442,24 @@
     },
     {
       "key": {
+        "uuid": "2f83045b_d40717ac",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T20:52:43Z",
+      "side": 1,
+      "message": "Removed \u0027host\u0027 member as NQN is already captured in spdk_nvmf_fc_association.host_nqn",
+      "parentUuid": "c08aab36_c23a16c2",
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7792c8ce_4b94c40a",
         "filename": "lib/nvmf/nvmf_fc.h",
         "patchSetId": 35
@@ -372,6 +480,30 @@
       "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3bef09a_d1bd7fee",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 35
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T20:52:43Z",
+      "side": 1,
+      "message": "Removed \u0027host\u0027 member as NQN is already captures in \u0027host_nqn\u0027.",
+      "parentUuid": "7792c8ce_4b94c40a",
+      "range": {
+        "startLine": 365,
+        "startChar": 1,
+        "endLine": 365,
+        "endChar": 28
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
