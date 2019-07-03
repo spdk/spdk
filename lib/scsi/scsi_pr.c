@@ -789,7 +789,7 @@ spdk_scsi_pr_check(struct spdk_scsi_task *task)
 				      "is not registered, cdb 0x%x\n", cdb[0]);
 			goto conflict;
 		}
-		break;
+		return 0;
 	case SPDK_SPC_PERSISTENT_RESERVE_OUT:
 		action = cdb[1] & 0x1f;
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "CHECK: PR OUT action %u\n", action);
@@ -802,7 +802,7 @@ spdk_scsi_pr_check(struct spdk_scsi_task *task)
 				SPDK_ERRLOG("CHECK: PR OUT action %u\n", action);
 				goto conflict;
 			}
-			break;
+			return 0;
 		case SPDK_SCSI_PR_OUT_REGISTER:
 		case SPDK_SCSI_PR_OUT_REG_AND_IGNORE_KEY:
 			return 0;
