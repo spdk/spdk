@@ -16,6 +16,24 @@
       "revId": "b42a889a4b53bf631746954c13443f422120401f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "790ff1ec_a647e413",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1662,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T01:23:04Z",
+      "side": 1,
+      "message": "Hi Darek,\n\nI agree with Paul. _iov looks pointer to iovec array, _child_iovcnt is better.\nThe patch is nice but will you change the name of the temporary variable?",
+      "parentUuid": "3fc3d2a6_c8e5c699",
+      "revId": "b42a889a4b53bf631746954c13443f422120401f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
