@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8ab9d79_5e271e64",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-03T08:45:26Z",
+      "side": 1,
+      "message": "I don\u0027t like idea that we are doing all this restoration inside callbacks - it is hard to follow what is happening here. Maybe we add some restore task and do this restoration in similar way as reloc is processing IOs?",
+      "revId": "da73885ca79bfe4b2dacb01845871d89f6788cf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
