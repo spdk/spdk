@@ -622,6 +622,14 @@ size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count,
 size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
 
 /**
+ * Reports the cache line size in bytes
+ *
+ * \return the cache line size in bytes
+ */
+size_t
+spdk_get_cache_line_size(void);
+
+/**
  * Reports whether the SPDK application is using the IOMMU for DMA
  *
  * \return True if we are using the IOMMU, false otherwise.

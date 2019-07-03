@@ -419,3 +419,9 @@ spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 {
 	return rte_ring_dequeue_burst((struct rte_ring *)ring, objs, count, NULL);
 }
+
+size_t
+spdk_get_cache_line_size(void)
+{
+	return RTE_CACHE_LINE_SIZE;
+}
