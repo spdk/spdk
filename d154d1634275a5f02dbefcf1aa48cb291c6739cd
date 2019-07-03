@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "97601db7_3a1d5528",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-07-03T08:09:12Z",
+      "side": 1,
+      "message": "I just tested with the latest code, this assert() is needed, the following below are not needed.\nSorry for not careful verification. Thanks Dong\u0027s double check.",
+      "parentUuid": "a2173f90_fa32e9df",
+      "range": {
+        "startLine": 324,
+        "startChar": 0,
+        "endLine": 326,
+        "endChar": 0
+      },
+      "revId": "d154d1634275a5f02dbefcf1aa48cb291c6739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc9bdbd8_45c09c9b",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 4
