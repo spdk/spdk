@@ -25,6 +25,52 @@
     },
     {
       "key": {
+        "uuid": "1bad53e8_fbcfda4c",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-03T14:46:34Z",
+      "side": 1,
+      "message": "nitpick: if it\u0027s an array, then it suggests multiple entries... shouldn\u0027t blknames be more approiate?",
+      "range": {
+        "startLine": 138,
+        "startChar": 1,
+        "endLine": 138,
+        "endChar": 8
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ec63f12_f212e481",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-03T14:46:34Z",
+      "side": 1,
+      "message": "this looks no longer used",
+      "range": {
+        "startLine": 206,
+        "startChar": 2,
+        "endLine": 206,
+        "endChar": 12
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "22472fc6_989d993e",
         "filename": "scripts/setup.sh",
         "patchSetId": 4
@@ -36,6 +82,29 @@
       "writtenOn": "2019-07-02T16:17:17Z",
       "side": 1,
       "message": "At this time no blkname is set, what we want to display here is probably the controller name.",
+      "range": {
+        "startLine": 209,
+        "startChar": 64,
+        "endLine": 209,
+        "endChar": 72
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "233fa4f2_da929269",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-03T14:46:34Z",
+      "side": 1,
+      "message": "This will be an empty string, as get_nvme_from_bdf is no longer called, nor does it fill $blkname contents",
       "range": {
         "startLine": 209,
         "startChar": 64,
@@ -64,6 +133,29 @@
         "startChar": 0,
         "endLine": 219,
         "endChar": 5
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed91fecb_4592b1cc",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-03T14:46:34Z",
+      "side": 1,
+      "message": "I think if $mount is a true/false bool value then \"if ! mount; then\" should suffice.",
+      "range": {
+        "startLine": 222,
+        "startChar": 5,
+        "endLine": 222,
+        "endChar": 25
       },
       "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
