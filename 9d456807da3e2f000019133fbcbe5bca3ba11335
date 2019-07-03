@@ -226,6 +226,30 @@
     },
     {
       "key": {
+        "uuid": "c0446890_295e080d",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:16:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50be330a_844bcbdc",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 41
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08090703_36ceb856",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 13
@@ -246,6 +270,30 @@
       "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3511368_1e662755",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:16:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "08090703_36ceb856",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 53
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -272,6 +320,30 @@
     },
     {
       "key": {
+        "uuid": "e065dcca_8618150f",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:16:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "59bca93b_0f0d566e",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 5
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "76cf0c78_66983c17",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 13
@@ -295,6 +367,30 @@
     },
     {
       "key": {
+        "uuid": "a88d6175_87b47f34",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:16:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "76cf0c78_66983c17",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 37
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2e56f7a_32af2db2",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 13
@@ -315,6 +411,30 @@
       "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b751830_56931fbe",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:16:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c2e56f7a_32af2db2",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 97
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
