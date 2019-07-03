@@ -71,6 +71,29 @@
     },
     {
       "key": {
+        "uuid": "6725ea98_660b8c3e",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-07-03T15:28:38Z",
+      "side": 1,
+      "message": "It should be in default case to avoid situation when some errors are not handled.",
+      "range": {
+        "startLine": 117,
+        "startChar": 2,
+        "endLine": 117,
+        "endChar": 67
+      },
+      "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4f090871_1b3afaa9",
         "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
         "patchSetId": 6
