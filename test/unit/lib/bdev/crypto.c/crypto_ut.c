@@ -139,6 +139,8 @@ mock_rte_crypto_op_attach_sym_session(struct rte_crypto_op *op,
 #include "bdev/crypto/vbdev_crypto.c"
 
 /* SPDK stubs */
+DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		struct spdk_bdev_io_wait_entry *entry), 0);
 DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *,
 	    (struct spdk_conf *cp, const char *name), NULL);
 DEFINE_STUB(spdk_conf_section_get_nval, char *,
@@ -374,11 +376,13 @@ test_error_paths(void)
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc = 1;
 
-	/* test failure of spdk_mempool_get_bulk() */
+	/* test failure of spdk_mempool_get_bulk(), will result in success becuase it
+	 * will get queued.
+	 */
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	MOCK_SET(spdk_mempool_get, NULL);
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	/* same thing but switch to reads to test error path in _crypto_complete_io() */
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
