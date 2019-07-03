@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14116a22_fc1f818b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-03T02:09:11Z",
+      "side": 1,
+      "message": "whic-\u003ewhich",
+      "revId": "5a8cf391b7c5559b407228591a7fabc47f515cd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c93c11e4_50d013cd",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-03T02:09:11Z",
+      "side": 1,
+      "message": "This breaks the original intention for this function, as you mentioned above, how about introduce a new type besides CONNECT_SCHED_ROUND_ROBIN and CONNECT_SCHED_HOST_IP ?",
+      "revId": "5a8cf391b7c5559b407228591a7fabc47f515cd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
