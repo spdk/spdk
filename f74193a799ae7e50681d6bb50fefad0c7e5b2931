@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "4858aa50_366b585a",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-03T08:43:08Z",
+      "side": 1,
+      "message": "First send the error response or RPC will hang. This was done in original code at #104",
+      "range": {
+        "startLine": 77,
+        "startChar": 7,
+        "endLine": 77,
+        "endChar": 14
+      },
+      "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "09401e2b_f5211eb6",
         "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
         "patchSetId": 6
