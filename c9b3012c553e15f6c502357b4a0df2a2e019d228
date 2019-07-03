@@ -88,6 +88,46 @@
     },
     {
       "key": {
+        "uuid": "838159cc_617b6bd3",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T06:48:25Z",
+      "side": 1,
+      "message": "Can we use spdk_nvmf_fc_lld_release_conn instead?",
+      "range": {
+        "startLine": 197,
+        "startChar": 3,
+        "endLine": 197,
+        "endChar": 36
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62ec2d10_a77f902d",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 887,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T06:48:25Z",
+      "side": 1,
+      "message": "Difference between here and the line 888 looks only\n\nFCNVME_RJU_RC_INSUFF_RES or\n\n(ret \u003d\u003d VERR_NO_ASSOC) ? FC_NVME_RJT_RC_INV_ASSOC : ((ret \u003d\u003d -ENOMEM) ? FCNVME_RJT_RC_INSUFF_RES : FCNVME_RJT_RC_LOGIC)\n\nSo can we consolidate two passes?\n\n\tuint8 reason \u003d 0;\n\n\tif (!opd) {\n\t\treason \u003d FCNVME_RJT_RC_INSUFF_RES;\n\t\tgoto rjt;\n\t}\n\n\t(snip)\n\n\tif (ret !\u003d 0) {\n\t\treason \u003d (ret \u003d\u003d VERR_NO_ASSOC) ? FC_NVME_RJT_RC_INV_ASSOC :\n\t\t\t ((ret \u003d\u003d -ENOMEM) ? FCNVME_RJT_RC_INSUFF_RES : FCNVME_RJT_RC_LOGIC);\n\t\tgoto rjt;\n\t}\n\n        (snip)\nrjt:\n\tls_rqst-\u003ersp_len \u003d nvmf_fc_ls_format_rjt(acc,\n\t\t\t   FCNVME_MAX_LS_BUFFER_SIZE,\n\t\t\t   rqst-\u003ew0.ls_cmd,\n\t\t\t   reason,\n\t\t\t   FCNVME_RJT_EXP_NONE, 0);\n\tnvmf_fc_xmt_ls_rsp(tgtport, ls_rqst);",
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "33f29499_a8a14a9e",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 35
@@ -105,6 +145,29 @@
     },
     {
       "key": {
+        "uuid": "a2db1e70_14ea9b02",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1029,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T06:48:25Z",
+      "side": 1,
+      "message": "Why can\u0027t we add the instance of struct spdk_nvmf_host to struct spdk_nvmf_fc_association and initialize the instance in nvmf_fc_ls_new_association(). Then can we remove nvmf_fc_ls_dup_host()?",
+      "range": {
+        "startLine": 1029,
+        "startChar": 8,
+        "endLine": 1029,
+        "endChar": 27
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "81f2452a_ee0f3041",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 35
@@ -116,6 +179,47 @@
       "writtenOn": "2019-07-02T09:07:42Z",
       "side": 1,
       "message": "should we free host and host-\u003enqn here?",
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20da619d_1fc63422",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T06:48:25Z",
+      "side": 1,
+      "message": "Managing host as a malloc\u0027ed instance may be error prone.",
+      "parentUuid": "81f2452a_ee0f3041",
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7792c8ce_4b94c40a",
+        "filename": "lib/nvmf/nvmf_fc.h",
+        "patchSetId": 35
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T06:48:25Z",
+      "side": 1,
+      "message": "can we change this from pointer to instance?\n\nIf the patch https://review.gerrithub.io/c/spdk/spdk/+/459742 is merged, we will be able to remove malloc for spdk_nvmf_host.",
+      "range": {
+        "startLine": 365,
+        "startChar": 1,
+        "endLine": 365,
+        "endChar": 28
+      },
       "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true

@@ -471,6 +471,30 @@
     },
     {
       "key": {
+        "uuid": "b6bbbc19_933525d8",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T06:48:25Z",
+      "side": 1,
+      "message": "Thank you, I got it.",
+      "parentUuid": "25eb65b1_8f7d39dc",
+      "range": {
+        "startLine": 422,
+        "startChar": 15,
+        "endLine": 422,
+        "endChar": 51
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac96a597_65a14216",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 30
@@ -964,6 +988,30 @@
       "side": 1,
       "message": "This LLD down call is to allocate hwqp buffers. There is already a comment before \u0027for\u0027 statement which is applicable to #n hwqp\u0027s",
       "parentUuid": "8dbf43f6_cb181898",
+      "range": {
+        "startLine": 223,
+        "startChar": 2,
+        "endLine": 223,
+        "endChar": 24
+      },
+      "revId": "3420f5fbdb383a5b39c524da904ebe88d095c2bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44069d51_ce10d5c2",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T06:48:25Z",
+      "side": 1,
+      "message": "OK, I got it.",
+      "parentUuid": "3ed92b08_cf892ca3",
       "range": {
         "startLine": 223,
         "startChar": 2,
