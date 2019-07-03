@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b01f49a4_941e6345",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T05:42:23Z",
+      "side": 1,
+      "message": "This is good but indicates only that g_bdev_io-\u003einternal.status is not changed.\nIs it too much to check queueing here and then MOCK_SET(spdk_mempool_get, 0x1) and resubmit here?",
+      "range": {
+        "startLine": 385,
+        "startChar": 1,
+        "endLine": 385,
+        "endChar": 70
+      },
+      "revId": "fc87edf6a9d47a9bf8874338ee8827ef03f56f08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
