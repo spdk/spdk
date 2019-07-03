@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "872a80a2_6a24be29",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T05:18:22Z",
+      "side": 1,
+      "message": "can we remove these?",
+      "range": {
+        "startLine": 324,
+        "startChar": 0,
+        "endLine": 326,
+        "endChar": 0
+      },
+      "revId": "d154d1634275a5f02dbefcf1aa48cb291c6739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc9bdbd8_45c09c9b",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T05:18:22Z",
+      "side": 1,
+      "message": "can we remove these?",
+      "range": {
+        "startLine": 394,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 0
+      },
+      "revId": "d154d1634275a5f02dbefcf1aa48cb291c6739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81666d7d_4a64f2fd",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T05:18:22Z",
+      "side": 1,
+      "message": "can we remove these?",
+      "range": {
+        "startLine": 524,
+        "startChar": 0,
+        "endLine": 526,
+        "endChar": 0
+      },
+      "revId": "d154d1634275a5f02dbefcf1aa48cb291c6739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36e4eb0b_9ac3c645",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T05:18:22Z",
+      "side": 1,
+      "message": "can we remove these?",
+      "range": {
+        "startLine": 564,
+        "startChar": 0,
+        "endLine": 566,
+        "endChar": 0
+      },
+      "revId": "d154d1634275a5f02dbefcf1aa48cb291c6739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afa82f8c_ede90fcb",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 730,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T05:18:22Z",
+      "side": 1,
+      "message": "can we remove these?",
+      "range": {
+        "startLine": 728,
+        "startChar": 0,
+        "endLine": 730,
+        "endChar": 0
+      },
+      "revId": "d154d1634275a5f02dbefcf1aa48cb291c6739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
