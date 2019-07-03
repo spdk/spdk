@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "7d86b0ba_244429ec",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-03T13:55:59Z",
+      "side": 1,
+      "message": "Reading two bands with QD\u003d1 and bs\u003d1 will be very slow, but I\u0027m ok to improve it later (increase block size - you could add TODO for this)",
+      "revId": "da73885ca79bfe4b2dacb01845871d89f6788cf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "073ee6b6_025713e6",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-03T13:55:59Z",
+      "side": 1,
+      "message": "I think this if should be commented - this is case when we detect overlaping region.",
+      "revId": "da73885ca79bfe4b2dacb01845871d89f6788cf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f8ab9d79_5e271e64",
         "filename": "lib/ftl/ftl_restore.c",
         "patchSetId": 8
@@ -67,6 +101,24 @@
       "side": 1,
       "message": "I disagree, it\u0027ll only make things more complicated. Moreover adding stuff to the core task that doesn\u0027t need to be there (we only need to do that at the beginning) isn\u0027t a good idea.",
       "parentUuid": "51f69359_4eae4bef",
+      "revId": "da73885ca79bfe4b2dacb01845871d89f6788cf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1980b8dd_4290d95e",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-03T13:55:59Z",
+      "side": 1,
+      "message": "I think the complexity will be similar but such code could be more readable, but lets leave it for now - logic looks fine in my opinion. Maybe you could add some comment at beginning of nv cache restore that will describe all steps we are doing here or we can add new section do FTL documentation.",
+      "parentUuid": "8a001f83_076c7efb",
       "revId": "da73885ca79bfe4b2dacb01845871d89f6788cf8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
