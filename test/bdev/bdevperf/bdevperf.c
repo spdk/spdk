@@ -42,6 +42,7 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 #include "spdk/string.h"
+#include "spdk/rpc.h"
 
 struct bdevperf_task {
 	struct iovec			iov;
@@ -79,11 +80,14 @@ static unsigned g_master_core;
 static int g_time_in_sec;
 static bool g_mix_specified;
 static const char *g_target_bdev_name;
+static bool g_wait_for_tests = false;
+struct spdk_jsonrpc_request *g_request = NULL;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
 static void bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task);
 static void performance_dump(uint64_t io_time_in_usec, uint64_t ema_period);
+static void rpc_perform_tests_cb(int rc);
 
 struct io_target {
 	char				*name;
@@ -395,6 +399,7 @@ static void
 end_run(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
+	int rc = 0;
 
 	spdk_put_io_channel(target->ch);
 	spdk_bdev_close(target->bdev_desc);
@@ -416,11 +421,15 @@ end_run(void *arg1, void *arg2)
 			printf("Test time less than one microsecond, no performance data will be shown\n");
 		}
 
-		blockdev_heads_destroy();
 		if (g_run_failed) {
-			spdk_app_stop(1);
+			rc = 1;
+		}
+
+		if (g_wait_for_tests && !g_shutdown) {
+			rpc_perform_tests_cb(rc);
 		} else {
-			spdk_app_stop(0);
+			blockdev_heads_destroy();
+			spdk_app_stop(rc);
 		}
 	}
 }
@@ -841,6 +850,7 @@ bdevperf_usage(void)
 	printf("\t\t(only valid with -S)\n");
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 	printf(" -T <target>               target bdev\n");
+	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
 }
 
 /*
@@ -998,6 +1008,12 @@ ret:
 static int
 verify_test_params(struct spdk_app_opts *opts)
 {
+	/* No need to configure RPC server if
+	 * if bdevperf is not supposed use RPC */
+	if (!g_wait_for_tests) {
+		opts->rpc_addr = NULL;
+	}
+
 	if (g_queue_depth <= 0) {
 		spdk_app_usage();
 		bdevperf_usage();
@@ -1179,6 +1195,11 @@ bdevperf_run(void *arg1)
 
 	g_master_core = spdk_env_get_current_core();
 
+	if (g_wait_for_tests) {
+		/* Do not perform any tests until RPC is received */
+		return;
+	}
+
 	bdevperf_construct_targets();
 
 	if (g_target_count == 0) {
@@ -1249,6 +1270,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_workload_type = optarg;
 	} else if (ch == 'T') {
 		g_target_bdev_name = optarg;
+	} else if (ch == 'z') {
+		g_wait_for_tests = true;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -1289,6 +1312,60 @@ bdevperf_parse_arg(int ch, char *arg)
 	return 0;
 }
 
+static void
+rpc_perform_tests_cb(int rc)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = g_request;
+
+	g_request = NULL;
+
+	if (rc == 0) {
+		w = spdk_jsonrpc_begin_result(request);
+		if (w == NULL) {
+			return;
+		}
+		spdk_json_write_uint32(w, rc);
+		spdk_jsonrpc_end_result(request, w);
+	} else {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "bdevperf failed with error %d", rc);
+	}
+
+	bdevperf_free_targets();
+}
+
+static void
+rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	int rc;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "perform_tests method requires no parameters");
+		return;
+	}
+
+	bdevperf_construct_targets();
+	if (g_target_count == 0) {
+		fprintf(stderr, "No valid bdevs found.\n");
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "No valid bdevs found: %s", spdk_strerror(-ENODEV));
+		return;
+	}
+	g_request = request;
+
+	rc = bdevperf_test();
+	if (rc) {
+		fprintf(stderr, "Could not perform tests due to error %d.\n", rc);
+		bdevperf_free_targets();
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Could not perform tests due to error: %d", rc);
+		return;
+	}
+}
+SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
+
 int
 main(int argc, char **argv)
 {
@@ -1297,7 +1374,6 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "bdevperf";
-	opts.rpc_addr = NULL;
 	opts.reactor_mask = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
@@ -1308,7 +1384,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zq:o:t:w:M:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
