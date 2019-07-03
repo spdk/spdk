@@ -80,7 +80,7 @@ cp $ceph_conf /etc/ceph/ceph.conf
 
 cp ${base_dir}/keyring /etc/ceph/keyring
 
-ceph-run sh -c "ulimit -n 16384 && ulimit -c unlimited && exec ceph-mon -c ${ceph_conf} -i a --keyring=${base_dir}/keyring --pid-file=${base_dir}/pid/root@`hostname`.pid --mon-data=${mon_dir}" || true
+ceph-run sh -c "ulimit -n 16384 && ulimit -c unlimited && exec ceph-mon -c ${ceph_conf} -i a --keyring=${base_dir}/keyring --pid-file=${base_dir}/pid/root@$(hostname).pid --mon-data=${mon_dir}" || true
 
 # create osd
 
@@ -88,10 +88,10 @@ i=0
 
 mkdir -p ${mnt_dir}
 
-uuid=`uuidgen`
+uuid=$(uuidgen)
 ceph -c ${ceph_conf} osd create ${uuid} $i
 ceph-osd -c ${ceph_conf} -i $i --mkfs --mkkey --osd-uuid ${uuid}
-ceph -c ${ceph_conf} osd crush add osd.${i} 1.0 host=`hostname` root=default
+ceph -c ${ceph_conf} osd crush add osd.${i} 1.0 host=$(hostname) root=default
 ceph -c ${ceph_conf} -i ${mnt_dir}/osd-device-${i}-data/keyring auth add osd.${i} osd "allow *" mon "allow profile osd" mgr "allow"
 
 # start osd

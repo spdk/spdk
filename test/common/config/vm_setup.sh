@@ -220,7 +220,7 @@ function install_vpp()
             echo "vpp already cloned."
             if [ ! -d /usr/local/src/vpp/build-root ]; then
                 echo "build-root has not been done"
-                echo "remove the `pwd` and start again"
+                echo "remove the $(pwd) and start again"
                 exit 1
             fi
         else

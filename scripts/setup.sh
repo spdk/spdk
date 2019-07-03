@@ -7,7 +7,7 @@ source "$rootdir/scripts/common.sh"
 
 function usage()
 {
-	if [ `uname` = Linux ]; then
+	if [ $(uname) = Linux ]; then
 		options="[config|reset|status|cleanup|help]"
 	else
 		options="[config|reset|help]"
@@ -22,13 +22,13 @@ function usage()
 	echo
 	echo "$options - as following:"
 	echo "config            Default mode. Allocate hugepages and bind PCI devices."
-	if [ `uname` = Linux ]; then
+	if [ $(uname) = Linux ]; then
 		echo "cleanup            Remove any orphaned files that can be left in the system after SPDK application exit"
 	fi
 	echo "reset             Rebind PCI devices back to their original drivers."
 	echo "                  Also cleanup any leftover spdk files/resources."
 	echo "                  Hugepage memory size will remain unchanged."
-	if [ `uname` = Linux ]; then
+	if [ $(uname) = Linux ]; then
 		echo "status            Print status of all SPDK-compatible devices on the system."
 	fi
 	echo "help              Print this help message."
@@ -136,7 +136,7 @@ function linux_hugetlbfs_mounts() {
 
 function get_nvme_name_from_bdf {
 	set +e
-	nvme_devs=`lsblk -d --output NAME | grep "^nvme"`
+	nvme_devs=$(lsblk -d --output NAME | grep "^nvme")
 	set -e
 	for dev in $nvme_devs; do
 		link_name=$(readlink /sys/block/$dev/device/device) || true
@@ -152,7 +152,7 @@ function get_nvme_name_from_bdf {
 }
 
 function get_virtio_names_from_bdf {
-	blk_devs=`lsblk --nodeps --output NAME`
+	blk_devs=$(lsblk --nodeps --output NAME)
 	virtio_names=''
 
 	for dev in $blk_devs; do
@@ -219,12 +219,12 @@ function configure_linux_pci {
 	done
 
 	# IOAT
-	TMP=`mktemp`
+	TMP=$(mktemp)
 	#collect all the device_id info of ioat devices.
 	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
 
-	for dev_id in `cat $TMP`; do
+	for dev_id in $(cat $TMP); do
 		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted I/OAT device"
@@ -237,12 +237,12 @@ function configure_linux_pci {
 	rm $TMP
 
 	# virtio
-	TMP=`mktemp`
+	TMP=$(mktemp)
 	#collect all the device_id info of virtio devices.
 	grep "PCI_DEVICE_ID_VIRTIO" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
 
-	for dev_id in `cat $TMP`; do
+	for dev_id in $(cat $TMP); do
 		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at $bdf"
@@ -263,12 +263,12 @@ function configure_linux_pci {
 	rm $TMP
 
 	# VMD
-	TMP=`mktemp`
+	TMP=$(mktemp)
 	#collect all the device_id info of vmd devices.
 	grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
 
-	for dev_id in `cat $TMP`; do
+	for dev_id in $(cat $TMP); do
 		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
 			if [[ -z "$PCI_WHITELIST" ]] || ! pci_can_use $bdf; then
 				echo "Skipping un-whitelisted VMD device at $bdf"
@@ -357,7 +357,7 @@ function configure_linux {
 	fi
 
 	echo "$NRHUGE" > "$hugepages_target"
-	allocated_hugepages=`cat $hugepages_target`
+	allocated_hugepages=$(cat $hugepages_target)
 	if [ "$allocated_hugepages" -lt "$NRHUGE" ]; then
 		echo ""
 		echo "## ERROR: requested $NRHUGE hugepages but only $allocated_hugepages could be allocated."
@@ -373,7 +373,7 @@ function configure_linux {
 			done
 		fi
 
-		MEMLOCK_AMNT=`ulimit -l`
+		MEMLOCK_AMNT=$(ulimit -l)
 		if [ "$MEMLOCK_AMNT" != "unlimited" ] ; then
 			MEMLOCK_MB=$(( $MEMLOCK_AMNT / 1024 ))
 			echo ""
@@ -413,7 +413,7 @@ function reset_linux_pci {
 	done
 
 	# IOAT
-	TMP=`mktemp`
+	TMP=$(mktemp)
 	#collect all the device_id info of ioat devices.
 	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
@@ -422,7 +422,7 @@ function reset_linux_pci {
 	check_for_driver ioatdma
 	driver_loaded=$?
 	set -e
-	for dev_id in `cat $TMP`; do
+	for dev_id in $(cat $TMP); do
 		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted I/OAT device"
@@ -438,7 +438,7 @@ function reset_linux_pci {
 	rm $TMP
 
 	# virtio
-	TMP=`mktemp`
+	TMP=$(mktemp)
 	#collect all the device_id info of virtio devices.
 	grep "PCI_DEVICE_ID_VIRTIO" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
@@ -448,7 +448,7 @@ function reset_linux_pci {
 	#  virtio-pci but just virtio_scsi instead.  Also need to make sure we get the
 	#  underscore vs. dash right in the virtio_scsi name.
 	modprobe virtio-pci || true
-	for dev_id in `cat $TMP`; do
+	for dev_id in $(cat $TMP); do
 		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
 			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at"
@@ -460,7 +460,7 @@ function reset_linux_pci {
 	rm $TMP
 
 	# VMD
-	TMP=`mktemp`
+	TMP=$(mktemp)
 	#collect all the device_id info of vmd devices.
 	grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
@@ -469,7 +469,7 @@ function reset_linux_pci {
 	check_for_driver vmd
 	driver_loaded=$?
 	set -e
-	for dev_id in `cat $TMP`; do
+	for dev_id in $(cat $TMP); do
 		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
 			if ! pci_can_use $bdf; then
 				echo "Skipping un-whitelisted VMD device at $bdf"
@@ -503,8 +503,8 @@ function status_linux {
 	shopt -s nullglob
 	for path in /sys/devices/system/node/node?/hugepages/hugepages-*/; do
 		numa_nodes=$((numa_nodes + 1))
-		free_pages=`cat $path/free_hugepages`
-		all_pages=`cat $path/nr_hugepages`
+		free_pages=$(cat $path/free_hugepages)
+		all_pages=$(cat $path/nr_hugepages)
 
 		[[ $path =~ (node[0-9]+)/hugepages/hugepages-([0-9]+kB) ]]
 
@@ -517,8 +517,8 @@ function status_linux {
 
 	# fall back to system-wide hugepages
 	if [ "$numa_nodes" = "0" ]; then
-		free_pages=`grep HugePages_Free /proc/meminfo | awk '{ print $2 }'`
-		all_pages=`grep HugePages_Total /proc/meminfo | awk '{ print $2 }'`
+		free_pages=$(grep HugePages_Free /proc/meminfo | awk '{ print $2 }')
+		all_pages=$(grep HugePages_Total /proc/meminfo | awk '{ print $2 }')
 		node="-"
 		huge_size="$HUGEPGSZ"
 
@@ -539,7 +539,7 @@ function status_linux {
 		device=$(cat /sys/bus/pci/devices/$bdf/device)
 		vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
 		if [ "$driver" = "nvme" -a -d /sys/bus/pci/devices/$bdf/nvme ]; then
-			name="\t"`ls /sys/bus/pci/devices/$bdf/nvme`;
+			name="\t"$(ls /sys/bus/pci/devices/$bdf/nvme);
 		else
 			name="-";
 		fi
@@ -550,8 +550,8 @@ function status_linux {
 	echo "I/OAT DMA"
 
 	#collect all the device_id info of ioat devices.
-	TMP=`grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
-	| awk -F"x" '{print $2}'`
+	TMP=$(grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
+	| awk -F"x" '{print $2}')
 	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver"
 	for dev_id in $TMP; do
 		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
@@ -571,8 +571,8 @@ function status_linux {
 	echo "virtio"
 
 	#collect all the device_id info of virtio devices.
-	TMP=`grep "PCI_DEVICE_ID_VIRTIO" $rootdir/include/spdk/pci_ids.h \
-	| awk -F"x" '{print $2}'`
+	TMP=$(grep "PCI_DEVICE_ID_VIRTIO" $rootdir/include/spdk/pci_ids.h \
+	| awk -F"x" '{print $2}')
 	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver\t\tDevice name"
 	for dev_id in $TMP; do
 		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
@@ -593,20 +593,20 @@ function status_linux {
 	echo "VMD"
 
 	#collect all the device_id info of vmd devices.
-	TMP=`grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
-	| awk -F"x" '{print $2}'`
+	TMP=$(grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
+	| awk -F"x" '{print $2}')
 	echo -e "BDF\t\tNuma Node\tDriver Name"
 	for dev_id in $TMP; do
 		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
-			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
-			node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
+			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
+			node=$(cat /sys/bus/pci/devices/$bdf/numa_node);
 			echo -e "$bdf\t$node\t\t$driver"
 		done
 	done
 }
 
 function configure_freebsd_pci {
-	TMP=`mktemp`
+	TMP=$(mktemp)
 
 	# NVMe
 	GREP_STR="class=0x010802"
@@ -614,21 +614,21 @@ function configure_freebsd_pci {
 	# IOAT
 	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
-	for dev_id in `cat $TMP`; do
+	for dev_id in $(cat $TMP); do
 		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
 	done
 
 	# VMD
 	grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
-	for dev_id in `cat $TMP`; do
+	for dev_id in $(cat $TMP); do
 		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
 	done
 
 	AWK_PROG="{if (count > 0) printf \",\"; printf \"%s:%s:%s\",\$2,\$3,\$4; count++}"
 	echo $AWK_PROG > $TMP
 
-	BDFS=`pciconf -l | grep "${GREP_STR}" | awk -F: -f $TMP`
+	BDFS=$(pciconf -l | grep "${GREP_STR}" | awk -F: -f $TMP)
 
 	kldunload nic_uio.ko || true
 	kenv hw.nic_uio.bdfs=$BDFS
@@ -641,7 +641,7 @@ function configure_freebsd {
 	# If contigmem is already loaded but the HUGEMEM specified doesn't match the
 	#  previous value, unload contigmem so that we can reload with the new value.
 	if kldstat -q -m contigmem; then
-		if [ `kenv hw.contigmem.num_buffers` -ne "$((HUGEMEM / 256))" ]; then
+		if [ $(kenv hw.contigmem.num_buffers) -ne "$((HUGEMEM / 256))" ]; then
 			kldunload contigmem.ko
 		fi
 	fi
@@ -678,12 +678,12 @@ fi
 if [ -z "$TARGET_USER" ]; then
 	TARGET_USER="$SUDO_USER"
 	if [ -z "$TARGET_USER" ]; then
-		TARGET_USER=`logname 2>/dev/null` || true
+		TARGET_USER=$(logname 2>/dev/null) || true
 	fi
 fi
 
-if [ `uname` = Linux ]; then
-	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` ))
+if [ $(uname) = Linux ]; then
+	HUGEPGSZ=$(( $(grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9') ))
 	HUGEPGSZ_MB=$(( $HUGEPGSZ / 1024 ))
 	: ${NRHUGE=$(( (HUGEMEM + HUGEPGSZ_MB - 1) / HUGEPGSZ_MB ))}
 

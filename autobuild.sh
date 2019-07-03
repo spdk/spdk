@@ -101,7 +101,7 @@ timing_exit "$make_timing_label"
 
 # Check for generated files that are not listed in .gitignore
 timing_enter generated_files_check
-if [ `git status --porcelain --ignore-submodules | wc -l` -ne 0 ]; then
+if [ $(git status --porcelain --ignore-submodules | wc -l) -ne 0 ]; then
 	echo "Generated files missing from .gitignore:"
 	git status --porcelain --ignore-submodules
 	exit 1
@@ -112,11 +112,11 @@ timing_exit generated_files_check
 #  capturing a binary's stat data before and after touching a
 #  header file and re-making.
 timing_enter dependency_check
-STAT1=`stat examples/nvme/identify/identify`
+STAT1=$(stat examples/nvme/identify/identify)
 sleep 1
 touch lib/nvme/nvme_internal.h
 $MAKE $MAKEFLAGS
-STAT2=`stat examples/nvme/identify/identify`
+STAT2=$(stat examples/nvme/identify/identify)
 
 if [ "$STAT1" == "$STAT2" ]; then
 	echo "Header dependency check failed"
