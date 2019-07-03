@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d72943f_ad753af1",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-03T06:38:15Z",
+      "side": 1,
+      "message": "You use timing_enter/exit in some places like here, but you don\u0027t use them  for the whole test script, and you dont use them for the actual tests as well (lines 40-60)",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 25
+      },
+      "revId": "ae7d9de0fb6da7ec13e218661d95f4d2aa96f8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "085fd141_0b967218",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-03T06:38:15Z",
+      "side": 1,
+      "message": "What\u0027s that for? Is it to remove any lvol stores from previous test runs?\nWe should make sure that there are no leftovers after tests in the first place. \n\nIf you really want to do this, then I\u0027d rather suggest dd approach from autotest.sh:111",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 42
+      },
+      "revId": "ae7d9de0fb6da7ec13e218661d95f4d2aa96f8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ed52b1d_1a9a6487",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-03T06:38:15Z",
+      "side": 1,
+      "message": "lvol store destruction should be added to trap in case of failure in order to clean up",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 41
+      },
+      "revId": "ae7d9de0fb6da7ec13e218661d95f4d2aa96f8d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
