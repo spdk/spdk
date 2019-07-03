@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a2173f90_fa32e9df",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-07-03T07:00:45Z",
+      "side": 1,
+      "message": "As you said, I removed these assert() just now, there was no new warnings. I added these assertions because I tested them with code a week ago. I think these new warnings might partly have been repaired somewhere else now. So line 118 is enough here, thank you.",
+      "parentUuid": "872a80a2_6a24be29",
+      "range": {
+        "startLine": 324,
+        "startChar": 0,
+        "endLine": 326,
+        "endChar": 0
+      },
+      "revId": "d154d1634275a5f02dbefcf1aa48cb291c6739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc9bdbd8_45c09c9b",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 4
