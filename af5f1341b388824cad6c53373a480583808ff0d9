@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6a15366_79ddedf5",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-03T08:32:00Z",
+      "side": 1,
+      "message": "This repeats clear below, could be removed instead.",
+      "range": {
+        "startLine": 1005,
+        "startChar": 1,
+        "endLine": 1005,
+        "endChar": 26
+      },
+      "revId": "af5f1341b388824cad6c53373a480583808ff0d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
