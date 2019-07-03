@@ -22,6 +22,30 @@
       "revId": "fc87edf6a9d47a9bf8874338ee8827ef03f56f08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d1c5fb3_de9d25f3",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-03T22:34:45Z",
+      "side": 1,
+      "message": "Thanks Shuhei, I was thinking that because the queuing is in the bdev layer that from a UT perspective on this function that it was sufficient to make sure that a mem error results in success which means it got queued.  I looked at the bdev internal list that I could check but that\u0027s bdev internals and not in the scope of UT this file. What do you think?",
+      "parentUuid": "b01f49a4_941e6345",
+      "range": {
+        "startLine": 385,
+        "startChar": 1,
+        "endLine": 385,
+        "endChar": 70
+      },
+      "revId": "fc87edf6a9d47a9bf8874338ee8827ef03f56f08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
