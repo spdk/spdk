@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/util.h"
 
 #include "env_internal.h"
 
@@ -58,11 +59,14 @@ virt_to_phys(void *vaddr)
 void *
 spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
 {
+	void *buf;
+
 	if (flags == 0) {
 		return NULL;
 	}
 
-	void *buf = rte_malloc_socket(NULL, size, align, socket_id);
+	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
+	buf = rte_malloc_socket(NULL, size, align, socket_id);
 	if (buf && phys_addr) {
 #ifdef DEBUG
 		fprintf(stderr, "phys_addr param in spdk_*malloc() is deprecated\n");
@@ -85,6 +89,7 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint
 void *
 spdk_realloc(void *buf, size_t size, size_t align)
 {
+	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
 	return rte_realloc(buf, size, align);
 }
 
@@ -121,7 +126,10 @@ spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 void *
 spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 {
-	void *new_buf = rte_realloc(buf, size, align);
+	void *new_buf;
+
+	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
+	new_buf = rte_realloc(buf, size, align);
 	if (new_buf && phys_addr) {
 		*phys_addr = virt_to_phys(new_buf);
 	}
