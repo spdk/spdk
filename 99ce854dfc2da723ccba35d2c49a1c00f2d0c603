@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "9157502c_8b32c998",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-03T08:23:01Z",
+      "side": 1,
+      "message": "Setting rc here will print yet another error, so it needs to be removed and instead we should use spdk_jsonrpc_send_error_response() and `goto cleanup`. This will also make style the same as below.",
+      "range": {
+        "startLine": 71,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 15
+      },
+      "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8c38b074_5be80fa9",
         "filename": "lib/bdev/aio/bdev_aio_rpc.c",
         "patchSetId": 2
@@ -13,6 +36,52 @@
       "writtenOn": "2019-07-02T19:21:19Z",
       "side": 1,
       "message": "you\u0027re not setting rc in any of these checks up here, what am I missing? In fact I\u0027m not even seeing the overall strategy, the check on line 67 doesn\u0027t follow the same style as any of these.  Can you clarify?",
+      "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf368d3e_f5796ac4",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-03T08:23:01Z",
+      "side": 1,
+      "message": "spdk_strerror() will return \"\" for negative codes and also for non posix codes :( I suggest showing the raw code to the user instead.\nOr fixing spdk_strerror() so that it will return code as string of digits that it got, instead of empty string.",
+      "range": {
+        "startLine": 116,
+        "startChar": 48,
+        "endLine": 116,
+        "endChar": 65
+      },
+      "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78f78384_4126b27d",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-03T08:23:01Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this switch have default case, same as #115?",
+      "range": {
+        "startLine": 189,
+        "startChar": 1,
+        "endLine": 189,
+        "endChar": 2
+      },
       "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
