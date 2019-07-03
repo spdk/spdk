@@ -1110,32 +1110,17 @@ verify_test_params(struct spdk_app_opts *opts)
 	return 0;
 }
 
-static void
-bdevperf_run(void *arg1)
+static int
+bdevperf_test(void)
 {
 	uint32_t i;
 	struct io_target *target;
 	struct spdk_event *event;
 	int rc;
 
-	rc = blockdev_heads_init();
-	if (rc) {
-		spdk_app_stop(1);
-		return;
-	}
-
-	bdevperf_construct_targets();
-
-	if (g_target_count == 0) {
-		fprintf(stderr, "No valid bdevs found.\n");
-		spdk_app_stop(1);
-		return;
-	}
-
 	rc = bdevperf_construct_targets_tasks();
 	if (rc) {
-		spdk_app_stop(1);
-		return;
+		return rc;
 	}
 
 	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / 1000000);
@@ -1148,16 +1133,44 @@ bdevperf_run(void *arg1)
 						    g_show_performance_period_in_usec);
 	}
 
-	g_master_core = spdk_env_get_current_core();
 	/* Send events to start all I/O */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
 		target = g_head[i];
 		if (target == NULL) {
-			break;
+			return -1;
 		}
 		event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
 					    target, NULL);
 		spdk_event_call(event);
+	}
+	return 0;
+}
+
+static void
+bdevperf_run(void *arg1)
+{
+	int rc;
+
+	rc = blockdev_heads_init();
+	if (rc) {
+		spdk_app_stop(1);
+		return;
+	}
+
+	g_master_core = spdk_env_get_current_core();
+
+	bdevperf_construct_targets();
+
+	if (g_target_count == 0) {
+		fprintf(stderr, "No valid bdevs found.\n");
+		spdk_app_stop(1);
+		return;
+	}
+
+	rc = bdevperf_test();
+	if (rc) {
+		spdk_app_stop(1);
+		return;
 	}
 }
 
