@@ -123,14 +123,49 @@ spdk_detach_rte_cb(void *_dev)
 static void
 spdk_detach_rte(struct spdk_pci_device *dev)
 {
+	struct rte_pci_device *rte_dev = dev->dev_handle;
+	int i;
+	bool removed;
+
 	/* The device was already marked as available and could be attached
 	 * again while we go asynchronous, so we explicitly forbid that.
 	 */
 	dev->internal.pending_removal = true;
 	if (spdk_process_is_primary() && !pthread_equal(g_dpdk_tid, pthread_self())) {
-		rte_eal_alarm_set(10, spdk_detach_rte_cb, dev->dev_handle);
+		rte_eal_alarm_set(1, spdk_detach_rte_cb, rte_dev);
+		/* wait up to 20ms for the cb to start executing */
+		for (i = 20; i > 0; i--) {
+
+			spdk_delay_us(1000);
+			pthread_mutex_lock(&g_pci_mutex);
+			removed = dev->internal.removed;
+			pthread_mutex_unlock(&g_pci_mutex);
+
+			if (removed) {
+				break;
+			}
+		}
+
+		/* besides checking the removed flag, we also need to wait
+		 * for the dpdk detach function to unwind, as it's doing some
+		 * operations even after calling our detach callback. Simply
+		 * cancell the alarm - if it started executing already, this
+		 * call will block and wait for it to finish.
+		 */
+		rte_eal_alarm_cancel(spdk_detach_rte_cb, rte_dev);
+
+		/* the device could have been finally removed, so just check
+		 * it again.
+		 */
+		pthread_mutex_lock(&g_pci_mutex);
+		removed = dev->internal.removed;
+		pthread_mutex_unlock(&g_pci_mutex);
+		if (!removed) {
+			fprintf(stderr, "Timeout waiting for DPDK to remove PCI device %s.\n",
+				rte_dev->name);
+		}
 	} else {
-		spdk_detach_rte_cb(dev->dev_handle);
+		spdk_detach_rte_cb(rte_dev);
 	}
 }
 
