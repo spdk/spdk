@@ -94,10 +94,9 @@ struct spdk_env_opts {
  * with the given size, alignment and socket id.
  *
  * \param size Size in bytes.
- * \param align Alignment value for the allocated memory. If '0', the allocated
- * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
- * allocated buffer is aligned to the multiple of align. In this case, it must
- * be a power of two.
+ * \param align If non-zero, the allocated buffer is aligned to a multiple of
+ * align. In this case, it must be a power of two. The returned buffer is always
+ * aligned to at least cache line size.
  * \param phys_addr **Deprecated**. Please use spdk_vtophys() for retrieving physical
  * addresses. A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
@@ -115,10 +114,9 @@ void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id,
  * with the given size, alignment and socket id. Also, the buffer will be zeroed.
  *
  * \param size Size in bytes.
- * \param align Alignment value for the allocated memory. If '0', the allocated
- * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
- * allocated buffer is aligned to the multiple of align. In this case, it must
- * be a power of two.
+ * \param align If non-zero, the allocated buffer is aligned to a multiple of
+ * align. In this case, it must be a power of two. The returned buffer is always
+ * aligned to at least cache line size.
  * \param phys_addr **Deprecated**. Please use spdk_vtophys() for retrieving physical
  * addresses. A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
@@ -136,10 +134,9 @@ void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id
  *
  * \param buf Buffer to resize.
  * \param size Size in bytes.
- * \param align Alignment value for the allocated memory. If '0', the allocated
- * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
- * allocated buffer is aligned to the multiple of align. In this case, it must
- * be a power of two.
+ * \param align If non-zero, the allocated buffer is aligned to a multiple of
+ * align. In this case, it must be a power of two. The returned buffer is always
+ * aligned to at least cache line size.
  *
  * \return a pointer to the resized memory buffer.
  */
@@ -180,10 +177,9 @@ void spdk_env_fini(void);
  * Allocate a pinned memory buffer with the given size and alignment.
  *
  * \param size Size in bytes.
- * \param align Alignment value for the allocated memory. If '0', the allocated
- * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
- * allocated buffer is aligned to the multiple of align. In this case, it must
- * be a power of two.
+ * \param align If non-zero, the allocated buffer is aligned to a multiple of
+ * align. In this case, it must be a power of two. The returned buffer is always
+ * aligned to at least cache line size.
  * \param phys_addr A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
  *
@@ -195,10 +191,9 @@ void *spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr);
  * Allocate a pinned, memory buffer with the given size, alignment and socket id.
  *
  * \param size Size in bytes.
- * \param align Alignment value for the allocated memory. If '0', the allocated
- * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
- * allocated buffer is aligned to the multiple of align. In this case, it must
- * be a power of two.
+ * \param align If non-zero, the allocated buffer is aligned to a multiple of
+ * align. In this case, it must be a power of two. The returned buffer is always
+ * aligned to at least cache line size.
  * \param phys_addr A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
@@ -213,10 +208,9 @@ void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int
  * will be zeroed.
  *
  * \param size Size in bytes.
- * \param align Alignment value for the allocated memory. If '0', the allocated
- * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
- * allocated buffer is aligned to the multiple of align. In this case, it must
- * be a power of two.
+ * \param align If non-zero, the allocated buffer is aligned to a multiple of
+ * align. In this case, it must be a power of two. The returned buffer is always
+ * aligned to at least cache line size.
  * \param phys_addr A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
  *
@@ -229,10 +223,9 @@ void *spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
  * The buffer will be zeroed.
  *
  * \param size Size in bytes.
- * \param align Alignment value for the allocated memory. If '0', the allocated
- * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
- * allocated buffer is aligned to the multiple of align. In this case, it must
- * be a power of two.
+ * \param align If non-zero, the allocated buffer is aligned to a multiple of
+ * align. In this case, it must be a power of two. The returned buffer is always
+ * aligned to at least cache line size.
  * \param phys_addr A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
@@ -248,10 +241,9 @@ void *spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, in
  *
  * \param buf Buffer to resize.
  * \param size Size in bytes.
- * \param align Alignment value for the allocated memory. If '0', the allocated
- * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
- * allocated buffer is aligned to the multiple of align. In this case, it must
- * be a power of two.
+ * \param align If non-zero, the allocated buffer is aligned to a multiple of
+ * align. In this case, it must be a power of two. The returned buffer is always
+ * aligned to at least cache line size.
  * \param phys_addr A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
  *
