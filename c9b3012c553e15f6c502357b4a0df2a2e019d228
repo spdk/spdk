@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8b57161f_899da1b6",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T14:09:56Z",
+      "side": 1,
+      "message": "Yes, this is not freed. This is a temp array used to capture the list of active hwqp pointers. In fact this memory hs to be freed before exiting this function. Fixed.",
+      "parentUuid": "b46d8693_0e6b7131",
+      "range": {
+        "startLine": 646,
+        "startChar": 1,
+        "endLine": 646,
+        "endChar": 7
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e9012a9d_696d2f46",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 35
@@ -45,6 +69,30 @@
       "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a957ee4_059ba838",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1685,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T14:09:56Z",
+      "side": 1,
+      "message": "Yes, \u0027valid\u0027 means non-zero.",
+      "parentUuid": "e9012a9d_696d2f46",
+      "range": {
+        "startLine": 1685,
+        "startChar": 35,
+        "endLine": 1685,
+        "endChar": 62
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "fc9030bb_94762d0a",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1686,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T14:09:56Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "b028652c_58ef0514",
+      "range": {
+        "startLine": 1686,
+        "startChar": 4,
+        "endLine": 1686,
+        "endChar": 22
+      },
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "35171ea6_ff2de5f3",
         "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
         "patchSetId": 35
@@ -85,6 +157,24 @@
       "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0e4e193_5d485e99",
+        "filename": "lib/nvmf/fc_adm_api/fc_adm_api.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T14:09:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "35171ea6_ff2de5f3",
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -168,6 +258,24 @@
     },
     {
       "key": {
+        "uuid": "01b128ea_31ed0b03",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T14:09:56Z",
+      "side": 1,
+      "message": "yes, in certain specific return code \u0027opd\u0027 memory has to be freed.",
+      "parentUuid": "33f29499_a8a14a9e",
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a2db1e70_14ea9b02",
         "filename": "lib/nvmf/fc_ls.c",
         "patchSetId": 35
@@ -223,6 +331,24 @@
       "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c08aab36_c23a16c2",
+        "filename": "lib/nvmf/fc_ls.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-03T14:09:56Z",
+      "side": 1,
+      "message": "Yes.",
+      "parentUuid": "81f2452a_ee0f3041",
+      "revId": "c9b3012c553e15f6c502357b4a0df2a2e019d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
