@@ -2794,7 +2794,11 @@ enum spdk_nvme_log_page {
 	/* 0x81-0xBF - I/O command set specific */
 
 	/* 0xC0-0xFF - vendor specific */
+	SPDK_NVME_LOG_VENDOR_SPECIFIC_START	= 0xc0,
+	SPDK_NVME_LOG_VENDOR_SPECIFIC_END	= 0xff,
 };
+
+#define spdk_nvme_log_page_is_vendor_specific(lid) ((lid) >= SPDK_NVME_LOG_VENDOR_SPECIFIC_START)
 
 /**
  * Error information log page (\ref SPDK_NVME_LOG_ERROR)
