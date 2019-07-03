@@ -73,7 +73,7 @@ spdk_rpc_construct_crypto_bdev(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_crypto_decoders,
 				    SPDK_COUNTOF(rpc_construct_crypto_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_crypto, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
