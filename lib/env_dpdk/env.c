@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/util.h"
 
 #include "env_internal.h"
 
@@ -61,6 +62,8 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint3
 	if (flags == 0) {
 		return NULL;
 	}
+
+	align = spdk_max(align, RTE_CACHE_LINE_SIZE);
 
 	void *buf = rte_malloc_socket(NULL, size, align, socket_id);
 	if (buf && phys_addr) {
