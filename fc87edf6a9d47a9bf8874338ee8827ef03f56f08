@@ -46,6 +46,30 @@
       "revId": "fc87edf6a9d47a9bf8874338ee8827ef03f56f08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a6db978_5496e985",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-03T23:00:06Z",
+      "side": 1,
+      "message": "Thank you Paul.\n\nI read the patch more than yesterday. _crypto_operation will return two error cases, ENOMEM and EINVAL. EINVAL is already covered at the line 409 and ENOMEM is covered here. We can mock spdk_bdev_queue_io_wait but it will not be necessary. As you say, simulating queueing is not in the scope of this UT.",
+      "parentUuid": "0d1c5fb3_de9d25f3",
+      "range": {
+        "startLine": 385,
+        "startChar": 1,
+        "endLine": 385,
+        "endChar": 70
+      },
+      "revId": "fc87edf6a9d47a9bf8874338ee8827ef03f56f08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
