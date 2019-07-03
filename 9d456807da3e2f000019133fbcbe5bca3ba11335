@@ -601,6 +601,29 @@
     },
     {
       "key": {
+        "uuid": "ad4635c5_b8df7c88",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-03T14:19:54Z",
+      "side": 1,
+      "message": "Are you sure deleting this in PS16 is OK?",
+      "range": {
+        "startLine": 47,
+        "startChar": 4,
+        "endLine": 47,
+        "endChar": 43
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c2e56f7a_32af2db2",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 13
