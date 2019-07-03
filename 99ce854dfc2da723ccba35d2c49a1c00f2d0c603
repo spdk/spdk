@@ -65,6 +65,29 @@
     },
     {
       "key": {
+        "uuid": "8d8a98f2_f5dd85c5",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-03T08:50:30Z",
+      "side": 1,
+      "message": "You could use spdk_jsonrpc_send_error_response() directly in places where you set the rc. It would make style more consistant because in create rpc you do it this way. Also it would make code more linear because you would only need to use goto for free operation.",
+      "range": {
+        "startLine": 182,
+        "startChar": 1,
+        "endLine": 182,
+        "endChar": 12
+      },
+      "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "78f78384_4126b27d",
         "filename": "lib/bdev/aio/bdev_aio_rpc.c",
         "patchSetId": 2
