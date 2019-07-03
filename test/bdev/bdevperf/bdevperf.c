@@ -235,7 +235,7 @@ bdevperf_free_target(struct io_target *target)
 }
 
 static void
-blockdev_heads_destroy(void)
+bdevperf_free_targets(void)
 {
 	uint32_t i, core_count;
 	struct io_target *target, *next_target;
@@ -247,13 +247,19 @@ blockdev_heads_destroy(void)
 	core_count = spdk_env_get_core_count();
 	for (i = 0; i < core_count; i++) {
 		target = g_head[i];
+		g_head[i] = NULL;
 		while (target != NULL) {
 			next_target = target->next;
 			bdevperf_free_target(target);
 			target = next_target;
 		}
 	}
+}
 
+static void
+blockdev_heads_destroy(void)
+{
+	bdevperf_free_targets();
 	free(g_head);
 	free(g_coremap);
 }
