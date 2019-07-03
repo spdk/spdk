@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "76bdfc33_a2e7b5a0",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "43b42c91_f24cb1a3",
+      "range": {
+        "startLine": 8,
+        "startChar": 2,
+        "endLine": 8,
+        "endChar": 56
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e18eded8_4a64c83a",
         "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
         "patchSetId": 13
@@ -45,6 +69,30 @@
       "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbf1309f_98d5a36f",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e18eded8_4a64c83a",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 41
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "a9428c31_fa06b6d2",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "593187a4_1b51cb4d",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 3
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "57db9e0b_6c66109e",
         "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
         "patchSetId": 13
@@ -91,6 +163,30 @@
       "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8041c5be_109631c4",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "57db9e0b_6c66109e",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 58
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "63925cbb_87716afa",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ee16ace0_ab9e35f1",
+      "range": {
+        "startLine": 70,
+        "startChar": 2,
+        "endLine": 70,
+        "endChar": 41
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbac3090_a54886b8",
         "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
         "patchSetId": 13
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "7515c480_333a4a61",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fbac3090_a54886b8",
+      "range": {
+        "startLine": 81,
+        "startChar": 3,
+        "endLine": 82,
+        "endChar": 57
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1cd74a10_c230359b",
         "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
         "patchSetId": 13
@@ -154,6 +298,24 @@
       "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b70de19_018c9dcc",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1cd74a10_c230359b",
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "f6fe88c9_118706a0",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:30:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c0542181_7ebf1f30",
+      "range": {
+        "startLine": 116,
+        "startChar": 2,
+        "endLine": 116,
+        "endChar": 57
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e81f7b7_5e99dc09",
         "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
         "patchSetId": 13
@@ -191,6 +377,30 @@
       "writtenOn": "2019-07-02T15:57:42Z",
       "side": 1,
       "message": "There\u0027s already apt update around line 70. Why nt group all apt operations there?",
+      "range": {
+        "startLine": 124,
+        "startChar": 40,
+        "endLine": 124,
+        "endChar": 115
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd45afd2_cd0f9166",
+        "filename": "scripts/vagrant/Vagrantfile_openstack_vm",
+        "patchSetId": 13
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-03T11:30:50Z",
+      "side": 1,
+      "message": "apt-get in line 70 no more exists",
+      "parentUuid": "0e81f7b7_5e99dc09",
       "range": {
         "startLine": 124,
         "startChar": 40,
