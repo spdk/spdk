@@ -16,6 +16,24 @@
       "revId": "da73885ca79bfe4b2dacb01845871d89f6788cf8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69263964_862e3b10",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-03T08:55:21Z",
+      "side": 1,
+      "message": "Restore task? First of all, it\u0027s not done periodically, only at the beginning. Secondly it\u0027d only add more code and complicate stuff (additional state variables just to know what\u0027s being currently done). Moreover, I think doing stuff in callbacks very much makes sense - it divides the phases of the recovery process very neatly.",
+      "parentUuid": "f8ab9d79_5e271e64",
+      "revId": "da73885ca79bfe4b2dacb01845871d89f6788cf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
