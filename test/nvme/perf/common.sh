@@ -25,6 +25,13 @@ NUMJOBS=1
 REPEAT_NO=3
 NOIOSCALING=false
 
+function is_bdf_mounted() {
+	local bdf=$1
+	local blkname=$(ls -l /sys/block/ | grep $bdf | awk '{print $9}')
+	local mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
+	echo $mountpoints
+}
+
 function get_cores(){
 	local cpu_list="$1"
 	for cpu in ${cpu_list//,/ }; do
@@ -57,8 +64,11 @@ function get_numa_node(){
 			echo $(cat /sys/bus/pci/devices/$bdev_bdf/numa_node)
 		done
 	else
+		# Only target not mounted NVMes
 		for bdf in $(iter_pci_class_code 01 08 02); do
+			if [[ $(is_bdf_mounted $bdf) = "0" ]]; then
 				echo $(cat /sys/bus/pci/devices/$bdf/numa_node)
+			fi
 		done
 	fi
 }
@@ -76,8 +86,12 @@ function get_disks(){
 		local bdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 		echo $(jq -r '.[].name' <<< $bdevs)
 	else
+		# Only target not mounted NVMes
 		for bdf in $(iter_pci_class_code 01 08 02); do
-			echo $(ls -l /sys/block/ | grep $bdf |awk '{print $9}')
+			if [[ $(is_bdf_mounted $bdf) = "0" ]]; then
+				local blkname=$(ls -l /sys/block/ | grep $bdf | awk '{print $9}')
+				echo $blkname
+			fi
 		done
 	fi
 }
@@ -182,9 +196,16 @@ function preconditioning(){
 	local filename=""
 	local i
 	sed -i -e "\$a[preconditioning]" $BASE_DIR/config.fio
+
+	# Generate filename argument for FIO.
+	# We only want to target NVMes not bound to nvme driver.
+	# If they're still bound to nvme that means they were skipped by
+	# setup.sh on purpose.
 	for bdf in $(iter_pci_class_code 01 08 02); do
-		dev_name='trtype=PCIe traddr='${bdf//:/.}' ns=1'
-		filename+=$(printf %s":" "$dev_name")
+		if ! grep -q nvme /sys/bus/pci/devices/$bdf/uevent; then
+			dev_name='trtype=PCIe traddr='${bdf//:/.}' ns=1'
+			filename+=$(printf %s":" "$dev_name")
+		fi
 	done
 	echo "** Preconditioning disks, this can take a while, depending on the size of disks."
 	run_spdk_nvme_fio "nvme" --filename="$filename" --size=100% --loops=2 --bs=1M\
