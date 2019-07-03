@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d566d7f_25396018",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-03T15:35:57Z",
+      "side": 1,
+      "message": "is --\u003e are",
+      "revId": "8d73f3b3ed155c920440b91bcfc9c4e53e56caed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb6e01c7_41eb4ac7",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-03T15:35:57Z",
+      "side": 1,
+      "message": "posed -\u003e posted",
+      "revId": "8d73f3b3ed155c920440b91bcfc9c4e53e56caed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
