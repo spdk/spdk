@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b69167d_b54a5ca6",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:24:55Z",
+      "side": 1,
+      "message": "I don\u0027t think these shutdown flags get set when starting/stopping particular tests. Should we still check them here?",
+      "range": {
+        "startLine": 405,
+        "startChar": 6,
+        "endLine": 405,
+        "endChar": 16
+      },
+      "revId": "852eb56e29bebd8b197a620ed8eb667cd00b074b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e91e144_6079b416",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:24:55Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to call this here. Shouldn\u0027t this be called at the end of the app?",
+      "range": {
+        "startLine": 419,
+        "startChar": 2,
+        "endLine": 419,
+        "endChar": 27
+      },
+      "revId": "852eb56e29bebd8b197a620ed8eb667cd00b074b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
