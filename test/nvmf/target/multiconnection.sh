@@ -54,6 +54,5 @@ rm -f ./local-job0-0-verify.state
 
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
 nvmftestfini
 timing_exit multiconnection

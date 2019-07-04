@@ -181,6 +181,13 @@ function nvmftestinit()
 	elif [ "$TEST_TRANSPORT" == "tcp" ]; then
 		NVMF_FIRST_TARGET_IP=127.0.0.1
 	fi
+
+	# currently we run the host/perf test for TCP even on systems without kernel nvme-tcp
+	#  support; that's fine since the host/perf test uses the SPDK initiator
+	# maybe later we will enforce modprobe to succeed once we have systems in the test pool
+	#  with nvme-tcp kernel support - but until then let this pass so we can still run the
+	#  host/perf test with the tcp transport
+	modprobe nvme-$TEST_TRANSPORT || true
 }
 
 function nvmfappstart()
@@ -190,17 +197,12 @@ function nvmfappstart()
 	nvmfpid=$!
 	trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 	waitforlisten $nvmfpid
-	# currently we run the host/perf test for TCP even on systems without kernel nvme-tcp
-	#  support; that's fine since the host/perf test uses the SPDK initiator
-	# maybe later we will enforce modprobe to succeed once we have systems in the test pool
-	#  with nvme-tcp kernel support - but until then let this pass so we can still run the
-	#  host/perf test with the tcp transport
-	modprobe nvme-$TEST_TRANSPORT || true
 	timing_exit start_nvmf_tgt
 }
 
 function nvmftestfini()
 {
+	nvmfcleanup
 	killprocess $nvmfpid
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh reset
