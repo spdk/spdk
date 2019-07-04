@@ -83,13 +83,11 @@ struct spdk_ftl_conf {
 	/* IO pool size per user thread */
 	size_t					user_io_pool_size;
 
-	struct {
-		/* Lowest percentage of invalid lbks for a band to be defragged */
-		size_t				invalid_thld;
+	/* Lowest percentage of invalid lbks for a band to be defragged */
+	size_t					invalid_thld;
 
-		/* User writes limits */
-		struct spdk_ftl_limit		limits[SPDK_FTL_LIMIT_MAX];
-	} defrag;
+	/* User writes limits */
+	struct spdk_ftl_limit			limits[SPDK_FTL_LIMIT_MAX];
 
 	/* Number of interleaving units per ws_opt */
 	size_t                                  num_interleave_units;

@@ -660,7 +660,7 @@ static const struct spdk_ftl_limit *
 ftl_get_limit(const struct spdk_ftl_dev *dev, int type)
 {
 	assert(type < SPDK_FTL_LIMIT_MAX);
-	return &dev->conf.defrag.limits[type];
+	return &dev->conf.limits[type];
 }
 
 static bool
@@ -1814,7 +1814,7 @@ ftl_band_needs_defrag(struct ftl_band *band, struct spdk_ftl_dev *dev)
 		return true;
 	}
 
-	thld_vld = (ftl_band_num_usable_lbks(band) * conf->defrag.invalid_thld) / 100;
+	thld_vld = (ftl_band_num_usable_lbks(band) * conf->invalid_thld) / 100;
 
 	return band->merit > ftl_band_calc_merit(band, &thld_vld);
 }

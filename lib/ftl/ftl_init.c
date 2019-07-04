@@ -66,20 +66,18 @@ struct ftl_admin_cmpl {
 static STAILQ_HEAD(, spdk_ftl_dev)	g_ftl_queue = STAILQ_HEAD_INITIALIZER(g_ftl_queue);
 static pthread_mutex_t			g_ftl_queue_lock = PTHREAD_MUTEX_INITIALIZER;
 static const struct spdk_ftl_conf	g_default_conf = {
-	.defrag = {
-		.limits = {
-			/* 5 free bands  / 0 % host writes */
-			[SPDK_FTL_LIMIT_CRIT]  = { .thld = 5,  .limit = 0 },
-			/* 10 free bands / 5 % host writes */
-			[SPDK_FTL_LIMIT_HIGH]  = { .thld = 10, .limit = 5 },
-			/* 20 free bands / 40 % host writes */
-			[SPDK_FTL_LIMIT_LOW]   = { .thld = 20, .limit = 40 },
-			/* 40 free bands / 100 % host writes - defrag starts running */
-			[SPDK_FTL_LIMIT_START] = { .thld = 40, .limit = 100 },
-		},
-		/* 10 percent valid lbks */
-		.invalid_thld = 10,
+	.limits = {
+		/* 5 free bands  / 0 % host writes */
+		[SPDK_FTL_LIMIT_CRIT]  = { .thld = 5,  .limit = 0 },
+		/* 10 free bands / 5 % host writes */
+		[SPDK_FTL_LIMIT_HIGH]  = { .thld = 10, .limit = 5 },
+		/* 20 free bands / 40 % host writes */
+		[SPDK_FTL_LIMIT_LOW]   = { .thld = 20, .limit = 40 },
+		/* 40 free bands / 100 % host writes - defrag starts running */
+		[SPDK_FTL_LIMIT_START] = { .thld = 40, .limit = 100 },
 	},
+	/* 10 percent valid lbks */
+	.invalid_thld = 10,
 	/* 20% spare lbks */
 	.lba_rsvd = 20,
 	/* 6M write buffer */
@@ -141,7 +139,7 @@ ftl_check_conf(const struct spdk_ftl_conf *conf,
 {
 	size_t i;
 
-	if (conf->defrag.invalid_thld >= 100) {
+	if (conf->invalid_thld >= 100) {
 		return -1;
 	}
 	if (conf->lba_rsvd >= 100) {
@@ -161,7 +159,7 @@ ftl_check_conf(const struct spdk_ftl_conf *conf,
 	}
 
 	for (i = 0; i < SPDK_FTL_LIMIT_MAX; ++i) {
-		if (conf->defrag.limits[i].limit > 100) {
+		if (conf->limits[i].limit > 100) {
 			return -1;
 		}
 	}
