@@ -1200,6 +1200,12 @@ spdk_bdevperf_shutdown_cb(void)
 	struct spdk_event *event;
 
 	g_shutdown = true;
+
+	if (g_target_count == 0) {
+		spdk_app_stop(0);
+		return;
+	}
+
 	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
 
 	/* Send events to stop all I/O on each core */
