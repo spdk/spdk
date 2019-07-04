@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45826bb4_559ce180",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T12:17:16Z",
+      "side": 1,
+      "message": "Let\u0027s just merge this into the spdk_ftl_conf.",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 51
+      },
+      "revId": "583220dad1e84bedc508ce8cd85b6f8e5265d6bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f337744_7b329d2b",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T12:17:16Z",
+      "side": 1,
+      "message": "Why did you add this? I\u0027d rather have a spdk_ftl_get_conf(dev) to retrieve current configuration. Or better yet, add spdk_ftl_conf to this structure and get rid of the duplicated values.",
+      "range": {
+        "startLine": 160,
+        "startChar": 0,
+        "endLine": 163,
+        "endChar": 52
+      },
+      "revId": "583220dad1e84bedc508ce8cd85b6f8e5265d6bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1e71677_faa397ca",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T12:17:16Z",
+      "side": 1,
+      "message": "Perhaps we could use **kwargs for the optional arguments? It\u0027d decrease the number of if\u0027s below.",
+      "range": {
+        "startLine": 599,
+        "startChar": 4,
+        "endLine": 599,
+        "endChar": 22
+      },
+      "revId": "583220dad1e84bedc508ce8cd85b6f8e5265d6bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
