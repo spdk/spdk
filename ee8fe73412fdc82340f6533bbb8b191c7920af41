@@ -1,0 +1,239 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d07a1d31_e1b80bd7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "\u0027untill\u0027 -\u003e \u0027until\u0027.",
+      "range": {
+        "startLine": 7,
+        "startChar": 29,
+        "endLine": 7,
+        "endChar": 36
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bb2fbc4_8f0d9423",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "Should be static.",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 38
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2edc4caa_523461ad",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "Wouldn\u0027t checking if g_request !\u003d NULL suffice?",
+      "range": {
+        "startLine": 428,
+        "startChar": 6,
+        "endLine": 428,
+        "endChar": 37
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bda0b932_f7bd0018",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1332,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it make sense to have a common response for both error and successful runs?",
+      "range": {
+        "startLine": 1324,
+        "startChar": 0,
+        "endLine": 1332,
+        "endChar": 48
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "715c4edf_cb21eb2c",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1332,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "Use spdk_strerror.",
+      "range": {
+        "startLine": 1332,
+        "startChar": 44,
+        "endLine": 1332,
+        "endChar": 46
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3552203_b988de69",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1353,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "What\u0027s the point of this?",
+      "range": {
+        "startLine": 1353,
+        "startChar": 34,
+        "endLine": 1353,
+        "endChar": 36
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d3bac1f_4a457576",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1356,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we first check if g_request \u003d\u003d NULL and send response with an error in case it isn\u0027t?",
+      "range": {
+        "startLine": 1356,
+        "startChar": 1,
+        "endLine": 1356,
+        "endChar": 20
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a479f1f_3af882e1",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1361,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "Set g_request \u003d NULL here.",
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79bbfcbc_7836753f",
+        "filename": "test/bdev/bdevperf/tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "Wouldn\u0027t calling it \u0027bdevperf.py\u0027 or \u0027rpc.py\u0027 make more sense?",
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83a1fd3d_0b73a1c1",
+        "filename": "test/bdev/bdevperf/tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "Missing docs.",
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "835f4990_b9c313a8",
+        "filename": "test/bdev/bdevperf/tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:57:12Z",
+      "side": 1,
+      "message": "I don\u0027t really understand that statement. Does that mean that it returns 0 if all the tests failed? What about other values? What if just some of the tests fail? What if they all succeed?",
+      "range": {
+        "startLine": 25,
+        "startChar": 8,
+        "endLine": 25,
+        "endChar": 50
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
