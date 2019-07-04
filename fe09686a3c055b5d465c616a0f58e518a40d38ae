@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db69193b_574b577e",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T14:03:40Z",
+      "side": 1,
+      "message": "It\u0027s not library-specific, but device-specific configuration.",
+      "range": {
+        "startLine": 153,
+        "startChar": 4,
+        "endLine": 153,
+        "endChar": 15
+      },
+      "revId": "fe09686a3c055b5d465c616a0f58e518a40d38ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62587cd6_384c76dd",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T14:03:40Z",
+      "side": 1,
+      "message": "Let\u0027s just call it conf.",
+      "range": {
+        "startLine": 154,
+        "startChar": 24,
+        "endLine": 154,
+        "endChar": 32
+      },
+      "revId": "fe09686a3c055b5d465c616a0f58e518a40d38ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
