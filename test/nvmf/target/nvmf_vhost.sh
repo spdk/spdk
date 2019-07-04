@@ -66,7 +66,6 @@ vm_shutdown_all
 
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
 killprocess $vhostpid
 nvmftestfini
 timing_exit nvmf_vhost

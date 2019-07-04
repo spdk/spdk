@@ -116,7 +116,7 @@ waitforlisten $perfpid /var/tmp/bdevperf.sock
 $rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
 
 # Expand the trap to clean up bdevperf if something goes wrong
-trap "process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid; nvmfcleanup; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforio /var/tmp/bdevperf.sock Nvme1n1
 
@@ -135,9 +135,6 @@ rm -rf $testdir/bdevperf.conf
 rm -rf $testdir/rpcs.txt
 trap - SIGINT SIGTERM EXIT
 
-timing_enter cleanup
-nvmfcleanup
-timing_exit cleanup
 timing_enter testfini
 nvmftestfini
 timing_exit testfini

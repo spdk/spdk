@@ -63,7 +63,6 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 
 if [ $fio_status -eq 0 ]; then
         echo "nvmf hotplug test: fio successful - expected failure"
-        nvmfcleanup
 	nvmftestfini
         exit 1
 else
@@ -78,6 +77,5 @@ rm -f ./local-job2-2-verify.state
 
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
 nvmftestfini
 timing_exit fio

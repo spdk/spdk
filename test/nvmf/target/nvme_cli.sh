@@ -73,7 +73,6 @@ fi
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
 nvmftestfini
 report_test_completion "nvmf_spdk_nvme_cli"
 timing_exit nvme_cli
