@@ -43,6 +43,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
+#include "spdk/bdev_zone.h"
 #include "spdk/queue.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/thread.h"
@@ -512,6 +513,16 @@ struct spdk_bdev_io {
 			/* meta data buffer size to transfer */
 			size_t md_len;
 		} nvme_passthru;
+		struct {
+			/* First logical block of a zone */
+			uint64_t zone_id;
+
+			/* Number of zones */
+			uint32_t num_zones;
+
+			/* The data buffer */
+			void *buf;
+		} zone_mgmt;
 	} u;
 
 	/** It may be used by modules to put the bdev_io into its own list. */
