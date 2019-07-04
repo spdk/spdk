@@ -790,7 +790,7 @@ static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
 	return !__atomic_load_n(&dev->num_inflight, __ATOMIC_SEQ_CST) &&
-	       LIST_EMPTY(&dev->wptr_list);
+	       LIST_EMPTY(&dev->wptr_list) && TAILQ_EMPTY(&dev->retry_queue);
 }
 
 void
