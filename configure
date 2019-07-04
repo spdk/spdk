@@ -606,7 +606,7 @@ if [[ "${CONFIG[PGO_CAPTURE]}" = "y" && "${CONFIG[PGO_USE]}" = "y" ]]; then
 	echo "ERROR: --enable-pgo-capture and --enable-pgo-use are mutually exclusive."
 	exit 1
 elif [[ "${CONFIG[PGO_USE]}" = "y" ]]; then
-	CC_TYPE=$($rootdir/scripts/detect_cc.sh --cc=$CC --cxx=$CXX --lto=$CONFIG[LTO] --ld=$LD | grep "CC_TYPE" | cut -d "=" -f 2)
+	CC_TYPE=$($rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" | grep "CC_TYPE" | cut -d "=" -f 2)
 	if [[ "$CC_TYPE" = "clang" ]]; then
 		# For clang we need to run an extra step on gathered profiling data.
 		echo "Generating suitable profile data"
