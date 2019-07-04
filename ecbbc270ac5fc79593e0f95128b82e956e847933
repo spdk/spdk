@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f58b552a_f4d7e962",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-04T09:24:40Z",
+      "side": 1,
+      "message": "callback",
+      "range": {
+        "startLine": 56,
+        "startChar": 9,
+        "endLine": 56,
+        "endChar": 18
+      },
+      "revId": "ecbbc270ac5fc79593e0f95128b82e956e847933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
