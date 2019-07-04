@@ -16,6 +16,24 @@
       "revId": "49c97e42617da97b3775dea43b61c27aa898e86e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d738b28_61adf25d",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-07-04T07:01:11Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c71a674b_6af0a170",
+      "revId": "49c97e42617da97b3775dea43b61c27aa898e86e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
