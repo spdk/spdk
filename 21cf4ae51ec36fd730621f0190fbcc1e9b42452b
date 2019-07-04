@@ -117,6 +117,30 @@
       "revId": "21cf4ae51ec36fd730621f0190fbcc1e9b42452b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e357659a_d2c6cbfc",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-04T20:56:03Z",
+      "side": 1,
+      "message": "Maciej Szwed: I think that deleting lvol at the end of test should be enough.",
+      "parentUuid": "a9fb337b_cf86f03d",
+      "range": {
+        "startLine": 13,
+        "startChar": 1,
+        "endLine": 13,
+        "endChar": 35
+      },
+      "revId": "21cf4ae51ec36fd730621f0190fbcc1e9b42452b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
