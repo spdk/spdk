@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "9da28ba7_11fda508",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T12:19:14Z",
+      "side": 1,
+      "message": "I\u0027d rather call them defrag paremters, as they configure the defragmentation process (which in turn is responsible for many things including WAF).",
+      "range": {
+        "startLine": 7,
+        "startChar": 14,
+        "endLine": 7,
+        "endChar": 28
+      },
+      "revId": "583220dad1e84bedc508ce8cd85b6f8e5265d6bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "45826bb4_559ce180",
         "filename": "include/spdk/ftl.h",
         "patchSetId": 1
