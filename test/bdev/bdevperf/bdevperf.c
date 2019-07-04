@@ -1198,16 +1198,25 @@ spdk_bdevperf_shutdown_cb(void)
 	struct spdk_event *event;
 
 	g_shutdown = true;
+
+	if (g_target_count == 0) {
+		blockdev_heads_destroy();
+		spdk_app_stop(0);
+		return;
+	}
+
 	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
 
 	/* Send events to stop all I/O on each core */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
 		if (g_head == NULL) {
-			break;
+			spdk_app_stop(1);
+			return;
 		}
 		target = g_head[i];
 		if (target == NULL) {
-			break;
+			spdk_app_stop(1);
+			return;
 		}
 		event = spdk_event_allocate(target->lcore, bdevperf_stop_io_on_core,
 					    target, NULL);
