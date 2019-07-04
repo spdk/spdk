@@ -82,7 +82,7 @@ function tgt_check_notifications() {
                         echo "ERROR: got extra event: $event_line"
                         rc=false
                         continue
-                elif ! echo "$ev_type" | egrep -q  "^${ex_ev_type}\$" || ! echo "$ev_ctx" | egrep -q "^${ex_ev_ctx}\$"; then
+                elif ! echo "$ev_type" | grep -E -q  "^${ex_ev_type}\$" || ! echo "$ev_ctx" | grep -E -q "^${ex_ev_ctx}\$"; then
                         echo "ERROR: expected event '$1' but got '$event' (whole event line: $event_line)"
                         rc=false
                 fi
