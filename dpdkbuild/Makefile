@@ -129,7 +129,8 @@ endif
 # Allow users to specify EXTRA_DPDK_CFLAGS if they want to build DPDK using unsupported compiler versions
 DPDK_CFLAGS += $(EXTRA_DPDK_CFLAGS)
 
-$(SPDK_ROOT_DIR)/dpdk/build:
+$(SPDK_ROOT_DIR)/dpdk/build: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h
+	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG) $(DPDK_OPTS)
 
 all: $(SPDK_ROOT_DIR)/dpdk/build
