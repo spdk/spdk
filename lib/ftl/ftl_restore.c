@@ -872,19 +872,53 @@ ftl_nv_cache_scan_block(struct ftl_nv_cache_block *block)
 	return 0;
 }
 
+static bool
+ftl_nv_cache_header_valid(struct spdk_ftl_dev *dev, const struct ftl_nv_cache_header *hdr)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(dev->nv_cache.bdev_desc);
+	uint32_t checksum;
+
+	checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
+	if (checksum != hdr->checksum) {
+		SPDK_ERRLOG("Invalid header checksum (found: %"PRIu32", expected: %"PRIu32")\n",
+			    checksum, hdr->checksum);
+		return false;
+	}
+
+	if (hdr->version != FTL_NV_CACHE_HEADER_VERSION) {
+		SPDK_ERRLOG("Invalid header version (found: %"PRIu32", expected: %"PRIu32")\n",
+			    hdr->version, FTL_NV_CACHE_HEADER_VERSION);
+		return false;
+	}
+
+	if (hdr->size != spdk_bdev_get_num_blocks(bdev)) {
+		SPDK_ERRLOG("Unexpected size of the non-volatile cache bdev (%"PRIu64", expected: %"
+			    PRIu64")\n", hdr->size, spdk_bdev_get_num_blocks(bdev));
+		return false;
+	}
+
+	if (spdk_uuid_compare(&hdr->uuid, &dev->uuid)) {
+		SPDK_ERRLOG("Invalid device UUID\n");
+		return false;
+	}
+
+	if (!ftl_nv_cache_phase_is_valid(hdr->phase) && hdr->phase != 0) {
+		return false;
+	}
+
+	return true;
+}
+
 static void
 ftl_nv_cache_read_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct ftl_restore *restore = cb_arg;
 	struct spdk_ftl_dev *dev = restore->dev;
-	struct spdk_bdev *bdev;
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	struct ftl_nv_cache_header *hdr;
 	struct iovec *iov = NULL;
 	int iov_cnt = 0, i, rc;
-	uint32_t checksum;
 
-	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 	spdk_bdev_io_get_iovec(bdev_io, &iov, &iov_cnt);
 	hdr = iov[0].iov_base;
 
@@ -894,55 +928,29 @@ ftl_nv_cache_read_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb
 		goto out;
 	}
 
-	checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
-	if (checksum != hdr->checksum) {
-		SPDK_ERRLOG("Invalid header checksum (found: %"PRIu32", expected: %"PRIu32")\n",
-			    checksum, hdr->checksum);
+	if (!ftl_nv_cache_header_valid(dev, hdr)) {
 		ftl_restore_complete(restore, -ENOTRECOVERABLE);
-		goto out;
-	}
-
-	if (hdr->version != FTL_NV_CACHE_HEADER_VERSION) {
-		SPDK_ERRLOG("Invalid header version (found: %"PRIu32", expected: %"PRIu32")\n",
-			    hdr->version, FTL_NV_CACHE_HEADER_VERSION);
-		ftl_restore_complete(restore, -ENOTRECOVERABLE);
-		goto out;
-	}
-
-	if (hdr->size != spdk_bdev_get_num_blocks(bdev)) {
-		SPDK_ERRLOG("Unexpected size of the non-volatile cache bdev (%"PRIu64", expected: %"
-			    PRIu64")\n", hdr->size, spdk_bdev_get_num_blocks(bdev));
-		ftl_restore_complete(restore, -ENOTRECOVERABLE);
-		goto out;
-	}
-
-	if (spdk_uuid_compare(&hdr->uuid, &dev->uuid)) {
-		SPDK_ERRLOG("Invalid device UUID\n");
-		ftl_restore_complete(restore, -ENOTRECOVERABLE);
-		goto out;
-	}
-
-	if (!ftl_nv_cache_phase_is_valid(hdr->phase)) {
-		/* If the phase equals zero, we lost power during recovery. We need to finish it up
-		 * by scrubbing the device once again.
-		 */
-		if (hdr->phase != 0) {
-			ftl_restore_complete(restore, -ENOTRECOVERABLE);
-		} else {
-			SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Detected phase 0, restarting scrub\n");
-			rc = ftl_nv_cache_scrub(nv_cache, ftl_nv_cache_scrub_cb, restore);
-			if (spdk_unlikely(rc != 0)) {
-				SPDK_ERRLOG("Unable to scrub the non-volatile cache: %s\n",
-					    spdk_strerror(-rc));
-				ftl_restore_complete(restore, -ENOTRECOVERABLE);
-			}
-		}
-
 		goto out;
 	}
 
 	/* Remember the latest phase */
 	nv_cache->phase = hdr->phase;
+
+	/* If the phase equals zero, we lost power during recovery. We need to finish it up
+	 * by scrubbing the device once again.
+	 */
+	if (hdr->phase == 0) {
+		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Detected phase 0, restarting scrub\n");
+		rc = ftl_nv_cache_scrub(nv_cache, ftl_nv_cache_scrub_cb, restore);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Unable to scrub the non-volatile cache: %s\n",
+				    spdk_strerror(-rc));
+			ftl_restore_complete(restore, -ENOTRECOVERABLE);
+		}
+
+		goto out;
+	}
+
 	restore->nv_cache.current_addr = FTL_NV_CACHE_DATA_OFFSET;
 
 	for (i = 0; i < FTL_NV_CACHE_RESTORE_DEPTH; ++i) {
