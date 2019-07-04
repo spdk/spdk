@@ -36,6 +36,8 @@
 #include "spdk/bdev_zone.h"
 #include "spdk/bdev_module.h"
 
+#include "bdev_internal.h"
+
 uint64_t
 spdk_bdev_get_zone_size(const struct spdk_bdev *bdev)
 {
@@ -52,4 +54,31 @@ uint32_t
 spdk_bdev_get_optimal_open_zones(const struct spdk_bdev *bdev)
 {
 	return bdev->optimal_open_zones;
+}
+
+int
+spdk_bdev_get_zone_info(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			uint64_t zone_id, size_t num_zones, struct spdk_bdev_zone_info *info,
+			spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT;
+	bdev_io->u.zone_mgmt.zone_action = SPDK_BDEV_ZONE_INFO;
+	bdev_io->u.zone_mgmt.zone_id = zone_id;
+	bdev_io->u.zone_mgmt.num_zones = num_zones;
+	bdev_io->u.zone_mgmt.buf = info;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
 }
