@@ -441,7 +441,7 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", ftl_bdev->bdev.name);
 
-	spdk_json_write_named_bool(w, "allow_open_bands", attrs.allow_open_bands);
+	spdk_json_write_named_bool(w, "allow_open_bands", attrs.conf.allow_open_bands);
 
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &attrs.uuid);
 	spdk_json_write_named_string(w, "uuid", uuid);
