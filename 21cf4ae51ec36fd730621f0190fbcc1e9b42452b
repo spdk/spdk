@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9751afeb_9c2557de",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-04T20:49:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b62c51fb_d76c7772",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 19
+      },
+      "revId": "21cf4ae51ec36fd730621f0190fbcc1e9b42452b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "05691a08_839441c4",
         "filename": "test/openstack/run_openstack_tests.sh",
         "patchSetId": 12
@@ -69,6 +93,30 @@
       "revId": "21cf4ae51ec36fd730621f0190fbcc1e9b42452b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9fb337b_cf86f03d",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-04T20:49:49Z",
+      "side": 1,
+      "message": "Will fail but in exit mode the execution of this method will be continued.",
+      "parentUuid": "7ae44b69_e58f6f03",
+      "range": {
+        "startLine": 13,
+        "startChar": 1,
+        "endLine": 13,
+        "endChar": 35
+      },
+      "revId": "21cf4ae51ec36fd730621f0190fbcc1e9b42452b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
