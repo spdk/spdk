@@ -1307,7 +1307,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                punits=args.punits,
                                                uuid=args.uuid,
                                                cache=args.cache,
-                                               allow_open_bands=args.allow_open_bands))
+                                               allow_open_bands=args.allow_open_bands,
+                                               overprovisioning=args.overprovisioning,
+                                               crit_limit=args.crit_limit,
+                                               crit_limit_thld=args.crit_limit_thld,
+                                               high_limit=args.high_limit,
+                                               high_limit_thld=args.high_limit_thld,
+                                               low_limit=args.low_limit,
+                                               low_limit_thld=args.low_limit_thld,
+                                               start_limit=args.start_limit,
+                                               start_limit_thld=args.start_limit_thld))
 
     p = subparsers.add_parser('construct_ftl_bdev',
                               help='Add FTL bdev')
@@ -1323,6 +1332,24 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache (optional)')
     p.add_argument('-o', '--allow_open_bands', help='Restoring after dirty shutdown without cache will'
                    ' result in partial data recovery, instead of error', action='store_true')
+    p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
+                   ' to user (optional)', type=int)
+    p.add_argument('--crit_limit', help='percentage of allowed user io versus relocation io on'
+                   ' critical relocation level (optional)', type=int)
+    p.add_argument('--crit_limit_thld', help='number of unwritten bands when critical relocation'
+                   ' limit is set (optional)', type=int)
+    p.add_argument('--high_limit', help='percentage of allowed user io versus relocation io on high'
+                   ' relocation level (optional)', type=int)
+    p.add_argument('--high_limit_thld', help='number of unwritten bands when high relocation limit'
+                   ' is set (optional)', type=int)
+    p.add_argument('--low_limit', help='percentage of allowed user io versus relocation io on'
+                   ' low relocation level (optional)', type=int)
+    p.add_argument('--low_limit_thld', help='number of unwritten bands when low relocation limit is'
+                   ' set (optional)', type=int)
+    p.add_argument('--start_limit', help='percentage of allowed user io versus relocation io'
+                   ' on start relocation level (optional)', type=int)
+    p.add_argument('--start_limit_thld', help='number of unwritten bands when relocations starts to'
+                   ' occur (optional)', type=int)
     p.set_defaults(func=construct_ftl_bdev)
 
     def delete_ftl_bdev(args):
