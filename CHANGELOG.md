@@ -9,12 +9,16 @@ of bdev interface.
 
 Zoned device concept is based on NVMe TP4035 - Zoned Namespaces.
 
-`spdk_zdev_get_info()` API was added to retrieve zoned device information.
+`spdk_zdev_get_info()` API was added for retrieving zoned device information.
+`spdk_zdev_get_zone_info()` API was added for retrieving information about
+zones inside zoned namespace.
 
 ### bdev
 
 New API `spdk_bdev_is_zdev()` has been added to indicate if bdev supports
 zoned namespace device semantics.
+
+New `spdk_bdev_io_type` SPDK_BDEV_IO_ZONE_INFO was added.
 
 ## v19.07:
 
