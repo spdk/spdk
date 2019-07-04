@@ -70,8 +70,6 @@ do
 
 done
 
-nvmfcleanup
-
 # do frequent add delete.
 for i in $(seq 1 $times)
 do

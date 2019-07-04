@@ -48,6 +48,5 @@ done
 
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
 nvmftestfini
 timing_exit srq_overwhelm

@@ -48,6 +48,5 @@ $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
 nvmftestfini
 timing_exit aer

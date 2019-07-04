@@ -66,6 +66,5 @@ rm -f ./local-job*
 
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
 nvmftestfini
 timing_exit lvol_integrity

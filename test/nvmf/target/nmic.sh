@@ -32,7 +32,6 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode2 Malloc0 || nmic_status=
 
 if [ $nmic_status -eq 0 ]; then
 	echo " Adding namespace passed - failure expected."
-	nvmfcleanup
 	nvmftestfini
 	exit 1
 else
@@ -55,6 +54,5 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
 nvmftestfini
 timing_exit nmic
