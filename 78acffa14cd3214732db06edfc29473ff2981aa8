@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7fb3f15f_6fff99e6",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:10:09Z",
+      "side": 1,
+      "message": "I think returning -1 would be a bit more future-proof in case bdevperf_construct_targets_tasks starts returning errnos instead of -1.",
+      "range": {
+        "startLine": 1121,
+        "startChar": 9,
+        "endLine": 1121,
+        "endChar": 11
+      },
+      "revId": "78acffa14cd3214732db06edfc29473ff2981aa8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fcebb81_d2c24fc8",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1143,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-04T09:10:09Z",
+      "side": 1,
+      "message": "Add a newline before the return statement.",
+      "revId": "78acffa14cd3214732db06edfc29473ff2981aa8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
