@@ -38,11 +38,6 @@
 #include "spdk/event.h"
 #include "spdk/vhost.h"
 
-/* TODO: this should be handled by configure */
-#if defined(SPDK_CONFIG_VHOST) && !defined(__linux__)
-#undef SPDK_CONFIG_VHOST
-#endif
-
 #ifdef SPDK_CONFIG_VHOST
 #define SPDK_VHOST_OPTS "S:"
 #else

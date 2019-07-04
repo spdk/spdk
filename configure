@@ -431,6 +431,17 @@ if [[ "$OSTYPE" == "freebsd"* ]]; then
 	fi
 fi
 
+if [[ "$OSTYPE" == "freebsd"* ]]; then
+	if [[ "${CONFIG[VHOST]}" == "y" ]]; then
+		echo "Vhost is only supported on Linux. Disabling it."
+		CONFIG[VHOST]="n"
+	fi
+	if [[ "${CONFIG[VIRTIO]}" == "y" ]]; then
+		echo "Virtio is only supported on Linux. Disabling it."
+		CONFIG[VIRTIO]="n"
+	fi
+fi
+
 if [ "${CONFIG[RDMA]}" = "y" ]; then
 	if ! echo -e '#include <infiniband/verbs.h>\n#include <rdma/rdma_verbs.h>\n' \
 		'int main(void) { return 0; }\n' \
