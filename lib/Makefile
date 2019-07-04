@@ -39,10 +39,10 @@ DIRS-y += bdev blob blobfs conf copy event json jsonrpc \
           ut_mock iscsi notify
 ifeq ($(OS),Linux)
 DIRS-y += nbd ftl
-DIRS-$(CONFIG_VHOST) += vhost
-DIRS-$(CONFIG_VIRTIO) += virtio
 endif
 
+DIRS-$(CONFIG_VHOST) += vhost
+DIRS-$(CONFIG_VIRTIO) += virtio
 DIRS-$(CONFIG_REDUCE) += reduce
 
 # If CONFIG_ENV is pointing at a directory in lib, build it.
