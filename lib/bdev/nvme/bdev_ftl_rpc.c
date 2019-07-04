@@ -71,6 +71,66 @@ static const struct spdk_json_object_decoder rpc_construct_ftl_decoders[] = {
 		"allow_open_bands", offsetof(struct rpc_construct_ftl, ftl_conf) +
 		offsetof(struct spdk_ftl_conf, allow_open_bands), spdk_json_decode_bool, true
 	},
+	{
+		"overprovisioning", offsetof(struct rpc_construct_ftl, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, lba_rsvd), spdk_json_decode_uint64, true
+	},
+	{
+		"crit_limit", offsetof(struct rpc_construct_ftl, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, defrag) +
+		offsetof(struct spdk_ftl_defrag_conf, limits[SPDK_FTL_LIMIT_CRIT]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"crit_limit_thld", offsetof(struct rpc_construct_ftl, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, defrag) +
+		offsetof(struct spdk_ftl_defrag_conf, limits[SPDK_FTL_LIMIT_CRIT]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"high_limit", offsetof(struct rpc_construct_ftl, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, defrag) +
+		offsetof(struct spdk_ftl_defrag_conf, limits[SPDK_FTL_LIMIT_HIGH]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"high_limit_thld", offsetof(struct rpc_construct_ftl, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, defrag) +
+		offsetof(struct spdk_ftl_defrag_conf, limits[SPDK_FTL_LIMIT_HIGH]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"low_limit", offsetof(struct rpc_construct_ftl, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, defrag) +
+		offsetof(struct spdk_ftl_defrag_conf, limits[SPDK_FTL_LIMIT_LOW]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"low_limit_thld", offsetof(struct rpc_construct_ftl, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, defrag) +
+		offsetof(struct spdk_ftl_defrag_conf, limits[SPDK_FTL_LIMIT_LOW]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"start_limit", offsetof(struct rpc_construct_ftl, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, defrag) +
+		offsetof(struct spdk_ftl_defrag_conf, limits[SPDK_FTL_LIMIT_START]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"start_limit_thld", offsetof(struct rpc_construct_ftl, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, defrag) +
+		offsetof(struct spdk_ftl_defrag_conf, limits[SPDK_FTL_LIMIT_START]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
 };
 
 #define FTL_RANGE_MAX_LENGTH 32

@@ -596,7 +596,10 @@ def destruct_split_vbdev(client, base_bdev):
     return client.call('destruct_split_vbdev', params)
 
 
-def construct_ftl_bdev(client, name, trtype, traddr, punits, allow_open_bands=None, uuid=None, cache=None):
+def construct_ftl_bdev(client, name, trtype, traddr, punits, allow_open_bands=None, uuid=None,
+                       cache=None, overprovisioning=None, crit_limit=None, crit_limit_thld=None,
+                       high_limit=None, high_limit_thld=None, low_limit=None, low_limit_thld=None,
+                       start_limit=None, start_limit_thld=None):
     """Construct FTL bdev
 
     Args:
@@ -607,6 +610,15 @@ def construct_ftl_bdev(client, name, trtype, traddr, punits, allow_open_bands=No
         uuid: UUID of the device
         cache: name of the write buffer bdev
         allow_open_bands: allow for partial restore after dirty shutdown
+        overprovisioning: percentage of device used for relocation, not exposed to user
+        crit_limit: percentage of allowed user io versus relocation io on critical relocation level
+        crit_limit_thld: number of unwritten bands when critical relocation limit is set
+        high_limit: percentage of allowed user io versus relocation io on high relocation level
+        high_limit_thld: number of unwritten bands when high relocation limit is set
+        low_limit: percentage of allowed user io versus relocation io on low relocation level
+        low_limit_thld: number of unwritten bands when low relocation limit is set
+        start_limit: percentage of allowed user io versus relocation io on start relocation level
+        start_limit_thld: number of unwritten bands when relocations starts to occur
     """
     params = {'name': name,
               'trtype': trtype,
@@ -618,6 +630,24 @@ def construct_ftl_bdev(client, name, trtype, traddr, punits, allow_open_bands=No
         params['cache'] = cache
     if allow_open_bands:
         params['allow_open_bands'] = allow_open_bands
+    if overprovisioning:
+        params['overprovisioning'] = overprovisioning
+    if crit_limit:
+        params['crit_limit'] = crit_limit
+    if crit_limit_thld:
+        params['crit_limit_thld'] = crit_limit_thld
+    if high_limit:
+        params['high_limit'] = high_limit
+    if high_limit_thld:
+        params['high_limit_thld'] = high_limit_thld
+    if low_limit:
+        params['low_limit'] = low_limit
+    if low_limit_thld:
+        params['low_limit_thld'] = low_limit_thld
+    if start_limit:
+        params['start_limit'] = start_limit
+    if start_limit_thld:
+        params['start_limit_thld'] = start_limit_thld
 
     return client.call('construct_ftl_bdev', params)
 

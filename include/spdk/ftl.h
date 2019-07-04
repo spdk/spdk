@@ -60,6 +60,14 @@ struct spdk_ftl_limit {
 	size_t					limit;
 };
 
+struct spdk_ftl_defrag_conf {
+	/* Lowest percentage of invalid lbks for a band to be defragged */
+	size_t				invalid_thld;
+
+	/* User writes limits */
+	struct spdk_ftl_limit		limits[SPDK_FTL_LIMIT_MAX];
+};
+
 struct spdk_ftl_conf {
 	/* Number of reserved addresses not exposed to the user */
 	size_t					lba_rsvd;
@@ -79,13 +87,8 @@ struct spdk_ftl_conf {
 	/* IO pool size per user thread */
 	size_t					user_io_pool_size;
 
-	struct {
-		/* Lowest percentage of invalid lbks for a band to be defragged */
-		size_t				invalid_thld;
-
-		/* User writes limits */
-		struct spdk_ftl_limit		limits[SPDK_FTL_LIMIT_MAX];
-	} defrag;
+	/* Defrag limits and threshold configuration */
+	struct spdk_ftl_defrag_conf		defrag;
 
 	/* Number of interleaving units per ws_opt */
 	size_t                                  num_interleave_units;
@@ -154,6 +157,10 @@ struct spdk_ftl_attrs {
 	size_t					num_chunks;
 	/* Number of sectors per chunk */
 	size_t					chunk_size;
+	/* Number of reserved addresses not exposed to the user */
+	size_t					lba_rsvd;
+	/* User writes limits */
+	struct spdk_ftl_limit			limits[SPDK_FTL_LIMIT_MAX];
 };
 
 struct ftl_module_init_opts {
