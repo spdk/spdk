@@ -22,6 +22,30 @@
       "revId": "34a761c9713b57c24ef23de16b2aae604ee4327e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0dcd701_ba22461a",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-04T09:10:40Z",
+      "side": 1,
+      "message": "Thank you Darek. Done. Will you review again when you can?",
+      "parentUuid": "4eeafac1_f81d4727",
+      "range": {
+        "startLine": 122,
+        "startChar": 25,
+        "endLine": 122,
+        "endChar": 32
+      },
+      "revId": "34a761c9713b57c24ef23de16b2aae604ee4327e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
