@@ -624,6 +624,30 @@
     },
     {
       "key": {
+        "uuid": "e05baf1a_8890235d",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-04T20:23:26Z",
+      "side": 1,
+      "message": "In vagrant file  http_proxy and https_proxy is used.",
+      "parentUuid": "ad4635c5_b8df7c88",
+      "range": {
+        "startLine": 47,
+        "startChar": 4,
+        "endLine": 47,
+        "endChar": 43
+      },
+      "revId": "9d456807da3e2f000019133fbcbe5bca3ba11335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2e56f7a_32af2db2",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 13
