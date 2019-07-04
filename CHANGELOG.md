@@ -8,7 +8,10 @@ Added new public header for zoned bdev. Zoned bdev is an extension
 of the bdev interface. Zoned device concept is based on
 NVMe TP4035 - Zoned Namespaces.
 
-`spdk_bdev_get_info()` API was added to retrieve zoned device information.
+`spdk_bdev_get_zone_size()`, `spdk_bdev_get_max_open_zones()`, `spdk_bdev_get_optimal_open_zones()`
+APIs were added for retrieving zoned device information.
+`spdk_bdev_get_zone_info()` API was added for retrieving information about zones in zoned
+device.
 
 ### bdev
 
