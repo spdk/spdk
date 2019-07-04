@@ -16,6 +16,24 @@
       "revId": "805660f3bf1457fefec15cb69b8261058d32ef51",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ed13fe1_2eb3aeec",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2251,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-04T07:35:53Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nI considered your suggestion.\n\nData digest error detected by the target is treated as a non-fatal transport error because error will be outside the target. \n\nHowever when DIF check is failed, the error is higly likely to be caused by the target itself.\nSo DIF check error should be treated as fatal transport error.\n\nIf data is corrupted in NVMe-SSD, NVMe controller will detect the error and return I/O failure to NVMe/TCP target. This is not transport error.\n\n\nNVMe/TCP transport error is handled by terminating the connection.\n\nI added the comment here and updated the commit message.\n\nI hope these make sense to you.",
+      "parentUuid": "45a4967d_ee9185f8",
+      "revId": "805660f3bf1457fefec15cb69b8261058d32ef51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
