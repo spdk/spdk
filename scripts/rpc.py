@@ -1299,7 +1299,24 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=destruct_split_vbdev)
 
     # ftl
+    ftl_valid_limits = ('crit', 'high', 'low', 'start')
+
     def construct_ftl_bdev(args):
+        def parse_limits(limits, arg_dict, key_suffix=''):
+            for limit in limits.split(','):
+                key, value = limit.split(':', 1)
+                if key in ftl_valid_limits:
+                    arg_dict['limit_' + key + key_suffix] = int(value)
+                else:
+                    raise ValueError('Limit {} is not supported'.format(key))
+
+        arg_limits = {}
+        if args.limit_threshold:
+            parse_limits(args.limit_threshold, arg_limits, '_threshold')
+
+        if args.limit:
+            parse_limits(args.limit, arg_limits)
+
         print_dict(rpc.bdev.construct_ftl_bdev(args.client,
                                                name=args.name,
                                                trtype=args.trtype,
@@ -1307,7 +1324,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                punits=args.punits,
                                                uuid=args.uuid,
                                                cache=args.cache,
-                                               allow_open_bands=args.allow_open_bands))
+                                               allow_open_bands=args.allow_open_bands,
+                                               overprovisioning=args.overprovisioning,
+                                               **arg_limits))
 
     p = subparsers.add_parser('construct_ftl_bdev',
                               help='Add FTL bdev')
@@ -1323,6 +1342,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache (optional)')
     p.add_argument('-o', '--allow_open_bands', help='Restoring after dirty shutdown without cache will'
                    ' result in partial data recovery, instead of error', action='store_true')
+    p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
+                   ' to user (optional)', type=int)
+
+    limits = p.add_argument_group('Defrag limits', 'Configures defrag limits and thresholds for'
+                                  ' levels ' + str(ftl_valid_limits)[1:-1])
+    limits.add_argument('--limit', help='Percentage of allowed user versus internal writes at given'
+                        ' levels, e.g. crit:0,high:20,low:80')
+    limits.add_argument('--limit-threshold', help='Number of free bands triggering a given level of'
+                        ' write limiting e.g. crit:1,high:2,low:3,start:4')
     p.set_defaults(func=construct_ftl_bdev)
 
     def delete_ftl_bdev(args):

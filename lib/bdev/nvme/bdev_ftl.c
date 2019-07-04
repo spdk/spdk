@@ -430,6 +430,7 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 {
 	struct ftl_bdev *ftl_bdev = bdev->ctxt;
 	struct spdk_ftl_attrs attrs;
+	struct spdk_ftl_conf *conf = &attrs.conf;
 	char uuid[SPDK_UUID_STRING_LEN];
 
 	spdk_ftl_dev_get_attrs(ftl_bdev->dev, &attrs);
@@ -441,7 +442,16 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", ftl_bdev->bdev.name);
 
-	spdk_json_write_named_bool(w, "allow_open_bands", attrs.conf.allow_open_bands);
+	spdk_json_write_named_bool(w, "allow_open_bands", conf->allow_open_bands);
+	spdk_json_write_named_uint64(w, "overprovisioning", conf->lba_rsvd);
+	spdk_json_write_named_uint64(w, "limit_crit", conf->limits[SPDK_FTL_LIMIT_CRIT].limit);
+	spdk_json_write_named_uint64(w, "limit_crit_threshold", conf->limits[SPDK_FTL_LIMIT_CRIT].thld);
+	spdk_json_write_named_uint64(w, "limit_high", conf->limits[SPDK_FTL_LIMIT_HIGH].limit);
+	spdk_json_write_named_uint64(w, "limit_high_threshold", conf->limits[SPDK_FTL_LIMIT_HIGH].thld);
+	spdk_json_write_named_uint64(w, "limit_low", conf->limits[SPDK_FTL_LIMIT_LOW].limit);
+	spdk_json_write_named_uint64(w, "limit_low_threshold", conf->limits[SPDK_FTL_LIMIT_LOW].thld);
+	spdk_json_write_named_uint64(w, "limit_start", conf->limits[SPDK_FTL_LIMIT_START].limit);
+	spdk_json_write_named_uint64(w, "limit_start_threshold", conf->limits[SPDK_FTL_LIMIT_START].thld);
 
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &attrs.uuid);
 	spdk_json_write_named_string(w, "uuid", uuid);
