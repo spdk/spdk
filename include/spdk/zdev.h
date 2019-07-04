@@ -62,12 +62,48 @@ struct spdk_zdev {
 	struct spdk_zdev_info info;
 };
 
+enum spdk_zdev_zone_state {
+	SPDK_BDEV_ZONE_STATE_EMPTY,
+	SPDK_BDEV_ZONE_STATE_FULL,
+	SPDK_BDEV_ZONE_STATE_CLOSED,
+	SPDK_BDEV_ZONE_STATE_OFFLINE
+};
+
+struct spdk_zdev_zone_info {
+	uint64_t			start_lba;
+	uint64_t			write_pointer;
+	uint64_t			capacity;
+	enum spdk_zdev_zone_state	state;
+};
+
 /**
  * Get zone info of the device.
  *
  * \param zdev Zone device to query.
  * \return spdk_zdev_info structure.
  */
-struct spdk_bdev_zonedev_info spdk_zdev_get_info(const struct spdk_zdev *zdev);
+const struct spdk_zdev_info *spdk_zdev_get_info(const struct spdk_zdev *zdev);
+
+/**
+ * Submit a get_zone_info request to the bdev.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param start_lba First logical block of a zone.
+ * \param num_zones Number of consecutive zones info to retrive.
+ * \param info Pointer to array capable to store num_zones elements.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_zdev_get_zone_info(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			    uint64_t start_lba, size_t num_zones, struct spdk_zdev_zone_info *info,
+			    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 #endif /* SPDK_ZDEV_H */
