@@ -116,7 +116,7 @@ if [ "$(uname -s)" = "Linux" ]; then
 	export HUGEMEM=8192
 elif [ "$(uname -s)" = "FreeBSD" ]; then
 	MAKE=gmake
-	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
+	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | grep -E -i 'hw.ncpu' | awk '{print $2}')}
 	DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
 	if [ -d $DPDK_FREEBSD_DIR ] && [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
 		WITH_DPDK_DIR=$DPDK_FREEBSD_DIR

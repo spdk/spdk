@@ -298,7 +298,7 @@ function cleanup_linux {
 	done
 	shopt -u extglob nullglob
 
-	files_to_clean+="$(ls -1 /dev/shm/* | egrep '(spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevio|bdevperf)_trace|spdk_iscsi_conns' || true) "
+	files_to_clean+="$(ls -1 /dev/shm/* | grep -E '(spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevio|bdevperf)_trace|spdk_iscsi_conns' || true) "
 	files_to_clean="$(readlink -e assert_not_empty $files_to_clean || true)"
 	if [[ -z "$files_to_clean" ]]; then
 		echo "Clean"
@@ -318,7 +318,7 @@ function cleanup_linux {
 
 	echo 'Cleaning'
 	for f in $files_to_clean; do
-		if ! echo "$opened_files" | egrep -q "^$f\$"; then
+		if ! echo "$opened_files" | grep -E -q "^$f\$"; then
 			echo "Removing:    $f"
 			rm $f
 		else
@@ -327,7 +327,7 @@ function cleanup_linux {
 	done
 
 	for dir in $dirs_to_clean; do
-	if ! echo "$opened_files" | egrep -q "^$dir\$"; then
+	if ! echo "$opened_files" | grep -E -q "^$dir\$"; then
 		echo "Removing:    $dir"
 		rmdir $dir
 	else

@@ -42,12 +42,12 @@ function waitfortcp() {
 		fi
 
 		if $have_ss_cmd; then
-			if $ns_cmd ss -ln | egrep -q "\s+$addr\s+"; then
+			if $ns_cmd ss -ln | grep -E -q "\s+$addr\s+"; then
 				break
 			fi
 		elif [[ "$(uname -s)" == "Linux" ]]; then
 			# For Linux, if system doesn't have ss, just assume it has netstat
-			if $ns_cmd netstat -an | grep -iw LISTENING | egrep -q "\s+$addr\$"; then
+			if $ns_cmd netstat -an | grep -iw LISTENING | grep -E -q "\s+$addr\$"; then
 				break
 			fi
 		fi
