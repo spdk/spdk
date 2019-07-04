@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45a4967d_ee9185f8",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2251,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-04T05:49:33Z",
+      "side": 1,
+      "message": "Can we mark only mark this request with error response instead of disconnect the queue pair?",
+      "revId": "805660f3bf1457fefec15cb69b8261058d32ef51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
