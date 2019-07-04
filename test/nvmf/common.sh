@@ -141,7 +141,8 @@ function nvmfcleanup()
 	sync
 	set +e
 	for i in {1..20}; do
-		modprobe -v -r nvme-$TEST_TRANSPORT nvme-fabrics
+		modprobe -v -r nvme-$TEST_TRANSPORT
+		modprobe -v -r nvme-fabrics
 		if [ $? -eq 0 ]; then
 			set -e
 			return
@@ -152,7 +153,10 @@ function nvmfcleanup()
 
 	# So far unable to remove the kernel modules. Try
 	# one more time and let it fail.
-	modprobe -v -r nvme-$TEST_TRANSPORT nvme-fabrics
+	# Allow the transport module to fail for now. See Jim's comment
+	# about the nvme-tcp module below.
+	modprobe -v -r nvme-$TEST_TRANSPORT || true
+	modprobe -v -r nvme-fabrics
 }
 
 function nvmftestinit()
