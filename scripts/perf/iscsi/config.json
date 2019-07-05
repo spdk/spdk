@@ -1,0 +1,48 @@
+{
+  "general": {
+    "username": "user",
+    "password": "password",
+    "num_targets": 16
+  },
+  "vpp": {
+    "enabled": true,
+    "main_core": 19,
+    "corelist_workers": "10-18",
+    "num_rx_queues": 9,
+    "num_tx_queues": 9,
+    "buffers_per_numa": 128000,
+
+    "mode":    "dpdk",
+    "devices": ["0000:81:00.0", "0000:81:00.1"],
+    "ifs":     ["enp129s0f0", "enp129s0f1"],
+    "vpp_ifs": ["TwentyFiveGigabitEthernet81/0/0", "TwentyFiveGigabitEthernet81/0/1"],
+    "nic_ips": ["10.0.0.1/24", "10.0.1.1/24"],
+
+    "vpp_dir": "/usr/local/src/vpp-19.04/build-root/install-vpp-native/vpp/"
+  },
+  "target": {
+    "nic_ips": ["127.0.0.1"],
+    "mode": "spdk",
+    "use_null_block": true,
+    "num_cores": "[30-39]",
+    "num_shared_buffers": 4096,
+    "portals": [{"host": "10.0.0.1", "port": "3260"},{"host": "10.0.1.1", "port": "3260"}],
+    "initiators": ["ANY"],
+    "netmasks": ["10.0.0.0/24", "10.0.1.0/24"]
+  },
+  "initiator1": {
+    "ip": "10.237.87.140",
+    "nic_ips": ["10.0.0.1", "10.0.1.1"],
+    "num_cores": 64,
+    "mode": "spdk"
+  },
+  "fio": {
+    "bs": ["4k"],
+    "qd": [128],
+    "rw": ["randrw"],
+    "rwmixread": 100,
+    "run_time": 60,
+    "ramp_time": 1,
+    "run_num": 3
+  }
+}
