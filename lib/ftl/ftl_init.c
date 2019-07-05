@@ -896,7 +896,7 @@ ftl_clear_nv_cache_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	nv_cache->phase = 1;
-	if (ftl_nv_cache_write_header(nv_cache, ftl_write_nv_cache_md_cb, dev)) {
+	if (ftl_nv_cache_write_header(nv_cache, false, ftl_write_nv_cache_md_cb, dev)) {
 		SPDK_ERRLOG("Unable to write non-volatile cache metadata header\n");
 		ftl_init_fail(dev);
 	}
@@ -1257,15 +1257,46 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 }
 
 static void
-ftl_call_fini_complete_cb(void *_ctx)
+ftl_call_fini_complete(struct spdk_ftl_dev *dev, int status)
 {
-	struct spdk_ftl_dev *dev = _ctx;
 	struct ftl_init_context ctx = dev->fini_ctx;
 
 	ftl_dev_free_sync(dev);
-
 	if (ctx.cb_fn != NULL) {
-		ctx.cb_fn(NULL, ctx.cb_arg, 0);
+		ctx.cb_fn(NULL, ctx.cb_arg, status);
+	}
+}
+
+static void
+ftl_nv_cache_header_fini_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	int status = 0;
+
+	spdk_bdev_free_io(bdev_io);
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Failed to write non-volatile cache metadata header\n");
+		status = -EIO;
+	}
+
+	ftl_call_fini_complete((struct spdk_ftl_dev *)cb_arg, status);
+}
+
+static void
+ftl_halt_complete_cb(void *ctx)
+{
+	struct spdk_ftl_dev *dev = ctx;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	int rc = 0;
+
+	if (!ftl_dev_has_nv_cache(dev)) {
+		ftl_call_fini_complete(dev, 0);
+	} else {
+		rc = ftl_nv_cache_write_header(nv_cache, true, ftl_nv_cache_header_fini_cb, dev);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Failed to write non-volatile cache metadata header: %s\n",
+				    spdk_strerror(-rc));
+			ftl_call_fini_complete(dev, rc);
+		}
 	}
 }
 
@@ -1282,7 +1313,7 @@ ftl_halt_poller(void *ctx)
 
 		ftl_anm_unregister_device(dev);
 
-		spdk_thread_send_msg(dev->fini_ctx.thread, ftl_call_fini_complete_cb, dev);
+		spdk_thread_send_msg(dev->fini_ctx.thread, ftl_halt_complete_cb, dev);
 	}
 
 	return 0;

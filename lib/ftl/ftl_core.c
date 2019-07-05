@@ -1063,7 +1063,7 @@ ftl_nv_cache_wrap(void *ctx)
 	struct ftl_nv_cache *nv_cache = ctx;
 	int rc;
 
-	rc = ftl_nv_cache_write_header(nv_cache, ftl_nv_cache_wrap_cb, nv_cache);
+	rc = ftl_nv_cache_write_header(nv_cache, false, ftl_nv_cache_wrap_cb, nv_cache);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Unable to write non-volatile cache metadata header: %s\n",
 			    spdk_strerror(-rc));
@@ -1253,8 +1253,8 @@ ftl_write_nv_cache(struct ftl_io *parent)
 }
 
 int
-ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_fn,
-			  void *cb_arg)
+ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, bool shutdown,
+			  spdk_bdev_io_completion_cb cb_fn, void *cb_arg)
 {
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
 	struct ftl_nv_cache_header *hdr = nv_cache->dma_buf;
@@ -1270,6 +1270,7 @@ ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion
 	hdr->size = spdk_bdev_get_num_blocks(bdev);
 	hdr->uuid = dev->uuid;
 	hdr->version = FTL_NV_CACHE_HEADER_VERSION;
+	hdr->current_addr = shutdown ? nv_cache->current_addr : FTL_LBA_INVALID;
 	hdr->checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
 
 	return spdk_bdev_write_blocks(nv_cache->bdev_desc, ioch->cache_ioch, hdr, 0, 1,
