@@ -41,6 +41,10 @@
 #include "spdk/thread.h"
 #include "spdk/bdev.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_ftl_dev;
 
 /* Limit thresholds */
@@ -279,5 +283,9 @@ int spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_
  * \return 0 if successfully submitted, negative errno otherwise.
  */
 int spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_FTL_H */
