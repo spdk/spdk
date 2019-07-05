@@ -2,6 +2,11 @@
 
 ## v19.10: (Upcoming Release)
 
+### bdev
+
+New API `spdk_bdev_is_zdev()` has been added to indicate if bdev supports
+zoned namespace device semantics.
+
 ## v19.07:
 
 ### ftl
