@@ -4,6 +4,9 @@
 
 ### bdev
 
+New API `spdk_bdev_is_zoned()` has been added to indicate if bdev supports
+zoned namespace device semantics.
+
 Added `spdk_bdev_get_write_unit_size()` function for retrieving required number
 of logical blocks for write operation.
 

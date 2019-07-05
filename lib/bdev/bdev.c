@@ -2520,6 +2520,12 @@ spdk_bdev_is_md_separate(const struct spdk_bdev *bdev)
 	return (bdev->md_len != 0) && !bdev->md_interleave;
 }
 
+bool
+spdk_bdev_is_zoned(const struct spdk_bdev *bdev)
+{
+	return bdev->zoned;
+}
+
 uint32_t
 spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev)
 {
