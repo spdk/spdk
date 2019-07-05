@@ -340,6 +340,21 @@ struct spdk_bdev {
 	bool zoned;
 
 	/**
+	 * Default size of each zone.
+	 */
+	size_t zone_size;
+
+	/**
+	 * Maximum number of open zones.
+	 */
+	size_t max_open_zones;
+
+	/**
+	 * Optimal number of open zones.
+	 */
+	size_t optimal_open_zones;
+
+	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
 	struct spdk_bdev_module *module;
