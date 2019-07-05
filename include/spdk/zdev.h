@@ -115,4 +115,24 @@ int spdk_zdev_get_zone_info(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 			    uint64_t start_lba, size_t num_zones, struct spdk_zdev_zone_info *info,
 			    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
+/**
+ * Submit a zone_open request to the bdev.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param start_lba First logical block of a zone.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_zdev_zone_open(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			uint64_t start_lba, spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+
 #endif /* SPDK_ZDEV_H */
