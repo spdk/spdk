@@ -3664,6 +3664,19 @@ blob_dirty_shutdown(void)
 	rc = spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
 	CU_ASSERT(rc == 0);
 
+	/* Put xattr that fits exactly single page.
+	 * This results in adding additional pages to MD.
+	 * First is flags and smaller xattr, second the large xattr,
+	 * third are just the extents.
+	 */
+	size_t xattr_length = 4072 - sizeof(struct spdk_blob_md_descriptor_xattr) -
+			      strlen("large_xattr");
+	char *xattr = calloc(xattr_length, sizeof(char));
+	SPDK_CU_ASSERT_FATAL(xattr != NULL);
+	rc = spdk_blob_set_xattr(blob, "large_xattr", xattr, xattr_length);
+	free(xattr);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
 	/* Resize the blob */
 	spdk_blob_resize(blob, 10, blob_op_complete, NULL);
 	poll_threads();
