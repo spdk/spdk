@@ -493,6 +493,10 @@ struct spdk_bdev_io {
 			/* meta data buffer size to transfer */
 			size_t md_len;
 		} nvme_passthru;
+		struct {
+			/* Used to change zoned device zone state */
+			uint8_t zone_action;
+		} zdev;
 	} u;
 
 	/** It may be used by modules to put the bdev_io into its own list. */
