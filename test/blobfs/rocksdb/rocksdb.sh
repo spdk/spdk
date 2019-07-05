@@ -45,7 +45,7 @@ pushd $DB_BENCH_DIR
 if [ -z "$SKIP_GIT_CLEAN" ]; then
 	git clean -x -f -d
 fi
-$MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=$rootdir
+export USE_RTTI=1 && $MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=$rootdir
 popd
 
 timing_exit db_bench_build
