@@ -12,6 +12,7 @@ Zoned device concept is based on NVMe TP4035 - Zoned Namespaces.
 `spdk_zdev_get_info()` API was added for retrieving zoned device information.
 `spdk_zdev_get_zone_info()` API was added for retrieving information about
 zones inside zoned namespace.
+`spdk_zdev_zone_action` enum was added.
 
 ### bdev
 
