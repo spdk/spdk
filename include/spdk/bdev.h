@@ -449,6 +449,14 @@ bool spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev);
 bool spdk_bdev_is_md_separate(const struct spdk_bdev *bdev);
 
 /**
+ * Checks if bdev support zoned namespace semantics.
+ *
+ * \param bdev Block device to query.
+ * \return true if device support zoned namespace sementics.
+ */
+bool spdk_bdev_is_zdev(const struct spdk_bdev *bdev);
+
+/**
  * Get block device data block size.
  *
  * Data block size is equal to block size if there is no metadata or
