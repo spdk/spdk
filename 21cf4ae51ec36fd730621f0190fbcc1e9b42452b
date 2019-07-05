@@ -141,6 +141,30 @@
       "revId": "21cf4ae51ec36fd730621f0190fbcc1e9b42452b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e6285c2_8373d9a4",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-05T09:15:14Z",
+      "side": 1,
+      "message": "For certainty I decided to delete lvol store before creation.",
+      "parentUuid": "e357659a_d2c6cbfc",
+      "range": {
+        "startLine": 13,
+        "startChar": 1,
+        "endLine": 13,
+        "endChar": 35
+      },
+      "revId": "21cf4ae51ec36fd730621f0190fbcc1e9b42452b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
