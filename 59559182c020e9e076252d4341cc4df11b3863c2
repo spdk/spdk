@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1cb3b5c1_2528ff4e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-05T12:23:15Z",
+      "side": 1,
+      "message": "What reference? RocksDB should compile without rtti from what I can tell.",
+      "revId": "59559182c020e9e076252d4341cc4df11b3863c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
