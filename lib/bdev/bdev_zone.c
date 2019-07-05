@@ -83,9 +83,9 @@ spdk_bdev_get_zone_info(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return 0;
 }
 
-int
-spdk_bdev_zone_open(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		    uint64_t zone_id, spdk_bdev_io_completion_cb cb, void *cb_arg)
+static int
+bdev_zone_management(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, uint64_t zone_id,
+		     enum spdk_bdev_zone_action action,  spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
@@ -99,11 +99,25 @@ spdk_bdev_zone_open(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->internal.ch = channel;
 	bdev_io->internal.desc = desc;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT;
-	bdev_io->u.zone_mgmt.zone_action = SPDK_BDEV_ZONE_OPEN;
+	bdev_io->u.zone_mgmt.zone_action = action;
 	bdev_io->u.zone_mgmt.zone_id = zone_id;
 	bdev_io->u.zone_mgmt.num_zones = 1;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	spdk_bdev_io_submit(bdev_io);
 	return 0;
+}
+
+int
+spdk_bdev_zone_open(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		    uint64_t zone_id, spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return bdev_zone_management(desc, ch, zone_id, SPDK_BDEV_ZONE_OPEN, cb, cb_arg);
+}
+
+int
+spdk_bdev_zone_finish(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		      uint64_t zone_id, spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return bdev_zone_management(desc, ch, zone_id, SPDK_BDEV_ZONE_FINISH, cb, cb_arg);
 }
