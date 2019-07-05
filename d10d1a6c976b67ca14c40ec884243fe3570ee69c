@@ -16,6 +16,24 @@
       "revId": "d10d1a6c976b67ca14c40ec884243fe3570ee69c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f84569a_e5a31069",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 992,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-05T06:45:50Z",
+      "side": 1,
+      "message": "Thank you Paul.\n\nHonestly I couldn\u0027t have good idea to put comment without using empty else clause.\nBut my head is a little cleaner now and we may be able to replace the empty else clause by the following comment.\n\n\"Get minimum of MSDBD and what the controller supports only if MSDBD is not 0 because 0 indicates no limit.\"\n\nI will not use such empty else clause and will find the chance of replacement.",
+      "parentUuid": "f9b7d7bb_746242b9",
+      "revId": "d10d1a6c976b67ca14c40ec884243fe3570ee69c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
