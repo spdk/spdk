@@ -122,7 +122,11 @@ spdk_nvme_wait_for_completion_robust_lock(
 			nvme_robust_mutex_lock(robust_mutex);
 		}
 
-		spdk_nvme_qpair_process_completions(qpair, 0);
+		if (spdk_nvme_qpair_process_completions(qpair, 0) < 0) {
+			status->done = true;
+			status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+		}
 
 		if (robust_mutex) {
 			nvme_robust_mutex_unlock(robust_mutex);
