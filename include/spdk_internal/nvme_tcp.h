@@ -103,10 +103,10 @@ struct nvme_tcp_pdu {
 
 	uint32_t					ch_valid_bytes;
 	uint32_t					psh_valid_bytes;
+	int						ref;
 
 	nvme_tcp_qpair_xfer_complete_cb			cb_fn;
 	void						*cb_arg;
-	int						ref;
 	struct iovec					data_iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
 	uint32_t					data_iovcnt;
 	uint32_t					data_len;
