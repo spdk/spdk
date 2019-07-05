@@ -182,6 +182,8 @@ struct ns_fn_table {
 	void	(*cleanup_ns_worker_ctx)(struct ns_worker_ctx *ns_ctx);
 };
 
+static char *g_log_file_path = NULL;
+
 static int g_outstanding_commands;
 
 static bool g_latency_ssd_tracking_enable = false;
@@ -1095,6 +1097,7 @@ static void usage(char *program_name)
 	printf("\t[-D disable submission queue in controller memory buffer, default: enabled]\n");
 	printf("\t[-H enable header digest for TCP transport, default: disabled]\n");
 	printf("\t[-I enable data digest for TCP transport, default: disabled]\n");
+	printf("\t[-J path to file for JSON performance output, default: disabled]\n");
 	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
@@ -1280,6 +1283,44 @@ print_performance(void)
 }
 
 static void
+log_performance(FILE *log_file)
+{
+	double io_per_second, mb_per_second, average_latency, min_latency, max_latency;
+	struct worker_thread	*worker;
+	struct ns_worker_ctx	*ns_ctx;
+
+	fprintf(log_file, "\t\"performance\": [\n");
+
+	worker = g_workers;
+	while (worker) {
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx) {
+			if (ns_ctx->io_completed != 0) {
+				io_per_second = (double)ns_ctx->io_completed / g_time_in_sec;
+				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
+				average_latency = ((double)ns_ctx->total_tsc / ns_ctx->io_completed) * 1000 * 1000 / g_tsc_rate;
+				min_latency = (double)ns_ctx->min_tsc * 1000 * 1000 / g_tsc_rate;
+				max_latency = (double)ns_ctx->max_tsc * 1000 * 1000 / g_tsc_rate;
+
+				fprintf(log_file, "\t\t{\n");
+				fprintf(log_file, "\t\t\t\"name\": %s\n", ns_ctx->entry->name);
+				fprintf(log_file, "\t\t\t\"core\": %u\n", worker->lcore);
+				fprintf(log_file, "\t\t\t\"iops\": %10.2f\n", io_per_second);
+				fprintf(log_file, "\t\t\t\"mibs\": %10.2f\n", mb_per_second);
+				fprintf(log_file, "\t\t\t\"average_latency\": %10.2f\n", average_latency);
+				fprintf(log_file, "\t\t\t\"min_latency\": %10.2f\n", min_latency);
+				fprintf(log_file, "\t\t\t\"max_latency\": %10.2f\n", max_latency);
+				fprintf(log_file, "\t\t}\n");
+			}
+			ns_ctx = ns_ctx->next;
+		}
+		worker = worker->next;
+	}
+
+	fprintf(log_file, "\t]\n");
+}
+
+static void
 print_latency_page(struct ctrlr_entry *entry)
 {
 	int i;
@@ -1360,6 +1401,24 @@ print_stats(void)
 			print_latency_statistics("Write", SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY);
 		}
 	}
+}
+
+static void
+log_stats(void)
+{
+	FILE *log_file = fopen(g_log_file_path, "w");
+	if (log_file == NULL) {
+		fprintf(stderr, "unable to open log file at %s\n", g_log_file_path);
+		return;
+	}
+
+	fprintf(log_file, "{\n");
+
+	log_performance(log_file);
+
+	fprintf(log_file, "}\n");
+
+	fclose(log_file);
 }
 
 static void
@@ -1534,7 +1593,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:U:V")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:U:V:J")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
@@ -1625,6 +1684,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'I':
 			g_data_digest = 1;
+			break;
+		case 'J':
+			g_log_file_path = optarg;
 			break;
 		case 'L':
 			g_latency_sw_tracking_level++;
@@ -2059,6 +2121,7 @@ int main(int argc, char **argv)
 	spdk_env_thread_wait_all();
 
 	print_stats();
+	log_stats();
 
 cleanup:
 	if (thread_id && pthread_cancel(thread_id) == 0) {
