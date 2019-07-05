@@ -167,10 +167,14 @@ struct spdk_nvmf_tcp_req  {
 	uint8_t					*buf;
 
 	bool					data_from_pool;
-	void					*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
+	bool					has_incapsule_data;
 
 	/* transfer_tag */
 	uint16_t				ttag;
+
+	enum spdk_nvmf_tcp_req_state		state;
+
+	void					*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
 
 	/*
 	 * next_expected_r2t_offset is used when we receive the h2c_data PDU.
@@ -183,9 +187,6 @@ struct spdk_nvmf_tcp_req  {
 	 */
 	uint32_t				c2h_data_offset;
 	uint32_t				c2h_data_pdu_num;
-
-	enum spdk_nvmf_tcp_req_state		state;
-	bool					has_incapsule_data;
 
 	TAILQ_ENTRY(spdk_nvmf_tcp_req)		link;
 	TAILQ_ENTRY(spdk_nvmf_tcp_req)		state_link;
