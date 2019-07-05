@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f452c2bb_1b208f04",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-05T07:30:05Z",
+      "side": 1,
+      "message": "No need to say it\u0027s FTL device, it\u0027s a given.",
+      "range": {
+        "startLine": 153,
+        "startChar": 4,
+        "endLine": 153,
+        "endChar": 8
+      },
+      "revId": "d035775f7bc5904707cbccc7fa1401329eea4b9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79b569de_2791c912",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-05T07:30:05Z",
+      "side": 1,
+      "message": "What\u0027s going on here? I think you\u0027ve merged to patches together here.",
+      "range": {
+        "startLine": 445,
+        "startChar": 0,
+        "endLine": 454,
+        "endChar": 92
+      },
+      "revId": "d035775f7bc5904707cbccc7fa1401329eea4b9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
