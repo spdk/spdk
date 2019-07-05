@@ -2,6 +2,15 @@
 
 ## v19.10: (Upcoming Release)
 
+### zdev
+
+Added new public header for zoned bdev. Zdev is extension
+of bdev interface.
+
+Zoned device concept is based on NVMe TP4035 - Zoned Namespaces.
+
+`spdk_zdev_get_info()` API was added to retrieve zoned device information.
+
 ### bdev
 
 New API `spdk_bdev_is_zdev()` has been added to indicate if bdev supports
