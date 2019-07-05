@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9dd39fd9_1272b90d",
+        "filename": "lib/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-05T09:09:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7fe11d03_b249d064",
+      "range": {
+        "startLine": 79,
+        "startChar": 3,
+        "endLine": 79,
+        "endChar": 13
+      },
+      "revId": "05493df18bcd017ad4ab229f3d8f5b078cbd5256",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6fee99fb_8ee24f7e",
         "filename": "scripts/rpc.py",
         "patchSetId": 4
@@ -68,6 +92,30 @@
       "revId": "05493df18bcd017ad4ab229f3d8f5b078cbd5256",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b49b3e5_1ba93bc6",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-05T09:09:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f2f54cf0_b1a0301b",
+      "range": {
+        "startLine": 614,
+        "startChar": 11,
+        "endLine": 614,
+        "endChar": 16
+      },
+      "revId": "05493df18bcd017ad4ab229f3d8f5b078cbd5256",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
