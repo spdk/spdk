@@ -932,6 +932,15 @@ spdk_bdev_module_examine_done(struct spdk_bdev_module *module)
 /** The last initialized bdev module */
 static struct spdk_bdev_module *g_resume_bdev_module = NULL;
 
+static void
+spdk_bdev_init_failed(void *cb_arg)
+{
+	struct spdk_bdev_module *module = cb_arg;
+
+	module->internal.action_in_progress--;
+	spdk_bdev_init_complete(-1);
+}
+
 static int
 spdk_bdev_modules_init(void)
 {
@@ -945,18 +954,16 @@ spdk_bdev_modules_init(void)
 		}
 		rc = module->module_init();
 		if (rc != 0) {
+			/* Bump action_in_progress to prevent other modules from completion of modules_init
+			 * Send message to defer application shutdown until resources are cleaned up */
+			module->internal.action_in_progress = 1;
+			spdk_thread_send_msg(spdk_get_thread(), spdk_bdev_init_failed, module);
 			return rc;
 		}
 	}
 
 	g_resume_bdev_module = NULL;
 	return 0;
-}
-
-static void
-spdk_bdev_init_failed(void *cb_arg)
-{
-	spdk_bdev_init_complete(-1);
 }
 
 void
@@ -1070,7 +1077,6 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	g_bdev_mgr.module_init_complete = true;
 	if (rc != 0) {
 		SPDK_ERRLOG("bdev modules init failed\n");
-		spdk_thread_send_msg(spdk_get_thread(), spdk_bdev_init_failed, NULL);
 		return;
 	}
 
