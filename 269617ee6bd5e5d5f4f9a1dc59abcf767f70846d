@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ee39e28_5090e20d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-05T12:19:07Z",
+      "side": 1,
+      "message": "This can\u0027t be right. The code is this:\n\nblob \u003d ctx-\u003eblob;\n... stuff that does not change blob pointer ...\nctx-\u003eblob \u003d blob;",
+      "revId": "269617ee6bd5e5d5f4f9a1dc59abcf767f70846d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
