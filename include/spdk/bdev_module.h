@@ -520,6 +520,9 @@ struct spdk_bdev_io {
 			/* Number of zones */
 			uint32_t num_zones;
 
+			/* Used to change zoned device zone state */
+			enum spdk_bdev_zone_action zone_action;
+
 			/* The data buffer */
 			void *buf;
 		} zone_mgmt;
