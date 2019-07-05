@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "08d18594_6aa9fe34",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-05T12:31:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6fee99fb_8ee24f7e",
+      "range": {
+        "startLine": 1337,
+        "startChar": 0,
+        "endLine": 1352,
+        "endChar": 49
+      },
+      "revId": "05493df18bcd017ad4ab229f3d8f5b078cbd5256",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f2f54cf0_b1a0301b",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 4
