@@ -55,7 +55,6 @@ struct spdk_vbdev_split_config {
 
 	SPDK_BDEV_PART_TAILQ splits;
 	struct spdk_bdev_part_base *split_base;
-	bool removed;
 
 	TAILQ_ENTRY(spdk_vbdev_split_config) tailq;
 };
@@ -102,10 +101,7 @@ vbdev_split_base_free(void *ctx)
 {
 	struct spdk_vbdev_split_config *cfg = ctx;
 
-	cfg->split_base = NULL;
-	if (cfg->removed) {
-		vbdev_split_del_config(cfg);
-	}
+	vbdev_split_del_config(cfg);
 }
 
 static int
@@ -294,7 +290,6 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 	return 0;
 err:
 	split_base_tailq = spdk_bdev_part_base_get_tailq(cfg->split_base);
-	cfg->removed = true;
 	spdk_bdev_part_base_hotremove(cfg->split_base, split_base_tailq);
 	return rc;
 }
@@ -312,7 +307,6 @@ vbdev_split_destruct_config(struct spdk_vbdev_split_config *cfg)
 {
 	struct bdev_part_tailq *split_base_tailq;
 
-	cfg->removed = true;
 	if (cfg->split_base != NULL) {
 		split_base_tailq = spdk_bdev_part_base_get_tailq(cfg->split_base);
 		spdk_bdev_part_base_hotremove(cfg->split_base, split_base_tailq);
@@ -468,7 +462,7 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 {
 	struct spdk_vbdev_split_config *cfg = vbdev_split_config_find_by_base_name(bdev->name);
 
-	if (cfg != NULL && cfg->removed == false) {
+	if (cfg != NULL) {
 		assert(cfg->split_base == NULL);
 
 		if (vbdev_split_create(cfg)) {
