@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87213e42_a0d8bac8",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-05T11:26:11Z",
+      "side": 1,
+      "message": "I think the close paren is not correct here.",
+      "revId": "51f0a6519f73de9f09a0fc0052b0fffab6d129a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
