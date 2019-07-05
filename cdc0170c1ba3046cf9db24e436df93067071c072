@@ -16,6 +16,24 @@
       "revId": "cdc0170c1ba3046cf9db24e436df93067071c072",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0322043b_bd8b4c89",
+        "filename": "test/env/env_dpdk_post_init/env_dpdk_post_init.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-05T11:38:23Z",
+      "side": 0,
+      "message": "It\u0027s valid to create an I/O qpair without a namespace. Imagine a device that supports namespace management. Maybe you plan to submit the commands that create the namespaces.",
+      "parentUuid": "7fe7173d_45d37108",
+      "revId": "cdc0170c1ba3046cf9db24e436df93067071c072",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
