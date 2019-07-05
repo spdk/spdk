@@ -106,8 +106,6 @@ struct ftl_nv_cache_restore {
 	size_t				num_outstanding;
 	/* Recovery/scan status */
 	int				status;
-	/* Recover the data from non-volatile cache */
-	bool				recovery;
 	/* Current phase of the recovery */
 	unsigned int			phase;
 };
@@ -500,7 +498,7 @@ ftl_nv_cache_scrub_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	nv_cache->phase = 1;
-	rc = ftl_nv_cache_write_header(nv_cache, ftl_nv_cache_write_header_cb, restore);
+	rc = ftl_nv_cache_write_header(nv_cache, false, ftl_nv_cache_write_header_cb, restore);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Unable to write the non-volatile cache metadata header: %s\n",
 			    spdk_strerror(-rc));
@@ -547,7 +545,7 @@ ftl_nv_cache_band_flush_cb(void *ctx, int status)
 	 * this process, we'll know it needs to be resumed.
 	 */
 	nv_cache->phase = 0;
-	rc = ftl_nv_cache_write_header(nv_cache, ftl_nv_cache_scrub_header_cb, restore);
+	rc = ftl_nv_cache_write_header(nv_cache, false, ftl_nv_cache_scrub_header_cb, restore);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Unable to write non-volatile cache metadata header: %s\n",
 			    spdk_strerror(-rc));
@@ -779,20 +777,17 @@ ftl_nv_cache_scan_done(struct ftl_nv_cache_restore *restore)
 	}
 	assert(num_blocks == nv_cache->num_data_blocks);
 #endif
-	if (!restore->recovery) {
-		ftl_nv_cache_recovery_done(restore);
-	} else {
-		restore->phase = ftl_nv_cache_prev_phase(nv_cache->phase);
-		/*
-		 * Only the latest two phases need to be recovered. The third one, even if present,
-		 * already has to be stored on the main storage, as it's already started to be
-		 * overwritten (only present here because of reordering of requests' completions).
-		 */
-		restore->range[nv_cache->phase].recovery = true;
-		restore->range[restore->phase].recovery = true;
+	restore->phase = ftl_nv_cache_prev_phase(nv_cache->phase);
 
-		ftl_nv_cache_recover_range(restore);
-	}
+	/*
+	 * Only the latest two phases need to be recovered. The third one, even if present,
+	 * already has to be stored on the main storage, as it's already started to be
+	 * overwritten (only present here because of reordering of requests' completions).
+	 */
+	restore->range[nv_cache->phase].recovery = true;
+	restore->range[restore->phase].recovery = true;
+
+	ftl_nv_cache_recover_range(restore);
 }
 
 static int ftl_nv_cache_scan_block(struct ftl_nv_cache_block *block);
@@ -872,6 +867,21 @@ ftl_nv_cache_scan_block(struct ftl_nv_cache_block *block)
 	return 0;
 }
 
+static void
+ftl_nv_cache_clean_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_nv_cache_restore *restore = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Unable to write the non-volatile cache metadata header\n");
+		ftl_nv_cache_restore_complete(restore, -EIO);
+		return;
+	}
+
+	ftl_nv_cache_restore_done(restore, restore->current_addr);
+}
+
 static bool
 ftl_nv_cache_header_valid(struct spdk_ftl_dev *dev, const struct ftl_nv_cache_header *hdr)
 {
@@ -903,6 +913,14 @@ ftl_nv_cache_header_valid(struct spdk_ftl_dev *dev, const struct ftl_nv_cache_he
 	}
 
 	if (!ftl_nv_cache_phase_is_valid(hdr->phase) && hdr->phase != 0) {
+		return false;
+	}
+
+	if ((hdr->current_addr >= spdk_bdev_get_num_blocks(bdev) ||
+	     hdr->current_addr  < FTL_NV_CACHE_DATA_OFFSET) &&
+	    (hdr->current_addr != FTL_LBA_INVALID)) {
+		SPDK_ERRLOG("Unexpected value of non-volatile cache's current address: %"PRIu64"\n",
+			    hdr->current_addr);
 		return false;
 	}
 
@@ -951,6 +969,25 @@ ftl_nv_cache_read_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb
 		goto out;
 	}
 
+	/* Valid current_addr means that the shutdown was clean, so we just need to overwrite the
+	 * header to make sure that any power loss occurring before the cache is wrapped won't be
+	 * mistaken for a clean shutdown.
+	 */
+	if (hdr->current_addr != FTL_LBA_INVALID) {
+		restore->nv_cache.current_addr = hdr->current_addr;
+
+		rc = ftl_nv_cache_write_header(nv_cache, false, ftl_nv_cache_clean_header_cb,
+					       &restore->nv_cache);
+		if (spdk_unlikely(rc != 0)) {
+			SPDK_ERRLOG("Failed to overwrite the non-volatile cache header: %s\n",
+				    spdk_strerror(-rc));
+			ftl_restore_complete(restore, -ENOTRECOVERABLE);
+		}
+
+		goto out;
+	}
+
+	/* Otherwise the shutdown was unexpected, so we need to recover the data from the cache */
 	restore->nv_cache.current_addr = FTL_NV_CACHE_DATA_OFFSET;
 
 	for (i = 0; i < FTL_NV_CACHE_RESTORE_DEPTH; ++i) {
@@ -1232,7 +1269,6 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 			SPDK_ERRLOG("%s while restoring tail md. Will attempt to pad band %u.\n",
 				    spdk_strerror(-status), rband->band->id);
 			STAILQ_INSERT_TAIL(&restore->pad_bands, rband, stailq);
-			restore->nv_cache.recovery = true;
 		}
 	}
 

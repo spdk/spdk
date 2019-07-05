@@ -262,6 +262,8 @@ struct ftl_nv_cache_header {
 	struct spdk_uuid			uuid;
 	/* Size of the non-volatile cache (in blocks) */
 	uint64_t				size;
+	/* Contains the next address to be written after clean shutdown, invalid LBA otherwise */
+	uint64_t				current_addr;
 	/* Current phase */
 	uint8_t					phase;
 	/* Checksum of the header, needs to be last element */
@@ -294,8 +296,8 @@ int	ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 				unsigned int num_entries);
 bool	ftl_ppa_is_written(struct ftl_band *band, struct ftl_ppa ppa);
 int	ftl_flush_active_bands(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
-int	ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_fn,
-				  void *cb_arg);
+int	ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, bool shutdown,
+				  spdk_bdev_io_completion_cb cb_fn, void *cb_arg);
 int	ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_fn,
 			   void *cb_arg);
 
