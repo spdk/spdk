@@ -16,6 +16,24 @@
       "revId": "6b30b8339d1fe8fbaf4809d157115e2c7842e95c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2725340c_8d47ffc0",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-05T10:39:20Z",
+      "side": 1,
+      "message": "I had similar concern as you but this patch was just a quick fix to enable VMD tests. I have plan to move all of this reads and writes of CFG reg (there are more in different parts of code) to some wrapper function. There is one issue with macro you proposed - we do not have guarantee that read from register will return same value as we write e.g. writing 0xffff to BAR could return 0xff00 and this is used to calculate memory size.",
+      "parentUuid": "24dafcd3_c3464339",
+      "revId": "6b30b8339d1fe8fbaf4809d157115e2c7842e95c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
