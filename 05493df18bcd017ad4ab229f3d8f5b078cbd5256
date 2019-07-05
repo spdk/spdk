@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7fe11d03_b249d064",
+        "filename": "lib/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-05T08:34:54Z",
+      "side": 1,
+      "message": "I think it\u0027d be a bit more readable if we changed the naming a bit: limit_crit, limit_high, limit_crit_threshold (expand the abbreviation, so it\u0027s easier for the user to understand), etc.",
+      "range": {
+        "startLine": 79,
+        "startChar": 3,
+        "endLine": 79,
+        "endChar": 13
+      },
+      "revId": "05493df18bcd017ad4ab229f3d8f5b078cbd5256",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fee99fb_8ee24f7e",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-05T08:34:54Z",
+      "side": 1,
+      "message": "Perhaps we could merge these? Like this:\n\nrpc.py construct_ftl_bdev ... --limit crit:0,high:10,low:30,start:100 --limit-threshold crit:5,low:25",
+      "range": {
+        "startLine": 1337,
+        "startChar": 0,
+        "endLine": 1352,
+        "endChar": 49
+      },
+      "revId": "05493df18bcd017ad4ab229f3d8f5b078cbd5256",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2f54cf0_b1a0301b",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-05T08:34:54Z",
+      "side": 1,
+      "message": "This is still not fixed, see my previous comment.",
+      "range": {
+        "startLine": 614,
+        "startChar": 11,
+        "endLine": 614,
+        "endChar": 16
+      },
+      "revId": "05493df18bcd017ad4ab229f3d8f5b078cbd5256",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
