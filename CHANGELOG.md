@@ -2,6 +2,11 @@
 
 ## v19.10: (Upcoming Release)
 
+### bdev
+
+New API `spdk_bdev_is_zdev()` has been added to indicate if bdev supports
+zoned namespace device semantics.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
