@@ -21,6 +21,8 @@ zoned namespace device semantics.
 New `spdk_bdev_io_type` SPDK_BDEV_IO_ZONE_INFO was added.
 New `spdk_bdev_io_type` SPDK_BDEV_IO_TYPE_ZONE_MANAGMENT was added.
 
+Added zdev field to `spdk_bdev_io` structure.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
