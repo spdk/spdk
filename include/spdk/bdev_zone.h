@@ -49,6 +49,13 @@
 
 struct spdk_bdev;
 
+enum spdk_bdev_zone_action {
+	SPDK_BDEV_ZONE_CLOSE,
+	SPDK_BDEV_ZONE_FINISH,
+	SPDK_BDEV_ZONE_OPEN,
+	SPDK_BDEV_ZONE_RESET
+};
+
 enum spdk_bdev_zone_state {
 	SPDK_BDEV_ZONE_STATE_EMPTY,
 	SPDK_BDEV_ZONE_STATE_OPEN,
@@ -112,5 +119,27 @@ uint32_t spdk_bdev_get_optimal_open_zones(const struct spdk_bdev *bdev);
 int spdk_bdev_get_zone_info(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			    uint64_t zone_id, size_t num_zones, struct spdk_bdev_zone_info *info,
 			    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+
+/**
+ * Submit a zone_management request to the bdev.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param zone_id First logical block of a zone.
+ * \param action Action to perform on a zone (open, close, reset, finish).
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_bdev_zone_management(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			      uint64_t zone_id, enum spdk_bdev_zone_action action,
+			      spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 #endif /* SPDK_BDEV_ZONE_H */
