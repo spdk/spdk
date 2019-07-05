@@ -21,6 +21,8 @@ zoned namespace device semantics.
 New `spdk_bdev_io_type` SPDK_BDEV_IO_ZONE_INFO was added.
 New `spdk_bdev_io_type` SPDK_BDEV_IO_TYPE_ZONE_MANAGMENT was added.
 
+Added zdev field to `spdk_bdev_io` structure.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable
