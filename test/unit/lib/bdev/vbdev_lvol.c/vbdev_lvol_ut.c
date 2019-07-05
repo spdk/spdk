@@ -638,8 +638,8 @@ spdk_bdev_register(struct spdk_bdev *vbdev)
 	return 0;
 }
 
-void
-spdk_bdev_module_examine_done(struct spdk_bdev_module *module)
+static void
+vbdev_examine_complete(void *cb_arg, struct spdk_lvol_store *lvs, int lvolerrno)
 {
 	SPDK_CU_ASSERT_FATAL(g_examine_done != true);
 	g_examine_done = true;
@@ -976,13 +976,12 @@ ut_lvol_examine(void)
 	/* Examine unsuccessfully - bdev already opened */
 	g_lvserrno = -1;
 	lvol_already_opened = true;
-	vbdev_lvs_examine(&g_bdev);
-	ut_lvs_examine_check(false);
+	CU_ASSERT(vbdev_lvs_examine(&g_bdev, vbdev_examine_complete, NULL) != 0);
 
 	/* Examine unsuccessfully - fail on lvol store */
 	g_lvserrno = -1;
 	lvol_already_opened = false;
-	vbdev_lvs_examine(&g_bdev);
+	CU_ASSERT(vbdev_lvs_examine(&g_bdev, vbdev_examine_complete, NULL) == 0);
 	ut_lvs_examine_check(false);
 
 	/* Examine successfully
@@ -993,7 +992,7 @@ ut_lvol_examine(void)
 	g_num_lvols = 1;
 	lvol_already_opened = false;
 	g_registered_bdevs = 0;
-	vbdev_lvs_examine(&g_bdev);
+	CU_ASSERT(vbdev_lvs_examine(&g_bdev, vbdev_examine_complete, NULL) == 0);
 	ut_lvs_examine_check(true);
 	CU_ASSERT(g_registered_bdevs == 0);
 	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->lvols));
@@ -1006,7 +1005,7 @@ ut_lvol_examine(void)
 	g_lvolerrno = 0;
 	g_registered_bdevs = 0;
 	lvol_already_opened = false;
-	vbdev_lvs_examine(&g_bdev);
+	CU_ASSERT(vbdev_lvs_examine(&g_bdev, vbdev_examine_complete, NULL) == 0);
 	ut_lvs_examine_check(true);
 	CU_ASSERT(g_registered_bdevs != 0);
 	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_store->lvols));
