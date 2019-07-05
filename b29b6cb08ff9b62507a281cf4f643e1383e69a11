@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4f3478e_87b85ba2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-05T09:13:08Z",
+      "side": 1,
+      "message": "nvme: Handle CQ polling failures by marking the controller as failed.",
+      "revId": "b29b6cb08ff9b62507a281cf4f643e1383e69a11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef468065_0f712f42",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-05T09:13:08Z",
+      "side": 1,
+      "message": "CQ overrun should never happen. If it is, we need to figure out how and fix it.\n\nHowever, the bug you\u0027re fixing can happen if polling the CQ worked, but it found a completion with an error. That\u0027s very different than a CQ overrun. So your fix seems correct here, but your commit message is not.",
+      "revId": "b29b6cb08ff9b62507a281cf4f643e1383e69a11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bd9592f_3ae9ab65",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-05T09:13:08Z",
+      "side": 1,
+      "message": "I can\u0027t figure out what this means. The nvme initiator does not support shared controllers over fabrics.",
+      "revId": "b29b6cb08ff9b62507a281cf4f643e1383e69a11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
