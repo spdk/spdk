@@ -3073,7 +3073,8 @@ static bool _spdk_bs_load_cur_md_page_valid(struct spdk_bs_load_ctx *ctx)
 		return false;
 	}
 
-	if (_spdk_bs_page_to_blobid(ctx->cur_page) != ctx->page->id) {
+	if (ctx->page->sequence_num == 0 &&
+	    _spdk_bs_page_to_blobid(ctx->cur_page) != ctx->page->id) {
 		return false;
 	}
 	return true;
