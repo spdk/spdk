@@ -71,6 +71,13 @@ enum spdk_zdev_zone_state {
 	SPDK_ZDEV_ZONE_STATE_OFFLINE
 };
 
+enum spdk_zdev_zone_action {
+	SPDK_ZDEV_ZONE_CLOSE,
+	SPDK_ZDEV_ZONE_FINISH,
+	SPDK_ZDEV_ZONE_OPEN,
+	SPDK_ZDEV_ZONE_RESET
+};
+
 struct spdk_zdev_zone_info {
 	uint64_t			start_lba;
 	uint64_t			write_pointer;
