@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24dafcd3_c3464339",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-05T08:54:11Z",
+      "side": 1,
+      "message": "I\u0027m concerned about what the optimizer will do here. I know header is marked volatile, but since nothing depends on the value of reg I\u0027m worried about someone in the future setting aggressive optimization levels (O3 or O4) and this read going away for that reason. One idea is to read the value into reg and compare it to the expected value. Then code actually depends on the value of reg.\n\nFor example:\n\nheader-\u003eone.mem_base \u003d 0xfff0;\nif (header-\u003eone.mem_base !\u003d 0xfff0) {\n    goto err;\n}\n\nYou could wrap this in a little macro in this function:\n\n#define MMIO_SYNC_WRITE(reg, value) \\\n    reg \u003d value;                    \\\n    if (reg !\u003d value) {             \\\n        goto err;                   \\\n    }\n\nand then you\u0027d have a bunch of these:\n\nMMIO_SYNC_WRITE(header-\u003eone.mem_base, 0xfff0);\n\nThe if statement won\u0027t get optimized out because of the volatile marking, I\u0027m at least confident in that part.\n\nYou could make this generic for use anywhere by additionally letting the user pass in the goto label for use in the error path.",
+      "revId": "6b30b8339d1fe8fbaf4809d157115e2c7842e95c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
