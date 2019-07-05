@@ -138,6 +138,9 @@ Added thread_get_stats RPC method to retrieve existing statistics.
 
 Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
 
+Add radamsa to mutate each json rpc data for fuzz tests. use rpc.py -m to open it.
+Also the mutation can be choiced now.
+
 ### blobstore
 
 A snapshot can now be deleted if there is only a single clone on top of it.

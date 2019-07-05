@@ -4,6 +4,10 @@ import time
 import os
 import logging
 import copy
+from logging.handlers import RotatingFileHandler
+from rpc.radamsa import mutate, mutate_all, check_mutate_mode, mutate_mp
+
+log_file = '/tmp/rpc.tmp'
 
 
 def print_dict(d):
@@ -20,16 +24,22 @@ class JSONRPCException(Exception):
 
 
 class JSONRPCClient(object):
-    def __init__(self, addr, port=None, timeout=60.0, **kwargs):
+    def __init__(self, addr, port=None, timeout=60.0, mutate=False, **kwargs):
         self.sock = None
         ch = logging.StreamHandler()
         ch.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
         ch.setLevel(logging.DEBUG)
         self._logger = logging.getLogger("JSONRPCClient(%s)" % addr)
         self._logger.addHandler(ch)
-        self.set_log_level(kwargs.get('log_level', logging.ERROR))
+        if mutate:
+            file_handler = RotatingFileHandler(log_file, mode='a', maxBytes=5*1024*1024, backupCount=2, encoding=None, delay=0)
+            self._logger.addHandler(file_handler)
+            self.set_log_level(logging.INFO)
+        else:
+            self.set_log_level(kwargs.get('log_level', logging.ERROR))
 
         self.timeout = timeout
+        self.mutate = mutate
         self._request_id = 0
         self._recv_buf = ""
         self._reqs = []
@@ -101,7 +111,27 @@ class JSONRPCClient(object):
         reqstr = "\n".join(json.dumps(req, indent=2) for req in self._reqs)
         self._reqs = []
         self._logger.info("Requests:\n%s\n", reqstr)
-        self.sock.sendall(reqstr.encode("utf-8"))
+
+        if self.mutate:
+            if self.mutate == 'd':
+                self._logger.debug("[radamsa] origin str : %s", reqstr)
+                reqs_array = mutate_all(reqstr)
+                for reqs in reqs_array:
+                    self._logger.debug("[radamsa] mutate str : %s", reqs)
+                    if type(reqs) == str:
+                        reqs = reqs.encode("utf-8")
+                    self.sock.sendall(reqs)
+            else:
+                if not check_mutate_mode(self.mutate):
+                    self._logger.debug("[radamsa] %s is not radamsa mutate mode ! no mutate choiced.", self.mutate)
+                    self.sock.sendall(reqstr.encode("utf-8"))
+                    return
+                self._logger.debug("[radamsa] origin str : %s", reqstr)
+                req = mutate_mp(reqstr, self.mutate, 'od')
+                self._logger.debug("[radamsa] mutate str : %s", req)
+                self.sock.sendall(req)
+        else:
+            self.sock.sendall(reqstr.encode("utf-8"))
 
     def send(self, method, params=None):
         id = self.add_request(method, params)
@@ -134,8 +164,12 @@ class JSONRPCClient(object):
                 self._recv_buf += newdata.decode("utf-8")
                 response = self.decode_one_response()
             except socket.timeout:
+                if self.mutate:
+                    self._logger.error("[radamsa] mutate time out. Seem like target already hang.")
                 break  # throw exception after loop to avoid Python freaking out about nested exceptions
             except ValueError:
+                if self.mutate:
+                    self._logger.error("[radamsa] mutate ValueError . Seem like target error.")
                 continue  # incomplete response; keep buffering
 
         if not response:
