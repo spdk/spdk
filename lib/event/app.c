@@ -120,7 +120,7 @@ static const struct option g_cmdline_options[] = {
 #define WAIT_FOR_RPC_OPT_IDX	258
 	{"wait-for-rpc",		no_argument,		NULL, WAIT_FOR_RPC_OPT_IDX},
 #define HUGE_DIR_OPT_IDX	259
-	{"huge-dir",			no_argument,		NULL, HUGE_DIR_OPT_IDX},
+	{"huge-dir",			required_argument,	NULL, HUGE_DIR_OPT_IDX},
 #define NUM_TRACE_ENTRIES_OPT_IDX	260
 	{"num-trace-entries",		required_argument,	NULL, NUM_TRACE_ENTRIES_OPT_IDX},
 #define MAX_REACTOR_DELAY_OPT_IDX	261
