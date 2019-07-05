@@ -851,7 +851,19 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 		return rc;
 	}
 
-	/* Serialize extents */
+	if (blob->active.num_clusters == 0) {
+		/* Return early if there are no clusters to serialize to extents */
+		return 0;
+	}
+
+	/* Serialize extents - always start at new page */
+	rc = _spdk_blob_serialize_add_page(blob, pages, page_count, &cur_page);
+	if (rc < 0) {
+		return rc;
+	}
+	buf = (uint8_t *)cur_page->descriptors;
+	remaining_sz = sizeof(cur_page->descriptors);
+
 	last_cluster = 0;
 	while (last_cluster < blob->active.num_clusters) {
 		_spdk_blob_serialize_extent(blob, last_cluster, &last_cluster,

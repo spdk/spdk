@@ -782,6 +782,7 @@ blob_snapshot_freeze_io(void)
 	spdk_thread_poll(thread, 1, 0);
 	spdk_thread_poll(thread, 1, 0);
 	spdk_thread_poll(thread, 1, 0);
+	spdk_thread_poll(thread, 1, 0);
 
 	CU_ASSERT(TAILQ_EMPTY(&bs_channel->queued_io));
 
@@ -4404,7 +4405,7 @@ blob_thin_prov_alloc(void)
 	/* Since clusters are not allocated,
 	 * number of metadata pages is expected to be minimal.
 	 */
-	CU_ASSERT(blob->active.num_pages == 1);
+	CU_ASSERT(blob->active.num_pages == 2);
 
 	/* Shrink the blob to 3 clusters - still unallocated */
 	spdk_blob_resize(blob, 3, blob_op_complete, NULL);
@@ -4647,7 +4648,7 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(free_clusters - 1 == spdk_bs_free_cluster_count(bs));
 	/* For thin-provisioned blob we need to write 20 pages plus one page metadata and
 	 * read 0 bytes */
-	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 21);
+	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 23);
 	CU_ASSERT(g_dev_read_bytes - read_bytes == 0);
 
 	spdk_blob_io_read(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
@@ -4987,7 +4988,7 @@ blob_snapshot_rw(void)
 	/* For a clone we need to allocate and copy one cluster, update one page of metadata
 	 * and then write 10 pages of payload.
 	 */
-	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 11 + cluster_size);
+	CU_ASSERT(g_dev_write_bytes - write_bytes == page_size * 13 + cluster_size);
 	CU_ASSERT(g_dev_read_bytes - read_bytes == cluster_size);
 
 	spdk_blob_io_read(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
