@@ -19,6 +19,7 @@ New API `spdk_bdev_is_zdev()` has been added to indicate if bdev supports
 zoned namespace device semantics.
 
 New `spdk_bdev_io_type` SPDK_BDEV_IO_ZONE_INFO was added.
+New `spdk_bdev_io_type` SPDK_BDEV_IO_TYPE_ZONE_MANAGMENT was added.
 
 ## v19.07:
 
