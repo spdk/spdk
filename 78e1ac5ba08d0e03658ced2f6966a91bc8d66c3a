@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dae57b81_bb08ebc1",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1308,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-05T12:54:03Z",
+      "side": 1,
+      "message": "Let\u0027s do a:\n\nlimit, value \u003d x.split(\u0027:\u0027, 1)",
+      "range": {
+        "startLine": 1308,
+        "startChar": 16,
+        "endLine": 1308,
+        "endChar": 35
+      },
+      "revId": "78e1ac5ba08d0e03658ced2f6966a91bc8d66c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "497b250f_eaa7957b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1312,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-05T12:54:03Z",
+      "side": 1,
+      "message": "Use .format() instead.",
+      "range": {
+        "startLine": 1312,
+        "startChar": 63,
+        "endLine": 1312,
+        "endChar": 70
+      },
+      "revId": "78e1ac5ba08d0e03658ced2f6966a91bc8d66c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99f5ada8_189cd791",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1312,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-05T12:54:03Z",
+      "side": 1,
+      "message": "Use ValueError instead.",
+      "range": {
+        "startLine": 1312,
+        "startChar": 26,
+        "endLine": 1312,
+        "endChar": 35
+      },
+      "revId": "78e1ac5ba08d0e03658ced2f6966a91bc8d66c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2ca19d2_3afbe17a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1321,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-05T12:54:03Z",
+      "side": 1,
+      "message": "This is the same as lines 1307-1312, perhaps we could extract it into a function and call it twice?",
+      "range": {
+        "startLine": 1315,
+        "startChar": 0,
+        "endLine": 1321,
+        "endChar": 0
+      },
+      "revId": "78e1ac5ba08d0e03658ced2f6966a91bc8d66c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
