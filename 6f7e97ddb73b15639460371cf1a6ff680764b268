@@ -22,6 +22,30 @@
       "revId": "6f7e97ddb73b15639460371cf1a6ff680764b268",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5e0dcb4_9dbc4959",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 788,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-05T07:17:48Z",
+      "side": 1,
+      "message": "right, will do it.",
+      "parentUuid": "87e5ab62_d246c63b",
+      "range": {
+        "startLine": 788,
+        "startChar": 1,
+        "endLine": 788,
+        "endChar": 46
+      },
+      "revId": "6f7e97ddb73b15639460371cf1a6ff680764b268",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
