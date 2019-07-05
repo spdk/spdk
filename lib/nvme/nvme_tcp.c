@@ -1587,8 +1587,8 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 	do {
 		rc = nvme_tcp_read_pdu(tqpair, &reaped);
 		if (rc < 0) {
-			SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
-				    errno, spdk_strerror(errno));
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Error polling CQ! (%d): %s\n",
+				      errno, spdk_strerror(errno));
 			return -1;
 		} else if (rc == 0) {
 			/* Partial PDU is read */
