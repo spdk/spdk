@@ -33,6 +33,75 @@
       "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5ef537d_6daa666e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-05T00:03:25Z",
+      "side": 1,
+      "message": "How about embedding the instance of struct spdk_bdev_callbacks here?",
+      "range": {
+        "startLine": 290,
+        "startChar": 28,
+        "endLine": 290,
+        "endChar": 37
+      },
+      "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33e6a92a_426d16e2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4335,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-05T00:03:25Z",
+      "side": 1,
+      "message": "ditto.",
+      "range": {
+        "startLine": 4335,
+        "startChar": 1,
+        "endLine": 4335,
+        "endChar": 10
+      },
+      "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e30d3e7_51a63494",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4371,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-05T00:03:25Z",
+      "side": 1,
+      "message": "How about allocating desc here, initializing desc-\u003ecallback and passing desc to _spdk_bdev_open()?\n\nThis will reduce calloc to once.",
+      "range": {
+        "startLine": 4371,
+        "startChar": 1,
+        "endLine": 4371,
+        "endChar": 10
+      },
+      "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
