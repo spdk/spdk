@@ -332,6 +332,11 @@ struct spdk_bdev {
 	uint32_t dif_check_flags;
 
 	/**
+	 * Specify whether bdev is zoned bdev.
+	 */
+	bool is_zdev;
+
+	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
 	struct spdk_bdev_module *module;
