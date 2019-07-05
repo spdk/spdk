@@ -94,6 +94,30 @@
     },
     {
       "key": {
+        "uuid": "76438673_d7606511",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-05T06:45:15Z",
+      "side": 1,
+      "message": "I would rather not use spdk_strerror() in default case because it will return \"\" for many of rc values",
+      "parentUuid": "6725ea98_660b8c3e",
+      "range": {
+        "startLine": 117,
+        "startChar": 2,
+        "endLine": 117,
+        "endChar": 67
+      },
+      "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4f090871_1b3afaa9",
         "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
         "patchSetId": 6
