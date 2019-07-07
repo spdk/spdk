@@ -22,6 +22,30 @@
       "revId": "ba13fb0d16d83d57423767a46f5fa97ba8ebb471",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71eb189d_c039adef",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1963,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-07T22:42:01Z",
+      "side": 1,
+      "message": "Thank you for nice suggestion, Darek. I swap \"if (pdu-\u003edif_ctx) {}\" and \"pdu-\u003ereadv_offset +\u003d rc\", and remove _rc.",
+      "parentUuid": "533c4b2c_f2650064",
+      "range": {
+        "startLine": 1963,
+        "startChar": 4,
+        "endLine": 1963,
+        "endChar": 7
+      },
+      "revId": "ba13fb0d16d83d57423767a46f5fa97ba8ebb471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
