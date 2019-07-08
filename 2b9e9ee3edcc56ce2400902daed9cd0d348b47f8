@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "144a53e7_447c7f81",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T10:03:10Z",
+      "side": 1,
+      "message": "Add a note that this function is now deprecated.",
+      "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "26b322f1_17c4cfc2",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
