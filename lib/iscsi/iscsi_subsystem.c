@@ -1356,6 +1356,7 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 	spdk_iscsi_portal_grp_close_all();
 	spdk_shutdown_iscsi_conns();
 	free(g_spdk_iscsi.session);
+	spdk_iscsi_opts_free(g_spdk_iscsi_opts);
 }
 
 static void
