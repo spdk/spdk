@@ -47,14 +47,6 @@ timing_enter host
 run_test suite test/nvmf/host/bdevperf.sh $TEST_ARGS
 run_test suite test/nvmf/host/identify.sh $TEST_ARGS
 run_test suite test/nvmf/host/perf.sh $TEST_ARGS
-# This script has traditionally tested the tcp transport, and then
-# also the rdma transport if it's available.  Now that this script
-# is parameterized, explicitly run the test a second time for the
-# tcp transport, at least until the test pool is set up with a VM
-# that can run all of the tcp tests.  At that point, this whole
-# script will be run twice, once for rdma and once for tcp, and
-# then this second invocation can be removed.
-run_test suite test/nvmf/host/perf.sh $TEST_ARGS --transport=tcp
 
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
