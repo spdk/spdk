@@ -16,6 +16,24 @@
       "revId": "53e2a889ea85ca2bf5fab4051fe39d0d7f179088",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78ecdbef_72fa30cb",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-08T06:27:48Z",
+      "side": 1,
+      "message": "Two values, true/false, may be enough. True: DIF insert/strip, false: DIF passthrough. \n\nBut we may have to add others options for DIX mode. For example, some HBAs support to separate data and metadata from extended LBA payload and merge data and metadata into extended LBA payload.  So I added enum.",
+      "parentUuid": "de12c526_5a75621e",
+      "revId": "53e2a889ea85ca2bf5fab4051fe39d0d7f179088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
