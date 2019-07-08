@@ -2373,6 +2373,123 @@ get_range_with_md_test(void)
 	CU_ASSERT(buf_len == 6144 + 128);
 }
 
+static void
+dif_generate_remap_and_verify(struct iovec *iovs, int iovcnt,
+			      uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+			      bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
+			      uint32_t init_ref_tag, uint32_t remapped_init_ref_tag,
+			      uint16_t apptag_mask, uint16_t app_tag)
+{
+	struct spdk_dif_ctx ctx = {};
+	int rc;
+
+	rc = ut_data_pattern_generate(iovs, iovcnt, block_size, md_size, num_blocks);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
+			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
+	CU_ASSERT(rc == 0);
+
+	spdk_dif_ctx_set_remapped_init_ref_tag(&ctx, remapped_init_ref_tag);
+
+	rc = spdk_dif_remap_ref_tag(iovs, iovcnt, num_blocks, &ctx, NULL);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
+			       remapped_init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(iovs, iovcnt, num_blocks, &ctx, NULL);
+	CU_ASSERT(rc == 0);
+
+	rc = ut_data_pattern_verify(iovs, iovcnt, block_size, md_size, num_blocks);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test(void)
+{
+	struct iovec iovs[4];
+	int i, num_blocks;
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	num_blocks = 0;
+
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], (512 + 8) * (i + 1));
+		num_blocks += i + 1;
+	}
+
+	dif_generate_remap_and_verify(iovs, 4, 512 + 8, 8, num_blocks, false, SPDK_DIF_TYPE1,
+				      dif_flags, 22, 99, 0xFFFF, 0x22);
+
+	dif_generate_remap_and_verify(iovs, 4, 512 + 8, 8, num_blocks, true, SPDK_DIF_TYPE1,
+				      dif_flags, 22, 99, 0xFFFF, 0x22);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
+static void
+dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test(void)
+{
+	struct iovec iovs[11];
+	uint32_t dif_flags;
+	int i;
+
+	dif_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	/* data[0][1000:0] */
+	_iov_alloc_buf(&iovs[0], 1000);
+
+	/* data[0][3095:1000], guard[0][0] */
+	_iov_alloc_buf(&iovs[1], 3096 + 1);
+
+	/* guard[0][1], apptag[0][0] */
+	_iov_alloc_buf(&iovs[2], 1 + 1);
+
+	/* apptag[0][1], reftag[0][0] */
+	_iov_alloc_buf(&iovs[3], 1 + 1);
+
+	/* reftag[0][3:1], ignore[0][59:0] */
+	_iov_alloc_buf(&iovs[4], 3 + 60);
+
+	/* ignore[119:60], data[1][3050:0] */
+	_iov_alloc_buf(&iovs[5], 60 + 3051);
+
+	/* data[1][4095:3050], guard[1][0] */
+	_iov_alloc_buf(&iovs[6], 1045 + 1);
+
+	/* guard[1][1], apptag[1][0] */
+	_iov_alloc_buf(&iovs[7], 1 + 1);
+
+	/* apptag[1][1], reftag[1][0] */
+	_iov_alloc_buf(&iovs[8], 1 + 1);
+
+	/* reftag[1][3:1], ignore[1][9:0] */
+	_iov_alloc_buf(&iovs[9], 3 + 10);
+
+	/* ignore[1][127:9] */
+	_iov_alloc_buf(&iovs[10], 118);
+
+	dif_generate_remap_and_verify(iovs, 11, 4096 + 128, 128, 2, false, SPDK_DIF_TYPE1, dif_flags,
+				      22, 99, 0xFFFF, 0x22);
+	dif_generate_remap_and_verify(iovs, 11, 4096 + 128, 128, 2, true, SPDK_DIF_TYPE1, dif_flags,
+				      22, 99, 0xFFFF, 0x22);
+
+	for (i = 0; i < 11; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2474,7 +2591,11 @@ main(int argc, char **argv)
 			    _dif_update_crc32c_split_test) == NULL ||
 		CU_add_test(suite, "dif_update_crc32c_stream_multi_segments_test",
 			    dif_update_crc32c_stream_multi_segments_test) == NULL ||
-		CU_add_test(suite, "get_range_with_md_test", get_range_with_md_test) == NULL
+		CU_add_test(suite, "get_range_with_md_test", get_range_with_md_test) == NULL ||
+		CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test",
+			    dif_sec_4096_md_128_prchk_7_multi_iovs_remap_test) == NULL ||
+		CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test",
+			    dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_remap_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
