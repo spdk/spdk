@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32836cb0_f2a345b9",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-08T15:59:08Z",
+      "side": 1,
+      "message": "Did you mean to delete the first sentence? Might be good to say something like \"if set to all zeroes\" instead of \"if necessary\"",
+      "revId": "ef4d5ad6084edacd2b9c2219ef23bc0305dc70e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
