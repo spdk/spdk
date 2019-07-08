@@ -52,6 +52,24 @@
       "revId": "53e2a889ea85ca2bf5fab4051fe39d0d7f179088",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "728c02f2_638d4fba",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-08T06:44:04Z",
+      "side": 1,
+      "message": "Yes, I intended to cover such use case.\nAsish requested such use case in https://github.com/spdk/spdk/issues/830.\n\nBut I don\u0027t have such use cases.\nIf others work on such use case, they will be able to add mode.\n\nOK, I will rework the patches to change the option to bool dif_insert_or_strip.\n\nPlease stay tune.",
+      "parentUuid": "a3b1dc7f_269e6016",
+      "revId": "53e2a889ea85ca2bf5fab4051fe39d0d7f179088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
