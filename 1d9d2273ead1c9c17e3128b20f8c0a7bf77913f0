@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a73a59c9_c218252f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 14
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-08T08:43:42Z",
+      "side": 1,
+      "message": "Nitpick: can we be a bit more descriptive here?\nI see that these are open stack tests, but these scripts don\u0027t have any readme or anything.\nI\u0027d like to roughly know what these tests do and what they test, and why are some of them commented out (github issues, JIRA issues, etc?)",
+      "revId": "1d9d2273ead1c9c17e3128b20f8c0a7bf77913f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
