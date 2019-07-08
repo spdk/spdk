@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39243bb0_5306e2b9",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 942,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T10:51:43Z",
+      "side": 1,
+      "message": "Do you really need to zero the entire disk? This can take prohibitively long. Consider just zeroing the nv cache header.",
+      "revId": "36c695110e6b5cc94d66780a17f08030a671e1ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
