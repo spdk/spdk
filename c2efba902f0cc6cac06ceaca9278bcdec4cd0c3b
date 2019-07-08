@@ -70,6 +70,24 @@
       "revId": "c2efba902f0cc6cac06ceaca9278bcdec4cd0c3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7d4e346_82bdfb7d",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1763,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T07:49:35Z",
+      "side": 1,
+      "message": "Oh I see - somehow scan-build is too stupid to figure out that taking a reference to a stack variable is never null.",
+      "parentUuid": "541b61a7_074499a5",
+      "revId": "c2efba902f0cc6cac06ceaca9278bcdec4cd0c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
