@@ -34,6 +34,24 @@
       "revId": "53e2a889ea85ca2bf5fab4051fe39d0d7f179088",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3b1dc7f_269e6016",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-08T06:33:49Z",
+      "side": 1,
+      "message": "There should only have two modes, DIF and DIX. As for the DIF insert/strip or DIF pass-through options, they should be configured via PRACT flag and MetadataSize.\n\nFor your cases, do you means there are scenarios that the low level bdevs can support DIX while the transport layer is using DIF mode ?",
+      "parentUuid": "78ecdbef_72fa30cb",
+      "revId": "53e2a889ea85ca2bf5fab4051fe39d0d7f179088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
