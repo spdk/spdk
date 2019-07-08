@@ -86,6 +86,14 @@ struct spdk_zdev_zone_info {
 };
 
 /**
+ * Get zoned device from bdev.
+ *
+ * \param bdev Block device.
+ * \return pointer to zoned device.
+ */
+struct spdk_zdev *spdk_zdev_from_bdev(struct spdk_bdev *bdev);
+
+/**
  * Get zone info of the device.
  *
  * \param zdev Zone device to query.

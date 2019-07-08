@@ -38,6 +38,16 @@
 
 #include "bdev_internal.h"
 
+struct spdk_zdev *
+spdk_zdev_from_bdev(struct spdk_bdev *bdev)
+{
+	if (!spdk_bdev_is_zdev(bdev)) {
+		return NULL;
+	}
+
+	return SPDK_CONTAINEROF(bdev, struct spdk_zdev, bdev);
+}
+
 const struct spdk_zdev_info *
 spdk_zdev_get_info(const struct spdk_zdev *zdev)
 {
