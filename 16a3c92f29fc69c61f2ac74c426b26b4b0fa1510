@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69c2b8fd_8b9d0d99",
+        "filename": "test/app/fuzz/nvme_fuzz/example.json",
+        "patchSetId": 41
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-08T09:18:07Z",
+      "side": 1,
+      "message": "similarly to vhost fuzzer, we might want to store those in hex",
+      "range": {
+        "startLine": 261,
+        "startChar": 17,
+        "endLine": 261,
+        "endChar": 27
+      },
+      "revId": "16a3c92f29fc69c61f2ac74c426b26b4b0fa1510",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
