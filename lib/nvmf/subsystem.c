@@ -1459,6 +1459,12 @@ spdk_nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_inf
 		goto exit;
 	}
 
+	if (res.regs.num_regs > SPDK_NVMF_MAX_NUM_REGISTRANTS) {
+		SPDK_ERRLOG("Can only support up to %u registrants\n", SPDK_NVMF_MAX_NUM_REGISTRANTS);
+		rc = -ERANGE;
+		goto exit;
+	}
+
 	rc = 0;
 	info->ptpl_activated = res.ptpl_activated;
 	info->rtype = res.rtype;
