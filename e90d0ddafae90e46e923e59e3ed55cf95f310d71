@@ -22,6 +22,30 @@
       "revId": "e90d0ddafae90e46e923e59e3ed55cf95f310d71",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3dd3c4dd_b3655684",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-08T09:44:02Z",
+      "side": 1,
+      "message": "Yeah, that works, thanks for the suggestion!",
+      "parentUuid": "209e7b36_bc5d4b22",
+      "range": {
+        "startLine": 34,
+        "startChar": 4,
+        "endLine": 34,
+        "endChar": 78
+      },
+      "revId": "e90d0ddafae90e46e923e59e3ed55cf95f310d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
