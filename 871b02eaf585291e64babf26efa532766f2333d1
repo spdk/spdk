@@ -34,6 +34,24 @@
       "revId": "871b02eaf585291e64babf26efa532766f2333d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "248eaf16_b89cca76",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 2460,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-08T07:55:47Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nI added PRACT support both to the back log of bdev and nvmf-tgt.\nhttps://trello.com/b/LnORPCpt/bdev-backlog\nhttps://trello.com/b/G2f3dVcs/nvme-of-target-backlog\n\nSupporting PRACT will be sufficiently complex to work as separate task.\nI will start to work on PRACT after this patch series soon.\nI hope it\u0027s OK for you.",
+      "parentUuid": "aa704627_2167690a",
+      "revId": "871b02eaf585291e64babf26efa532766f2333d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
