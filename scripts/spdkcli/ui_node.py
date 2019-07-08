@@ -437,9 +437,9 @@ class UIPmemBdev(UIBdev):
     def ui_command_delete_pmem_pool(self, pmem_file):
         self.get_root().delete_pmem_pool(pmem_file=pmem_file)
 
-    def ui_command_info_pmem_pool(self, pmem_file):
-        ret = self.get_root().delete_pmem_pool(pmem_file=pmem_file)
-        self.shell.log.info(ret)
+    def ui_command_pmem_pool_info(self, pmem_file):
+        ret = self.get_root().pmem_pool_info(pmem_file=pmem_file)
+        self.shell.log.info(json.dumps(ret, indent=2))
 
     def ui_command_create(self, pmem_file, name):
         ret_name = self.get_root().create_pmem_bdev(pmem_file=pmem_file,
