@@ -110,6 +110,9 @@ struct spdk_dif_ctx {
 
 	/* Seed value for guard computation */
 	uint16_t		guard_seed;
+
+	/* Remapped initial reference tag. */
+	uint32_t		remapped_init_ref_tag;
 };
 
 /** DIF error information */
@@ -160,6 +163,16 @@ int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md
  * \param data_offset Byte offset from the start of the whole data buffer.
  */
 void spdk_dif_ctx_set_data_offset(struct spdk_dif_ctx *ctx, uint32_t data_offset);
+
+/**
+ * Set remapped initial reference tag of DIF context.
+ *
+ * \param ctx DIF context.
+ * \param remapped_init_ref_tag Remapped initial reference tag. For type 1, this is the
+ * starting block address.
+ */
+void spdk_dif_ctx_set_remapped_init_ref_tag(struct spdk_dif_ctx *ctx,
+		uint32_t remapped_init_ref_tag);
 
 /**
  * Generate DIF for extended LBA payload.
@@ -404,4 +417,23 @@ void spdk_dif_get_range_with_md(uint32_t data_offset, uint32_t data_len,
  * \return Extended LBA based data length.
  */
 uint32_t spdk_dif_get_length_with_md(uint32_t data_len, const struct spdk_dif_ctx *ctx);
+
+/**
+ * Remap reference tag for extended LBA payload.
+ *
+ * When using stacked virtual bdev (e.g. split virtual bdev), block address space for I/O
+ * will be remapped during I/O processing and so reference tag will have to be remapped
+ * accordingly. This patch is for that case.
+ *
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param num_blocks Number of blocks of the payload.
+ * \param ctx DIF context.
+ * \param err_blk Error information of the block in which DIF error is found.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_remap_ref_tag(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
+			   const struct spdk_dif_ctx *dif_ctx,
+			   struct spdk_dif_error *err_blk);
 #endif /* SPDK_DIF_H */
