@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6329a8b0_4f7fe363",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T08:11:04Z",
+      "side": 1,
+      "message": "Move this to the NVMe-oF target section and say this:\n\nPersistent reservation emulation has been added to the NVMe-oF target. Persistent reservation state is stored in a JSON file on the local filesystem between target restart. To support this, an optional parameter to the RPC method `nvmf_subsystem_add_ns` called `--ptpl_file` was added. This allows the user to specify which file to store the persistent reservation state in. Note that this is done per namespace.",
+      "revId": "3f63dad06d73d95c27fa385ad9406cd7fa615575",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7daee3dd_aa1f4464",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 3825,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T08:11:04Z",
+      "side": 1,
+      "message": "Can we make the file extension .json? It doesn\u0027t really matter, but that gives people a hint that they can open it with a text editor and see a json file.",
+      "revId": "3f63dad06d73d95c27fa385ad9406cd7fa615575",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "986f23cc_3016bee2",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 1527,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T08:11:04Z",
+      "side": 1,
+      "message": "I think we should describe this as\n\n\"The persistent reservation storage location (optional)\"\n\nIt\u0027s not really configuration and more a persistent place to store the data.",
+      "revId": "3f63dad06d73d95c27fa385ad9406cd7fa615575",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
