@@ -121,7 +121,7 @@ if version_lt "1.9.5" "${GIT_VERSION}"; then
 fi
 
 echo -n "Checking for spaces before tabs..."
-git grep --line-number $' \t' -- > whitespace.log || true
+git grep --line-number $' \t' -- './*' ':!*.patch' > whitespace.log || true
 if [ -s whitespace.log ]; then
 	echo " Spaces before tabs detected"
 	cat whitespace.log
@@ -170,7 +170,7 @@ rm -f badcunit.log
 
 echo -n "Checking blank lines at end of file..."
 
-if ! git grep -I -l -e . -z | \
+if ! git grep -I -l -e . -z  './*' ':!*.patch' | \
 	xargs -0 -P$(nproc) -n1 scripts/eofnl > eofnl.log; then
 	echo " Incorrect end-of-file formatting detected"
 	cat eofnl.log
@@ -181,7 +181,7 @@ fi
 rm -f eofnl.log
 
 echo -n "Checking for POSIX includes..."
-git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/vhost/rte_vhost*/**' ':!scripts/posix.txt' > scripts/posix.log || true
+git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/vhost/rte_vhost*/**' ':!scripts/posix.txt' ':!*.patch' > scripts/posix.log || true
 if [ -s scripts/posix.log ]; then
 	echo "POSIX includes detected. Please include spdk/stdinc.h instead."
 	cat scripts/posix.log
