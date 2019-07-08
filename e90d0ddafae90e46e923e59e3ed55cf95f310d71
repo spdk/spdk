@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "209e7b36_bc5d4b22",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-08T08:47:33Z",
+      "side": 1,
+      "message": "no need to create an array just to strip it in the next pipe\n\n\".config[] | select(.params.traddr !\u003d \\\"$device\\\").params.traddr\")\n\n(untested)",
+      "range": {
+        "startLine": 34,
+        "startChar": 4,
+        "endLine": 34,
+        "endChar": 78
+      },
+      "revId": "e90d0ddafae90e46e923e59e3ed55cf95f310d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
