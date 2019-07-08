@@ -164,7 +164,15 @@ EOL
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 
 # Run bdevperf with gpt
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
+$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5 -z &
+bdevperf_pid=$!
+trap "killprocess $bdevperf_pid; exit 1" SIGINT SIGTERM EXIT
+echo "Process bdevperf pid: $bdevperf_pid"
+waitforlisten $bdevperf_pid
+$testdir/bdevperf/bdevperf.py perform_tests
+killprocess $bdevperf_pid
+trap - SIGINT SIGTERM EXIT
+
 $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
 rm -f $testdir/bdev_gpt.conf
 
