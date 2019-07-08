@@ -59,6 +59,30 @@
     },
     {
       "key": {
+        "uuid": "1ce66aed_27fe8426",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-08T08:16:52Z",
+      "side": 1,
+      "message": "I\u0027m using it as a function argument below, so it\u0027s better like that :)",
+      "parentUuid": "d5ef537d_6daa666e",
+      "range": {
+        "startLine": 290,
+        "startChar": 28,
+        "endLine": 290,
+        "endChar": 37
+      },
+      "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "33e6a92a_426d16e2",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 8
@@ -93,6 +117,30 @@
       "writtenOn": "2019-07-05T00:03:25Z",
       "side": 1,
       "message": "How about allocating desc here, initializing desc-\u003ecallback and passing desc to _spdk_bdev_open()?\n\nThis will reduce calloc to once.",
+      "range": {
+        "startLine": 4371,
+        "startChar": 1,
+        "endLine": 4371,
+        "endChar": 10
+      },
+      "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d591f8e6_4b5ffae5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4371,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-08T08:16:52Z",
+      "side": 1,
+      "message": "Sounds good.",
+      "parentUuid": "8e30d3e7_51a63494",
       "range": {
         "startLine": 4371,
         "startChar": 1,
