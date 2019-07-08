@@ -71,7 +71,12 @@ $rpc_py delete_target_node $node_base:Target0
 echo "Error injection test done"
 
 if [ -z "$NO_NVME" ]; then
-	$rpc_py construct_split_vbdev Nvme0n1 2 -s 10000
+	bdev_size=$(get_bdev_size Nvme0n1)
+	split_size=$((bdev_size/2))
+	if [ $split_size -gt 10000 ]; then
+		split_size=10000
+	fi
+	$rpc_py construct_split_vbdev Nvme0n1 2 -s $split_size
 	$rpc_py construct_target_node Target1 Target1_alias Nvme0n1p0:0 1:2 64 -d
 fi
 
