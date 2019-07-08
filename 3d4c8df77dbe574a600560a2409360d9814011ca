@@ -16,6 +16,24 @@
       "revId": "3d4c8df77dbe574a600560a2409360d9814011ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5002231f_d85f7a46",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T08:15:52Z",
+      "side": 1,
+      "message": "The correct word choice is \"optimal\", so \"get_optimal_poll_group\". I\u0027m only nit-picking on this because this is in a public interface that lots of people will end up implementing.",
+      "parentUuid": "e6a69e62_05165158",
+      "revId": "3d4c8df77dbe574a600560a2409360d9814011ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
