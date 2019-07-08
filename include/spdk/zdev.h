@@ -85,6 +85,16 @@ struct spdk_zdev_zone_info {
 	enum spdk_zdev_zone_state	state;
 };
 
+static inline struct spdk_zdev *
+spdk_zdev_from_bdev(struct spdk_bdev *bdev)
+{
+	if (!spdk_bdev_is_zdev(bdev)) {
+		return NULL;
+	}
+
+	return SPDK_CONTAINEROF(bdev, struct spdk_zdev, bdev);
+}
+
 /**
  * Get zone info of the device.
  *
