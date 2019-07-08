@@ -45,6 +45,64 @@
       "revId": "e5022e62dabb44408fdf7410cc15d4f8c41cc32b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cb3d851_1c2520de",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T08:25:43Z",
+      "side": 1,
+      "message": "I think we should change this in the following way:\n\n1) Rename ConnSched -\u003e ConnectionScheduler\n2) Instead of 0, 1, or 2, let\u0027s define string names an dparse them here. That\u0027s more user friendly. I suggest these three names:\n - \"RoundRobin\"\n - \"Host\"\n - \"Transport\"\n\nThe new one here is \"transport\", and I think this is going to end up being useful for fibre channel too so I want to use a generic name.",
+      "parentUuid": "285c7046_685dae5a",
+      "range": {
+        "startLine": 116,
+        "startChar": 1,
+        "endLine": 118,
+        "endChar": 2
+      },
+      "revId": "e5022e62dabb44408fdf7410cc15d4f8c41cc32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efe316b8_b2cb852f",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T08:25:43Z",
+      "side": 1,
+      "message": "The comment here probably isn\u0027t needed - it\u0027s the same as the function name.",
+      "revId": "e5022e62dabb44408fdf7410cc15d4f8c41cc32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40964dd5_53355769",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-08T08:25:43Z",
+      "side": 1,
+      "message": "optimal",
+      "revId": "e5022e62dabb44408fdf7410cc15d4f8c41cc32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
