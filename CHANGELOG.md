@@ -14,6 +14,7 @@ Zoned device concept is based on NVMe TP4035 - Zoned Namespaces.
 zones inside zoned namespace.
 `spdk_zdev_zone_action` enum was added.
 Added `spdk_zdev_zone_open() `, `spdk_zdev_zone_finish()` new APIs.
+`spdk_zdev_from_bdev()` API was added for downcasting bdev to zdev.
 
 ### bdev
 
