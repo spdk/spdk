@@ -16,6 +16,24 @@
       "revId": "871b02eaf585291e64babf26efa532766f2333d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa704627_2167690a",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 2460,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-08T06:31:20Z",
+      "side": 1,
+      "message": "We don\u0027t support PRACT in bdev layer yet. I want to leave PRACT as an enhancement item for now.",
+      "parentUuid": "cc6e9bf9_eba1a81f",
+      "revId": "871b02eaf585291e64babf26efa532766f2333d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
