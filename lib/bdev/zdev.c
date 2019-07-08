@@ -38,6 +38,16 @@
 
 #include "bdev_internal.h"
 
+struct spdk_zdev *
+spdk_zdev_from_bdev(struct spdk_bdev *bdev)
+{
+	if (!spdk_bdev_is_zoned(bdev)) {
+		return NULL;
+	}
+
+	return SPDK_CONTAINEROF(bdev, struct spdk_zdev, bdev);
+}
+
 size_t
 spdk_bdev_get_zone_size(const struct spdk_zdev *zdev)
 {

@@ -64,6 +64,14 @@ size_t spdk_bdev_get_zone_size(const struct spdk_zdev *zdev);
  */
 size_t spdk_bdev_get_max_open_zones(const struct spdk_zdev *zdev);
 
+/**
+ * Get zoned device optimal number of open zones.
+ *
+ * \param zdev Zoned device to query.
+ * \return Optimal number of open zones for this zoned device.
+ */
+size_t spdk_bdev_get_optimal_open_zones(const struct spdk_zdev *zdev);
+
 enum spdk_zdev_zone_state {
 	SPDK_ZDEV_ZONE_STATE_EMPTY,
 	SPDK_ZDEV_ZONE_STATE_OPEN,
@@ -89,12 +97,12 @@ struct spdk_zdev_zone_info {
 };
 
 /**
- * Get zoned device optimal number of open zones.
+ * Get zoned device from bdev.
  *
- * \param zdev Zoned device to query.
- * \return Optimal number of open zones for this zoned device.
+ * \param bdev Block device.
+ * \return pointer to zoned device.
  */
-size_t spdk_bdev_get_optimal_open_zones(const struct spdk_zdev *zdev);
+struct spdk_zdev *spdk_zdev_from_bdev(struct spdk_bdev *bdev);
 
 /**
  * Submit a get_zone_info request to the bdev.
