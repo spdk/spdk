@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6a69e62_05165158",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-08T05:44:16Z",
+      "side": 1,
+      "message": "If we use \"optimal\", we can say \"Get the polling group of the queue pair optimal for the specific transport\".",
+      "revId": "3d4c8df77dbe574a600560a2409360d9814011ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
