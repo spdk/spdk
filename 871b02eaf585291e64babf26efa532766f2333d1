@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc6e9bf9_eba1a81f",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 2460,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-08T06:23:36Z",
+      "side": 1,
+      "message": "According to the specification, the flag is true when PRACT set to 1 and MetadataSize equals 8 or MedataSize \u003e 8, see specification 1.3 8.3.1.1 and 8.3.1.2 chapter.",
+      "revId": "871b02eaf585291e64babf26efa532766f2333d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
