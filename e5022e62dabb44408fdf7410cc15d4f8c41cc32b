@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f8cad9e_2363c5f6",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-08T05:49:07Z",
+      "side": 1,
+      "message": "you can remove this.",
+      "range": {
+        "startLine": 166,
+        "startChar": 7,
+        "endLine": 166,
+        "endChar": 15
+      },
+      "revId": "e5022e62dabb44408fdf7410cc15d4f8c41cc32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "285c7046_685dae5a",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-08T05:49:07Z",
+      "side": 1,
+      "message": "switch (sched_conf) {\ncase CONNECT_SCHED_ROUND_ROBIN:\ncase CONNECT_SCHED_OPTIMIZED_GROUP:\n  conn-\u003econn_sched \u003d sched_conf;\n  break;\ndefault:\n  SPDK_ERRLOG(\"Unknown schedule mode: %d\\n\", sched_conf);\n  break;\n}\n\nOr \n\nenum spdk_nvmf_connect_sched {\n  (snip)\n  MAX_CONNECT_SCHED_POLICY,\n}\n\nand \n\n  check if (sched_conf \u003c MAX_CONNECT_SCHED_POLICY)\n\nwill avoid human error and may be better.",
+      "range": {
+        "startLine": 116,
+        "startChar": 1,
+        "endLine": 118,
+        "endChar": 2
+      },
+      "revId": "e5022e62dabb44408fdf7410cc15d4f8c41cc32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
