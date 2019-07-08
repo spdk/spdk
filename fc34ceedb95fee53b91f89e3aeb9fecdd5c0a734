@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6721ab46_d9fd538d",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-07-08T04:36:48Z",
+      "side": 1,
+      "message": "Better to align the data structure.",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 88,
+        "endChar": 34
+      },
+      "revId": "fc34ceedb95fee53b91f89e3aeb9fecdd5c0a734",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
