@@ -214,10 +214,11 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	uint64_t offset;
 	int rc = 0;
 
+	offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
+
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		if (bdev_io->u.bdev.md_buf == NULL) {
 			rc = spdk_bdev_readv_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
 						    bdev_io->u.bdev.iovcnt, offset,
@@ -233,7 +234,6 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		if (bdev_io->u.bdev.md_buf == NULL) {
 			rc = spdk_bdev_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
 						     bdev_io->u.bdev.iovcnt, offset,
@@ -249,17 +249,14 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		rc = spdk_bdev_write_zeroes_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
 						   spdk_bdev_part_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		rc = spdk_bdev_unmap_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
 					    spdk_bdev_part_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
 		rc = spdk_bdev_flush_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
 					    spdk_bdev_part_complete_io, bdev_io);
 		break;
