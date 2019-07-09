@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a9c5cda_603298ef",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-09T07:41:40Z",
+      "side": 1,
+      "message": "Can you move this section to line 627 and combine with line 643 to 649 for the error path?",
+      "range": {
+        "startLine": 583,
+        "startChar": 1,
+        "endLine": 590,
+        "endChar": 2
+      },
+      "revId": "7ada9e52cec3ace2bf96aefcb7e8dbe55e5f1e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
