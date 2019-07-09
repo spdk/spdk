@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7477958e_0b1fc87a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d07a1d31_e1b80bd7",
+      "range": {
+        "startLine": 7,
+        "startChar": 29,
+        "endLine": 7,
+        "endChar": 36
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6bb2fbc4_8f0d9423",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "428ac6e0_0b8eb169",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6bb2fbc4_8f0d9423",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 38
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2edc4caa_523461ad",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 3
@@ -68,6 +116,53 @@
       "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f01d4bf_28be73e0",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "I\u0027d leave the !g_shutdown here anyway, since in case test started via rpc is shutdown - we actually stop the app instead of just sending RPC back.",
+      "parentUuid": "2edc4caa_523461ad",
+      "range": {
+        "startLine": 428,
+        "startChar": 6,
+        "endLine": 428,
+        "endChar": 37
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "188c0dd7_fc5c7d72",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "FYI, turns out some tests use \u0027-r\u0027 flag to enable RPC. Changed this so that without -z, rpc_address is unaffected. When -z is set, only assign rpc_addr the SPDK_DEFAULT_RPC_ADDR if none was assigned.",
+      "range": {
+        "startLine": 1011,
+        "startChar": 0,
+        "endLine": 1015,
+        "endChar": 2
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +212,54 @@
     },
     {
       "key": {
+        "uuid": "eb7a00eb_5c115188",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1332,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Usually the json returned from call is object called \u0027result\u0027 containing whatever objects needed (here its only the rc). Or in case of error, the object is called \u0027error\u0027 and contains \u0027code\u0027 and \u0027message\u0027, for this we\u0027ve got functions like spdk_jsonrpc_send_error_response() and spdk_jsonrpc_send_error_response_fmt().\n\nI don\u0027t think moving away from this scheme in this patch would be appropriate.",
+      "parentUuid": "bda0b932_f7bd0018",
+      "range": {
+        "startLine": 1324,
+        "startChar": 0,
+        "endLine": 1332,
+        "endChar": 48
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67eb4f46_14aa5689",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1332,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "715c4edf_cb21eb2c",
+      "range": {
+        "startLine": 1332,
+        "startChar": 44,
+        "endLine": 1332,
+        "endChar": 46
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3552203_b988de69",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 3
@@ -137,6 +280,30 @@
       "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ebc2edf_908c5a53",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1353,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a3552203_b988de69",
+      "range": {
+        "startLine": 1353,
+        "startChar": 34,
+        "endLine": 1353,
+        "endChar": 36
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "0e285251_24a9d1b1",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1356,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d3bac1f_4a457576",
+      "range": {
+        "startLine": 1356,
+        "startChar": 1,
+        "endLine": 1356,
+        "endChar": 20
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a479f1f_3af882e1",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 3
@@ -177,6 +368,24 @@
       "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4487e130_0f710417",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1361,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a479f1f_3af882e1",
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -197,6 +406,24 @@
     },
     {
       "key": {
+        "uuid": "8394a8f6_9862bf19",
+        "filename": "test/bdev/bdevperf/tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79bbfcbc_7836753f",
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83a1fd3d_0b73a1c1",
         "filename": "test/bdev/bdevperf/tests.py",
         "patchSetId": 3
@@ -211,6 +438,24 @@
       "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9e5cb18_cdfcdfa5",
+        "filename": "test/bdev/bdevperf/tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "83a1fd3d_0b73a1c1",
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -234,6 +479,30 @@
       "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01d3b8f6_f89cf5f0",
+        "filename": "test/bdev/bdevperf/tests.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "835f4990_b9c313a8",
+      "range": {
+        "startLine": 25,
+        "startChar": 8,
+        "endLine": 25,
+        "endChar": 50
+      },
+      "revId": "ee8fe73412fdc82340f6533bbb8b191c7920af41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
