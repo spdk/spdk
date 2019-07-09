@@ -74,13 +74,16 @@ spdk_rpc_construct_crypto_bdev(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_construct_crypto_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_CRYPTO, "spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	rc = create_crypto_disk(req.base_bdev_name, req.name,
 				req.crypto_pmd, req.key);
-	if (rc != 0) {
-		goto invalid;
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -94,9 +97,8 @@ spdk_rpc_construct_crypto_bdev(struct spdk_jsonrpc_request *request,
 	free_rpc_construct_crypto(&req);
 	return;
 
-invalid:
+cleanup:
 	free_rpc_construct_crypto(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 SPDK_RPC_REGISTER("construct_crypto_bdev", spdk_rpc_construct_crypto_bdev, SPDK_RPC_RUNTIME)
 
@@ -140,14 +142,15 @@ spdk_rpc_delete_crypto_bdev(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_delete_crypto_decoders,
 				    SPDK_COUNTOF(rpc_delete_crypto_decoders),
 				    &req)) {
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
-		rc = -ENODEV;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
 	}
 
 	delete_crypto_disk(bdev, _spdk_rpc_delete_crypto_bdev_cb, request);
@@ -156,8 +159,7 @@ spdk_rpc_delete_crypto_bdev(struct spdk_jsonrpc_request *request,
 
 	return;
 
-invalid:
+cleanup:
 	free_rpc_delete_crypto(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("delete_crypto_bdev", spdk_rpc_delete_crypto_bdev, SPDK_RPC_RUNTIME)
