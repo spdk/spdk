@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff377d31_a90d72b4",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-09T08:15:29Z",
+      "side": 1,
+      "message": "There should be a description that this value is cumulative somewhere. Be that in the jsonrpc.md or when someone calls help on the RPC itself. But this could be a point of confusion if not documented.",
+      "revId": "3e634ab26211da0bade74c646a132372d5cd4b34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
