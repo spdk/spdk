@@ -22,6 +22,23 @@
       "revId": "da8ba1925260e26cb99237f0653e7034082f5c00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ebb2a08_e960f15e",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-09T13:21:49Z",
+      "side": 1,
+      "message": "I think single-char options still added some value by separating those arguments.\n\ne.g. I have no idea what `0123456789123456` means, but with `--encrypt-key 0123456789123456` it would be significantly easier to read. `-k 0123456789123456` as it is now is something inbetween and it\u0027s... tolerable. Is there any way we can keep the params, but show them as non-optional in help?",
+      "revId": "da8ba1925260e26cb99237f0653e7034082f5c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
