@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96e8d7ac_835600e8",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T09:45:30Z",
+      "side": 1,
+      "message": "This file is a festival of mixed quoting styles. \u0027\u0027 vs \"\" vs \"\"\".\"\"\". We should agree on something and clean this up. Not -1\u0027ing for this, just making an unrelated comment :P\n\nI strongly suggest using \"\" where possible.",
+      "range": {
+        "startLine": 41,
+        "startChar": 24,
+        "endLine": 41,
+        "endChar": 45
+      },
+      "revId": "d8d066575c81897d046477f1f116ed8920456344",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d1c9ddb_4ffd5bfb",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T09:45:30Z",
+      "side": 1,
+      "message": "Nitpick: Actually the comment about mixed qouting styles makes sense here.\nYou can avoid escaping \\\u0027 by just using \"\" to quote the string.",
+      "range": {
+        "startLine": 45,
+        "startChar": 29,
+        "endLine": 45,
+        "endChar": 83
+      },
+      "revId": "d8d066575c81897d046477f1f116ed8920456344",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bfd4cf0_4f812d88",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 1849,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T09:45:30Z",
+      "side": 1,
+      "message": "We define cmd_output here with value as local variable for main(), then we declare it again in functions below as global  (more than once).\nCould we instead move it outside of main() (to line 22/23) so that it is always considered global?",
+      "range": {
+        "startLine": 1849,
+        "startChar": 4,
+        "endLine": 1849,
+        "endChar": 19
+      },
+      "revId": "d8d066575c81897d046477f1f116ed8920456344",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3842e665_b41e9013",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 1898,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T09:45:30Z",
+      "side": 1,
+      "message": "Nitpick: \"if not input:\" should be just fine. Up to you if you want to change it.",
+      "range": {
+        "startLine": 1898,
+        "startChar": 19,
+        "endLine": 1898,
+        "endChar": 35
+      },
+      "revId": "d8d066575c81897d046477f1f116ed8920456344",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
