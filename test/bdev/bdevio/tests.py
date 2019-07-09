@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-
-from rpc.client import print_dict, JSONRPCException
-
 import logging
 import argparse
-import rpc
 import sys
 import shlex
+
+try:
+    from rpc.client import print_dict, JSONRPCException
+    import rpc
+except ImportError:
+    print("SPDK RPC library missing. Please add spdk/scripts/ directory to PYTHONPATH:")
+    print("\'export PYTHONPATH=$PYTHONPATH:./spdk/scripts/\'")
+    exit(1)
 
 try:
     from shlex import quote
