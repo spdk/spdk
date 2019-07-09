@@ -37,6 +37,9 @@ CONFIG_PREFIX="/usr/local"
 # Target architecture
 CONFIG_ARCH=native
 
+# Prefix for cross compilation
+CONFIG_CROSS_PREFIX=
+
 # Build with debug logging. Turn off for performance testing and normal usage
 CONFIG_DEBUG=n
 
