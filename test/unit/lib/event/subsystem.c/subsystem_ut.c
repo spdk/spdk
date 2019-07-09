@@ -49,12 +49,6 @@ spdk_app_stop(int rc)
 	global_rc = rc;
 }
 
-uint32_t
-spdk_env_get_current_core(void)
-{
-	return 0;
-}
-
 static void
 ut_event_fn(void *arg1)
 {

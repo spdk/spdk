@@ -84,9 +84,6 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	return 0;
 }
 
-DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), 0);
-DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), 0);
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB(rte_vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
 DEFINE_STUB(rte_vhost_get_negotiated_features, int, (int vid, uint64_t *features), 0);
