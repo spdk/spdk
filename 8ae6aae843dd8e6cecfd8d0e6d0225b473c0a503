@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7541b5d0_0ab35322",
+        "filename": "lib/event/subsystems/vmd/vmd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-09T04:21:10Z",
+      "side": 1,
+      "message": "Karol is working on some better error reporting, but I\u0027m not sure what solution he implemented. I guess this patch is fine for now.",
+      "range": {
+        "startLine": 75,
+        "startChar": 25,
+        "endLine": 75,
+        "endChar": 32
+      },
+      "revId": "8ae6aae843dd8e6cecfd8d0e6d0225b473c0a503",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
