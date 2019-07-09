@@ -1881,3 +1881,119 @@ spdk_dif_remap_ref_tag(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 
 	return 0;
 }
+
+static int
+_dix_remap_ref_tag(struct _dif_sgl *md_sgl, uint32_t offset_blocks,
+		   const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
+{
+	uint32_t expected = 0, _actual, remapped;
+	uint8_t *md_buf;
+	struct spdk_dif *dif;
+
+	_dif_sgl_get_buf(md_sgl, (void *)&md_buf, NULL);
+
+	dif = (struct spdk_dif *)(md_buf + ctx->guard_interval);
+
+	switch (ctx->dif_type) {
+	case SPDK_DIF_TYPE1:
+	case SPDK_DIF_TYPE2:
+		/* If Type 1 or 2 is used, then all DIF checks are disabled when
+		 * the Application Tag is 0xFFFF.
+		 */
+		if (dif->app_tag == 0xFFFF) {
+			goto end;
+		}
+		break;
+	case SPDK_DIF_TYPE3:
+		/* If Type 3 is used, then all DIF checks are disabled when the
+		 * Application Tag is 0xFFFF and the Reference Tag is 0xFFFFFFFF.
+		 */
+		if (dif->app_tag == 0xFFFF && dif->ref_tag == 0xFFFFFFFF) {
+			goto end;
+		}
+		break;
+	default:
+		break;
+	}
+
+	/* For type 1 and 2, the Reference Tag is incremented for each
+	 * subsequent logical block. For type 3, the Reference Tag
+	 * remains the same as the initialReference Tag.
+	 */
+	if (ctx->dif_type != SPDK_DIF_TYPE3) {
+		expected = ctx->init_ref_tag + ctx->ref_tag_offset + offset_blocks;
+		remapped = ctx->remapped_init_ref_tag + ctx->ref_tag_offset + offset_blocks;
+	} else {
+		remapped = ctx->remapped_init_ref_tag;
+	}
+
+	/* Verify the stored Reference Tag. */
+	switch (ctx->dif_type) {
+	case SPDK_DIF_TYPE1:
+	case SPDK_DIF_TYPE2:
+		/* Compare the DIF Reference Tag field to the computed Reference Tag.
+		 * The computed Reference Tag will be the least significant 4 bytes
+		 * of the LBA when Type 1 is used, and application specific value
+		 * if Type 2 is used.
+		 */
+		_actual = from_be32(&dif->ref_tag);
+		if (_actual != expected) {
+			_dif_error_set(err_blk, SPDK_DIF_REFTAG_ERROR, expected,
+				       _actual, offset_blocks);
+			SPDK_ERRLOG("Failed to compare Ref Tag: LBA=%" PRIu32 "," \
+				    " Expected=%x, Actual=%x\n",
+				    expected, expected, _actual);
+			return -1;
+		}
+		break;
+	case SPDK_DIF_TYPE3:
+		/* For type 3, the computed Reference Tag remains unchanged.
+		 * Hence ignore the Reference Tag field.
+		 */
+		break;
+	default:
+		break;
+	}
+
+	/* Update the stored Reference Tag to the remapped one. */
+	to_be32(&dif->ref_tag, remapped);
+
+end:
+	_dif_sgl_advance(md_sgl, ctx->md_size);
+
+	return 0;
+}
+
+int
+spdk_dix_remap_ref_tag(struct iovec *md_iov, uint32_t num_blocks,
+		       const struct spdk_dif_ctx *ctx,
+		       struct spdk_dif_error *err_blk)
+{
+	struct _dif_sgl md_sgl;
+	uint32_t offset_blocks;
+	int rc;
+
+	_dif_sgl_init(&md_sgl, md_iov, 1);
+
+	if (!_dif_sgl_is_valid(&md_sgl, ctx->md_size * num_blocks)) {
+		SPDK_ERRLOG("Size of metadata iovec array is not valid.\n");
+		return -EINVAL;
+	}
+
+	if (_dif_is_disabled(ctx->dif_type)) {
+		return 0;
+	}
+
+	if (!(ctx->dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK)) {
+		return 0;
+	}
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		rc = _dix_remap_ref_tag(&md_sgl, offset_blocks, ctx, err_blk);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return 0;
+}
