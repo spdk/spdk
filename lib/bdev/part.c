@@ -36,6 +36,7 @@
  */
 
 #include "spdk/bdev.h"
+#include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 
@@ -195,6 +196,72 @@ spdk_bdev_part_get_offset_blocks(struct spdk_bdev_part *part)
 	return part->internal.offset_blocks;
 }
 
+static int
+spdk_bdev_part_remap_dif(struct spdk_bdev_io *bdev_io, uint32_t offset,
+			 uint32_t remapped_offset)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_error err_blk = {};
+	int rc;
+
+	if (spdk_likely(!(bdev->dif_check_flags & SPDK_DIF_FLAGS_REFTAG_CHECK))) {
+		return 0;
+	}
+
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
+			       bdev->dif_is_head_of_md, bdev->dif_type, bdev->dif_check_flags,
+			       offset, 0, 0, 0, 0);
+	if (rc != 0) {
+		SPDK_ERRLOG("Initialization of DIF context failed\n");
+		return rc;
+	}
+
+	spdk_dif_ctx_set_remapped_init_ref_tag(&dif_ctx, remapped_offset);
+
+	if (bdev->md_interleave) {
+		rc = spdk_dif_remap_ref_tag(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					    bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk);
+	} else {
+		struct iovec md_iov = {
+			.iov_base	= bdev_io->u.bdev.md_buf,
+			.iov_len	= bdev_io->u.bdev.num_blocks * bdev->md_len,
+		};
+
+		rc = spdk_dix_remap_ref_tag(&md_iov, bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk);
+	}
+
+	if (rc != 0) {
+		SPDK_ERRLOG("Remapping reference tag failed. type=%d, offset=%" PRIu32 "\n",
+			    err_blk.err_type, err_blk.err_offset);
+	}
+
+	return rc;
+}
+
+static void
+spdk_bdev_part_complete_read_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *part_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	uint32_t offset, remapped_offset;
+	int rc;
+
+	offset = bdev_io->u.bdev.offset_blocks;
+	remapped_offset = part_io->u.bdev.offset_blocks;
+
+	if (success) {
+		rc = spdk_bdev_part_remap_dif(bdev_io, offset, remapped_offset);
+		if (rc != 0) {
+			status = SPDK_BDEV_IO_STATUS_FAILED;
+		}
+	}
+
+	spdk_bdev_io_complete(part_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
+
 static void
 spdk_bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
@@ -211,54 +278,63 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	struct spdk_bdev_part *part = ch->part;
 	struct spdk_io_channel *base_ch = ch->base_ch;
 	struct spdk_bdev_desc *base_desc = part->internal.base->desc;
-	uint64_t offset;
+	uint64_t offset, remapped_offset;
 	int rc = 0;
 
-	offset = bdev_io->u.bdev.offset_blocks + part->internal.offset_blocks;
+	offset = bdev_io->u.bdev.offset_blocks;
+	remapped_offset = offset + part->internal.offset_blocks;
 
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.bdev.md_buf == NULL) {
 			rc = spdk_bdev_readv_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
-						    bdev_io->u.bdev.iovcnt, offset,
+						    bdev_io->u.bdev.iovcnt, remapped_offset,
 						    bdev_io->u.bdev.num_blocks,
-						    spdk_bdev_part_complete_io, bdev_io);
+						    spdk_bdev_part_complete_read_io, bdev_io);
 		} else {
 			rc = spdk_bdev_readv_blocks_with_md(base_desc, base_ch,
 							    bdev_io->u.bdev.iovs,
 							    bdev_io->u.bdev.iovcnt,
-							    bdev_io->u.bdev.md_buf, offset,
+							    bdev_io->u.bdev.md_buf, remapped_offset,
 							    bdev_io->u.bdev.num_blocks,
-							    spdk_bdev_part_complete_io, bdev_io);
+							    spdk_bdev_part_complete_read_io, bdev_io);
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
+		rc = spdk_bdev_part_remap_dif(bdev_io, offset, remapped_offset);
+		if (rc != 0) {
+			return SPDK_BDEV_IO_STATUS_FAILED;
+		}
+
 		if (bdev_io->u.bdev.md_buf == NULL) {
 			rc = spdk_bdev_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
-						     bdev_io->u.bdev.iovcnt, offset,
+						     bdev_io->u.bdev.iovcnt, remapped_offset,
 						     bdev_io->u.bdev.num_blocks,
 						     spdk_bdev_part_complete_io, bdev_io);
 		} else {
 			rc = spdk_bdev_writev_blocks_with_md(base_desc, base_ch,
 							     bdev_io->u.bdev.iovs,
 							     bdev_io->u.bdev.iovcnt,
-							     bdev_io->u.bdev.md_buf, offset,
+							     bdev_io->u.bdev.md_buf, remapped_offset,
 							     bdev_io->u.bdev.num_blocks,
 							     spdk_bdev_part_complete_io, bdev_io);
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		rc = spdk_bdev_write_zeroes_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
-						   spdk_bdev_part_complete_io, bdev_io);
+		rc = spdk_bdev_write_zeroes_blocks(base_desc, base_ch, remapped_offset,
+						   bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
+						   bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		rc = spdk_bdev_unmap_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
-					    spdk_bdev_part_complete_io, bdev_io);
+		rc = spdk_bdev_unmap_blocks(base_desc, base_ch, remapped_offset,
+					    bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
+					    bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		rc = spdk_bdev_flush_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
-					    spdk_bdev_part_complete_io, bdev_io);
+		rc = spdk_bdev_flush_blocks(base_desc, base_ch, remapped_offset,
+					    bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
+					    bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		rc = spdk_bdev_reset(base_desc, base_ch,
