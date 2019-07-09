@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f9cada00_01b80689",
+        "filename": "lib/bdev/null/bdev_null_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:11:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d3b1b32d_e7682132",
+      "range": {
+        "startLine": 78,
+        "startChar": 7,
+        "endLine": 78,
+        "endChar": 14
+      },
+      "revId": "4d1843a98f50b7ee5b4b2302274c54f35f832819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a6d094f_b4b4160b",
         "filename": "lib/bdev/null/bdev_null_rpc.c",
         "patchSetId": 5
@@ -45,6 +69,30 @@
       "revId": "4d1843a98f50b7ee5b4b2302274c54f35f832819",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00723856_dc6e4147",
+        "filename": "lib/bdev/null/bdev_null_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:11:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a6d094f_b4b4160b",
+      "range": {
+        "startLine": 121,
+        "startChar": 1,
+        "endLine": 121,
+        "endChar": 12
+      },
+      "revId": "4d1843a98f50b7ee5b4b2302274c54f35f832819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "51585b4d_e50a4701",
+        "filename": "lib/bdev/null/bdev_null_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:11:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07c55a80_3980445c",
+      "range": {
+        "startLine": 123,
+        "startChar": 93,
+        "endLine": 123,
+        "endChar": 95
+      },
+      "revId": "4d1843a98f50b7ee5b4b2302274c54f35f832819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f2d012d_0f522e03",
         "filename": "lib/bdev/null/bdev_null_rpc.c",
         "patchSetId": 5
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "d522a3ec_c4dec3d3",
+        "filename": "lib/bdev/null/bdev_null_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:11:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f2d012d_0f522e03",
+      "range": {
+        "startLine": 126,
+        "startChar": 62,
+        "endLine": 126,
+        "endChar": 64
+      },
+      "revId": "4d1843a98f50b7ee5b4b2302274c54f35f832819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b34f17ac_73623028",
         "filename": "lib/bdev/null/bdev_null_rpc.c",
         "patchSetId": 5
@@ -114,6 +210,30 @@
       "revId": "4d1843a98f50b7ee5b4b2302274c54f35f832819",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d15e508c_93e25636",
+        "filename": "lib/bdev/null/bdev_null_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:11:55Z",
+      "side": 1,
+      "message": "Done, obsolete as I got rid of the switch and inlined code into if  at line 106 as suggested",
+      "parentUuid": "b34f17ac_73623028",
+      "range": {
+        "startLine": 131,
+        "startChar": 1,
+        "endLine": 131,
+        "endChar": 2
+      },
+      "revId": "4d1843a98f50b7ee5b4b2302274c54f35f832819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
