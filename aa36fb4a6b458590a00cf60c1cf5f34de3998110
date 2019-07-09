@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51b0b609_096d4a87",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:45:46Z",
+      "side": 1,
+      "message": "As per comment below, just remove \u0027true\u0027 here.",
+      "range": {
+        "startLine": 55,
+        "startChar": 83,
+        "endLine": 55,
+        "endChar": 89
+      },
+      "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bf0f92e_69f4fc4d",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:45:46Z",
+      "side": 1,
+      "message": "I don\u0027t think this check should be necessary. Since we don\u0027t treat \u0027filename\u0027 as optional, lets change the line 55 to reflect that. Along with removing this check here, since json decode will fail if filename is not provided.",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 0
+      },
+      "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6d145f2_5a3841ad",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:45:46Z",
+      "side": 1,
+      "message": "This will be handled by spdk_bdev_register(), do we need to handle it here as well ?\nOn similar note, I wonder whether we should check for empty strings when decoding the json. Is it ever valid ?",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 2
+      },
+      "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f422e5b_f27fa021",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T08:45:46Z",
+      "side": 1,
+      "message": "Where this check come from ? From what I can see \u0027block_size\u0027 is optional and user can skip providing it. Then create_aio_bdev() will attempt to detect the correct block_size for the provided filename.\nI think this should be removed.",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 2
+      },
+      "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
