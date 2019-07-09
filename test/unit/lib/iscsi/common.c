@@ -128,8 +128,6 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	return 0;
 }
 
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
-
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
 	    (uint32_t core, spdk_event_fn fn, void *arg1, void *arg2), NULL);
 

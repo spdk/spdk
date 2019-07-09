@@ -165,7 +165,6 @@ DEFINE_STUB(spdk_bdev_module_claim_bdev, int, (struct spdk_bdev *bdev, struct sp
 		struct spdk_bdev_module *module), 0);
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
 DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *vbdev), 0);
-DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
 
 /* DPDK stubs */
 DEFINE_STUB(rte_cryptodev_count, uint8_t, (void), 0);
