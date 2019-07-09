@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e6ac922_7323b947",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:58:03Z",
+      "side": 1,
+      "message": "I suggest changing this to: sudo dnf install -y qemu-system-x86 qemu-img, as these are only binaries we use.\n\nInstalling whole qemu results in about 600MB install of not needed dependencies like:\n\n```\nInstalling dependencies:\n SLOF                        noarch 0.1.git20171214-2.fc28        fedora  198 k\n edk2-aarch64                noarch 20180815gitcb5f4f45ce-2.fc28  updates 2.1 M\n openbios                    noarch 1:20171016-1.git83818bd.fc28  fedora  268 k\n qemu-system-aarch64         x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-aarch64-core    x86_64 2:2.11.2-5.fc28               updates 3.0 M\n qemu-system-alpha           x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-alpha-core      x86_64 2:2.11.2-5.fc28               updates 2.2 M\n qemu-system-arm             x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-arm-core        x86_64 2:2.11.2-5.fc28               updates 2.9 M\n qemu-system-cris            x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-cris-core       x86_64 2:2.11.2-5.fc28               updates 1.6 M\n qemu-system-lm32            x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-lm32-core       x86_64 2:2.11.2-5.fc28               updates 1.6 M\n qemu-system-m68k            x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-m68k-core       x86_64 2:2.11.2-5.fc28               updates 1.7 M\n qemu-system-microblaze      x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-microblaze-core x86_64 2:2.11.2-5.fc28               updates 3.2 M\n qemu-system-mips            x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-mips-core       x86_64 2:2.11.2-5.fc28               updates 9.8 M\n qemu-system-moxie           x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-moxie-core      x86_64 2:2.11.2-5.fc28               updates 1.6 M\n qemu-system-nios2           x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-nios2-core      x86_64 2:2.11.2-5.fc28               updates 1.6 M\n qemu-system-or1k            x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-or1k-core       x86_64 2:2.11.2-5.fc28               updates 1.6 M\n qemu-system-ppc             x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-ppc-core        x86_64 2:2.11.2-5.fc28               updates 8.2 M\n qemu-system-s390x           x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-s390x-core      x86_64 2:2.11.2-5.fc28               updates 2.0 M\n qemu-system-sh4             x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-sh4-core        x86_64 2:2.11.2-5.fc28               updates 4.3 M\n qemu-system-sparc           x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-sparc-core      x86_64 2:2.11.2-5.fc28               updates 3.9 M\n qemu-system-tricore         x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-tricore-core    x86_64 2:2.11.2-5.fc28               updates 1.6 M\n qemu-system-unicore32       x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-unicore32-core  x86_64 2:2.11.2-5.fc28               updates 1.6 M\n qemu-system-xtensa          x86_64 2:2.11.2-5.fc28               updates  26 k\n qemu-system-xtensa-core     x86_64 2:2.11.2-5.fc28               updates 3.2 M\n qemu-user                   x86_64 2:2.11.2-5.fc28               updates  14 M\n```\n\nWhile qemu-system-x86 qemu-img install is only about 150MB",
+      "range": {
+        "startLine": 195,
+        "startChar": 16,
+        "endLine": 195,
+        "endChar": 40
+      },
+      "revId": "036e2da32d1a18e56cb73145d312d503c9478f9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
