@@ -8,13 +8,13 @@ Added new public header for zoned bdev. Zdev is an extension
 of the bdev interface. Zoned device concept is based on
 NVMe TP4035 - Zoned Namespaces.
 
-==== BASE ====
 `spdk_zdev_get_info()` API was added for retrieving zoned device information.
 `spdk_zdev_get_zone_info()` API was added for retrieving information about
 zones inside zoned namespace.
 `spdk_zdev_zone_action` enum was added.
-Added `spdk_bdev_zone_open() `, `spdk_bdev_zone_finish()` new APIs.
-`spdk_bdev_from_bdev()` API was added for downcasting bdev to zdev.
+Added `spdk_bdev_zone_open() `, `spdk_bdev_zone_finish()`,
+`spdk_bdev_zone_close` new APIs for changing zone state.
+`spdk_zdev_from_bdev()` API was added for downcasting bdev to zdev.
 
 ### bdev
 
