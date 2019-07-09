@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d46c2633_40ca17c8",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-09T13:18:07Z",
+      "side": 1,
+      "message": "As I mentioned in comment, we can make arguments required by putting `required \u003d True` in here.",
+      "range": {
+        "startLine": 172,
+        "startChar": 35,
+        "endLine": 172,
+        "endChar": 36
+      },
+      "revId": "da8ba1925260e26cb99237f0653e7034082f5c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
