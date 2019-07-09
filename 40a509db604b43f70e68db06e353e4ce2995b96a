@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5762707e_06745043",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-09T03:57:02Z",
+      "side": 1,
+      "message": "I think we should not change this. \n\nThis qpair is the first qpair of all connections coming from a particular IP.\nEven if the poll group is best for the first connection, we are not sure it is best for other connections.\nget_next_pg() will be the safe choice.",
+      "range": {
+        "startLine": 213,
+        "startChar": 8,
+        "endLine": 213,
+        "endChar": 32
+      },
+      "revId": "40a509db604b43f70e68db06e353e4ce2995b96a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
