@@ -22,6 +22,30 @@
       "revId": "fcd787161f65701eb46888f99dab7d7ffe40b826",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49d2db2d_44558ee1",
+        "filename": "test/bdev/bdevio/tests.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-09T10:52:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89c26c39_aca05ae5",
+      "range": {
+        "startLine": 12,
+        "startChar": 11,
+        "endLine": 12,
+        "endChar": 13
+      },
+      "revId": "fcd787161f65701eb46888f99dab7d7ffe40b826",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
