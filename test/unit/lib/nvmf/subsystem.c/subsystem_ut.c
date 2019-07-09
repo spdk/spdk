@@ -69,12 +69,6 @@ subsystem_ns_remove_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int 
 {
 }
 
-uint32_t
-spdk_env_get_current_core(void)
-{
-	return 0;
-}
-
 struct spdk_event *
 spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
 {

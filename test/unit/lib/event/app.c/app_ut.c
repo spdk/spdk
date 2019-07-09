@@ -42,7 +42,6 @@
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *, (uint32_t core, spdk_event_fn fn, void *arg1,
 		void *arg2), NULL);
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 DEFINE_STUB_V(spdk_subsystem_init, (spdk_msg_fn cb_fn, void *cb_arg));
 DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_handler func,
 		uint32_t state_mask));

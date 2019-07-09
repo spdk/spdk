@@ -76,11 +76,9 @@ DEFINE_STUB_P(spdk_conf_section_get_nmval, char, (struct spdk_conf_section *sp, 
 DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 		void *arg, unsigned timeout_sec, const char *errmsg), 0);
-DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
 DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (void *event_ctx, int response));
 DEFINE_STUB_V(spdk_vhost_lock, (void));
 DEFINE_STUB_V(spdk_vhost_unlock, (void));
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *ctrlr_name, spdk_vhost_event_fn fn,
 		void *arg));
 DEFINE_STUB(spdk_vhost_vring_desc_has_next, bool, (struct vring_desc *cur_desc), false);
