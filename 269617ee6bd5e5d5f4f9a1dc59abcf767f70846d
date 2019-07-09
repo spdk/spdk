@@ -34,6 +34,24 @@
       "revId": "269617ee6bd5e5d5f4f9a1dc59abcf767f70846d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb302eb3_ebdf16a1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-09T13:28:22Z",
+      "side": 1,
+      "message": "Possibly just an assert that blob-\u003eactive.clusters is not NULL",
+      "parentUuid": "93753fa0_c4eda96d",
+      "revId": "269617ee6bd5e5d5f4f9a1dc59abcf767f70846d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
