@@ -14,6 +14,10 @@ function nproc() {
 
 fi
 
+function version_lt() {
+	[ $( echo -e "$1\n$2" | sort -V | head -1 ) != "$1" ]
+}
+
 rc=0
 
 echo -n "Checking file permissions..."
@@ -108,6 +112,13 @@ else
 	echo " OK"
 fi
 rm -f comment.log
+
+GIT_VERSION=$( git --version | cut -d' ' -f3 )
+
+if version_lt "1.9.5" "${GIT_VERSION}"; then
+	echo " Your git version is too old to perform all tests. Please update git to at least 1.9.5 version..."
+	exit 0
+fi
 
 echo -n "Checking for spaces before tabs..."
 git grep --line-number $' \t' -- > whitespace.log || true
