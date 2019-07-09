@@ -28,6 +28,7 @@ CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,o
 LIBRXE_INSTALL=true
 
 OSID=$(source /etc/os-release && echo $ID)
+OSVERSION=$(source /etc/os-release && echo $VERSION_ID)
 PACKAGEMNG='undefined'
 
 function install_rxe_cfg()
@@ -237,6 +238,15 @@ function install_vpp()
             # This workaround is only for VPP v19.01.1 and should be solved in
             # the next release.
             git -C ./vpp apply ${VM_SETUP_PATH}/patch/vpp/workaround-dont-notify-transport-closing.patch
+
+            if [ "${OSID}" == 'fedora' ]; then
+                if [ ${OSVERSION} -eq 29 ]; then
+                    git -C ./ vpp apply ${VM_SETUP_PATH}/patch/vpp/fedora29-fix.patch
+                fi
+                if [ ${OSVERSION} -eq 30 ]; then
+                    git -C ./ vpp apply ${VM_SETUP_PATH}/patch/vpp/fedora30-fix.patch
+                fi
+            fi
 
             # Installing required dependencies for building VPP
             yes | make -C ./vpp install-dep

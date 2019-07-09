@@ -1,0 +1,74 @@
+diff --git a/Makefile b/Makefile
+index 900c1efb4..4a2aa231e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -94,7 +94,7 @@ RPM_DEPENDS += libuuid-devel
+ ifeq ($(OS_ID),fedora)
+ 	RPM_DEPENDS += dnf-utils
+ 	RPM_DEPENDS += subunit subunit-devel
+-	RPM_DEPENDS += compat-openssl10-devel
++	RPM_DEPENDS += openssl-devel
+ 	RPM_DEPENDS += python2-devel python2-ply
+ 	RPM_DEPENDS += python2-virtualenv
+ 	RPM_DEPENDS += mbedtls-devel
+diff --git a/build/external/packages/dpdk.mk b/build/external/packages/dpdk.mk
+index 6c46ac298..227a0772d 100644
+--- a/build/external/packages/dpdk.mk
++++ b/build/external/packages/dpdk.mk
+@@ -148,7 +148,7 @@ endif
+ endif
+ endif
+ 
+-DPDK_EXTRA_CFLAGS += -L$(I)/lib -I$(I)/include
++DPDK_EXTRA_CFLAGS += -L$(I)/lib -I$(I)/include -Wno-address-of-packed-member
+ 
+ # assemble DPDK make arguments
+ DPDK_MAKE_ARGS := -C $(DPDK_SOURCE) -j $(JOBS) \
+diff --git a/src/cmake/memfd.cmake b/src/cmake/memfd.cmake
+index ca499c459..f7eec2c10 100644
+--- a/src/cmake/memfd.cmake
++++ b/src/cmake/memfd.cmake
+@@ -24,3 +24,12 @@ if (HAVE_MEMFD_CREATE)
+     add_definitions(-DHAVE_MEMFD_CREATE)
+ endif()
+ 
++check_c_source_compiles("
++  #define _GNU_SOURCE
++  #include <sched.h>
++  int main() { return getcpu (0, 0); }
++" HAVE_GETCPU)
++
++if (HAVE_GETCPU)
++  add_definitions(-DHAVE_GETCPU)
++endif()
+diff --git a/src/vppinfra/linux/syscall.h b/src/vppinfra/linux/syscall.h
+index 1ae029d58..99d1a3ab6 100644
+--- a/src/vppinfra/linux/syscall.h
++++ b/src/vppinfra/linux/syscall.h
+@@ -19,11 +19,13 @@
+ #include <unistd.h>
+ #include <sys/syscall.h>
+ 
++#ifndef HAVE_GETCPU
+ static inline int
+ getcpu (unsigned *cpu, unsigned *node, void *tcache)
+ {
+   return syscall (__NR_getcpu, cpu, node, tcache);
+ }
++#endif
+ 
+ static inline long
+ set_mempolicy (int mode, const unsigned long *nodemask, unsigned long maxnode)
+diff --git a/src/vppinfra/pmalloc.c b/src/vppinfra/pmalloc.c
+index 365ee0443..ed1c0329f 100644
+--- a/src/vppinfra/pmalloc.c
++++ b/src/vppinfra/pmalloc.c
+@@ -53,7 +53,7 @@ pmalloc_validate_numa_node (u32 * numa_node)
+   if (*numa_node == CLIB_PMALLOC_NUMA_LOCAL)
+     {
+       u32 cpu;
+-      if (getcpu (&cpu, numa_node, 0) != 0)
++      if (getcpu (&cpu, numa_node) != 0)
+ 	return 1;
+     }
+   return 0;
