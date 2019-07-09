@@ -17,6 +17,9 @@ function usage()
 	echo ""
 	echo " --prefix=path             Configure installation prefix (default: /usr/local)"
 	echo ""
+	echo " --cross-prefix=prefix     Prefix for cross compilation (default: none)"
+	echo "                           example: aarch64-linux-gnu-"
+	echo ""
 	echo " --enable-debug            Configure for debug builds"
 	echo " --enable-log-bt           Enable support of backtrace printing in SPDK logs (requires libunwind)."
 	echo " --enable-werror           Treat compiler warnings as errors"
@@ -322,6 +325,10 @@ for i in "$@"; do
 			CONFIG[URING]=n
 			CONFIG[URING_PATH]=
 			;;
+		--cross-prefix=*)
+			CONFIG[CROSS_PREFIX]=${i#*=}
+			CONFIG[CROSS]=y
+			;;
 		--)
 			break
 			;;
@@ -333,7 +340,13 @@ for i in "$@"; do
 done
 
 # Detect architecture and force no isal if non x86 archtecture
-arch=$(uname -m)
+if [[ "${CONFIG[CROSS]}" = "y" ]]; then
+	# This is only for this check, if we set cross-prefix we do not expect x86_64
+	arch=${CONFIG[CROSS_PREFIX]}
+else
+	arch=$(uname -m)
+fi
+
 if [[ $arch != x86_64* ]]; then
 	echo "Notice: ISAL auto-disabled due to CPU incompatiblity."
 	CONFIG[ISAL]=n

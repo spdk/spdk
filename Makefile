@@ -72,6 +72,13 @@ LIB += isalbuild
 DPDK_DEPS += isalbuild
 endif
 
+# preserve additional parameters if any
+ifeq ($(CONFIG_CROSS),y)
+CC := $(subst $(firstword $(CC)),$(CONFIG_CROSS_PREFIX)gcc,$(CC))
+CXX := $(subst $(firstword $(CXX)),$(CONFIG_CROSS_PREFIX)g++,$(CXX))
+LD := $(subst $(firstword $(LD)),$(CONFIG_CROSS_PREFIX)ld,$(LD))
+endif
+
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
