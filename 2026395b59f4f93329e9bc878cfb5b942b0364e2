@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb50d10a_ec2da4e7",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-09T00:34:42Z",
+      "side": 1,
+      "message": "I\u0027m OK with this patch, just doubt that there will be lots of error messages for this case in reality.",
+      "revId": "2026395b59f4f93329e9bc878cfb5b942b0364e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
