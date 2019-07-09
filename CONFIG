@@ -142,3 +142,7 @@ CONFIG_URING=n
 
 # Path to custom built IO_URING library
 CONFIG_URING_PATH=
+
+# Prefix for cross compilation
+CONFIG_CROSS_PREFIX=
+CONFIG_CROSS=n
