@@ -1064,6 +1064,22 @@ _reduce_vol_compress_chunk(struct spdk_reduce_vol_request *req, reduce_request_f
 }
 
 static void
+_reduce_vol_decompress_chunk_scratch(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
+{
+	struct spdk_reduce_vol *vol = req->vol;
+
+	req->backing_cb_args.cb_fn = next_fn;
+	req->backing_cb_args.cb_arg = req;
+	req->comp_buf_iov[0].iov_base = req->comp_buf;
+	req->comp_buf_iov[0].iov_len = req->chunk->compressed_size;
+	req->decomp_buf_iov[0].iov_base = req->decomp_buf;
+	req->decomp_buf_iov[0].iov_len = vol->params.chunk_size;
+	vol->backing_dev->decompress(vol->backing_dev,
+				     req->comp_buf_iov, 1, req->decomp_buf_iov, 1,
+				     &req->backing_cb_args);
+}
+
+static void
 _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
 {
 	struct spdk_reduce_vol *vol = req->vol;
@@ -1180,7 +1196,7 @@ _write_read_done(void *_req, int reduce_errno)
 	}
 
 	if (req->chunk_is_compressed) {
-		_reduce_vol_decompress_chunk(req, _write_decompress_done);
+		_reduce_vol_decompress_chunk_scratch(req, _write_decompress_done);
 	} else {
 		_write_decompress_done(req, req->chunk->compressed_size);
 	}
