@@ -436,4 +436,22 @@ uint32_t spdk_dif_get_length_with_md(uint32_t data_len, const struct spdk_dif_ct
 int spdk_dif_remap_ref_tag(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 			   const struct spdk_dif_ctx *dif_ctx,
 			   struct spdk_dif_error *err_blk);
+
+/**
+ * Remap reference tag for separate metadata payload.
+ *
+ * When using stacked virtual bdev (e.g. split virtual bdev), block address space for I/O
+ * will be remapped during I/O processing and so reference tag will have to be remapped
+ * accordingly. This patch is for that case.
+ *
+ * \param md_iov A contiguous buffer for metadata.
+ * \param num_blocks Number of blocks of the payload.
+ * \param ctx DIF context.
+ * \param err_blk Error information of the block in which DIF error is found.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dix_remap_ref_tag(struct iovec *md_iov, uint32_t num_blocks,
+			   const struct spdk_dif_ctx *dif_ctx,
+			   struct spdk_dif_error *err_blk);
 #endif /* SPDK_DIF_H */
