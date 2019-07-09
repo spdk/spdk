@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fba66d3a_54e5c116",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:10:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4858aa50_366b585a",
+      "range": {
+        "startLine": 77,
+        "startChar": 7,
+        "endLine": 77,
+        "endChar": 14
+      },
+      "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09401e2b_f5211eb6",
         "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
         "patchSetId": 6
@@ -45,6 +69,30 @@
       "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fded2466_a554ac22",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:10:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "09401e2b_f5211eb6",
+      "range": {
+        "startLine": 114,
+        "startChar": 93,
+        "endLine": 114,
+        "endChar": 95
+      },
+      "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -118,6 +166,54 @@
     },
     {
       "key": {
+        "uuid": "c91aa107_5a39545e",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:10:18Z",
+      "side": 1,
+      "message": "Done\nI actually got rid of switch and moved error response near create_malloc_disk and just handle it\u0027s return codes in a generic way with spdk_strerror.",
+      "parentUuid": "76438673_d7606511",
+      "range": {
+        "startLine": 117,
+        "startChar": 2,
+        "endLine": 117,
+        "endChar": 67
+      },
+      "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a69774b6_f779d868",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:10:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65a51c2d_648c2204",
+      "range": {
+        "startLine": 117,
+        "startChar": 62,
+        "endLine": 117,
+        "endChar": 64
+      },
+      "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f090871_1b3afaa9",
         "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
         "patchSetId": 6
@@ -138,6 +234,30 @@
       "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04a85572_29cb7933",
+        "filename": "lib/bdev/malloc/bdev_malloc_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:10:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f090871_1b3afaa9",
+      "range": {
+        "startLine": 170,
+        "startChar": 62,
+        "endLine": 170,
+        "endChar": 64
+      },
+      "revId": "f74193a799ae7e50681d6bb50fefad0c7e5b2931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
