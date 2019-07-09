@@ -12,8 +12,8 @@ NVMe TP4035 - Zoned Namespaces.
 APIs were added for retrieving zoned device information.
 `spdk_bdev_get_zone_info()` API was added for retrieving information about zones in zoned
 device.
-Added `spdk_bdev_zone_open()`, `spdk_bdev_zone_finish()`, `spdk_bdev_zone_close()`
-new APIs for changing zone state.
+Added `spdk_bdev_zone_open() `, `spdk_bdev_zone_finish()`,
+`spdk_bdev_zone_close()`, `spdk_bdev_zone_reset()` new APIs for changing zone state.
 
 ### bdev
 
