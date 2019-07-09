@@ -1103,8 +1103,8 @@ _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request
 		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
 		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
 		ttl_len += req->decomp_iov[i + req->decomp_iovcnt].iov_len;
-		req->decomp_iovcnt++;
 	}
+	req->decomp_iovcnt += req->iovcnt;
 
 	/* send the rest of the chunk to our scratch buffer */
 	remainder = vol->params.chunk_size - ttl_len;
@@ -1162,8 +1162,8 @@ _write_decompress_done(void *_req, int reduce_errno)
 		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
 		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
 		ttl_len += req->decomp_iov[i + req->decomp_iovcnt].iov_len;
-		req->decomp_iovcnt++;
 	}
+	req->decomp_iovcnt += req->iovcnt;
 
 	if (ttl_len < req->vol->params.chunk_size) {
 		req->decomp_iov[req->decomp_iovcnt].iov_base = req->decomp_buf + ttl_len;
@@ -1407,8 +1407,8 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
 		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
 		ttl_len += req->decomp_iov[i + req->decomp_iovcnt].iov_len;
-		req->decomp_iovcnt++;
 	}
+	req->decomp_iovcnt += req->iovcnt;
 
 	chunk_offset += req->length;
 	if (chunk_offset != lb_per_chunk) {
