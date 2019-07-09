@@ -184,7 +184,17 @@ int spdk_opal_cmd_setup_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_
 
 int spdk_opal_cmd_get_max_ranges(struct spdk_opal_dev *dev, const char *passwd);
 int spdk_opal_cmd_get_locking_range_info(struct spdk_opal_dev *dev, const char *passwd,
+		enum spdk_opal_user user_id,
 		enum spdk_opal_locking_range locking_range_id);
+int spdk_opal_cmd_enable_user(struct spdk_opal_dev *dev, enum spdk_opal_user user_id,
+			      const char *passwd);
+int spdk_opal_cmd_add_user_to_locking_range(struct spdk_opal_dev *dev, enum spdk_opal_user user_id,
+		enum spdk_opal_locking_range locking_range_id,
+		enum spdk_opal_lock_state lock_flag, const char *passwd);
+int spdk_opal_cmd_set_new_passwd(struct spdk_opal_dev *dev, enum spdk_opal_user user_id,
+				 const char *new_passwd, const char *old_passwd, bool new_user);
+
+
 struct spdk_opal_locking_range_info *spdk_opal_get_locking_range_info(struct spdk_opal_dev *dev,
 		enum spdk_opal_locking_range id);
 uint8_t spdk_opal_get_max_locking_ranges(struct spdk_opal_dev *dev);
