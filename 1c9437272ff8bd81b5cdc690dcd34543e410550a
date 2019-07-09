@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4caf5089_a1aab85c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1103,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-09T06:51:54Z",
+      "side": 1,
+      "message": "If this is defined by the specification, we should move this part to nvme_spec.h.",
+      "range": {
+        "startLine": 1093,
+        "startChar": 0,
+        "endLine": 1103,
+        "endChar": 2
+      },
+      "revId": "1c9437272ff8bd81b5cdc690dcd34543e410550a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
