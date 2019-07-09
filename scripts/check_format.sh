@@ -14,6 +14,10 @@ function nproc() {
 
 fi
 
+function version_lt() {
+	[ $( echo -e "$1\n$2" | sort -V | head -1 ) != "$1" ]
+}
+
 rc=0
 
 echo -n "Checking file permissions..."
@@ -90,6 +94,14 @@ if hash astyle; then
 	fi
 else
 	echo "You do not have astyle installed so your code style is not being checked!"
+fi
+
+GIT_VERSION=$( git --version | cut -d' ' -f3 )
+
+if version_lt "1.9.5" "${GIT_VERSION}"; then
+	# git <1.9.5 doesn't support pathspec magic exclude
+	echo " Your git version is too old to perform all tests. Please update git to at least 1.9.5 version..."
+	exit 0
 fi
 
 echo -n "Checking comment style..."
