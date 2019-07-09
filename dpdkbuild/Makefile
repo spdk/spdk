@@ -93,6 +93,10 @@ else
 DPDK_CONFIG := $(TARGET_MACHINE)-native
 endif
 
+ifneq ($(CONFIG_CROSS_PREFIX),)
+DPDK_OPTS += CROSS=$(CONFIG_CROSS_PREFIX)-
+endif
+
 ifeq ($(OS),Linux)
 DPDK_CONFIG := $(DPDK_CONFIG)-linuxapp
 NPROC := $(shell nproc)
