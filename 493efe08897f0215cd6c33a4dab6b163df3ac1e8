@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17a85c45_25731b59",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-09T08:03:09Z",
+      "side": 1,
+      "message": "cdw10 is the lower 32 bits of the LBA, so just let init_ref_tag \u003d cmd-\u003ecdw10 is fine.",
+      "revId": "493efe08897f0215cd6c33a4dab6b163df3ac1e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
