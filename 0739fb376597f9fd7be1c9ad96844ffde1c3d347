@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22a6920e_c0dc0aaa",
+        "filename": "test/vmd/config/config.fio",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-09T04:08:51Z",
+      "side": 1,
+      "message": "do we need this?",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 12
+      },
+      "revId": "0739fb376597f9fd7be1c9ad96844ffde1c3d347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d62d9a50_8afeaae9",
+        "filename": "test/vmd/vmd.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-09T04:08:51Z",
+      "side": 1,
+      "message": "this sounds weird, how about\n\n\"Couldn\u0027t find any NVMe device behind a VMD\"",
+      "revId": "0739fb376597f9fd7be1c9ad96844ffde1c3d347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
