@@ -169,10 +169,10 @@ if __name__ == "__main__":
                                                   key=args.key))
     p = subparsers.add_parser('construct_crypto_bdev',
                               help='Add a crypto vbdev')
-    p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
-    p.add_argument('-c', '--name', help="Name of the crypto vbdev")
-    p.add_argument('-d', '--crypto_pmd', help="Name of the crypto device driver")
-    p.add_argument('-k', '--key', help="Key")
+    p.add_argument('base_bdev_name', help="Name of the base bdev")
+    p.add_argument('name', help="Name of the crypto vbdev")
+    p.add_argument('crypto_pmd', help="Name of the crypto device driver")
+    p.add_argument('key', help="Key")
     p.set_defaults(func=construct_crypto_bdev)
 
     def delete_crypto_bdev(args):

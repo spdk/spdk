@@ -223,7 +223,7 @@ function create_bdev_subsystem_config() {
 			local crypto_dirver=crypto_qat
 		fi
 
-		tgt_rpc construct_crypto_bdev -b MallocForCryptoBdev -c CryptoMallocBdev -d $crypto_dirver -k 0123456789123456
+		tgt_rpc construct_crypto_bdev MallocForCryptoBdev CryptoMallocBdev $crypto_dirver 0123456789123456
 		expected_notifications+=(
 			bdev_register:MallocForCryptoBdev
 			bdev_register:CryptoMallocBdev
