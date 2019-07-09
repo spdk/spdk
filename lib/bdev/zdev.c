@@ -111,3 +111,26 @@ spdk_zdev_zone_finish(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
+
+int
+spdk_zdev_zone_close(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		     uint64_t start_lba, spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ZONE_MANAGMENT;
+	bdev_io->u.zdev.zone_action = SPDK_ZDEV_ZONE_CLOSE;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
