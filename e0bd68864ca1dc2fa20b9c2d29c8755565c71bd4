@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6cc2ddec_9e62ba8f",
+        "filename": "lib/bdev/null/bdev_null_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-09T09:09:44Z",
+      "side": 1,
+      "message": "Don\u0027t think we need message on server side, just send_error_response() is enough. Also, this way is inconsistant with how you do it later",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 84,
+        "endChar": 75
+      },
+      "revId": "e0bd68864ca1dc2fa20b9c2d29c8755565c71bd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3e56d26_21ed1dbe",
+        "filename": "lib/bdev/null/bdev_null_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-09T09:09:44Z",
+      "side": 1,
+      "message": "Don\u0027t think we need message on server side, just send_error_response() is enough. Also, this way is inconsistant with how you do it later",
+      "range": {
+        "startLine": 91,
+        "startChar": 2,
+        "endLine": 91,
+        "endChar": 51
+      },
+      "revId": "e0bd68864ca1dc2fa20b9c2d29c8755565c71bd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
