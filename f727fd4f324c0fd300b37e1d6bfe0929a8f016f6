@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4464a65b_6a82af3c",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-09T07:06:33Z",
+      "side": 1,
+      "message": "According to the specification, you only need NUMD, DSEPC, DTYPE, DOPER, so the internal API should support both send/receive commands, and you can wrapper APIs based on the internal API.",
+      "range": {
+        "startLine": 750,
+        "startChar": 0,
+        "endLine": 752,
+        "endChar": 42
+      },
+      "revId": "f727fd4f324c0fd300b37e1d6bfe0929a8f016f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2dd470e9_2cc3e545",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-09T07:06:33Z",
+      "side": 1,
+      "message": "We should move this part to nvme_spec.h",
+      "range": {
+        "startLine": 717,
+        "startChar": 0,
+        "endLine": 741,
+        "endChar": 2
+      },
+      "revId": "f727fd4f324c0fd300b37e1d6bfe0929a8f016f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
