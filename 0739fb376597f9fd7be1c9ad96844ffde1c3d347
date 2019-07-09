@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "95eda3e5_60729139",
+        "filename": "test/vmd/config/config.fio",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-09T06:52:36Z",
+      "side": 1,
+      "message": "This flag enable VMD enumeration in nvme fio plugin",
+      "parentUuid": "22a6920e_c0dc0aaa",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 12
+      },
+      "revId": "0739fb376597f9fd7be1c9ad96844ffde1c3d347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d62d9a50_8afeaae9",
         "filename": "test/vmd/vmd.sh",
         "patchSetId": 4
@@ -39,6 +63,24 @@
       "revId": "0739fb376597f9fd7be1c9ad96844ffde1c3d347",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fdd39a9_1e27626b",
+        "filename": "test/vmd/vmd.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-09T06:52:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d62d9a50_8afeaae9",
+      "revId": "0739fb376597f9fd7be1c9ad96844ffde1c3d347",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
