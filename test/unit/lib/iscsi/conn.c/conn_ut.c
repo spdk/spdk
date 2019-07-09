@@ -49,14 +49,6 @@ static TAILQ_HEAD(, spdk_iscsi_task) g_ut_read_tasks = TAILQ_HEAD_INITIALIZER(g_
 
 DEFINE_STUB(spdk_app_get_shm_id, int, (void), 0);
 
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
-
-DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), 0);
-
-DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), 0);
-
-DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), 0);
-
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
 	    (uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2),
 	    NULL);
