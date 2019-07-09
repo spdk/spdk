@@ -16,6 +16,24 @@
       "revId": "2026395b59f4f93329e9bc878cfb5b942b0364e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5800e3a_8d5b1120",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-07-09T00:52:07Z",
+      "side": 1,
+      "message": "hi changpeng,\n I\u0027m glad with your response.\nthis will be print only once. retried behaviors are in nvme_transport_qpair_process_completions.\nbefore this, controller keeps failed and printing work flush error, that CQ will be broken. Once it has been marked failed, code will abort in next loop, and exit.",
+      "parentUuid": "fb50d10a_ec2da4e7",
+      "revId": "2026395b59f4f93329e9bc878cfb5b942b0364e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
