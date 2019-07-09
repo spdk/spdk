@@ -177,6 +177,9 @@ enum spdk_opal_token {
 
 	/* Autority table */
 	SPDK_OPAL_AUTH_ENABLE		= 0x05,
+
+	/* ACE table */
+	SPDK_OPAL_BOOLEAN_EXPR  = 0x03,
 };
 
 /*
