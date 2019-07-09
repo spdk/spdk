@@ -975,9 +975,9 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	if (page->next != SPDK_INVALID_MD_PAGE) {
 		uint32_t next_page = page->next;
 		uint64_t next_lba = _spdk_bs_page_to_lba(blob->bs, blob->bs->md_start + next_page);
+		uint64_t max_md_lba = _spdk_bs_page_to_lba(blob->bs, blob->bs->md_start + blob->bs->md_len);
 
-
-		assert(next_lba < (blob->bs->md_start + blob->bs->md_len));
+		assert(next_lba < max_md_lba);
 
 		/* Read the next page */
 		ctx->num_pages++;
