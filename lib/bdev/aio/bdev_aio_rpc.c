@@ -52,7 +52,7 @@ free_rpc_construct_aio(struct rpc_construct_aio *req)
 
 static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
 	{"name", offsetof(struct rpc_construct_aio, name), spdk_json_decode_string},
-	{"filename", offsetof(struct rpc_construct_aio, filename), spdk_json_decode_string, true},
+	{"filename", offsetof(struct rpc_construct_aio, filename), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_construct_aio, block_size), spdk_json_decode_uint32, true},
 };
 
@@ -68,11 +68,6 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_construct_aio_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	if (req.filename == NULL) {
 		rc = -EINVAL;
 		goto invalid;
 	}
