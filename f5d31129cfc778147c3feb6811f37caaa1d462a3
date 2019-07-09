@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c165add9_14a34473",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2753,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-09T06:32:54Z",
+      "side": 1,
+      "message": "This looks loop_num_to_wait will continue increasing and become very large value if spdk_sock_group continues returning zero. I think we should set upper limit to loop_num_to_wait.\n\nCan we try to use exponential backoff mechanism instead?\n\nFor example, if spdk_sock_group_poll returns 0 continuously 10 times, do spin loop 50 times, and then retry ...\nDo you think this gets the same improvement?",
+      "range": {
+        "startLine": 2753,
+        "startChar": 2,
+        "endLine": 2753,
+        "endChar": 62
+      },
+      "revId": "f5d31129cfc778147c3feb6811f37caaa1d462a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
