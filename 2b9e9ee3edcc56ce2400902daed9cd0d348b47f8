@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "cbfef20d_ad374a31",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-09T06:11:24Z",
+      "side": 1,
+      "message": "Please don\u0027t spare words on the commit msg :)\n\nThis is a huge change which took us a fair amount of time, so I\u0027d like to see at least the following here:\n\n * what\u0027s the motivation behind this\n * what is this new event callback\n * how is spdk_bdev_open_ext different from spdk_bdev_open? which one am i supposed to use?\n * why spdk_bdev_open_ext accepts a bdev name instead of struct spdk_bdev?",
+      "revId": "2b9e9ee3edcc56ce2400902daed9cd0d348b47f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e280420d_5e097541",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 8
