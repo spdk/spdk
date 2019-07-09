@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "05f342b3_d32a81d8",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T10:51:17Z",
+      "side": 1,
+      "message": "Done.\nCahnged in separate patch.",
+      "parentUuid": "51b0b609_096d4a87",
+      "range": {
+        "startLine": 55,
+        "startChar": 83,
+        "endLine": 55,
+        "endChar": 89
+      },
+      "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2bf0f92e_69f4fc4d",
         "filename": "lib/bdev/aio/bdev_aio_rpc.c",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61421801_a5eea493",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T10:51:17Z",
+      "side": 1,
+      "message": "Done\nChanged in separate patch",
+      "parentUuid": "2bf0f92e_69f4fc4d",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 0
+      },
+      "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5e38b82b_9ee46580",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T10:51:17Z",
+      "side": 1,
+      "message": "Done.\nRemoved, will not check it here.",
+      "parentUuid": "b6d145f2_5a3841ad",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 2
+      },
+      "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f422e5b_f27fa021",
         "filename": "lib/bdev/aio/bdev_aio_rpc.c",
         "patchSetId": 3
@@ -91,6 +163,30 @@
       "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92afa96b_02ae5d7b",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T10:51:17Z",
+      "side": 1,
+      "message": "Done, removed. Valid point.",
+      "parentUuid": "4f422e5b_f27fa021",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 2
+      },
+      "revId": "aa36fb4a6b458590a00cf60c1cf5f34de3998110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
