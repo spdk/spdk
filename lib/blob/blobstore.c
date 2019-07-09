@@ -791,6 +791,45 @@ _spdk_blob_serialize_xattrs(const struct spdk_blob *blob,
 }
 
 static int
+_spdk_blob_serialize_extents(const struct spdk_blob *blob,
+			     struct spdk_blob_md_page **pages,
+			     struct spdk_blob_md_page *cur_page,
+			     uint32_t *page_count)
+{
+	uint64_t				last_cluster;
+	int					rc;
+	uint8_t					*buf;
+	size_t					remaining_sz;
+
+	/* Serialize extents - always start at new page */
+	rc = _spdk_blob_serialize_add_page(blob, pages, page_count, &cur_page);
+	if (rc < 0) {
+		return rc;
+	}
+	buf = (uint8_t *)cur_page->descriptors;
+	remaining_sz = sizeof(cur_page->descriptors);
+
+	last_cluster = 0;
+	while (last_cluster < blob->active.num_clusters) {
+		_spdk_blob_serialize_extent(blob, last_cluster, &last_cluster, buf, remaining_sz);
+
+		if (last_cluster == blob->active.num_clusters) {
+			break;
+		}
+
+		rc = _spdk_blob_serialize_add_page(blob, pages, page_count, &cur_page);
+		if (rc < 0) {
+			return rc;
+		}
+
+		buf = (uint8_t *)cur_page->descriptors;
+		remaining_sz = sizeof(cur_page->descriptors);
+	}
+
+	return 0;
+}
+
+static int
 _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pages,
 		     uint32_t *page_count)
 {
@@ -798,7 +837,6 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 	int					rc;
 	uint8_t					*buf;
 	size_t					remaining_sz;
-	uint64_t				last_cluster;
 
 	assert(pages != NULL);
 	assert(page_count != NULL);
@@ -840,34 +878,9 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 		return 0;
 	}
 
-	/* Serialize extents - always start at new page */
-	rc = _spdk_blob_serialize_add_page(blob, pages, page_count, &cur_page);
-	if (rc < 0) {
-		return rc;
-	}
-	buf = (uint8_t *)cur_page->descriptors;
-	remaining_sz = sizeof(cur_page->descriptors);
+	rc = _spdk_blob_serialize_extents(blob, pages, cur_page, page_count);
 
-	last_cluster = 0;
-	while (last_cluster < blob->active.num_clusters) {
-		_spdk_blob_serialize_extent(blob, last_cluster, &last_cluster,
-					    buf, remaining_sz);
-
-		if (last_cluster == blob->active.num_clusters) {
-			break;
-		}
-
-		rc = _spdk_blob_serialize_add_page(blob, pages, page_count,
-						   &cur_page);
-		if (rc < 0) {
-			return rc;
-		}
-
-		buf = (uint8_t *)cur_page->descriptors;
-		remaining_sz = sizeof(cur_page->descriptors);
-	}
-
-	return 0;
+	return rc;
 }
 
 struct spdk_blob_load_ctx {
