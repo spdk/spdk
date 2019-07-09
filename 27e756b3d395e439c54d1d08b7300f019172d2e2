@@ -46,6 +46,30 @@
       "revId": "27e756b3d395e439c54d1d08b7300f019172d2e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de20aa69_5294ee57",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:13:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e6eff6a0_15f628e0",
+      "range": {
+        "startLine": 109,
+        "startChar": 1,
+        "endLine": 117,
+        "endChar": 8
+      },
+      "revId": "27e756b3d395e439c54d1d08b7300f019172d2e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

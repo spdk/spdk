@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "99aabf58_6bc96cf0",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:13:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9157502c_8b32c998",
+      "range": {
+        "startLine": 71,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 15
+      },
+      "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c38b074_5be80fa9",
         "filename": "lib/bdev/aio/bdev_aio_rpc.c",
         "patchSetId": 2
@@ -39,6 +63,24 @@
       "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "93eee408_ce0d111f",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:13:35Z",
+      "side": 1,
+      "message": "Next patch set should get everything into same \u0027style\u0027\n\nI\u0027m not setting any \"rc\" variable because it won\u0027t be used later in case of error.\n\"rc\" will be purely for create_aio_bdev()",
+      "parentUuid": "8c38b074_5be80fa9",
+      "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "d18b21f1_06e778b5",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:13:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf368d3e_f5796ac4",
+      "range": {
+        "startLine": 116,
+        "startChar": 48,
+        "endLine": 116,
+        "endChar": 65
+      },
+      "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d8a98f2_f5dd85c5",
         "filename": "lib/bdev/aio/bdev_aio_rpc.c",
         "patchSetId": 2
@@ -85,6 +151,30 @@
       "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "695970fc_e1a03b88",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-09T08:13:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d8a98f2_f5dd85c5",
+      "range": {
+        "startLine": 182,
+        "startChar": 1,
+        "endLine": 182,
+        "endChar": 12
+      },
+      "revId": "99ce854dfc2da723ccba35d2c49a1c00f2d0c603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
