@@ -34,6 +34,24 @@
       "revId": "6b30b8339d1fe8fbaf4809d157115e2c7842e95c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0fa3d1f_482f440e",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-09T05:57:25Z",
+      "side": 1,
+      "message": "I think I agree with Wojciech - we should add a wrapper function for all cfg accesses and use it consistently throughout the entire driver. This should be done outside of this patch.",
+      "parentUuid": "2725340c_8d47ffc0",
+      "revId": "6b30b8339d1fe8fbaf4809d157115e2c7842e95c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
