@@ -13,7 +13,8 @@ APIs were added for retrieving zoned device information.
 `spdk_bdev_get_zone_info()` API was added for retrieving information about zones in zoned
 device.
 Added `spdk_bdev_zone_open() `, `spdk_bdev_zone_finish()`,
-`spdk_bdev_zone_close` new APIs for changing zone state.
+`spdk_bdev_zone_close()`, `spkd_bdev_zone_reset()` new APIs for changing zone
+state.
 
 ### bdev
 
