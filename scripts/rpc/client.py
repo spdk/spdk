@@ -38,16 +38,19 @@ class JSONRPCClient(object):
                 self._logger.debug("Trying to connect to UNIX socket: %s", addr)
                 self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 self.sock.connect(addr)
-            elif ':' in addr:
-                self._logger.debug("Trying to connect to IPv6 address addr:%s, port:%i", addr, port)
-                for res in socket.getaddrinfo(addr, port, socket.AF_INET6, socket.SOCK_STREAM, socket.SOL_TCP):
-                    af, socktype, proto, canonname, sa = res
-                self.sock = socket.socket(af, socktype, proto)
-                self.sock.connect(sa)
+            elif port:
+                if ':' in addr:
+                    self._logger.debug("Trying to connect to IPv6 address addr:%s, port:%i", addr, port)
+                    for res in socket.getaddrinfo(addr, port, socket.AF_INET6, socket.SOCK_STREAM, socket.SOL_TCP):
+                        af, socktype, proto, canonname, sa = res
+                    self.sock = socket.socket(af, socktype, proto)
+                    self.sock.connect(sa)
+                else:
+                    self._logger.debug("Trying to connect to IPv4 address addr:%s, port:%i'", addr, port)
+                    self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self.sock.connect((addr, port))
             else:
-                self._logger.debug("Trying to connect to IPv4 address addr:%s, port:%i'", addr, port)
-                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.sock.connect((addr, port))
+                raise socket.error("Unix socket '%s' does not exist" % addr)
         except socket.error as ex:
             raise JSONRPCException("Error while connecting to %s\n"
                                    "Error details: %s" % (addr, ex))
