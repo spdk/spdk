@@ -13,7 +13,8 @@ NVMe TP4035 - Zoned Namespaces.
 zones inside zoned namespace.
 `spdk_zdev_zone_action` enum was added.
 Added `spdk_bdev_zone_open() `, `spdk_bdev_zone_finish()`,
-`spdk_bdev_zone_close` new APIs for changing zone state.
+`spdk_bdev_zone_close()`, `spkd_bdev_zone_reset()` new APIs for changing zone
+state.
 `spdk_zdev_from_bdev()` API was added for downcasting bdev to zdev.
 
 ### bdev
