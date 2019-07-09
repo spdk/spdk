@@ -72,6 +72,14 @@ LIB += isalbuild
 DPDK_DEPS += isalbuild
 endif
 
+# prepend prefix to CC while preserving additional parameters if any
+# if CONFIG_CROSS_PREFIX already exists in CC/CXX/LD then replace it harmlessly, otherwise add it
+ifeq ($(CONFIG_CROSS),y)
+CC := $(subst $(firstword $(CC)),$(CONFIG_CROSS_PREFIX)$(subst $(CONFIG_CROSS_PREFIX),,$(firstword $(CC))),$(CC))
+CXX := $(subst $(firstword $(CXX)),$(CONFIG_CROSS_PREFIX)$(subst $(CONFIG_CROSS_PREFIX),,$(firstword $(CXX))),$(CXX))
+LD := $(subst $(firstword $(LD)),$(CONFIG_CROSS_PREFIX)$(subst $(CONFIG_CROSS_PREFIX),,$(firstword $(LD))),$(LD))
+endif
+
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
