@@ -128,3 +128,10 @@ spdk_bdev_zone_close(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 {
 	return bdev_zone_management(desc, ch, zone_id, SPDK_BDEV_ZONE_CLOSE, cb, cb_arg);
 }
+
+int
+spdk_bdev_zone_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		     uint64_t zone_id, spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return bdev_zone_management(desc, ch, zone_id, SPDK_BDEV_ZONE_RESET, cb, cb_arg);
+}
