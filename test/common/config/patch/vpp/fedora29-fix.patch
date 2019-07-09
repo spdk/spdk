@@ -1,0 +1,19 @@
+diff --git a/Makefile b/Makefile
+index 900c1efb4..4889eefbe 100644
+--- a/Makefile
++++ b/Makefile
+@@ -92,9 +92,11 @@ RPM_DEPENDS += ninja-build
+ RPM_DEPENDS += libuuid-devel
+ 
+ ifeq ($(OS_ID),fedora)
+-	RPM_DEPENDS += dnf-utils
++	ifeq ("$(wildcard /usr/bin/package-cleanup)","")
++		RPM_DEPENDS += dnf-utils
++	endif
+ 	RPM_DEPENDS += subunit subunit-devel
+-	RPM_DEPENDS += compat-openssl10-devel
++	RPM_DEPENDS += openssl-devel
+ 	RPM_DEPENDS += python2-devel python2-ply
+ 	RPM_DEPENDS += python2-virtualenv
+ 	RPM_DEPENDS += mbedtls-devel
+
