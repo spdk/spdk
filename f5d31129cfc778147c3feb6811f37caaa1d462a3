@@ -22,6 +22,30 @@
       "revId": "f5d31129cfc778147c3feb6811f37caaa1d462a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd9848a3_61438561",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2753,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-07-09T06:42:53Z",
+      "side": 1,
+      "message": "Hi Shuhei,\nYes. The maximal wait is 50 times. If we did not get any response, it will skip 50 times. Then After first times, it did not get event, will wait additional 50 times. It will not become large. Since if the value is already positive,we will decrease this value",
+      "parentUuid": "c165add9_14a34473",
+      "range": {
+        "startLine": 2753,
+        "startChar": 2,
+        "endLine": 2753,
+        "endChar": 62
+      },
+      "revId": "f5d31129cfc778147c3feb6811f37caaa1d462a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
