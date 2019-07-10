@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06531116_a97aba9b",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T05:38:48Z",
+      "side": 1,
+      "message": "If you have the same checks in rpc now, you might want to do just asserts here.\n\n(You would need to add those checks to config file parsing code, but that\u0027s fine - legacy configs will be removed eventually).",
+      "range": {
+        "startLine": 181,
+        "startChar": 0,
+        "endLine": 189,
+        "endChar": 2
+      },
+      "revId": "059c9d83b9e7db7a46c4e6c3ef078b34c87c3aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d418d91_e80e6118",
+        "filename": "lib/bdev/null/bdev_null_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T05:38:48Z",
+      "side": 1,
+      "message": "Can we return bdeverrno to the user, somehow?",
+      "range": {
+        "startLine": 151,
+        "startChar": 25,
+        "endLine": 151,
+        "endChar": 39
+      },
+      "revId": "059c9d83b9e7db7a46c4e6c3ef078b34c87c3aa4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
