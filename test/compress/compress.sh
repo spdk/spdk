@@ -8,6 +8,7 @@ plugindir=$rootdir/examples/bdev/fio_plugin
 rpc_py="$rootdir/scripts/rpc.py"
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
+source "$rootdir/test/nvmf/common.sh"
 
 function compress_cleanup() {
 	timing enter compress_cleanup
@@ -40,7 +41,7 @@ lvs_u=$($rpc_py construct_lvol_store Nvme0n1 lvs0)
 lvb_u=$($rpc_py construct_lvol_bdev -t -u $lvs_u lvb0 10000)
 # this will force isal_pmd as some of the CI systems need a qat driver update
 $rpc_py set_compress_pmd -p 2
-$rpc_py construct_compress_bdev -b $lvb_u -p /tmp
+compress_bdev=$($rpc_py construct_compress_bdev -b $lvb_u -p /tmp)
 trap - SIGINT SIGTERM EXIT
 killprocess $bdev_svc_pid
 timing_exit compress_setup
@@ -76,6 +77,38 @@ trap - SIGINT SIGTERM EXIT
 killprocess $bdevperf_pid
 
 timing_exit compress_test
+
+# run perf with nvmf using compress bdev
+timing_enter nvmf_perf_test
+export TEST_TRANSPORT=tcp && nvmftestinit
+nvmfappstart "-m 0x7"
+trap "compress_cleanup; exit 1" SIGINT SIGTERM EXIT
+
+# Create an NVMe-oF subsystem and add compress bdev as a namespace
+$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
+$rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 $compress_bdev
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+
+if [ $RUN_NIGHTLY -eq 0 ]; then
+	qd=32
+	runtime=3
+else
+	qd=64
+	runtime=30
+fi
+
+# Start random read writes in the background
+$rootdir/examples/nvme/perf/perf -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q $qd -s 512 -w randrw -t $runtime -c 0x18 -M 50 &
+perf_pid=$!
+
+# Wait for I/O to complete
+trap "killprocess $perf_pid; compress_cleanup; exit 1" SIGINT SIGTERM EXIT
+wait $perf_pid
+
+nvmftestfini
+timing_exit nvmf_perf_test
 
 # remove the compress on disk metadata and config file
 compress_cleanup $lvb_u $lvs_u
