@@ -48,7 +48,6 @@ struct spdk_iscsi_portal {
 	char				host[MAX_PORTAL_ADDR + 1];
 	char				port[MAX_PORTAL_PORT + 1];
 	struct spdk_sock		*sock;
-	struct spdk_cpuset		cpumask;
 	struct spdk_poller		*acceptor_poller;
 	TAILQ_ENTRY(spdk_iscsi_portal)	per_pg_tailq;
 	TAILQ_ENTRY(spdk_iscsi_portal)	g_tailq;
@@ -63,8 +62,7 @@ struct spdk_iscsi_portal_grp {
 
 /* SPDK iSCSI Portal Group management API */
 
-struct spdk_iscsi_portal *spdk_iscsi_portal_create(const char *host, const char *port,
-		const char *cpumask);
+struct spdk_iscsi_portal *spdk_iscsi_portal_create(const char *host, const char *port);
 void spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p);
 
 struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_create(int tag);

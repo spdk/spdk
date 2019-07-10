@@ -800,8 +800,7 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 	}
 	for (i = 0; i < req.portal_list.num_portals; i++) {
 		portal = spdk_iscsi_portal_create(req.portal_list.portals[i].host,
-						  req.portal_list.portals[i].port,
-						  req.portal_list.portals[i].cpumask);
+						  req.portal_list.portals[i].port);
 		if (portal == NULL) {
 			SPDK_ERRLOG("portal_create failed\n");
 			goto out;
