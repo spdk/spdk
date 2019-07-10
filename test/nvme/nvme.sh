@@ -42,13 +42,12 @@ if [ $(uname) = Linux ]; then
 	# note: more work probably needs to be done to properly handle devices with multiple
 	# namespaces
 	for bdf in $(iter_pci_class_code 01 08 02); do
-		for blkname in $(get_nvme_name_from_bdf $bdf); do
-			if [ "$blkname" != "" ]; then
-				mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
+		for name in $(get_nvme_name_from_bdf $bdf); do
+			if [ "$name" != "" ]; then
+				mountpoints=$(lsblk /dev/$name --output MOUNTPOINT -n | wc -w)
 				if [ "$mountpoints" = "0" ]; then
-					break
-				else
-					blkname=''
+					blkname=$name
+					break 2
 				fi
 			fi
 		done
