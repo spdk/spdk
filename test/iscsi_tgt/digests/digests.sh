@@ -92,10 +92,10 @@ sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 
-# iscsiadm installed by some Fedora releases loses DataDigest parameter.
+# iscsiadm installed by some Fedora releases loses the ability to set DataDigest parameter.
 # Check and avoid setting DataDigest.
-DataDigestAbility=$(iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT | grep DataDigest || true)
-if [ "$DataDigestAbility"x = x ]; then
+DataDigestAbility=$(iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT -o update -n node.conn[0].iscsi.DataDigest -v None 2>&1 || true)
+if [ "$DataDigestAbility"x != x ]; then
 	iscsi_header_digest_test
 else
 	iscsi_header_data_digest_test
