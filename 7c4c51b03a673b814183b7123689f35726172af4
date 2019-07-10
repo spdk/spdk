@@ -16,6 +16,24 @@
       "revId": "7c4c51b03a673b814183b7123689f35726172af4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd069a28_4c5cba6a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-10T10:26:13Z",
+      "side": 1,
+      "message": "Since we rely on the non-volatile cache to recover data from any band that isn\u0027t closed, we have to make sure that the data being moved from one band to another is stored on a closed band, before the source band can be erased. Otherwise we\u0027d lose moved data if power was lost after the source band got erased, but before the destination band was closed.\n\nThe counters are actually kept on the band that is being source of the data, while the bitmap is kept on the band being the destination. When a band is closed, its bitmap is checked to find bands that have its data moved to this one and decrement their counters.",
+      "parentUuid": "5c557630_2d8373af",
+      "revId": "7c4c51b03a673b814183b7123689f35726172af4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
