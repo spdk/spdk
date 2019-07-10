@@ -286,14 +286,37 @@ display_controller_list(void)
 }
 
 static char *
-get_line(char *buf, int buf_size, FILE *f)
+get_line(char *buf, int buf_size, FILE *f, bool secret)
 {
-	char *ret;
+	char *ch;
 	size_t len;
+	struct termios default_attr = {}, new_attr = {};
+	int ret;
 
-	ret = fgets(buf, buf_size, f);
-	if (ret == NULL) {
+	if (secret) {
+		ret = tcgetattr(STDIN_FILENO, &default_attr);
+		if (ret) {
+			return NULL;
+		}
+
+		new_attr = default_attr;
+		new_attr.c_lflag &= ~ECHO;  /* disable echo */
+		ret = tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_attr);
+		if (ret) {
+			return NULL;
+		}
+	}
+
+	ch = fgets(buf, buf_size, f);
+	if (ch == NULL) {
 		return NULL;
+	}
+
+	if (secret) {
+		ret = tcsetattr(STDIN_FILENO, TCSAFLUSH, &default_attr); /* restore default confing */
+		if (ret) {
+			return NULL;
+		}
 	}
 
 	len = strlen(buf);
@@ -321,7 +344,7 @@ get_controller(void)
 	printf("Please Input PCI Address(domain:bus:dev.func):\n");
 
 	while ((ch = getchar()) != '\n' && ch != EOF);
-	p = get_line(address, 64, stdin);
+	p = get_line(address, 64, stdin, false);
 	if (p == NULL) {
 		return NULL;
 	}
@@ -794,7 +817,7 @@ update_firmware_image(void)
 
 	printf("Please Input The Path Of Firmware Image\n");
 
-	if (get_line(path, sizeof(path), stdin) == NULL) {
+	if (get_line(path, sizeof(path), stdin, false) == NULL) {
 		printf("Invalid path setting\n");
 		while (getchar() != '\n');
 		return;
@@ -985,7 +1008,7 @@ opal_init(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input the new password for ownership:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = getpass(new_passwd);
+			passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin, true);
 			if (passwd_p) {
 				ret = spdk_opal_cmd_take_ownership(iter->opal_dev, passwd_p);
 				if (ret) {
@@ -1043,7 +1066,7 @@ opal_setup_lockingrange(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input the password for setting up locking range:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = getpass(passwd);
+			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
 			if (passwd_p) {
 				ret = spdk_opal_cmd_lock_unlock(iter->opal_dev, OPAL_ADMIN1, OPAL_READWRITE,
 								OPAL_LOCKING_RANGE_GLOBAL, passwd_p);
@@ -1147,7 +1170,7 @@ opal_list_locking_ranges(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input password:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = getpass(passwd);
+			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
 			if (passwd_p) {
 				ret = spdk_opal_cmd_get_max_ranges(iter->opal_dev, passwd_p);
 				if (ret) {
@@ -1208,7 +1231,7 @@ opal_revert_tper(struct dev *iter)
 			printf("Please be noted this operation will erase ALL DATA on this drive\n");
 			printf("Please input password for revert TPer:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = getpass(passwd);
+			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
 			if (passwd_p) {
 				ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
 				if (ret) {
