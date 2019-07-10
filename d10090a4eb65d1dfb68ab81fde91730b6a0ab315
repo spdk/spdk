@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8470ba4_92ab1e11",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T04:40:49Z",
+      "side": 1,
+      "message": "You should set g_zero_buf back to NULL if you want to try re-allocating it later.",
+      "revId": "d10090a4eb65d1dfb68ab81fde91730b6a0ab315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13327f5b_e6ffe4fc",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T04:40:49Z",
+      "side": 1,
+      "message": "This doesn\u0027t work for more than 1 volume. Currently whenever you unload one, the g_zero_buf will be always freed - even if other volumes still need it.",
+      "revId": "d10090a4eb65d1dfb68ab81fde91730b6a0ab315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
