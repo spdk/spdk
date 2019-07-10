@@ -52,6 +52,7 @@ struct spdk_bdev_nvme_opts {
 	uint32_t retry_count;
 	uint64_t nvme_adminq_poll_period_us;
 	uint64_t nvme_ioq_poll_period_us;
+	uint32_t io_queue_requests;
 };
 
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, int rc);
