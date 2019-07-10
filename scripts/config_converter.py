@@ -529,8 +529,6 @@ def get_iscsi_portal_group_json(config, name):
                 if "@" in items[1]:
                     portal['port'] =\
                         items[1].rsplit(":", 1)[1].split("@")[0]
-                    portal['cpumask'] =\
-                        items[1].rsplit(":", 1)[1].split("@")[1]
                 else:
                     portal['port'] = items[1].rsplit(":", 1)[1]
                 portals.append(portal)

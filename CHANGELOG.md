@@ -150,6 +150,11 @@ Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
 
 A snapshot can now be deleted if there is only a single clone on top of it.
 
+### iSCSI
+
+Portals may no longer be associated wtih a cpumask. The scheduling of
+connections is moving to a more dynamic model.
+
 ## v19.04:
 
 ### nvme
