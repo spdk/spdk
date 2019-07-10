@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e58f2798_28f3e941",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2681,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-07-10T14:11:02Z",
+      "side": 1,
+      "message": "rqpair",
+      "revId": "021950f48c15e4ba75d49614cbefdb00e7481576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bd2d149_2aa59ac0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3192,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-07-10T14:11:02Z",
+      "side": 1,
+      "message": "The original implementation of spdk_nvmf_rdma_destroy_defunct_qpair has no checks for data completeness and destroys the qpair unconditionally. It seems to be a measure of last resort to clean up a qpair if no RDMA event destroyed it in a specified time interval.",
+      "revId": "021950f48c15e4ba75d49614cbefdb00e7481576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f906c1a7_3756f5ef",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3233,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-07-10T14:11:02Z",
+      "side": 1,
+      "message": "It seems that the functions spdk_nvmf_rdma_destroy_defunct_qpair and nvmf_rdma_destroy_drained_qpair have the same semantic in that case since rqpair-\u003eqpair.state is set to SPDK_NVMF_QPAIR_ERROR by nvmf before calling the current function",
+      "revId": "021950f48c15e4ba75d49614cbefdb00e7481576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
