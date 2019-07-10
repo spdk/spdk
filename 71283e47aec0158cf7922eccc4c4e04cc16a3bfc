@@ -16,6 +16,24 @@
       "revId": "71283e47aec0158cf7922eccc4c4e04cc16a3bfc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df7bdc50_09799d84",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1552,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-10T06:22:28Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nTheoretically we can add TCP listeners and RDMA listeners to a single NVMf subsystem. In this case, we have to process RDMA connections as DIF pass-through and TCP connections as DIF insert/strip. Hence I thought that passing the option of transport was necessary.",
+      "parentUuid": "f874644f_f16a57fd",
+      "revId": "71283e47aec0158cf7922eccc4c4e04cc16a3bfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
