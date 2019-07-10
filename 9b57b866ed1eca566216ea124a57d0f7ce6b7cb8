@@ -16,6 +16,24 @@
       "revId": "9b57b866ed1eca566216ea124a57d0f7ce6b7cb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "115f9511_9d64abf2",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-10T09:49:10Z",
+      "side": 1,
+      "message": "As you\u0027ve said your proposal comes with a cost. I think keeping a simple counter is a better solution.",
+      "parentUuid": "e10f7dcb_57e9b1d6",
+      "revId": "9b57b866ed1eca566216ea124a57d0f7ce6b7cb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
