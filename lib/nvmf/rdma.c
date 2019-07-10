@@ -64,9 +64,6 @@ struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
 #define DEFAULT_NVMF_RDMA_CQ_SIZE	4096
 #define MAX_WR_PER_QP(queue_depth)	(queue_depth * 3 + 2)
 
-/* Timeout for destroying defunct rqpairs */
-#define NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US	4000000
-
 /* The maximum number of buffers per request */
 #define NVMF_REQ_MAX_BUFFERS	(SPDK_NVMF_MAX_SGL_ENTRIES * 2)
 
@@ -393,12 +390,6 @@ struct spdk_nvmf_rdma_qpair {
 	enum ibv_qp_state			ibv_state;
 
 	uint32_t				disconnect_flags;
-
-	/* Poller registered in case the qpair doesn't properly
-	 * complete the qpair destruct process and becomes defunct.
-	 */
-
-	struct spdk_poller			*destruct_poller;
 
 	/* There are several ways a disconnect can start on a qpair
 	 * and they are not all mutually exclusive. It is important
@@ -875,8 +866,6 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	int				rc;
 
 	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair->cm_id, 0);
-
-	spdk_poller_unregister(&rqpair->destruct_poller);
 
 	if (rqpair->qd != 0) {
 		if (rqpair->srq == NULL) {
@@ -2663,26 +2652,42 @@ spdk_nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 }
 
-static void nvmf_rdma_destroy_drained_qpair(void *ctx)
+static bool
+nvmf_rdma_is_qpair_drained(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	/* In non SRQ path, we will reach rqpair->max_queue_depth. In SRQ path, we will get the last_wqe event. */
+	if (rqpair->current_send_depth != 0) {
+		return false;
+	}
+
+	if (rqpair->srq == NULL && rqpair->current_recv_depth != rqpair->max_queue_depth) {
+		return false;
+	}
+
+	if (rqpair->srq != NULL && rqpair->last_wqe_reached == false) {
+		return false;
+	}
+
+	return true;
+}
+
+static void
+nvmf_rdma_destroy_drained_qpair(void *ctx)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = ctx;
 	struct spdk_nvmf_rdma_transport *rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
 			struct spdk_nvmf_rdma_transport, transport);
 
-	/* In non SRQ path, we will reach rqpair->max_queue_depth. In SRQ path, we will get the last_wqe event. */
-	if (rqpair->current_send_depth != 0) {
-		return;
-	}
-
-	if (rqpair->srq == NULL && rqpair->current_recv_depth != rqpair->max_queue_depth) {
-		return;
-	}
-
-	if (rqpair->srq != NULL && rqpair->last_wqe_reached == false) {
+	if (!nvmf_rdma_is_qpair_drained(rqpair)) {
 		return;
 	}
 
 	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
+
+	/* Qpair will be destroyed when nvmf layer closes this qpair */
+	if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ERROR) {
+		return;
+	}
 	spdk_nvmf_rdma_qpair_destroy(rqpair);
 }
 
@@ -3183,17 +3188,21 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-static int
-spdk_nvmf_rdma_destroy_defunct_qpair(void *ctx)
+static void
+spdk_nvmf_rdma_destroy_defunct_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	struct spdk_nvmf_rdma_qpair	*rqpair = ctx;
 	struct spdk_nvmf_rdma_transport *rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
 			struct spdk_nvmf_rdma_transport, transport);
 
 	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
+
+	/* Qpair will be destroyed when it has been drained */
+	if (!nvmf_rdma_is_qpair_drained(rqpair)) {
+		return;
+	}
 	spdk_nvmf_rdma_qpair_destroy(rqpair);
 
-	return 0;
+	return;
 }
 
 static void
@@ -3221,8 +3230,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
 	}
 
-	rqpair->destruct_poller = spdk_poller_register(spdk_nvmf_rdma_destroy_defunct_qpair, (void *)rqpair,
-				  NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US);
+	spdk_nvmf_rdma_destroy_defunct_qpair(rqpair);
 }
 
 static struct spdk_nvmf_rdma_qpair *
