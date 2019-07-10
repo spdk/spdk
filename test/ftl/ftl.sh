@@ -52,14 +52,14 @@ if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	run_test suite $testdir/fio.sh $device basic
 	timing_exit fio_basic
 
-	$rootdir/test/app/bdev_svc/bdev_svc &
-	bdev_svc_pid=$!
+	$rootdir/app/spdk_tgt/spdk_tgt &
+	svc_pid=$!
 
-	trap "killprocess $bdev_svc_pid; exit 1" SIGINT SIGTERM EXIT
+	trap "killprocess $svc_pid; exit 1" SIGINT SIGTERM EXIT
 
-	waitforlisten $bdev_svc_pid
+	waitforlisten $svc_pid
 	uuid=$($rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3 | jq -r '.uuid')
-	killprocess $bdev_svc_pid
+	killprocess $svc_pid
 
 	trap - SIGINT SIGTERM EXIT
 

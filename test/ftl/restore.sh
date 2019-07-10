@@ -26,8 +26,8 @@ restore_kill() {
 
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
-$rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
-# Wait until bdev_svc starts
+$rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
+# Wait until spdk_tgt starts
 waitforlisten $svcpid
 
 if [ -n "$uuid" ]; then
@@ -55,8 +55,8 @@ md5sum $mount_dir/testfile > $testdir/testfile.md5
 umount $mount_dir
 killprocess $svcpid
 
-$rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
-# Wait until bdev_svc starts
+$rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
+# Wait until spdk_tgt starts
 waitforlisten $svcpid
 
 $rpc_py load_config < $testdir/config/ftl.json

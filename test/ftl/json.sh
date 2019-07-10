@@ -16,7 +16,7 @@ json_kill() {
 
 trap "json_kill; exit 1" SIGINT SIGTERM EXIT
 
-$rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
+$rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
 waitforlisten $svcpid
 
 # Create new bdev from json configuration
