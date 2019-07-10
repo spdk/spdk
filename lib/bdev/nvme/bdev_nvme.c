@@ -107,6 +107,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT,
 	.nvme_adminq_poll_period_us = 1000000ULL,
 	.nvme_ioq_poll_period_us = 0,
+	.io_queue_requests = 0,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -537,6 +538,8 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	opts.delay_pcie_doorbell = true;
+	opts.io_queue_requests = spdk_max(g_opts.io_queue_requests, opts.io_queue_requests);
+	g_opts.io_queue_requests = opts.io_queue_requests;
 
 	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
 
@@ -1087,17 +1090,12 @@ spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts)
 	*opts = g_opts;
 }
 
-int
+void
 spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
-	if (g_bdev_nvme_init_thread != NULL) {
-		return -EPERM;
-	}
-
 	g_opts = *opts;
-
-	return 0;
 }
+
 struct set_nvme_hotplug_ctx {
 	uint64_t period_us;
 	bool enabled;
@@ -2118,6 +2116,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "retry_count", g_opts.retry_count);
 	spdk_json_write_named_uint64(w, "nvme_adminq_poll_period_us", g_opts.nvme_adminq_poll_period_us);
 	spdk_json_write_named_uint64(w, "nvme_ioq_poll_period_us", g_opts.nvme_ioq_poll_period_us);
+	spdk_json_write_named_uint32(w, "io_queue_requests", g_opts.io_queue_requests);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
