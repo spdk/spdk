@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8005041f_9b922f31",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-10T04:05:28Z",
+      "side": 1,
+      "message": "Just a question. if parent is not NULL and (parent-\u003eflags \u0026 FTL_IO_VECTOR_LBA) is not 0, (opts-\u003eflags \u0026 FTL_IO_VECTOR_LBA) is ensured to be 0?\n\nShould we skip this if block when parent is not NULL?",
+      "range": {
+        "startLine": 317,
+        "startChar": 2,
+        "endLine": 317,
+        "endChar": 16
+      },
+      "revId": "60942ca48536543fe0070d13fe9a008f864ac1e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
