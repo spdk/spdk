@@ -22,6 +22,30 @@
       "revId": "77fda6cac51779434cffb5bcdf8cd1a22790a8e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4224722_59b9d9cd",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-10T07:30:07Z",
+      "side": 1,
+      "message": "I think it\u0027s more readable to do that in each script individually. Some of the code might get duplicated, but I don\u0027t like the idea of having an argument parsing function that would set some global variables.",
+      "parentUuid": "e88b95f8_2f76eb97",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 4
+      },
+      "revId": "77fda6cac51779434cffb5bcdf8cd1a22790a8e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
