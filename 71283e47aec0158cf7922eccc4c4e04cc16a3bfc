@@ -52,6 +52,24 @@
       "revId": "71283e47aec0158cf7922eccc4c4e04cc16a3bfc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88184ce4_739771e9",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1552,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-10T23:36:54Z",
+      "side": 1,
+      "message": "Thank you for your nice suggestion, Ben.\n\nI inserted two patches before this to make dif_insert_or_strip per-controller. Will you review the patches again?",
+      "parentUuid": "894579d4_90cd7e6f",
+      "revId": "71283e47aec0158cf7922eccc4c4e04cc16a3bfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
