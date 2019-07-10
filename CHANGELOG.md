@@ -264,6 +264,11 @@ with SPDK thread when necessary.
 Added spdk_thread_destroy() to allow framework polling the thread to
 release resources associated with that thread.
 
+### iSCSI
+
+Portals may no longer be associated with a cpumask. The scheduling of
+connections is moving to a more dynamic model.
+
 ## v19.04:
 
 ### nvme
