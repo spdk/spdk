@@ -298,7 +298,8 @@ if __name__ == "__main__":
                                        timeout_us=args.timeout_us,
                                        retry_count=args.retry_count,
                                        nvme_adminq_poll_period_us=args.nvme_adminq_poll_period_us,
-                                       nvme_ioq_poll_period_us=args.nvme_ioq_poll_period_us)
+                                       nvme_ioq_poll_period_us=args.nvme_ioq_poll_period_us,
+                                       io_queue_requests=args.io_queue_requests)
 
     p = subparsers.add_parser('set_bdev_nvme_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -312,6 +313,8 @@ if __name__ == "__main__":
                    help='How often the admin queue is polled for asynchronous events', type=int)
     p.add_argument('-i', '--nvme-ioq-poll-period-us',
                    help='How often to poll I/O queues for completions', type=int)
+    p.add_argument('-s', '--io-queue-requests',
+                   help='The number of requests to allocate for this NVMe I/O queue', type=int)
     p.set_defaults(func=set_bdev_nvme_options)
 
     def set_bdev_nvme_hotplug(args):

@@ -1402,6 +1402,7 @@ timeout_us                 | Optional | number      | Timeout for each command, 
 retry_count                | Optional | number      | The number of attempts per I/O before an I/O fails
 nvme_adminq_poll_period_us | Optional | number      | How often the admin queue is polled for asynchronous events in microseconds
 nvme_ioq_poll_period_us    | Optional | number      | How often I/O queues are polled for completions, in microseconds. Default: 0 (as fast as possible).
+io_queue_requests          | Optional | number      | The number of requests to allocate for this NVMe I/O queue.
 
 ### Example
 
@@ -1414,7 +1415,8 @@ request:
     "retry_count": 5,
     "nvme_adminq_poll_period_us": 2000,
     "timeout_us": 10000000,
-    "action_on_timeout": "reset"
+    "action_on_timeout": "reset",
+    "io_queue_requests" : 2048,
   },
   "jsonrpc": "2.0",
   "method": "set_bdev_nvme_options",

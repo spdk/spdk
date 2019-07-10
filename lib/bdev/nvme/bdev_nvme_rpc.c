@@ -75,6 +75,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = 
 	{"retry_count", offsetof(struct spdk_bdev_nvme_opts, retry_count), spdk_json_decode_uint32, true},
 	{"nvme_adminq_poll_period_us", offsetof(struct spdk_bdev_nvme_opts, nvme_adminq_poll_period_us), spdk_json_decode_uint64, true},
 	{"nvme_ioq_poll_period_us", offsetof(struct spdk_bdev_nvme_opts, nvme_ioq_poll_period_us), spdk_json_decode_uint64, true},
+	{"io_queue_requests", offsetof(struct spdk_bdev_nvme_opts, io_queue_requests), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -94,10 +95,7 @@ spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_bdev_nvme_set_opts(&opts);
-	if (rc) {
-		goto invalid;
-	}
+	spdk_bdev_nvme_set_opts(&opts);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w != NULL) {
@@ -109,7 +107,8 @@ spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("set_bdev_nvme_options", spdk_rpc_set_bdev_nvme_options, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("set_bdev_nvme_options", spdk_rpc_set_bdev_nvme_options,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 struct rpc_bdev_nvme_hotplug {
 	bool enabled;
