@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f874644f_f16a57fd",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1552,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-10T06:05:52Z",
+      "side": 1,
+      "message": "Instead of adding a parameter here, I think we\u0027d better to add this option to spdk_nvmf_ns_opts(), as it\u0027s a patch serial, I\u0027m fine to change it in later patch.",
+      "revId": "71283e47aec0158cf7922eccc4c4e04cc16a3bfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
