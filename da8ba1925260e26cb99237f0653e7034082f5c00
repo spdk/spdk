@@ -105,6 +105,24 @@
       "revId": "da8ba1925260e26cb99237f0653e7034082f5c00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a093c3f7_b8e1f7f5",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T05:31:56Z",
+      "side": 1,
+      "message": "Uhh, what a mess. I\u0027m tempted to drop this broken argparse and switch e.g. to docopt.org ...",
+      "parentUuid": "40632c8e_2a27b9da",
+      "revId": "da8ba1925260e26cb99237f0653e7034082f5c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
