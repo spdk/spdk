@@ -16,6 +16,24 @@
       "revId": "18668e0d16dcfa7ee3d506769635959d995a7965",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39cefb6f_f6e66304",
+        "filename": "test/vmd/config/config.fio",
+        "patchSetId": 5
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-10T07:16:12Z",
+      "side": 1,
+      "message": "I just copy this example config from /nvme/fio_plugin and add enable_vmd flag - but you are right, there is no reason to not checking it.",
+      "parentUuid": "39dac497_bff3a7cc",
+      "revId": "18668e0d16dcfa7ee3d506769635959d995a7965",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
