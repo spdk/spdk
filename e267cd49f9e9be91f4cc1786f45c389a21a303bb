@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "630b1b70_982959b1",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T09:39:31Z",
+      "side": 1,
+      "message": "no need for subshell + echo, you can do just:\n\nlsblk /dev/$blkname --output MOUNTPOINT -n | wc -w\n\n\n\nOr you could make the function actually return a value:\n[ \"$mountpoints\" \u003d \"0\" ]\n\nthen:\n\nif ! is_bdf_mounted $bdf; then [...]",
+      "range": {
+        "startLine": 31,
+        "startChar": 1,
+        "endLine": 32,
+        "endChar": 18
+      },
+      "revId": "e267cd49f9e9be91f4cc1786f45c389a21a303bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dcdea787_dd1858f2",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T09:39:31Z",
+      "side": 1,
+      "message": "can we use get_disks() here?",
+      "revId": "e267cd49f9e9be91f4cc1786f45c389a21a303bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
