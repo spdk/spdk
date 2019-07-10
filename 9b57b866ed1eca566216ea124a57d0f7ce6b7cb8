@@ -34,6 +34,24 @@
       "revId": "9b57b866ed1eca566216ea124a57d0f7ce6b7cb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c27db773_65924755",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-10T12:13:30Z",
+      "side": 1,
+      "message": "I just want to avoid yet another num_outstanding counter - we will be adding similar one also to track band num_outstanding IOs and then wptr could use this counter.",
+      "parentUuid": "115f9511_9d64abf2",
+      "revId": "9b57b866ed1eca566216ea124a57d0f7ce6b7cb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
