@@ -313,6 +313,8 @@ struct spdk_nvmf_ctrlr {
 	uint64_t last_keep_alive_tick;
 	struct spdk_poller			*keep_alive_poller;
 
+	bool dif_insert_or_strip;
+
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
 };
 
