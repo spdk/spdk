@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f9e98f8_542c8ee0",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 2460,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-07-10T03:00:06Z",
+      "side": 1,
+      "message": "Can we use only one if:\n\nif (spdk_unlikely(ttransport-\u003etransport.opts.dif_insert_or_strip) \u0026\u0026 \n  spdk_nvmf_request_get_dif_ctx(\u0026tcp_req-\u003ereq, \u0026tcp_req-\u003edif_ctx))",
+      "range": {
+        "startLine": 2460,
+        "startChar": 4,
+        "endLine": 2460,
+        "endChar": 72
+      },
+      "revId": "fefc9996c8f84bb5767f7beb3509f6d296fefe63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
