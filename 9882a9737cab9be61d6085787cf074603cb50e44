@@ -22,6 +22,30 @@
       "revId": "9882a9737cab9be61d6085787cf074603cb50e44",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a4dd1b3_1b6f9513",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1016759
+      },
+      "writtenOn": "2019-07-10T12:23:02Z",
+      "side": 1,
+      "message": "I\u0027m afraid the solution is not that simple here.\n\nThe approach prepend \"CONFIG_CROSS_PREFIX to CC\" assumes there is CC Env variable properly defined.\n\nMaybe a little of background information can help in this case.\nIt all comes down to 3 cases:\n* there is CC variable defined e.g. gcc -\u003e this one is easy, we could prepend prefix to CC.\n* there is no CC variable defined, it takes the system default, which might be /bin/cc which is symbolic link to gcc (I have it like this on my machine for example) -\u003e This one breaks when prepended, says cannot find \u003cprefix\u003e-cc.\n* there is CC variable defined which already has correct prefix (e.g. by embedded building environments which cross-compile by default) -\u003e when we prepend it would end looking like \u003cprefix\u003e$(\u003cprefix\u003eCC), which is also broken.\n\nThe solution proposed aims to cover all cases above with as minimal effort required as possible. DPDK also supports those cases.\n\nI changed string manipulation slightly to support other compilers than gcc: so now it should do:\n\"gcc/clang -lwhatever\" -\u003e \"\u003cprefix\u003egcc/\u003cprefix\u003eclang -lwhatever \"\n\nthough this still disables case 1 when no CC variable is configured and it can assume its \"cc\".",
+      "parentUuid": "f6d4bb16_7b43d8b9",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 65
+      },
+      "revId": "9882a9737cab9be61d6085787cf074603cb50e44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
