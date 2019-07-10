@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6d4bb16_7b43d8b9",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T08:18:39Z",
+      "side": 1,
+      "message": "This is basically:\n\"gcc -lwhatever\" -\u003e \"aarch64-linux-gnu-gcc -lwhatever\"\n\nCould we just prepend the CONFIG_CROSS_PREFIX to CC? e.g.\nCC :\u003d $(CONFIG_CROSS_PREFIX)$(CC)\n\nThen we\u0027ll also work with clang, icc, and everything else.",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 65
+      },
+      "revId": "9882a9737cab9be61d6085787cf074603cb50e44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
