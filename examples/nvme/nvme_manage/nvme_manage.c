@@ -951,7 +951,7 @@ opal_dump_info(struct spdk_opal_info *opal)
 		printf("Reverted PIN = %d, ", opal->opal_v200_reverted_pin);
 		printf("Number of admins = %d, ", opal->opal_v200_num_admin);
 		printf("Number of users = %d\n", opal->opal_v200_num_user);
-		printf("\n\n");
+		printf("\n");
 	}
 }
 
@@ -975,6 +975,7 @@ opal_usage(void)
 static void
 opal_scan(struct dev *iter)
 {
+	while (getchar() != '\n');
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
 		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
@@ -1010,9 +1011,10 @@ opal_init(struct dev *iter)
 			return;
 		}
 		if (spdk_opal_supported(iter->opal_dev)) {
-			printf("Please input the new password for ownership:\n");
+			printf("Please input the new password for ownership:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin, true);
+			printf("\n...\n");
 			if (passwd_p) {
 				ret = spdk_opal_cmd_take_ownership(iter->opal_dev, passwd_p);
 				if (ret) {
@@ -1026,7 +1028,7 @@ opal_init(struct dev *iter)
 					printf("Locking SP activate failure: %d\n", ret);
 					return;
 				}
-				printf("...\n...\nOpal Init Success\n");
+				printf("...\nOpal Init Success\n");
 			} else {
 				printf("Input password invalid. Opal Init failure\n");
 			}
@@ -1066,9 +1068,10 @@ opal_setup_lockingrange(struct dev *iter)
 			return;
 		}
 		if (spdk_opal_supported(iter->opal_dev)) {
-			printf("Please input the password for setting up locking range:\n");
+			printf("Please input the password for setting up locking range:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			printf("\n");
 			if (passwd_p) {
 				printf("Specify locking range id:\n");
 				if (!scanf("%d", &locking_range_id)) {
@@ -1084,6 +1087,7 @@ opal_setup_lockingrange(struct dev *iter)
 				if (!scanf("%ld", &range_start)) {
 					printf("Invalid range start address\n");
 				}
+				while (getchar() != '\n');
 
 				ret = spdk_opal_cmd_setup_locking_range(iter->opal_dev,
 									OPAL_ADMIN1, locking_range_id, range_start, range_length, passwd_p);
@@ -1100,7 +1104,7 @@ opal_setup_lockingrange(struct dev *iter)
 				}
 				info = spdk_opal_get_locking_range_info(iter->opal_dev, locking_range_id);
 
-				printf("locking range ID: %d\n", info->locking_range_id);
+				printf("\nlocking range ID: %d\n", info->locking_range_id);
 				printf("range start: %ld\n", info->range_start);
 				printf("range length: %ld\n", info->range_length);
 				printf("read lock enabled: %d\n", info->read_lock_enabled);
@@ -1137,9 +1141,10 @@ opal_list_locking_ranges(struct dev *iter)
 			return;
 		}
 		if (spdk_opal_supported(iter->opal_dev)) {
-			printf("Please input password:\n");
+			printf("Please input password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			printf("\n");
 			if (passwd_p) {
 				ret = spdk_opal_cmd_get_max_ranges(iter->opal_dev, passwd_p);
 				if (ret) {
@@ -1200,9 +1205,10 @@ opal_new_user_enable(struct dev *iter)
 			return;
 		}
 		if (spdk_opal_supported(iter->opal_dev)) {
-			printf("Please input admin password:\n");
+			printf("Please input admin password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			printf("\n");
 			if (passwd_p) {
 				printf("which user to enable: ");
 				if (!scanf("%d", &user_id)) {
@@ -1217,7 +1223,7 @@ opal_new_user_enable(struct dev *iter)
 					spdk_opal_close(iter->opal_dev);
 					return;
 				}
-				printf("Please set a new password for this user:\n");
+				printf("Please set a new password for this user:");
 				while ((ch = getchar()) != '\n' && ch != EOF);
 				user_pw_p = get_line(user_pw, MAX_PASSWORD_SIZE, stdin, true);
 				if (user_pw_p == NULL) {
@@ -1233,7 +1239,7 @@ opal_new_user_enable(struct dev *iter)
 					return;
 				}
 
-				printf("...\n...\nEnable User Success\n");
+				printf("\n...\n...\nEnable User Success\n");
 			} else {
 				printf("Input password invalid. Enable user failure\n");
 			}
@@ -1268,12 +1274,14 @@ opal_change_password(struct dev *iter)
 				spdk_opal_close(iter->opal_dev);
 				return;
 			}
-			printf("Password:\n");
+			printf("Password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			old_passwd_p = get_line(old_passwd, MAX_PASSWORD_SIZE, stdin, true);
+			printf("\n");
 			if (old_passwd_p) {
 				printf("Please input new password:\n");
 				new_passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin, true);
+				printf("\n");
 				if (new_passwd_p == NULL) {
 					printf("Input password invalid. Change password failure\n");
 					spdk_opal_close(iter->opal_dev);
@@ -1314,9 +1322,10 @@ opal_add_user_to_locking_range(struct dev *iter)
 			return;
 		}
 		if (spdk_opal_supported(iter->opal_dev)) {
-			printf("Please input admin password:\n");
+			printf("Please input admin password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			printf("\n");
 			if (passwd_p) {
 				printf("Specify locking range id:\n");
 				if (!scanf("%d", &locking_range_id)) {
@@ -1331,6 +1340,7 @@ opal_add_user_to_locking_range(struct dev *iter)
 					spdk_opal_close(iter->opal_dev);
 					return;
 				}
+				while (getchar() != '\n');
 
 				ret = spdk_opal_cmd_add_user_to_locking_range(iter->opal_dev, user_id, locking_range_id,
 						OPAL_READONLY,
@@ -1380,9 +1390,10 @@ opal_user_lock_unlock_range(struct dev *iter)
 				return;
 			}
 
-			printf("Please input password:\n");
+			printf("Please input password:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			printf("\n");
 			if (passwd_p) {
 				printf("Specify locking range id:\n");
 				if (!scanf("%d", &locking_range_id)) {
@@ -1409,6 +1420,7 @@ opal_user_lock_unlock_range(struct dev *iter)
 					printf("Invalid options\n");
 					return;
 				}
+				while (getchar() != '\n');
 
 				ret = spdk_opal_cmd_lock_unlock(iter->opal_dev, user_id, state_flag,
 								locking_range_id, passwd_p);
@@ -1436,7 +1448,6 @@ opal_revert_tper(struct dev *iter)
 	int ret;
 	int ch;
 
-
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
 		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
 		if (iter->opal_dev == NULL) {
@@ -1444,9 +1455,11 @@ opal_revert_tper(struct dev *iter)
 		}
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please be noted this operation will erase ALL DATA on this drive\n");
-			printf("Please input password for revert TPer:\n");
+			printf("Please don't ternminate this excecution. Otherwise undefined error may occur\n");
+			printf("Please input password for revert TPer:");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin, true);
+			printf("\n...\n");
 			if (passwd_p) {
 				ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
 				if (ret) {
@@ -1454,7 +1467,7 @@ opal_revert_tper(struct dev *iter)
 					spdk_opal_close(iter->opal_dev);
 					return;
 				}
-				printf("...\n...\nRevert TPer Success\n");
+				printf("...\nRevert TPer Success\n");
 			} else {
 				printf("Input password invalid. Revert TPer failure\n");
 			}
@@ -1524,8 +1537,7 @@ test_opal(void)
 			printf("Invalid option\n");
 		}
 
-		while (getchar() != '\n');
-		printf("press Enter to display Opal cmd menu ...\n");
+		printf("\npress Enter to display Opal cmd menu ...\n");
 		while (getchar() != '\n');
 		opal_usage();
 	}
