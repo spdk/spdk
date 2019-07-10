@@ -362,7 +362,7 @@ def add_portal_group(client, portals, tag):
     """Add a portal group.
 
     Args:
-        portals: List of portals, e.g. [{'host': ip, 'port': port}] or [{'host': ip, 'port': port, 'cpumask': cpumask}]
+        portals: List of portals, e.g. [{'host': ip, 'port': port}]
         tag: Initiator group tag (unique, integer > 0)
 
     Returns:
