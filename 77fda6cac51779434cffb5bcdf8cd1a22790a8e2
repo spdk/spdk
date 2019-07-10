@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e88b95f8_2f76eb97",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-10T07:04:08Z",
+      "side": 1,
+      "message": "Move this to ftl/common.sh ?",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 4
+      },
+      "revId": "77fda6cac51779434cffb5bcdf8cd1a22790a8e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
