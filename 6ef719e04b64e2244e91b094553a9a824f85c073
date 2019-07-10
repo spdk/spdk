@@ -25,6 +25,28 @@
     {
       "robotId": "curl-test000042",
       "robotRunId": "curl-test000042-run0",
+      "url": "https://gerrit.async.com.br/Documentation/rest-api-changes.html",
+      "fixSuggestions": [],
+      "key": {
+        "uuid": "efc1c800_fe8bc4f2",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 758,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T15:50:24Z",
+      "side": 1,
+      "message": "more testing",
+      "tag": "rest",
+      "revId": "6ef719e04b64e2244e91b094553a9a824f85c073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "robotId": "curl-test000042",
+      "robotRunId": "curl-test000042-run0",
       "fixSuggestions": [],
       "key": {
         "uuid": "8b32e64c_c4802f75",
