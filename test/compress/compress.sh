@@ -8,6 +8,7 @@ plugindir=$rootdir/examples/bdev/fio_plugin
 rpc_py="$rootdir/scripts/rpc.py"
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
+source "$rootdir/test/nvmf/common.sh"
 
 function compress_err_cleanup() {
 	rm -rf /tmp/pmem
@@ -62,11 +63,42 @@ $rpc_py set_compress_pmd -p 2
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
 waitforbdev $compress_bdev
 $rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
-
-# now cleanup the vols, deleting the compression vol also deletes the pmem file
-$rpc_py delete_compress_bdev COMP_lvs0/lv0
-$rpc_py destroy_lvol_store -l lvs0
-
+if [ $RUN_NIGHTLY -eq 0 ]; then
+	# now cleanup the vols, deleting the compression vol also deletes the pmem file
+	$rpc_py delete_compress_bdev COMP_lvs0/lv0
+	$rpc_py destroy_lvol_store -l lvs0
+fi
 trap - SIGINT SIGTERM EXIT
 killprocess $bdevperf_pid
+
+# run perf with nvmf using compress bdev for nightly test only
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	export TEST_TRANSPORT=tcp && nvmftestinit
+	nvmfappstart "-m 0x7"
+	trap "nvmftestfini; compress_err_cleanup; exit 1" SIGINT SIGTERM EXIT
+
+	# Create an NVMe-oF subsystem and add compress bdev as a namespace
+	$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
+	$rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
+	waitforbdev $compress_bdev
+	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 $compress_bdev
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+
+	# Start random read writes in the background
+	$rootdir/examples/nvme/perf/perf -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q $qd -s 512 -w randrw -t $runtime -c 0x18 -M 50 &
+	perf_pid=$!
+
+	# Wait for I/O to complete
+	trap "killprocess $perf_pid; compress_err_cleanup; exit 1" SIGINT SIGTERM EXIT
+	wait $perf_pid
+
+	# now cleanup the vols, deleting the compression vol also deletes the pmem file
+	$rpc_py delete_compress_bdev COMP_lvs0/lv0
+	$rpc_py destroy_lvol_store -l lvs0
+
+	trap - SIGINT SIGTERM EXIT
+	nvmftestfini
+fi
+
 timing_exit compress_test
