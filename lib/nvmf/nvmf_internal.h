@@ -310,10 +310,12 @@ struct spdk_nvmf_ctrlr {
 	TAILQ_HEAD(log_page_head, spdk_nvmf_reservation_log) log_head;
 
 	/* Time to trigger keep-alive--poller_time = now_tick + period */
-	uint64_t last_keep_alive_tick;
-	struct spdk_poller			*keep_alive_poller;
+	uint64_t			last_keep_alive_tick;
+	struct spdk_poller		*keep_alive_poller;
 
-	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
+	bool				dif_insert_or_strip;
+
+	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };
 
 struct spdk_nvmf_subsystem {
