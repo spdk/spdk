@@ -63,6 +63,37 @@ enum controller_display_model {
 };
 
 static int
+secure_input(struct termios *default_attr)
+{
+	struct termios new_attr;
+	int ret;
+
+	ret = tcgetattr(STDIN_FILENO, default_attr);
+	if (ret) {
+		goto err;
+	}
+
+	new_attr = *default_attr;
+	new_attr.c_lflag &= ~ECHO;
+	ret = tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_attr);
+	if (ret) {
+		goto err;
+	}
+	return 0;
+
+err:
+	printf("Secure input failed\n");
+	return ret;
+}
+
+static int
+close_secure_input(struct termios *default_attr)
+{
+	return tcsetattr(STDIN_FILENO, TCSAFLUSH, default_attr);
+}
+
+
+static int
 cmp_devs(const void *ap, const void *bp)
 {
 	const struct dev *a = ap, *b = bp;
@@ -976,6 +1007,7 @@ opal_init(struct dev *iter)
 	char *passwd_p;
 	int ret;
 	int ch;
+	struct termios attr;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
 		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
@@ -985,7 +1017,14 @@ opal_init(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input the new password for ownership:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = getpass(new_passwd);
+			ret = secure_input(&attr);
+			passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin);
+			ret += close_secure_input(&attr);
+			if (ret) {
+				spdk_opal_close(iter->opal_dev);
+				return;
+			}
+
 			if (passwd_p) {
 				ret = spdk_opal_cmd_take_ownership(iter->opal_dev, passwd_p);
 				if (ret) {
@@ -1034,6 +1073,7 @@ opal_setup_lockingrange(struct dev *iter)
 	struct spdk_opal_locking_range_info *info;
 	int state;
 	enum spdk_opal_lock_state state_flag;
+	struct termios attr;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
 		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
@@ -1043,7 +1083,13 @@ opal_setup_lockingrange(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input the password for setting up locking range:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = getpass(passwd);
+			ret = secure_input(&attr);
+			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
+			ret += close_secure_input(&attr);
+			if (ret) {
+				spdk_opal_close(iter->opal_dev);
+				return;
+			}
 			if (passwd_p) {
 				ret = spdk_opal_cmd_lock_unlock(iter->opal_dev, OPAL_ADMIN1, OPAL_READWRITE,
 								OPAL_LOCKING_RANGE_GLOBAL, passwd_p);
@@ -1138,6 +1184,7 @@ opal_list_locking_ranges(struct dev *iter)
 	int max_ranges;
 	int i;
 	struct spdk_opal_locking_range_info *info;
+	struct termios attr;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
 		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
@@ -1147,7 +1194,13 @@ opal_list_locking_ranges(struct dev *iter)
 		if (spdk_opal_supported(iter->opal_dev)) {
 			printf("Please input password:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = getpass(passwd);
+			ret = secure_input(&attr);
+			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
+			ret += close_secure_input(&attr);
+			if (ret) {
+				spdk_opal_close(iter->opal_dev);
+				return;
+			}
 			if (passwd_p) {
 				ret = spdk_opal_cmd_get_max_ranges(iter->opal_dev, passwd_p);
 				if (ret) {
@@ -1198,6 +1251,7 @@ opal_revert_tper(struct dev *iter)
 	char *passwd_p;
 	int ret;
 	int ch;
+	struct termios attr;
 
 	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
 		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
@@ -1208,7 +1262,13 @@ opal_revert_tper(struct dev *iter)
 			printf("Please be noted this operation will erase ALL DATA on this drive\n");
 			printf("Please input password for revert TPer:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
-			passwd_p = getpass(passwd);
+			ret = secure_input(&attr);
+			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
+			ret += close_secure_input(&attr);
+			if (ret) {
+				spdk_opal_close(iter->opal_dev);
+				return;
+			}
 			if (passwd_p) {
 				ret = spdk_opal_cmd_revert_tper(iter->opal_dev, passwd_p);
 				if (ret) {
