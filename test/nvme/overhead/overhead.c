@@ -183,7 +183,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	/* Only register the first namespace. */
 	if (num_ns < 1) {
 		fprintf(stderr, "controller found with no namespaces\n");
-		exit(1);
+		return;
 	}
 
 	register_ns(ctrlr, spdk_nvme_ctrlr_get_ns(ctrlr, 1));
