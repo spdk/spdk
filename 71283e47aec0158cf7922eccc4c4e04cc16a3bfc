@@ -34,6 +34,24 @@
       "revId": "71283e47aec0158cf7922eccc4c4e04cc16a3bfc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "894579d4_90cd7e6f",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1552,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-10T12:19:13Z",
+      "side": 1,
+      "message": "This is tough because it\u0027s the first time we have a situation where we want to emulate a command (identify) differently depending on which transport the host connected through. There\u0027s two approaches we could be taking. The first is what you\u0027ve done - put a parameter on the transport and check that in the generic layer when we emulate the command. The second is to snoop the command completions in the transport and then \"adjust\" the values. I think I prefer the approach you\u0027ve taken here, but I have one suggestion.\n\nCan you add a flag to the spdk_nvmf_ctrlr that indicates whether it is doing automatic dif insert/strip? Then you can pass the ctrlr pointer into spdk_nvmf_bdev_ctrlr_identify_ns and use that. My main concern is that we may want to be able to selectively turn on and off dif insert/strip per-controller at some point (maybe a particular host doesn\u0027t have suitable initiator code to support it, but we still want to let them connect).",
+      "parentUuid": "df7bdc50_09799d84",
+      "revId": "71283e47aec0158cf7922eccc4c4e04cc16a3bfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
