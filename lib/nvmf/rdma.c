@@ -2678,6 +2678,12 @@ static void nvmf_rdma_destroy_drained_qpair(void *ctx)
 	}
 
 	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
+
+	/* Qpair will be destroyed after nvmf layer closes this qpair */
+	if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ERROR) {
+		return;
+	}
+
 	spdk_nvmf_rdma_qpair_destroy(rqpair);
 }
 
