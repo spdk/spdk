@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f152a14c_9f4e777a",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1009,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-10T07:55:37Z",
+      "side": 1,
+      "message": "struct termios attr \u003d {};",
+      "revId": "290f6b42a65fe8827604b94f88e4c862695d13a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e345356d_5ec244af",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1019,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-10T07:55:37Z",
+      "side": 1,
+      "message": "you need to check ret value after line 1019.",
+      "revId": "290f6b42a65fe8827604b94f88e4c862695d13a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "600f6b6c_bfad27d1",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1086,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-10T07:55:37Z",
+      "side": 1,
+      "message": "can you put secure_input() and close_secure_input() into the function get_line() ?",
+      "revId": "290f6b42a65fe8827604b94f88e4c862695d13a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
