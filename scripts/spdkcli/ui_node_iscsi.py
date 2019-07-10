@@ -298,7 +298,7 @@ class UIPortalGroups(UINode):
         """Add a portal group.
 
         Args:
-           portals: List of portals e.g. ip:port@cpumask ip2:port2
+           portals: List of portals e.g. ip:port ip2:port2
            tag: Portal group tag (unique, integer > 0)
         """
         portals = []
@@ -313,7 +313,7 @@ class UIPortalGroups(UINode):
             host, port = host.rsplit(":", -1)
             portals.append({'host': host, 'port': port})
             if cpumask:
-                portals[-1]['cpumask'] = cpumask
+                print("WARNING: Specifying a CPU mask for portal groups is no longer supported. Ignoring.")
         tag = self.ui_eval_param(tag, "number", None)
         self.get_root().construct_portal_group(tag=tag, portals=portals)
 
@@ -355,16 +355,16 @@ class UIPortalGroup(UINode):
     def refresh(self):
         self._children = set([])
         for portal in self.pg.portals:
-            UIPortal(portal['host'], portal['port'], portal['cpumask'], self)
+            UIPortal(portal['host'], portal['port'], self)
 
     def summary(self):
         return "Portals: %d" % len(self.pg.portals), None
 
 
 class UIPortal(UINode):
-    def __init__(self, host, port, cpumask, parent):
-        UINode.__init__(self, "host=%s, port=%s, cpumask=%s" % (
-            host, port, cpumask), parent)
+    def __init__(self, host, port, parent):
+        UINode.__init__(self, "host=%s, port=%s" % (
+            host, port), parent)
         self.refresh()
 
 
