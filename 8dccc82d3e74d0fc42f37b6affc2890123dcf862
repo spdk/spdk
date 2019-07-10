@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43202cc1_3761de07",
+        "filename": "test/ftl/dirty_shutdown.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-10T12:29:58Z",
+      "side": 1,
+      "message": "It will be good to have also test that kill ftl bdev with working IO thread.",
+      "revId": "8dccc82d3e74d0fc42f37b6affc2890123dcf862",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
