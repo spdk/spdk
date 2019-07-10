@@ -96,6 +96,11 @@ remapped during I/O processing and DIF reference tag is remapped accordingly.
 
 ### nvme
 
+Added an optional parameter `--io-queue-requests` to RPC `set_bdev_nvme_options`, which
+can be used to change the number of requests allocated for one NVMe I/O queue.  For
+very big I/O size, e.g. 128MiB, with this option user will not get an error due to
+limited requests in NVMe driver layer.
+
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
 previously attached controller.
 
