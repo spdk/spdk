@@ -1182,6 +1182,12 @@ test_get_dif_ctx(void)
 
 	ns.bdev = &bdev;
 
+	ctrlr.dif_insert_or_strip = false;
+
+	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
+	CU_ASSERT(ret == false);
+
+	ctrlr.dif_insert_or_strip = true;
 	qpair.state = SPDK_NVMF_QPAIR_UNINITIALIZED;
 
 	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);

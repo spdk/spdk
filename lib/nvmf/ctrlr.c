@@ -2652,6 +2652,11 @@ bool
 spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	if (spdk_likely(ctrlr == NULL || !ctrlr->dif_insert_or_strip)) {
+		return false;
+	}
 
 	if (spdk_unlikely(qpair->state != SPDK_NVMF_QPAIR_ACTIVE)) {
 		return false;
@@ -2665,5 +2670,5 @@ spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx
 		return false;
 	}
 
-	return spdk_nvmf_ctrlr_get_dif_ctx(qpair->ctrlr, &req->cmd->nvme_cmd, dif_ctx);
+	return spdk_nvmf_ctrlr_get_dif_ctx(ctrlr, &req->cmd->nvme_cmd, dif_ctx);
 }
