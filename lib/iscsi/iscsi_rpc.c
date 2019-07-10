@@ -799,9 +799,13 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 	for (i = 0; i < req.portal_list.num_portals; i++) {
+		if (req.portal_list.portals[i].cpumask) {
+			SPDK_WARNLOG("A portal was specified with a CPU mask which is no longer supported.\n");
+			SPDK_WARNLOG("Ignoring the cpumask.\n");
+		}
+
 		portal = spdk_iscsi_portal_create(req.portal_list.portals[i].host,
-						  req.portal_list.portals[i].port,
-						  req.portal_list.portals[i].cpumask);
+						  req.portal_list.portals[i].port);
 		if (portal == NULL) {
 			SPDK_ERRLOG("portal_create failed\n");
 			goto out;

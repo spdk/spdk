@@ -2,6 +2,11 @@
 
 ## v19.10: (Upcoming Release)
 
+### iSCSI
+
+Portals may no longer be associated with a cpumask. The scheduling of
+connections is moving to a more dynamic model.
+
 ## v19.07:
 
 ### ftl
