@@ -1,0 +1,64 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e08fdf8b_be66003f",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T15:45:05Z",
+      "side": 1,
+      "message": "[nit] test",
+      "tag": "rest",
+      "revId": "6ef719e04b64e2244e91b094553a9a824f85c073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5c9ad87_0687e0ed",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 832,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T15:45:05Z",
+      "side": 1,
+      "message": "test range",
+      "range": {
+        "startLine": 830,
+        "startChar": 0,
+        "endLine": 832,
+        "endChar": 0
+      },
+      "tag": "rest",
+      "revId": "6ef719e04b64e2244e91b094553a9a824f85c073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1c217f6_bd576661",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-10T15:45:05Z",
+      "side": 1,
+      "message": "test2",
+      "tag": "rest",
+      "revId": "6ef719e04b64e2244e91b094553a9a824f85c073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
