@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c557630_2d8373af",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-10T08:54:35Z",
+      "side": 1,
+      "message": "I don\u0027t understand why you need to track so many things to ensure the band can be erased. Isn\u0027t it as simple as saying it has no valid data? You should only be marking the data as invalid once the write to whatever other band it went to is complete, so I\u0027m not getting where the extra complexity is coming from.\n\nIf you keep the counters on the band that\u0027s the source of the data being moved instead of on the target, can\u0027t you eliminate the bitmap?",
+      "revId": "7c4c51b03a673b814183b7123689f35726172af4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
