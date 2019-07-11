@@ -172,36 +172,28 @@ void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn);
  *
  * \param tgt The target to create a poll group.
  *
- * \return a poll group on success, or NULL on failure.
+ * \return 0 on success, error code on failure
  */
-struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt);
-
-/**
- * Get optimal nvmf poll group for the qpair.
- *
- * \param qpair Requested qpair
- *
- * \return a poll group on success, or NULL on failure.
- */
-struct spdk_nvmf_poll_group *spdk_nvmf_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair);
+int spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt);
 
 /**
  * Destroy a poll group.
  *
- * \param group The poll group to destroy.
+ * \param tgt A pointer to spdk tgt which poll group will be destroyed.
+ * \param group A pointer to group to bedestroyed.
  */
-void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
+void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_poll_group *group);
 
 /**
- * Add the given qpair to the poll group.
+ * Select a poll group and add the given qpair to the poll group.
  *
- * \param group The group to add qpair to.
- * \param qpair The qpair to add.
+ * \param tgt a pointer to nvmf target
+ * \param qpair The qpair to assign a poll group to.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
-			     struct spdk_nvmf_qpair *qpair);
+int spdk_nvmf_tgt_schedule_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair);
+
 
 typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
 

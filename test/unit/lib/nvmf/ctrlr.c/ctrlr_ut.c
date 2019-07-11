@@ -53,7 +53,7 @@ DEFINE_STUB(spdk_nvmf_tgt_find_subsystem,
 	    NULL);
 
 DEFINE_STUB(spdk_nvmf_poll_group_create,
-	    struct spdk_nvmf_poll_group *,
+	    int,
 	    (struct spdk_nvmf_tgt *tgt),
 	    NULL);
 
@@ -369,7 +369,7 @@ test_connect(void)
 	req.rsp = &rsp;
 
 	MOCK_SET(spdk_nvmf_tgt_find_subsystem, &subsystem);
-	MOCK_SET(spdk_nvmf_poll_group_create, &group);
+	MOCK_SET(spdk_nvmf_poll_group_create, 0);
 
 	/* Valid admin connect command */
 	memset(&rsp, 0, sizeof(rsp));
