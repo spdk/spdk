@@ -1,4 +1,4 @@
-/*-
+/*
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation.
@@ -208,23 +208,22 @@ _get_total_chunks(uint64_t vol_size, uint64_t chunk_size)
 	return num_chunks;
 }
 
+static inline uint32_t
+_reduce_vol_get_chunk_struct_size(uint64_t backing_io_units_per_chunk)
+{
+	return sizeof(struct spdk_reduce_chunk_map) + sizeof(uint64_t) * backing_io_units_per_chunk;
+}
+
 static uint64_t
 _get_pm_total_chunks_size(uint64_t vol_size, uint64_t chunk_size, uint64_t backing_io_unit_size)
 {
-	uint64_t io_units_per_chunk, num_chunks, total_chunks_size;
+	uint64_t num_chunks, total_chunks_size;
 
 	num_chunks = _get_total_chunks(vol_size, chunk_size);
-	io_units_per_chunk = chunk_size / backing_io_unit_size;
-	total_chunks_size = num_chunks * io_units_per_chunk * sizeof(uint64_t);
+	total_chunks_size = num_chunks * _reduce_vol_get_chunk_struct_size(backing_io_unit_size);
 
 	return spdk_divide_round_up(total_chunks_size, REDUCE_PM_SIZE_ALIGNMENT) *
 	       REDUCE_PM_SIZE_ALIGNMENT;
-}
-
-static inline uint32_t
-_reduce_vol_get_chunk_struct_size(struct spdk_reduce_vol *vol)
-{
-	return sizeof(struct spdk_reduce_chunk_map) + sizeof(uint64_t) * vol->backing_io_units_per_chunk;
 }
 
 static struct spdk_reduce_chunk_map *
@@ -235,7 +234,8 @@ _reduce_vol_get_chunk_map(struct spdk_reduce_vol *vol, uint64_t chunk_map_index)
 	assert(chunk_map_index < _get_total_chunks(vol->params.vol_size, vol->params.chunk_size));
 
 	chunk_map_addr = (uintptr_t)vol->pm_chunk_maps;
-	chunk_map_addr += chunk_map_index * _reduce_vol_get_chunk_struct_size(vol);
+	chunk_map_addr += chunk_map_index *
+			  _reduce_vol_get_chunk_struct_size(vol->backing_io_units_per_chunk);
 
 	return (struct spdk_reduce_chunk_map *)chunk_map_addr;
 }
@@ -979,7 +979,8 @@ _write_write_done(void *_req, int reduce_errno)
 	 */
 
 	/* Persist the new chunk map.  This must be persisted before we update the logical map. */
-	_reduce_persist(vol, req->chunk, _reduce_vol_get_chunk_struct_size(vol));
+	_reduce_persist(vol, req->chunk,
+			_reduce_vol_get_chunk_struct_size(vol->backing_io_units_per_chunk));
 
 	vol->pm_logical_map[req->logical_map_index] = req->chunk_map_index;
 
@@ -1526,7 +1527,7 @@ void spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol)
 	ttl_chunk_sz = _get_pm_total_chunks_size(vol->params.vol_size, vol->params.chunk_size,
 			vol->params.backing_io_unit_size);
 	SPDK_NOTICELOG("\ttotal_chunks_size = 0x%" PRIx64 "\n", ttl_chunk_sz);
-	struct_size = _reduce_vol_get_chunk_struct_size(vol);
+	struct_size = _reduce_vol_get_chunk_struct_size(vol->backing_io_units_per_chunk);
 	SPDK_NOTICELOG("\tchunk_struct_size = 0x%x\n", struct_size);
 
 	SPDK_NOTICELOG("pmem info:\n");
