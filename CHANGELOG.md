@@ -19,6 +19,11 @@ connections is moving to a more dynamic model.
 The `bdev_delay_update_latency` has been added to allow users to update
 a latency value for a given delay bdev.
 
+### nvmf
+
+The `spdk_nvmf_tgt_create` function has been extended to allow users to pass
+a pointer to NVMF configuration
+
 ## v19.07:
 
 ### ftl
