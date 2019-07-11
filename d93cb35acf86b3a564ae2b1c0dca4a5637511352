@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44e2d818_e9460fc6",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-11T12:01:12Z",
+      "side": 1,
+      "message": "unrelated change but it\u0027s fine",
+      "revId": "d93cb35acf86b3a564ae2b1c0dca4a5637511352",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
