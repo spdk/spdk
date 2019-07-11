@@ -1300,6 +1300,9 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	rqpair->cm_id = event->id;
 	rqpair->listen_id = event->listen_id;
 	rqpair->qpair.transport = transport;
+	/* use qid from the private data to determine the qpair type
+	   qid will be set to the appropriate value when the controller is created */
+	rqpair->qpair.qid = private_data->qid;
 
 	event->id->context = &rqpair->qpair;
 
@@ -3047,6 +3050,30 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 	return &rgroup->group;
 }
 
+static struct spdk_nvmf_transport_poll_group *
+spdk_nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup;
+	struct spdk_nvmf_poll_group *group;
+
+	if (qpair->qid == 0) {
+		group = spdk_nvmf_get_next_pg(qpair->transport->tgt, CONNECT_SCHED_POLL_GROUP_ADMIN);
+	} else {
+		group = spdk_nvmf_get_next_pg(qpair->transport->tgt, CONNECT_SCHED_POLL_GROUP_IO);
+	}
+
+	if (group != NULL) {
+		TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+			//find a transport poll group which serves the same kind of transport as the qpair
+			if (tgroup->transport == qpair->transport) {
+				return tgroup;
+			}
+		}
+	}
+
+	return NULL;
+}
+
 static void
 spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
@@ -3650,6 +3677,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.listener_discover = spdk_nvmf_rdma_discover,
 
 	.poll_group_create = spdk_nvmf_rdma_poll_group_create,
+	.get_optimal_poll_group = spdk_nvmf_rdma_get_optimal_poll_group,
 	.poll_group_destroy = spdk_nvmf_rdma_poll_group_destroy,
 	.poll_group_add = spdk_nvmf_rdma_poll_group_add,
 	.poll_group_poll = spdk_nvmf_rdma_poll_group_poll,
