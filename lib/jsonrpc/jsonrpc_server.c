@@ -177,6 +177,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *js
 	request->recv_buffer = malloc(len + 1);
 	if (request->recv_buffer == NULL) {
 		SPDK_ERRLOG("Failed to allocate buffer to copy request (%zu bytes)\n", len + 1);
+		skip_response(request);
 		spdk_jsonrpc_free_request(request);
 		return -1;
 	}
@@ -190,6 +191,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *js
 		if (request->values == NULL) {
 			SPDK_ERRLOG("Failed to allocate buffer for JSON values (%zu bytes)\n",
 				    request->values_cnt * sizeof(request->values[0]));
+			skip_response(request);
 			spdk_jsonrpc_free_request(request);
 			return -1;
 		}
