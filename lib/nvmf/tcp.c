@@ -926,8 +926,12 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 	int i;
 	struct spdk_nvmf_tcp_req *tcp_req;
 	struct spdk_nvmf_transport *transport = tqpair->qpair.transport;
-	struct spdk_nvmf_tcp_transport *ttransport;
-	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+	uint32_t in_capsule_data_size;
+
+	in_capsule_data_size = transport->opts.in_capsule_data_size;
+	if (transport->opts.dif_insert_or_strip) {
+		in_capsule_data_size = SPDK_BDEV_BUF_SIZE_WITH_MD(in_capsule_data_size);
+	}
 
 	if (!tqpair->qpair.sq_head_max) {
 		tqpair->req = calloc(1, sizeof(*tqpair->req));
@@ -936,8 +940,8 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 			return -1;
 		}
 
-		if (transport->opts.in_capsule_data_size) {
-			tqpair->buf = spdk_dma_zmalloc(ttransport->transport.opts.in_capsule_data_size, 0x1000, NULL);
+		if (in_capsule_data_size) {
+			tqpair->buf = spdk_dma_zmalloc(in_capsule_data_size, 0x1000, NULL);
 			if (!tqpair->buf) {
 				SPDK_ERRLOG("Unable to allocate buf on tqpair=%p.\n", tqpair);
 				return -1;
@@ -978,9 +982,8 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 			return -1;
 		}
 
-		if (transport->opts.in_capsule_data_size) {
-			tqpair->bufs = spdk_dma_zmalloc(size * transport->opts.in_capsule_data_size,
-							0x1000, NULL);
+		if (in_capsule_data_size) {
+			tqpair->bufs = spdk_dma_zmalloc(in_capsule_data_size, 0x1000, NULL);
 			if (!tqpair->bufs) {
 				SPDK_ERRLOG("Unable to allocate bufs on tqpair=%p.\n", tqpair);
 				return -1;
@@ -995,7 +998,7 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 
 			/* Set up memory to receive commands */
 			if (tqpair->bufs) {
-				tcp_req->buf = (void *)((uintptr_t)tqpair->bufs + (i * transport->opts.in_capsule_data_size));
+				tcp_req->buf = (void *)((uintptr_t)tqpair->bufs + (i * in_capsule_data_size));
 			}
 
 			/* Set the cmdn and rsp */
