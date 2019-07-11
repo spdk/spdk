@@ -969,7 +969,78 @@ nvme_qpair_free_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 	STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
 }
 
-void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);
+static inline void
+nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child)
+{
+	assert(parent != NULL);
+	assert(child != NULL);
+	assert(child->parent == parent);
+	assert(parent->num_children != 0);
+
+	parent->num_children--;
+	TAILQ_REMOVE(&parent->children, child, child_tailq);
+}
+
+static inline void
+nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_request *child = child_arg;
+	struct nvme_request *parent = child->parent;
+
+	nvme_request_remove_child(parent, child);
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		memcpy(&parent->parent_status, cpl, sizeof(*cpl));
+	}
+
+	if (parent->num_children == 0) {
+		nvme_complete_request(parent->cb_fn, parent->cb_arg, parent->qpair,
+				      parent, &parent->parent_status);
+		nvme_free_request(parent);
+	}
+}
+
+static inline void
+nvme_request_add_child(struct nvme_request *parent, struct nvme_request *child)
+{
+	assert(parent->num_children != UINT16_MAX);
+
+	if (parent->num_children == 0) {
+		/*
+		 * Defer initialization of the children TAILQ since it falls
+		 *  on a separate cacheline.  This ensures we do not touch this
+		 *  cacheline except on request splitting cases, which are
+		 *  relatively rare.
+		 */
+		TAILQ_INIT(&parent->children);
+		parent->parent = NULL;
+		memset(&parent->parent_status, 0, sizeof(struct spdk_nvme_cpl));
+	}
+
+	parent->num_children++;
+	TAILQ_INSERT_TAIL(&parent->children, child, child_tailq);
+	child->parent = parent;
+	child->cb_fn = nvme_cb_complete_child;
+	child->cb_arg = child;
+}
+
+static inline void
+nvme_request_free_children(struct nvme_request *req)
+{
+	struct nvme_request *child, *tmp;
+
+	if (req->num_children == 0) {
+		return;
+	}
+
+	/* free all child nvme_request */
+	TAILQ_FOREACH_SAFE(child, &req->children, child_tailq, tmp) {
+		nvme_request_remove_child(req, child);
+		nvme_request_free_children(child);
+		nvme_free_request(child);
+	}
+}
+
 int	nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 				   struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick);
 uint64_t nvme_get_quirks(const struct spdk_pci_id *id);
