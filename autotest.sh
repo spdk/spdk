@@ -154,6 +154,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test suite test/bdev/blockdev.sh
+		run_test suite test/bdev/bdev_nvme.sh
 		if [[ $RUN_NIGHTLY -eq 1 ]]; then
 			run_test suite test/bdev/bdev_raid.sh
 		fi
