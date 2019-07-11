@@ -71,7 +71,28 @@ enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_ERROR,
 };
 
+enum spdk_nvmf_connect_sched_poll_group_type {
+	CONNECT_SCHED_POLL_GROUP_ANY = 0,
+	CONNECT_SCHED_POLL_GROUP_ADMIN,
+	CONNECT_SCHED_POLL_GROUP_IO,
+};
+
 typedef void (*spdk_nvmf_state_change_done)(void *cb_arg, int status);
+
+struct spdk_nvmf_tgt_host_trid {
+	struct spdk_nvme_transport_id       host_trid;
+	struct spdk_nvmf_poll_group          *pg;
+	uint32_t                            ref;
+	TAILQ_ENTRY(spdk_nvmf_tgt_host_trid)     link;
+};
+
+struct spdk_nvmf_tgt_conn_sched {
+	struct spdk_nvmf_poll_group *next_poll_group_any;
+	struct spdk_nvmf_poll_group *next_poll_group_admin;
+	struct spdk_nvmf_poll_group *next_poll_group_io;
+	/* List of host trids that are connected to the target */
+	TAILQ_HEAD(, spdk_nvmf_tgt_host_trid) host_trids;
+};
 
 struct spdk_nvmf_tgt {
 	uint64_t				discovery_genctr;
@@ -87,7 +108,12 @@ struct spdk_nvmf_tgt {
 
 	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
 	void					*destroy_cb_arg;
+
 	const struct spdk_nvmf_tgt_conf		*conf;
+
+	struct spdk_nvmf_tgt_conn_sched		conn_sched;
+
+	TAILQ_HEAD(, spdk_nvmf_poll_group)	poll_groups;
 };
 
 struct spdk_nvmf_host {
@@ -173,6 +199,8 @@ struct spdk_nvmf_poll_group {
 
 	/* All of the queue pairs that belong to this poll group */
 	TAILQ_HEAD(, spdk_nvmf_qpair)			qpairs;
+
+	TAILQ_ENTRY(spdk_nvmf_poll_group)			link;
 
 	/* Statistics */
 	struct spdk_nvmf_poll_group_stat		stat;
@@ -417,6 +445,9 @@ void spdk_nvmf_ns_reservation_request(void *ctx);
 void spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 		struct spdk_nvmf_ns *ns,
 		enum spdk_nvme_reservation_notification_log_page_type type);
+struct spdk_nvmf_poll_group *
+spdk_nvmf_get_next_pg(struct spdk_nvmf_tgt *tgt,
+		      enum spdk_nvmf_connect_sched_poll_group_type group_type);
 
 /*
  * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.
