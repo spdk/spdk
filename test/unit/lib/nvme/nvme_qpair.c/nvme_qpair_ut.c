@@ -49,14 +49,6 @@ struct nvme_driver _g_nvme_driver = {
 };
 
 void
-nvme_request_remove_child(struct nvme_request *parent,
-			  struct nvme_request *child)
-{
-	parent->num_children--;
-	TAILQ_REMOVE(&parent->children, child, child_tailq);
-}
-
-void
 nvme_transport_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 }
