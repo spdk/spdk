@@ -5,6 +5,28 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
+rpc_py=$rootdir/scripts/rpc.py
+
+function get_number_of_namespaces {
+	declare -i count=0
+	lsblk -d --output NAME | grep "^nvme"
+	nvme_devs=$(lsblk -d --output NAME | grep "^nvme") || true
+	if [ -z "$nvme_devs" ]; then
+		return
+	fi
+	for dev in $nvme_devs; do
+		link_name=$(readlink /sys/block/$dev/device/device) || true
+		if [ -z "$link_name" ]; then
+			link_name=$(readlink /sys/block/$dev/device)
+		fi
+		bdf=$(basename "$link_name")
+		if [ "$bdf" = "$1" ]; then
+			count=$((count+1))
+		fi
+	done
+	eval "$2=$count"
+}
+
 function get_nvme_name_from_bdf {
 	blkname=()
 
@@ -161,6 +183,60 @@ if [ $(uname) = Linux ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi
+
+sleep 1
+$rootdir/scripts/setup.sh reset
+sleep 3
+
+for bdf in $(iter_pci_class_code 01 08 02); do
+        bdf_str=$(echo $bdf | tr -d . | tr -d :)
+        get_number_of_namespaces $bdf ns_count
+        declare -i ns_count_$bdf_str=$ns_count
+done
+
+$rootdir/scripts/setup.sh
+
+$testdir/../../app/spdk_tgt/spdk_tgt &
+spdk_pid=$!
+echo $spdk_pid > $BASE_DIR/spdk.pid
+waitforlisten $spdk_pid
+
+for bdf in $(iter_pci_class_code 01 08 02); do
+        $rpc_py construct_nvme_bdev -t PCIe -a $bdf -b $bdf
+
+        # Check if controller has been created successfully
+        if [ -z "$($rpc_py get_nvme_controllers | grep "$bdf")" ]; then
+                exit 1
+        fi
+
+        # Check if number of created bdevs is the same as number of existing namespaces
+        bdf_str=$(echo $bdf | tr -d . | tr -d :)
+        var="ns_count_$bdf_str"
+        namespaces=$($rpc_py get_bdevs | grep "$bdf" | grep name | wc -l)
+        if [ $namespaces != ${!var} ]; then
+                exit 1
+        fi
+
+        # Check if each namespace/bdev details is propagated correctly for NVMe with multiple namespaces
+        if [ $namespaces -gt 1 ]; then
+                declare -i i=1
+
+                while [ $i -lt $namespaces ]; do
+                        ns1=$($rpc_py get_bdevs -b ${bdf}n${i} | grep -v \"id\" | grep -v \"name\": | grep -v \"uuid\": | jq -r '.[]')
+                        ns2=$($rpc_py get_bdevs -b ${bdf}n${i+1} | grep -v \"id\" | grep -v \"name\": | grep -v \"uuid\": | jq -r '.[]')
+                        if [ "$ns1" != "$ns2" ]; then
+                                exit 1
+                        fi
+
+                        i=$i+1
+                done
+        fi
+done
+
+if pkill -F $BASE_DIR/spdk.pid; then
+    sleep 1
+fi
+rm $BASE_DIR/spdk.pid || true
 
 if [ -d /usr/src/fio ]; then
 	timing_enter fio_plugin
