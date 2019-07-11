@@ -22,6 +22,30 @@
       "revId": "110037c22189273223c8747b6303e51d210f89e6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9276d685_33b404a9",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 701,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-11T14:14:11Z",
+      "side": 1,
+      "message": "I think we could get rid of this allocation altogether and just use the memory retrieved from the pool.\n\nFor some of the other allocations (especially the write buffer) it makes sense to explicitly require the buffers to be aligned to cache line.",
+      "parentUuid": "fcbbbc7a_a1f5143a",
+      "range": {
+        "startLine": 701,
+        "startChar": 9,
+        "endLine": 701,
+        "endChar": 35
+      },
+      "revId": "110037c22189273223c8747b6303e51d210f89e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
