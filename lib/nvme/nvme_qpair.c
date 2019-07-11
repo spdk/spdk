@@ -546,11 +546,6 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	bool			child_req_failed = false;
 
-	if (ctrlr->is_failed) {
-		nvme_free_request(req);
-		return -ENXIO;
-	}
-
 	nvme_qpair_check_enabled(qpair);
 
 	if (req->num_children) {
@@ -559,15 +554,26 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		 * request itself, since the parent is the original unsplit request.
 		 */
 		TAILQ_FOREACH_SAFE(child_req, &req->children, child_tailq, tmp) {
-			if (!child_req_failed) {
+			if (spdk_likely(!child_req_failed)) {
 				rc = nvme_qpair_submit_request(qpair, child_req);
-				if (rc != 0) {
+				if (spdk_unlikely(rc != 0)) {
 					child_req_failed = true;
 				}
 			} else { /* free remaining child_reqs since one child_req fails */
 				nvme_request_remove_child(req, child_req);
+				nvme_request_free_children(child_req);
 				nvme_free_request(child_req);
 			}
+		}
+
+		if (spdk_unlikely(child_req_failed)) {
+			/* part of children requests have been submitted,
+			 * return success for this case.
+			 */
+			if (req->num_children) {
+				return 0;
+			}
+			goto error;
 		}
 
 		return rc;
@@ -593,6 +599,11 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		}
 	}
 
+	if (spdk_unlikely(ctrlr->is_failed)) {
+		rc = -ENXIO;
+		goto error;
+	}
+
 	/* assign submit_tick before submitting req to specific transport */
 	if (spdk_unlikely(ctrlr->timeout_enabled)) {
 		if (req->submit_tick == 0) { /* req submitted for the first time */
@@ -604,12 +615,12 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	}
 
 	if (spdk_likely(qpair->is_enabled)) {
-		return nvme_transport_qpair_submit_request(qpair, req);
+		rc = nvme_transport_qpair_submit_request(qpair, req);
 	} else if (nvme_qpair_is_admin_queue(qpair) && req->cmd.opc == SPDK_NVME_OPC_FABRIC) {
 		/* Always allow fabrics commands through on the admin qpair - these get
 		 *  the controller out of reset state.
 		 */
-		return nvme_transport_qpair_submit_request(qpair, req);
+		rc = nvme_transport_qpair_submit_request(qpair, req);
 	} else {
 		/* The controller is being reset - queue this request and
 		 *  submit it later when the reset is completed.
@@ -617,6 +628,18 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
 		return 0;
 	}
+
+	if (spdk_likely(rc == 0)) {
+		return 0;
+	}
+
+error:
+	if (req->parent != NULL) {
+		nvme_request_remove_child(req->parent, req);
+	}
+	nvme_free_request(req);
+
+	return rc;
 }
 
 void
