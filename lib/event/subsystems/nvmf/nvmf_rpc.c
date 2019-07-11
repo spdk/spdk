@@ -1339,8 +1339,13 @@ static int decode_conn_sched(const struct spdk_json_val *val, void *out)
 		*sched = CONNECT_SCHED_ROUND_ROBIN;
 	} else if (spdk_json_strequal(val, "hostip") == true) {
 		*sched = CONNECT_SCHED_HOST_IP;
+	} else if (spdk_json_strequal(val, "transport") == true) {
+		*sched = CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP;
 	} else {
-		SPDK_ERRLOG("Invalid connection scheduling parameter\n");
+		SPDK_ERRLOG("The valid value of conn_sched should be:\n"
+			    "\t roundrobin\n"
+			    "\t hostip\n"
+			    "\t transport\n");
 		return -EINVAL;
 	}
 

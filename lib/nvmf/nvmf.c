@@ -217,12 +217,18 @@ spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 }
 
 struct spdk_nvmf_tgt *
-spdk_nvmf_tgt_create(uint32_t max_subsystems)
+spdk_nvmf_tgt_create(uint32_t max_subsystems, const struct spdk_nvmf_tgt_conf *tgt_conf)
 {
 	struct spdk_nvmf_tgt *tgt;
 
+	if (!tgt_conf) {
+		SPDK_ERRLOG("Provided empty configuration\n");
+		return NULL;
+	}
+
 	tgt = calloc(1, sizeof(*tgt));
 	if (!tgt) {
+		SPDK_ERRLOG("Failed to allocate memory\n");
 		return NULL;
 	}
 
@@ -235,6 +241,7 @@ spdk_nvmf_tgt_create(uint32_t max_subsystems)
 	tgt->discovery_genctr = 0;
 	tgt->discovery_log_page = NULL;
 	tgt->discovery_log_page_size = 0;
+	tgt->conf = tgt_conf;
 	TAILQ_INIT(&tgt->transports);
 
 	tgt->subsystems = calloc(tgt->max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
