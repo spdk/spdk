@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a8c15253_61b370d0",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-07-11T01:49:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c05de0d0_06751736",
+      "revId": "8c6fa8eeb8ffed884028dbf322bd1ca5eecfa0b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da9c27bc_cdc1e66d",
         "filename": "test/compress/compress.sh",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-07-11T00:43:31Z",
       "side": 1,
       "message": "do you need to duplicate lines 94-100, why can\u0027t you use the definitions from earlier?",
+      "revId": "8c6fa8eeb8ffed884028dbf322bd1ca5eecfa0b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d696e48_f35f6fdf",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-07-11T01:49:39Z",
+      "side": 1,
+      "message": "Yes. Removed. Thanks for the review.",
+      "parentUuid": "da9c27bc_cdc1e66d",
       "revId": "8c6fa8eeb8ffed884028dbf322bd1ca5eecfa0b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
