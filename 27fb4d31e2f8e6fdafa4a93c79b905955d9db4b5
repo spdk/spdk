@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "dcc4bb26_3ef3c35c",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-11T12:36:10Z",
+      "side": 1,
+      "message": "That a good idea.",
+      "parentUuid": "2281516b_10be6c78",
+      "revId": "27fb4d31e2f8e6fdafa4a93c79b905955d9db4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2dd62aac_9fb1e8c2",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -47,6 +65,24 @@
       "writtenOn": "2019-07-09T06:17:02Z",
       "side": 1,
       "message": "Eventually we would like to allow for resizing bdevs with open descriptors. Is there any way to do it with this new mechanism as it is now?",
+      "revId": "27fb4d31e2f8e6fdafa4a93c79b905955d9db4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89c44201_ef67b03a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2650,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-11T12:36:10Z",
+      "side": 1,
+      "message": "Probably yes. Implementing this could be the next task here.",
+      "parentUuid": "2dd62aac_9fb1e8c2",
       "revId": "27fb4d31e2f8e6fdafa4a93c79b905955d9db4b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
