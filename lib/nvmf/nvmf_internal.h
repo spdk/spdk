@@ -71,6 +71,12 @@ enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_ERROR,
 };
 
+enum spdk_nvmf_connect_sched_poll_group_type {
+	CONNECT_SCHED_POLL_GROUP_ANY = 0,
+	CONNECT_SCHED_POLL_GROUP_ADMIN,
+	CONNECT_SCHED_POLL_GROUP_IO,
+};
+
 typedef void (*spdk_nvmf_state_change_done)(void *cb_arg, int status);
 
 struct spdk_nvmf_tgt_host_trid {
@@ -81,7 +87,9 @@ struct spdk_nvmf_tgt_host_trid {
 };
 
 struct spdk_nvmf_tgt_conn_sched {
-	struct spdk_nvmf_poll_group *next_poll_group;
+	struct spdk_nvmf_poll_group *next_poll_group_any;
+	struct spdk_nvmf_poll_group *next_poll_group_admin;
+	struct spdk_nvmf_poll_group *next_poll_group_io;
 	/* List of host trids that are connected to the target */
 	TAILQ_HEAD(, spdk_nvmf_tgt_host_trid) host_trids;
 };
@@ -432,6 +440,9 @@ void spdk_nvmf_ns_reservation_request(void *ctx);
 void spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 		struct spdk_nvmf_ns *ns,
 		enum spdk_nvme_reservation_notification_log_page_type type);
+struct spdk_nvmf_poll_group *
+spdk_nvmf_get_next_pg(struct spdk_nvmf_tgt *tgt,
+		      enum spdk_nvmf_connect_sched_poll_group_type group_type);
 
 /*
  * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.
