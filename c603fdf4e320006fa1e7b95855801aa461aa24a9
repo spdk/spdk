@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbd9a1db_17c72352",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-11T06:01:42Z",
+      "side": 1,
+      "message": "you can still free the buffer when other volumes use it\n\n-\u003e create one vol, alloc g_zero_buf, success\n-\u003e create another vol, g_vol_count \u003e 0 so don\u0027t alloc g_zero_buf, fail, free g_zero_buf\n-\u003e crash",
+      "range": {
+        "startLine": 354,
+        "startChar": 2,
+        "endLine": 354,
+        "endChar": 24
+      },
+      "revId": "c603fdf4e320006fa1e7b95855801aa461aa24a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cfa8f42_2d8f820e",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-11T06:01:42Z",
+      "side": 1,
+      "message": "It looks like we can reach g_vol_count\u003d\u003d0 without freeing the buf. Is this expected?",
+      "range": {
+        "startLine": 404,
+        "startChar": 6,
+        "endLine": 404,
+        "endChar": 32
+      },
+      "revId": "c603fdf4e320006fa1e7b95855801aa461aa24a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
