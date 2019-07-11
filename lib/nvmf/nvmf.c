@@ -661,8 +661,10 @@ spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 	pg = spdk_io_channel_get_ctx(ch);
 	TAILQ_INSERT_TAIL(&tgt->poll_groups, pg, link);
 
-	if (tgt->conn_sched.next_poll_group == NULL) {
-		tgt->conn_sched.next_poll_group = pg;
+	if (tgt->conn_sched.next_poll_group_any == NULL) {
+		tgt->conn_sched.next_poll_group_any = pg;
+		tgt->conn_sched.next_poll_group_admin = pg;
+		tgt->conn_sched.next_poll_group_io = pg;
 	}
 
 	return 0;
@@ -719,18 +721,33 @@ int spdk_nvmf_tgt_schedule_qpair(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpa
 }
 
 /* Round robin selection of poll groups */
-static struct spdk_nvmf_poll_group *
-spdk_nvmf_get_next_pg(struct spdk_nvmf_tgt *tgt)
+struct spdk_nvmf_poll_group *
+spdk_nvmf_get_next_pg(struct spdk_nvmf_tgt *tgt,
+		      enum spdk_nvmf_connect_sched_poll_group_type group_type)
 {
-	struct spdk_nvmf_poll_group *pg;
+	struct spdk_nvmf_poll_group **pg;
+	struct spdk_nvmf_poll_group *result;
 
-	pg = tgt->conn_sched.next_poll_group;
-	tgt->conn_sched.next_poll_group = TAILQ_NEXT(pg, link);
-	if (tgt->conn_sched.next_poll_group == NULL) {
-		tgt->conn_sched.next_poll_group = TAILQ_FIRST(&tgt->poll_groups);
+	switch (group_type) {
+	case CONNECT_SCHED_POLL_GROUP_ADMIN:
+		pg = &tgt->conn_sched.next_poll_group_admin;
+		break;
+	case CONNECT_SCHED_POLL_GROUP_IO:
+		pg = &tgt->conn_sched.next_poll_group_io;
+		break;
+	case CONNECT_SCHED_POLL_GROUP_ANY:
+	default:
+		pg = &tgt->conn_sched.next_poll_group_any;
+		break;
 	}
 
-	return pg;
+	result = *pg;
+	*pg = TAILQ_NEXT(*pg, link);
+	if (*pg == NULL) {
+		*pg = TAILQ_FIRST(&tgt->poll_groups);
+	}
+
+	return result;
 }
 
 static struct spdk_nvmf_poll_group *
@@ -741,7 +758,7 @@ spdk_nvmf_get_optimal_pg(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpai
 	tgroup = spdk_nvmf_transport_get_optimal_poll_group(qpair->transport, qpair);
 
 	if (tgroup == NULL || tgroup->group == NULL) {
-		return spdk_nvmf_get_next_pg(tgt);
+		return spdk_nvmf_get_next_pg(tgt, CONNECT_SCHED_POLL_GROUP_ANY);
 	}
 
 	return tgroup->group;
@@ -759,7 +776,7 @@ spdk_nvmf_poll_group_select(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *q
 	case CONNECT_SCHED_HOST_IP:
 		ret = spdk_nvmf_qpair_get_peer_trid(qpair, &trid);
 		if (ret) {
-			pg = spdk_nvmf_get_next_pg(tgt);
+			pg = spdk_nvmf_get_next_pg(tgt, CONNECT_SCHED_POLL_GROUP_ANY);
 			SPDK_ERRLOG("Invalid host transport Id. Assigning to poll group %p\n", pg);
 			break;
 		}
@@ -775,12 +792,12 @@ spdk_nvmf_poll_group_select(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *q
 		if (!tmp_trid) {
 			new_trid = calloc(1, sizeof(*new_trid));
 			if (!new_trid) {
-				pg = spdk_nvmf_get_next_pg(tgt);
+				pg = spdk_nvmf_get_next_pg(tgt, CONNECT_SCHED_POLL_GROUP_ANY);
 				SPDK_ERRLOG("Insufficient memory. Assigning to poll group %p\n", pg);
 				break;
 			}
 			/* Get the next available poll group for the new host */
-			pg = spdk_nvmf_get_next_pg(tgt);
+			pg = spdk_nvmf_get_next_pg(tgt, CONNECT_SCHED_POLL_GROUP_ANY);
 			new_trid->pg = pg;
 			memcpy(new_trid->host_trid.traddr, trid.traddr,
 			       SPDK_NVMF_TRADDR_MAX_LEN + 1);
@@ -792,7 +809,7 @@ spdk_nvmf_poll_group_select(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *q
 		break;
 	case CONNECT_SCHED_ROUND_ROBIN:
 	default:
-		pg = spdk_nvmf_get_next_pg(tgt);
+		pg = spdk_nvmf_get_next_pg(tgt, CONNECT_SCHED_POLL_GROUP_ANY);
 		break;
 	}
 
