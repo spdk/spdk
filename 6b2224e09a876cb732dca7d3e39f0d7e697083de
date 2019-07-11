@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09f78a06_a992bc94",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1703,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-11T22:42:25Z",
+      "side": 1,
+      "message": "PawelK\u0027s patch https://review.gerrithub.io/c/spdk/spdk/+/459199 says we should remove this. We can remove this separately later.",
+      "range": {
+        "startLine": 1699,
+        "startChar": 0,
+        "endLine": 1703,
+        "endChar": 0
+      },
+      "revId": "6b2224e09a876cb732dca7d3e39f0d7e697083de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
