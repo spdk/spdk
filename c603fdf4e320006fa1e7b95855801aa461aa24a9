@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d842f11b_c2b683df",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-11T15:01:52Z",
+      "side": 1,
+      "message": "yeah, didn\u0027t catch that one.  a failure on the creation of a 2nd vol will kill the buff for the first one.  my bad",
+      "parentUuid": "fbd9a1db_17c72352",
+      "range": {
+        "startLine": 354,
+        "startChar": 2,
+        "endLine": 354,
+        "endChar": 24
+      },
+      "revId": "c603fdf4e320006fa1e7b95855801aa461aa24a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9cfa8f42_2d8f820e",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2019-07-11T06:01:42Z",
       "side": 1,
       "message": "It looks like we can reach g_vol_count\u003d\u003d0 without freeing the buf. Is this expected?",
+      "range": {
+        "startLine": 404,
+        "startChar": 6,
+        "endLine": 404,
+        "endChar": 32
+      },
+      "revId": "c603fdf4e320006fa1e7b95855801aa461aa24a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a4d6a1e_5541ebac",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-11T15:01:52Z",
+      "side": 1,
+      "message": "how? the 2nd condition in the if isn\u0027t evaluated if the first is false so the decrement doesn\u0027t happen. Is that what you mean?",
+      "parentUuid": "9cfa8f42_2d8f820e",
       "range": {
         "startLine": 404,
         "startChar": 6,
