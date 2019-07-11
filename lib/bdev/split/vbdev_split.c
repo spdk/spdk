@@ -83,7 +83,7 @@ static int vbdev_split_config_json(struct spdk_json_write_ctx *w);
 static int vbdev_split_get_ctx_size(void);
 
 static void
-vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
+_vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
 
 static struct spdk_bdev_module split_if = {
 	.name = "split",
@@ -126,7 +126,7 @@ vbdev_split_resubmit_io(void *arg)
 {
 	struct vbdev_split_bdev_io *split_io = (struct vbdev_split_bdev_io *)arg;
 
-	vbdev_split_submit_request(split_io->ch, split_io->bdev_io);
+	_vbdev_split_submit_request(split_io->ch, split_io->bdev_io);
 }
 
 static void
@@ -147,7 +147,7 @@ vbdev_split_queue_io(struct vbdev_split_bdev_io *split_io)
 }
 
 static void
-vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
+_vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct vbdev_split_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct vbdev_split_bdev_io *io_ctx = (struct vbdev_split_bdev_io *)bdev_io->driver_ctx;
@@ -164,6 +164,31 @@ vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 			SPDK_ERRLOG("split: error on io submission, rc=%d.\n", rc);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
+	}
+}
+
+static void
+vbdev_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
+{
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	_vbdev_split_submit_request(ch, bdev_io);
+}
+
+static void
+vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_get_buf(bdev_io, vbdev_split_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		break;
+	default:
+		_vbdev_split_submit_request(_ch, bdev_io);
+		break;
 	}
 }
 
