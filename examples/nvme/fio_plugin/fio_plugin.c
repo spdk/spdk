@@ -756,6 +756,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	struct spdk_fio_request	*fio_req = io_u->engine_data;
 	struct spdk_fio_qpair	*fio_qpair;
 	struct spdk_nvme_ns	*ns = NULL;
+	void			*md_buf = NULL;
 	struct spdk_dif_ctx	*dif_ctx = &fio_req->dif_ctx;
 	uint32_t		block_size;
 	uint64_t		lba;
@@ -772,6 +773,9 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	}
 	if (fio_qpair == NULL || ns == NULL) {
 		return -ENXIO;
+	}
+	if (fio_qpair->do_nvme_pi && !fio_qpair->extended_lba) {
+		md_buf = fio_req->md_buf;
 	}
 	fio_req->fio_qpair = fio_qpair;
 
@@ -796,26 +800,26 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	switch (io_u->ddir) {
 	case DDIR_READ:
 		if (!g_spdk_enable_sgl) {
-			rc = spdk_nvme_ns_cmd_read_with_md(ns, fio_qpair->qpair, io_u->buf, fio_req->md_buf, lba, lba_count,
+			rc = spdk_nvme_ns_cmd_read_with_md(ns, fio_qpair->qpair, io_u->buf, md_buf, lba, lba_count,
 							   spdk_fio_completion_cb, fio_req,
 							   dif_ctx->dif_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
 		} else {
 			rc = spdk_nvme_ns_cmd_readv_with_md(ns, fio_qpair->qpair, lba,
 							    lba_count, spdk_fio_completion_cb, fio_req, dif_ctx->dif_flags,
-							    spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, fio_req->md_buf,
+							    spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
 							    dif_ctx->apptag_mask, dif_ctx->app_tag);
 		}
 		break;
 	case DDIR_WRITE:
 		if (!g_spdk_enable_sgl) {
-			rc = spdk_nvme_ns_cmd_write_with_md(ns, fio_qpair->qpair, io_u->buf, fio_req->md_buf, lba,
+			rc = spdk_nvme_ns_cmd_write_with_md(ns, fio_qpair->qpair, io_u->buf, md_buf, lba,
 							    lba_count,
 							    spdk_fio_completion_cb, fio_req,
 							    dif_ctx->dif_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
 		} else {
 			rc = spdk_nvme_ns_cmd_writev_with_md(ns, fio_qpair->qpair, lba,
 							     lba_count, spdk_fio_completion_cb, fio_req, dif_ctx->dif_flags,
-							     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, fio_req->md_buf,
+							     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
 							     dif_ctx->apptag_mask, dif_ctx->app_tag);
 		}
 		break;
