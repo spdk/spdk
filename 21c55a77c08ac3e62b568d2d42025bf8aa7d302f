@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3060aa06_5b0b0633",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-11T08:34:39Z",
+      "side": 1,
+      "message": "Hi Changpeng, Why g_opts.io_queue_requests needs to be updated here?",
+      "range": {
+        "startLine": 542,
+        "startChar": 1,
+        "endLine": 542,
+        "endChar": 51
+      },
+      "revId": "21c55a77c08ac3e62b568d2d42025bf8aa7d302f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
