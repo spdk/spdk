@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30d6013a_8a8d7cce",
+        "filename": "test/spdkcli/pmem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-11T09:26:23Z",
+      "side": 1,
+      "message": "Please add here: rm -f $testdir/match_files/spdkcli_pmem_info.test",
+      "revId": "89d54cf7bfb13dca7ea9b4eb282f726777cee0b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
