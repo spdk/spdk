@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -63,6 +63,17 @@ struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 struct spdk_nvmf_transport;
 
+enum spdk_nvmf_connect_sched {
+	CONNECT_SCHED_ROUND_ROBIN = 0,
+	CONNECT_SCHED_HOST_IP,
+	CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP,
+};
+
+struct spdk_nvmf_tgt_conf {
+	uint32_t acceptor_poll_rate;
+	enum spdk_nvmf_connect_sched conn_sched;
+};
+
 struct spdk_nvmf_transport_opts {
 	uint16_t	max_queue_depth;
 	uint16_t	max_qpairs_per_ctrlr;
@@ -82,10 +93,12 @@ struct spdk_nvmf_transport_opts {
  * Construct an NVMe-oF target.
  *
  * \param max_subsystems the maximum number of subsystems allowed by the target.
+ * \param tgt_conf a pointer to the NVMe-oF target configuration
  *
  * \return a pointer to a NVMe-oF target on success, or NULL on failure.
  */
-struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(uint32_t max_subsystems);
+struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(uint32_t max_subsystems,
+		const struct spdk_nvmf_tgt_conf  *tgt_conf);
 
 typedef void (spdk_nvmf_tgt_destroy_done_fn)(void *ctx, int status);
 
