@@ -137,14 +137,19 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 					    SPDK_COUNTOF(rpc_get_bdevs_iostat_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
-			goto invalid;
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "spdk_json_decode_object failed");
+			free_rpc_get_bdevs_iostat(&req);
+			return;
 		}
 
 		if (req.name) {
 			bdev = spdk_bdev_get_by_name(req.name);
 			if (bdev == NULL) {
 				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-				goto invalid;
+				spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+				free_rpc_get_bdevs_iostat(&req);
+				return;
 			}
 		}
 	}
@@ -154,7 +159,7 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 	ctx = calloc(1, sizeof(struct rpc_get_bdevs_iostat_ctx));
 	if (ctx == NULL) {
 		SPDK_ERRLOG("Failed to allocate rpc_get_bdevs_iostat_ctx struct\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "No memory left");
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		return;
 	}
 
@@ -204,13 +209,6 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_end_result(request, w);
 		free(ctx);
 	}
-
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-
-	free_rpc_get_bdevs_iostat(&req);
 }
 SPDK_RPC_REGISTER("get_bdevs_iostat", spdk_rpc_get_bdevs_iostat, SPDK_RPC_RUNTIME)
 
@@ -325,14 +323,19 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 					      SPDK_COUNTOF(rpc_get_bdevs_decoders),
 					      &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		free_rpc_get_bdevs(&req);
+		return;
 	}
 
 	if (req.name) {
 		bdev = spdk_bdev_get_by_name(req.name);
 		if (bdev == NULL) {
 			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-			goto invalid;
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+			free_rpc_get_bdevs(&req);
+			return;
 		}
 	}
 
@@ -355,13 +358,6 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(request, w);
-
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-
-	free_rpc_get_bdevs(&req);
 }
 SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs, SPDK_RPC_RUNTIME)
 
@@ -396,22 +392,28 @@ spdk_rpc_set_bdev_qd_sampling_period(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_set_bdev_qd_sampling_period_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	if (req.name) {
 		bdev = spdk_bdev_get_by_name(req.name);
 		if (bdev == NULL) {
 			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-			goto invalid;
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+			goto cleanup;
 		}
 	} else {
 		SPDK_ERRLOG("Missing name param\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -EINVAL, "Missing name parameter");
+		goto cleanup;
 	}
 
 	if (req.period == UINT64_MAX) {
 		SPDK_ERRLOG("Missing period param");
+		spdk_jsonrpc_send_error_response(request, -EINVAL, "Missing period parameter");
+		goto cleanup;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -419,13 +421,9 @@ spdk_rpc_set_bdev_qd_sampling_period(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
-	free_rpc_set_bdev_qd_sampling_period(&req);
-	return;
 
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+cleanup:
 	free_rpc_set_bdev_qd_sampling_period(&req);
-	return;
 }
 SPDK_RPC_REGISTER("set_bdev_qd_sampling_period",
 		  spdk_rpc_set_bdev_qd_sampling_period,
@@ -500,15 +498,16 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_set_bdev_qos_limit_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Bdev does not exist");
-		goto exit;
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
 	}
 
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
@@ -518,18 +517,13 @@ spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 	}
 	if (i == SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES) {
 		SPDK_ERRLOG("no rate limits specified\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "No rate limits specified");
-		goto exit;
+		spdk_jsonrpc_send_error_response(request, -EINVAL, "No rate limits specified");
+		goto cleanup;
 	}
 
-	free_rpc_set_bdev_qos_limit(&req);
 	spdk_bdev_set_qos_rate_limits(bdev, req.limits, spdk_rpc_set_bdev_qos_limit_complete, request);
-	return;
 
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-exit:
+cleanup:
 	free_rpc_set_bdev_qos_limit(&req);
 }
 
@@ -574,31 +568,26 @@ spdk_rpc_enable_bdev_histogram(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_enable_bdev_histogram_request req = {NULL};
 	struct spdk_bdev *bdev;
-	int rc;
 
 	if (spdk_json_decode_object(params, rpc_enable_bdev_histogram_request_decoders,
 				    SPDK_COUNTOF(rpc_enable_bdev_histogram_request_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
-		rc = -ENODEV;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
 	}
 
 	spdk_bdev_histogram_enable(bdev, _spdk_bdev_histogram_status_cb, request, req.enable);
 
+cleanup:
 	free_rpc_enable_bdev_histogram_request(&req);
-
-	return;
-
-invalid:
-	free_rpc_enable_bdev_histogram_request(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 
 SPDK_RPC_REGISTER("enable_bdev_histogram", spdk_rpc_enable_bdev_histogram, SPDK_RPC_RUNTIME)
@@ -677,36 +666,32 @@ spdk_rpc_get_bdev_histogram(struct spdk_jsonrpc_request *request,
 	struct rpc_get_bdev_histogram_request req = {NULL};
 	struct spdk_histogram_data *histogram;
 	struct spdk_bdev *bdev;
-	int rc;
 
 	if (spdk_json_decode_object(params, rpc_get_bdev_histogram_request_decoders,
 				    SPDK_COUNTOF(rpc_get_bdev_histogram_request_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
-		rc = -ENODEV;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
 	}
 
 	histogram = spdk_histogram_data_alloc();
 	if (histogram == NULL) {
-		rc = -ENOMEM;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		goto cleanup;
 	}
 
 	spdk_bdev_histogram_get(bdev, histogram, _spdk_rpc_bdev_histogram_data_cb, request);
 
+cleanup:
 	free_rpc_get_bdev_histogram_request(&req);
-	return;
-
-invalid:
-	free_rpc_get_bdev_histogram_request(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 
 SPDK_RPC_REGISTER("get_bdev_histogram", spdk_rpc_get_bdev_histogram, SPDK_RPC_RUNTIME)
