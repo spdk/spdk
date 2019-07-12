@@ -114,10 +114,6 @@ done
 
 sync
 
-if [ $(uname -s) = Linux ]; then
-	# Load RAM disk driver if available
-	modprobe brd || true
-fi
 timing_exit cleanup
 
 # set up huge pages
