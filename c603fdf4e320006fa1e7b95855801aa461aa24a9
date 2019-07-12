@@ -117,6 +117,30 @@
       "revId": "c603fdf4e320006fa1e7b95855801aa461aa24a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46f133c0_694779db",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-12T00:35:32Z",
+      "side": 1,
+      "message": "Not actually.  When the bdev module gets an examine is tries to load it as a compressdev volume which will fail because it won\u0027t have a signature and this routine will be called to cleaned the examination.  The difference between coming through here with a real compresssdev vol that is being deleted vs a non-compressdev vol that is being examines is that the volsize will be \u003e0 for a real one.  So, I only want to decrement the g_vol_count if I\u0027m cleaning up after a real vol delete (or unload) so I only decrement if the first condition is true and if it is, and we\u0027re down to 0 on the vol count, then its time to free the buffer.  Hope that makes sense, thanks for reviewing :)",
+      "parentUuid": "6fae8e30_4eb404ba",
+      "range": {
+        "startLine": 404,
+        "startChar": 6,
+        "endLine": 404,
+        "endChar": 32
+      },
+      "revId": "c603fdf4e320006fa1e7b95855801aa461aa24a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
