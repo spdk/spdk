@@ -72,19 +72,22 @@ ifneq ($(filter freebsd%,$(TARGET_TRIPLET_WORDS)),)
 OS = FreeBSD
 endif
 
+TARGET_ARCH ?= $(shell uname -m)
 TARGET_MACHINE := $(firstword $(TARGET_TRIPLET_WORDS))
+
+ifeq ($(TARGET_ARCH),$(TARGET_MACHINE))
+TARGET_ARCH = native
+endif
 
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
 ifneq ($(filter powerpc%,$(TARGET_MACHINE)),)
-COMMON_CFLAGS += -mcpu=native
-endif
-ifeq ($(TARGET_MACHINE),x86_64)
-COMMON_CFLAGS += -march=native
-endif
-ifeq ($(TARGET_MACHINE),aarch64)
+COMMON_CFLAGS += -mcpu=$(TARGET_ARCH)
+else ifeq ($(TARGET_MACHINE),aarch64)
 COMMON_CFLAGS += -march=armv8-a+crc
 COMMON_CFLAGS += -DPAGE_SIZE=$(shell getconf PAGESIZE)
+else
+COMMON_CFLAGS += -march=$(TARGET_ARCH)
 endif
 
 ifeq ($(CONFIG_WERROR), y)
