@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6850543e_51d4ef1e",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-12T00:13:03Z",
+      "side": 1,
+      "message": "g_vol_count",
+      "range": {
+        "startLine": 395,
+        "startChar": 4,
+        "endLine": 395,
+        "endChar": 17
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d454df91_3cb92dbf",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-12T00:13:03Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 409,
+        "startChar": 5,
+        "endLine": 409,
+        "endChar": 18
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

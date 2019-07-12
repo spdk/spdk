@@ -93,6 +93,30 @@
       "revId": "c603fdf4e320006fa1e7b95855801aa461aa24a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fae8e30_4eb404ba",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-12T00:13:03Z",
+      "side": 1,
+      "message": "Hi Paul, I\u0027m late to join and very preliminary question.\nYour intention is that if vol-\u003eparams.vol_size is 0, g_vol_count should also be 0 here?\nSo we can add assert((vol-\u003eparams.vol_size \u003e 0) \u003d\u003d (g_vol_count \u003e 0)) here before decrementing g_vol_count?",
+      "parentUuid": "0a4d6a1e_5541ebac",
+      "range": {
+        "startLine": 404,
+        "startChar": 6,
+        "endLine": 404,
+        "endChar": 32
+      },
+      "revId": "c603fdf4e320006fa1e7b95855801aa461aa24a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
