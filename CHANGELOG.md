@@ -15,6 +15,8 @@ device.
 Added `spdk_bdev_zone_open() `, `spdk_bdev_zone_finish()`,
 `spdk_bdev_zone_close()`, `spkd_bdev_zone_reset()` new APIs for changing zone
 state.
+`spdk_bdev_zone_append()` and `spdk_bdev_zone_append_with_md` APIs were added for
+appending data to a zone.
 
 ### bdev
 
