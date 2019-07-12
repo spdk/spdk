@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "91d66e3e_60f52f22",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-12T19:55:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d5e4f19_af0ba6e5",
+      "revId": "0101854abcbaf4cde7a0ec6d68c971b8b0df2691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c4dd061_58cc2a3a",
         "filename": "doc/lvol.md",
         "patchSetId": 5
@@ -33,6 +51,24 @@
       "revId": "0101854abcbaf4cde7a0ec6d68c971b8b0df2691",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7dca5b0f_099f721f",
+        "filename": "doc/lvol.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-12T19:55:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3c4dd061_58cc2a3a",
+      "revId": "0101854abcbaf4cde7a0ec6d68c971b8b0df2691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
