@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a07dd60c_34537946",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-12T12:00:10Z",
+      "side": 1,
+      "message": "I think we could just set _ftl_halt_defrag inside spdk_ftl_dev_free. dev-\u003ehalt and raloc-\u003ehalt should be protected/atomic.",
+      "revId": "e443005302c95b67e9cb4332434dc1af24ccf994",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
