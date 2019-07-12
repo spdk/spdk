@@ -135,3 +135,51 @@ spdk_bdev_zone_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 {
 	return bdev_zone_management(desc, ch, zone_id, SPDK_BDEV_ZONE_RESET, cb, cb_arg);
 }
+
+static int
+_spdk_bdev_append_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			  void *buf, void *md_buf, uint64_t zone_id, uint64_t num_blocks,
+			  spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ZONE_APPEND;
+	bdev_io->u.bdev.iovs = &bdev_io->iov;
+	bdev_io->u.bdev.iovs[0].iov_base = buf;
+	bdev_io->u.bdev.iovs[0].iov_len = num_blocks * bdev->blocklen;
+	bdev_io->u.bdev.iovcnt = 1;
+	bdev_io->u.bdev.md_buf = md_buf;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->u.bdev.offset_blocks = zone_id;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int
+spdk_bdev_zone_append(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		      void *buf, uint64_t start_lba, uint64_t num_blocks,
+		      spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return _spdk_bdev_append_with_md(desc, ch, buf, NULL, start_lba, num_blocks,
+					 cb, cb_arg);
+}
+
+int
+spdk_bdev_zone_append_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			      void *buf, void *md, uint64_t start_lba, uint64_t num_blocks,
+			      spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return _spdk_bdev_append_with_md(desc, ch, buf, md, start_lba, num_blocks,
+					 cb, cb_arg);
+}
