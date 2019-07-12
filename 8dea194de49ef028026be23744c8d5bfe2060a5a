@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3737fb_8227f0d2",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-12T12:08:33Z",
+      "side": 1,
+      "message": "Technically this is going to treat compiling for a different x86 generation as cross compiling (i.e. compiling for broadwell from a skylake). But it doesn\u0027t matter - this works anyway.",
+      "revId": "8dea194de49ef028026be23744c8d5bfe2060a5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
