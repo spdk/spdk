@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d6aa39c_20abec25",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-12T03:40:32Z",
+      "side": 1,
+      "message": "we don\u0027t have request-\u003eresponse, this will segfault",
+      "range": {
+        "startLine": 211,
+        "startChar": 16,
+        "endLine": 211,
+        "endChar": 23
+      },
+      "revId": "e91fd4731412a965bbbd1cce288d7eb0449703d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d3edffe_8cc96ba1",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-12T03:40:32Z",
+      "side": 1,
+      "message": "skip_response() puts the request on a queue which is periodically checked by the rpc poller. Freeing it now leaves you with a dangling pointer. In fact, the rpc poller after picking up the request will call spdk_jsonrpc_free_request(request) and nothing else, so you really don\u0027t need to call skip_response(), just free the request. After all, we failed to allocate a response buffer so we can\u0027t physically send a response.",
+      "revId": "e91fd4731412a965bbbd1cce288d7eb0449703d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
