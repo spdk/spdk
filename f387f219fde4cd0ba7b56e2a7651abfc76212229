@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "10a60fe7_6ad41fb8",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:24:16Z",
+      "side": 1,
+      "message": "these 2 lines can be removed",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 8
+      },
+      "revId": "f387f219fde4cd0ba7b56e2a7651abfc76212229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a8e12043_ff6b9ead",
         "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
         "patchSetId": 1
@@ -18,6 +41,29 @@
         "startChar": 2,
         "endLine": 146,
         "endChar": 14
+      },
+      "revId": "f387f219fde4cd0ba7b56e2a7651abfc76212229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a782f6c8_07594a05",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:24:16Z",
+      "side": 1,
+      "message": "these 2 lines can be removed",
+      "range": {
+        "startLine": 152,
+        "startChar": 0,
+        "endLine": 153,
+        "endChar": 8
       },
       "revId": "f387f219fde4cd0ba7b56e2a7651abfc76212229",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -87,6 +133,75 @@
         "startChar": 2,
         "endLine": 214,
         "endChar": 13
+      },
+      "revId": "f387f219fde4cd0ba7b56e2a7651abfc76212229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98a648bc_22490006",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:24:16Z",
+      "side": 1,
+      "message": "these 2 lines can be removed",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 8
+      },
+      "revId": "f387f219fde4cd0ba7b56e2a7651abfc76212229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e3ef129_4bf4ffbf",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:24:16Z",
+      "side": 1,
+      "message": "these 2 lines can be removed",
+      "range": {
+        "startLine": 303,
+        "startChar": 0,
+        "endLine": 304,
+        "endChar": 8
+      },
+      "revId": "f387f219fde4cd0ba7b56e2a7651abfc76212229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8762fdc5_eb9ed2bb",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:24:16Z",
+      "side": 1,
+      "message": "these 2 lines can be removed",
+      "range": {
+        "startLine": 360,
+        "startChar": 0,
+        "endLine": 362,
+        "endChar": 0
       },
       "revId": "f387f219fde4cd0ba7b56e2a7651abfc76212229",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
