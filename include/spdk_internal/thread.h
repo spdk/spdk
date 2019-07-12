@@ -38,10 +38,4 @@
 
 struct spdk_thread;
 
-/**
- * Force the current system thread to act as if executing the given SPDK thread.
- * This is only used for unit testing.
- */
-void spdk_set_thread(struct spdk_thread *thread);
-
 #endif /* SPDK_THREAD_INTERNAL_H_ */
