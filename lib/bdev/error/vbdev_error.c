@@ -318,7 +318,8 @@ spdk_vbdev_error_create(const char *base_bdev_name)
 
 	base_bdev = spdk_bdev_get_by_name(base_bdev_name);
 	if (!base_bdev) {
-		return 0;
+		SPDK_ERRLOG("Base bdev does't exist\n");
+		return -ENODEV;
 	}
 
 	rc = _spdk_vbdev_error_create(base_bdev);
