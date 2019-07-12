@@ -719,7 +719,7 @@ ftl_reloc_free(struct ftl_reloc *reloc)
 bool
 ftl_reloc_is_halted(const struct ftl_reloc *reloc)
 {
-	return reloc->halt;
+	return reloc->halt || reloc->dev->halt;
 }
 
 void
