@@ -321,17 +321,17 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 
 	if (name == NULL) {
 		SPDK_ERRLOG("Missing name parameter for spdk_create_pmem_disk()\n");
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (pmemblk_check(pmem_file, 0) != 1) {
 		SPDK_ERRLOG("Pool '%s' check failed: %s\n", pmem_file, pmemblk_errormsg());
-		return EIO;
+		return -EIO;
 	}
 
 	pdisk = calloc(1, sizeof(*pdisk));
 	if (!pdisk) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	snprintf(pdisk->pmem_file, sizeof(pdisk->pmem_file), "%s", pmem_file);
@@ -349,21 +349,21 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 		SPDK_ERRLOG("Block size must be more than 0 bytes\n");
 		pmemblk_close(pdisk->pool);
 		free(pdisk);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (num_blocks == 0) {
 		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
 		pmemblk_close(pdisk->pool);
 		free(pdisk);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	pdisk->disk.name = strdup(name);
 	if (!pdisk->disk.name) {
 		pmemblk_close(pdisk->pool);
 		free(pdisk);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	pdisk->disk.product_name = "pmemblk disk";
