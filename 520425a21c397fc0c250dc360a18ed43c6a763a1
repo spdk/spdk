@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4d1a2e1_29b4cedb",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-12T04:18:57Z",
+      "side": 1,
+      "message": "if you\u0027re making the function public, you should add a proper doxygen part:\n * \\param thread spdk thread\n\n\nI believe CI will complain otherwise.",
+      "revId": "520425a21c397fc0c250dc360a18ed43c6a763a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
