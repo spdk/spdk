@@ -40,16 +40,6 @@ SYS_LIBS += -laio
 CFLAGS += -DHAVE_LIBAIO
 endif
 
-ifeq ($(CONFIG_URING),y)
-SYS_LIBS += -luring
-CFLAGS += -DHAVE_URING
-ifeq ($(strip $(CONFIG_URING_PATH)),)
-else
-CFLAGS += -I$(CONFIG_URING_PATH)
-LDFLAGS += -L$(CONFIG_URING_PATH)
-endif
-endif
-
 install: $(APP)
 	$(INSTALL_EXAMPLE)
 
