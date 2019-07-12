@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "21ad270c_ba96dac8",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-12T16:00:39Z",
+      "side": 1,
+      "message": "Yes it looks like that is on purpose.  The cleanup routine just below is called elsewhere as well and expects the vol mem to be allocated.",
+      "parentUuid": "fd424373_cf038a27",
+      "range": {
+        "startLine": 429,
+        "startChar": 36,
+        "endLine": 429,
+        "endChar": 52
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2d6e7795_cf480fad",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 12
@@ -130,6 +154,30 @@
       "writtenOn": "2019-07-12T02:51:56Z",
       "side": 1,
       "message": "in this case, this loading didn\u0027t increment g_vol_count. So should we clear vol-\u003eparams.vol_size to zero here?",
+      "range": {
+        "startLine": 437,
+        "startChar": 2,
+        "endLine": 437,
+        "endChar": 20
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b48d343_44ae15fe",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-12T16:00:39Z",
+      "side": 1,
+      "message": "yes that would close this hole - if the vol made it this far and the super couldn\u0027t be written for some reason the vol would indeed have a size here and the buff wouldn\u0027t get freed.  I\u0027ll look first and see if there a cleaner place for alloc/free of this thing, its starting to get ugly :(",
+      "parentUuid": "2d6e7795_cf480fad",
       "range": {
         "startLine": 437,
         "startChar": 2,
@@ -165,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "db759731_fca0e033",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-12T16:00:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5a414672_c3eead93",
+      "range": {
+        "startLine": 449,
+        "startChar": 39,
+        "endLine": 449,
+        "endChar": 51
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "768e44ca_0415e5ed",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 12
@@ -185,6 +257,30 @@
       "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8106158_c6ba541d",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-12T16:00:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "768e44ca_0415e5ed",
+      "range": {
+        "startLine": 608,
+        "startChar": 2,
+        "endLine": 608,
+        "endChar": 36
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
