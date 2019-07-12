@@ -952,6 +952,11 @@ void
 spdk_opal_close(struct spdk_opal_dev *dev)
 {
 	pthread_mutex_destroy(&dev->mutex_lock);
+	if (dev->max_ranges > 0) {
+		for (int i = 0; i < dev->max_ranges; i++) {
+			free(dev->locking_range_info[i]);
+		}
+	}
 	free(dev->opal_info);
 	free(dev);
 }

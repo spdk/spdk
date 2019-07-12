@@ -1076,16 +1076,22 @@ opal_setup_lockingrange(struct dev *iter)
 				printf("Specify locking range id:\n");
 				if (!scanf("%d", &locking_range_id)) {
 					printf("Invalid locking range id\n");
+					spdk_opal_close(iter->opal_dev);
+					return;
 				}
 
 				printf("range length:\n");
 				if (!scanf("%ld", &range_length)) {
 					printf("Invalid range length\n");
+					spdk_opal_close(iter->opal_dev);
+					return;
 				}
 
 				printf("range start:\n");
 				if (!scanf("%ld", &range_start)) {
 					printf("Invalid range start address\n");
+					spdk_opal_close(iter->opal_dev);
+					return;
 				}
 				while (getchar() != '\n');
 
@@ -1100,6 +1106,7 @@ opal_setup_lockingrange(struct dev *iter)
 						passwd_p, OPAL_ADMIN1, locking_range_id);
 				if (ret) {
 					printf("Get locking range info failure: %d\n", ret);
+					spdk_opal_close(iter->opal_dev);
 					return;
 				}
 				info = spdk_opal_get_locking_range_info(iter->opal_dev, locking_range_id);
@@ -1149,6 +1156,7 @@ opal_list_locking_ranges(struct dev *iter)
 				ret = spdk_opal_cmd_get_max_ranges(iter->opal_dev, passwd_p);
 				if (ret) {
 					printf("get max ranges failure: %d\n", ret);
+					spdk_opal_close(iter->opal_dev);
 					return;
 				}
 
@@ -1158,6 +1166,7 @@ opal_list_locking_ranges(struct dev *iter)
 							passwd_p, OPAL_ADMIN1, i);
 					if (ret) {
 						printf("Get locking range info failure: %d\n", ret);
+						spdk_opal_close(iter->opal_dev);
 						return;
 					}
 					info = spdk_opal_get_locking_range_info(iter->opal_dev, i);
