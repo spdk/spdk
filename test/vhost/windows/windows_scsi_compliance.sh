@@ -46,7 +46,7 @@ done
 trap "rm -f $aio_file; rm -rf $testdir/results; error_exit" SIGINT SIGTERM ERR
 
 mkdir -p $testdir/results
-dd if=/dev/zero of=$aio_file bs=1M count=512
+fallocate -l 512M $aio_file
 
 timing_enter vhost_run
 vhost_run

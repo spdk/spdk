@@ -102,6 +102,7 @@ $testdir/bdevio/tests.py perform_tests
 if [ $(uname -s) = Linux ]; then
 	timing_enter blockdev_aio
 	# Create a file to be used as an AIO backend
+	fallocate -l 10M /tmp/aiofile
 	dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 	$rpc_py construct_aio_bdev /tmp/aiofile AIO0 2048
 	$testdir/bdevio/tests.py perform_tests -b AIO0

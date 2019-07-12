@@ -127,7 +127,8 @@ function vhost_kill()
 
 trap "vhost_kill; rm -f $testdir/aio_bdev_0 $testdir/aio_bdev_1; exit 1" SIGINT SIGTERM EXIT
 
-truncate -s 400M $testdir/aio_bdev_0 $testdir/aio_bdev_1
+fallocate -l 400M $testdir/aio_bdev_0
+fallocate -l 400M $testdir/aio_bdev_1
 vhost_start
 $testdir/lvol_test.py $rpc_py $total_size $block_size $testdir $rootdir/app/vhost "${test_cases[@]}"
 

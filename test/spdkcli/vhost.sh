@@ -26,8 +26,8 @@ $spdkcli_job "'/bdevs/malloc create 40 512 Malloc0' 'Malloc0' True
 '/bdevs/null create null_bdev0 32 512' 'null_bdev0' True
 '/bdevs/null create null_bdev1 32 512' 'null_bdev1' True
 "
-dd if=/dev/zero of=/tmp/sample_aio bs=2048 count=5000
-dd if=/dev/zero of=/tmp/sample_aio2 bs=2048 count=5000
+fallocate -l 10M /tmp/sample_aio
+fallocate -l 10M /tmp/sample_aio2
 $spdkcli_job "'/bdevs/aio create sample0 /tmp/sample_aio 512' 'sample0' True
 '/bdevs/aio create sample1 /tmp/sample_aio2 512' 'sample1' True
 "

@@ -43,7 +43,7 @@ if [[ $? != 0 ]]; then
 fi
 
 echo "INFO: Trying to create file on readonly disk"
-truncate -s "200M" $test_folder_name/$test_file_name"_on_readonly"
+fallocate -l 200M $test_folder_name/$test_file_name"_on_readonly"
 if [[ $? == 0 ]]; then
 	error "Created a file on a readonly disk!"
 fi
