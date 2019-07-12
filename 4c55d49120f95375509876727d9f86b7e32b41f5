@@ -93,6 +93,98 @@
       "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd424373_cf038a27",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-12T02:51:56Z",
+      "side": 1,
+      "message": "Unrelated with this patch, but calling _allocate_vol_requests regardless of reduce_error is OK?",
+      "range": {
+        "startLine": 429,
+        "startChar": 36,
+        "endLine": 429,
+        "endChar": 52
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d6e7795_cf480fad",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-12T02:51:56Z",
+      "side": 1,
+      "message": "in this case, this loading didn\u0027t increment g_vol_count. So should we clear vol-\u003eparams.vol_size to zero here?",
+      "range": {
+        "startLine": 437,
+        "startChar": 2,
+        "endLine": 437,
+        "endChar": 20
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a414672_c3eead93",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-12T02:51:56Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 449,
+        "startChar": 39,
+        "endLine": 449,
+        "endChar": 51
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "768e44ca_0415e5ed",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-12T02:51:56Z",
+      "side": 1,
+      "message": "In this case, vol-\u003eparams.vol_size is positive but _allocate_vol_requests() is not called yet. should we clear vol-\u003eparams.vol_size to zero here?",
+      "range": {
+        "startLine": 608,
+        "startChar": 2,
+        "endLine": 608,
+        "endChar": 36
+      },
+      "revId": "4c55d49120f95375509876727d9f86b7e32b41f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
