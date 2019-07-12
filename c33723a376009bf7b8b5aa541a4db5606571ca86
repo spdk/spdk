@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3746dc7_6245c61e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3233,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-12T07:56:16Z",
+      "side": 1,
+      "message": "poller will call spdk_nvmf_rdma_destroy_defunct_qpair() periodically if there are pending requests, and if you remove the code here, there can only one chance to get it closed.",
+      "revId": "c33723a376009bf7b8b5aa541a4db5606571ca86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
