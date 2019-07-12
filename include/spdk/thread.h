@@ -206,6 +206,13 @@ void spdk_thread_lib_fini(void);
 struct spdk_thread *spdk_thread_create(const char *name, struct spdk_cpuset *cpumask);
 
 /**
+ * Force the current system thread to act as if executing the given SPDK thread.
+ *
+ * \param thread The thread to set.
+ */
+void spdk_set_thread(struct spdk_thread *thread);
+
+/**
  * Mark the thread as exited, failing all future spdk_thread_poll() calls. May
  * only be called within an spdk poller or message.
  *
