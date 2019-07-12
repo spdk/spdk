@@ -14,7 +14,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 timing_enter blob_bdev_io_wait
 
-truncate -s 64M $testdir/aio.bdev
+fallocate -l 64M $testdir/aio.bdev
 
 $rootdir/test/app/bdev_svc/bdev_svc &
 bdev_svc_pid=$!

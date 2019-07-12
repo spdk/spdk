@@ -41,10 +41,10 @@ function wait_for_devices_ready() {
 
 function devices_initialization() {
 	timing_enter devices_initialization
-	dd if=/dev/zero of=/root/test0 bs=1M count=1024
-	dd if=/dev/zero of=/root/test1 bs=1M count=1024
-	dd if=/dev/zero of=/root/test2 bs=1M count=1024
-	dd if=/dev/zero of=/root/test3 bs=1M count=1024
+	fallocate -l 1024M /root/test0
+	fallocate -l 1024M /root/test1
+	fallocate -l 1024M /root/test2
+	fallocate -l 1024M /root/test3
 	monitor_cmd "drive_add 0 file=/root/test0,format=raw,id=drive0,if=none"
 	monitor_cmd "drive_add 1 file=/root/test1,format=raw,id=drive1,if=none"
 	monitor_cmd "drive_add 2 file=/root/test2,format=raw,id=drive2,if=none"

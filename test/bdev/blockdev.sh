@@ -54,7 +54,7 @@ function nbd_function_test() {
 timing_enter bdev
 
 # Create a file to be used as an AIO backend
-dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
+fallocate -l 10M /tmp/aiofile
 
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
@@ -100,6 +100,7 @@ trap "killprocess $bdevio_pid; exit 1" SIGINT SIGTERM EXIT
 echo "Process bdevio pid: $bdevio_pid"
 waitforlisten $bdevio_pid
 $testdir/bdevio/tests.py perform_tests
+
 killprocess $bdevio_pid
 trap - SIGINT SIGTERM EXIT
 timing_exit bounds

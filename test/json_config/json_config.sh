@@ -193,7 +193,7 @@ function create_bdev_subsystem_config() {
 
 		if [[ $(uname -s) = Linux ]]; then
 			# This AIO bdev must be large enough to be used as LVOL store
-			dd if=/dev/zero of=/tmp/sample_aio bs=1024 count=102400
+			falloc -l 100M /tmp/sample_aio
 			tgt_rpc construct_aio_bdev /tmp/sample_aio aio_disk 1024
 			expected_notifications+=( bdev_register:aio_disk )
 		fi

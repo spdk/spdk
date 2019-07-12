@@ -735,7 +735,7 @@ function vm_setup()
 					fi
 
 					notice "Creating Virtio disc $raw_disk"
-					dd if=/dev/zero of=$raw_disk bs=1024k count=1024
+					fallocate -l 1024M $raw_disk
 				else
 					notice "Using existing image $raw_disk"
 				fi

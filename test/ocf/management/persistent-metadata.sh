@@ -7,13 +7,13 @@ source $rootdir/test/common/autotest_common.sh
 rpc_py=$rootdir/scripts/rpc.py
 
 rm -f aio*
-truncate -s 128M aio0
-truncate -s 128M aio1
-truncate -s 128M aio2
-truncate -s 128M aio3
-truncate -s 128M aio4
-truncate -s 128M aio5
-truncate -s 128M aio6
+fallocate -l 128M aio0
+fallocate -l 128M aio1
+fallocate -l 128M aio2
+fallocate -l 128M aio3
+fallocate -l 128M aio4
+fallocate -l 128M aio5
+fallocate -l 128M aio6
 
 echo "
 [AIO]

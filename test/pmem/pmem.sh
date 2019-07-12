@@ -103,7 +103,7 @@ function pmem_pool_info_tc3()
 		pmempool create -s 32000000 obj $obj_pool_file
 	else
 		echo "Warning: pmempool package not found! Creating stub file."
-		truncate -s "32M" $obj_pool_file
+		fallocate -l 32M $obj_pool_file
 	fi
 
 	if $rpc_py pmem_pool_info $obj_pool_file; then
@@ -394,7 +394,7 @@ function delete_pmem_pool_tc2()
 		pmempool create -s 32000000 obj $obj_pool_file
 	else
 		echo "Warning: pmempool package not found! Creating stub file."
-		truncate -s "32M" $obj_pool_file
+		fallocate -l 32M $obj_pool_file
 	fi
 
 	if $rpc_py delete_pmem_pool $obj_pool_file; then
@@ -478,7 +478,7 @@ function construct_pmem_bdev_tc3()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 
-	truncate -s 32M $rootdir/test/pmem/random_file
+	fallocate -l 32M $rootdir/test/pmem/random_file
 	if $rpc_py construct_pmem_bdev -n $bdev_name $rootdir/test/pmem/random_file; then
 		error "Created pmem bdev from random file!"
 	fi
@@ -501,7 +501,7 @@ function construct_pmem_bdev_tc4()
 		pmempool create -s 32000000 obj $obj_pool_file
 	else
 		echo "Warning: pmempool package not found! Creating stub file."
-		truncate -s "32M" $obj_pool_file
+		fallocate -l 32M $obj_pool_file
 	fi
 
 	if $rpc_py construct_pmem_bdev -n $bdev_name $obj_pool_file; then
