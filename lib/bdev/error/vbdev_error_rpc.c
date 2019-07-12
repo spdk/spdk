@@ -92,17 +92,21 @@ spdk_rpc_construct_error_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_error_bdev req = {};
 	struct spdk_json_write_ctx *w;
+	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_construct_error_bdev_decoders,
 				    SPDK_COUNTOF(rpc_construct_error_bdev_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
-	if (spdk_vbdev_error_create(req.base_name)) {
-		SPDK_ERRLOG("Could not create ErrorInjection bdev %s\n", req.base_name);
-		goto invalid;
+	rc = spdk_vbdev_error_create(req.base_name);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -118,8 +122,7 @@ spdk_rpc_construct_error_bdev(struct spdk_jsonrpc_request *request,
 
 	return;
 
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+cleanup:
 	free_rpc_construct_error_bdev(&req);
 }
 SPDK_RPC_REGISTER("construct_error_bdev", spdk_rpc_construct_error_bdev, SPDK_RPC_RUNTIME)
@@ -159,19 +162,20 @@ spdk_rpc_delete_error_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_error req = {NULL};
 	struct spdk_bdev *vbdev;
-	int rc;
+	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_delete_error_decoders,
 				    SPDK_COUNTOF(rpc_delete_error_decoders),
 				    &req)) {
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	vbdev = spdk_bdev_get_by_name(req.name);
 	if (vbdev == NULL) {
-		rc = -ENODEV;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
 
 	spdk_vbdev_error_delete(vbdev, _spdk_rpc_delete_error_bdev_cb, request);
@@ -180,9 +184,8 @@ spdk_rpc_delete_error_bdev(struct spdk_jsonrpc_request *request,
 
 	return;
 
-invalid:
+cleanup:
 	free_rpc_delete_error(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("delete_error_bdev", spdk_rpc_delete_error_bdev, SPDK_RPC_RUNTIME)
 
@@ -216,28 +219,35 @@ spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	uint32_t io_type;
 	uint32_t error_type;
-	int ret;
+	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_error_information_decoders,
 				    SPDK_COUNTOF(rpc_error_information_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	io_type = spdk_rpc_error_bdev_io_type_parse(req.io_type);
 	if (io_type == ERROR_BDEV_IO_TYPE_INVALID) {
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -EINVAL,
+						 "Unexpected io_type value");
+		goto cleanup;
 	}
 
 	error_type = spdk_rpc_error_bdev_error_type_parse(req.error_type);
 	if (error_type == ERROR_BDEV_ERROR_TYPE_INVALID) {
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -EINVAL,
+						 "Unexpected error_type value");
+		goto cleanup;
 	}
 
-	ret = spdk_vbdev_inject_error(req.name, io_type, error_type, req.num);
-	if (ret) {
-		goto invalid;
+	rc = spdk_vbdev_inject_error(req.name, io_type, error_type, req.num);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
 
 	free_rpc_error_information(&req);
@@ -251,8 +261,7 @@ spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 	return;
 
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+cleanup:
 	free_rpc_error_information(&req);
 }
 SPDK_RPC_REGISTER("bdev_inject_error", spdk_rpc_bdev_inject_error, SPDK_RPC_RUNTIME)

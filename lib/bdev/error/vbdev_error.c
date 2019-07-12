@@ -108,7 +108,7 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint3
 	if (!bdev) {
 		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", name);
 		pthread_mutex_unlock(&g_vbdev_error_mutex);
-		return -1;
+		return -ENODEV;
 	}
 
 	TAILQ_FOREACH(part, &g_error_disks, tailq) {
@@ -121,7 +121,7 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint3
 	if (error_disk == NULL) {
 		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", name);
 		pthread_mutex_unlock(&g_vbdev_error_mutex);
-		return -1;
+		return -ENODEV;
 	}
 
 	if (0xffffffff == io_type) {
