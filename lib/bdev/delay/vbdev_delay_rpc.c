@@ -75,30 +75,28 @@ spdk_rpc_bdev_delay_create(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_construct_delay_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_DELAY, "spdk_json_decode_object failed\n");
-		free_rpc_construct_delay(&req);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		return;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	rc = create_delay_disk(req.base_bdev_name, req.name, req.avg_read_latency, req.p99_read_latency,
 			       req.avg_write_latency, req.p99_write_latency);
 	if (rc != 0) {
-		free_rpc_construct_delay(&req);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Failed to create delay_disk");
-		return;
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
-		free_rpc_construct_delay(&req);
-		return;
+		goto cleanup;
 	}
 
 	spdk_json_write_string(w, req.name);
 	spdk_jsonrpc_end_result(request, w);
+
+cleanup:
 	free_rpc_construct_delay(&req);
-	return;
 }
 SPDK_RPC_REGISTER("bdev_delay_create", spdk_rpc_bdev_delay_create, SPDK_RPC_RUNTIME)
 
@@ -137,29 +135,24 @@ spdk_rpc_bdev_delay_delete(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_delay req = {NULL};
 	struct spdk_bdev *bdev;
-	int rc;
 
 	if (spdk_json_decode_object(params, rpc_delete_delay_decoders,
 				    SPDK_COUNTOF(rpc_delete_delay_decoders),
 				    &req)) {
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
-		rc = -ENODEV;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
 	}
 
 	delete_delay_disk(bdev, _spdk_rpc_bdev_delay_delete_cb, request);
 
+cleanup:
 	free_rpc_delete_delay(&req);
-
-	return;
-
-invalid:
-	free_rpc_delete_delay(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("bdev_delay_delete", spdk_rpc_bdev_delay_delete, SPDK_RPC_RUNTIME)
