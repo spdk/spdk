@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d5623eaf_e279c0e6",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-12T11:22:27Z",
+      "side": 1,
+      "message": "I don\u0027t think so. First: split does not use RPC. Second: there isn\u0027t any other bdev that creates bdevs while creating controller and remove bdevs by removing controller. This issue is valid only for NVMe controllers. Third: This function removes only NVMe bdevs, so the order of removal does not matter.",
+      "parentUuid": "839ede18_3916548d",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 40
+      },
+      "revId": "84c4126eb88f3b41714f26d2fd971a888f0938f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5ad5449d_9d3a0535",
         "filename": "test/json_config/clear_config.py",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-07-12T09:29:04Z",
       "side": 1,
       "message": "How about changing this patch to issue get_bdevs() again on each successful delete, until get_bdevs() does not return any bdev? List of bdevs would get updated, and any dependencies would be resolved as the bdevs get deleted.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 72
+      },
+      "revId": "84c4126eb88f3b41714f26d2fd971a888f0938f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41a03bc5_0edaa9bd",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-12T11:22:27Z",
+      "side": 1,
+      "message": "This function does not base on get_bdevs output (rpc_bdevs) to select bdev for removal but on function argument (bdev_config), so reloading rpc_bdevs list won\u0027t solve that issue as we will still call remove function for original list passed with argument.",
+      "parentUuid": "5ad5449d_9d3a0535",
       "range": {
         "startLine": 75,
         "startChar": 0,
