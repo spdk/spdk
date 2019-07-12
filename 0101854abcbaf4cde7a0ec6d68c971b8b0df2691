@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d5e4f19_af0ba6e5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-12T13:15:08Z",
+      "side": 1,
+      "message": "A snapshot can now be deleted if there is only a single clone on top of it.",
+      "revId": "0101854abcbaf4cde7a0ec6d68c971b8b0df2691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c4dd061_58cc2a3a",
+        "filename": "doc/lvol.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-12T13:15:08Z",
+      "side": 1,
+      "message": "A snapshot can be removed only if there is a single clone on top of it. The relation chain will be updated accordingly. The cluster map of clone and snapshot will be merged and entries for unallocated clusters in the clone will be updated with addresses from the snapshot cluster map. The entire operation modifies metadata only - no data is copied during this process.",
+      "revId": "0101854abcbaf4cde7a0ec6d68c971b8b0df2691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
