@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce31f5ec_a03836b2",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-12T12:05:15Z",
+      "side": 1,
+      "message": "If the user wants to cross-compile, I think they should set CC, CXX, and LD in their environment and then invoke make.",
+      "revId": "85fcc5498ac214e1499ae0977b5ad5b97ab8e8f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e98a2e2_89bb2c8f",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-12T12:05:15Z",
+      "side": 1,
+      "message": "It should be possible to determine that the user is cross compiling just by looking at their $(CC). I think you can compare the output of \u0027uname -m\u0027 to the variable $(TARGET_MACHINE). If they\u0027re the same, they aren\u0027t cross compiling. If they\u0027re different, you should set CROSS.",
+      "revId": "85fcc5498ac214e1499ae0977b5ad5b97ab8e8f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cddf3cf6_d4d2871a",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-12T12:05:15Z",
+      "side": 1,
+      "message": "I think you can actually get this cross prefix by doing $(shell $(CC) -dumpmachine), assuming the user has set CC correctly. In fact, I think it\u0027s already available as the variable $(TARGET_TRIPLE).",
+      "revId": "85fcc5498ac214e1499ae0977b5ad5b97ab8e8f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
