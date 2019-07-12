@@ -201,4 +201,26 @@ int spdk_zdev_zone_close(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch
 int spdk_zdev_zone_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			 uint64_t start_lba, spdk_bdev_io_completion_cb cb, void *cb_arg);
 
+/**
+ * Submit a zone_append request to the bdev.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param start_lba First logical block of a zone.
+ * \param buf Data buffer to written from.
+ * \param num_blocks The number of blocks to write. buf must be greater than or equal to this size.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_zdev_zone_append(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			  void *buf, uint64_t start_lba, uint64_t num_blocks,
+			  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
 #endif /* SPDK_ZDEV_H */
