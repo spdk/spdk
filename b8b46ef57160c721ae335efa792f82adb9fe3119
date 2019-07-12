@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "505679d2_c7e1f6c9",
+        "filename": "examples/nvme/hello_world/hello_world.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-12T07:52:23Z",
+      "side": 1,
+      "message": "Can you just drop this part of the patch? There may be a bug here with inactive namespaces, but this print isn\u0027t related to the patch anyway.",
+      "revId": "b8b46ef57160c721ae335efa792f82adb9fe3119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
