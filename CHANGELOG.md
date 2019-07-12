@@ -17,6 +17,7 @@ Added `spdk_zdev_zone_open() `, `spdk_zdev_zone_finish()`,
 `spdk_zdev_zone_close()`, `spkd_zdev_zone_reset()` new APIs for changing zone
 state.
 `spdk_zdev_from_bdev()` API was added for downcasting bdev to zdev.
+`spdk_zdev_zone_append()` API was added for appending data to a zone.
 
 ### bdev
 
