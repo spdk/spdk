@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33e14805_112bd2e0",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:32:49Z",
+      "side": 1,
+      "message": "maybe \"goto cleanup\" here",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 115,
+        "endChar": 9
+      },
+      "revId": "e0e85a3f13411b7897e36c959ead4d5afc2b8a66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f840f851_d22c301c",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:32:49Z",
+      "side": 1,
+      "message": "these 2 lines can be removed",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 8
+      },
+      "revId": "e0e85a3f13411b7897e36c959ead4d5afc2b8a66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d22bb9d1_64ff63d9",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:32:49Z",
+      "side": 1,
+      "message": "Here rc \u003d 0 always. I suggest removing rc variable completely and use ENODEV here",
+      "range": {
+        "startLine": 177,
+        "startChar": 44,
+        "endLine": 177,
+        "endChar": 46
+      },
+      "revId": "e0e85a3f13411b7897e36c959ead4d5afc2b8a66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c35563df_dac38a18",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:32:49Z",
+      "side": 1,
+      "message": "these 2 lines can be removed",
+      "range": {
+        "startLine": 183,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 8
+      },
+      "revId": "e0e85a3f13411b7897e36c959ead4d5afc2b8a66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6e5bd80_d884893a",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:32:49Z",
+      "side": 1,
+      "message": "this line and return at #262 can be removed, but then also \"goto cleanup\" should be used at #257",
+      "range": {
+        "startLine": 253,
+        "startChar": 0,
+        "endLine": 253,
+        "endChar": 34
+      },
+      "revId": "e0e85a3f13411b7897e36c959ead4d5afc2b8a66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
