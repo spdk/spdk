@@ -210,7 +210,7 @@ static int nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
-static volatile uint16_t g_signal_lock;
+static uint16_t g_signal_lock;
 static bool g_sigset = false;
 static int hotplug_fd = -1;
 
@@ -218,8 +218,11 @@ static void
 nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
 {
 	void *map_address;
+	uint16_t flag = 0;
 
-	if (!__sync_bool_compare_and_swap(&g_signal_lock, 0, 1)) {
+	if (!__atomic_compare_exchange_n(&g_signal_lock, &flag, 1, false, __ATOMIC_ACQUIRE,
+					 __ATOMIC_RELAXED)) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "request g_signal_lock failed\n");
 		return;
 	}
 
@@ -231,15 +234,14 @@ nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
 				   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
 		if (map_address == MAP_FAILED) {
 			SPDK_ERRLOG("mmap failed\n");
-			g_signal_lock = 0;
+			__atomic_store_n(&g_signal_lock, 0, __ATOMIC_RELEASE);
 			return;
 		}
 		memset(map_address, 0xFF, sizeof(struct spdk_nvme_registers));
 		g_thread_mmio_ctrlr->regs = (volatile struct spdk_nvme_registers *)map_address;
 		g_thread_mmio_ctrlr->is_remapped = true;
 	}
-	g_signal_lock = 0;
-	return;
+	__atomic_store_n(&g_signal_lock, 0, __ATOMIC_RELEASE);
 }
 
 static void
