@@ -40,6 +40,7 @@
 #include "ftl_core.h"
 #include "ftl_rwb.h"
 #include "ftl_band.h"
+#include "ftl_debug.h"
 
 void
 ftl_io_inc_req(struct ftl_io *io)
@@ -479,11 +480,17 @@ ftl_io_alloc_child(struct ftl_io *parent)
 void
 ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status)
 {
+	char ppa_buf[128];
+
 	/* TODO: add error handling for specifc cases */
 	if (status->status.sct == SPDK_NVME_SCT_MEDIA_ERROR &&
 	    status->status.sc == SPDK_OCSSD_SC_READ_HIGH_ECC) {
 		return;
 	}
+
+	SPDK_ERRLOG("Status code type 0x%x, status code 0x%x for IO type %u @ppa: %s, lba 0x%lx, cnt %lu\n",
+		    status->status.sct, status->status.sc, io->type, ftl_ppa2str(io->ppa, ppa_buf, sizeof(ppa_buf)),
+		    ftl_io_get_lba(io, 0), io->lbk_cnt);
 
 	io->status = -EIO;
 }
