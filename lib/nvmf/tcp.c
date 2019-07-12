@@ -270,6 +270,9 @@ struct spdk_nvmf_tcp_poll_group {
 	TAILQ_HEAD(, spdk_nvmf_tcp_req)		pending_data_buf_queue;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
+
+	/* poll group poller */
+	struct spdk_poller			*group_poller;
 };
 
 struct spdk_nvmf_tcp_port {
@@ -1207,6 +1210,8 @@ spdk_nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 	spdk_sock_group_close(&tgroup->sock_group);
+
+	spdk_poller_unregister(&tgroup->group_poller);
 
 	if (!TAILQ_EMPTY(&tgroup->pending_data_buf_queue)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on poll group destruction\n");
@@ -2743,6 +2748,28 @@ spdk_nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair)
 }
 
 static int
+_nvmf_tcp_poll_group_poll(void *ctx)
+{
+	int rc;
+	struct spdk_nvmf_tcp_poll_group *tgroup = ctx;
+
+	rc = spdk_sock_group_poll(tgroup->sock_group);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
+		return rc;
+	}
+
+	if (rc && tgroup->group_poller) {
+		spdk_poller_unregister(&tgroup->group_poller);
+	}
+
+	return rc;
+}
+
+
+#define SPDK_NVMF_TCP_POLL_GROUP_TIME_IN_US 10
+
+static int
 spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
@@ -2754,10 +2781,12 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 		return 0;
 	}
 
-	rc = spdk_sock_group_poll(tgroup->sock_group);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
-		return rc;
+	if (tgroup->group_poller == NULL) {
+		rc = _nvmf_tcp_poll_group_poll(tgroup);
+		if (!rc) {
+			tgroup->group_poller = spdk_poller_register(_nvmf_tcp_poll_group_poll,
+					       tgroup, SPDK_NVMF_TCP_POLL_GROUP_TIME_IN_US);
+		}
 	}
 
 	return 0;
