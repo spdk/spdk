@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4ec45ebb_3014bd00",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-12T09:29:56Z",
+      "side": 1,
+      "message": "I think that here won\u0027t be segfault as in spdk_json_write_end is checked if response \u003d\u003d NULL.",
+      "parentUuid": "3d6aa39c_20abec25",
+      "range": {
+        "startLine": 211,
+        "startChar": 16,
+        "endLine": 211,
+        "endChar": 23
+      },
+      "revId": "e91fd4731412a965bbbd1cce288d7eb0449703d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d3edffe_8cc96ba1",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 6
@@ -39,6 +63,24 @@
       "revId": "e91fd4731412a965bbbd1cce288d7eb0449703d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a5b6408_880a62b3",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-12T09:29:56Z",
+      "side": 1,
+      "message": "I agree. Doing free on request before sending it may cause problems.",
+      "parentUuid": "5d3edffe_8cc96ba1",
+      "revId": "e91fd4731412a965bbbd1cce288d7eb0449703d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
