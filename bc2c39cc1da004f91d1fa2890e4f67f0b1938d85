@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0960b30_f4325c49",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:19:12Z",
+      "side": 1,
+      "message": "return?",
+      "range": {
+        "startLine": 62,
+        "startChar": 1,
+        "endLine": 62,
+        "endChar": 2
+      },
+      "revId": "bc2c39cc1da004f91d1fa2890e4f67f0b1938d85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3d1e7fc_5d66ac94",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:19:12Z",
+      "side": 1,
+      "message": "return?",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 67,
+        "endChar": 2
+      },
+      "revId": "bc2c39cc1da004f91d1fa2890e4f67f0b1938d85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c7adf1c_e670103c",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:19:12Z",
+      "side": 1,
+      "message": "return?",
+      "range": {
+        "startLine": 72,
+        "startChar": 1,
+        "endLine": 72,
+        "endChar": 2
+      },
+      "revId": "bc2c39cc1da004f91d1fa2890e4f67f0b1938d85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63715226_30882276",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:19:12Z",
+      "side": 1,
+      "message": "This return is redundant here",
+      "range": {
+        "startLine": 80,
+        "startChar": 1,
+        "endLine": 80,
+        "endChar": 8
+      },
+      "revId": "bc2c39cc1da004f91d1fa2890e4f67f0b1938d85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
