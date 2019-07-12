@@ -46,6 +46,13 @@ $spdkcli_job "'/lvol_stores create lvs0 Malloc0' 'lvs0' True
 "
 timing_exit spdkcli_create_lvols_config
 
+timing_enter spdkcli_check_match_details
+# We delete .uuid field because it is not deterministic
+$rootdir/scripts/spdkcli.py /lvol_stores/lvs0 show_details | jq 'del(.uuid)' > $testdir/match_files/spdkcli_details_lvs.test
+$rootdir/test/app/match/match $testdir/match_files/spdkcli_details_lvs.test.match
+rm -f $testdir/match_files/spdkcli_details_lvs.test
+timing_exit spdkcli_check_match_details
+
 timing_enter spdkcli_create_vhosts_config
 $spdkcli_job "'vhost/block create vhost_blk1 Nvme0n1p0' 'Nvme0n1p0' True
 'vhost/block create vhost_blk2 Nvme0n1p1 0x1 readonly' 'Nvme0n1p1' True
