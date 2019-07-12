@@ -40,4 +40,10 @@ SYS_LIBS += -laio
 CFLAGS += -DHAVE_LIBAIO
 endif
 
+
+ifeq ($(strip $(CONFIG_URING_PATH)),)
+CFLAGS += -DHAVE_LIBURING
+LDFLAGS += -L$(CONFIG_URING_PATH)
+endif
+
 include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk

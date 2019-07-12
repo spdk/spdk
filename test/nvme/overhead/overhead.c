@@ -43,6 +43,12 @@
 
 #if HAVE_LIBAIO
 #include <libaio.h>
+#undef HAVE_LIBURING
+#endif
+
+#if HAVE_LIBURING
+#include "liburing.h"
+#undef HAVE_LIBAIO
 #endif
 
 struct ctrlr_entry {
@@ -54,10 +60,13 @@ struct ctrlr_entry {
 enum entry_type {
 	ENTRY_TYPE_NVME_NS,
 	ENTRY_TYPE_AIO_FILE,
+	ENTRY_TYPE_IO_URING_FILE,
 };
 
 struct ns_entry {
 	enum entry_type		type;
+	int			io_inflight;
+	int			io_pending;
 
 	union {
 		struct {
@@ -71,6 +80,12 @@ struct ns_entry {
 			struct io_event		*events;
 			io_context_t		ctx;
 		} aio;
+#endif
+#if HAVE_LIBURING
+		struct {
+			struct io_uring uring;
+			int    fd;
+		} uring;
 #endif
 	} u;
 
@@ -94,6 +109,10 @@ struct perf_task {
 };
 
 static bool g_enable_histogram = false;
+#if HAVE_LIBURING
+static bool g_enable_fixedbufs = false;
+struct iovec *g_iov;
+#endif
 
 static struct ctrlr_entry *g_ctrlr = NULL;
 static struct ns_entry *g_ns = NULL;
@@ -103,10 +122,11 @@ static uint64_t g_tsc_rate;
 static uint32_t g_io_size_bytes;
 static int g_time_in_sec;
 
-static int g_aio_optind; /* Index of first AIO filename in argv */
+static int g_io_interface_optind; /* Index of first AIO filename in argv */
 
 struct perf_task *g_task;
 uint64_t g_tsc_submit = 0;
+uint64_t g_actual_submit = 0;
 uint64_t g_tsc_submit_min = UINT64_MAX;
 uint64_t g_tsc_submit_max = 0;
 uint64_t g_tsc_complete = 0;
@@ -280,6 +300,174 @@ aio_check_io(void)
 	}
 }
 #endif /* HAVE_LIBAIO */
+#if HAVE_LIBURING
+static int
+register_io_uring_file(const char *path)
+{
+	struct ns_entry *entry;
+
+	int fd, flags;
+	uint64_t size;
+	uint32_t blklen;
+
+	flags = O_RDONLY | O_NOATIME | O_DIRECT;
+	fd = open(path, flags);
+	if (fd < 0) {
+		fprintf(stderr, "Could not open IO_URING device %s: %s\n", path, strerror(errno));
+		return -1;
+	}
+
+	size = spdk_fd_get_size(fd);
+	if (size == 0) {
+		fprintf(stderr, "Could not determine size of IO_URING device %s\n", path);
+		close(fd);
+		return -1;
+	}
+
+	blklen = spdk_fd_get_blocklen(fd);
+	if (blklen == 0) {
+		fprintf(stderr, "Could not determine block size of IO_URING device %s\n", path);
+		close(fd);
+		return -1;
+	}
+
+	entry = calloc(1, sizeof(struct ns_entry));
+	if (entry == NULL) {
+		close(fd);
+		perror("io_uring ns_entry malloc");
+		return -1;
+	}
+
+	entry->type = ENTRY_TYPE_IO_URING_FILE;
+	entry->u.uring.fd = fd;
+	entry->size_in_ios = size / g_io_size_bytes;
+	entry->io_size_blocks = g_io_size_bytes / blklen;
+	entry->submit_histogram = spdk_histogram_data_alloc();
+	entry->complete_histogram = spdk_histogram_data_alloc();
+
+	snprintf(entry->name, sizeof(entry->name), "%s", path);
+
+	g_ns = entry;
+
+	return 0;
+}
+
+static int
+io_uring_submit_single(struct io_uring *uring, int fd, const __u8 cmd, void *buf,
+		       unsigned long nbytes,
+		       uint64_t offset, void *cb_ctx)
+{
+	struct io_uring_sqe *sqe;
+	static bool register_buffers = true;
+
+	sqe = io_uring_get_sqe(uring);
+
+	if (g_enable_fixedbufs) {
+		if (register_buffers) {
+			g_iov = calloc(1, sizeof(struct iovec));
+			g_iov->iov_base = buf;
+			g_iov->iov_len = nbytes;
+			io_uring_register_buffers(uring, g_iov, 1);
+			register_buffers = false;
+		}
+		if (cmd == IORING_OP_READ_FIXED) {
+			g_ns->io_pending++;
+			io_uring_prep_read_fixed(sqe, fd, g_iov->iov_base, nbytes, offset);
+		} else {
+			io_uring_prep_write_fixed(sqe, fd, g_iov->iov_base, nbytes, offset);
+		}
+
+	} else {
+		struct iovec *iov;
+		iov = calloc(1, sizeof(struct iovec));
+		iov->iov_base = buf;
+		iov->iov_len = nbytes;
+
+		if (cmd == IORING_OP_READ_FIXED) {
+			g_ns->io_pending++;
+			io_uring_prep_readv(sqe, fd, iov, 1, offset);
+		} else {
+			io_uring_prep_writev(sqe, fd, iov, 1, offset);
+		}
+	}
+	io_uring_sqe_set_data(sqe, cb_ctx);
+
+	return 0;
+}
+
+static int
+io_uring_reap(struct io_uring *ring, int max)
+{
+	int i, count, ret;
+	struct io_uring_cqe *cqe;
+	count = 0;
+
+	for (i = 0; i < max; i++) {
+		ret = io_uring_peek_cqe(ring, &cqe);
+		if (ret != 0) {
+			return ret;
+		}
+
+		if (cqe == NULL) {
+			return count;
+		}
+
+		if (cqe->res != (signed) g_io_size_bytes) {
+			fprintf(stderr, "ret=%d, wanted 4096\n", cqe->res);
+			exit(1);
+		}
+		io_uring_cqe_seen(ring, cqe);
+		g_ns->current_queue_depth--;
+		count++;
+	}
+
+	return count;
+}
+
+static void
+io_uring_check_io(void)
+{
+	struct io_uring *ring = &g_ns->u.uring.uring;
+	int to_submit, to_complete;
+	int ret = 0;
+	int count;
+	uint64_t start, tsc_submit;
+
+	to_submit = g_ns->io_pending;
+	to_complete = g_ns->io_inflight;
+
+	if (to_submit > 0) {
+		start = spdk_get_ticks();
+		ret = io_uring_submit(ring);
+		g_ns->io_pending = 0;
+		g_ns->io_inflight += to_submit;
+		tsc_submit = spdk_get_ticks() - start;
+		g_tsc_submit += tsc_submit;
+		if (tsc_submit < g_tsc_submit_min) {
+			g_tsc_submit_min = tsc_submit;
+		}
+		if (tsc_submit > g_tsc_submit_max) {
+			g_tsc_submit_max = tsc_submit;
+		}
+		if (g_enable_histogram) {
+			spdk_histogram_data_tally(g_ns->submit_histogram, tsc_submit);
+		}
+	} else if (to_complete > 0) {
+		ret = io_uring_enter(ring->ring_fd, 0, 0,
+				     IORING_ENTER_GETEVENTS, NULL);
+	}
+
+	if (ret < 0) {
+		exit(1);
+	}
+
+	if (to_complete > 0) {
+		count = io_uring_reap(ring, to_complete);
+		g_ns->io_inflight -= count;
+	}
+
+}
+#endif
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
 
@@ -304,11 +492,18 @@ submit_single_io(void)
 				g_io_size_bytes, offset_in_ios * g_io_size_bytes, g_task);
 	} else
 #endif
-	{
-		rc = spdk_nvme_ns_cmd_read(entry->u.nvme.ns, g_ns->u.nvme.qpair, g_task->buf,
-					   offset_in_ios * entry->io_size_blocks,
-					   entry->io_size_blocks, io_complete, g_task, 0);
-	}
+#if HAVE_LIBURING
+		if (entry->type == ENTRY_TYPE_IO_URING_FILE) {
+			rc = io_uring_submit_single(&g_ns->u.uring.uring, entry->u.uring.fd, IORING_OP_READ_FIXED,
+						    g_task->buf, g_io_size_bytes, offset_in_ios * g_io_size_bytes, g_task);
+		} else
+#endif
+
+		{
+			rc = spdk_nvme_ns_cmd_read(entry->u.nvme.ns, g_ns->u.nvme.qpair, g_task->buf,
+						   offset_in_ios * entry->io_size_blocks,
+						   entry->io_size_blocks, io_complete, g_task, 0);
+		}
 
 	spdk_rmb();
 	tsc_submit = spdk_get_ticks() - start;
@@ -349,9 +544,14 @@ check_io(void)
 		aio_check_io();
 	} else
 #endif
-	{
-		spdk_nvme_qpair_process_completions(g_ns->u.nvme.qpair, 0);
-	}
+#if HAVE_LIBURING
+		if (g_ns->type == ENTRY_TYPE_IO_URING_FILE) {
+			io_uring_check_io();
+		} else
+#endif
+		{
+			spdk_nvme_qpair_process_completions(g_ns->u.nvme.qpair, 0);
+		}
 	spdk_rmb();
 	end = spdk_get_ticks();
 	if (g_ns->current_queue_depth == 1) {
@@ -363,7 +563,8 @@ check_io(void)
 		 *  will ensure this extra time is accounted for next time through
 		 *  when we see current_queue_depth drop to 0.
 		 */
-		if (g_ns->type == ENTRY_TYPE_NVME_NS || (end - g_complete_tsc_start) < 500) {
+		if (g_ns->type == ENTRY_TYPE_NVME_NS || (g_ns->type == ENTRY_TYPE_IO_URING_FILE) ||
+		    (end - g_complete_tsc_start) < 500) {
 			g_complete_tsc_start = end;
 		}
 	} else {
@@ -413,6 +614,19 @@ init_ns_worker_ctx(void)
 			return -1;
 		}
 #endif
+	} else if (g_ns->type == ENTRY_TYPE_IO_URING_FILE) {
+#ifdef HAVE_LIBURING
+		struct io_uring *ring = &g_ns->u.uring.uring;
+		int ret;
+		g_ns->io_pending = 0;
+		g_ns->io_inflight = 0;
+
+		ret = io_uring_queue_init(1, ring, IORING_SETUP_IOPOLL);
+		if (ret < 0) {
+			fprintf(stderr, "queue_init error\n");
+			return -1;
+		}
+#endif
 	} else {
 		/*
 		 * TODO: If a controller has multiple namespaces, they could all use the same queue.
@@ -435,6 +649,11 @@ cleanup_ns_worker_ctx(void)
 #ifdef HAVE_LIBAIO
 		io_destroy(g_ns->u.aio.ctx);
 		free(g_ns->u.aio.events);
+#endif
+	} else if (g_ns->type == ENTRY_TYPE_IO_URING_FILE) {
+#ifdef HAVE_LIBURING
+		close(g_ns->u.uring.uring.ring_fd);
+		io_uring_queue_exit(&g_ns->u.uring.uring);
 #endif
 	} else {
 		spdk_nvme_ctrlr_free_io_qpair(g_ns->u.nvme.qpair);
@@ -551,11 +770,14 @@ parse_args(int argc, char **argv)
 	g_io_size_bytes = 0;
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "hs:t:H")) != -1) {
+	while ((op = getopt(argc, argv, "hfs:t:H")) != -1) {
 		switch (op) {
 		case 'h':
 			usage(argv[0]);
 			exit(0);
+			break;
+		case 'f':
+			g_enable_fixedbufs = true;
 			break;
 		case 's':
 			val = spdk_strtol(optarg, 10);
@@ -590,7 +812,7 @@ parse_args(int argc, char **argv)
 		return 1;
 	}
 
-	g_aio_optind = optind;
+	g_io_interface_optind = optind;
 
 	return 0;
 }
@@ -684,35 +906,47 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	g_task = spdk_zmalloc(sizeof(struct perf_task), 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	g_task = spdk_dma_zmalloc(sizeof(struct perf_task), 0, NULL);
 	if (g_task == NULL) {
 		fprintf(stderr, "g_task alloc failed\n");
 		exit(1);
 	}
 
-	g_task->buf = spdk_zmalloc(g_io_size_bytes, 0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	g_task->buf = spdk_dma_zmalloc(g_io_size_bytes, 0x1000, NULL);
 	if (g_task->buf == NULL) {
-		fprintf(stderr, "g_task->buf spdk_zmalloc failed\n");
+		fprintf(stderr, "g_task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
 	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
 
 #if HAVE_LIBAIO
-	if (g_aio_optind < argc) {
-		printf("Measuring overhead for AIO device %s.\n", argv[g_aio_optind]);
-		if (register_aio_file(argv[g_aio_optind]) != 0) {
+	if (g_io_interface_optind < argc) {
+		printf("Measuring overhead for AIO device %s.\n", argv[g_io_interface_optind]);
+		if (register_aio_file(argv[g_io_interface_optind]) != 0) {
 			cleanup();
 			return -1;
 		}
 	} else
 #endif
-	{
-		if (register_controllers() != 0) {
-			cleanup();
-			return -1;
+#if HAVE_LIBURING
+		if (g_io_interface_optind < argc) {
+			printf("Measuring overhead for IO_URING device %s.\n", argv[g_io_interface_optind]);
+			if (g_enable_fixedbufs) {
+				printf("Using Fixedbufs for IO_uring...\n");
+			}
+			if (register_io_uring_file(argv[g_io_interface_optind]) != 0) {
+				cleanup();
+				return -1;
+			}
+		} else
+#endif
+		{
+			if (register_controllers() != 0) {
+				cleanup();
+				return -1;
+			}
 		}
-	}
 
 	printf("Initialization complete. Launching workers.\n");
 
