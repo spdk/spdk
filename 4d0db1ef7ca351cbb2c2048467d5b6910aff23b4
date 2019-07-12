@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb2114bd_1aba1a62",
+        "filename": "lib/bdev/iscsi/bdev_iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:38:19Z",
+      "side": 1,
+      "message": "these 2 lines can be removed",
+      "range": {
+        "startLine": 105,
+        "startChar": 0,
+        "endLine": 106,
+        "endChar": 8
+      },
+      "revId": "4d0db1ef7ca351cbb2c2048467d5b6910aff23b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea37d98e_a85da8de",
+        "filename": "lib/bdev/iscsi/bdev_iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-12T14:38:19Z",
+      "side": 1,
+      "message": "these 2 lines can be removed",
+      "range": {
+        "startLine": 164,
+        "startChar": 0,
+        "endLine": 167,
+        "endChar": 8
+      },
+      "revId": "4d0db1ef7ca351cbb2c2048467d5b6910aff23b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
