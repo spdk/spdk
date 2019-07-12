@@ -2128,7 +2128,6 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	int rc;
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_device	*device, *tmp;
-	struct ibv_pd			*pd;
 	struct ibv_context		**contexts;
 	uint32_t			i;
 	int				flag;
@@ -2282,20 +2281,16 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
 		i++;
 
-		pd = NULL;
 		if (g_nvmf_hooks.get_ibv_pd) {
-			pd = g_nvmf_hooks.get_ibv_pd(NULL, device->context);
+			device->pd = g_nvmf_hooks.get_ibv_pd(NULL, device->context);
+		} else {
+			device->pd = ibv_alloc_pd(device->context);
 		}
 
-		if (!g_nvmf_hooks.get_ibv_pd) {
-			device->pd = ibv_alloc_pd(device->context);
-			if (!device->pd) {
-				SPDK_ERRLOG("Unable to allocate protection domain.\n");
-				spdk_nvmf_rdma_destroy(&rtransport->transport);
-				return NULL;
-			}
-		} else {
-			device->pd = pd;
+		if (!device->pd) {
+			SPDK_ERRLOG("Unable to allocate protection domain.\n");
+			spdk_nvmf_rdma_destroy(&rtransport->transport);
+			return NULL;
 		}
 
 		assert(device->map == NULL);
