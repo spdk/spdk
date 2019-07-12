@@ -68,6 +68,9 @@ def main():
                 spdk_shell.run_interactive()
             except (JSONRPCException, ExecutionError) as e:
                 spdk_shell.log.error("%s" % e)
+            except BrokenPipeError as e:
+                spdk_shell.log.error("Lost connection with SPDK: %s" % e)
+                break
 
 
 if __name__ == "__main__":
