@@ -1188,6 +1188,7 @@ static void
 ftl_add_halt_poller(void *ctx)
 {
 	struct spdk_ftl_dev *dev = ctx;
+	dev->halt = 1;
 
 	_ftl_halt_defrag(dev);
 
@@ -1204,7 +1205,6 @@ spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *cb_arg)
 
 	dev->halt_cb = cb;
 	dev->halt_arg = cb_arg;
-	dev->halt = 1;
 
 	ftl_rwb_disable_interleaving(dev->rwb);
 
