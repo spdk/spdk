@@ -1402,7 +1402,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-s', '--conn-sched', help="""'roundrobin' - Schedule the incoming connections from any host
     on the cores in a round robin manner (Default). 'hostip' - Schedule all the incoming connections from a
     specific host IP on to the same core. Connections from different IP will be assigned to cores in a round
-    robin manner""")
+    robin manner. 'transport' - Schedule the connection according to the transport characteristics.""")
     p.set_defaults(func=set_nvmf_target_config)
 
     def nvmf_create_transport(args):
