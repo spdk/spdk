@@ -718,6 +718,7 @@ norandommap=1
 percentile_list=50:99:99.9:99.99:99.999
 time_based=1
 ramp_time=0
+numjobs=4
 EOL
 
 	if [ "$workload" == "verify" ]; then
