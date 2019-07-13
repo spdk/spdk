@@ -515,6 +515,8 @@ get_conn_sched_string(enum spdk_nvmf_connect_sched sched)
 {
 	if (sched == CONNECT_SCHED_HOST_IP) {
 		return "hostip";
+	} else if (sched == CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP){
+		return "transport";
 	} else {
 		return "roundrobin";
 	}
