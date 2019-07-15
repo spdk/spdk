@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49aae352_393cd244",
+        "filename": "lib/bdev/delay/vbdev_delay_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-15T11:47:25Z",
+      "side": 1,
+      "message": "Add spdk_jsonrpc_send_error_response here.",
+      "revId": "ff383ce9d0270c1808eecfdb6da686fc8485608f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
