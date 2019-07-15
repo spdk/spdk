@@ -37,19 +37,57 @@ function test_construct_lvs() {
 	rpc_cmd delete_malloc_bdev "$malloc_name"
 }
 
-# try to create two lvs with conflicting aliases
-function test_construct_lvs_conflict_alias() {
-	# create the first one
+# try to create two
+function test_construct_lvs_negative() {
+	# create the first lvs
 	malloc1_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
 	lvs1_uuid=$(rpc_cmd construct_lvol_store "$malloc1_name" lvs_test)
 
-	# second one
+	# make sure we've got 1 lvs
+	lvol_stores=$(rpc_cmd get_lvol_stores)
+	[ "$(jq length <<< "$lvol_stores")" == "1" ]
+
+	# try to create second lvs with conflicting name
 	malloc2_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
 	! rpc_cmd construct_lvol_store "$malloc2_name" lvs_test
+
+	# reuse the second malloc for some more lvs creation negative tests
+	# capacity bigger than malloc's
+	! rpc_cmd construct_lvol_store "$malloc2_name" lvs2_test -c $(( MALLOC_SIZE + 1 ))
+	# capacity equal to malloc's (no space left for metadata)
+	! rpc_cmd construct_lvol_store "$malloc2_name" lvs2_test -c $MALLOC_SIZE
+	# capacity smaller than malloc's, but still no space left for metadata
+	! rpc_cmd construct_lvol_store "$malloc2_name" lvs2_test -c $(( MALLOC_SIZE - 1 ))
+	# cluster size smaller than the minimum (8192)
+	! rpc_cmd construct_lvol_store "$malloc2_name" lvs2_test -c 4096
+	# cluster size smaller than the minimum (8192)
+	! rpc_cmd construct_lvol_store "$malloc2_name" lvs2_test -c 8191
+
+	# no additional lvol stores should have been created
+	lvol_stores=$(rpc_cmd get_lvol_stores)
+	[ "$(jq length <<< "$lvol_stores")" == "1" ]
+
+	# this one should be fine
+	lvs2_uuid=$(rpc_cmd construct_lvol_store "$malloc2_name" lvs2_test -c 8192)
+	# we should have one more lvs
+	lvol_stores=$(rpc_cmd get_lvol_stores)
+	[ "$(jq length <<< "$lvol_stores")" == "2" ]
 
 	# clean up
 	rpc_cmd destroy_lvol_store -u "$lvs1_uuid"
 	! rpc_cmd get_lvol_stores -u "$lvs1_uuid"
+
+	# make sure we've got 1 lvs less
+	lvol_stores=$(rpc_cmd get_lvol_stores)
+	[ "$(jq length <<< "$lvol_stores")" == "1" ]
+
+	rpc_cmd destroy_lvol_store -u "$lvs2_uuid"
+	! rpc_cmd get_lvol_stores -u "$lvs2_uuid"
+
+	# we should be all clear now
+	lvol_stores=$(rpc_cmd get_lvol_stores)
+	[ "$(jq length <<< "$lvol_stores")" == "0" ]
+
 	rpc_cmd delete_malloc_bdev "$malloc1_name"
 	rpc_cmd delete_malloc_bdev "$malloc2_name"
 }
@@ -308,7 +346,7 @@ trap "killprocess $spdk_pid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
 run_test test_construct_lvs
-run_test test_construct_lvs_conflict_alias
+run_test test_construct_lvs_negative
 run_test test_construct_lvol
 run_test test_construct_multi_lvols
 run_test test_construct_lvols_conflict_alias
