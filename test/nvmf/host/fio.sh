@@ -24,7 +24,7 @@ nvmfpid=$!
 trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
-$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 timing_exit start_nvmf_tgt
 
 $rpc_py construct_malloc_bdev 64 512 -b Malloc1

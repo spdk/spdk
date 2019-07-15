@@ -17,7 +17,7 @@ nvmfappstart "-m 0xF --wait-for-rpc"
 # Minimal number of bdev io pool (5) and cache (1)
 $rpc_py set_bdev_options -p 5 -c 1
 $rpc_py start_subsystem_init
-$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
 $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001

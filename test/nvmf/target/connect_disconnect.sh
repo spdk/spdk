@@ -16,7 +16,7 @@ timing_enter connect_disconnect
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192 -c 0
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c 0
 
 bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 

@@ -21,7 +21,7 @@ fi
 nvmfappstart "-m 0xF"
 
 # create the rdma transport with an intentionally small SRQ depth
-$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192 -s 1024
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -s 1024
 
 for i in $(seq 0 5); do
 	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK00000000000001

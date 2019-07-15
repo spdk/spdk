@@ -11,7 +11,7 @@ timing_enter rpc
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
 # set times for subsystem construct/delete
 if [ $RUN_NIGHTLY -eq 1 ]; then

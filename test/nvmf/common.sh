@@ -2,6 +2,7 @@ NVMF_PORT=4420
 NVMF_IP_PREFIX="192.168.100"
 NVMF_IP_LEAST_ADDR=8
 NVMF_TCP_IP_ADDRESS="127.0.0.1"
+NVMF_TRANSPORT_OPTS=""
 
 : ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
 : ${NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"}; export NVMF_APP
@@ -169,6 +170,8 @@ function nvmftestinit()
 			rdma_device_init
 		fi
 	fi
+
+	NVMF_TRANSPORT_OPTS="-t $TEST_TRANSPORT"
 	if [ "$TEST_TRANSPORT" == "rdma" ]; then
 		RDMA_IP_LIST=$(get_available_rdma_ips)
 		NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
