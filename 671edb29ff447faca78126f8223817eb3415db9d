@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5faa390a_34757df1",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1016496
+      },
+      "writtenOn": "2019-07-15T08:27:08Z",
+      "side": 1,
+      "message": "Need to remove from the parent req before freeing this request, otherwise the parent req\u0027s num_children is not zero and will return 0 on line 574. I think the code should write this:\nif (req-\u003eparent !\u003d NULL) {\n\t\tnvme_request_remove_child(req-\u003eparent, req);\n}\nnvme_free_request(req);",
+      "range": {
+        "startLine": 576,
+        "startChar": 2,
+        "endLine": 576,
+        "endChar": 3
+      },
+      "revId": "671edb29ff447faca78126f8223817eb3415db9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
