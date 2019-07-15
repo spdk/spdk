@@ -38,7 +38,6 @@ function usage() {
                                     551: 'delete_lvol_bdev',
                                     552: 'destroy_lvol_store_with_clones',
                                     553: 'unregister_lvol_bdev',
-                                    602: 'construct_lvol_store_with_all_clear_methods',
                                     650: 'thin_provisioning_check_space',
                                     651: 'thin_provisioning_read_empty_bdev',
                                     652: 'thin_provisioning_data_integrity_test',
