@@ -46,6 +46,6 @@ function run_vhost_tgt() {
 
 function check_match() {
 	$rootdir/scripts/spdkcli.py ll $SPDKCLI_BRANCH > $testdir/match_files/${MATCH_FILE}
-	$rootdir/test/app/match/match -v $testdir/match_files/${MATCH_FILE}.match
+	$rootdir/test/app/match/match $testdir/match_files/${MATCH_FILE}.match
 	rm -f $testdir/match_files/${MATCH_FILE}
 }
