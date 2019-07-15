@@ -457,7 +457,6 @@ static void
 ftl_nv_cache_restore_done(struct ftl_nv_cache_restore *restore, uint64_t current_addr)
 {
 	struct ftl_nv_cache *nv_cache = restore->nv_cache;
-	unsigned int phase = nv_cache->phase;
 
 	pthread_spin_lock(&nv_cache->lock);
 	nv_cache->current_addr = current_addr;
@@ -465,7 +464,7 @@ ftl_nv_cache_restore_done(struct ftl_nv_cache_restore *restore, uint64_t current
 	pthread_spin_unlock(&nv_cache->lock);
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Enabling non-volatile cache (phase: %u, addr: %"
-		      PRIu64")\n", phase, current_addr);
+		      PRIu64")\n", nv_cache->phase, current_addr);
 
 	ftl_nv_cache_restore_complete(restore, 0);
 }
