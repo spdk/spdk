@@ -346,7 +346,7 @@ free_rpc_construct_lvol_bdev(struct rpc_construct_lvol_bdev *req)
 static const struct spdk_json_object_decoder rpc_construct_lvol_bdev_decoders[] = {
 	{"uuid", offsetof(struct rpc_construct_lvol_bdev, uuid), spdk_json_decode_string, true},
 	{"lvs_name", offsetof(struct rpc_construct_lvol_bdev, lvs_name), spdk_json_decode_string, true},
-	{"lvol_name", offsetof(struct rpc_construct_lvol_bdev, lvol_name), spdk_json_decode_string, true},
+	{"lvol_name", offsetof(struct rpc_construct_lvol_bdev, lvol_name), spdk_json_decode_string},
 	{"size", offsetof(struct rpc_construct_lvol_bdev, size), spdk_json_decode_uint64},
 	{"thin_provision", offsetof(struct rpc_construct_lvol_bdev, thin_provision), spdk_json_decode_bool, true},
 	{"clear_method", offsetof(struct rpc_construct_lvol_bdev, clear_method), spdk_json_decode_string, true},
@@ -397,12 +397,6 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 
 	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
 	if (rc != 0) {
-		goto invalid;
-	}
-
-	if (req.lvol_name == NULL) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no bdev name\n");
-		rc = -EINVAL;
 		goto invalid;
 	}
 
