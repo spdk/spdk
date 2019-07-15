@@ -262,6 +262,45 @@ function test_construct_lvol_alias_conflict() {
 	! rpc_cmd get_bdevs -b "$malloc_name"
 }
 
+# create an lvs+lvol, create another lvs on lvol and then a nested lvol
+function test_construct_nested_lvol() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd construct_lvol_store "$malloc_name" lvs_test)
+
+	# create an lvol on top
+	lvol_uuid=$(rpc_cmd construct_lvol_bdev -u "$lvs_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+	# create a nested lvs
+	nested_lvs_uuid=$(rpc_cmd construct_lvol_store "$lvol_uuid" nested_lvs)
+
+	nested_lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB - LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	nested_lvol_size=$(( nested_lvol_size_mb * 1024 * 1024 ))
+
+	# create a nested lvol
+	nested_lvol1_uuid=$(rpc_cmd construct_lvol_bdev -u "$nested_lvs_uuid" nested_lvol1 "$nested_lvol_size_mb")
+	nested_lvol1=$(rpc_cmd get_bdevs -b "$nested_lvol1_uuid")
+
+	[ "$(jq -r '.[0].name' <<< "$nested_lvol1")" = "$nested_lvol1_uuid" ]
+	[ "$(jq -r '.[0].uuid' <<< "$nested_lvol1")" = "$nested_lvol1_uuid" ]
+	[ "$(jq -r '.[0].aliases[0]' <<< "$nested_lvol1")" = "nested_lvs/nested_lvol1" ]
+	[ "$(jq -r '.[0].block_size' <<< "$nested_lvol1")" = "$MALLOC_BS" ]
+	[ "$(jq -r '.[0].num_blocks' <<< "$nested_lvol1")" = "$(( nested_lvol_size / MALLOC_BS ))" ]
+	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$nested_lvol1")" = "$nested_lvs_uuid" ]
+
+	# try to create another nested lvol on a lvs that's already full
+	! rpc_cmd construct_lvol_bdev -u "$nested_lvs_uuid" nested_lvol2 "$nested_lvol_size_mb"
+
+	# clean up
+	rpc_cmd destroy_lvol_bdev "$nested_lvol1_uuid"
+	! rpc_cmd get_bdevs -b "$nested_lvol1_uuid"
+	rpc_cmd destroy_lvol_store -u "$nested_lvs_uuid"
+	! rpc_cmd get_lvol_stores -u "$nested_lvs_uuid"
+	rpc_cmd destroy_lvol_bdev "$lvol_uuid"
+	! rpc_cmd get_bdevs -b "$lvol_uuid"
+	rpc_cmd destroy_lvol_store -u "$lvs_uuid"
+	! rpc_cmd get_lvol_stores -u "$lvs_uuid"
+	rpc_cmd delete_malloc_bdev "$malloc_name"
+}
 
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
@@ -276,6 +315,7 @@ run_test test_construct_lvols_conflict_alias
 run_test test_construct_lvol_inexistent_lvs
 run_test test_construct_lvol_full_lvs
 run_test test_construct_lvol_alias_conflict
+run_test test_construct_nested_lvol
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
