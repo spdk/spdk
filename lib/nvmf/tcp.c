@@ -540,7 +540,7 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     "  max_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
 		     "  num_shared_buffers=%d, c2h_success=%d,\n"
-		     "  dif_insert_or_strip=%d\n",
+		     "  dif_insert_or_strip=%d, sock_priority=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr,
@@ -549,7 +549,8 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->max_aq_depth,
 		     opts->num_shared_buffers,
 		     opts->c2h_success,
-		     opts->dif_insert_or_strip);
+		     opts->dif_insert_or_strip,
+		     opts->sock_priority);
 
 	/* I/O unit size cannot be larger than max I/O size */
 	if (opts->io_unit_size > opts->max_io_size) {
@@ -1091,6 +1092,15 @@ _spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "New connection accepted on %s port %s\n",
 		      port->trid.traddr, port->trid.trsvcid);
+
+	if (transport->opts.sock_priority) {
+		rc = spdk_sock_set_priority(sock, transport->opts.sock_priority);
+		if (rc) {
+			SPDK_ERRLOG("Failed to set the priority of the socket\n");
+			spdk_sock_close(&sock);
+			return;
+		}
+	}
 
 	tqpair = calloc(1, sizeof(struct spdk_nvmf_tcp_qpair));
 	if (tqpair == NULL) {
@@ -2862,6 +2872,7 @@ spdk_nvmf_tcp_qpair_set_sq_size(struct spdk_nvmf_qpair *qpair)
 #define SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE 32
 #define SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION true
 #define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
+#define SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY 0
 
 static void
 spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -2876,6 +2887,7 @@ spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->buf_cache_size =		SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE;
 	opts->c2h_success =		SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION;
 	opts->dif_insert_or_strip =	SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP;
+	opts->sock_priority =		SPDK_NVMF_TCP_DEFAULT_SOCK_PRIORITY;
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {

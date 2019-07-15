@@ -176,6 +176,11 @@ DEFINE_STUB(spdk_sock_group_get_ctx,
 	    (struct spdk_sock_group *group),
 	    NULL);
 
+DEFINE_STUB(spdk_sock_set_priority,
+	    int,
+	    (struct spdk_sock *sock, int priority),
+	    0);
+
 DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
 
 struct spdk_trace_histories *g_trace_histories;
