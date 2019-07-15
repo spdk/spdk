@@ -76,6 +76,7 @@ struct spdk_nvmf_transport_opts {
 	bool		no_srq;
 	bool		c2h_success;
 	bool		dif_insert_or_strip;
+	uint32_t	sock_priority;
 };
 
 struct spdk_nvmf_poll_group_stat {
