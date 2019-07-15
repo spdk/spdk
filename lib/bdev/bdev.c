@@ -1134,6 +1134,11 @@ spdk_bdev_module_finish_iter(void *arg)
 {
 	struct spdk_bdev_module *bdev_module;
 
+	if (!g_bdev_mgr.module_init_complete) {
+		spdk_bdev_mgr_unregister_cb(NULL);
+		return;
+	}
+
 	/* Start iterating from the last touched module */
 	if (!g_resume_bdev_module) {
 		bdev_module = TAILQ_LAST(&g_bdev_mgr.bdev_modules, bdev_module_list);
