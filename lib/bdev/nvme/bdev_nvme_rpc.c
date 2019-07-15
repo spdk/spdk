@@ -90,13 +90,15 @@ spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
 					      SPDK_COUNTOF(rpc_bdev_nvme_options_decoders),
 					      &opts)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		return;
 	}
 
 	rc = spdk_bdev_nvme_set_opts(&opts);
 	if (rc) {
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -104,10 +106,6 @@ spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
 		spdk_json_write_bool(w, true);
 		spdk_jsonrpc_end_result(request, w);
 	}
-
-	return;
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("set_bdev_nvme_options", spdk_rpc_set_bdev_nvme_options, SPDK_RPC_STARTUP)
 
@@ -254,7 +252,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM));
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		return;
 	}
 
@@ -262,14 +260,18 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_construct_nvme_decoders),
 				    &ctx->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	/* Parse trtype */
 	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, ctx->req.trtype);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to parse trtype: %s\n", ctx->req.trtype);
-		goto invalid;
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse trtype: %s",
+						     ctx->req.trtype);
+		goto cleanup;
 	}
 
 	/* Parse traddr */
@@ -280,7 +282,9 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 		rc = spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, ctx->req.adrfam);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to parse adrfam: %s\n", ctx->req.adrfam);
-			goto invalid;
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse adrfam: %s",
+							     ctx->req.adrfam);
+			goto cleanup;
 		}
 	}
 
@@ -312,15 +316,16 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
-	if (spdk_bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, &ctx->count, ctx->req.hostnqn,
-				  prchk_flags, spdk_rpc_construct_nvme_bdev_done, ctx)) {
-		goto invalid;
+	rc = spdk_bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, &ctx->count, ctx->req.hostnqn,
+				   prchk_flags, spdk_rpc_construct_nvme_bdev_done, ctx);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
 
 	return;
 
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+cleanup:
 	free_rpc_construct_nvme(&ctx->req);
 	free(ctx);
 }
@@ -370,18 +375,20 @@ spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
 					      SPDK_COUNTOF(rpc_get_nvme_controllers_decoders),
 					      &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	if (req.name) {
 		ctrlr = nvme_bdev_ctrlr_get_by_name(req.name);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("ctrlr '%s' does not exist\n", req.name);
-			goto invalid;
+			spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Controller %s does not exist", req.name);
+			goto cleanup;
 		}
 	}
 
-	free_rpc_get_nvme_controllers(&req);
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
 		return;
@@ -401,11 +408,7 @@ spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-
+cleanup:
 	free_rpc_get_nvme_controllers(&req);
 }
 SPDK_RPC_REGISTER("get_nvme_controllers", spdk_rpc_get_nvme_controllers, SPDK_RPC_RUNTIME)
@@ -435,16 +438,16 @@ spdk_rpc_delete_nvme_controller(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_delete_nvme_decoders,
 				    SPDK_COUNTOF(rpc_delete_nvme_decoders),
 				    &req)) {
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	rc = spdk_bdev_nvme_delete(req.name);
 	if (rc != 0) {
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
-
-	free_rpc_delete_nvme(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
@@ -453,11 +456,8 @@ spdk_rpc_delete_nvme_controller(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
-	return;
 
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 spdk_strerror(-rc));
+cleanup:
 	free_rpc_delete_nvme(&req);
 }
 SPDK_RPC_REGISTER("delete_nvme_controller", spdk_rpc_delete_nvme_controller, SPDK_RPC_RUNTIME)
