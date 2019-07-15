@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a17ed0d8_b8e83728",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-15T11:21:39Z",
+      "side": 1,
+      "message": "Add spdk_jsonrpc_send_error_response here as well.",
+      "revId": "ac435ee0a2271e7c310baf4524e90a16f6552aef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
