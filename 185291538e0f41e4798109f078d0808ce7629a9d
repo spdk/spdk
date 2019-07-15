@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0378205_9cace2f5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-15T09:04:20Z",
+      "side": 1,
+      "message": "This should work, how about moving line 959: g_resume_bdev_module \u003d module; after line 970 ?",
+      "revId": "185291538e0f41e4798109f078d0808ce7629a9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
