@@ -427,6 +427,22 @@ spdk_posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 			  &sz, sizeof(sz));
 }
 
+static int
+spdk_posix_sock_set_priority(struct spdk_sock *_sock, int priority)
+{
+	int rc = -1;
+
+#if defined(SO_PRIORITY)
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
+	assert(sock != NULL);
+
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_PRIORITY,
+			&priority, sizeof(priority));
+#endif
+	return rc;
+}
+
 static bool
 spdk_posix_sock_is_ipv6(struct spdk_sock *_sock)
 {
@@ -620,6 +636,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.set_recvlowat	= spdk_posix_sock_set_recvlowat,
 	.set_recvbuf	= spdk_posix_sock_set_recvbuf,
 	.set_sendbuf	= spdk_posix_sock_set_sendbuf,
+	.set_priority	= spdk_posix_sock_set_priority,
 	.is_ipv6	= spdk_posix_sock_is_ipv6,
 	.is_ipv4	= spdk_posix_sock_is_ipv4,
 	.get_placement_id	= spdk_posix_sock_get_placement_id,
