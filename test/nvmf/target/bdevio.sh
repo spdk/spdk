@@ -14,7 +14,7 @@ timing_enter bdevio
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0

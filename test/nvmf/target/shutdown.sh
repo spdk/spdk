@@ -38,7 +38,7 @@ timing_enter shutdown
 nvmftestinit
 nvmfappstart "-m 0xF"
 
-$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
 num_subsystems=10
 # SoftRoce does not have enough queues available for
