@@ -71,6 +71,54 @@
     },
     {
       "key": {
+        "uuid": "54bc9682_773ba37f",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-15T12:58:19Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1bad53e8_fbcfda4c",
+      "range": {
+        "startLine": 138,
+        "startChar": 1,
+        "endLine": 138,
+        "endChar": 8
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0bab9a8_6ec707b1",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-15T12:58:19Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "da607340_6249224f",
+      "range": {
+        "startLine": 138,
+        "startChar": 1,
+        "endLine": 138,
+        "endChar": 11
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ec63f12_f212e481",
         "filename": "scripts/setup.sh",
         "patchSetId": 4
@@ -91,6 +139,30 @@
       "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fd83f4d_4e109622",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-15T12:58:19Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2ec63f12_f212e481",
+      "range": {
+        "startLine": 206,
+        "startChar": 2,
+        "endLine": 206,
+        "endChar": 12
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -140,6 +212,54 @@
     },
     {
       "key": {
+        "uuid": "099bed2f_ca2496e4",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-15T12:58:19Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "233fa4f2_da929269",
+      "range": {
+        "startLine": 209,
+        "startChar": 64,
+        "endLine": 209,
+        "endChar": 72
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b397724_52df8418",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-15T12:58:19Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "22472fc6_989d993e",
+      "range": {
+        "startLine": 209,
+        "startChar": 64,
+        "endLine": 209,
+        "endChar": 72
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "746cbd97_fc919dd3",
         "filename": "scripts/setup.sh",
         "patchSetId": 4
@@ -151,6 +271,30 @@
       "writtenOn": "2019-07-02T16:17:17Z",
       "side": 1,
       "message": "Not sure how important is to display each and every active mountpoint on single controller, but alternatively you could just break here on first occurrence.",
+      "range": {
+        "startLine": 216,
+        "startChar": 0,
+        "endLine": 219,
+        "endChar": 5
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42559b7b_5b7fd52a",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-15T12:58:19Z",
+      "side": 1,
+      "message": "It will help user to find which NVMe is mounted and if this is something that user wants to correct or not.",
+      "parentUuid": "746cbd97_fc919dd3",
       "range": {
         "startLine": 216,
         "startChar": 0,
@@ -183,6 +327,30 @@
       "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b93f3300_d56c3ddf",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-15T12:58:19Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ed91fecb_4592b1cc",
+      "range": {
+        "startLine": 222,
+        "startChar": 5,
+        "endLine": 222,
+        "endChar": 25
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
