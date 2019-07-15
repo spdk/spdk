@@ -681,8 +681,9 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 	.write_config_json	= bdev_rbd_write_config_json,
 };
 
-struct spdk_bdev *
-spdk_bdev_rbd_create(const char *name, const char *user_id, const char *pool_name,
+int
+spdk_bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
+		     const char *pool_name,
 		     const char *const *config,
 		     const char *rbd_name,
 		     uint32_t block_size)
@@ -691,38 +692,38 @@ spdk_bdev_rbd_create(const char *name, const char *user_id, const char *pool_nam
 	int ret;
 
 	if ((pool_name == NULL) || (rbd_name == NULL)) {
-		return NULL;
+		return -EINVAL;
 	}
 
 	rbd = calloc(1, sizeof(struct bdev_rbd));
 	if (rbd == NULL) {
 		SPDK_ERRLOG("Failed to allocate bdev_rbd struct\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	rbd->rbd_name = strdup(rbd_name);
 	if (!rbd->rbd_name) {
 		bdev_rbd_free(rbd);
-		return NULL;
+		return -ENOMEM;
 	}
 
 	if (user_id) {
 		rbd->user_id = strdup(user_id);
 		if (!rbd->user_id) {
 			bdev_rbd_free(rbd);
-			return NULL;
+			return -ENOMEM;
 		}
 	}
 
 	rbd->pool_name = strdup(pool_name);
 	if (!rbd->pool_name) {
 		bdev_rbd_free(rbd);
-		return NULL;
+		return -ENOMEM;
 	}
 
 	if (config && !(rbd->config = spdk_bdev_rbd_dup_config(config))) {
 		bdev_rbd_free(rbd);
-		return NULL;
+		return -ENOMEM;
 	}
 
 	ret = bdev_rbd_init(rbd->user_id, rbd->pool_name,
@@ -731,7 +732,7 @@ spdk_bdev_rbd_create(const char *name, const char *user_id, const char *pool_nam
 	if (ret < 0) {
 		bdev_rbd_free(rbd);
 		SPDK_ERRLOG("Failed to init rbd device\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	if (name) {
@@ -741,7 +742,7 @@ spdk_bdev_rbd_create(const char *name, const char *user_id, const char *pool_nam
 	}
 	if (!rbd->disk.name) {
 		bdev_rbd_free(rbd);
-		return NULL;
+		return -ENOMEM;
 	}
 	rbd->disk.product_name = "Ceph Rbd Disk";
 	bdev_rbd_count++;
@@ -763,10 +764,12 @@ spdk_bdev_rbd_create(const char *name, const char *user_id, const char *pool_nam
 	if (ret) {
 		spdk_io_device_unregister(rbd, NULL);
 		bdev_rbd_free(rbd);
-		return NULL;
+		return ret;
 	}
 
-	return &rbd->disk;
+	*bdev = &(rbd->disk);
+
+	return ret;
 }
 
 void
@@ -787,6 +790,7 @@ bdev_rbd_library_init(void)
 	const char *val;
 	const char *pool_name;
 	const char *rbd_name;
+	struct spdk_bdev *bdev;
 	uint32_t block_size;
 	long int tmp;
 
@@ -841,8 +845,8 @@ bdev_rbd_library_init(void)
 		}
 
 		/* TODO(?): user_id and rbd config values */
-		if (spdk_bdev_rbd_create(NULL, NULL, pool_name, NULL, rbd_name, block_size) == NULL) {
-			rc = -1;
+		rc = spdk_bdev_rbd_create(&bdev, NULL, NULL, pool_name, NULL, rbd_name, block_size);
+		if (rc) {
 			goto end;
 		}
 	}
