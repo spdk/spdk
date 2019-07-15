@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b598aeee_d483add8",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T05:24:07Z",
+      "side": 1,
+      "message": "I\u0027m not the python expert but isn\u0027t `if not c2h_success` the recommended way?",
+      "range": {
+        "startLine": 95,
+        "startChar": 4,
+        "endLine": 95,
+        "endChar": 31
+      },
+      "revId": "d27681f7f5b3afe38777d59df8e2bc595faeb4f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
