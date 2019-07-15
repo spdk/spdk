@@ -82,6 +82,7 @@ struct spdk_net_impl {
 	int (*set_recvlowat)(struct spdk_sock *sock, int nbytes);
 	int (*set_recvbuf)(struct spdk_sock *sock, int sz);
 	int (*set_sendbuf)(struct spdk_sock *sock, int sz);
+	int (*set_priority)(struct spdk_sock *sock, int priority);
 
 	bool (*is_ipv6)(struct spdk_sock *sock);
 	bool (*is_ipv4)(struct spdk_sock *sock);

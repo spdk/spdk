@@ -98,6 +98,7 @@ sock groups. This API is intended to provide the user with that information.
 
 spdk_sock_group_get_ctx() was added to return the context of the spdk_sock_group.
 spdk_sock_group_create() is updated to allow input the user provided ctx.
+spdk_sock_set_priority() is added to set the priority of the socket.
 
 ### rpc
 
