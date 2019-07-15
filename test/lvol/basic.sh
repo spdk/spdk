@@ -76,6 +76,49 @@ function test_construct_lvs_conflict_alias() {
 	check_leftover_devices
 }
 
+# call bdev_lvol_create_lvstore with cluster size equals to malloc bdev size + 1B
+# call bdev_lvol_create_lvstore with cluster size smaller than minimal value of 8192
+function test_construct_lvs_different_cluster_size() {
+	# create the first lvs
+	malloc1_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs1_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc1_name" lvs_test)
+
+	# make sure we've got 1 lvs
+	lvol_stores=$(rpc_cmd bdev_lvol_get_lvstores)
+	[ "$(jq length <<< "$lvol_stores")" == "1" ]
+
+	# use the second malloc for some more lvs creation negative tests
+	malloc2_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	# capacity bigger than malloc's
+	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c $(( MALLOC_SIZE + 1 )) && false
+	# capacity equal to malloc's (no space left for metadata)
+	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c $MALLOC_SIZE && false
+	# capacity smaller than malloc's, but still no space left for metadata
+	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c $(( MALLOC_SIZE - 1 )) && false
+	# cluster size smaller than the minimum (8192)
+	rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c 8191 && false
+
+	# no additional lvol stores should have been created
+	lvol_stores=$(rpc_cmd bdev_lvol_get_lvstores)
+	[ "$(jq length <<< "$lvol_stores")" == "1" ]
+
+	# this one should be fine
+	lvs2_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc2_name" lvs2_test -c 8192)
+	# we should have one more lvs
+	lvol_stores=$(rpc_cmd bdev_lvol_get_lvstores)
+	[ "$(jq length <<< "$lvol_stores")" == "2" ]
+
+	# clean up
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs1_uuid"
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs1_uuid" && false
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs2_uuid"
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs2_uuid" && false
+
+	rpc_cmd bdev_malloc_delete "$malloc1_name"
+	rpc_cmd bdev_malloc_delete "$malloc2_name"
+	check_leftover_devices
+}
+
 # create lvs + lvol on top, verify lvol's parameters
 function test_construct_lvol() {
 	# create an lvol store
@@ -335,6 +378,7 @@ run_test "test_construct_lvs" test_construct_lvs
 run_test "test_construct_lvs_nonexistent_bdev" test_construct_lvs_nonexistent_bdev
 run_test "test_construct_two_lvs_on_the_same_bdev" test_construct_two_lvs_on_the_same_bdev
 run_test "test_construct_lvs_conflict_alias" test_construct_lvs_conflict_alias
+run_test "test_construct_lvs_different_cluster_size" test_construct_lvs_different_cluster_size
 run_test "test_construct_lvol" test_construct_lvol
 run_test "test_construct_multi_lvols" test_construct_multi_lvols
 run_test "test_construct_lvols_conflict_alias" test_construct_lvols_conflict_alias
