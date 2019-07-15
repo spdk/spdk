@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6340f0a4_5a7b59a0",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1016496
+      },
+      "writtenOn": "2019-07-15T02:47:34Z",
+      "side": 1,
+      "message": "The rc is a Non-zero value this time. The bdev_io will be freed at bdev_nvme_submit_request if rc is not zero. If there are some of req children already submitted to disk, we must return rc with zero value.",
+      "range": {
+        "startLine": 569,
+        "startChar": 2,
+        "endLine": 573,
+        "endChar": 12
+      },
+      "revId": "061def5d447762b74c5750fb64f59bd5206304b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
