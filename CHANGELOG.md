@@ -19,7 +19,9 @@ This allows the user to specify which file to store the persistent reservation s
 that this is done per namespace.
 
 The c2h success optimization under which a command capsule response is not sent
-for reads is turned on. A config knob was added to allow for enable/disable.
+for reads is turned on by default. A config knob was added to allow disabling
+the optimization. This will mostly be used for integration testing with 5.0.x kernels
+while some compatibility fixes make their way down the pipeline for 5.1.x kernels.
 
 Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
