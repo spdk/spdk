@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c100d32e_731099d4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T03:43:31Z",
+      "side": 1,
+      "message": "please add a commit msg: reasoning, performance numbers, speculation - what\u0027s this patch for?",
+      "revId": "2b0675a0b5adfbd73b41ff4e3a2d21124c29a7a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
