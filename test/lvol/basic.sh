@@ -131,6 +131,40 @@ function test_construct_lvs_different_cluster_size() {
 	check_leftover_devices
 }
 
+# test different methods of clearing the disk on lvolstore creation
+function test_construct_lvs_clear_methods() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+
+	# first try to provide invalid clear method
+	rpc_cmd bdev_lvol_create_lvstore  "$malloc2_name" lvs2_test --clear-method invalid123 && false
+
+	# no lvs should be created
+	lvol_stores=$(rpc_cmd bdev_lvol_get_lvstores)
+	[ "$(jq length <<< "$lvol_stores")" == "0" ]
+
+	methods="none unmap write_zeroes"
+	for clear_method in $methods; do
+		lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test --clear-method $clear_method)
+
+		# create an lvol on top
+		lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+		lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+		[ "$(jq -r '.[0].name' <<< "$lvol")" = "$lvol_uuid" ]
+		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
+		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test" ]
+		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+
+		# clean up
+		rpc_cmd bdev_lvol_delete "$lvol_uuid"
+		rpc_cmd bdev_get_bdevs -b "$lvol_uuid" && false
+		rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+		rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
+	done
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
+
 # create lvs + lvol on top, verify lvol's parameters
 function test_construct_lvol() {
 	# create an lvol store
@@ -401,6 +435,7 @@ run_test "test_construct_lvs_nonexistent_bdev" test_construct_lvs_nonexistent_bd
 run_test "test_construct_two_lvs_on_the_same_bdev" test_construct_two_lvs_on_the_same_bdev
 run_test "test_construct_lvs_conflict_alias" test_construct_lvs_conflict_alias
 run_test "test_construct_lvs_different_cluster_size" test_construct_lvs_different_cluster_size
+run_test "test_construct_lvs_clear_methods" test_construct_lvs_clear_methods
 run_test "test_construct_lvol" test_construct_lvol
 run_test "test_construct_multi_lvols" test_construct_multi_lvols
 run_test "test_construct_lvols_conflict_alias" test_construct_lvols_conflict_alias
