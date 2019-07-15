@@ -1574,10 +1574,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	rgroup = rqpair->poller->group;
 	rdma_req->req.iovcnt = 0;
 
-	num_buffers = rdma_req->req.length / rtransport->transport.opts.io_unit_size;
-	if (rdma_req->req.length % rtransport->transport.opts.io_unit_size) {
-		num_buffers++;
-	}
+	num_buffers = SPDK_CEIL_DIV(rdma_req->req.length, rtransport->transport.opts.io_unit_size);
 
 	if (nvmf_rdma_request_get_buffers(rdma_req, &rgroup->group, &rtransport->transport, num_buffers)) {
 		return -ENOMEM;
@@ -1636,10 +1633,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
 
 	for (i = 0; i < num_sgl_descriptors; i++) {
-		num_buffers += desc->keyed.length / rtransport->transport.opts.io_unit_size;
-		if (desc->keyed.length % rtransport->transport.opts.io_unit_size) {
-			num_buffers++;
-		}
+		num_buffers += SPDK_CEIL_DIV(desc->keyed.length, rtransport->transport.opts.io_unit_size);
 		desc++;
 	}
 	/* If the number of buffers is too large, then we know the I/O is larger than allowed. Fail it. */
