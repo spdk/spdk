@@ -1,0 +1,418 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc4f9120_43b70044",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "Those two variables are not marked optional in the rpc structure (line #88) and must be non-NULL, otherwise spdk_json_decode_object would fail. You might want to remove those checks in a preliminary patch.",
+      "range": {
+        "startLine": 140,
+        "startChar": 1,
+        "endLine": 150,
+        "endChar": 2
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26ac17ae_02c7f079",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "Can we print something more direct? E.g. \"Bdev \u0027%s\u0027 not found\". construct_lvol_store might have quite a few parameters and the regular \"Device not found\" seems too generic to me.",
+      "range": {
+        "startLine": 154,
+        "startChar": 53,
+        "endLine": 154,
+        "endChar": 74
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e33510d_86b3c85c",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "This is \"No such file or directory\". How about \"Lvolstore \u0027%s\u0027 not found\"",
+      "range": {
+        "startLine": 248,
+        "startChar": 53,
+        "endLine": 248,
+        "endChar": 74
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b2ed976_8dadbb33",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "You might want to remove those 2 lines and let the code fall-through the cleanup label automatically.",
+      "range": {
+        "startLine": 254,
+        "startChar": 1,
+        "endLine": 256,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aee8d0ef_cd2fbd20",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 328,
+        "startChar": 0,
+        "endLine": 331,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14ead6dd_1172fb33",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "This parameter is declared optional (line #359), but then we explicitly require it here. Could you make lvol_name required and then remove this check in a preliminary patch?",
+      "range": {
+        "startLine": 415,
+        "startChar": 1,
+        "endLine": 419,
+        "endChar": 2
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "823875b3_441131d3",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "to be removed",
+      "range": {
+        "startLine": 443,
+        "startChar": 0,
+        "endLine": 444,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a7c6fd1_20218c58",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 528,
+        "startChar": 0,
+        "endLine": 529,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d869a903_2c6bf888",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 613,
+        "startChar": 0,
+        "endLine": 614,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fd4fd25_3c2d5c99",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 697,
+        "startChar": 0,
+        "endLine": 699,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a389bac3_1ca218c1",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 780,
+        "startChar": 0,
+        "endLine": 781,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9daf03a0_c52e5b63",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 824,
+        "startChar": 0,
+        "endLine": 825,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6388883_f28804c3",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "not needed, to be removed",
+      "range": {
+        "startLine": 892,
+        "startChar": 0,
+        "endLine": 896,
+        "endChar": 2
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52e8a7c1_f7768a91",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 913,
+        "startChar": 0,
+        "endLine": 914,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "979fa8c7_ee5fb966",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "to be removed",
+      "range": {
+        "startLine": 979,
+        "startChar": 0,
+        "endLine": 983,
+        "endChar": 2
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f90d6a9_87b290b1",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1001,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 1000,
+        "startChar": 0,
+        "endLine": 1001,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35f147fb_8fdfdee8",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 1079,
+        "startChar": 0,
+        "endLine": 1080,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "518c308d_66219a19",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1192,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T04:14:59Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 1190,
+        "startChar": 0,
+        "endLine": 1192,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
