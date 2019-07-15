@@ -3616,6 +3616,7 @@ max_srq_depth               | Optional | number  | The number of elements in a p
 no_srq                      | Optional | boolean | Disable shared receive queue even for devices that support it. (RDMA only)
 c2h_success                 | Optional | boolean | Disable C2H success optimization (TCP only)
 dif_insert_or_strip         | Optional | boolean | Enable DIF insert for write I/O and DIF strip for read I/O DIF (TCP only)
+sock_priority               | Optional | number  | The socket priority of the connection owned by this transport (TCP only)
 
 ### Example:
 
