@@ -16,6 +16,24 @@
       "revId": "ff383ce9d0270c1808eecfdb6da686fc8485608f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3941a16e_e03e268d",
+        "filename": "lib/bdev/delay/vbdev_delay_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-15T12:11:17Z",
+      "side": 1,
+      "message": "I think sending error responses here in this place is up for discussion. Let\u0027s settle on updating it later as a separate patch.",
+      "parentUuid": "49aae352_393cd244",
+      "revId": "ff383ce9d0270c1808eecfdb6da686fc8485608f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
