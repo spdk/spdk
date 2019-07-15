@@ -23,6 +23,9 @@ for reads is turned on by default. A config knob was added to allow disabling
 the optimization. This will mostly be used for integration testing with 5.0.x kernels
 while some compatibility fixes make their way down the pipeline for 5.1.x kernels.
 
+The sock priority setting of the TCP connection owned by the tcp transport is added. It is
+used to optimize the TCP connection performance under designated traffic classes.
+
 Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.

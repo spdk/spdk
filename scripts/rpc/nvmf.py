@@ -48,7 +48,8 @@ def nvmf_create_transport(client,
                           max_srq_depth=None,
                           no_srq=False,
                           c2h_success=True,
-                          dif_insert_or_strip=None):
+                          dif_insert_or_strip=None,
+                          sock_priority=None):
     """NVMf Transport Create options.
 
     Args:
@@ -96,6 +97,8 @@ def nvmf_create_transport(client,
         params['c2h_success'] = c2h_success
     if dif_insert_or_strip:
         params['dif_insert_or_strip'] = dif_insert_or_strip
+    if sock_priority:
+        params['sock_priority'] = sock_priority
     return client.call('nvmf_create_transport', params)
 
 
