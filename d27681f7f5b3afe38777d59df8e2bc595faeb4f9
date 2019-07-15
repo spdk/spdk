@@ -22,6 +22,30 @@
       "revId": "d27681f7f5b3afe38777d59df8e2bc595faeb4f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa46c736_7666dfe0",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-15T05:40:12Z",
+      "side": 1,
+      "message": "\"if not c2h_success\" is the opposite of \"if c2h_success\". I am trying to pass through c2h_success whether it is true or false. Essentially if it\u0027s anything other than None. This is something that I don\u0027t think we check for very well in the RPC scripts, and it has lead to most of our boolean defaults being set to false, and only passing in true through the RPCs.",
+      "parentUuid": "b598aeee_d483add8",
+      "range": {
+        "startLine": 95,
+        "startChar": 4,
+        "endLine": 95,
+        "endChar": 31
+      },
+      "revId": "d27681f7f5b3afe38777d59df8e2bc595faeb4f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
