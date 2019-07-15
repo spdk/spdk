@@ -285,6 +285,46 @@ function test_construct_lvol_alias_conflict() {
 	check_leftover_devices
 }
 
+# create an lvs+lvol, create another lvs on lvol and then a nested lvol
+function test_construct_nested_lvol() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# create an lvol on top
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+	# create a nested lvs
+	nested_lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$lvol_uuid" nested_lvs)
+
+	nested_lvol_size_mb=$(( LVS_DEFAULT_CAPACITY_MB - LVS_DEFAULT_CLUSTER_SIZE_MB ))
+	nested_lvol_size=$(( nested_lvol_size_mb * 1024 * 1024 ))
+
+	# create a nested lvol
+	nested_lvol1_uuid=$(rpc_cmd bdev_lvol_create -u "$nested_lvs_uuid" nested_lvol1 "$nested_lvol_size_mb")
+	nested_lvol1=$(rpc_cmd bdev_get_bdevs -b "$nested_lvol1_uuid")
+
+	[ "$(jq -r '.[0].name' <<< "$nested_lvol1")" = "$nested_lvol1_uuid" ]
+	[ "$(jq -r '.[0].uuid' <<< "$nested_lvol1")" = "$nested_lvol1_uuid" ]
+	[ "$(jq -r '.[0].aliases[0]' <<< "$nested_lvol1")" = "nested_lvs/nested_lvol1" ]
+	[ "$(jq -r '.[0].block_size' <<< "$nested_lvol1")" = "$MALLOC_BS" ]
+	[ "$(jq -r '.[0].num_blocks' <<< "$nested_lvol1")" = "$(( nested_lvol_size / MALLOC_BS ))" ]
+	[ "$(jq -r '.[0].driver_specific.lvol.lvol_store_uuid' <<< "$nested_lvol1")" = "$nested_lvs_uuid" ]
+
+	# try to create another nested lvol on a lvs that's already full
+	rpc_cmd bdev_lvol_create -u "$nested_lvs_uuid" nested_lvol2 "$nested_lvol_size_mb" && false
+
+	# clean up
+	rpc_cmd bdev_lvol_delete "$nested_lvol1_uuid"
+	rpc_cmd bdev_get_bdevs -b "$nested_lvol1_uuid" && false
+	rpc_cmd bdev_lvol_delete_lvstore -u "$nested_lvs_uuid"
+	rpc_cmd bdev_lvol_get_lvstores -u "$nested_lvs_uuid" && false
+	rpc_cmd bdev_lvol_delete "$lvol_uuid"
+	rpc_cmd bdev_get_bdevs -b "$lvol_uuid" && false
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	check_leftover_devices
+}
 
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
@@ -301,6 +341,7 @@ run_test "test_construct_lvols_conflict_alias" test_construct_lvols_conflict_ali
 run_test "test_construct_lvol_inexistent_lvs" test_construct_lvol_inexistent_lvs
 run_test "test_construct_lvol_full_lvs" test_construct_lvol_full_lvs
 run_test "test_construct_lvol_alias_conflict" test_construct_lvol_alias_conflict
+run_test "test_construct_nested_lvol" test_construct_nested_lvol
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
