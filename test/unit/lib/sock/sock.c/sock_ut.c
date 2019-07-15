@@ -250,6 +250,12 @@ spdk_ut_sock_get_placement_id(struct spdk_sock *_sock, int *placement_id)
 	return -1;
 }
 
+static int
+spdk_ut_sock_set_priority(struct spdk_sock *_sock, int priority)
+{
+	return 0;
+}
+
 static struct spdk_sock_group_impl *
 spdk_ut_sock_group_impl_create(void)
 {
@@ -321,6 +327,7 @@ static struct spdk_net_impl g_ut_net_impl = {
 	.set_recvlowat	= spdk_ut_sock_set_recvlowat,
 	.set_recvbuf	= spdk_ut_sock_set_recvbuf,
 	.set_sendbuf	= spdk_ut_sock_set_sendbuf,
+	.set_priority	= spdk_ut_sock_set_priority,
 	.is_ipv6	= spdk_ut_sock_is_ipv6,
 	.is_ipv4	= spdk_ut_sock_is_ipv4,
 	.get_placement_id	= spdk_ut_sock_get_placement_id,
