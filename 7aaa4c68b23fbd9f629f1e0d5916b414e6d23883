@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7791b3a7_ca083f97",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-15T11:12:37Z",
+      "side": 1,
+      "message": "Could we allocate g_iov statically? Size of iovec is small.",
+      "range": {
+        "startLine": 114,
+        "startChar": 13,
+        "endLine": 114,
+        "endChar": 19
+      },
+      "revId": "7aaa4c68b23fbd9f629f1e0d5916b414e6d23883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5d495da_b118841a",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-15T11:12:37Z",
+      "side": 1,
+      "message": "register_io_uring_file is almost identical with register_aio_file.\nDifferences are flags and entry-\u003etype.\n\nSo how about changing the function name to register_io_interface_file and using ifdef for flags and entry-\u003etype?",
+      "range": {
+        "startLine": 305,
+        "startChar": 0,
+        "endLine": 305,
+        "endChar": 22
+      },
+      "revId": "7aaa4c68b23fbd9f629f1e0d5916b414e6d23883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0545c9b4_bf40baea",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 909,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-15T11:12:37Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 909,
+        "startChar": 10,
+        "endLine": 909,
+        "endChar": 26
+      },
+      "revId": "7aaa4c68b23fbd9f629f1e0d5916b414e6d23883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e32d71b_0a8b0196",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-15T11:12:37Z",
+      "side": 1,
+      "message": "spdk_dma_zmalloc and spdk_dma_malloc will be deprecated. Please see the recent patches by Dark and use spdk_zmalloc.",
+      "range": {
+        "startLine": 915,
+        "startChar": 15,
+        "endLine": 915,
+        "endChar": 31
+      },
+      "revId": "7aaa4c68b23fbd9f629f1e0d5916b414e6d23883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
