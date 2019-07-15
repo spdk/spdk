@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d02652d8_838e5e50",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-15T09:50:27Z",
+      "side": 1,
+      "message": "Done, removed.",
+      "parentUuid": "dc4f9120_43b70044",
+      "range": {
+        "startLine": 140,
+        "startChar": 1,
+        "endLine": 150,
+        "endChar": 2
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26ac17ae_02c7f079",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 1
@@ -189,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "dbaa76f6_a5ea9c0d",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-15T09:50:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aee8d0ef_cd2fbd20",
+      "range": {
+        "startLine": 328,
+        "startChar": 0,
+        "endLine": 331,
+        "endChar": 8
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14ead6dd_1172fb33",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 1
@@ -209,6 +257,30 @@
       "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f19683e_645644a1",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-15T09:50:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "14ead6dd_1172fb33",
+      "range": {
+        "startLine": 415,
+        "startChar": 1,
+        "endLine": 419,
+        "endChar": 2
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -517,6 +589,30 @@
     },
     {
       "key": {
+        "uuid": "f1c8b0cc_4ddc167d",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-15T09:50:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c6388883_f28804c3",
+      "range": {
+        "startLine": 892,
+        "startChar": 0,
+        "endLine": 896,
+        "endChar": 2
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52e8a7c1_f7768a91",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 1
@@ -584,6 +680,30 @@
       "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6448a881_70d6d14c",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-15T09:50:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "979fa8c7_ee5fb966",
+      "range": {
+        "startLine": 979,
+        "startChar": 0,
+        "endLine": 983,
+        "endChar": 2
+      },
+      "revId": "0634f93bc978d556e5843280d287c8151ce46e3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
