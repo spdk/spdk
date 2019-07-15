@@ -22,6 +22,30 @@
       "revId": "671edb29ff447faca78126f8223817eb3415db9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "338c6327_121b2174",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-15T08:35:43Z",
+      "side": 1,
+      "message": "Right, I think so.",
+      "parentUuid": "5faa390a_34757df1",
+      "range": {
+        "startLine": 576,
+        "startChar": 2,
+        "endLine": 576,
+        "endChar": 3
+      },
+      "revId": "671edb29ff447faca78126f8223817eb3415db9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
