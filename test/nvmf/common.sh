@@ -183,6 +183,7 @@ function nvmftestinit()
 		fi
 	elif [ "$TEST_TRANSPORT" == "tcp" ]; then
 		NVMF_FIRST_TARGET_IP=127.0.0.1
+		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
 	fi
 
 	# currently we run the host/perf test for TCP even on systems without kernel nvme-tcp
