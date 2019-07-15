@@ -136,17 +136,6 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (req.bdev_name == NULL) {
-		SPDK_ERRLOG("missing bdev_name param\n");
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	if (req.lvs_name == NULL) {
-		SPDK_ERRLOG("missing lvs_name param\n");
-		rc = -EINVAL;
-		goto invalid;
-	}
 	bdev = spdk_bdev_get_by_name(req.bdev_name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("bdev '%s' does not exist\n", req.bdev_name);
@@ -890,12 +879,6 @@ spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_resize_lvol_bdev_decoders),
 				    &req)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	if (req.name == NULL) {
-		SPDK_ERRLOG("missing name param\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
