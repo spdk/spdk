@@ -43,9 +43,10 @@ char **spdk_bdev_rbd_dup_config(const char *const *config);
 
 typedef void (*spdk_delete_rbd_complete)(void *cb_arg, int bdeverrno);
 
-struct spdk_bdev *spdk_bdev_rbd_create(const char *name, const char *user_id, const char *pool_name,
-				       const char *const *config,
-				       const char *rbd_name, uint32_t block_size);
+int spdk_bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
+			 const char *pool_name,
+			 const char *const *config,
+			 const char *rbd_name, uint32_t block_size);
 /**
  * Delete rbd bdev.
  *

@@ -114,35 +114,35 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_rbd req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
+	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_construct_rbd_decoders,
 				    SPDK_COUNTOF(rpc_construct_rbd_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RBD, "spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
-	bdev = spdk_bdev_rbd_create(req.name, req.user_id, req.pool_name,
-				    (const char *const *)req.config,
-				    req.rbd_name,
-				    req.block_size);
-	if (bdev == NULL) {
-		goto invalid;
+	rc = spdk_bdev_rbd_create(&bdev, req.name, req.user_id, req.pool_name,
+				  (const char *const *)req.config,
+				  req.rbd_name,
+				  req.block_size);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
 	}
-
-	free_rpc_construct_rbd(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
-		return;
+		goto cleanup;
 	}
 
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
 	spdk_jsonrpc_end_result(request, w);
-	return;
 
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+cleanup:
 	free_rpc_construct_rbd(&req);
 }
 SPDK_RPC_REGISTER("construct_rbd_bdev", spdk_rpc_construct_rbd_bdev, SPDK_RPC_RUNTIME)
@@ -187,22 +187,20 @@ spdk_rpc_delete_rbd_bdev(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_delete_rbd_decoders,
 				    SPDK_COUNTOF(rpc_delete_rbd_decoders),
 				    &req)) {
-		rc = -EINVAL;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
-		rc = -ENODEV;
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
 	}
 
 	spdk_bdev_rbd_delete(bdev, _spdk_rpc_delete_rbd_bdev_cb, request);
-	free_rpc_delete_rbd(&req);
-	return;
 
-invalid:
+cleanup:
 	free_rpc_delete_rbd(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("delete_rbd_bdev", spdk_rpc_delete_rbd_bdev, SPDK_RPC_RUNTIME)
