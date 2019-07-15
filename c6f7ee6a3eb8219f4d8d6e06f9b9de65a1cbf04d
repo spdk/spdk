@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0eda575_548033a8",
+        "filename": "test/spdkcli/vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T03:37:34Z",
+      "side": 1,
+      "message": "The match script accepts wildcards, you could use those\n\n$ cat test/app/match/match\n\n\u003cSNIP\u003e\n+# expected output is stored in a \".match\" file, which contains a copy of\n+# the expected output with embedded tokens for things that should not be\n+# exact matches.  the supported tokens are:\n+#\n+#      $(N)    an integer (i.e. one or more decimal digits)\n+#      $(NC)   one or more decimal digits with comma separators\n+#      $(FP)   a floating point number\n+#      $(S)    ascii string\n+#      $(X)    hex number\n+#      $(XX)   hex number prefixed with 0x\n+#      $(W)    whitespace\n+#      $(nW)   non-whitespace\n+#      $(*)    any string\n+#      $(DD)   output of a \"dd\" run\n+#      $(OPT)  line is optional (may be missing, matched if found)\n+#      $(OPX)  ends a contiguous list of $(OPT)...$(OPX) lines, at least\n+#              one of which must match",
+      "range": {
+        "startLine": 51,
+        "startChar": 65,
+        "endLine": 51,
+        "endChar": 75
+      },
+      "revId": "c6f7ee6a3eb8219f4d8d6e06f9b9de65a1cbf04d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
