@@ -32,6 +32,13 @@ scheduling strategy among different spdk threads.
 
 Added infrastructure to retrieve global and per poll group NVMf statistics.
 
+The previous implementation of the nvmf_create_transport rpc c2h_success option made it impossible
+to disable that optimization. The implementation has been updated to follow more closely the
+pattern set by other boolean options in that rpc and the help text and docs have been updated to
+reflect the new implementation and usage. The new usage keeps the option enabled by default, but
+allows users to disable it. This will mostly be used for integration testing with 5.0.x kernels
+while some compatibility fixes make their way down the pipeline for 5.1.x kernels.
+
 ### notify
 
 The function `spdk_notify_get_types()` and `spdk_notify_get_events()` were

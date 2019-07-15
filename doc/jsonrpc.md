@@ -3614,7 +3614,7 @@ num_shared_buffers          | Optional | number  | The number of pooled data buf
 buf_cache_size              | Optional | number  | The number of shared buffers to reserve for each poll group
 max_srq_depth               | Optional | number  | The number of elements in a per-thread shared receive queue (RDMA only)
 no_srq                      | Optional | boolean | Disable shared receive queue even for devices that support it. (RDMA only)
-c2h_success                 | Optional | boolean | Enable C2H success optimization (TCP only)
+c2h_success                 | Optional | boolean | Disable C2H success optimization (TCP only)
 dif_insert_or_strip         | Optional | boolean | Enable DIF insert for write I/O and DIF strip for read I/O DIF (TCP only)
 
 ### Example:

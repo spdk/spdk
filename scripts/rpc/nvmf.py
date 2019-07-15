@@ -63,7 +63,7 @@ def nvmf_create_transport(client,
         buf_cache_size: The number of shared buffers to reserve for each poll group (optional)
         max_srq_depth: Max number of outstanding I/O per shared receive queue - RDMA specific (optional)
         no_srq: Boolean flag to disable SRQ even for devices that support it - RDMA specific (optional)
-        c2h_success: Boolean flag to enable/disable the C2H success optimization - TCP specific (optional)
+        c2h_success: Boolean flag to disable the C2H success optimization - TCP specific (optional)
         dif_insert_or_strip: Boolean flag to enable DIF insert/strip for I/O - TCP specific (optional)
 
     Returns:
@@ -92,7 +92,7 @@ def nvmf_create_transport(client,
         params['max_srq_depth'] = max_srq_depth
     if no_srq:
         params['no_srq'] = no_srq
-    if c2h_success:
+    if c2h_success is not None:
         params['c2h_success'] = c2h_success
     if dif_insert_or_strip:
         params['dif_insert_or_strip'] = dif_insert_or_strip
