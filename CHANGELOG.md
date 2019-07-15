@@ -21,6 +21,9 @@ that this is done per namespace.
 The c2h success optimization under which a command capsule response is not sent
 for reads is turned on. A config knob was added to allow for enable/disable.
 
+The sock priority setting of the TCP connection owned by the tcp transport is added. It is
+used to optimize the TCP connection performance under designated traffic classes.
+
 Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.

@@ -1419,7 +1419,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        max_srq_depth=args.max_srq_depth,
                                        no_srq=args.no_srq,
                                        c2h_success=args.c2h_success,
-                                       dif_insert_or_strip=args.dif_insert_or_strip)
+                                       dif_insert_or_strip=args.dif_insert_or_strip,
+                                       sock_priority=args.sock_priority)
 
     p = subparsers.add_parser('nvmf_create_transport', help='Create NVMf transport')
     p.add_argument('-t', '--trtype', help='Transport type (ex. RDMA)', type=str, required=True)
@@ -1435,6 +1436,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-r', '--no-srq', action='store_true', help='Disable per-thread shared receive queue. Relevant only for RDMA transport')
     p.add_argument('-o', '--c2h-success', help='Enable C2H success optimization. Relevant only for TCP transport', type=bool)
     p.add_argument('-f', '--dif-insert-or-strip', action='store_true', help='Enable DIF insert/strip. Relevant only for TCP transport')
+    p.add_argument('-y', '--sock-priority', help='The sock priority of the tcp connection. Relevant only for TCP transport', type=int)
     p.set_defaults(func=nvmf_create_transport)
 
     def get_nvmf_transports(args):
