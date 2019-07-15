@@ -286,6 +286,12 @@ spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 	return sock->net_impl->set_sendbuf(sock, sz);
 }
 
+int
+spdk_sock_set_priority(struct spdk_sock *sock, int priority)
+{
+	return sock->net_impl->set_priority(sock, priority);
+}
+
 bool
 spdk_sock_is_ipv6(struct spdk_sock *sock)
 {
