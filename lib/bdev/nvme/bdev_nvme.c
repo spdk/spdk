@@ -1262,12 +1262,12 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 	if (nvme_bdev_ctrlr_get(trid) != NULL) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
-		return -1;
+		return -EEXIST;
 	}
 
 	if (nvme_bdev_ctrlr_get_by_name(base_name)) {
 		SPDK_ERRLOG("A controller with the provided name (%s) already exists.\n", base_name);
-		return -1;
+		return -EEXIST;
 	}
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
@@ -1310,7 +1310,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	if (ctx->probe_ctx == NULL) {
 		SPDK_ERRLOG("No controller was found with provided trid (traddr: %s)\n", trid->traddr);
 		free(ctx);
-		return -1;
+		return -ENODEV;
 	}
 	ctx->poller = spdk_poller_register(bdev_nvme_async_poll, ctx, 1000);
 
