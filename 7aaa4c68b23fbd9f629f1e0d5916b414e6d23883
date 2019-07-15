@@ -48,6 +48,29 @@
     },
     {
       "key": {
+        "uuid": "5ac21651_38c04a1e",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-15T11:42:48Z",
+      "side": 1,
+      "message": "Can we avoid calloc in io_uring_submit_single for io_uring_submit_sigle too? For example, can we hold iovec in the struct g_task, and set and pass it to io_uring_prep_readv/writev?",
+      "range": {
+        "startLine": 498,
+        "startChar": 10,
+        "endLine": 498,
+        "endChar": 21
+      },
+      "revId": "7aaa4c68b23fbd9f629f1e0d5916b414e6d23883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0545c9b4_bf40baea",
         "filename": "test/nvme/overhead/overhead.c",
         "patchSetId": 1
