@@ -784,7 +784,7 @@ test_reservation_register_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(reg == NULL);
 
 	/* TEST CASE: Enable PTPL */
-	g_ns.ptpl_file = "/var/log/Ns1PR.cfg";
+	g_ns.ptpl_file = "/tmp/Ns1PR.cfg";
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY, 0,
 					      SPDK_NVME_RESERVE_PTPL_PERSIST_POWER_LOSS, 0, 0xa1);
 	update_sgroup = nvmf_ns_reservation_register(&g_ns, &g_ctrlr1_A, req);
@@ -905,7 +905,7 @@ test_reservation_acquire_release_with_ptpl(void)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	/* TEST CASE: Enable PTPL */
-	g_ns.ptpl_file = "/var/log/Ns1PR.cfg";
+	g_ns.ptpl_file = "/tmp/Ns1PR.cfg";
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY, 0,
 					      SPDK_NVME_RESERVE_PTPL_PERSIST_POWER_LOSS, 0, 0xa1);
 	update_sgroup = nvmf_ns_reservation_register(&g_ns, &g_ctrlr1_A, req);
