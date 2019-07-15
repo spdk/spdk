@@ -131,7 +131,6 @@ def case_message(func):
             553: 'unregister_lvol_bdev',
             600: 'bdev_lvol_create_lvstore_with_cluster_size_max',
             601: 'bdev_lvol_create_lvstore_with_cluster_size_min',
-            602: 'bdev_lvol_create_lvstore_with_all_clear_methods',
             # Provisioning
             650: 'thin_provisioning_check_space',
             651: 'thin_provisioning_read_empty_bdev',
@@ -920,43 +919,6 @@ class TestCases(object):
         # Expected result:
         # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
         # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case602(self):
-        """
-        bdev_lvol_create_lvstore_with_all_clear_methods
-
-        Call bdev_lvol_create_lvstore with all options for clear methods.
-        """
-        fail_count = 0
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store with clear method 'none'
-        lvol_uuid = self.c.bdev_lvol_create_lvstore(base_name, self.lvs_name, clear_method="none")
-        fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, lvol_uuid)
-        fail_count += self.c.bdev_malloc_delete(base_name)
-
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store with clear method 'unmap'
-        lvol_uuid = self.c.bdev_lvol_create_lvstore(base_name, self.lvs_name, clear_method="unmap")
-        fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, lvol_uuid)
-        fail_count += self.c.bdev_malloc_delete(base_name)
-
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store with clear method 'write_zeroes'
-        lvol_uuid = self.c.bdev_lvol_create_lvstore(base_name, self.lvs_name, clear_method="write_zeroes")
-        fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, lvol_uuid)
-        fail_count += self.c.bdev_malloc_delete(base_name)
-
-        # Expected result:
-        # - construct lvol store return code != 0
-        # - Error code response printed to stdout
         return fail_count
 
     @case_message

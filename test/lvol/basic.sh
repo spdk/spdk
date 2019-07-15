@@ -92,6 +92,39 @@ function test_construct_lvs_negative() {
 	rpc_cmd bdev_malloc_delete "$malloc2_name"
 }
 
+# test different methods of clearing the disk on lvolstore creation
+function test_construct_lvs_clear_methods() {
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+
+	# first try to provide invalid clear method
+	! rpc_cmd bdev_lvol_create_lvstore  "$malloc2_name" lvs2_test --clear-method invalid123
+
+	# no lvs should be created
+	lvol_stores=$(rpc_cmd bdev_lvol_get_lvstores)
+	[ "$(jq length <<< "$lvol_stores")" == "0" ]
+
+	methods="none unmap write_zeroes"
+	for clear_method in $methods; do
+		lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore  "$malloc_name" lvs_test --clear-method $clear_method)
+
+		# create an lvol on top
+		lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+		lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
+		[ "$(jq -r '.[0].name' <<< "$lvol")" = "$lvol_uuid" ]
+		[ "$(jq -r '.[0].uuid' <<< "$lvol")" = "$lvol_uuid" ]
+		[ "$(jq -r '.[0].aliases[0]' <<< "$lvol")" = "lvs_test/lvol_test" ]
+		[ "$(jq -r '.[0].block_size' <<< "$lvol")" = "$MALLOC_BS" ]
+		[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+
+		# clean up
+		rpc_cmd bdev_lvol_delete "$lvol_uuid"
+		! rpc_cmd bdev_get_bdevs -b "$lvol_uuid"
+		rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+		! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+	done
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+}
+
 # create lvs + lvol on top, verify lvol's parameters
 function test_construct_lvol() {
 	# create an lvol store
@@ -347,6 +380,7 @@ waitforlisten $spdk_pid
 
 run_lvol_test test_construct_lvs
 run_lvol_test test_construct_lvs_negative
+run_lvol_test test_construct_lvs_clear_methods
 run_lvol_test test_construct_lvol
 run_lvol_test test_construct_multi_lvols
 run_lvol_test test_construct_lvols_conflict_alias
