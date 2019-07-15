@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "317ec48e_7513abe4",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T03:49:33Z",
+      "side": 1,
+      "message": "that\u0027s a no-op, please remove",
+      "range": {
+        "startLine": 212,
+        "startChar": 1,
+        "endLine": 212,
+        "endChar": 7
+      },
+      "revId": "c3abcd2ea21441d090e9e43157ed63087bf0e97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0a7bc25_9874ae99",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-15T03:49:33Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 363,
+        "startChar": 1,
+        "endLine": 363,
+        "endChar": 7
+      },
+      "revId": "c3abcd2ea21441d090e9e43157ed63087bf0e97c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
