@@ -920,56 +920,6 @@ class TestCases(object):
         return fail_count
 
     @case_message
-    def test_case600(self):
-        """
-        construct_lvol_store_with_cluster_size_max
-
-        Negative test for constructing a new lvol store.
-        Call construct_lvol_store with cluster size is equal malloc bdev size + 1B.
-        """
-        fail_count = 0
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Construct_lvol_store on correct, exisitng malloc bdev and cluster size equal
-        # malloc bdev size in bytes + 1B
-        lvol_uuid = self.c.construct_lvol_store(base_name,
-                                                self.lvs_name,
-                                                (self.total_size * 1024 * 1024) + 1) == 0
-        if self.c.check_get_lvol_stores(base_name, lvol_uuid) == 0:
-            fail_count += 1
-        fail_count += self.c.delete_malloc_bdev(base_name)
-
-        # Expected result:
-        # - return code != 0
-        # - Error code response printed to stdout
-        return fail_count
-
-    @case_message
-    def test_case601(self):
-        """
-        construct_lvol_store_with_cluster_size_min
-
-        Negative test for constructing a new lvol store.
-        Call construct_lvol_store with cluster size smaller than minimal value of 8192.
-        """
-        fail_count = 0
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Try construct lvol store on malloc bdev with cluster size 8191
-        lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, 8191)
-        # Verify that lvol store was not created
-        if self.c.check_get_lvol_stores(base_name, lvol_uuid) == 0:
-            fail_count += 1
-        fail_count += self.c.delete_malloc_bdev(base_name)
-
-        # Expected result:
-        # - construct lvol store return code != 0
-        # - Error code response printed to stdout
-        return fail_count
-
-    @case_message
     def test_case602(self):
         """
         construct_lvol_store_with_all_clear_methods
