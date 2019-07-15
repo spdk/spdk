@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -53,6 +53,9 @@ extern "C" {
 
 #define SPDK_SEC_TO_USEC 1000000ULL
 #define SPDK_SEC_TO_NSEC 1000000000ULL
+
+/* Ceiling division of unsigned integers */
+#define SPDK_CEIL_DIV(x,y) (((x)+(y)-1)/(y))
 
 static inline uint32_t
 spdk_u32log2(uint32_t x)
