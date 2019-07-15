@@ -922,43 +922,6 @@ class TestCases(object):
         return fail_count
 
     @case_message
-    def test_case602(self):
-        """
-        construct_lvol_store_with_all_clear_methods
-
-        Call construct_lvol_store with all options for clear methods.
-        """
-        fail_count = 0
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Construct lvol store with clear method 'none'
-        lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, clear_method="none")
-        fail_count += self.c.check_get_lvol_stores(base_name, lvol_uuid)
-        fail_count += self.c.delete_malloc_bdev(base_name)
-
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Construct lvol store with clear method 'unmap'
-        lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, clear_method="unmap")
-        fail_count += self.c.check_get_lvol_stores(base_name, lvol_uuid)
-        fail_count += self.c.delete_malloc_bdev(base_name)
-
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Construct lvol store with clear method 'write_zeroes'
-        lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, clear_method="write_zeroes")
-        fail_count += self.c.check_get_lvol_stores(base_name, lvol_uuid)
-        fail_count += self.c.delete_malloc_bdev(base_name)
-
-        # Expected result:
-        # - construct lvol store return code != 0
-        # - Error code response printed to stdout
-        return fail_count
-
-    @case_message
     def test_case650(self):
         """
         thin_provisioning_check_space
