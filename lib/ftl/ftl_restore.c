@@ -157,7 +157,6 @@ ftl_restore_free(struct ftl_restore *restore)
 	}
 
 	spdk_dma_free(restore->md_buf);
-	free(restore->lba_map);
 	free(restore->bands);
 	free(restore);
 }
@@ -167,7 +166,7 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 {
 	struct ftl_restore *restore;
 	struct ftl_restore_band *rband;
-	size_t i, md_size;
+	size_t i;
 
 	restore = calloc(1, sizeof(*restore));
 	if (!restore) {
@@ -192,17 +191,10 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 		rband->md_status = FTL_MD_NO_MD;
 	}
 
-	/* Allocate buffer capable of holding either tail md or head mds of all bands */
-	md_size = spdk_max(ftl_dev_num_bands(dev) * ftl_head_md_num_lbks(dev) * FTL_BLOCK_SIZE,
-			   ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE);
-
-	restore->md_buf = spdk_dma_zmalloc(md_size, 0, NULL);
+	/* Allocate buffer capable of holding head mds of all bands */
+	restore->md_buf = spdk_dma_zmalloc(ftl_dev_num_bands(dev) * ftl_head_md_num_lbks(
+			dev) * FTL_BLOCK_SIZE, 0, NULL);
 	if (!restore->md_buf) {
-		goto error;
-	}
-
-	restore->lba_map = calloc(ftl_num_band_lbks(dev), sizeof(uint64_t));
-	if (!restore->lba_map) {
 		goto error;
 	}
 
@@ -1210,6 +1202,7 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 		if (!dev->conf.allow_open_bands) {
 			SPDK_ERRLOG("%s while restoring tail md in band %u.\n",
 				    spdk_strerror(-status), rband->band->id);
+			ftl_band_release_lba_map(rband->band);
 			ftl_restore_complete(restore, status);
 			return;
 		} else {
@@ -1221,16 +1214,11 @@ ftl_restore_tail_md_cb(struct ftl_io *io, void *ctx, int status)
 	}
 
 	if (!status && ftl_restore_l2p(rband->band)) {
+		ftl_band_release_lba_map(rband->band);
 		ftl_restore_complete(restore, -ENOTRECOVERABLE);
 		return;
 	}
-
-	/*
-	 * The LBA map for bands is assigned from ftl_restore->lba_map and needs to be set to NULL
-	 * before successful restore, otherwise ftl_band_alloc_lba_map will fail after
-	 * initialization finalizes.
-	 */
-	rband->band->lba_map.map = NULL;
+	ftl_band_release_lba_map(rband->band);
 
 	rband = ftl_restore_next_band(restore);
 	if (!rband) {
@@ -1253,8 +1241,7 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 	struct ftl_restore *restore = rband->parent;
 	struct ftl_band *band = rband->band;
 
-	band->lba_map.map = restore->lba_map;
-	band->lba_map.dma_buf = restore->md_buf;
+	ftl_band_alloc_lba_map(band);
 
 	if (ftl_band_read_tail_md(band, band->tail_md_ppa, ftl_restore_tail_md_cb, rband)) {
 		SPDK_ERRLOG("Failed to send tail metadata read\n");
