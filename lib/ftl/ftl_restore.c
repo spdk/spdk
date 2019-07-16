@@ -68,8 +68,6 @@ struct ftl_restore {
 
 	void				*md_buf;
 
-	void				*lba_map;
-
 	bool				l2p_phase;
 };
 
@@ -88,7 +86,6 @@ ftl_restore_free(struct ftl_restore *restore)
 	}
 
 	spdk_dma_free(restore->md_buf);
-	free(restore->lba_map);
 	free(restore->bands);
 	free(restore);
 }
@@ -129,11 +126,6 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 
 	restore->md_buf = spdk_dma_zmalloc(md_size, spdk_get_cache_line_size(), NULL);
 	if (!restore->md_buf) {
-		goto error;
-	}
-
-	restore->lba_map = calloc(ftl_num_band_lbks(dev), sizeof(uint64_t));
-	if (!restore->lba_map) {
 		goto error;
 	}
 
@@ -613,8 +605,11 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 	struct ftl_restore *restore = rband->parent;
 	struct ftl_band *band = rband->band;
 
-	band->lba_map.map = restore->lba_map;
-	band->lba_map.dma_buf = restore->md_buf;
+	if (ftl_band_set_dma_buf(band, restore->md_buf)) {
+		SPDK_ERRLOG("Failed to set band dma buffer\n");
+		ftl_restore_complete(restore, -ENOTRECOVERABLE);
+		return -ENOTRECOVERABLE;
+	}
 
 	if (ftl_band_read_tail_md(band, band->tail_md_ppa, ftl_restore_tail_md_cb, rband)) {
 		SPDK_ERRLOG("Failed to send tail metadata read\n");

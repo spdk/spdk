@@ -67,6 +67,8 @@ setup_band(void)
 
 	g_dev = test_init_ftl_dev(&g_geo, &g_range);
 	g_band = test_init_ftl_band(g_dev, TEST_BAND_IDX);
+	printf("pool %p", g_dev->lba_pool);
+
 	rc = ftl_band_alloc_lba_map(g_band);
 	CU_ASSERT_EQUAL_FATAL(rc, 0);
 }

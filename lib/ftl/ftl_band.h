@@ -200,6 +200,7 @@ struct ftl_ppa ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff);
 void		ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state);
 size_t		ftl_band_age(const struct ftl_band *band);
 void		ftl_band_acquire_lba_map(struct ftl_band *band);
+int		ftl_band_set_dma_buf(struct ftl_band *band, void *dma_buf);
 int		ftl_band_alloc_lba_map(struct ftl_band *band);
 void		ftl_band_clear_lba_map(struct ftl_band *band);
 void		ftl_band_release_lba_map(struct ftl_band *band);
@@ -232,6 +233,7 @@ int		ftl_band_write_prep(struct ftl_band *band);
 struct ftl_chunk *ftl_band_next_operational_chunk(struct ftl_band *band,
 		struct ftl_chunk *chunk);
 size_t		ftl_lba_map_pool_elem_size(struct spdk_ftl_dev *dev);
+size_t		ftl_lba_map_segments_size(struct spdk_ftl_dev *dev);
 
 static inline int
 ftl_band_empty(const struct ftl_band *band)
