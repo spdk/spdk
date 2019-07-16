@@ -16,6 +16,24 @@
       "revId": "185291538e0f41e4798109f078d0808ce7629a9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3de97e98_6b3e97a2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T07:00:15Z",
+      "side": 1,
+      "message": "Current behavior doesn\u0027t work. In fact, it\u0027s utterly broken. There\u0027s a github issue for it: https://github.com/spdk/spdk/issues/739 (\"SPDK subsystems don\u0027t handle initialization failures very well\").\n\nSome bdev modules expect their fini() callback to be fired even if that module failed to init, other modules don\u0027t expect that and crash on double free or something similar. It\u0027s a mess.\n\nI think this patch is good. Not even trying to cleanup after failed initialization is the best we can do. At least we won\u0027t crash. Although could we add a FIXME comment here?\n\ne.g. \"FIXME: Handling initialization failures is broken now, so we won\u0027t even try cleaning up after successfully initialized modules\"\n\nLater on we should actually do the same for spdk subsystem initialization.",
+      "parentUuid": "e0378205_9cace2f5",
+      "revId": "185291538e0f41e4798109f078d0808ce7629a9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
