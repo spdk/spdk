@@ -141,7 +141,7 @@ class JSONRPCClient(object):
         self._logger.info("response:\n%s\n", json.dumps(response, indent=2))
         return response
 
-    def call(self, method, params=None):
+    def call(self, method, params={}):
         self._logger.debug("call('%s')" % method)
         req_id = self.send(method, params)
         try:
