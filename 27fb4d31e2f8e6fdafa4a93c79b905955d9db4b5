@@ -104,6 +104,24 @@
       "revId": "27fb4d31e2f8e6fdafa4a93c79b905955d9db4b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14b55f03_446cd681",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2650,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-16T10:13:15Z",
+      "side": 1,
+      "message": "In my patch I\u0027m not modifying blockcnt. This patch is only related to event notification - not to how the resize itself works. If you see issue with resize flow please fill in github issue for that.",
+      "parentUuid": "9d64ea44_8d945bbd",
+      "revId": "27fb4d31e2f8e6fdafa4a93c79b905955d9db4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
