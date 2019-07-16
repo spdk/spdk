@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a0b93c4_72dc4f33",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-16T18:17:27Z",
+      "side": 1,
+      "message": "Don\u0027t you need a return statement after the call to spdk_jsonrpc_send_error_response?",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 2
+      },
+      "revId": "be77d28e7169f829aa489fa8afaa1296ed0681e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc6784b8_e761e570",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-16T18:17:27Z",
+      "side": 1,
+      "message": "Don\u0027t you need a return statement after the call to spdk_jsonrpc_send_error_response?",
+      "range": {
+        "startLine": 99,
+        "startChar": 68,
+        "endLine": 100,
+        "endChar": 1
+      },
+      "revId": "be77d28e7169f829aa489fa8afaa1296ed0681e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
