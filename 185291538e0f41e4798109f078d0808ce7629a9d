@@ -70,6 +70,24 @@
       "revId": "185291538e0f41e4798109f078d0808ce7629a9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aef73994_2753feb5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-16T07:42:53Z",
+      "side": 1,
+      "message": "I see your issue now, spdk_bdev_init_complete(-1) is called before module_init(), for you code here. if part of the bdev modules have been initialized, then we will not call module_fini(). I don\u0027t know, we should have a better idea.",
+      "parentUuid": "0eb7dd3f_a3701e52",
+      "revId": "185291538e0f41e4798109f078d0808ce7629a9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
