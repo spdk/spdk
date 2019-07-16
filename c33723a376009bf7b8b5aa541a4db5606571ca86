@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b0ca39d0_72c7a20b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3200,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-07-16T08:59:11Z",
+      "side": 1,
+      "message": "This line aims to defer destruction until the qp is drained.\n\nAs you said in comment, some driver/hardware doesn\u0027t post back the failed wr successfully. Under that circumstance, qp will not be drained forever. So this line should be removed and nvmf_rdma_destroy_drained_qpair will destroy qp to release its resources.\n\nBut I think removing this line causes a potential problem. There\u0027s a possibility that ibv_poll_cq polls the wr of this destoryed qp after nvmf_rdma_destroy_drained_qpair\u0027s execution. If the possibility exists, ibv_poll_cq path will aceess a destroyed qp.",
+      "revId": "c33723a376009bf7b8b5aa541a4db5606571ca86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c3746dc7_6245c61e",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
