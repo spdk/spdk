@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1484209c_e9fbfb3e",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-16T13:31:29Z",
+      "side": 1,
+      "message": "Is there a path that this can be NULL? If not, let\u0027s get rid of this condition.",
+      "range": {
+        "startLine": 358,
+        "startChar": 5,
+        "endLine": 358,
+        "endChar": 17
+      },
+      "revId": "2fcd449c3b568505beb67476672421b78c913b51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df69626b_b7017c2c",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-16T13:31:29Z",
+      "side": 1,
+      "message": "It\u0027s just used in one place, let\u0027s just inline this.",
+      "range": {
+        "startLine": 672,
+        "startChar": 0,
+        "endLine": 672,
+        "endChar": 52
+      },
+      "revId": "2fcd449c3b568505beb67476672421b78c913b51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0b7008b_ef8fe4f6",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-16T13:31:29Z",
+      "side": 1,
+      "message": "Let\u0027s not check this and just assume dma_buf !\u003d NULL.",
+      "range": {
+        "startLine": 682,
+        "startChar": 0,
+        "endLine": 685,
+        "endChar": 2
+      },
+      "revId": "2fcd449c3b568505beb67476672421b78c913b51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34a57c9b_b1b72930",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1184,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-16T13:31:29Z",
+      "side": 1,
+      "message": "I don\u0027t understand this, if we\u0027re clearing the map, should we just clear ftl_lba_map_num_lbks() * FTL_BLOCK_SIZE (i.e. the actual size of the LBA map)?",
+      "range": {
+        "startLine": 1184,
+        "startChar": 25,
+        "endLine": 1184,
+        "endChar": 50
+      },
+      "revId": "2fcd449c3b568505beb67476672421b78c913b51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d178a69f_96ffdac1",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-16T13:31:29Z",
+      "side": 1,
+      "message": "Do we need to expose this? I don\u0027t see any references beside those in ftl_band.c.",
+      "revId": "2fcd449c3b568505beb67476672421b78c913b51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e25b418_aff7d87d",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-16T13:31:29Z",
+      "side": 1,
+      "message": "So you\u0027ve removed the restore-\u003elba_map in favor of using restore-\u003emd_buf for all of the buffers, however we you did not change the size of restore-\u003emd_buf. Shouldn\u0027t it be expanded to accommodate the additional lba_map buffer?",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 50
+      },
+      "revId": "2fcd449c3b568505beb67476672421b78c913b51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c7812a7_523059d5",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-16T13:31:29Z",
+      "side": 1,
+      "message": "I know this is out of scope for this patch, but could you please have a look at the restore code to check whether we can use the regular way of acquiring DMA buffers for band\u0027s metadata (from the pool) instead of using restore-\u003emd_buf?",
+      "range": {
+        "startLine": 608,
+        "startChar": 0,
+        "endLine": 608,
+        "endChar": 51
+      },
+      "revId": "2fcd449c3b568505beb67476672421b78c913b51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
