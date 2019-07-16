@@ -390,8 +390,6 @@ spdk_rpc_set_bdev_qd_sampling_period(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev *bdev;
 	struct spdk_json_write_ctx *w;
 
-	req.period = UINT64_MAX;
-
 	if (spdk_json_decode_object(params, rpc_set_bdev_qd_sampling_period_decoders,
 				    SPDK_COUNTOF(rpc_set_bdev_qd_sampling_period_decoders),
 				    &req)) {
@@ -399,19 +397,10 @@ spdk_rpc_set_bdev_qd_sampling_period(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (req.name) {
-		bdev = spdk_bdev_get_by_name(req.name);
-		if (bdev == NULL) {
-			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-			goto invalid;
-		}
-	} else {
-		SPDK_ERRLOG("Missing name param\n");
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
 		goto invalid;
-	}
-
-	if (req.period == UINT64_MAX) {
-		SPDK_ERRLOG("Missing period param");
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
