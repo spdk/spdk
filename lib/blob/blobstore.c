@@ -978,6 +978,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		uint64_t max_md_lba = _spdk_bs_page_to_lba(blob->bs, blob->bs->md_start + blob->bs->md_len);
 
 		assert(next_lba < max_md_lba);
+		(void)max_md_lba; /* Unused variable */
 
 		/* Read the next page */
 		ctx->num_pages++;
