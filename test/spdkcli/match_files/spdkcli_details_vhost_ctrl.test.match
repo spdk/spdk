@@ -1,0 +1,22 @@
+{
+  "backend_specific": {
+    "scsi": [
+      {
+        "id": 0,
+        "luns": [
+          {
+            "bdev_name": "Malloc2",
+            "id": 0
+          }
+        ],
+        "scsi_dev_num": 0,
+        "target_name": "Target 0"
+      }
+    ]
+  },
+  "cpumask": "0x3",
+  "ctrlr": "vhost_scsi1",
+  "delay_base_us": 20,
+  "iops_threshold": 1000000,
+  "socket": "$(S)/vhost_scsi1"
+}
