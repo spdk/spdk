@@ -151,6 +151,7 @@ $valgrind $testdir/lib/util/crc16.c/crc16_ut
 $valgrind $testdir/lib/util/crc32_ieee.c/crc32_ieee_ut
 $valgrind $testdir/lib/util/crc32c.c/crc32c_ut
 $valgrind $testdir/lib/util/string.c/string_ut
+$valgrind $testdir/lib/util/lmemp.c/lmemp_ut
 $valgrind $testdir/lib/util/dif.c/dif_ut
 
 if [ $(uname -s) = Linux ]; then
