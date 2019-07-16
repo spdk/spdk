@@ -2431,26 +2431,6 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	snprintf(port->trid.traddr, sizeof(port->trid.traddr), "%s", trid->traddr);
 	snprintf(port->trid.trsvcid, sizeof(port->trid.trsvcid), "%s", trid->trsvcid);
 
-	pthread_mutex_lock(&rtransport->lock);
-	assert(rtransport->event_channel != NULL);
-	TAILQ_FOREACH(port_tmp, &rtransport->ports, link) {
-		if (spdk_nvme_transport_id_compare(&port_tmp->trid, &port->trid) == 0) {
-			port_tmp->ref++;
-			free(port);
-			/* Already listening at this address */
-			pthread_mutex_unlock(&rtransport->lock);
-			return 0;
-		}
-	}
-
-	rc = rdma_create_id(rtransport->event_channel, &port->id, port, RDMA_PS_TCP);
-	if (rc < 0) {
-		SPDK_ERRLOG("rdma_create_id() failed\n");
-		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
-		return rc;
-	}
-
 	switch (port->trid.adrfam) {
 	case SPDK_NVMF_ADRFAM_IPV4:
 		family = AF_INET;
@@ -2461,7 +2441,6 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	default:
 		SPDK_ERRLOG("Unhandled ADRFAM %d\n", port->trid.adrfam);
 		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
 	}
 
@@ -2475,8 +2454,29 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	if (rc) {
 		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(rc), rc);
 		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&rtransport->lock);
+	assert(rtransport->event_channel != NULL);
+	TAILQ_FOREACH(port_tmp, &rtransport->ports, link) {
+		if (spdk_nvme_transport_id_compare(&port_tmp->trid, &port->trid) == 0) {
+			port_tmp->ref++;
+			freeaddrinfo(res);
+			free(port);
+			/* Already listening at this address */
+			pthread_mutex_unlock(&rtransport->lock);
+			return 0;
+		}
+	}
+
+	rc = rdma_create_id(rtransport->event_channel, &port->id, port, RDMA_PS_TCP);
+	if (rc < 0) {
+		SPDK_ERRLOG("rdma_create_id() failed\n");
+		freeaddrinfo(res);
+		free(port);
+		pthread_mutex_unlock(&rtransport->lock);
+		return rc;
 	}
 
 	rc = rdma_bind_addr(port->id, res->ai_addr);
