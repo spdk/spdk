@@ -2289,8 +2289,8 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 		if (!device->pd) {
 			SPDK_ERRLOG("Unable to allocate protection domain.\n");
-			spdk_nvmf_rdma_destroy(&rtransport->transport);
-			return NULL;
+			rc = -ENOMEM;
+			break;
 		}
 
 		assert(device->map == NULL);
@@ -2298,8 +2298,8 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		device->map = spdk_mem_map_alloc(0, &g_nvmf_rdma_map_ops, device->pd);
 		if (!device->map) {
 			SPDK_ERRLOG("Unable to allocate memory map for listen address\n");
-			spdk_nvmf_rdma_destroy(&rtransport->transport);
-			return NULL;
+			rc = -ENOMEM;
+			break;
 		}
 
 		assert(device->map != NULL);
