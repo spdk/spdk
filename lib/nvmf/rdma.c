@@ -2431,6 +2431,32 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	snprintf(port->trid.traddr, sizeof(port->trid.traddr), "%s", trid->traddr);
 	snprintf(port->trid.trsvcid, sizeof(port->trid.trsvcid), "%s", trid->trsvcid);
 
+	switch (port->trid.adrfam) {
+	case SPDK_NVMF_ADRFAM_IPV4:
+		family = AF_INET;
+		break;
+	case SPDK_NVMF_ADRFAM_IPV6:
+		family = AF_INET6;
+		break;
+	default:
+		SPDK_ERRLOG("Unhandled ADRFAM %d\n", port->trid.adrfam);
+		free(port);
+		return -EINVAL;
+	}
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = family;
+	hints.ai_flags = AI_NUMERICSERV;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = 0;
+
+	rc = getaddrinfo(port->trid.traddr, port->trid.trsvcid, &hints, &res);
+	if (rc) {
+		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(rc), rc);
+		free(port);
+		return -EINVAL;
+	}
+
 	pthread_mutex_lock(&rtransport->lock);
 	assert(rtransport->event_channel != NULL);
 	TAILQ_FOREACH(port_tmp, &rtransport->ports, link) {
@@ -2449,34 +2475,6 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
-	}
-
-	switch (port->trid.adrfam) {
-	case SPDK_NVMF_ADRFAM_IPV4:
-		family = AF_INET;
-		break;
-	case SPDK_NVMF_ADRFAM_IPV6:
-		family = AF_INET6;
-		break;
-	default:
-		SPDK_ERRLOG("Unhandled ADRFAM %d\n", port->trid.adrfam);
-		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
-		return -EINVAL;
-	}
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = family;
-	hints.ai_flags = AI_NUMERICSERV;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = 0;
-
-	rc = getaddrinfo(port->trid.traddr, port->trid.trsvcid, &hints, &res);
-	if (rc) {
-		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(rc), rc);
-		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
-		return -EINVAL;
 	}
 
 	rc = rdma_bind_addr(port->id, res->ai_addr);
