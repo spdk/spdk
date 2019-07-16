@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "502ba80e_9ae12ca0",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T09:05:35Z",
+      "side": 1,
+      "message": "I think we can drop this word.\n\n\"soft ulimit for max open files is set to ...\"",
+      "range": {
+        "startLine": 371,
+        "startChar": 48,
+        "endLine": 371,
+        "endChar": 54
+      },
+      "revId": "a76f0cc4598103badbc8738a5e0c5fe5a4faee80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cef19a3e_e1ceecca",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T09:05:35Z",
+      "side": 1,
+      "message": "How about:\nif run as current user\n?",
+      "range": {
+        "startLine": 372,
+        "startChar": 74,
+        "endLine": 372,
+        "endChar": 76
+      },
+      "revId": "a76f0cc4598103badbc8738a5e0c5fe5a4faee80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef20e413_0e17c55e",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T09:05:35Z",
+      "side": 1,
+      "message": "How about:\neven if run as root\n?",
+      "range": {
+        "startLine": 379,
+        "startChar": 74,
+        "endLine": 379,
+        "endChar": 86
+      },
+      "revId": "a76f0cc4598103badbc8738a5e0c5fe5a4faee80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
