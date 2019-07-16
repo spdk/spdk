@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0ff70337_5dd4b2f0",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-16T10:08:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6f7332c3_ac782bac",
+      "range": {
+        "startLine": 299,
+        "startChar": 42,
+        "endLine": 299,
+        "endChar": 86
+      },
+      "revId": "f23f13661e20714f86521746fcf3b69ca3e94d1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b5898ac_258531e8",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2019-07-16T05:14:20Z",
       "side": 1,
       "message": "do we need this struct?",
+      "range": {
+        "startLine": 276,
+        "startChar": 0,
+        "endLine": 276,
+        "endChar": 29
+      },
+      "revId": "f23f13661e20714f86521746fcf3b69ca3e94d1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afa580fa_328be52b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-16T10:08:44Z",
+      "side": 1,
+      "message": "It separates callback functionality making it more readable. I can remove it if you think that this is useless and this will be readable enough w/o it.",
+      "parentUuid": "3b5898ac_258531e8",
       "range": {
         "startLine": 276,
         "startChar": 0,
@@ -68,6 +116,30 @@
       "revId": "f23f13661e20714f86521746fcf3b69ca3e94d1f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a94ea470_7d34779f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-16T10:08:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d79c15ac_3ec53500",
+      "range": {
+        "startLine": 281,
+        "startChar": 5,
+        "endLine": 281,
+        "endChar": 11
+      },
+      "revId": "f23f13661e20714f86521746fcf3b69ca3e94d1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
