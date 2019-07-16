@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f11e655c_4691cba5",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T03:13:38Z",
+      "side": 1,
+      "message": "this is probably dead code anyway - rpc passes here a parameter which is not optional.",
+      "range": {
+        "startLine": 322,
+        "startChar": 1,
+        "endLine": 325,
+        "endChar": 2
+      },
+      "revId": "fd5793d947e8e24e87c06456b0abfd29c1376986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "264b34dd_aa74202d",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T03:13:38Z",
+      "side": 1,
+      "message": "Should it be -errno as well?",
+      "range": {
+        "startLine": 342,
+        "startChar": 9,
+        "endLine": 342,
+        "endChar": 14
+      },
+      "revId": "fd5793d947e8e24e87c06456b0abfd29c1376986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
