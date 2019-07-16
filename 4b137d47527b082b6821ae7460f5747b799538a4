@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3e4dcb7e_a5b44daa",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-16T07:14:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "188905e6_9584a940",
+      "range": {
+        "startLine": 10,
+        "startChar": 47,
+        "endLine": 10,
+        "endChar": 52
+      },
+      "revId": "4b137d47527b082b6821ae7460f5747b799538a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da607340_6249224f",
         "filename": "scripts/setup.sh",
         "patchSetId": 4
