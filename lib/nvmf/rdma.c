@@ -1039,7 +1039,6 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 error:
 	rdma_destroy_id(rqpair->cm_id);
 	rqpair->cm_id = NULL;
-	spdk_nvmf_rdma_qpair_destroy(rqpair);
 	return -1;
 }
 
