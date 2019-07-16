@@ -76,7 +76,7 @@ waitforlisten $perfpid /var/tmp/bdevperf.sock
 $rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
 
 # Kill bdev_svc
-kill -9 $perfpid
+kill -9 $perfpid || true
 rm -f /var/run/spdk_bdev1
 
 # Verify the target stays up
@@ -116,7 +116,7 @@ waitforlisten $perfpid /var/tmp/bdevperf.sock
 $rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
 
 # Expand the trap to clean up bdevperf if something goes wrong
-trap "process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
+trap "process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid || true; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 waitforio /var/tmp/bdevperf.sock Nvme1n1
 
@@ -127,7 +127,7 @@ killprocess $nvmfpid
 sleep 1
 # TODO: Right now the NVMe-oF initiator will not correctly detect broken connections
 # and so it will never shut down. Just kill it.
-kill -9 $perfpid
+kill -9 $perfpid || true
 timing_exit test3
 
 rm -f ./local-job0-0-verify.state
