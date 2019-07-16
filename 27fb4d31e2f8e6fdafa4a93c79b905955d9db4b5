@@ -86,6 +86,24 @@
       "revId": "27fb4d31e2f8e6fdafa4a93c79b905955d9db4b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d64ea44_8d945bbd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2650,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:36:58Z",
+      "side": 1,
+      "message": "It should be thought out before the new API is introduced.\n\nYou can\u0027t just modify bdev-\u003eblockcnt on one thread while other threads constantly do I/O and reference the very same bdev-\u003eblockcnt. It\u0027s a non-atomic 64-bit value and even the assignment that we already have at line 2254 is super fishy. You need some way to synchronize bdev-\u003eblockcnt accesses, and one way to do it is to make the resize event asynchronous, so that the upper layer could do the following:\n\n-\u003e notify_cb is called\n   -\u003e start informing other I/O threads of the new blocksize\n-\u003e after all the threads are updated, consume the bdev resize event and change the blocksize (it should be probably a field in the descriptor struct)",
+      "parentUuid": "89c44201_ef67b03a",
+      "revId": "27fb4d31e2f8e6fdafa4a93c79b905955d9db4b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
