@@ -1,0 +1,141 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "057d5bc5_b447a049",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:03:46Z",
+      "side": 1,
+      "message": "the filename is create_openstack_vm.sh, can we remove this comment?",
+      "range": {
+        "startLine": 3,
+        "startChar": 2,
+        "endLine": 3,
+        "endChar": 20
+      },
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d4fd585_3a2eb20b",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:03:46Z",
+      "side": 1,
+      "message": "this script is essentially a wrapper for just a bunch of commands. you can make it much more readable by removing all the argument parsing and leaving it with just the core logic. A brief description like this is usually not useful - if I run some random script on my machine I have to check what the script does (and not just what it says it does :) ).",
+      "range": {
+        "startLine": 5,
+        "startChar": 2,
+        "endLine": 5,
+        "endChar": 78
+      },
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e009b7ad_3ebeb0ad",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:03:46Z",
+      "side": 1,
+      "message": "It shouldn\u0027t matter for the image how much ram and cpu there is, so why are we exporting this?",
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ba33b7f_a1c62994",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:03:46Z",
+      "side": 1,
+      "message": "You have to be at least consistent with double quotes around variables - in the line above you\u0027ve got them, here you don\u0027t (causing cp to expand to `cp /my/space in name/file` which tries to copy `/my/space` into `in`)",
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8effc40a_8879ab05",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:03:46Z",
+      "side": 1,
+      "message": "since we\u0027re exporting anyway - can we just accept an env variable in this script instead of parsing arguments? Then we don\u0027t need lines 14-50",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 18
+      },
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a223fd6_1a03491f",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:03:46Z",
+      "side": 1,
+      "message": "Do we need to setup proxy inside the script? if someone\u0027s running this behind a firewall, he know he\u0027s running behind a firewall and it\u0027s his problem to setup proxy - setting up all the stuff here just makes the script harder to follow. Can we just remove it?",
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e79f173_fc18ce90",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:03:46Z",
+      "side": 1,
+      "message": "what if there\u0027s more than 1 vmdk? e.g. if someone runs this script again after long time and the filename changed.",
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
