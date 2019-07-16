@@ -70,6 +70,30 @@
       "revId": "110037c22189273223c8747b6303e51d210f89e6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58033bb2_b544265e",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 701,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T16:40:41Z",
+      "side": 1,
+      "message": "I\u0027m still not sure about spdk_get_cache_line_size function, but I noticed DPDK *always* allocates cacheline-aligned memory even though the documentation doesn\u0027t guarantee that. Could we just enforce cacheline alignment in SPDK? In spdk_malloc() implemention we could always pass spdk_min(align, RTE_CACHE_LINE_SIZE) to rte_malloc(). Then we could document this behavior and just rely on it here.\n\nGuys, Ben, any thoughts?",
+      "parentUuid": "6039a874_455d24af",
+      "range": {
+        "startLine": 701,
+        "startChar": 9,
+        "endLine": 701,
+        "endChar": 35
+      },
+      "revId": "110037c22189273223c8747b6303e51d210f89e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
