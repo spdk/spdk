@@ -39,8 +39,11 @@
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
 #include "spdk/likely.h"
+#include "spdk/lmemp.h"
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
+
+#define CMB_ALLOC_DEBUG (0)
 
 /*
  * Number of completion queue entries to process before ringing the
@@ -84,14 +87,10 @@ struct nvme_pcie_ctrlr {
 	/* Controller memory buffer size in Bytes */
 	uint64_t cmb_size;
 
-	/* Current offset of controller memory buffer, relative to start of BAR virt addr */
-	uint64_t cmb_current_offset;
-
-	/* Last valid offset into CMB, this differs if CMB memory registration occurs or not */
-	uint64_t cmb_max_offset;
-
 	void *cmb_mem_register_addr;
 	size_t cmb_mem_register_size;
+
+	void *cmb_allocator_base;
 
 	bool cmb_io_data_supported;
 
@@ -154,6 +153,9 @@ struct nvme_pcie_qpair {
 	/* Array of trackers indexed by command ID. */
 	struct nvme_tracker *tr;
 
+	/* Pointer to controller for access to common storage allocator */
+	struct nvme_pcie_ctrlr *pctrlr;
+
 	uint16_t num_entries;
 
 	uint8_t retry_count;
@@ -210,6 +212,7 @@ static int nvme_pcie_ctrlr_attach(struct spdk_nvme_probe_ctx *probe_ctx,
 static int nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 				     const struct spdk_nvme_io_qpair_opts *opts);
 static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
+static int nvme_pcie_ctrlr_free_cmb_buffer(struct nvme_pcie_ctrlr *pctrlr, void *buf);
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 static uint16_t g_signal_lock;
@@ -521,8 +524,6 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	pctrlr->cmb_bar_virt_addr = addr;
 	pctrlr->cmb_bar_phys_addr = bar_phys_addr;
 	pctrlr->cmb_size = size;
-	pctrlr->cmb_current_offset = offset;
-	pctrlr->cmb_max_offset = offset + size;
 
 	if (!cmbsz.bits.sqs) {
 		pctrlr->ctrlr.opts.use_cmb_sqs = false;
@@ -530,6 +531,21 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 
 	/* If only SQS is supported use legacy mapping */
 	if (cmbsz.bits.sqs && !(cmbsz.bits.wds || cmbsz.bits.rds)) {
+		if (pctrlr->cmb_allocator_base == NULL) {
+			/* Hard coded value assumes no more than 1,024 separate allocations */
+			pctrlr->cmb_allocator_base = spdk_lmempc_init_allocator(1024);
+			if (pctrlr->cmb_allocator_base == NULL) { goto exit; }
+		}
+		spdk_lmempc_define_mempool((struct storbase *) pctrlr->cmb_allocator_base,
+					   (addr + offset),
+					   (bar_phys_addr + offset),
+					   size);
+#if CMB_ALLOC_DEBUG
+		printf("CMB memory pool created vaddr 0x%p paddr 0x%lx size 0x%lx\n",
+		       (addr + offset),
+		       (bar_phys_addr + offset),
+		       size);
+#endif
 		return;
 	}
 
@@ -548,8 +564,22 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		SPDK_ERRLOG("spdk_mem_register() failed\n");
 		goto exit;
 	}
-	pctrlr->cmb_current_offset = mem_register_start - ((uint64_t)pctrlr->cmb_bar_virt_addr);
-	pctrlr->cmb_max_offset = mem_register_end - ((uint64_t)pctrlr->cmb_bar_virt_addr);
+
+	if (pctrlr->cmb_allocator_base == NULL) {
+		/* Hard coded value assumes no more than 1,024 separate allocations */
+		pctrlr->cmb_allocator_base = spdk_lmempc_init_allocator(1024);
+		if (pctrlr->cmb_allocator_base == NULL) { goto exit; }
+	}
+	spdk_lmempc_define_mempool((struct storbase *) pctrlr->cmb_allocator_base,
+				   pctrlr->cmb_mem_register_addr,
+				   (bar_phys_addr + (pctrlr->cmb_mem_register_addr - pctrlr->cmb_bar_virt_addr)),
+				   pctrlr->cmb_mem_register_size);
+#if CMB_ALLOC_DEBUG
+	printf("CMB memory pool created vaddr 0x%p paddr 0x%lx size 0x%lx\n",
+	       pctrlr->cmb_mem_register_addr,
+	       (bar_phys_addr + (pctrlr->cmb_mem_register_addr - pctrlr->cmb_bar_virt_addr)),
+	       pctrlr->cmb_mem_register_size);
+#endif
 	pctrlr->cmb_io_data_supported = true;
 
 	return;
@@ -567,6 +597,14 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	void *addr = pctrlr->cmb_bar_virt_addr;
 
 	if (addr) {
+		if (pctrlr->cmb_allocator_base != NULL) {
+#if CMB_ALLOC_DEBUG
+			printf("Releasing CMB memory pool\n");
+#endif
+			spdk_lmempc_exit_allocator((struct storbase *)pctrlr->cmb_allocator_base);
+			pctrlr->cmb_allocator_base = NULL;
+		}
+
 		if (pctrlr->cmb_mem_register_addr) {
 			spdk_mem_unregister(pctrlr->cmb_mem_register_addr, pctrlr->cmb_mem_register_size);
 		}
@@ -580,25 +618,50 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	return rc;
 }
 
-static int
+static void *
 nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t aligned,
-			  uint64_t *offset)
+			  uint64_t *iova)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-	uint64_t round_offset;
+	uint64_t liova;
+	void *vaddr;
 
-	round_offset = pctrlr->cmb_current_offset;
-	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
-
-	/* CMB may only consume part of the BAR, calculate accordingly */
-	if (round_offset + length > pctrlr->cmb_max_offset) {
-		SPDK_ERRLOG("Tried to allocate past valid CMB range!\n");
-		return -1;
+	if (pctrlr->cmb_allocator_base == NULL) {
+		return NULL;
 	}
 
-	*offset = round_offset;
-	pctrlr->cmb_current_offset = round_offset + length;
+	vaddr = spdk_lmempc_allocate_storage((struct storbase *) pctrlr->cmb_allocator_base,
+					     0,
+					     0,
+					     length,
+					     aligned,
+					     &liova);
+	if (vaddr == NULL) {
+		SPDK_ERRLOG("Insufficient storage to allocate 0x%lx bytes of CMB!\n", length);
+		return NULL;
+	}
+	if (iova != NULL) {
+		*iova = liova;
+	}
+#if CMB_ALLOC_DEBUG
+	printf("CMB memory pool allocated vaddr 0x%p paddr 0x%lx size 0x%lx\n",
+	       vaddr, liova, length);
+#endif
+	return vaddr;
+}
 
+static int
+nvme_pcie_ctrlr_free_cmb_buffer(struct nvme_pcie_ctrlr *pctrlr, void *buf)
+{
+
+	if (pctrlr->cmb_allocator_base == NULL) {
+		return 0;
+	}
+
+	spdk_lmempc_release_storage((struct storbase *)pctrlr->cmb_allocator_base, buf);
+#if CMB_ALLOC_DEBUG
+	printf("CMB memory pool released buffer vaddr 0x%p\n", buf);
+#endif
 	return 0;
 }
 
@@ -614,7 +677,7 @@ void *
 nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-	uint64_t offset;
+	void *vaddr;
 
 	if (pctrlr->cmb_bar_virt_addr == NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CMB not available\n");
@@ -626,23 +689,29 @@ nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 		return NULL;
 	}
 
-	if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, size, 4, &offset) != 0) {
+	vaddr = nvme_pcie_ctrlr_alloc_cmb(ctrlr, size, 4, NULL);
+	if (vaddr == NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "%zu-byte CMB allocation failed\n", size);
 		return NULL;
 	}
 
-	return pctrlr->cmb_bar_virt_addr + offset;
+	return vaddr;
 }
 
 int
 nvme_pcie_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
 {
-	/*
-	 * Do nothing for now.
-	 * TODO: Track free space so buffers may be reused.
-	 */
-	SPDK_ERRLOG("%s: no deallocation for CMB buffers yet!\n",
-		    __func__);
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
+	if (pctrlr->cmb_allocator_base == NULL) {
+		return 0;
+	}
+
+	spdk_lmempc_release_storage((struct storbase *)pctrlr->cmb_allocator_base, buf);
+#if CMB_ALLOC_DEBUG
+	printf("CMB memory pool released I/O buffer vaddr 0x%p size 0x%lx\n",
+	       buf, size);
+#endif
 	return 0;
 }
 
@@ -1002,7 +1071,6 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	struct nvme_tracker	*tr;
 	uint16_t		i;
 	volatile uint32_t	*doorbell_base;
-	uint64_t		offset;
 	uint16_t		num_trackers;
 	size_t			page_align = VALUE_2MB;
 	uint32_t                flags = SPDK_MALLOC_DMA;
@@ -1041,10 +1109,16 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 
 	/* cmd and cpl rings must be aligned on page size boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {
-		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					      sysconf(_SC_PAGESIZE), &offset) == 0) {
-			pqpair->cmd = pctrlr->cmb_bar_virt_addr + offset;
-			pqpair->cmd_bus_addr = pctrlr->cmb_bar_phys_addr + offset;
+		/* Assuming pagesize is power of 2 */
+		int p2 = ffs(sysconf(_SC_PAGESIZE)) - 1;
+
+		/* We need this pointer to release the memory later */
+		pqpair->pctrlr = pctrlr;
+		pqpair->cmd = nvme_pcie_ctrlr_alloc_cmb(ctrlr,
+							(pqpair->num_entries * sizeof(struct spdk_nvme_cmd)),
+							p2,
+							&pqpair->cmd_bus_addr);
+		if (pqpair->cmd != NULL) {
 			pqpair->sq_in_cmb = true;
 		}
 	}
@@ -1436,6 +1510,12 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_pcie_admin_qpair_destroy(qpair);
+	}
+	/* If CMB allocated from CMB mempool, release its storage back into its pool */
+	if (pqpair->cmd && pqpair->sq_in_cmb) {
+		if (pqpair->pctrlr != NULL) {
+			nvme_pcie_ctrlr_free_cmb_buffer(pqpair->pctrlr, pqpair->cmd);
+		}
 	}
 	/*
 	 * We check sq_vaddr and cq_vaddr to see if the user specified the memory
