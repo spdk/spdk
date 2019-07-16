@@ -16,6 +16,24 @@
       "revId": "b175c3875220e285e6b9be905e1eff639c20de5e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d5143fb_eccaebb2",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-16T11:51:25Z",
+      "side": 1,
+      "message": "Yup, this here was my mistake, deleted one line too much.",
+      "parentUuid": "16617791_0b485f0e",
+      "revId": "b175c3875220e285e6b9be905e1eff639c20de5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
