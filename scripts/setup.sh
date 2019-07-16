@@ -365,6 +365,21 @@ function configure_linux {
 		exit 1
 	fi
 
+	CURENT_SOFT_ULIMIT=$(ulimit -n)
+	if [ "$CURENT_SOFT_ULIMIT" != "unlimited" ]; then
+		echo ""
+		echo "WARNING: soft ulimit for max open files is set to $CURENT_SOFT_ULIMIT."
+		echo "SPDK won't be able to use more than $CURENT_SOFT_ULIMIT hugepages if run as current user."
+		echo ""
+	fi
+	CURENT_HARD_ULIMIT=$(ulimit -Hn)
+	if [ "$CURENT_HARD_ULIMIT" != "unlimited" ]; then
+		echo ""
+		echo "WARNING: hard ulimit for max open files is set to $CURENT_HARD_ULIMIT."
+		echo "SPDK won't be able to use more than $CURENT_HARD_ULIMIT hugepages even if run as root."
+		echo ""
+	fi
+
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ -n "$TARGET_USER" ]; then
 			for mount in $hugetlbfs_mounts; do

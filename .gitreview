@@ -1,0 +1,7 @@
+[gerrit] 
+host=review.gerrithub.io 
+port=443 
+project=spdk/spdk 
+defaultremote=origin 
+defaultbranch=master 
+defaultrebase=0
