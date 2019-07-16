@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2794130_7f4cb57c",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:07:46Z",
+      "side": 1,
+      "message": "it\u0027s always set inside autotest_common.sh, you don\u0027t need to set it here",
+      "revId": "4204719ad228f7d53ece6dc3b21e73730e09ff69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1421d5d_59ebf6e8",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:07:46Z",
+      "side": 1,
+      "message": "I can\u0027t see the corresponding fini in this script",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 12
+      },
+      "revId": "4204719ad228f7d53ece6dc3b21e73730e09ff69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65b4ac09_51688145",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:07:46Z",
+      "side": 1,
+      "message": "what is even happening here? Please add comments",
+      "revId": "4204719ad228f7d53ece6dc3b21e73730e09ff69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
