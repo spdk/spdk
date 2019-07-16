@@ -65,6 +65,11 @@ test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
 	dev->punits = calloc(ftl_dev_num_punits(dev), sizeof(*dev->punits));
 	SPDK_CU_ASSERT_FATAL(dev->punits != NULL);
 
+	dev->lba_pool = spdk_mempool_create("ftl_ut", 2, 0x18000,
+					    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					    SPDK_ENV_SOCKET_ID_ANY);
+	SPDK_CU_ASSERT_FATAL(dev->lba_pool != NULL);
+
 	for (size_t i = 0; i < ftl_dev_num_punits(dev); ++i) {
 		punit = range->begin + i;
 		dev->punits[i].dev = dev;
@@ -126,6 +131,7 @@ test_free_ftl_dev(struct spdk_ftl_dev *dev)
 	spdk_set_thread(dev->core_thread.thread);
 	spdk_thread_exit(dev->core_thread.thread);
 	spdk_thread_destroy(dev->core_thread.thread);
+	spdk_mempool_free(dev->lba_pool);
 	free(dev->punits);
 	free(dev->bands);
 	free(dev);
@@ -138,8 +144,7 @@ test_free_ftl_band(struct ftl_band *band)
 	spdk_bit_array_free(&band->lba_map.vld);
 	spdk_bit_array_free(&band->reloc_bitmap);
 	free(band->chunk_buf);
-	free(band->lba_map.map);
-	spdk_free(band->lba_map.dma_buf);
+	spdk_dma_free(band->lba_map.dma_buf);
 }
 
 uint64_t
