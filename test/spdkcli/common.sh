@@ -32,12 +32,6 @@ function run_nvmf_tgt() {
 	waitforlisten $nvmf_tgt_pid
 }
 
-function run_iscsi_tgt() {
-	$rootdir/app/iscsi_tgt/iscsi_tgt -m 0x3 -p 0 -s 4096 &
-	iscsi_tgt_pid=$!
-	waitforlisten $iscsi_tgt_pid
-}
-
 function run_vhost_tgt() {
 	$rootdir/app/vhost/vhost -m 0x3 -p 0 -s 4096 &
 	vhost_tgt_pid=$!

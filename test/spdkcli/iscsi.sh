@@ -13,7 +13,13 @@ timing_enter spdkcli_iscsi
 trap 'on_error_exit;' ERR
 
 timing_enter run_iscsi_tgt
-run_iscsi_tgt
+
+# Running iscsi target with --wait-for-rpc. Implies start_subsystem_init later
+$rootdir/app/iscsi_tgt/iscsi_tgt -m 0x3 -p 0 -s 4096 --wait-for-rpc &
+iscsi_tgt_pid=$!
+waitforlisten $iscsi_tgt_pid
+$rootdir/scripts/rpc.py start_subsystem_init
+
 timing_exit run_iscsi_tgt
 
 timing_enter spdkcli_create_iscsi_config
