@@ -52,6 +52,24 @@
       "revId": "185291538e0f41e4798109f078d0808ce7629a9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0eb7dd3f_a3701e52",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1015685
+      },
+      "writtenOn": "2019-07-16T07:17:49Z",
+      "side": 1,
+      "message": "There are two scenes. One sub-bdev module init() failed, g_resume_bdev_module is working fine.  Another all sub-bdev modules don\u0027t call init(), g_resume_bdev_module will be null and the same time it will lead to repeate all bdev fini()",
+      "parentUuid": "2e5680a5_1c24cefe",
+      "revId": "185291538e0f41e4798109f078d0808ce7629a9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
