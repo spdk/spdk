@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "6f7332c3_ac782bac",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T05:21:01Z",
+      "side": 1,
+      "message": "This belongs in spdk_bdev_open documentation, not here",
+      "range": {
+        "startLine": 299,
+        "startChar": 42,
+        "endLine": 299,
+        "endChar": 86
+      },
+      "revId": "f23f13661e20714f86521746fcf3b69ca3e94d1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3b5898ac_258531e8",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 11
