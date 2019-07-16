@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4879abca_df525a3f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2733,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-16T10:12:35Z",
+      "side": 1,
+      "message": "for function definitions we usually put the type and the name in two separate lines\n\nthe patch is fine though, we can fix it later.",
+      "range": {
+        "startLine": 2733,
+        "startChar": 0,
+        "endLine": 2733,
+        "endChar": 12
+      },
+      "revId": "91370d83e090aedeb26af67a214b577fc2d3c52e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
