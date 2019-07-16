@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bc3d2e06_5b3504ae",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-16T00:32:25Z",
+      "side": 1,
+      "message": "Oh thanks, yeah! I guess I can just leave the original changelog entry then since it never made it through a release cycle. Maybe I\u0027ll add in the last couple of sentences from my message.",
+      "parentUuid": "1b458ec7_81f00fd1",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 0
+      },
+      "revId": "d27681f7f5b3afe38777d59df8e2bc595faeb4f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b598aeee_d483add8",
         "filename": "scripts/rpc/nvmf.py",
         "patchSetId": 1
