@@ -55,6 +55,7 @@ $spdkcli_job "'vhost/block create vhost_blk1 Nvme0n1p0' 'Nvme0n1p0' True
 'vhost/scsi/vhost_scsi2 add_lun 0 Malloc3' 'Malloc3' True
 'vhost/scsi/vhost_scsi2 add_lun 1 Nvme0n1p2' 'Nvme0n1p2' True
 'vhost/scsi/vhost_scsi2 add_lun 2 Nvme0n1p3' 'Nvme0n1p3' True
+'vhost/scsi/vhost_scsi1 set_coalescing 20 1000000' '' True
 "
 timing_exit spdkcli_create_vhosts_config
 
