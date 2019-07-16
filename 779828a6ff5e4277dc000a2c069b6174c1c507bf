@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b965e808_2cfa8b0c",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-16T10:05:49Z",
+      "side": 1,
+      "message": "If period argument is required, this assign is not",
+      "range": {
+        "startLine": 389,
+        "startChar": 14,
+        "endLine": 389,
+        "endChar": 24
+      },
+      "revId": "779828a6ff5e4277dc000a2c069b6174c1c507bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2b2c5eb_28fcb4c5",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-16T10:05:49Z",
+      "side": 1,
+      "message": "req.name is not marked as optional, so maybe we can remove this check?",
+      "range": {
+        "startLine": 408,
+        "startChar": 14,
+        "endLine": 408,
+        "endChar": 35
+      },
+      "revId": "779828a6ff5e4277dc000a2c069b6174c1c507bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6aa0791a_2ca04428",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-16T10:05:49Z",
+      "side": 1,
+      "message": "req.period is not marked as optional, so maybe we can remove this check?\n\nIf not, this print misses \\n as the end, please improve :)",
+      "range": {
+        "startLine": 414,
+        "startChar": 14,
+        "endLine": 414,
+        "endChar": 36
+      },
+      "revId": "779828a6ff5e4277dc000a2c069b6174c1c507bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
