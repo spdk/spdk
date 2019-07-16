@@ -34,6 +34,24 @@
       "revId": "185291538e0f41e4798109f078d0808ce7629a9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e5680a5_1c24cefe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-16T07:08:31Z",
+      "side": 1,
+      "message": "if g_resume_bdev_module can\u0027t work with all the modules, we should remove the code.",
+      "parentUuid": "3de97e98_6b3e97a2",
+      "revId": "185291538e0f41e4798109f078d0808ce7629a9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
