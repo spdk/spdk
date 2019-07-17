@@ -114,7 +114,10 @@ function test_construct_lvs_different_cluster_size() {
 	# clean up
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs1_uuid"
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvs1_uuid" && false
-	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs2_uuid"
+
+	# delete the second lvs (using its name only)
+	rpc_cmd bdev_lvol_delete_lvstore -l lvs2_test
+	rpc_cmd bdev_lvol_get_lvstores -l lvs2_test && false
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvs2_uuid" && false
 
 	rpc_cmd bdev_malloc_delete "$malloc1_name"
