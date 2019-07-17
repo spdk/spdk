@@ -118,6 +118,30 @@
       "revId": "110037c22189273223c8747b6303e51d210f89e6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f37f2354_ef81baed",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 701,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-17T07:29:18Z",
+      "side": 1,
+      "message": "I\u0027ll add the change to the parent patch, but it feels a bit off for me. The documentation change would need to happen in the global env.h, so would this mean we want each environment implementation to guarantee being at least cache line sized? \nThe code here wants 64B alignment so it\u0027s not trashing the cache, not for hardware requirements so it feels like the usage in FTL could use the spdk_get_cache_line_size function (especially the allocation in rwb) in case of a change of environment. Or maybe all of the usage could just have explicit NVMe alignment requirements (like DWORD) and the fact that it\u0027s bumped to RTE_CACHE_LINE_SIZE in DPDK is just a side effect?",
+      "parentUuid": "f563fc2e_3a454655",
+      "range": {
+        "startLine": 701,
+        "startChar": 9,
+        "endLine": 701,
+        "endChar": 35
+      },
+      "revId": "110037c22189273223c8747b6303e51d210f89e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
