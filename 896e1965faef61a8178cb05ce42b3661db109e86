@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "685cc720_6b95e5ae",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-17T11:21:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "057d5bc5_b447a049",
+      "range": {
+        "startLine": 3,
+        "startChar": 2,
+        "endLine": 3,
+        "endChar": 20
+      },
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d4fd585_3a2eb20b",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 18
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "15a0e759_e7891cd0",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-17T11:21:58Z",
+      "side": 1,
+      "message": "I removed this line",
+      "parentUuid": "2d4fd585_3a2eb20b",
+      "range": {
+        "startLine": 5,
+        "startChar": 2,
+        "endLine": 5,
+        "endChar": 78
+      },
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e009b7ad_3ebeb0ad",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 18
@@ -59,6 +107,24 @@
       "writtenOn": "2019-07-16T05:03:46Z",
       "side": 1,
       "message": "It shouldn\u0027t matter for the image how much ram and cpu there is, so why are we exporting this?",
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3b7e3a1_1df4170e",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-17T11:21:58Z",
+      "side": 1,
+      "message": "This is minimum memory recommended when installing devstack",
+      "parentUuid": "e009b7ad_3ebeb0ad",
       "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -79,6 +145,24 @@
       "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4ee724c_eb17cdeb",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-17T11:21:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4ba33b7f_a1c62994",
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -105,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "5a0db58d_752d3207",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-17T11:21:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8effc40a_8879ab05",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 18
+      },
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a223fd6_1a03491f",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 18
@@ -122,6 +230,24 @@
     },
     {
       "key": {
+        "uuid": "6cb64517_cf0a56c2",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-17T11:21:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a223fd6_1a03491f",
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e79f173_fc18ce90",
         "filename": "scripts/vagrant/create_openstack_vm.sh",
         "patchSetId": 18
@@ -136,6 +262,24 @@
       "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75db47f4_da8065b8",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-17T11:21:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4e79f173_fc18ce90",
+      "revId": "896e1965faef61a8178cb05ce42b3661db109e86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
