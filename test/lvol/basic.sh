@@ -84,7 +84,9 @@ function test_construct_lvs_negative() {
 	# make sure we can't delete the same lvs again
 	! rpc_cmd destroy_lvol_store -u "$lvs1_uuid"
 
-	rpc_cmd destroy_lvol_store -u "$lvs2_uuid"
+	# delete the second lvs (using its name only)
+	rpc_cmd destroy_lvol_store -l lvs2_test
+	! rpc_cmd get_lvol_stores -l lvs2_test
 	! rpc_cmd get_lvol_stores -u "$lvs2_uuid"
 
 	# we should be all clear now
