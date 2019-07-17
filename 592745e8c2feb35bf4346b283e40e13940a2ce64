@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5929be8d_f98cd1ff",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T02:55:44Z",
+      "side": 1,
+      "message": "Can we use\n\n \"Bdev %s not found\", req.bdev_name\n\ninstead?",
+      "range": {
+        "startLine": 150,
+        "startChar": 55,
+        "endLine": 150,
+        "endChar": 76
+      },
+      "revId": "592745e8c2feb35bf4346b283e40e13940a2ce64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a14a4712_168b0111",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T02:55:44Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 336,
+        "startChar": 54,
+        "endLine": 336,
+        "endChar": 75
+      },
+      "revId": "592745e8c2feb35bf4346b283e40e13940a2ce64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12143bbc_695dd862",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T02:55:44Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 401,
+        "startChar": 53,
+        "endLine": 401,
+        "endChar": 74
+      },
+      "revId": "592745e8c2feb35bf4346b283e40e13940a2ce64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07dea04b_558a5b2e",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T02:55:44Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 569,
+        "startChar": 53,
+        "endLine": 569,
+        "endChar": 74
+      },
+      "revId": "592745e8c2feb35bf4346b283e40e13940a2ce64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe501b61_7c2ec90f",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T02:55:44Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 667,
+        "startChar": 53,
+        "endLine": 667,
+        "endChar": 74
+      },
+      "revId": "592745e8c2feb35bf4346b283e40e13940a2ce64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
