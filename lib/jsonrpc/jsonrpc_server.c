@@ -62,6 +62,7 @@ static void
 parse_single_request(struct spdk_jsonrpc_request *request, struct spdk_json_val *values)
 {
 	struct jsonrpc_request req = {};
+	const struct spdk_json_val *params = NULL;
 
 	if (spdk_json_decode_object(values, jsonrpc_request_decoders,
 				    SPDK_COUNTOF(jsonrpc_request_decoders),
@@ -89,13 +90,17 @@ parse_single_request(struct spdk_jsonrpc_request *request, struct spdk_json_val 
 	}
 
 	if (req.params) {
-		if (req.params->type != SPDK_JSON_VAL_ARRAY_BEGIN &&
-		    req.params->type != SPDK_JSON_VAL_OBJECT_BEGIN) {
-			goto invalid;
+		/* null json value is as if there were no parameters */
+		if (req.params->type != SPDK_JSON_VAL_NULL) {
+			if (req.params->type != SPDK_JSON_VAL_ARRAY_BEGIN &&
+			    req.params->type != SPDK_JSON_VAL_OBJECT_BEGIN) {
+				goto invalid;
+			}
+			params = req.params;
 		}
 	}
 
-	spdk_jsonrpc_server_handle_request(request, req.method, req.params);
+	spdk_jsonrpc_server_handle_request(request, req.method, params);
 	return;
 
 invalid:

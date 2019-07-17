@@ -141,6 +141,61 @@ out:
 	return rc;
 }
 
+static int
+spdk_jsonrpc_client_check_null_params_method(struct spdk_jsonrpc_client *client)
+{
+	int rc;
+	bool res = false;
+	struct spdk_jsonrpc_client_response *json_resp = NULL;
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_client_request *request;
+
+	request = spdk_jsonrpc_client_create_request();
+	if (request == NULL) {
+		return -ENOMEM;
+	}
+
+	w = spdk_jsonrpc_begin_request(request, 1, "test_null_params");
+	spdk_json_write_name(w, "params");
+	spdk_json_write_null(w);
+	spdk_jsonrpc_end_request(request, w);
+	spdk_jsonrpc_client_send_request(client, request);
+
+	rc = _rpc_client_wait_for_response(client);
+	if (rc <= 0) {
+		goto out;
+	}
+
+	json_resp = spdk_jsonrpc_client_get_response(client);
+	if (json_resp == NULL) {
+		SPDK_ERRLOG("spdk_jsonrpc_client_get_response() failed\n");
+		rc = -1;
+		goto out;
+
+	}
+
+	/* Check for error response */
+	if (json_resp->error != NULL) {
+		SPDK_ERRLOG("Unexpected error response\n");
+		rc = -1;
+		goto out;
+	}
+
+	assert(json_resp->result);
+
+	if (spdk_json_decode_bool(json_resp->result, &res) != 0 || res != true) {
+		SPDK_ERRLOG("Response is not a boolean or it is not 'true'\n");
+		rc = -EINVAL;
+		goto out;
+	} else {
+		rc = 0;
+	}
+
+out:
+	spdk_jsonrpc_client_free_response(json_resp);
+	return rc;
+}
+
 static void
 rpc_test_method_startup(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
@@ -156,6 +211,24 @@ rpc_test_method_runtime(struct spdk_jsonrpc_request *request, const struct spdk_
 					 "rpc_test_method_runtime(): Method body not implemented");
 }
 SPDK_RPC_REGISTER("test_method_runtime", rpc_test_method_runtime, SPDK_RPC_RUNTIME)
+
+static void
+rpc_test_method_null_params(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "rpc_test_method_null_params(): Parameters are not NULL");
+		return;
+	}
+	w = spdk_jsonrpc_begin_result(request);
+	assert(w != NULL);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("test_null_params", rpc_test_method_null_params, SPDK_RPC_RUNTIME)
 
 static bool g_conn_close_detected;
 
@@ -322,6 +395,12 @@ rpc_client_th(void *arg)
 	rc = spdk_jsonrpc_client_check_rpc_method(client, method_name);
 	if (rc) {
 		fprintf(stderr, "spdk_jsonrpc_client_check_rpc_method() failed: rc=%d errno=%d\n", rc, errno);
+		goto out;
+	}
+
+	rc = spdk_jsonrpc_client_check_null_params_method(client);
+	if (rc) {
+		fprintf(stderr, "spdk_jsonrpc_client_null_params_method() failed: rc=%d errno=%d\n", rc, errno);
 		goto out;
 	}
 
