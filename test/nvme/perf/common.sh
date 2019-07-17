@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xe
+set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 PLUGIN_DIR_NVME=$ROOT_DIR/examples/nvme/fio_plugin
@@ -312,7 +312,8 @@ function usage()
 	echo "    --ramp-time=TIME[s]   Fio will run the specified workload for this amount of time before logging any performance numbers. [default=$RAMP_TIME]"
 	echo "    --fio-bin=PATH        Path to fio binary. [default=$FIO_BIN]"
 	echo "    --driver=STR          Use 'bdev' or 'nvme' for spdk driver with fio_plugin,"
-	echo "                          'kernel-libaio', 'kernel-classic-polling' or 'kernel-hybrid-polling' for kernel driver. [default=$PLUGIN]"
+	echo "                          'kernel-libaio', 'kernel-classic-polling', 'kernel-hybrid-polling' or"
+	echo "                          'kernel-io-uring' for kernel driver. [default=$PLUGIN]"
 	echo "    --max-disk=INT,ALL    Number of disks to test on, this will run multiple workloads with increasing number of disk each run, if =ALL then test on all found disk. [default=$DISKNO]"
 	echo "    --disk-no=INT,ALL     Number of disks to test on, this will run one workload on selected number od disks, it discards max-disk setting, if =ALL then test on all found disk"
 	echo "    --rw=STR              Type of I/O pattern. Accepted values are randrw,rw. [default=$RW]"

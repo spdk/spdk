@@ -15,9 +15,10 @@
 # 2 devices on numa0 per core, cores 28-29 will be aligned with 2 devices on numa1 per core and cores 30-33 with 1 device on numa1 per core.
 # "--iodepth" - Number of I/Os to keep in flight per devices for SPDK fio_plugin and per job for kernel driver.
 # "--driver" - "This parameter is used to set the ioengine and other fio parameters that determine how fio jobs issue I/O. SPDK supports two modes (nvme and bdev): to use the SPDK BDEV fio plugin set the value to bdev, set the value to nvme to use the SPDK NVME PMD.
-# "There are 3 modes available for Linux Kernel driver: set the value to kernel-libaio to use the Linux asynchronous I/O engine,
+# "There are 4 modes available for Linux Kernel driver: set the value to kernel-libaio to use the Linux asynchronous I/O engine,
 # set the value to kernel-classic-polling to use the pvsynch2 ioengine in classic polling mode (100% load on the polling CPU core),
-# set the value to kernel-hybrid-polling to use the pvsynch2 ioengine in hybrid polling mode where the polling thread sleeps for half the mean device execution time.
+# set the value to kernel-hybrid-polling to use the pvsynch2 ioengine in hybrid polling mode where the polling thread sleeps for half the mean device execution time,
+# set the value to kernel-io-uring to use io_uring engine.
 # "--no-preconditioning" - skip preconditioning - Normally the script will precondition disks to put them in a steady state.
 # However, preconditioning could be skipped, for example preconditiong has been already made and workload was 100% reads.
 # "--disk-no" - use specified number of disks for test.
@@ -63,6 +64,9 @@ elif [ $PLUGIN = "kernel-hybrid-polling" ]; then
 elif [ $PLUGIN = "kernel-libaio" ]; then
 	$ROOT_DIR/scripts/setup.sh reset
 	fio_ioengine_opt="--ioengine=libaio"
+elif [ $PLUGIN = "kernel-io-uring" ]; then
+	$ROOT_DIR/scripts/setup.sh reset
+	fio_ioengine_opt="--ioengine=io_uring"
 fi
 
 result_dir=perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}
