@@ -8,6 +8,7 @@ timing_enter lvol
 
 timing_enter basic
 run_test suite test/lvol/basic.sh
+run_test suite test/lvol/resize.sh
 timing_exit basic
 
 timing_exit lvol
