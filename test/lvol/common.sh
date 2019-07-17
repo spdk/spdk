@@ -7,7 +7,8 @@ LVS_DEFAULT_CAPACITY_MB=$(( MALLOC_SIZE_MB - LVS_DEFAULT_CLUSTER_SIZE_MB ))
 LVS_DEFAULT_CAPACITY=$(( LVS_DEFAULT_CAPACITY_MB * 1024 * 1024 ))
 
 function run_test() {
-	$@
+	# run test case in a subshell so it can define its own traps
+	("$@")
 
 	leftover_bdevs=$(rpc_cmd get_bdevs)
 	[ "$(jq length <<< "$leftover_bdevs")" == "0" ]
