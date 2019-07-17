@@ -1,0 +1,158 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44260ff9_4ebebbfd",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T08:32:41Z",
+      "side": 1,
+      "message": "So sorry, my idea was bad. Will you restore your idea and separate register_aio_file() and register_io_uring_file()?",
+      "range": {
+        "startLine": 216,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 26
+      },
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0ef44c6_4a41e09e",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T08:32:41Z",
+      "side": 1,
+      "message": "Could we change to the following? I hope this is simpler.\n\nstatic void\nsubmit_single_io(void)\n{\n\tswitch (entry-\u003etype) {\n\tcase ENTRY_TYPE_NVME_NS:\n\t\trc \u003d spdk_nvme_ns_cmd_read();\n\t\tbreak;\n#if HAVE_LIBURING:\n\tcase ENTRY_TYPE_AIO_FILE:\n\t\trc \u003d aio_submit();\n\t\tbreak;\n#endif\n#if HAVE_LIBURING:\n\tcase ENTRY_TYPE_IO_URING_FILE:\n\t\trc \u003d io_uring_submit_single();\n\t\tbreak;\n#endif\n\tdefault:\n\t\tbreak;\n\t}\n}",
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e677f15_e4ebe5d3",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T08:32:41Z",
+      "side": 1,
+      "message": "ditto.\n\nstatic uint64_t\ncheck_io(void)\n{\n\tswitch (entry-\u003etype) {\n\tcase ENTRY_TYPE_NVME_NS:\n\t\tspdk_nvme_qpair_process_completions();\n\t\tbreak;\n#if HAVE_LIBAIO\n\tcase ENTRY_TYPE_AIO_FILE:\n\t\taio_check_io();\n\t\tbreak;\n#endif\n#if HAVE_LIBURING\n\tcase ENTRY_TYPE_IO_URING_FILE:\n\t\tio_uring_check_io();\n\t\tbreak;\n#endif\n\tdefault:\n\t\tbreak;\n\t}\n}",
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96e1c26c_1968287a",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T08:32:41Z",
+      "side": 1,
+      "message": "ditto.\n\nstatic int\ninit_ns_worker_ctx(void)\n{\n\tswitch (g_ns-\u003etype) {\n#if HAVE_LIBAIO\n\tcase ENTRY_TYPE_AIO_FILE:\n\t\tg_ns-\u003eu.aio.events \u003d calloc();\n\t\tg_ns-\u003eu.aio.ctx \u003d 0;\n\t\tio_setup(1, \u0026g_ns-\u003eu.aio.ctx);\n\t\tbreak;\n#endif\n#if HAVE_LIBURING:\n\tcase ENTRY_TYPE_IO_URING_FILE:\n\t{\n\t\tstruct io_uring *ring \u003d \u0026g_ns-\u003eu.uring.uring;\n\t\tg_ns-\u003eio_penging \u003d 0;\n\t\tg_ns-\u003eio_inflight \u003d 0;\n\t\tio_uring_queue_init(1, ring, IORING_SETUP_IOPOLL);\n\t\tbreak;\n\t}\n#endif\n\tcase ENTRY_TYPE_NVME_NS:\n\t\tg_ns-\u003eu.nvme.qpair \u003d spdk_nvme_ctrlr_alloc_io_qpair();\n\t\tbreak;\n\tdefault:\n\t\tbreak;\n\t}\n}",
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e697e5c1_836dc231",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T08:32:41Z",
+      "side": 1,
+      "message": "ditto\n\nstatic void\ncleanup_ns_worker_ctx(void)\n{\n\tswitch (g_ns-\u003etype) {\n#if HAVE_LIBAIO\n\tcase ENTRY_TYPE_AIO_FILE:\n\t\tio_destroy(g_ns-\u003eu.aio.ctx);\n\t\tfree(g_ns-\u003eu.aio.events);\n\t\tbreak;\n#endif\n#if HAVE_LIBURING\n\tcase ENTRY_TYPE_IO_URING_FILE:\n\t\tclose(g_ns-\u003eu.uring.uring.ring_fd);\n\t\tio_uring_queue_exit(\u0026g_ns-\u003eu.uring.uring);\n\t\tfree(g_task-\u003eiov);\n\t\tif (g_enable_fixedbufs) {\n\t\t\tfree(g_fixedbuf_iov);\n\t\t}\n\t\tbreak;\n#endif\n\tcase ENTRY_TYPE_NVME_NS:\n\t\tspdk_nvme_ctrlr_free_io_qpair(g_ns-\u003eu.nvme.qpair);\n\t\tbreak;\n\tdefault:\n\t\tbreak;\n\t}\n}",
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25a66b4a_93c735db",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T08:32:41Z",
+      "side": 1,
+      "message": "could we change this to the option -p?\nI think we can enable both AIO and URING but we want to use only either one in a run.",
+      "range": {
+        "startLine": 804,
+        "startChar": 1,
+        "endLine": 804,
+        "endChar": 23
+      },
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7149850_46e8af5e",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T08:32:41Z",
+      "side": 1,
+      "message": "Please revert this change.",
+      "range": {
+        "startLine": 906,
+        "startChar": 31,
+        "endLine": 906,
+        "endChar": 48
+      },
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4603cf99_b2fbce1f",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 912,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T08:32:41Z",
+      "side": 1,
+      "message": "The following depends on my comment at the line 804.",
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
