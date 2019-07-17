@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "02f98404_8888712a",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-17T11:42:46Z",
+      "side": 1,
+      "message": "I wouldn\u0027t remove that.\nspdk_create_pmem_disk() doesn\u0027t necessarily have to be called from bdev_pmem_rpc.c",
+      "parentUuid": "f11e655c_4691cba5",
+      "range": {
+        "startLine": 322,
+        "startChar": 1,
+        "endLine": 325,
+        "endChar": 2
+      },
+      "revId": "fd5793d947e8e24e87c06456b0abfd29c1376986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "264b34dd_aa74202d",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "fd5793d947e8e24e87c06456b0abfd29c1376986",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bf9d765_35f89335",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-17T11:42:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "264b34dd_aa74202d",
+      "range": {
+        "startLine": 342,
+        "startChar": 9,
+        "endLine": 342,
+        "endChar": 14
+      },
+      "revId": "fd5793d947e8e24e87c06456b0abfd29c1376986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
