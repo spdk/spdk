@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3daf9946_c788281d",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-17T04:36:12Z",
+      "side": 1,
+      "message": "is this any different from just running the command in subshell?\n\n$BDEVPERF_DIR/bdevperf -c $BASE_DIR/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME",
+      "range": {
+        "startLine": 280,
+        "startChar": 1,
+        "endLine": 280,
+        "endChar": 8
+      },
+      "revId": "6cc98929d475c7d8bb261a38d3f7cdbd242711c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
