@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1ccd6ac_46773bd7",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T02:53:40Z",
+      "side": 1,
+      "message": "Will you pick either one, this or spdk_strerror(ENODEV) in this patch series?",
+      "range": {
+        "startLine": 143,
+        "startChar": 57,
+        "endLine": 143,
+        "endChar": 91
+      },
+      "revId": "41babd11526fe89a6ae825095e15639aa2596ca5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
