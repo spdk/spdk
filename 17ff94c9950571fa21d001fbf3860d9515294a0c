@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aae6c6d3_9ad47003",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-17T09:18:53Z",
+      "side": 1,
+      "message": "You should also update the documentation to say that there\u0027s a minimum alignment.",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 11
+      },
+      "revId": "17ff94c9950571fa21d001fbf3860d9515294a0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
