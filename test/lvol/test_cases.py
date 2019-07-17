@@ -112,7 +112,6 @@ def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
             # bdev_lvol_delete_lvstore - positive tests
-            251: 'bdev_lvol_delete_lvstore_use_name_positive',
             252: 'bdev_lvol_delete_lvstore_with_lvol_bdev_positive',
             253: 'destroy_multi_logical_volumes_positive',
             254: 'destroy_after_bdev_lvol_resize_positive',
@@ -292,37 +291,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.bdev_lvol_get_lvstores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case251(self):
-        """
-        bdev_lvol_delete_lvstore_use_name_positive
-
-        Positive test for destroying a logical volume store using
-        lvol store name instead of uuid for reference.
-        Call bdev_lvol_delete_lvstore with correct logical volume name
-        """
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store on created malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        # Check correct uuid values in response bdev_lvol_get_lvstores command
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        # Destroy lvol store
-        fail_count += self.c.bdev_lvol_delete_lvstore(self.lvs_name)
-        # Check correct response bdev_lvol_get_lvstores command
-        if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
-            fail_count += 1
-        fail_count += self.c.bdev_malloc_delete(base_name)
-
-        # Expected result:
-        # - calls successful, return code = 0
-        # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case252(self):
