@@ -32,10 +32,10 @@ function test_resize_lvol() {
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
 	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
 
-	# resize the lvol to four times its original size
+	# resize the lvol to four times its original size, use its name instead of uuid
 	lvol_size_mb=$(( lvol_size_mb * 2 ))
 	lvol_size=$(( lvol_size_mb * 1024 * 1024 ))
-	rpc_cmd bdev_lvol_resize "$lvol_uuid" "$lvol_size_mb"
+	rpc_cmd bdev_lvol_resize lvs_test/lvol_test "$lvol_size_mb"
 	lvol=$(rpc_cmd bdev_get_bdevs -b "$lvol_uuid")
 	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( lvol_size / MALLOC_BS ))" ]
 
