@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d47dd0a_b086d6b0",
+        "filename": "lib/sock/posix/posix.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-17T06:55:25Z",
+      "side": 1,
+      "message": "Should have the same behavior as VPP, return 0 if SO_PRIORITY is not defined.",
+      "revId": "19e81891820879ce39dcea55817eb1510507f429",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
