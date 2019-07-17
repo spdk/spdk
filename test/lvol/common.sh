@@ -11,6 +11,7 @@ function rpc_cmd() {
 }
 
 function run_lvol_test() {
+	# run test case in a subshell so it can define its own traps
 	run_test suite $@
 
 	leftover_bdevs=$(rpc_cmd bdev_get_bdevs)
