@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87233919_89dfcc63",
+        "filename": "test/fuzz/autofuzz.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-17T05:00:50Z",
+      "side": 1,
+      "message": "there\u0027s no need to set it here - autotest_common.sh does it for you",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 6
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dceed881_d89b9d60",
+        "filename": "test/fuzz/autofuzz.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-17T05:00:50Z",
+      "side": 1,
+      "message": "you might want to wrap it with double quotes, otherwise bash will throw syntax error if TEST_TRANSPORT is undefined\n\n(it\u0027s as if you wrote `if [ $transport \u003d\u003d ];`)",
+      "range": {
+        "startLine": 40,
+        "startChar": 20,
+        "endLine": 40,
+        "endChar": 35
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69881f7a_d8ecf0cc",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-17T05:00:50Z",
+      "side": 1,
+      "message": "to be removed",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 6
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f62f361c_03e79e33",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-17T05:00:50Z",
+      "side": 1,
+      "message": "you could do \n\u0026\u003e $output_dir/vhost_fuzz_tgt_output.txt\n(redirect everything)",
+      "range": {
+        "startLine": 24,
+        "startChar": 11,
+        "endLine": 24,
+        "endChar": 54
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a2cb6af_cec742a8",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-17T05:00:50Z",
+      "side": 1,
+      "message": "quotes",
+      "range": {
+        "startLine": 36,
+        "startChar": 6,
+        "endLine": 36,
+        "endChar": 21
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07d2ecf0_7aa60a20",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-17T05:00:50Z",
+      "side": 1,
+      "message": "I\u0027m just curious - is this actually required?",
+      "range": {
+        "startLine": 39,
+        "startChar": 4,
+        "endLine": 39,
+        "endChar": 11
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a908fbff_3492e377",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-17T05:00:50Z",
+      "side": 1,
+      "message": "please use $() instead of backticks. It generally doesn\u0027t matter in this case, but Karol is starting to run some syntax checkers for bash which complain about it.",
+      "range": {
+        "startLine": 42,
+        "startChar": 51,
+        "endLine": 42,
+        "endChar": 56
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82a66d85_e36fee28",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-17T05:00:50Z",
+      "side": 1,
+      "message": "quotes",
+      "range": {
+        "startLine": 45,
+        "startChar": 6,
+        "endLine": 45,
+        "endChar": 21
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
