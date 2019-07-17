@@ -22,6 +22,30 @@
       "revId": "edd9d962651976f941ec98be508d640e6c3ac653",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "830a6c24_d44c7e97",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T03:00:06Z",
+      "side": 1,
+      "message": "place? (panzer is military tank?)",
+      "parentUuid": "4bd4861f_281f1aef",
+      "range": {
+        "startLine": 10,
+        "startChar": 24,
+        "endLine": 10,
+        "endChar": 30
+      },
+      "revId": "edd9d962651976f941ec98be508d640e6c3ac653",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
