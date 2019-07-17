@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "18138997_f7e4fb0d",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T09:09:15Z",
+      "side": 1,
+      "message": "I got a reply by Darek to the preivous patch. So this is OK.",
+      "parentUuid": "5929be8d_f98cd1ff",
+      "range": {
+        "startLine": 150,
+        "startChar": 55,
+        "endLine": 150,
+        "endChar": 76
+      },
+      "revId": "592745e8c2feb35bf4346b283e40e13940a2ce64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a14a4712_168b0111",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 5
