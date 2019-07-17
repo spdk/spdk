@@ -54,12 +54,42 @@ function test_resize_lvol() {
 	rpc_cmd delete_malloc_bdev "$malloc_name"
 }
 
+function test_resize_lvol_negative() {
+	# create an lvol store
+	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd construct_lvol_store "$malloc_name" lvs_test)
+
+	# create an lvol on top
+	lvol_uuid=$(rpc_cmd construct_lvol_bdev -u "$lvs_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+
+	# try to resize another, inexistent lvol
+	dummy_uuid="00000000-0000-0000-0000-000000000000"
+	! rpc_cmd resize_lvol_bdev "$dummy_uuid" 0
+	# just make the size of the real lvol did not change
+	lvol=$(rpc_cmd get_bdevs -b "$lvol_uuid")
+	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+
+	# try to resize an lvol to a size bigger than lvs
+	! rpc_cmd resize_lvol_bdev "$lvol_uuid" "$MALLOC_SIZE_MB"
+	# just make the size of the real lvol did not change
+	lvol=$(rpc_cmd get_bdevs -b "$lvol_uuid")
+	[ "$(jq -r '.[0].num_blocks' <<< "$lvol")" = "$(( LVS_DEFAULT_CAPACITY / MALLOC_BS ))" ]
+
+	# clean up
+	rpc_cmd destroy_lvol_bdev "$lvol_uuid"
+	! rpc_cmd get_bdevs -b "$lvol_uuid"
+	rpc_cmd destroy_lvol_store -u "$lvs_uuid"
+	! rpc_cmd get_lvol_stores -u "$lvs_uuid"
+	rpc_cmd delete_malloc_bdev "$malloc_name"
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap "killprocess $spdk_pid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
 run_test test_resize_lvol
+run_test test_resize_lvol_negative
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
