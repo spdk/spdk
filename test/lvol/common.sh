@@ -17,6 +17,7 @@ function check_leftover_devices() {
 	[ "$(jq length <<< "$leftover_lvs")" == "0" ]
 }
 
+# round down size to the nearest cluster size boundary
 function round_down() {
 	echo $(( $1 / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
 }
