@@ -178,6 +178,24 @@
     },
     {
       "key": {
+        "uuid": "8db02e0f_fe89a149",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-17T23:25:10Z",
+      "side": 1,
+      "message": "Hi Vishal,\n\nThanks for your comment.\nI understood now your intention is that completion latency includes submission latency. It looks reasonable to me.\n\nBut the line 487 to 516 in submit_single_io also get submission latency.\n\nShould we enable only either one?",
+      "parentUuid": "107050e4_b9c936b0",
+      "revId": "7aaa4c68b23fbd9f629f1e0d5916b414e6d23883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5ac21651_38c04a1e",
         "filename": "test/nvme/overhead/overhead.c",
         "patchSetId": 1
