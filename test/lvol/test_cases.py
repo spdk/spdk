@@ -111,9 +111,6 @@ def test_counter():
 def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
-            # resize lvol store - negative tests
-            200: 'resize_logical_volume_nonexistent_logical_volume',
-            201: 'resize_logical_volume_with_size_out_of_range',
             # bdev_lvol_delete_lvstore - positive tests
             250: 'bdev_lvol_delete_lvstore_positive',
             251: 'bdev_lvol_delete_lvstore_use_name_positive',
@@ -296,66 +293,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.bdev_lvol_get_lvstores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case200(self):
-        """
-        resize_logical_volume_nonexistent_logical_volume
-
-        Negative test for resizing a logical_volume.
-        Call bdev_lvol_resize with logical volume which does not
-        exist in configuration.
-        """
-        fail_count = 0
-        # Try resize lvol bdev on logical volume which does not exist
-        if self.c.bdev_lvol_resize(self._gen_lvb_uuid(), 16) == 0:
-            fail_count += 1
-
-        # Expected result:
-        # - return code != 0
-        # - Error code: ENODEV ("No such device") response printed to stdout
-        return fail_count
-
-    @case_message
-    def test_case201(self):
-        """
-        resize_logical_volume_with_size_out_of_range
-
-        Negative test for resizing a logical volume.
-        Call resize_lvol_store with size argument bigger than size of base bdev.
-        """
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct lvol store on created malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        # Check correct uuid values in response bdev_lvol_get_lvstores command
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        # Construct_lvol_bdev on correct lvs_uuid and
-        # size is equal one quarter of size malloc bdev
-        lvs_size = self.get_lvs_size()
-        uuid_bdev = self.c.bdev_lvol_create(uuid_store,
-                                            self.lbd_name,
-                                            lvs_size)
-        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev,
-                                                          lvs_size)
-        # Try bdev_lvol_resize on correct lvs_uuid and size is
-        # equal to size malloc bdev + 1MiB; this call should fail
-        if self.c.bdev_lvol_resize(uuid_bdev, self.total_size + 1) == 0:
-            fail_count += 1
-
-        self.c.bdev_lvol_delete(uuid_bdev)
-        self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.bdev_malloc_delete(base_name)
-
-        # Expected result:
-        # - bdev_lvol_resize call return code != 0
-        # - Error code: ENODEV ("Not enough free clusters left on lvol store")
-        #   response printed to stdout
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case250(self):
