@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dfb25a0_ef811a41",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T04:18:51Z",
+      "side": 1,
+      "message": "this used to be ERRLOG. I think now that we return almost the exact same strings via RPC, we don\u0027t need to any additional SPDK_*LOG at all. I opt for removing all of them, but let\u0027s do it in a separate patch.\n\nThis is fine for now.",
+      "range": {
+        "startLine": 208,
+        "startChar": 2,
+        "endLine": 208,
+        "endChar": 15
+      },
+      "revId": "bbf251fc05b319ed207c9153dbc0406157d2a0db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20c45050_4b29eed8",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T04:18:51Z",
+      "side": 1,
+      "message": "this can apparently be NULL, we\u0027ll most likely end up with printing \"(NULL)\" but in general it\u0027s undefined behavior.\n\nyou can define msg as follows:\nconst char *msg \u003d pmemblk_errormsg();\n\nmsg \u003d msg ? msg : \"(logs disabled)\";",
+      "range": {
+        "startLine": 210,
+        "startChar": 40,
+        "endLine": 210,
+        "endChar": 43
+      },
+      "revId": "bbf251fc05b319ed207c9153dbc0406157d2a0db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60175e40_8e94b4d2",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T04:18:51Z",
+      "side": 1,
+      "message": "^\n\nalso please add an empty line after the variable declaration",
+      "revId": "bbf251fc05b319ed207c9153dbc0406157d2a0db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e08375c2_97c33e9f",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T04:18:51Z",
+      "side": 1,
+      "message": "^",
+      "revId": "bbf251fc05b319ed207c9153dbc0406157d2a0db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7318c6fd_7985ba28",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T04:18:51Z",
+      "side": 1,
+      "message": "^",
+      "revId": "bbf251fc05b319ed207c9153dbc0406157d2a0db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
