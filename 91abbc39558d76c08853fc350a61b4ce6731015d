@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "840df144_1269cc58",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T10:45:58Z",
+      "side": 1,
+      "message": "This is WAY too complicated :)\n\nhint: use jq:\nrpc.py get_bdevs | jq \".[] .block_size\"",
+      "range": {
+        "startLine": 59,
+        "startChar": 13,
+        "endLine": 59,
+        "endChar": 157
+      },
+      "revId": "91abbc39558d76c08853fc350a61b4ce6731015d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9552164a_f78046f6",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T10:45:58Z",
+      "side": 1,
+      "message": "No need for loop.\nI see that this test is for one disk only (see line 79 - we create only one lvol_store on just one specific Nvme bdev - Nvme0n1).",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 2
+      },
+      "revId": "91abbc39558d76c08853fc350a61b4ce6731015d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b9c14d1_8f5adea4",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T10:45:58Z",
+      "side": 1,
+      "message": "In case of fail - try not to exit explicitly, if not needed.\nScripts run with -e option, which means they exit at first error. Also, errors cause trap functions to be executed, which allows for some cleanup routines (see line 85 as an example. Inb case of error this stops nbd disk, and does some additional cleanup with err_clean() function)",
+      "range": {
+        "startLine": 66,
+        "startChar": 2,
+        "endLine": 66,
+        "endChar": 8
+      },
+      "revId": "91abbc39558d76c08853fc350a61b4ce6731015d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0747d7f_42625460",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T10:45:58Z",
+      "side": 1,
+      "message": "You can add check just above this line, no loop required as explained earlier.",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 50
+      },
+      "revId": "91abbc39558d76c08853fc350a61b4ce6731015d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
