@@ -22,6 +22,30 @@
       "revId": "d72d5c53d7c3d940ffa603bba753a1bd08870c0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86982800_f8f52cce",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T06:03:05Z",
+      "side": 1,
+      "message": "Copy-paste gone wrong.",
+      "parentUuid": "56563969_55b0cc64",
+      "range": {
+        "startLine": 735,
+        "startChar": 10,
+        "endLine": 735,
+        "endChar": 16
+      },
+      "revId": "d72d5c53d7c3d940ffa603bba753a1bd08870c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
