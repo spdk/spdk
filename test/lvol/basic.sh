@@ -29,6 +29,9 @@ function test_construct_lvs() {
 	# remove the lvs and verify it's gone
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid" && false
+	# make sure we can't delete the same lvs again
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid" && false
+
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 	check_leftover_devices
 }
