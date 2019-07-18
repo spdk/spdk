@@ -22,6 +22,30 @@
       "revId": "7dac9d1f12b73c0493128fa4dd22a2681b8bc2b9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "788251e6_6077a37d",
+        "filename": "scripts/vagrant/create_openstack_vm.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-18T12:11:45Z",
+      "side": 1,
+      "message": "We cannot becasue it is created in directory with random name.",
+      "parentUuid": "795c9b32_f23fabc0",
+      "range": {
+        "startLine": 28,
+        "startChar": 59,
+        "endLine": 28,
+        "endChar": 90
+      },
+      "revId": "7dac9d1f12b73c0493128fa4dd22a2681b8bc2b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
