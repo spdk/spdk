@@ -114,8 +114,6 @@ def case_message(func):
             # bdev_lvol_delete_lvstore - positive tests
             254: 'destroy_after_bdev_lvol_resize_positive',
             255: 'delete_lvol_store_persistent_positive',
-            # bdev_lvol_delete_lvstore - negative tests
-            300: 'bdev_lvol_delete_lvstore_nonexistent_lvs_uuid',
             550: 'delete_bdev_positive',
             551: 'delete_lvol_bdev',
             552: 'bdev_lvol_delete_lvstore_with_clones',
@@ -396,24 +394,6 @@ class TestCases(object):
         # - bdev_lvol_get_lvstores should not report any existsing lvol stores in configuration
         #    after deleting and adding NVMe bdev
         # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case300(self):
-        """
-        bdev_lvol_delete_lvstore_nonexistent_lvs_uuid
-
-        Call bdev_lvol_delete_lvstore with nonexistent logical_volumes name
-        exist in configuration.
-        """
-        fail_count = 0
-        # try to call bdev_lvol_delete_lvstore with lvs_uuid which does not exist
-        if self.c.bdev_lvol_delete_lvstore(self._gen_lvs_uuid()) == 0:
-            fail_count += 1
-
-        # Expected result:
-        # - return code != 0
-        # - Error code response printed to stdout
         return fail_count
 
     @case_message
