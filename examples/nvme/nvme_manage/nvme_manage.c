@@ -1058,12 +1058,12 @@ opal_setup_lockingrange(struct dev *iter)
 				}
 
 				printf("range length:\n");
-				if (!scanf("%ld", &range_length)) {
+				if (!scanf("%" SCNu64, &range_length)) {
 					printf("Invalid range length\n");
 				}
 
 				printf("range start:\n");
-				if (!scanf("%ld", &range_start)) {
+				if (!scanf("%" SCNu64, &range_start)) {
 					printf("Invalid range start address\n");
 				}
 
