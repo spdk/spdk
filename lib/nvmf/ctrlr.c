@@ -324,6 +324,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 			1;
 
 	spdk_uuid_copy(&ctrlr->hostid, (struct spdk_uuid *)connect_data->hostid);
+	memcpy(ctrlr->hostnqn, connect_data->hostnqn, sizeof(ctrlr->hostnqn));
 
 	ctrlr->vcprop.cap.raw = 0;
 	ctrlr->vcprop.cap.bits.cqr = 1; /* NVMe-oF specification required */

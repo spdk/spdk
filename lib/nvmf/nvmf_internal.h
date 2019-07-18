@@ -286,6 +286,7 @@ struct spdk_nvmf_reservation_log {
  */
 struct spdk_nvmf_ctrlr {
 	uint16_t			cntlid;
+	char				hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	struct spdk_nvmf_subsystem	*subsys;
 
 	struct {
