@@ -1284,5 +1284,6 @@ ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb)
 
 	/* If restore_device is called, there must be at least one valid band */
 	rband = ftl_restore_next_band(restore);
+	assert(rband);
 	return ftl_restore_tail_md(rband);
 }

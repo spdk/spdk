@@ -222,6 +222,7 @@ ftl_md_write_fail(struct ftl_io *io, int status)
 	char buf[128];
 
 	wptr = ftl_wptr_from_band(band);
+	assert(wptr);
 
 	SPDK_ERRLOG("Metadata write failed @ppa: %s, status: %d\n",
 		    ftl_ppa2str(wptr->ppa, buf, sizeof(buf)), status);
@@ -239,6 +240,7 @@ ftl_md_write_cb(struct ftl_io *io, void *arg, int status)
 	size_t id;
 
 	wptr = ftl_wptr_from_band(band);
+	assert(wptr);
 
 	if (status) {
 		ftl_md_write_fail(io, status);
@@ -497,6 +499,7 @@ ftl_close_direct_wptr(struct ftl_band *band)
 {
 	struct ftl_wptr *wptr = ftl_wptr_from_band(band);
 
+	assert(wptr);
 	assert(wptr->direct_mode);
 	assert(band->state == FTL_BAND_STATE_CLOSED);
 
@@ -1464,6 +1467,7 @@ ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 
 	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
 	wptr = ftl_wptr_from_band(io->band);
+	assert(wptr);
 
 	chunk->busy = false;
 	chunk->write_offset += io->lbk_cnt;
