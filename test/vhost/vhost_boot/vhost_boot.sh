@@ -65,6 +65,15 @@ vhost_run
 timing_exit start_vhost
 
 timing_enter create_lvol
+
+nvme_bdev=$($rcp_py get_bdevs  -b Nvme0n1)
+nvme_bdev_bs=$($nvme_bdev | jq ".[] .block_size")
+nvme_bdev_name=$($nvme_bdev | jq ".[] .name")
+if [[ $nvme_bdev_bs != 512 ]]; then
+	echo "ERROR: Your device $nvme_bdev_name block size is $nvme_bdev_bs, but should be 512 bytes."
+	false
+fi
+
 lvs_u=$($rpc_py construct_lvol_store Nvme0n1 lvs0)
 lvb_u=$($rpc_py construct_lvol_bdev -u $lvs_u lvb0 20000)
 timing_exit create_lvol
