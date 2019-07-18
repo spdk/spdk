@@ -21,7 +21,6 @@ function usage() {
     echo "    --block-size          Block size for this bdev"
     echo "-x                        set -x for script debug"
     echo "    --test-cases=         List test cases which will be run:
-                                    250: 'destroy_lvol_store_positive',
                                     251: 'destroy_lvol_store_use_name_positive',
                                     252: 'destroy_lvol_store_with_lvol_bdev_positive',
                                     253: 'destroy_multi_logical_volumes_positive',
