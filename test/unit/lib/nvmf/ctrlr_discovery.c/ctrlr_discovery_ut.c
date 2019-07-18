@@ -220,6 +220,7 @@ test_discovery_log(void)
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
 					       SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem->allow_any_host = true;
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
 	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
@@ -232,20 +233,21 @@ test_discovery_log(void)
 	/* Get only genctr (first field in the header) */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, &iov, 1, 0, sizeof(disc_log->genctr));
+	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0,
+					 sizeof(disc_log->genctr));
 	CU_ASSERT(disc_log->genctr == 1); /* one added subsystem */
 
 	/* Get only the header, no entries */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, &iov, 1, 0, sizeof(*disc_log));
+	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0, sizeof(*disc_log));
 	CU_ASSERT(disc_log->genctr == 1);
 	CU_ASSERT(disc_log->numrec == 1);
 
 	/* Offset 0, exact size match */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, &iov, 1, 0,
+	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0,
 					 sizeof(*disc_log) + sizeof(disc_log->entries[0]));
 	CU_ASSERT(disc_log->genctr != 0);
 	CU_ASSERT(disc_log->numrec == 1);
@@ -254,7 +256,7 @@ test_discovery_log(void)
 	/* Offset 0, oversize buffer */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, &iov, 1, 0, sizeof(buffer));
+	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0, sizeof(buffer));
 	CU_ASSERT(disc_log->genctr != 0);
 	CU_ASSERT(disc_log->numrec == 1);
 	CU_ASSERT(disc_log->entries[0].trtype == 42);
@@ -264,7 +266,7 @@ test_discovery_log(void)
 	/* Get just the first entry, no header */
 	memset(buffer, 0xCC, sizeof(buffer));
 	entry = (struct spdk_nvmf_discovery_log_page_entry *)buffer;
-	spdk_nvmf_get_discovery_log_page(&tgt, &iov,
+	spdk_nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov,
 					 1,
 					 offsetof(struct spdk_nvmf_discovery_log_page, entries[0]),
 					 sizeof(*entry));
