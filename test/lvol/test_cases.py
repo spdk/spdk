@@ -115,7 +115,6 @@ def case_message(func):
             255: 'delete_lvol_store_persistent_positive',
             # destroy_lvol_store - negative tests
             300: 'destroy_lvol_store_nonexistent_lvs_uuid',
-            301: 'delete_lvol_store_underlying_bdev',
             550: 'delete_bdev_positive',
             551: 'delete_lvol_bdev',
             552: 'destroy_lvol_store_with_clones',
@@ -413,39 +412,6 @@ class TestCases(object):
         # Expected result:
         # - return code != 0
         # - Error code response printed to stdout
-        return fail_count
-
-    @case_message
-    def test_case301(self):
-        """
-        delete_lvol_store_underlying_bdev
-
-        Call destroy_lvol_store after deleting it's base bdev.
-        Lvol store should be automatically removed on deleting underlying bdev.
-        """
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Construct lvol store on created malloc bdev
-        uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name)
-        # Check correct uuid values in response get_lvol_stores command
-        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
-                                                  self.cluster_size)
-
-        # Delete malloc bdev
-        if self.c.delete_malloc_bdev(base_name) != 0:
-            fail_count += 1
-
-        # Try to destroy lvol store. This call should fail as lvol store
-        # is no longer present
-        if self.c.destroy_lvol_store(uuid_store) == 0:
-            fail_count += 1
-
-        # Expected result:
-        # - destroy_lvol_store return code != 0
-        # - Error code: ENODEV ("No such device") response printed to stdout
-        # - no other operation fails
         return fail_count
 
     @case_message
