@@ -10,6 +10,18 @@ Blobfs file asynchronous operations were added to public APIs.
 
 A new file API `spdk_posix_file_load` was added to load file content into a data buffer.
 
+New APIs `spdk_dif_ctx_set_data_offset`, `spdk_dif_verify_stream`,
+`spdk_dif_get_range_with_md`, `spdk_dif_get_length_with_md` have been added,
+and existing APIs `spdk_dif_ctx_init`, `spdk_dif_set_md_interleave_iovs`, and
+`spdk_dif_generate_stream` have been refined to insert or strip DIF by stream
+fasion with any alignment.
+
+New APIs `spdk_dif_ctx_set_remapped_init_ref_tag`, `spdk_dif_remap_ref_tag`,
+and `spdk_dix_remap_ref_tag` have been added to remap DIF reference tag.
+
+New APIs `spdk_dif_update_crc32c` and `spdk_dif_update_crc32c_stream` have been
+added to compute CRC-32C checksum for extended LBA payload.
+
 ### NVMe-oF Target
 
 Persistent reservation emulation has been added to the NVMe-oF target. Persistent reservation
