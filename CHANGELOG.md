@@ -65,6 +65,10 @@ would expect the drive to see the slowest 1% of I/O report. For underlying drive
 significant latency, the latency values provided to the drive will be additive. This should be
 taken into account if trying to achieve an artificial latency on top of an nvme drive or aio device.
 
+DIF reference tag remapping is now supported for partition type virtual bdev
+modules. When using partition type virtual bdevs, block address space is
+remapped during I/O processing and DIF reference tag is remapped accordingly.
+
 ### nvme
 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
