@@ -611,6 +611,7 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 		}
 
 		chunk = ftl_band_next_operational_chunk(band, chunk);
+		assert(chunk);
 		ppa.grp = chunk->start_ppa.grp;
 		ppa.pu = chunk->start_ppa.pu;
 
