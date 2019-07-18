@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdf1644b_d2669827",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T04:24:41Z",
+      "side": 1,
+      "message": "I\u0027m surprised check_format doesn\u0027t complain. This argument should be put in a separate line.",
+      "range": {
+        "startLine": 269,
+        "startChar": 68,
+        "endLine": 269,
+        "endChar": 69
+      },
+      "revId": "bff86f4992f82a9722e1f2492a5c97c938fb4878",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
