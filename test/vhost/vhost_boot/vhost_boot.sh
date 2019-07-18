@@ -65,6 +65,13 @@ vhost_run
 timing_exit start_vhost
 
 timing_enter create_lvol
+
+DEV_BS=$($rcp.py get_bdevs | jq ".[] .block_size")
+DEV_NAME=$($rcp.py get_bdevs | jq ".[] .name")
+if [ $DEV_BS != 512 ]; then
+	echo "ERROR: Your device $DEV_NAME block size is $DEV_BS, but should be 512 bytes."
+fi
+
 lvs_u=$($rpc_py construct_lvol_store Nvme0n1 lvs0)
 lvb_u=$($rpc_py construct_lvol_bdev -u $lvs_u lvb0 20000)
 timing_exit create_lvol
