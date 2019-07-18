@@ -1882,10 +1882,10 @@ nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
+		assert(tcp_req->req != NULL);
 		if (tcp_req->req->cmd.opc != SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 			continue;
 		}
-		assert(tcp_req->req != NULL);
 		req = tcp_req->req;
 
 		nvme_tcp_req_complete(req, &cpl);
