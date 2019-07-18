@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b68873d8_7c56c1bd",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3200,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T02:23:23Z",
+      "side": 1,
+      "message": "That\u0027s a legitimate concern. We tried to incorporate this function as a \"last chance option\" for the hardware that doesn\u0027t drain back entries. We set the poll rate on the defunct qpair poller to 4 seconds in the hope that any reasonable piece of hardware would have completely drained the cq entries by the time the poller expired.\nI believe that in practice, because of the long poller timeout, the risk of the situation you described above is minimal (if not non-existent).\n\nThe only other option I can think of right now to properly destroy qpairs from devices that won\u0027t drain is by keeping some sort of quirks list of NICs in the code and branching on the device type when destroying qpairs. However that comes with the challenge of keeping that list up to date with firmware changes and other factors.",
+      "parentUuid": "b0ca39d0_72c7a20b",
+      "revId": "c33723a376009bf7b8b5aa541a4db5606571ca86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c3746dc7_6245c61e",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
