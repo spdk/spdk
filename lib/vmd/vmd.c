@@ -173,7 +173,7 @@ vmd_assign_base_addrs(struct vmd_pci_device *dev)
 {
 	uint16_t mem_base = 0, mem_limit = 0;
 	unsigned char mem_attr = 0;
-	int last = dev->header_type ? 2 : 6;
+	int last;
 	struct vmd_adapter *vmd = NULL;
 	bool ret_val = false;
 	uint32_t bar_value;
@@ -189,6 +189,7 @@ vmd_assign_base_addrs(struct vmd_pci_device *dev)
 
 	vmd_align_base_addrs(vmd, ONE_MB);
 
+	last = dev->header_type ? 2 : 6;
 	for (int i = 0; i < last; i++) {
 		bar_value = dev->header->zero.BAR[i];
 		dev->header->zero.BAR[i] = ~(0U);
