@@ -49,7 +49,7 @@
 #include "spdk_internal/log.h"
 
 static void
-nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
+nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn)
 {
 	uint64_t numrec = 0;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -78,6 +78,10 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 		}
 
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+			continue;
+		}
+
+		if (!spdk_nvmf_subsystem_host_allowed(subsystem, hostnqn)) {
 			continue;
 		}
 
@@ -118,7 +122,7 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 }
 
 void
-spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, struct iovec *iov,
+spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
 				 uint32_t iovcnt, uint64_t offset, uint32_t length)
 {
 	size_t copy_len = 0;
@@ -127,7 +131,7 @@ spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, struct iovec *iov,
 
 	if (tgt->discovery_log_page == NULL ||
 	    tgt->discovery_log_page->genctr != tgt->discovery_genctr) {
-		nvmf_update_discovery_log(tgt);
+		nvmf_update_discovery_log(tgt, hostnqn);
 	}
 
 	/* Copy the valid part of the discovery log page, if any */
