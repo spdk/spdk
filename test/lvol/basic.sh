@@ -14,6 +14,12 @@ function test_construct_lvs() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 	lvs=$(rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid")
 
+	# try to destroy inexistent lvs, this should obviously fail
+	dummy_uuid="00000000-0000-0000-0000-000000000000"
+	rpc_cmd bdev_lvol_delete_lvstore -u "$dummy_uuid" && false
+	# our lvs should not be impacted
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+
 	# verify it's there
 	[ "$(jq -r '.[0].uuid' <<< "$lvs")" = "$lvs_uuid" ]
 	[ "$(jq -r '.[0].name' <<< "$lvs")" = "lvs_test" ]
