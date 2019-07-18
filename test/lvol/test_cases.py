@@ -111,7 +111,6 @@ def case_message(func):
     def inner(*args, **kwargs):
         test_name = {
             # destroy_lvol_store - positive tests
-            253: 'destroy_multi_logical_volumes_positive',
             254: 'destroy_after_resize_lvol_bdev_positive',
             255: 'delete_lvol_store_persistent_positive',
             # destroy_lvol_store - negative tests
@@ -288,48 +287,6 @@ class TestCases(object):
     def get_lvs_cluster_size(self, lvs_name="lvs_test"):
         lvs = self.c.get_lvol_stores(lvs_name)[0]
         return int(int(lvs['cluster_size']) / MEGABYTE)
-
-    @case_message
-    def test_case253(self):
-        """
-        Name: destroy_multi_logical_volumes_positive
-
-        Positive test for destroying a logical volume store with multiple lvol
-        bdevs created on top.
-        Call construct_lvol_bdev with correct lvol store UUID and
-        size is equal to one quarter of the this bdev size.
-        """
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Construct lvol store on correct, exisitng malloc bdev
-        uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name)
-        # Check correct uuid values in response get_lvol_stores command
-        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
-                                                  self.cluster_size)
-        size = self.get_lvs_divided_size(4)
-        # Construct four lvol bdevs on correct lvs_uuid and
-        # size is equal to one quarter of the lvol size
-        for i in range(4):
-            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
-                                                   self.lbd_name + str(i),
-                                                   size)
-            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
-
-        # Destroy lvol store
-        self.c.destroy_lvol_store(uuid_store)
-        # Check correct response get_lvol_stores command
-        if self.c.check_get_lvol_stores("", "", "") == 1:
-            fail_count += 1
-        self.c.delete_malloc_bdev(base_name)
-
-        # Expected result:
-        # - call successful, return code = 0
-        # - get_lvol_store: backend used for construct_lvol_bdev has name
-        #   field set with the same name as returned from RPC call for all repeat
-        # - no other operation fails
-        return fail_count
 
     @case_message
     def test_case254(self):
