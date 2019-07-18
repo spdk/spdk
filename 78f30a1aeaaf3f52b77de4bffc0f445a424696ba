@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "577d81ed_e7a7f84d",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-18T05:00:29Z",
+      "side": 1,
+      "message": "is_bdf_not_mounted or is_bdf_unmounted may be a little easy to me but that\u0027s fine.",
+      "range": {
+        "startLine": 29,
+        "startChar": 9,
+        "endLine": 29,
+        "endChar": 23
+      },
+      "revId": "78f30a1aeaaf3f52b77de4bffc0f445a424696ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
