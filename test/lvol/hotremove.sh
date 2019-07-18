@@ -60,6 +60,40 @@ function test_hotremove_lvol_store_multiple_lvols() {
 	rpc_cmd bdev_malloc_delete "$malloc_name"
 }
 
+# create an lvs on malloc, then remove just the malloc
+function test_hotremove_lvol_store_base() {
+	# create lvs + lvol on top
+	malloc_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+
+	# clean up
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	# make sure the lvs is gone
+	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+	# make sure we can't delete the lvs again
+	! rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+}
+
+# create an lvs on malloc, then an lvol, then remove just the malloc
+function test_hotremove_lvol_store_base_with_lvols() {
+	# create lvs + lvol on top
+	malloc_name=$(rpc_cmd bdev_malloc_delete $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
+	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB")
+
+	rpc_cmd bdev_get_bdevs -b "$lvol_uuid"
+
+	# clean up
+	rpc_cmd bdev_malloc_delete "$malloc_name"
+	# make sure the lvol is gone
+	! rpc_cmd bdev_get_bdevs -b "$lvol_uuid"
+	# make sure the lvs is gone as well
+	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+
+	# make sure we can't delete the lvs again
+	! rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
@@ -67,6 +101,8 @@ waitforlisten $spdk_pid
 
 run_lvol_test test_hotremove_lvol_store
 run_lvol_test test_hotremove_lvol_store_multiple_lvols
+run_lvol_test test_hotremove_lvol_store_base
+run_lvol_test test_hotremove_lvol_store_base_with_lvols
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
