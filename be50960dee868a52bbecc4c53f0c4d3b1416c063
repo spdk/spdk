@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ad78922_ba00438d",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1100,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-18T05:01:18Z",
+      "side": 1,
+      "message": "How can we let users know the value about the priority? It\u0027s nice to put the message in somewhere to let users know the range of the priority.",
+      "revId": "be50960dee868a52bbecc4c53f0c4d3b1416c063",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
