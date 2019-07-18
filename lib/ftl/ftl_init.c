@@ -477,6 +477,10 @@ ftl_dev_nvme_init(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts 
 	}
 
 	dev->ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, FTL_NSID);
+	if (dev->ns == NULL) {
+		SPDK_ERRLOG("Invalid NS (%"PRIu32")\n", FTL_NSID);
+		return -1;
+	}
 	dev->trid = opts->trid;
 	dev->md_size = spdk_nvme_ns_get_md_size(dev->ns);
 
