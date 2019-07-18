@@ -1491,7 +1491,8 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		switch (lid) {
 		case SPDK_NVME_LOG_DISCOVERY:
-			spdk_nvmf_get_discovery_log_page(subsystem->tgt, req->iov, req->iovcnt, offset, len);
+			spdk_nvmf_get_discovery_log_page(subsystem->tgt, ctrlr->hostnqn, req->iov, req->iovcnt, offset,
+							 len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
 			goto invalid_log_page;
