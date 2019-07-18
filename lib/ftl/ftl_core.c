@@ -211,6 +211,7 @@ ftl_wptr_from_band(struct ftl_band *band)
 		}
 	}
 
+	assert(false);
 	return NULL;
 }
 
