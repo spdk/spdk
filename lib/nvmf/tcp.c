@@ -2469,7 +2469,6 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
-	assert(tcp_req->state != TCP_REQUEST_STATE_FREE);
 
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
