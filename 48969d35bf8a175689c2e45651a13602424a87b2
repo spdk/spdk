@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b616e4de_65178406",
+        "filename": "scripts/perf/iscsi/common.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T12:36:32Z",
+      "side": 1,
+      "message": "This is almost 1:1 copy of perf/nvmf/common.py.\n\nAny chance for not copying that, and importing nvmf/common.py instead?\nYou can move nvmf/common.py to some other directory to make it work for both nvmf and iscsi scripts.",
+      "revId": "48969d35bf8a175689c2e45651a13602424a87b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f867c8a0_b9cd4848",
+        "filename": "scripts/perf/iscsi/run_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T12:36:32Z",
+      "side": 1,
+      "message": "In general - there is a lot of copy-pasta code.\nI suggest thinking about slightly modifying nvmf/perf scripts (I suspect not much work would be involved) to make them a bit more easier to use, maybe even move out some of the class functions to common.py. After that it\u0027d be easier to better use inheritance instead of just copying classes.",
+      "revId": "48969d35bf8a175689c2e45651a13602424a87b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e3846d7_bea64217",
+        "filename": "scripts/perf/iscsi/run_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T12:36:32Z",
+      "side": 1,
+      "message": "For such long strings I\u0027d suggest using join()",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 23
+      },
+      "revId": "48969d35bf8a175689c2e45651a13602424a87b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1fa6e70_40a043f3",
+        "filename": "scripts/perf/iscsi/run_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T12:36:32Z",
+      "side": 1,
+      "message": "Naming nitpick; What does ctl stands for? I\u0027d rename this one, not sure to what because I don\u0027t know what it does.",
+      "range": {
+        "startLine": 104,
+        "startChar": 8,
+        "endLine": 104,
+        "endChar": 11
+      },
+      "revId": "48969d35bf8a175689c2e45651a13602424a87b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed0002d2_6d5ba66c",
+        "filename": "scripts/perf/iscsi/run_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T12:36:32Z",
+      "side": 1,
+      "message": "I know there\u0027s a similar block of code in perf/nvmf, but after consideration I think you could remove the \"if\"and change the iscsi_admdir to be iscsiadm_bin parameter, with def value of \"iscsiadm\".\n\nAnd then in __init__, just do:\nself.iscsiadm_bin \u003d iscsiadm_bin",
+      "range": {
+        "startLine": 268,
+        "startChar": 0,
+        "endLine": 271,
+        "endChar": 70
+      },
+      "revId": "48969d35bf8a175689c2e45651a13602424a87b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2a3bf8b_e3452b88",
+        "filename": "scripts/perf/iscsi/run_iscsi.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T12:36:32Z",
+      "side": 1,
+      "message": "break the line",
+      "range": {
+        "startLine": 321,
+        "startChar": 16,
+        "endLine": 321,
+        "endChar": 130
+      },
+      "revId": "48969d35bf8a175689c2e45651a13602424a87b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
