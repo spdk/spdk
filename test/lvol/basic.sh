@@ -118,6 +118,9 @@ function test_construct_lvs_different_cluster_size() {
 	lvol_stores=$(rpc_cmd bdev_lvol_get_lvstores)
 	[ "$(jq length <<< "$lvol_stores")" == "1" ]
 
+	# make sure we can't delete the same lvs again
+	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs1_uuid" && false
+
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs2_uuid"
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvs2_uuid" && false
 
