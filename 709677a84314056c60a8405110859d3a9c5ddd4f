@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "31402a45_00d0e517",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-18T22:44:02Z",
+      "side": 1,
+      "message": "How does uring play with aio? Does enabling uring require disabling aio? Or can we have have both enabled and choose at runtime if to use uring/aio?",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 6
+      },
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fb67d6c_ced04fcf",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-18T22:44:02Z",
+      "side": 1,
+      "message": "I would re-order these 2 so that the fd is first just like for aio above, followed by struct io_uring. One of the key learnings from the work done to optimize our NVMe driver is organizing data into hot and cold path cache lines improves performance. I think the fd field is a lot hotter than some of the fields I see in the io_uring that look like placeholders for future expansion of uring beyond block I/O. \nAssuming that the overhead tool is already analyzed with pahole and optimized I would suggest following the order for libaio so that the fd is in the first cache line just like in the libaio case.",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 13
+      },
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b3c5d15_33b8e1c4",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-18T22:44:02Z",
+      "side": 1,
+      "message": "Should this flag be set to a default value of true? If I understand this correctly, doesn\u0027t using fixedbufs give us the best performance because it pre-allocates I/O buffers? Or am I mixing this setting up with a different discussion we had about pre-allocating I/O buffers?",
+      "range": {
+        "startLine": 116,
+        "startChar": 12,
+        "endLine": 116,
+        "endChar": 39
+      },
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "44260ff9_4ebebbfd",
         "filename": "test/nvme/overhead/overhead.c",
         "patchSetId": 3
@@ -18,6 +87,75 @@
         "startChar": 0,
         "endLine": 216,
         "endChar": 26
+      },
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b56072e_7168ccd9",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-18T22:44:02Z",
+      "side": 1,
+      "message": "I/O size is hard-coded to 4096 instead of using g_io_size_bytes.",
+      "range": {
+        "startLine": 399,
+        "startChar": 35,
+        "endLine": 399,
+        "endChar": 39
+      },
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "975b857c_29431356",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-18T22:44:02Z",
+      "side": 1,
+      "message": "Use descriptive name like tsc_before_io_submit",
+      "range": {
+        "startLine": 417,
+        "startChar": 10,
+        "endLine": 417,
+        "endChar": 15
+      },
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c1f8654_2bf71028",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-18T22:44:02Z",
+      "side": 1,
+      "message": "Should these be set to_submit and to_complete? What does setting to_complete\u003d0 do? If I understand this param, it causes the kernel to block till at least that many I/Os are complete. So are setting this to zero so that the overhead tool does not block, but use the io_uring_reap to poll for completions?",
+      "range": {
+        "startLine": 439,
+        "startChar": 38,
+        "endLine": 439,
+        "endChar": 42
       },
       "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -70,6 +208,29 @@
       "writtenOn": "2019-07-17T08:32:41Z",
       "side": 1,
       "message": "ditto.\n\nstatic int\ninit_ns_worker_ctx(void)\n{\n\tswitch (g_ns-\u003etype) {\n#if HAVE_LIBAIO\n\tcase ENTRY_TYPE_AIO_FILE:\n\t\tg_ns-\u003eu.aio.events \u003d calloc();\n\t\tg_ns-\u003eu.aio.ctx \u003d 0;\n\t\tio_setup(1, \u0026g_ns-\u003eu.aio.ctx);\n\t\tbreak;\n#endif\n#if HAVE_LIBURING:\n\tcase ENTRY_TYPE_IO_URING_FILE:\n\t{\n\t\tstruct io_uring *ring \u003d \u0026g_ns-\u003eu.uring.uring;\n\t\tg_ns-\u003eio_penging \u003d 0;\n\t\tg_ns-\u003eio_inflight \u003d 0;\n\t\tio_uring_queue_init(1, ring, IORING_SETUP_IOPOLL);\n\t\tbreak;\n\t}\n#endif\n\tcase ENTRY_TYPE_NVME_NS:\n\t\tg_ns-\u003eu.nvme.qpair \u003d spdk_nvme_ctrlr_alloc_io_qpair();\n\t\tbreak;\n\tdefault:\n\t\tbreak;\n\t}\n}",
+      "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97f5f709_dee4a7b7",
+        "filename": "test/nvme/overhead/overhead.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-18T22:44:02Z",
+      "side": 1,
+      "message": "Let\u0027s make this \"io_uring_queue_init\" to make it easier to trace the error.",
+      "range": {
+        "startLine": 609,
+        "startChar": 20,
+        "endLine": 609,
+        "endChar": 30
+      },
       "revId": "709677a84314056c60a8405110859d3a9c5ddd4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
