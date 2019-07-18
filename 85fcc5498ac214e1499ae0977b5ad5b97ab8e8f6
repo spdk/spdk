@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "3c740418_2f76c4ce",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T14:27:50Z",
+      "side": 1,
+      "message": "From what I see it\u0027s fairly common to allow the user to specify a \"CROSS_PREFIX\" option. E.g. linux does it.\n\nIf that\u0027s how DPDK works, let\u0027s just do the same. It doesn\u0027t have to be mandatory for cross compilation though.\n\nHow about the following next steps:\n * apply Ben\u0027s patches with TARGET_ARCH first\n * allow setting TARGET_ARCH in configure (./configure --target-arch\u003daarm64)\n * set \"arch\" in the root Makefile upon --target-arch (just like this patch does it for --cross-prefix now)\n * apply this patch adding an optional --cross-prefix setting (./configure --target\u003daarm64 --cross-prefix\u003dmy-arm-toolchain-)\n\nI\u0027m thinking we should set all those compilation options via configure because we already save some of them to cc.flags.mk at that point.",
+      "parentUuid": "e2f385a4_a5dc889d",
+      "revId": "85fcc5498ac214e1499ae0977b5ad5b97ab8e8f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4e98a2e2_89bb2c8f",
         "filename": "dpdkbuild/Makefile",
         "patchSetId": 3
