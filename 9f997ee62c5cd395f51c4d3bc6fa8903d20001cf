@@ -94,6 +94,29 @@
     },
     {
       "key": {
+        "uuid": "99f59d66_9246dec2",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T11:47:40Z",
+      "side": 1,
+      "message": "same here with naming. switch to lower case, suggested var name nvme_bdev_name",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 8
+      },
+      "revId": "9f997ee62c5cd395f51c4d3bc6fa8903d20001cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "13a3d975_e5e407de",
         "filename": "test/vhost/vhost_boot/vhost_boot.sh",
         "patchSetId": 2
