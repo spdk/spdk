@@ -262,6 +262,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_ctrlr	*ctrlr;
 	struct spdk_nvmf_transport *transport;
+	const char *hostnqn = connect_data->hostnqn;
 
 	ctrlr = calloc(1, sizeof(*ctrlr));
 	if (ctrlr == NULL) {
@@ -324,6 +325,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 			1;
 
 	spdk_uuid_copy(&ctrlr->hostid, (struct spdk_uuid *)connect_data->hostid);
+	snprintf(ctrlr->hostnqn, sizeof(ctrlr->hostnqn), "%s", hostnqn);
 
 	ctrlr->vcprop.cap.raw = 0;
 	ctrlr->vcprop.cap.bits.cqr = 1; /* NVMe-oF specification required */
