@@ -157,6 +157,9 @@ API functions are spdk_nvme_ctrlr_security_receive() and
 spdk_nvme_ctrlr_security_send(). This module should be considered experimental
 pending additional features and tests.
 
+The NVMe-oF initiator is now able to transfer IO whose size is more than 128KiB
+if the corresponding NVMe-oF target allows.
+
 ### raid
 
 Added new strip_size_kb rpc param on create to replace the more ambiguous
