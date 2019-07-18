@@ -3185,6 +3185,9 @@ spdk_nvmf_rdma_destroy_defunct_qpair(void *ctx)
 	struct spdk_nvmf_rdma_transport *rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
 			struct spdk_nvmf_rdma_transport, transport);
 
+	SPDK_INFOLOG(SPDK_LOG_RDMA, "QP#%d hasn't been drained as expected, manually destroy it\n",
+		     rqpair->qpair.qid);
+
 	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
 	spdk_nvmf_rdma_qpair_destroy(rqpair);
 
