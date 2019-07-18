@@ -24,7 +24,6 @@ function usage() {
                                     254: 'destroy_after_bdev_lvol_resize_positive',
                                     255: 'delete_lvol_store_persistent_positive',
                                     300: 'bdev_lvol_delete_lvstore_nonexistent_lvs_uuid',
-                                    301: 'delete_lvol_store_underlying_bdev',
                                     350: 'nested_destroy_logical_volume_negative',
                                     400: 'nested_construct_logical_volume_positive',
                                     550: 'delete_bdev_positive',
