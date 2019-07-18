@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "c9e31a03_588058fe",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1184,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-18T08:08:27Z",
+      "side": 1,
+      "message": "Aren\u0027t we doing that on line 1189? If not, I think we should do that in a separate memset call.",
+      "parentUuid": "9a2e5df6_40426dd8",
+      "range": {
+        "startLine": 1184,
+        "startChar": 25,
+        "endLine": 1184,
+        "endChar": 50
+      },
+      "revId": "2fcd449c3b568505beb67476672421b78c913b51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d178a69f_96ffdac1",
         "filename": "lib/ftl/ftl_band.h",
         "patchSetId": 1

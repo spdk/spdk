@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0111bc6_a8262b0e",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1161,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-18T08:08:27Z",
+      "side": 1,
+      "message": "The name suggests that this should return the size of lba_map-\u003esegments, while you\u0027re actually returning the size of lba_map-\u003emap + lba_map-\u003esegments.",
+      "range": {
+        "startLine": 1161,
+        "startChar": 0,
+        "endLine": 1161,
+        "endChar": 25
+      },
+      "revId": "cb7fc18e6a1256a113f30c205c2e047813494d35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da5dc48b_8fd86e4f",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-18T08:08:27Z",
+      "side": 1,
+      "message": "Could you change the line break, so that the \u0027dev)\u0027 part is on the upper line?",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 35
+      },
+      "revId": "cb7fc18e6a1256a113f30c205c2e047813494d35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f25c237a_c00d3262",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1244,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-07-18T08:08:27Z",
+      "side": 1,
+      "message": "Check the result of this call.",
+      "range": {
+        "startLine": 1244,
+        "startChar": 1,
+        "endLine": 1244,
+        "endChar": 23
+      },
+      "revId": "cb7fc18e6a1256a113f30c205c2e047813494d35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
