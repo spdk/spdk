@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "581ef066_e847a289",
+        "filename": "test/fuzz/autofuzz.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T00:58:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "87233919_89dfcc63",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 6
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dceed881_d89b9d60",
         "filename": "test/fuzz/autofuzz.sh",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68c93763_60d75536",
+        "filename": "test/fuzz/autofuzz.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T00:58:45Z",
+      "side": 1,
+      "message": "Done - also applied it to the test conditions below.",
+      "parentUuid": "dceed881_d89b9d60",
+      "range": {
+        "startLine": 40,
+        "startChar": 20,
+        "endLine": 40,
+        "endChar": 35
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b5b9f9fd_a187c83a",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T00:58:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "69881f7a_d8ecf0cc",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 6
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f62f361c_03e79e33",
         "filename": "test/fuzz/autofuzz_vhost.sh",
         "patchSetId": 1
@@ -91,6 +163,30 @@
       "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a407d5c3_18128bb1",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T00:58:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f62f361c_03e79e33",
+      "range": {
+        "startLine": 24,
+        "startChar": 11,
+        "endLine": 24,
+        "endChar": 54
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "9910e1ca_f258f892",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T00:58:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a2cb6af_cec742a8",
+      "range": {
+        "startLine": 36,
+        "startChar": 6,
+        "endLine": 36,
+        "endChar": 21
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "07d2ecf0_7aa60a20",
         "filename": "test/fuzz/autofuzz_vhost.sh",
         "patchSetId": 1
@@ -137,6 +257,30 @@
       "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f812d39_7710a065",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T00:58:45Z",
+      "side": 1,
+      "message": "No, force of habit I guess.",
+      "parentUuid": "07d2ecf0_7aa60a20",
+      "range": {
+        "startLine": 39,
+        "startChar": 4,
+        "endLine": 39,
+        "endChar": 11
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "44e93675_8b3f174f",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T00:58:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a908fbff_3492e377",
+      "range": {
+        "startLine": 42,
+        "startChar": 51,
+        "endLine": 42,
+        "endChar": 56
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "82a66d85_e36fee28",
         "filename": "test/fuzz/autofuzz_vhost.sh",
         "patchSetId": 1
@@ -183,6 +351,30 @@
       "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "740ad01f_507cb7ba",
+        "filename": "test/fuzz/autofuzz_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T00:58:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "82a66d85_e36fee28",
+      "range": {
+        "startLine": 45,
+        "startChar": 6,
+        "endLine": 45,
+        "endChar": 21
+      },
+      "revId": "f52dcc0099c3afcb7eab3ba1375785e36413e765",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
