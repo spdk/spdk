@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2407fe4_17ebde85",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T05:24:35Z",
+      "side": 1,
+      "message": "I\u0027m curious - what do we use nvmf for in this test?",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 12
+      },
+      "revId": "e2ec87a967a63b627ae80741d0b539ed8f8d67d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8a3901c_c8dd26ad",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T05:24:35Z",
+      "side": 1,
+      "message": "the ERR trap is set in autotest_common.sh - it prints e.g. the backtrace. Test scripts shouldn\u0027t really override it.\n\nWe use `set -e` throughout the autotest, so any triggered ERR will be followed by EXIT, which is is what you should trap here. Specifically, you can use:\n\ntrap \"finish_test\" SIGINT SIGTERM EXIT\n\nso the test will also cleanup after some unexpected termination. I don\u0027t think we need error_exit at all. That generic backtrace already prints the failed line.",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 47
+      },
+      "revId": "e2ec87a967a63b627ae80741d0b539ed8f8d67d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f9413f0_0e8feccb",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T05:24:35Z",
+      "side": 1,
+      "message": "Let\u0027s put it in $testdir, that\u0027s usually where test-generated files land.",
+      "range": {
+        "startLine": 29,
+        "startChar": 33,
+        "endLine": 29,
+        "endChar": 40
+      },
+      "revId": "e2ec87a967a63b627ae80741d0b539ed8f8d67d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06a3a561_96283452",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T05:24:35Z",
+      "side": 1,
+      "message": "we start this app in background but don\u0027t kill it anywhere at the end of the test",
+      "revId": "e2ec87a967a63b627ae80741d0b539ed8f8d67d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3860f708_b83c348b",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T05:24:35Z",
+      "side": 1,
+      "message": "^",
+      "revId": "e2ec87a967a63b627ae80741d0b539ed8f8d67d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
