@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "27aa7553_0af7f8c5",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-07-18T08:03:34Z",
+      "side": 1,
+      "message": "Thanks for the comment. If I understand you correctly then we can\u0027t declare g_spdk_nvmf_tgt_conf as an extern symbol in nvmf_internal.h and use it in nvmf.c since the definition of g_spdk_nvmf_tgt_conf is in conf.c which which links in the different library (event_nvmf), so the suggested approach leads to undefined reference\nTo keep backward compatibility in the public API we can add a new function like spdk_nvmf_tgt_add_conf. But this approach will increase the complexity of the code since it will be necessary to check that the configuration was applied to the target before using it. What do you think about it?",
+      "parentUuid": "7d0220ff_4b52b3a3",
+      "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e248e12b_d8170e5f",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 2
