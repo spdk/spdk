@@ -403,6 +403,9 @@ spdk_rpc_set_bdev_qd_sampling_period(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		goto cleanup;
+	}
 	spdk_bdev_set_qd_sampling_period(bdev, req.period);
 
 	spdk_json_write_bool(w, true);
