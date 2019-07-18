@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae92d2f8_6a2b33cf",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T02:44:34Z",
+      "side": 1,
+      "message": "Just thinking out loud here. It might be useful to make the -m option take in radamsa fuzzing options as a string parameter. Then you could allow individual test creators to decide how to fuzz a specific rpc. For example, we might not care what happens when we flip a bit or a byte in the construct_malloc_bdev rpc, but we might care about that option in another rpc. What do you think?",
+      "range": {
+        "startLine": 108,
+        "startChar": 61,
+        "endLine": 108,
+        "endChar": 70
+      },
+      "revId": "f5b4b4492c6d8fb8b10344755a3e5cf9eb7e02c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a43e02da_1506f3d0",
+        "filename": "scripts/rpc/radamsa.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T02:44:34Z",
+      "side": 1,
+      "message": "Is this one relevant for our tests?",
+      "range": {
+        "startLine": 42,
+        "startChar": 3,
+        "endLine": 42,
+        "endChar": 38
+      },
+      "revId": "f5b4b4492c6d8fb8b10344755a3e5cf9eb7e02c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
