@@ -56,6 +56,17 @@ if [[ -z $os_image ]]; then
 	exit 1
 fi
 
+CURRENT_BS=$($rcp.py get_bdevs | grep -E '\"name\"|\"block_size\"' | sed 'N;s/\n/ /' | awk '{gsub(/\",/,":")} {gsub(/\,/,"")} {gsub(/\"/,"")} {print $2 $4}')
+for BS in $CURRENT_BS
+do
+	IFS=: read DEV_NAME DEV_BS <<< $BS
+	if [ $DEV_BS != 512 ]; then
+		echo "ERROR: Your device $DEV_NAME block size is $DEV_BS, but should be 512 bytes."
+		echo "Exiting test!"
+		exit 1
+	fi
+done
+
 vhosttestinit
 
 timing_enter vhost_boot
