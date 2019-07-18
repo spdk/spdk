@@ -2461,6 +2461,7 @@ spdk_nvmf_qpair_request_cleanup(struct spdk_nvmf_qpair *qpair)
 		assert(qpair->state_cb != NULL);
 
 		if (TAILQ_EMPTY(&qpair->outstanding)) {
+			assert(qpair->group->thread == spdk_get_thread());
 			qpair->state_cb(qpair->state_cb_arg, 0);
 		}
 	} else {
