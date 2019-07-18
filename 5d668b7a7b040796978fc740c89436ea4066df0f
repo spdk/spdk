@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4dbe16db_1aa763cb",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T02:22:31Z",
+      "side": 1,
+      "message": "you can return here without freeing req",
+      "range": {
+        "startLine": 394,
+        "startChar": 2,
+        "endLine": 394,
+        "endChar": 8
+      },
+      "revId": "5d668b7a7b040796978fc740c89436ea4066df0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cda30ce_1750b8dd",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T02:22:31Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 454,
+        "startChar": 2,
+        "endLine": 454,
+        "endChar": 8
+      },
+      "revId": "5d668b7a7b040796978fc740c89436ea4066df0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
