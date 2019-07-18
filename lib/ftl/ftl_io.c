@@ -570,12 +570,13 @@ ftl_io_reset(struct ftl_io *io)
 void
 ftl_io_free(struct ftl_io *io)
 {
-	struct ftl_io *parent = io->parent;
+	struct ftl_io *parent;
 
 	if (!io) {
 		return;
 	}
 
+	parent = io->parent;
 	if (parent && ftl_io_remove_child(io)) {
 		ftl_io_complete(parent);
 	}
