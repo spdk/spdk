@@ -89,7 +89,8 @@ static const struct spdk_json_object_decoder rpc_get_raid_bdevs_decoders[] = {
  * none
  */
 static void
-spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
 {
 	struct rpc_get_raid_bdevs   req = {};
 	struct spdk_json_write_ctx  *w;
@@ -252,8 +253,9 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 				  req.raid_level,
 				  &raid_cfg);
 	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, rc, "Failed to add RAID bdev config %s: %s", req.name,
-						     spdk_strerror(-rc));
+		spdk_jsonrpc_send_error_response_fmt(request, rc,
+						     "Failed to add RAID bdev config %s: %s",
+						     req.name, spdk_strerror(-rc));
 		goto cleanup;
 	}
 
@@ -262,7 +264,8 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		if (rc != 0) {
 			raid_bdev_config_cleanup(raid_cfg);
 			spdk_jsonrpc_send_error_response_fmt(request, rc,
-							     "Failed to add base bdev %s to RAID bdev config %s: %s", req.base_bdevs.base_bdevs[i], req.name,
+							     "Failed to add base bdev %s to RAID bdev config %s: %s",
+							     req.base_bdevs.base_bdevs[i], req.name,
 							     spdk_strerror(-rc));
 			goto cleanup;
 		}
@@ -271,14 +274,16 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	rc = raid_bdev_create(raid_cfg);
 	if (rc != 0) {
 		raid_bdev_config_cleanup(raid_cfg);
-		spdk_jsonrpc_send_error_response_fmt(request, rc, "Failed to create RAID bdev %s: %s", req.name,
-						     spdk_strerror(-rc));
+		spdk_jsonrpc_send_error_response_fmt(request, rc,
+						     "Failed to create RAID bdev %s: %s",
+						     req.name, spdk_strerror(-rc));
 		goto cleanup;
 	}
 
 	rc = raid_bdev_add_base_devices(raid_cfg);
 	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, rc, "Failed to add any base bdev to RAID bdev %s: %s",
+		spdk_jsonrpc_send_error_response_fmt(request, rc,
+						     "Failed to add any base bdev to RAID bdev %s: %s",
 						     req.name, spdk_strerror(-rc));
 		goto cleanup;
 	}
@@ -376,7 +381,8 @@ exit:
  * none
  */
 static void
-spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct rpc_destroy_raid_bdev_ctx *ctx;
 
@@ -396,7 +402,8 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request, const struct sp
 
 	ctx->raid_cfg = raid_bdev_config_find_by_name(ctx->req.name);
 	if (ctx->raid_cfg == NULL) {
-		spdk_jsonrpc_send_error_response_fmt(request, ENODEV, "raid bdev %s is not found in config",
+		spdk_jsonrpc_send_error_response_fmt(request, ENODEV,
+						     "raid bdev %s is not found in config",
 						     ctx->req.name);
 		goto cleanup;
 	}
