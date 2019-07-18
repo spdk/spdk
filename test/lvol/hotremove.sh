@@ -12,6 +12,12 @@ function test_hotremove_lvol_store() {
 	lvs_uuid=$(rpc_cmd bdev_lvol_create_lvstore "$malloc_name" lvs_test)
 	lvol_uuid=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test "$LVS_DEFAULT_CAPACITY_MB")
 
+	# try to destroy inexistent lvs, this should obviously fail
+	dummy_uuid="00000000-0000-0000-0000-000000000000"
+	! rpc_cmd bdev_lvol_delete_lvstore -u "$dummy_uuid"
+	# our lvs should not be impacted
+	rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
+
 	# remove lvs (with one lvol open)
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid"
 	! rpc_cmd bdev_lvol_get_lvstores -u "$lvs_uuid"
