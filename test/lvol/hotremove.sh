@@ -30,12 +30,43 @@ function test_hotremove_lvol_store() {
 	rpc_cmd delete_malloc_bdev "$malloc_name"
 }
 
+# destroy lvs with 4 lvols on top
+function test_hotremove_lvol_store_multiple_lvols() {
+	# create lvs
+	malloc_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	lvs_uuid=$(rpc_cmd construct_lvol_store "$malloc_name" lvs_test)
+
+	lvol_size_mb=$(( (MALLOC_SIZE_MB- LVS_DEFAULT_CLUSTER_SIZE_MB) / 4 ))
+	# round down lvol size to the nearest cluster size boundary
+	lvol_size_mb=$(( lvol_size_mb / LVS_DEFAULT_CLUSTER_SIZE_MB * LVS_DEFAULT_CLUSTER_SIZE_MB ))
+
+	# create 4 lvols
+	for i in $(seq 1 4); do
+		rpc_cmd construct_lvol_bdev -u "$lvs_uuid" "lvol_test${i}" "$lvol_size_mb"
+	done
+
+	lvols=$(rpc_cmd get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
+	[ "$(jq length <<< "$lvols")" == "4" ]
+
+	# remove lvs (with 4 lvols open)
+	rpc_cmd destroy_lvol_store -u "$lvs_uuid"
+	! rpc_cmd get_lvol_stores -u "$lvs_uuid"
+
+	# make sure all lvols are gone
+	lvols=$(rpc_cmd get_bdevs | jq -r '[ .[] | select(.product_name == "Logical Volume") ]')
+	[ "$(jq length <<< "$lvols")" == "0" ]
+
+	# clean up
+	rpc_cmd delete_malloc_bdev "$malloc_name"
+}
+
 $rootdir/app/spdk_tgt/spdk_tgt &
 spdk_pid=$!
 trap 'killprocess "$spdk_pid"; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
 run_test test_hotremove_lvol_store
+run_test test_hotremove_lvol_store_multiple_lvols
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_pid
