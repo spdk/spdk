@@ -81,6 +81,9 @@ function test_construct_lvs_negative() {
 	lvol_stores=$(rpc_cmd get_lvol_stores)
 	[ "$(jq length <<< "$lvol_stores")" == "1" ]
 
+	# make sure we can't delete the same lvs again
+	! rpc_cmd destroy_lvol_store -u "$lvs1_uuid"
+
 	rpc_cmd destroy_lvol_store -u "$lvs2_uuid"
 	! rpc_cmd get_lvol_stores -u "$lvs2_uuid"
 
