@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7edf0d4a_6c0059a3",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T11:46:54Z",
+      "side": 1,
+      "message": "There is only one nvme bdev in configuration at this time, so this will work, but let\u0027s explicitly call:\nrpc.py get_bdevs -b Nvme0n1",
+      "range": {
+        "startLine": 69,
+        "startChar": 10,
+        "endLine": 69,
+        "endChar": 26
+      },
+      "revId": "9f997ee62c5cd395f51c4d3bc6fa8903d20001cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d83b686_bd3ab656",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T11:46:54Z",
+      "side": 1,
+      "message": "Naming nitpick. Other variables in this script are lower case, this stands out.\nLet\u0027s change it to nvme_bdev_bs.",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 6
+      },
+      "revId": "9f997ee62c5cd395f51c4d3bc6fa8903d20001cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "316d5406_b4a0ff3b",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T11:46:54Z",
+      "side": 1,
+      "message": "rpc.py get_bdevs -b Nvme0n1",
+      "range": {
+        "startLine": 70,
+        "startChar": 19,
+        "endLine": 70,
+        "endChar": 28
+      },
+      "revId": "9f997ee62c5cd395f51c4d3bc6fa8903d20001cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb3caf56_2444d8a1",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T11:46:54Z",
+      "side": 1,
+      "message": "There is no variable \"rcp.py\" in this script, only rpc_py\n\nActually you could call get_bdevs just once, save output into local variable and then use it to get block_size and name",
+      "range": {
+        "startLine": 70,
+        "startChar": 12,
+        "endLine": 70,
+        "endChar": 18
+      },
+      "revId": "9f997ee62c5cd395f51c4d3bc6fa8903d20001cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13a3d975_e5e407de",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T11:46:54Z",
+      "side": 1,
+      "message": "Follow file bracketing convention and stick to double brackets",
+      "range": {
+        "startLine": 71,
+        "startChar": 3,
+        "endLine": 71,
+        "endChar": 21
+      },
+      "revId": "9f997ee62c5cd395f51c4d3bc6fa8903d20001cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1055ade3_a3ad01fe",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-18T11:46:54Z",
+      "side": 1,
+      "message": "Add \"false\" just below echo.\nThis will cause \"-e\" option to kick in, and trap function will run cleanup and exit the script.",
+      "revId": "9f997ee62c5cd395f51c4d3bc6fa8903d20001cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
