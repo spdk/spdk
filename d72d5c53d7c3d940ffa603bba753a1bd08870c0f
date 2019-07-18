@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56563969_55b0cc64",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T02:25:38Z",
+      "side": 1,
+      "message": "we already have some return code here \"ret\", don\u0027t we want to use it? It doesn\u0027t necessarily have to be ENOMEM",
+      "range": {
+        "startLine": 735,
+        "startChar": 10,
+        "endLine": 735,
+        "endChar": 16
+      },
+      "revId": "d72d5c53d7c3d940ffa603bba753a1bd08870c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
