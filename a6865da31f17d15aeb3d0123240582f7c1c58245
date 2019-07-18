@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d0220ff_4b52b3a3",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T01:36:25Z",
+      "side": 1,
+      "message": "Rather than changing the public API function, can we just move the declaration of g_spdk_nvmf_tgt_conf to nvmf_internal.h. That way we avoid breaking other people\u0027s implementations if they happen to be using something other than the stock target application.\n\nIf there is a strong reason that it needs to be this way, and we end up deciding to change the public API then there will definitely need to be a changelog entry.",
+      "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e248e12b_d8170e5f",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1345,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T01:36:25Z",
+      "side": 1,
+      "message": "Probably better worded as \"Invalid value supplied for conn_sched. Please provide one of:\\n\" then the options listed as you have them.",
+      "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a24c295_5ec5d1f8",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-18T01:36:25Z",
+      "side": 1,
+      "message": "Please line up the variable name with the rest in the structure.",
+      "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
