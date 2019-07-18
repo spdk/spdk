@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31c1606b_8e397278",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-18T14:36:52Z",
+      "side": 1,
+      "message": "e.g. freebsd can return amd64, which is not a valid -march\n\nwe could just check if TARGET_ARCH was specified by the user and use -march\u003dnative if it was not",
+      "range": {
+        "startLine": 75,
+        "startChar": 15,
+        "endLine": 75,
+        "endChar": 32
+      },
+      "revId": "7be60616fd48885a6ac4c3e36a898f7f496e6e11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
