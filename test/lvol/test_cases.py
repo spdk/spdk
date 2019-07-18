@@ -114,7 +114,6 @@ def case_message(func):
             # bdev_lvol_delete_lvstore - positive tests
             254: 'destroy_after_bdev_lvol_resize_positive',
             255: 'delete_lvol_store_persistent_positive',
-            550: 'delete_bdev_positive',
             551: 'delete_lvol_bdev',
             552: 'bdev_lvol_delete_lvstore_with_clones',
             553: 'unregister_lvol_bdev',
@@ -393,34 +392,6 @@ class TestCases(object):
         # Expected result:
         # - bdev_lvol_get_lvstores should not report any existsing lvol stores in configuration
         #    after deleting and adding NVMe bdev
-        # - no other operation fails
-        return fail_count
-
-    @case_message
-    def test_case550(self):
-        """
-        delete_bdev_positive
-
-        Positive test for deleting malloc bdev.
-        Call bdev_lvol_create_lvstore with correct base bdev name.
-        """
-        # Create malloc bdev
-        base_name = self.c.bdev_malloc_create(self.total_size,
-                                              self.block_size)
-        # Construct_lvol_store on correct, exisitng malloc bdev
-        uuid_store = self.c.bdev_lvol_create_lvstore(base_name,
-                                                     self.lvs_name)
-        # Check correct uuid values in response bdev_lvol_get_lvstores command
-        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
-                                                         self.cluster_size)
-        # Delete malloc bdev
-        self.c.bdev_malloc_delete(base_name)
-        #  Check response bdev_lvol_get_lvstores command
-        if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
-            fail_count += 1
-
-        # Expected result:
-        # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
         # - no other operation fails
         return fail_count
 
