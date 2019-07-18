@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58d93de4_c6aa5f8e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-18T02:32:20Z",
+      "side": 1,
+      "message": "Will you write the intention of this patch in commit message?",
+      "revId": "a4bb628f761f9b5b158d14d917ad9684ce6914dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ded1d574_30635805",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-18T02:32:20Z",
+      "side": 1,
+      "message": "Should we describe the use case or the purpose more explicitly? something like \"Socket priority can now be specified to prioritize all packets on TCP transport against other non SPDK applications.\"?",
+      "revId": "a4bb628f761f9b5b158d14d917ad9684ce6914dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
