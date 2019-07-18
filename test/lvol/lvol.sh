@@ -25,7 +25,6 @@ function usage() {
                                     255: 'delete_lvol_store_persistent_positive',
                                     350: 'nested_destroy_logical_volume_negative',
                                     400: 'nested_construct_logical_volume_positive',
-                                    550: 'delete_bdev_positive',
                                     551: 'delete_lvol_bdev',
                                     552: 'bdev_lvol_delete_lvstore_with_clones',
                                     553: 'unregister_lvol_bdev',
