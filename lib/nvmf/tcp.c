@@ -467,6 +467,10 @@ spdk_nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
 
+	if (tqpair->qpair.group != NULL) {
+		assert(tqpair->qpair.group->thread == spdk_get_thread());
+	}
+
 	spdk_poller_unregister(&tqpair->flush_poller);
 	spdk_sock_close(&tqpair->sock);
 	spdk_nvmf_tcp_cleanup_all_states(tqpair);
