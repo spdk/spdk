@@ -396,34 +396,6 @@ class TestCases(object):
         return fail_count
 
     @case_message
-    def test_case550(self):
-        """
-        delete_bdev_positive
-
-        Positive test for deleting malloc bdev.
-        Call construct_lvol_store with correct base bdev name.
-        """
-        # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        # Construct_lvol_store on correct, exisitng malloc bdev
-        uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name)
-        # Check correct uuid values in response get_lvol_stores command
-        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
-                                                  self.cluster_size)
-        # Delete malloc bdev
-        self.c.delete_malloc_bdev(base_name)
-        #  Check response get_lvol_stores command
-        if self.c.check_get_lvol_stores("", "", "") == 1:
-            fail_count += 1
-
-        # Expected result:
-        # - get_lvol_stores: response should be of no value after destroyed lvol store
-        # - no other operation fails
-        return fail_count
-
-    @case_message
     def test_case551(self):
         """
         destroy_lvol_bdev_ordering
