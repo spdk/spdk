@@ -883,15 +883,20 @@ ftl_nv_cache_read_header_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb
 	int iov_cnt = 0, i, rc;
 	uint32_t checksum;
 
-	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-	spdk_bdev_io_get_iovec(bdev_io, &iov, &iov_cnt);
-	hdr = iov[0].iov_base;
-
 	if (!success) {
 		SPDK_ERRLOG("Unable to read non-volatile cache metadata header\n");
 		ftl_restore_complete(restore, -ENOTRECOVERABLE);
 		goto out;
 	}
+
+	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+	spdk_bdev_io_get_iovec(bdev_io, &iov, &iov_cnt);
+	if (!iov) {
+		SPDK_ERRLOG("Unable to get the iov for non-volatile cache metadata header\n");
+		ftl_restore_complete(restore, -ENOTRECOVERABLE);
+		goto out;
+	}
+	hdr = iov[0].iov_base;
 
 	checksum = spdk_crc32c_update(hdr, offsetof(struct ftl_nv_cache_header, checksum), 0);
 	if (checksum != hdr->checksum) {
