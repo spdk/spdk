@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c101aa9_f2ed8f6e",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-19T06:04:24Z",
+      "side": 1,
+      "message": "assert(iov !\u003d NULL) may be here instead but this patch makes sense to me.",
+      "revId": "7a95a7bb19ecbd593aeb407d19036c947125a5a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
