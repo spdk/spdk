@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe213417_054d0b99",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 826,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-19T06:37:34Z",
+      "side": 1,
+      "message": "Typo for if (g_mbuf_mp) ? I don\u0027t think this line is required.",
+      "revId": "51bd9c83df8a739a0867518a18b06d8d2e4d78e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
