@@ -631,6 +631,9 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	}
 
 	/* Allocate crypto operations. */
+#ifdef DEBUG
+	memset(crypto_ops, 0, sizeof(crypto_ops));
+#endif
 	allocated = rte_crypto_op_bulk_alloc(g_crypto_op_mp,
 					     RTE_CRYPTO_OP_TYPE_SYMMETRIC,
 					     crypto_ops, cryop_cnt);
