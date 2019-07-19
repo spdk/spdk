@@ -109,12 +109,16 @@ spdk_rpc_set_log_print_level(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_log_level_decoders,
 				    SPDK_COUNTOF(rpc_log_level_decoders), &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_LOG, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
 		goto invalid;
 	}
 
 	level = _parse_log_level(req.level);
 	if (level == -1) {
 		SPDK_DEBUGLOG(SPDK_LOG_LOG, "try to set invalid log level\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "try to set invalid log level");
 		goto invalid;
 	}
 
@@ -131,7 +135,6 @@ spdk_rpc_set_log_print_level(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_log_level(&req);
 }
 SPDK_RPC_REGISTER("set_log_print_level", spdk_rpc_set_log_print_level,
@@ -155,7 +158,7 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 	name = _get_log_level_name(level);
 	if (name == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Internal error");
+						 "invalid log level");
 		return;
 	}
 
@@ -182,12 +185,16 @@ spdk_rpc_set_log_level(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_log_level_decoders,
 				    SPDK_COUNTOF(rpc_log_level_decoders), &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_LOG, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
 		goto invalid;
 	}
 
 	level = _parse_log_level(req.level);
 	if (level == -1) {
 		SPDK_DEBUGLOG(SPDK_LOG_LOG, "try to set invalid log level\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "try to set invalid log level");
 		goto invalid;
 	}
 
@@ -205,7 +212,6 @@ spdk_rpc_set_log_level(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_log_level(&req);
 }
 SPDK_RPC_REGISTER("set_log_level", spdk_rpc_set_log_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
@@ -228,7 +234,7 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 	name = _get_log_level_name(level);
 	if (name == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Internal error");
+						 "invalid log level");
 		return;
 	}
 
@@ -253,11 +259,15 @@ spdk_rpc_set_log_flag(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_log_flag_decoders,
 				    SPDK_COUNTOF(rpc_log_flag_decoders), &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_LOG, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
 		goto invalid;
 	}
 
 	if (req.flag == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_LOG, "flag was 0\n");
+		SPDK_DEBUGLOG(SPDK_LOG_LOG, "invalid flag 0\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "invalid flag 0");
 		goto invalid;
 	}
 
@@ -274,7 +284,6 @@ spdk_rpc_set_log_flag(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_log_flag(&req);
 }
 SPDK_RPC_REGISTER("set_log_flag", spdk_rpc_set_log_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
@@ -290,11 +299,15 @@ spdk_rpc_clear_log_flag(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_log_flag_decoders,
 				    SPDK_COUNTOF(rpc_log_flag_decoders), &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_LOG, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
 		goto invalid;
 	}
 
 	if (req.flag == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_LOG, "flag was 0\n");
+		SPDK_DEBUGLOG(SPDK_LOG_LOG, "Invalid flag 0\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "invalid flag 0");
 		goto invalid;
 	}
 
@@ -311,7 +324,6 @@ spdk_rpc_clear_log_flag(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_log_flag(&req);
 }
 SPDK_RPC_REGISTER("clear_log_flag", spdk_rpc_clear_log_flag,
