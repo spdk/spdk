@@ -229,6 +229,9 @@ bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
 	free(nvme_bdev_ctrlr->name);
 	free(nvme_bdev_ctrlr->bdevs);
+	if (nvme_bdev_ctrlr->opal_handler) {
+		spdk_opal_close(nvme_bdev_ctrlr->opal_handler);
+	}
 	free(nvme_bdev_ctrlr);
 }
 
@@ -647,6 +650,14 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_object_end(w);
 
+	if (cdata->oacs.security) {
+		spdk_json_write_named_object_begin(w, "security");
+
+		spdk_json_write_named_uint32(w, "opal", spdk_opal_supported(nvme_bdev_ctrlr->opal_handler));
+
+		spdk_json_write_object_end(w);
+	}
+
 	spdk_json_write_object_end(w);
 
 	return 0;
@@ -931,6 +942,15 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
+static void
+opal_init(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+{
+	if (spdk_nvme_ctrlr_get_flags(nvme_bdev_ctrlr->ctrlr) &
+	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		nvme_bdev_ctrlr->opal_handler = spdk_opal_init_dev(nvme_bdev_ctrlr->ctrlr);
+	}
+}
+
 static int
 create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	     const char *name,
@@ -981,6 +1001,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_bdev_ctrlr);
+
+	opal_init(nvme_bdev_ctrlr);
 
 	return 0;
 }
