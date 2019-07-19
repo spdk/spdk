@@ -602,7 +602,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	int completed = 0;
 	int crypto_index = 0;
 	uint32_t en_offset = 0;
-	struct rte_crypto_op *crypto_ops[MAX_ENQUEUE_ARRAY_SIZE];
+	struct rte_crypto_op *crypto_ops[MAX_ENQUEUE_ARRAY_SIZE] = {};
 	struct rte_mbuf *src_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *dst_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
 	int burst;
