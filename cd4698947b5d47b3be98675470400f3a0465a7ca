@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3a1c7e6_aa7d4bb6",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-19T12:21:26Z",
+      "side": 1,
+      "message": "No need to call jq and then pipe to jq again.\nInstead use here-string: \u003c\u003c\u003c\n\ne.g:\njq \".[] .block_size\" \u003c\u003c\u003c \"$nvme_bdev\"",
+      "range": {
+        "startLine": 70,
+        "startChar": 15,
+        "endLine": 70,
+        "endChar": 56
+      },
+      "revId": "cd4698947b5d47b3be98675470400f3a0465a7ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3914fa10_9af2de64",
+        "filename": "test/vhost/vhost_boot/vhost_boot.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-19T12:21:26Z",
+      "side": 1,
+      "message": "^\n^",
+      "range": {
+        "startLine": 71,
+        "startChar": 17,
+        "endLine": 71,
+        "endChar": 52
+      },
+      "revId": "cd4698947b5d47b3be98675470400f3a0465a7ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
