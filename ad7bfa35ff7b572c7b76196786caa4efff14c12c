@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6e792a09_e593dfc7",
+        "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-19T08:40:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4df379c9_9c6c0e6b",
+      "revId": "ad7bfa35ff7b572c7b76196786caa4efff14c12c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "feead942_897ccce9",
         "filename": "test/unit/lib/json/json_write.c/json_write_ut.c",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "ad7bfa35ff7b572c7b76196786caa4efff14c12c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97fa929c_03b49fad",
+        "filename": "test/unit/lib/json/json_write.c/json_write_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-19T08:40:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "feead942_897ccce9",
+      "revId": "ad7bfa35ff7b572c7b76196786caa4efff14c12c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "47005919_2ee5e625",
+        "filename": "test/unit/lib/json/json_write.c/json_write_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-19T08:40:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3967f5cc_f4784c88",
+      "revId": "ad7bfa35ff7b572c7b76196786caa4efff14c12c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f52872d8_c8a793dc",
         "filename": "test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut.c",
         "patchSetId": 2
@@ -67,6 +121,24 @@
       "revId": "ad7bfa35ff7b572c7b76196786caa4efff14c12c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60e97293_89fb96e5",
+        "filename": "test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-19T08:40:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f52872d8_c8a793dc",
+      "revId": "ad7bfa35ff7b572c7b76196786caa4efff14c12c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
