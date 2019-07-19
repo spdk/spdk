@@ -66,6 +66,7 @@ static void mock_rte_pktmbuf_attach_extbuf(struct rte_mbuf *m, void *buf_addr, r
 static void mock_rte_pktmbuf_attach_extbuf(struct rte_mbuf *m, void *buf_addr, rte_iova_t buf_iova,
 		uint16_t buf_len, struct rte_mbuf_ext_shared_info *shinfo)
 {
+	assert(m != NULL);
 	m->buf_addr = buf_addr;
 	m->buf_iova = buf_iova;
 	m->buf_len = buf_len;
@@ -822,8 +823,9 @@ test_initdrivers(void)
 		free(dev_qp->device);
 		free(dev_qp);
 	}
-
-	free(g_mbuf_mp);
+	if (!g_mbuf_mp) {
+		free(g_mbuf_mp);
+	}
 	g_mbuf_mp = orig_mbuf_mp;
 }
 

@@ -423,8 +423,8 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(backing_dev, struct vbdev_compress,
 					   backing_dev);
 	struct rte_comp_op *comp_op;
-	struct rte_mbuf *src_mbufs[MAX_MBUFS_PER_OP];
-	struct rte_mbuf *dst_mbufs[MAX_MBUFS_PER_OP];
+	struct rte_mbuf *src_mbufs[MAX_MBUFS_PER_OP] = {};
+	struct rte_mbuf *dst_mbufs[MAX_MBUFS_PER_OP] = {};
 	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
 	uint64_t total_length = 0;
 	struct iovec *current_src_iov = NULL;
