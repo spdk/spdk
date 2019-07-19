@@ -89,10 +89,10 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 {
 	struct spdk_bdev_alias *tmp;
 
-	CU_ASSERT(alias != NULL);
 	CU_ASSERT(bdev != NULL);
 
 	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+		SPDK_CU_ASSERT_FATAL(alias != NULL);
 		if (strncmp(alias, tmp->alias, SPDK_LVOL_NAME_MAX) == 0) {
 			TAILQ_REMOVE(&bdev->aliases, tmp, tailq);
 			free(tmp->alias);
