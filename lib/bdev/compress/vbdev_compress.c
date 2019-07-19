@@ -465,6 +465,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 
 		current_src_iov = src_iovs[iov_index].iov_base;
 		total_length += src_iovs[iov_index].iov_len;
+		assert(src_mbufs[iov_index] != NULL);
 		src_mbufs[iov_index]->userdata = reduce_cb_arg;
 
 		rte_pktmbuf_attach_extbuf(src_mbufs[iov_index],
