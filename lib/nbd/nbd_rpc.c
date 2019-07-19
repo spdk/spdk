@@ -157,7 +157,7 @@ spdk_rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 	}
 
 	if (rc) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(rc));
 		return;
 	}
 
@@ -190,6 +190,8 @@ spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_start_nbd_disk_decoders),
 				    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
 		goto invalid;
 	}
 
@@ -202,11 +204,15 @@ spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 		rc = check_available_nbd_disk(req->nbd_device);
 		if (rc == 1) {
 			SPDK_DEBUGLOG(SPDK_LOG_NBD, "NBD device %s is in using.\n", req->nbd_device);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
+							 "nbd device %s is in use", req->nbd_device);
 			goto invalid;
 		}
 
 		if (rc != 0) {
 			SPDK_DEBUGLOG(SPDK_LOG_NBD, "Illegal nbd_device %s.\n", req->nbd_device);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST,
+							 "illegal nbd device %s", req->nbd_device);
 			goto invalid;
 		}
 	} else {
@@ -214,6 +220,8 @@ spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 		req->nbd_device = find_available_nbd_disk(req->nbd_idx, &req->nbd_idx);
 		if (req->nbd_device == NULL) {
 			SPDK_INFOLOG(SPDK_LOG_NBD, "There is no available nbd device.\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
+							 "there is no available nbd device");
 			goto invalid;
 		}
 	}
@@ -226,7 +234,6 @@ spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 
 invalid:
 	free_rpc_start_nbd_disk(req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 
 SPDK_RPC_REGISTER("start_nbd_disk", spdk_rpc_start_nbd_disk, SPDK_RPC_RUNTIME)
@@ -287,14 +294,14 @@ spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_stop_nbd_disk_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
 		goto out;
 	}
 
 	if (req.nbd_device == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+						 "invalid nbd device");
 		goto out;
 	}
 
@@ -302,7 +309,7 @@ spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 	nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
 	if (!nbd) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+						 "cannot find nbd device");
 		goto out;
 	}
 
@@ -335,6 +342,7 @@ spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 	rc = pthread_detach(tid);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not detach nbd disconnect thread: %s\n", spdk_strerror(rc));
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(rc));
 		goto out;
 	}
 
@@ -384,6 +392,8 @@ spdk_rpc_get_nbd_disks(struct spdk_jsonrpc_request *request,
 					    SPDK_COUNTOF(rpc_get_nbd_disks_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
 			goto invalid;
 		}
 
@@ -391,6 +401,9 @@ spdk_rpc_get_nbd_disks(struct spdk_jsonrpc_request *request,
 			nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
 			if (nbd == NULL) {
 				SPDK_ERRLOG("nbd device '%s' does not exist\n", req.nbd_device);
+				spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+								     "nbd device '%s' does not exist",
+								     req.nbd_device);
 				goto invalid;
 			}
 
@@ -420,8 +433,6 @@ spdk_rpc_get_nbd_disks(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-
 	free_rpc_get_nbd_disks(&req);
 }
 SPDK_RPC_REGISTER("get_nbd_disks", spdk_rpc_get_nbd_disks, SPDK_RPC_RUNTIME)
