@@ -222,6 +222,9 @@ static void
 bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	assert(nvme_bdev_ctrlr->destruct);
+	if (nvme_bdev_ctrlr->opal_dev) {
+		spdk_opal_close(nvme_bdev_ctrlr->opal_dev);
+	}
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -647,6 +650,14 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_object_end(w);
 
+	if (cdata->oacs.security) {
+		spdk_json_write_named_object_begin(w, "security");
+
+		spdk_json_write_named_uint32(w, "opal", spdk_opal_supported(nvme_bdev_ctrlr->opal_dev));
+
+		spdk_json_write_object_end(w);
+	}
+
 	spdk_json_write_object_end(w);
 
 	return 0;
@@ -981,6 +992,11 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_bdev_ctrlr);
+
+	if (spdk_nvme_ctrlr_get_flags(nvme_bdev_ctrlr->ctrlr) &
+	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		nvme_bdev_ctrlr->opal_dev = spdk_opal_init_dev(nvme_bdev_ctrlr->ctrlr);
+	}
 
 	return 0;
 }
