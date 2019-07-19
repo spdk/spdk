@@ -436,6 +436,11 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 
 	assert(src_iovcnt < MAX_MBUFS_PER_OP);
 
+#ifdef DEBUG
+	memset(src_mbufs, 0, sizeof(src_mbufs));
+	memset(dst_mbufs, 0, sizeof(dst_mbufs));
+#endif
+
 	comp_op = rte_comp_op_alloc(g_comp_op_mp);
 	if (!comp_op) {
 		SPDK_ERRLOG("trying to get a comp op!\n");
