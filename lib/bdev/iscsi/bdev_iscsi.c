@@ -98,9 +98,10 @@ struct bdev_iscsi_conn_req {
 	char					*initiator_iqn;
 	struct iscsi_context			*context;
 	spdk_bdev_iscsi_create_cb		create_cb;
-	spdk_bdev_iscsi_create_cb		create_cb_arg;
+	void                   *create_cb_arg;
 	bool					unmap_supported;
 	int					lun;
+	int                 status;
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
 };
 
@@ -110,17 +111,14 @@ complete_conn_req(struct bdev_iscsi_conn_req *req, struct spdk_bdev *bdev,
 {
 	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
 	req->create_cb(req->create_cb_arg, bdev, status);
-	if (status) {
-		/* if the request failed and no iscsi lun was
-		 * created then we could not hand over this
-		 * memory and have to free it manually now.
-		 */
-		iscsi_destroy_context(req->context);
-		free(req->initiator_iqn);
-		free(req->bdev_name);
-		free(req->url);
-	}
-	free(req);
+
+	/*
+	 * we are still running in the context of iscsi_service()
+	 * so do not tear down it data structures here
+	 */
+
+	req->status = status;
+
 }
 
 static int
@@ -725,6 +723,25 @@ iscsi_bdev_conn_poll(void *arg)
 				SPDK_ERRLOG("iscsi_service failed: %s\n", iscsi_get_error(context));
 			}
 		}
+
+		/*
+		 * An error has occurred during connecting, we have been
+		 * removed from the g_iscsi_conn_req list already clean
+		 * up the data structures, no attempts to connect to the
+		 * URL will be made any further
+		 */
+		if (req->status != SCSI_STATUS_GOOD) {
+
+			free(req->initiator_iqn);
+			free(req->bdev_name);
+			free(req->url);
+
+			iscsi_disconnect(req->context);
+			iscsi_destroy_context(req->context);
+			free(req);
+		} else {
+			assert(req->status == SCSI_STATUS_GOOD);
+		}
 	}
 
 	return -1;
@@ -748,6 +765,7 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 		return -ENOMEM;
 	}
 
+	req->status = SCSI_STATUS_GOOD;
 	req->bdev_name = strdup(bdev_name);
 	req->url = strdup(url);
 	req->initiator_iqn = strdup(initiator_iqn);
