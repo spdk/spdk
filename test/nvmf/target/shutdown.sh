@@ -36,7 +36,7 @@ function waitforio() {
 
 timing_enter shutdown
 nvmftestinit
-nvmfappstart "-m 0xF"
+nvmfappstart "-m 0x1E"
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
@@ -70,7 +70,7 @@ timing_exit create_subsystems
 
 timing_enter test1
 # Run bdev_svc, which connects but does not issue I/O
-$rootdir/test/app/bdev_svc/bdev_svc -i 1 -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf &
+$rootdir/test/app/bdev_svc/bdev_svc -m 0x1 -i 1 -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf &
 perfpid=$!
 waitforlisten $perfpid /var/tmp/bdevperf.sock
 $rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
