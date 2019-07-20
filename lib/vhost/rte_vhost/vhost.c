@@ -521,6 +521,13 @@ rte_vhost_vring_call(int vid, uint16_t vring_idx)
 	if (!vq)
 		return -1;
 
+	/* Ensure all our used ring changes are visible to the guest at the time
+	 * of interrupt.
+	 * TODO: this is currently an sfence on x86. For other architectures we
+	 * will most likely need an smp_mb(), but smp_mb() is an overkill for x86.
+	 */
+	rte_wmb();
+
 	if (vq->callfd != -1) {
 		eventfd_write(vq->callfd, (eventfd_t)1);
 		return 0;
