@@ -371,7 +371,7 @@ _spdk_rpc_get_vhost_controller(struct spdk_json_write_ctx *w, struct spdk_vhost_
 	spdk_json_write_named_string(w, "socket", vdev->path);
 
 	spdk_json_write_named_object_begin(w, "backend_specific");
-	spdk_vhost_dump_info_json(vdev, w);
+	vhost_dump_info_json(vdev, w);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -549,7 +549,7 @@ spdk_rpc_construct_vhost_nvme_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_nvme_dev_construct(req.ctrlr, req.cpumask, req.io_queues);
+	rc = vhost_nvme_dev_construct(req.ctrlr, req.cpumask, req.io_queues);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -612,7 +612,7 @@ spdk_rpc_add_vhost_nvme_ns(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_nvme_dev_add_ns(vdev, req.bdev_name);
+	rc = vhost_nvme_dev_add_ns(vdev, req.bdev_name);
 	spdk_vhost_unlock();
 	if (rc < 0) {
 		goto invalid;
