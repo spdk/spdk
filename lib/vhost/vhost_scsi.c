@@ -197,6 +197,22 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 		     svdev->vdev.name, scsi_tgt_num);
 }
 
+static void
+vhost_scsi_dev_process_removed_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
+{
+	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
+	struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
+					    struct spdk_vhost_scsi_dev, vdev);
+
+	/* all sessions have already detached the device */
+	if (svdev->scsi_dev_state[scsi_tgt_num].status != VHOST_SCSI_DEV_REMOVING) {
+		/* device was already removed in the meantime */
+		return;
+	}
+
+	remove_scsi_tgt(svdev, scsi_tgt_num);
+}
+
 static int
 vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
 				   struct spdk_vhost_session *vsession, void *ctx)
@@ -206,16 +222,7 @@ vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
 	struct spdk_scsi_dev_session_state *state;
 
 	if (vsession == NULL) {
-		/* all sessions have already detached the device */
-		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
-						    struct spdk_vhost_scsi_dev, vdev);
-
-		if (svdev->scsi_dev_state[scsi_tgt_num].status != VHOST_SCSI_DEV_REMOVING) {
-			/* device was already removed in the meantime */
-			return 0;
-		}
-
-		remove_scsi_tgt(svdev, scsi_tgt_num);
+		vhost_scsi_dev_process_removed_cpl_cb(vdev, ctx);
 		return 0;
 	}
 
@@ -913,6 +920,21 @@ vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	spdk_vhost_scsi_dev_remove_tgt(&svdev->vdev, scsi_dev_num, NULL, NULL);
 }
 
+static void
+vhost_scsi_dev_add_tgt_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
+{
+	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
+	struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
+					    struct spdk_vhost_scsi_dev, vdev);
+	struct spdk_scsi_dev_vhost_state *vhost_sdev;
+
+	vhost_sdev = &svdev->scsi_dev_state[scsi_tgt_num];
+
+	/* All sessions have added the target */
+	assert(vhost_sdev->status == VHOST_SCSI_DEV_ADDING);
+	vhost_sdev->status = VHOST_SCSI_DEV_PRESENT;
+}
+
 static int
 vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 			   struct spdk_vhost_session *vsession, void *ctx)
@@ -924,13 +946,7 @@ vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 	int rc;
 
 	if (vsession == NULL) {
-		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
-						    struct spdk_vhost_scsi_dev, vdev);
-		vhost_sdev = &svdev->scsi_dev_state[scsi_tgt_num];
-
-		/* All sessions have added the target */
-		assert(vhost_sdev->status == VHOST_SCSI_DEV_ADDING);
-		vhost_sdev->status = VHOST_SCSI_DEV_PRESENT;
+		vhost_scsi_dev_add_tgt_cpl_cb(vdev, ctx);
 		return 0;
 	}
 
@@ -1052,6 +1068,21 @@ struct scsi_tgt_hotplug_ctx {
 	bool async_fini;
 };
 
+static void
+vhost_scsi_dev_remove_tgt_cpl_cb(struct spdk_vhost_dev *vdev, void *_ctx)
+{
+	struct scsi_tgt_hotplug_ctx *ctx = _ctx;
+	struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
+					    struct spdk_vhost_scsi_dev, vdev);
+
+	if (!ctx->async_fini) {
+		/* there aren't any active sessions, so remove the dev and exit */
+		remove_scsi_tgt(svdev, ctx->scsi_tgt_num);
+	}
+
+	free(ctx);
+}
+
 static int
 vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 			      struct spdk_vhost_session *vsession, void *_ctx)
@@ -1062,15 +1093,7 @@ vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 	struct spdk_scsi_dev_session_state *state;
 
 	if (vsession == NULL) {
-		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
-						    struct spdk_vhost_scsi_dev, vdev);
-
-		if (!ctx->async_fini) {
-			/* there aren't any active sessions, so remove the dev and exit */
-			remove_scsi_tgt(svdev, scsi_tgt_num);
-		}
-
-		free(ctx);
+		vhost_scsi_dev_remove_tgt_cpl_cb(vdev, _ctx);
 		return 0;
 	}
 
