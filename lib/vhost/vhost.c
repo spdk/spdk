@@ -463,13 +463,6 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 	* (volatile uint16_t *) &used->idx = virtqueue->last_used_idx;
 	spdk_vhost_log_used_vring_idx(vsession, virtqueue);
 
-	/* Ensure all our used ring changes are visible to the guest at the time
-	 * of interrupt.
-	 * TODO: this is currently an sfence on x86. For other architectures we
-	 * will most likely need an smp_mb(), but smp_mb() is an overkill for x86.
-	 */
-	spdk_wmb();
-
 	virtqueue->used_req_cnt++;
 }
 
