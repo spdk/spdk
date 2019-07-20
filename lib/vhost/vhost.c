@@ -369,12 +369,18 @@ vhost_session_used_signal(struct spdk_vhost_session *vsession)
 	}
 }
 
+static void
+vhost_dev_set_coalescing_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
+{
+	/* nothing to do */
+}
+
 static int
 vhost_session_set_coalescing(struct spdk_vhost_dev *vdev,
 			     struct spdk_vhost_session *vsession, void *ctx)
 {
 	if (vsession == NULL) {
-		/* nothing to do */
+		vhost_dev_set_coalescing_cpl_cb(vdev, ctx);
 		return 0;
 	}
 

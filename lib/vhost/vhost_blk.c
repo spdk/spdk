@@ -556,6 +556,19 @@ spdk_vhost_blk_get_dev(struct spdk_vhost_dev *vdev)
 	return bvdev->bdev;
 }
 
+static void
+vhost_dev_bdev_remove_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
+{
+
+	/* All sessions have been notified, time to close the bdev */
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	assert(bvdev != NULL);
+	spdk_bdev_close(bvdev->bdev_desc);
+	bvdev->bdev_desc = NULL;
+	bvdev->bdev = NULL;
+}
+
 static int
 vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 			     struct spdk_vhost_session *vsession,
@@ -564,13 +577,7 @@ vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_blk_session *bvsession;
 
 	if (vsession == NULL) {
-		/* All sessions have been notified, time to close the bdev */
-		struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
-
-		assert(bvdev != NULL);
-		spdk_bdev_close(bvdev->bdev_desc);
-		bvdev->bdev_desc = NULL;
-		bvdev->bdev = NULL;
+		vhost_dev_bdev_remove_cpl_cb(vdev, ctx);
 		return 0;
 	}
 
