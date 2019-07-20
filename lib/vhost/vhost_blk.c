@@ -576,11 +576,6 @@ vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 {
 	struct spdk_vhost_blk_session *bvsession;
 
-	if (vsession == NULL) {
-		vhost_dev_bdev_remove_cpl_cb(vdev, ctx);
-		return 0;
-	}
-
 	bvsession = (struct spdk_vhost_blk_session *)vsession;
 	if (bvsession->requestq_poller) {
 		spdk_poller_unregister(&bvsession->requestq_poller);
@@ -599,7 +594,8 @@ bdev_remove_cb(void *remove_ctx)
 		     bvdev->vdev.name);
 
 	spdk_vhost_lock();
-	vhost_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_remove_cb, NULL);
+	vhost_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_remove_cb,
+				  vhost_dev_bdev_remove_cpl_cb, NULL);
 	spdk_vhost_unlock();
 }
 

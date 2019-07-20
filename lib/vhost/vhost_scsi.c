@@ -218,16 +218,8 @@ vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
 				   struct spdk_vhost_session *vsession, void *ctx)
 {
 	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
-	struct spdk_vhost_scsi_session *svsession;
-	struct spdk_scsi_dev_session_state *state;
-
-	if (vsession == NULL) {
-		vhost_scsi_dev_process_removed_cpl_cb(vdev, ctx);
-		return 0;
-	}
-
-	svsession = (struct spdk_vhost_scsi_session *)vsession;
-	state = &svsession->scsi_dev_state[scsi_tgt_num];
+	struct spdk_vhost_scsi_session *svsession = (struct spdk_vhost_scsi_session *)vsession;
+	struct spdk_scsi_dev_session_state *state = &svsession->scsi_dev_state[scsi_tgt_num];
 
 	if (state->dev != NULL) {
 		/* there's still a session that references this device,
@@ -261,6 +253,7 @@ process_removed_devs(struct spdk_vhost_scsi_session *svsession)
 			spdk_vhost_lock();
 			vhost_dev_foreach_session(&svsession->svdev->vdev,
 						  vhost_scsi_session_process_removed,
+						  vhost_scsi_dev_process_removed_cpl_cb,
 						  (void *)(uintptr_t)i);
 			spdk_vhost_unlock();
 		}
@@ -940,18 +933,11 @@ vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 			   struct spdk_vhost_session *vsession, void *ctx)
 {
 	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
-	struct spdk_vhost_scsi_session *svsession;
+	struct spdk_vhost_scsi_session *svsession = (struct spdk_vhost_scsi_session *)vsession;
+	struct spdk_scsi_dev_session_state *session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
 	struct spdk_scsi_dev_vhost_state *vhost_sdev;
-	struct spdk_scsi_dev_session_state *session_sdev;
 	int rc;
 
-	if (vsession == NULL) {
-		vhost_scsi_dev_add_tgt_cpl_cb(vdev, ctx);
-		return 0;
-	}
-
-	svsession = (struct spdk_vhost_scsi_session *)vsession;
-	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
 	if (!vsession->started || session_sdev->dev != NULL) {
 		/* Nothing to do. */
 		return 0;
@@ -1059,6 +1045,7 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 		     vdev->name, scsi_tgt_num, bdev_name);
 
 	vhost_dev_foreach_session(vdev, vhost_scsi_session_add_tgt,
+				  vhost_scsi_dev_add_tgt_cpl_cb,
 				  (void *)(uintptr_t)scsi_tgt_num);
 	return scsi_tgt_num;
 }
@@ -1089,16 +1076,8 @@ vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 {
 	struct scsi_tgt_hotplug_ctx *ctx = _ctx;
 	unsigned scsi_tgt_num = ctx->scsi_tgt_num;
-	struct spdk_vhost_scsi_session *svsession;
-	struct spdk_scsi_dev_session_state *state;
-
-	if (vsession == NULL) {
-		vhost_scsi_dev_remove_tgt_cpl_cb(vdev, _ctx);
-		return 0;
-	}
-
-	svsession = (struct spdk_vhost_scsi_session *)vsession;
-	state = &svsession->scsi_dev_state[scsi_tgt_num];
+	struct spdk_vhost_scsi_session *svsession = (struct spdk_vhost_scsi_session *)vsession;
+	struct spdk_scsi_dev_session_state *state = &svsession->scsi_dev_state[scsi_tgt_num];
 
 	if (!vsession->started || state->dev == NULL) {
 		/* Nothing to do */
@@ -1163,7 +1142,8 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 	scsi_dev_state->remove_ctx = cb_arg;
 	scsi_dev_state->status = VHOST_SCSI_DEV_REMOVING;
 
-	vhost_dev_foreach_session(vdev, vhost_scsi_session_remove_tgt, ctx);
+	vhost_dev_foreach_session(vdev, vhost_scsi_session_remove_tgt,
+				  vhost_scsi_dev_remove_tgt_cpl_cb, ctx);
 	return 0;
 }
 
@@ -1425,6 +1405,7 @@ destroy_session_poller_cb(void *arg)
 			/* try to detach it globally */
 			vhost_dev_foreach_session(vsession->vdev,
 						  vhost_scsi_session_process_removed,
+						  vhost_scsi_dev_process_removed_cpl_cb,
 						  (void *)(uintptr_t)i);
 		}
 	}

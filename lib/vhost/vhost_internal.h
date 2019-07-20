@@ -191,12 +191,8 @@ struct spdk_vhost_dev {
 };
 
 /**
- * Synchronized vhost session event used for backend callbacks.
- *
  * \param vdev vhost device.
- * \param vsession vhost session. If all sessions have been
- * iterated through, this function will be called one last
- * time with vsession == NULL.
+ * \param vsession vhost session.
  * \param arg user-provided parameter.
  *
  * \return negative values will break the foreach call, meaning
@@ -206,6 +202,12 @@ struct spdk_vhost_dev {
 typedef int (*spdk_vhost_session_fn)(struct spdk_vhost_dev *vdev,
 				     struct spdk_vhost_session *vsession,
 				     void *arg);
+
+/**
+ * \param vdev vhost device.
+ * \param arg user-provided parameter.
+ */
+typedef void (*spdk_vhost_dev_fn)(struct spdk_vhost_dev *vdev, void *arg);
 
 struct spdk_vhost_dev_backend {
 	uint64_t virtio_features;
@@ -310,16 +312,20 @@ int vhost_blk_controller_construct(void);
 void vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 /*
- * Call function for each active session on the provided
- * vhost device. The function will be called one-by-one
- * on each session's thread.
+ * Call a function for each session of the provided vhost device.
+ * The function will be called one-by-one on each session's thread.
  *
  * \param vdev vhost device
- * \param fn function to call
- * \param arg additional argument to \c fn
+ * \param fn function to call on each session's thread
+ * \param cpl_fn function to be called at the end of the iteration on
+ * the vhost management thread.
+ * Optional, can be NULL.
+ * \param arg additional argument to the both callbacks
  */
 void vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
-			       spdk_vhost_session_fn fn, void *arg);
+			       spdk_vhost_session_fn fn,
+			       spdk_vhost_dev_fn cpl_fn,
+			       void *arg);
 
 /**
  * Call a function on the provided lcore and block until either
