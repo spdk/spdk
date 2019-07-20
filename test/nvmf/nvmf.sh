@@ -36,11 +36,8 @@ fi
 run_test suite test/nvmf/target/nmic.sh $TEST_ARGS
 run_test suite test/nvmf/target/rpc.sh $TEST_ARGS
 run_test suite test/nvmf/target/fio.sh $TEST_ARGS
-# bdevio currently fails with tcp transport - see issue #808
-if [ "$TEST_TRANSPORT" == "rdma" ]; then
-    run_test suite test/nvmf/target/shutdown.sh $TEST_ARGS
-    run_test suite test/nvmf/target/bdevio.sh $TEST_ARGS
-fi
+run_test suite test/nvmf/target/shutdown.sh $TEST_ARGS
+run_test suite test/nvmf/target/bdevio.sh $TEST_ARGS
 
 timing_enter host
 
