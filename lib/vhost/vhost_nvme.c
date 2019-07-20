@@ -265,7 +265,7 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 	residue_len = mps - (prp1 % mps);
 	residue_len = spdk_min(len, residue_len);
 
-	vva = spdk_vhost_gpa_to_vva(vsession, prp1, residue_len);
+	vva = vhost_gpa_to_vva(vsession, prp1, residue_len);
 	if (spdk_unlikely(vva == NULL)) {
 		SPDK_ERRLOG("GPA to VVA failed\n");
 		return -1;
@@ -283,7 +283,7 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 		if (len <= mps) {
 			/* 2 PRP used */
 			task->iovcnt = 2;
-			vva = spdk_vhost_gpa_to_vva(vsession, prp2, len);
+			vva = vhost_gpa_to_vva(vsession, prp2, len);
 			if (spdk_unlikely(vva == NULL)) {
 				return -1;
 			}
@@ -292,7 +292,7 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 		} else {
 			/* PRP list used */
 			nents = (len + mps - 1) / mps;
-			vva = spdk_vhost_gpa_to_vva(vsession, prp2, nents * sizeof(*prp_list));
+			vva = vhost_gpa_to_vva(vsession, prp2, nents * sizeof(*prp_list));
 			if (spdk_unlikely(vva == NULL)) {
 				return -1;
 			}
@@ -300,7 +300,7 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 			i = 0;
 			while (len != 0) {
 				residue_len = spdk_min(len, mps);
-				vva = spdk_vhost_gpa_to_vva(vsession, prp_list[i], residue_len);
+				vva = vhost_gpa_to_vva(vsession, prp_list[i], residue_len);
 				if (spdk_unlikely(vva == NULL)) {
 					return -1;
 				}
@@ -712,8 +712,8 @@ vhost_nvme_doorbell_buffer_config(struct spdk_vhost_nvme_dev *nvme,
 		return -1;
 	}
 	/* Guest Physical Address to Host Virtual Address */
-	nvme->dbbuf_dbs = spdk_vhost_gpa_to_vva(vsession, dbs_dma_addr, 4096);
-	nvme->dbbuf_eis = spdk_vhost_gpa_to_vva(vsession, eis_dma_addr, 4096);
+	nvme->dbbuf_dbs = vhost_gpa_to_vva(vsession, dbs_dma_addr, 4096);
+	nvme->dbbuf_eis = vhost_gpa_to_vva(vsession, eis_dma_addr, 4096);
 	if (!nvme->dbbuf_dbs || !nvme->dbbuf_eis) {
 		return -1;
 	}
@@ -768,7 +768,7 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	sq->size = qsize + 1;
 	sq->sq_head = sq->sq_tail = 0;
 	requested_len = sizeof(struct spdk_nvme_cmd) * sq->size;
-	sq->sq_cmd = spdk_vhost_gpa_to_vva(nvme->vsession, dma_addr, requested_len);
+	sq->sq_cmd = vhost_gpa_to_vva(nvme->vsession, dma_addr, requested_len);
 	if (!sq->sq_cmd) {
 		return -1;
 	}
@@ -851,7 +851,7 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	cq->guest_signaled_cq_head = 0;
 	cq->need_signaled_cnt = 0;
 	requested_len = sizeof(struct spdk_nvme_cpl) * cq->size;
-	cq->cq_cqe = spdk_vhost_gpa_to_vva(nvme->vsession, dma_addr, requested_len);
+	cq->cq_cqe = vhost_gpa_to_vva(nvme->vsession, dma_addr, requested_len);
 	if (!cq->cq_cqe) {
 		return -1;
 	}
@@ -910,7 +910,7 @@ spdk_vhost_nvme_get_by_name(int vid)
 }
 
 int
-spdk_vhost_nvme_get_cap(int vid, uint64_t *cap)
+vhost_nvme_get_cap(int vid, uint64_t *cap)
 {
 	struct spdk_vhost_nvme_dev *nvme;
 
@@ -924,7 +924,7 @@ spdk_vhost_nvme_get_cap(int vid, uint64_t *cap)
 }
 
 int
-spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf)
+vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf)
 {
 	struct spdk_nvme_cmd *req = (struct spdk_nvme_cmd *)cmd;
 	struct spdk_nvme_cpl *cpl = (struct spdk_nvme_cpl *)cqe;
@@ -998,7 +998,7 @@ spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf)
 }
 
 int
-spdk_vhost_nvme_set_bar_mr(int vid, void *bar_addr, uint64_t bar_size)
+vhost_nvme_set_bar_mr(int vid, void *bar_addr, uint64_t bar_size)
 {
 	struct spdk_vhost_nvme_dev *nvme;
 
@@ -1016,7 +1016,7 @@ spdk_vhost_nvme_set_bar_mr(int vid, void *bar_addr, uint64_t bar_size)
 }
 
 int
-spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd)
+vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd)
 {
 	struct spdk_vhost_nvme_dev *nvme;
 	struct spdk_vhost_nvme_cq *cq;
@@ -1106,7 +1106,7 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 	/* Start the NVMe Poller */
 	nvme->requestq_poller = spdk_poller_register(nvme_worker, nvme, 0);
 
-	spdk_vhost_session_start_done(vsession, 0);
+	vhost_session_start_done(vsession, 0);
 	return 0;
 }
 
@@ -1122,12 +1122,12 @@ spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
 		return -1;
 	}
 
-	pg = spdk_vhost_get_poll_group(vsession->vdev->cpumask);
-	rc = spdk_vhost_session_send_event(pg, vsession, spdk_vhost_nvme_start_cb,
-					   3, "start session");
+	pg = vhost_get_poll_group(vsession->vdev->cpumask);
+	rc = vhost_session_send_event(pg, vsession, spdk_vhost_nvme_start_cb,
+				      3, "start session");
 
 	if (rc != 0) {
-		spdk_vhost_put_poll_group(pg);
+		vhost_put_poll_group(pg);
 	}
 
 	return rc;
@@ -1186,7 +1186,7 @@ destroy_device_poller_cb(void *arg)
 	nvme->dataplane_started = false;
 
 	spdk_poller_unregister(&nvme->stop_poller);
-	spdk_vhost_session_stop_done(nvme->vsession, 0);
+	vhost_session_stop_done(nvme->vsession, 0);
 
 	spdk_vhost_unlock();
 	return -1;
@@ -1199,7 +1199,7 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 
 	if (nvme == NULL) {
-		spdk_vhost_session_stop_done(vsession, -1);
+		vhost_session_stop_done(vsession, -1);
 		return -1;
 	}
 
@@ -1215,8 +1215,8 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 static int
 spdk_vhost_nvme_stop(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession->poll_group, vsession,
-					     spdk_vhost_nvme_stop_cb, 3, "start session");
+	return vhost_session_send_event(vsession->poll_group, vsession,
+					spdk_vhost_nvme_stop_cb, 3, "start session");
 }
 
 static void
@@ -1293,7 +1293,7 @@ static const struct spdk_vhost_dev_backend spdk_vhost_nvme_device_backend = {
 	.stop_session = spdk_vhost_nvme_stop,
 	.dump_info_json = spdk_vhost_nvme_dump_info_json,
 	.write_config_json = spdk_vhost_nvme_write_config_json,
-	.remove_device = spdk_vhost_nvme_dev_remove,
+	.remove_device = vhost_nvme_dev_remove,
 };
 
 static int
@@ -1377,7 +1377,7 @@ spdk_vhost_nvme_ctrlr_identify_update(struct spdk_vhost_nvme_dev *dev)
 }
 
 int
-spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t num_io_queues)
+vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t num_io_queues)
 {
 	struct spdk_vhost_nvme_dev *dev;
 	int rc;
@@ -1393,8 +1393,8 @@ spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t nu
 	}
 
 	spdk_vhost_lock();
-	rc = spdk_vhost_dev_register(&dev->vdev, name, cpumask,
-				     &spdk_vhost_nvme_device_backend);
+	rc = vhost_dev_register(&dev->vdev, name, cpumask,
+				&spdk_vhost_nvme_device_backend);
 
 	if (rc) {
 		free(dev);
@@ -1414,7 +1414,7 @@ spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t nu
 }
 
 int
-spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev)
+vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 	struct spdk_vhost_nvme_ns *ns;
@@ -1433,7 +1433,7 @@ spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev)
 		}
 	}
 
-	rc = spdk_vhost_dev_unregister(vdev);
+	rc = vhost_dev_unregister(vdev);
 	if (rc != 0) {
 		return rc;
 	}
@@ -1443,7 +1443,7 @@ spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev)
 }
 
 int
-spdk_vhost_nvme_dev_add_ns(struct spdk_vhost_dev *vdev, const char *bdev_name)
+vhost_nvme_dev_add_ns(struct spdk_vhost_dev *vdev, const char *bdev_name)
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 	struct spdk_vhost_nvme_ns *ns;
@@ -1484,7 +1484,7 @@ spdk_vhost_nvme_dev_add_ns(struct spdk_vhost_dev *vdev, const char *bdev_name)
 }
 
 int
-spdk_vhost_nvme_controller_construct(void)
+vhost_nvme_controller_construct(void)
 {
 	struct spdk_conf_section *sp;
 	const char *name;
@@ -1519,7 +1519,7 @@ spdk_vhost_nvme_controller_construct(void)
 			io_queues = 1;
 		}
 
-		rc = spdk_vhost_nvme_dev_construct(name, cpumask, io_queues);
+		rc = vhost_nvme_dev_construct(name, cpumask, io_queues);
 		if (rc < 0) {
 			SPDK_ERRLOG("VhostNvme%u: Construct failed\n", ctrlr_num);
 			return -1;
@@ -1536,7 +1536,7 @@ spdk_vhost_nvme_controller_construct(void)
 				SPDK_ERRLOG("namespace configuration missing bdev name\n");
 				break;
 			}
-			rc = spdk_vhost_nvme_dev_add_ns(vdev, bdev_name);
+			rc = vhost_nvme_dev_add_ns(vdev, bdev_name);
 			if (rc < 0) {
 				SPDK_WARNLOG("VhostNvme%u: Construct Namespace with %s failed\n",
 					     ctrlr_num, bdev_name);

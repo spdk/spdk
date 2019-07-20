@@ -105,8 +105,8 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 		*task->status = status;
 	}
 
-	spdk_vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq, task->req_idx,
-					task->used_len);
+	vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq, task->req_idx,
+				   task->used_len);
 	blk_task_finish(task);
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
 }
@@ -130,7 +130,7 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 	uint32_t desc_handled_cnt;
 	int rc;
 
-	rc = spdk_vhost_vq_get_desc(vsession, vq, req_idx, &desc, &desc_table, &desc_table_size);
+	rc = vhost_vq_get_desc(vsession, vq, req_idx, &desc, &desc_table, &desc_table_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
 		return -1;
@@ -148,7 +148,7 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 			return -1;
 		}
 
-		if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vsession, iovs, &cnt, desc))) {
+		if (spdk_unlikely(vhost_vring_desc_to_iov(vsession, iovs, &cnt, desc))) {
 			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "%s: invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
 				      vsession->name, req_idx, cnt);
 			return -1;
@@ -156,9 +156,9 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 
 		len += desc->len;
 
-		out_cnt += spdk_vhost_vring_desc_is_wr(desc);
+		out_cnt += vhost_vring_desc_is_wr(desc);
 
-		rc = spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_size);
+		rc = vhost_vring_desc_get_next(&desc, desc_table, desc_table_size);
 		if (rc != 0) {
 			SPDK_ERRLOG("%s: descriptor chain at index %"PRIu16" terminated unexpectedly.\n",
 				    vsession->name, req_idx);
@@ -194,8 +194,8 @@ static void
 blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 {
 	*task->status = success ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR;
-	spdk_vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq, task->req_idx,
-					task->used_len);
+	vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq, task->req_idx,
+				   task->used_len);
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
 		      task->req_idx, success ? "OK" : "FAIL");
 	blk_task_finish(task);
@@ -425,7 +425,7 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 
-	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
+	reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	if (!reqs_cnt) {
 		return;
 	}
@@ -437,7 +437,7 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
 			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
 				    vsession->name, reqs[i], vq->vring.size);
-			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
+			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
 
@@ -445,7 +445,7 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 		if (spdk_unlikely(task->used)) {
 			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
 				    vsession->name, reqs[i]);
-			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
+			vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
 
@@ -478,7 +478,7 @@ vdev_worker(void *arg)
 		process_vq(bvsession, &vsession->virtqueue[q_idx]);
 	}
 
-	spdk_vhost_session_used_signal(vsession);
+	vhost_session_used_signal(vsession);
 
 	return -1;
 }
@@ -491,7 +491,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_v
 	uint32_t length;
 	uint16_t iovcnt, req_idx;
 
-	if (spdk_vhost_vq_avail_ring_get(vq, &req_idx, 1) != 1) {
+	if (vhost_vq_avail_ring_get(vq, &req_idx, 1) != 1) {
 		return;
 	}
 
@@ -501,7 +501,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_v
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK_DATA, "Aborting request %" PRIu16"\n", req_idx);
 	}
 
-	spdk_vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
+	vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
 }
 
 static int
@@ -515,7 +515,7 @@ no_bdev_vdev_worker(void *arg)
 		no_bdev_process_vq(bvsession, &vsession->virtqueue[q_idx]);
 	}
 
-	spdk_vhost_session_used_signal(vsession);
+	vhost_session_used_signal(vsession);
 
 	if (vsession->task_cnt == 0 && bvsession->io_channel) {
 		spdk_put_io_channel(bvsession->io_channel);
@@ -557,8 +557,9 @@ spdk_vhost_blk_get_dev(struct spdk_vhost_dev *vdev)
 }
 
 static int
-_spdk_vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev, struct spdk_vhost_session *vsession,
-				   void *ctx)
+vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
+			     struct spdk_vhost_session *vsession,
+			     void *ctx)
 {
 	struct spdk_vhost_blk_session *bvsession;
 
@@ -596,7 +597,7 @@ bdev_remove_cb(void *remove_ctx)
 		     bvdev->vdev.name);
 
 	spdk_vhost_lock();
-	spdk_vhost_dev_foreach_session(&bvdev->vdev, _spdk_vhost_session_bdev_remove_cb, NULL);
+	vhost_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_remove_cb, NULL);
 	spdk_vhost_unlock();
 }
 
@@ -664,8 +665,8 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 }
 
 static int
-spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
-			struct spdk_vhost_session *vsession, void *unused)
+vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
+		   struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 	struct spdk_vhost_blk_dev *bvdev;
@@ -705,22 +706,22 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: started poller on lcore %d\n",
 		     vsession->name, spdk_env_get_current_core());
 out:
-	spdk_vhost_session_start_done(vsession, rc);
+	vhost_session_start_done(vsession, rc);
 	return rc;
 }
 
 static int
-spdk_vhost_blk_start(struct spdk_vhost_session *vsession)
+vhost_blk_start(struct spdk_vhost_session *vsession)
 {
 	struct vhost_poll_group *pg;
 	int rc;
 
-	pg = spdk_vhost_get_poll_group(vsession->vdev->cpumask);
-	rc = spdk_vhost_session_send_event(pg, vsession, spdk_vhost_blk_start_cb,
-					   3, "start session");
+	pg = vhost_get_poll_group(vsession->vdev->cpumask);
+	rc = vhost_session_send_event(pg, vsession, vhost_blk_start_cb,
+				      3, "start session");
 
 	if (rc != 0) {
-		spdk_vhost_put_poll_group(pg);
+		vhost_put_poll_group(pg);
 	}
 
 	return rc;
@@ -743,7 +744,7 @@ destroy_session_poller_cb(void *arg)
 
 	for (i = 0; i < vsession->max_queues; i++) {
 		vsession->virtqueue[i].next_event_time = 0;
-		spdk_vhost_vq_used_signal(vsession, &vsession->virtqueue[i]);
+		vhost_vq_used_signal(vsession, &vsession->virtqueue[i]);
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: stopping poller on lcore %d\n",
@@ -756,15 +757,15 @@ destroy_session_poller_cb(void *arg)
 
 	free_task_pool(bvsession);
 	spdk_poller_unregister(&bvsession->stop_poller);
-	spdk_vhost_session_stop_done(vsession, 0);
+	vhost_session_stop_done(vsession, 0);
 
 	spdk_vhost_unlock();
 	return -1;
 }
 
 static int
-spdk_vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
-		       struct spdk_vhost_session *vsession, void *unused)
+vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
+		  struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 
@@ -775,14 +776,14 @@ spdk_vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 }
 
 static int
-spdk_vhost_blk_stop(struct spdk_vhost_session *vsession)
+vhost_blk_stop(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession->poll_group, vsession,
-					     spdk_vhost_blk_stop_cb, 3, "stop session");
+	return vhost_session_send_event(vsession->poll_group, vsession,
+					vhost_blk_stop_cb, 3, "stop session");
 }
 
 static void
-spdk_vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev *bdev = spdk_vhost_blk_get_dev(vdev);
 	struct spdk_vhost_blk_dev *bvdev;
@@ -804,7 +805,7 @@ spdk_vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_writ
 }
 
 static void
-spdk_vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 
@@ -827,11 +828,11 @@ spdk_vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_w
 	spdk_json_write_object_end(w);
 }
 
-static int spdk_vhost_blk_destroy(struct spdk_vhost_dev *dev);
+static int vhost_blk_destroy(struct spdk_vhost_dev *dev);
 
 static int
-spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
-			  uint32_t len)
+vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
+		     uint32_t len)
 {
 	struct virtio_blk_config blkcfg;
 	struct spdk_vhost_blk_dev *bvdev;
@@ -908,16 +909,16 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI) | (1ULL << VIRTIO_BLK_F_DISCARD) |
 	(1ULL << VIRTIO_BLK_F_WRITE_ZEROES),
 	.session_ctx_size = sizeof(struct spdk_vhost_blk_session) - sizeof(struct spdk_vhost_session),
-	.start_session =  spdk_vhost_blk_start,
-	.stop_session = spdk_vhost_blk_stop,
-	.vhost_get_config = spdk_vhost_blk_get_config,
-	.dump_info_json = spdk_vhost_blk_dump_info_json,
-	.write_config_json = spdk_vhost_blk_write_config_json,
-	.remove_device = spdk_vhost_blk_destroy,
+	.start_session =  vhost_blk_start,
+	.stop_session = vhost_blk_stop,
+	.vhost_get_config = vhost_blk_get_config,
+	.dump_info_json = vhost_blk_dump_info_json,
+	.write_config_json = vhost_blk_write_config_json,
+	.remove_device = vhost_blk_destroy,
 };
 
 int
-spdk_vhost_blk_controller_construct(void)
+vhost_blk_controller_construct(void)
 {
 	struct spdk_conf_section *sp;
 	unsigned ctrlr_num;
@@ -991,7 +992,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	bvdev->bdev = bdev;
 	bvdev->readonly = readonly;
-	ret = spdk_vhost_dev_register(&bvdev->vdev, name, cpumask, &vhost_blk_device_backend);
+	ret = vhost_dev_register(&bvdev->vdev, name, cpumask, &vhost_blk_device_backend);
 	if (ret != 0) {
 		spdk_bdev_close(bvdev->bdev_desc);
 		goto out;
@@ -1013,7 +1014,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	if (features && rte_vhost_driver_enable_features(bvdev->vdev.path, features)) {
 		SPDK_ERRLOG("%s: failed to enable features 0x%"PRIx64"\n", name, features);
 
-		if (spdk_vhost_dev_unregister(&bvdev->vdev) != 0) {
+		if (vhost_dev_unregister(&bvdev->vdev) != 0) {
 			SPDK_ERRLOG("%s: failed to remove device\n", name);
 		}
 
@@ -1032,13 +1033,13 @@ out:
 }
 
 static int
-spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
+vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 	int rc;
 
 	assert(bvdev != NULL);
-	rc = spdk_vhost_dev_unregister(&bvdev->vdev);
+	rc = vhost_dev_unregister(&bvdev->vdev);
 	if (rc != 0) {
 		return rc;
 	}

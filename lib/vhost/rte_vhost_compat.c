@@ -57,7 +57,7 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 	struct vhost_user_msg *msg = _msg;
 	struct spdk_vhost_session *vsession;
 
-	vsession = spdk_vhost_session_find_by_vid(vid);
+	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
 		SPDK_ERRLOG("Received a message to unitialized session (vid %d).\n", vid);
 		assert(false);
@@ -151,7 +151,7 @@ spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 	struct vhost_user_msg *msg = _msg;
 	struct spdk_vhost_session *vsession;
 
-	vsession = spdk_vhost_session_find_by_vid(vid);
+	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
 		SPDK_ERRLOG("Received a message to unitialized session (vid %d).\n", vid);
 		assert(false);
@@ -203,7 +203,7 @@ struct rte_vhost_user_extern_ops g_spdk_extern_vhost_ops = {
 };
 
 void
-spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession)
+vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession)
 {
 	int rc;
 
@@ -216,7 +216,7 @@ spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession)
 }
 
 void
-spdk_vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev)
+vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev)
 {
 	uint64_t protocol_features = 0;
 
@@ -227,13 +227,13 @@ spdk_vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev)
 
 #else /* SPDK_CONFIG_VHOST_INTERNAL_LIB */
 void
-spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession)
+vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession)
 {
 	/* nothing to do. all the changes are already incorporated into rte_vhost */
 }
 
 void
-spdk_vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev)
+vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev)
 {
 	/* nothing to do */
 }
