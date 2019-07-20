@@ -65,6 +65,7 @@ do
 done
 $rpc_py < $testdir/rpcs.txt
 timing_exit create_subsystems
+sleep 1
 
 # Test 1: Kill the initiator unexpectedly with no I/O outstanding
 
