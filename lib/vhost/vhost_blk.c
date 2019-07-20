@@ -528,15 +528,7 @@ no_bdev_vdev_worker(void *arg)
 static struct spdk_vhost_blk_session *
 to_blk_session(struct spdk_vhost_session *vsession)
 {
-	if (vsession == NULL) {
-		return NULL;
-	}
-
-	if (vsession->vdev->backend != &vhost_blk_device_backend) {
-		SPDK_ERRLOG("%s: not a vhost-blk device\n", vsession->vdev->name);
-		return NULL;
-	}
-
+	assert(vsession->vdev->backend == &vhost_blk_device_backend);
 	return (struct spdk_vhost_blk_session *)vsession;
 }
 
@@ -580,7 +572,6 @@ _spdk_vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev, struct spdk_vhos
 		struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 
 		assert(bvdev != NULL);
-
 		spdk_bdev_close(bvdev->bdev_desc);
 		bvdev->bdev_desc = NULL;
 		bvdev->bdev = NULL;
@@ -676,17 +667,9 @@ static int
 spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 			struct spdk_vhost_session *vsession, void *unused)
 {
+	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 	struct spdk_vhost_blk_dev *bvdev;
-	struct spdk_vhost_blk_session *bvsession;
 	int i, rc = 0;
-
-	bvsession = to_blk_session(vsession);
-	if (bvsession == NULL) {
-		SPDK_ERRLOG("%s: trying to start non-blk session as a blk one.\n",
-			    vdev->name);
-		rc = -1;
-		goto out;
-	}
 
 	bvdev = to_blk_dev(vdev);
 	assert(bvdev != NULL);
@@ -783,22 +766,12 @@ static int
 spdk_vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 		       struct spdk_vhost_session *vsession, void *unused)
 {
-	struct spdk_vhost_blk_session *bvsession;
-
-	bvsession = to_blk_session(vsession);
-	if (bvsession == NULL) {
-		SPDK_ERRLOG("Trying to stop non-blk controller as a blk one.\n");
-		goto err;
-	}
+	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 
 	spdk_poller_unregister(&bvsession->requestq_poller);
 	bvsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
 				 bvsession, 1000);
 	return 0;
-
-err:
-	spdk_vhost_session_stop_done(vsession, -1);
-	return -1;
 }
 
 static int
@@ -815,10 +788,6 @@ spdk_vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_writ
 	struct spdk_vhost_blk_dev *bvdev;
 
 	bvdev = to_blk_dev(vdev);
-	if (bvdev == NULL) {
-		return;
-	}
-
 	assert(bvdev != NULL);
 	spdk_json_write_named_object_begin(w, "block");
 
@@ -840,10 +809,7 @@ spdk_vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_w
 	struct spdk_vhost_blk_dev *bvdev;
 
 	bvdev = to_blk_dev(vdev);
-	if (bvdev == NULL) {
-		return;
-	}
-
+	assert(bvdev != NULL);
 	if (!bvdev->bdev) {
 		return;
 	}
@@ -874,11 +840,7 @@ spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	uint64_t blkcnt;
 
 	bvdev = to_blk_dev(vdev);
-	if (bvdev == NULL) {
-		SPDK_ERRLOG("Trying to get virito_blk configuration failed\n");
-		return -1;
-	}
-
+	assert(bvdev != NULL);
 	bdev = bvdev->bdev;
 	if (bdev == NULL) {
 		/* We can't just return -1 here as this GET_CONFIG message might
@@ -1075,10 +1037,7 @@ spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 	int rc;
 
-	if (!bvdev) {
-		return -EINVAL;
-	}
-
+	assert(bvdev != NULL);
 	rc = spdk_vhost_dev_unregister(&bvdev->vdev);
 	if (rc != 0) {
 		return rc;

@@ -815,15 +815,7 @@ to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 static struct spdk_vhost_scsi_session *
 to_scsi_session(struct spdk_vhost_session *vsession)
 {
-	if (vsession == NULL) {
-		return NULL;
-	}
-
-	if (vsession->vdev->backend != &spdk_vhost_scsi_device_backend) {
-		SPDK_ERRLOG("%s: not a vhost-scsi device.\n", vsession->vdev->name);
-		return NULL;
-	}
-
+	assert(vsession->vdev->backend == &spdk_vhost_scsi_device_backend);
 	return (struct spdk_vhost_scsi_session *)vsession;
 }
 
@@ -855,10 +847,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
 	int rc, i;
 
-	if (svdev == NULL) {
-		return -EINVAL;
-	}
-
+	assert(svdev != NULL);
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		if (svdev->scsi_dev_state[i].dev) {
 			if (vdev->registered) {
@@ -890,7 +879,8 @@ spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num)
 
 	assert(num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
 	svdev = to_scsi_dev(vdev);
-	if (svdev == NULL || svdev->scsi_dev_state[num].status != VHOST_SCSI_DEV_PRESENT) {
+	assert(svdev != NULL);
+	if (svdev->scsi_dev_state[num].status != VHOST_SCSI_DEV_PRESENT) {
 		return NULL;
 	}
 
@@ -998,10 +988,7 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 	const char *bdev_names_list[1];
 
 	svdev = to_scsi_dev(vdev);
-	if (svdev == NULL) {
-		return -EINVAL;
-	}
-
+	assert(svdev != NULL);
 	if (scsi_tgt_num < 0) {
 		for (scsi_tgt_num = 0; scsi_tgt_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; scsi_tgt_num++) {
 			if (svdev->scsi_dev_state[scsi_tgt_num].dev == NULL) {
@@ -1127,10 +1114,7 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 	}
 
 	svdev = to_scsi_dev(vdev);
-	if (svdev == NULL) {
-		return -ENODEV;
-	}
-
+	assert(svdev != NULL);
 	scsi_dev_state = &svdev->scsi_dev_state[scsi_tgt_num];
 	if (scsi_dev_state->dev == NULL || scsi_dev_state->status == VHOST_SCSI_DEV_ADDING) {
 		SPDK_ERRLOG("%s: SCSI target %u is not occupied\n", vdev->name, scsi_tgt_num);
@@ -1296,15 +1280,11 @@ static int
 spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 			 struct spdk_vhost_session *vsession, void *unused)
 {
-	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_scsi_session *svsession;
+	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
+	struct spdk_vhost_scsi_dev *svdev = svsession->svdev;
 	struct spdk_scsi_dev_vhost_state *state;
 	uint32_t i;
 	int rc;
-
-	svsession = to_scsi_session(vsession);
-	assert(svsession != NULL);
-	svdev = svsession->svdev;
 
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = VIRTIO_SCSI_REQUESTQ; i < vsession->max_queues; i++) {
@@ -1360,16 +1340,9 @@ out:
 static int
 spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 {
-	struct spdk_vhost_scsi_session *svsession;
+	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
 	struct spdk_vhost_scsi_dev *svdev;
 	int rc;
-
-	svsession = to_scsi_session(vsession);
-	if (svsession == NULL) {
-		SPDK_ERRLOG("%s: trying to start non-scsi session as a scsi one.\n",
-			    vsession->name);
-		return -1;
-	}
 
 	svdev = to_scsi_dev(vsession->vdev);
 	assert(svdev != NULL);
@@ -1450,10 +1423,7 @@ static int
 spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 			struct spdk_vhost_session *vsession, void *unused)
 {
-	struct spdk_vhost_scsi_session *svsession;
-
-	svsession = to_scsi_session(vsession);
-	assert(svsession != NULL);
+	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
 
 	/* Stop receiving new I/O requests */
 	spdk_poller_unregister(&svsession->requestq_poller);
@@ -1476,14 +1446,9 @@ spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 static int
 spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 {
-	struct spdk_vhost_scsi_session *svsession;
+	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
 	int rc;
 
-	svsession = to_scsi_session(vsession);
-	if (svsession == NULL) {
-		SPDK_ERRLOG("Trying to stop non-scsi session as a scsi one.\n");
-		return -1;
-	}
 	rc = spdk_vhost_session_send_event(vsession->poll_group, vsession,
 					   spdk_vhost_scsi_stop_cb, 3, "stop session");
 	if (rc != 0) {
@@ -1551,10 +1516,6 @@ spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_
 	struct spdk_scsi_dev *scsi_dev;
 	struct spdk_scsi_lun *lun;
 	uint32_t i;
-
-	if (to_scsi_dev(vdev) == NULL) {
-		return;
-	}
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "method", "construct_vhost_scsi_controller");
