@@ -79,8 +79,14 @@ struct vhost_session_fn_ctx {
 	/** ID of the session to send event to. */
 	uint32_t vsession_id;
 
-	/** User callback function to be executed on given thread. */
+	/** User provided function to be executed on session's thread. */
 	spdk_vhost_session_fn cb_fn;
+
+	/**
+	 * User provided function to be called on the init thread
+	 * after iterating through all sessions.
+	 */
+	spdk_vhost_dev_fn cpl_fn;
 
 	/** Custom user context */
 	void *user_ctx;
@@ -379,11 +385,6 @@ static int
 vhost_session_set_coalescing(struct spdk_vhost_dev *vdev,
 			     struct spdk_vhost_session *vsession, void *ctx)
 {
-	if (vsession == NULL) {
-		vhost_dev_set_coalescing_cpl_cb(vdev, ctx);
-		return 0;
-	}
-
 	vsession->coalescing_delay_time_base =
 		vdev->coalescing_delay_us * spdk_get_ticks_hz() / 1000000ULL;
 	vsession->coalescing_io_rate_threshold =
@@ -423,7 +424,8 @@ spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 		return rc;
 	}
 
-	vhost_dev_foreach_session(vdev, vhost_session_set_coalescing, NULL);
+	vhost_dev_foreach_session(vdev, vhost_session_set_coalescing,
+				  vhost_dev_set_coalescing_cpl_cb, NULL);
 	return 0;
 }
 
@@ -998,7 +1000,7 @@ foreach_session_finish_cb(void *arg1)
 	assert(vdev->pending_async_op_num > 0);
 	vdev->pending_async_op_num--;
 	/* Call fn one last time with vsession == NULL */
-	ctx->cb_fn(vdev, NULL, ctx->user_ctx);
+	ctx->cpl_fn(vdev, ctx->user_ctx);
 
 	pthread_mutex_unlock(&g_vhost_mutex);
 	free(ctx);
@@ -1082,7 +1084,9 @@ foreach_session_continue(struct vhost_session_fn_ctx *ev_ctx,
 
 void
 vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
-			  spdk_vhost_session_fn fn, void *arg)
+			  spdk_vhost_session_fn fn,
+			  spdk_vhost_dev_fn cpl_fn,
+			  void *arg)
 {
 	struct spdk_vhost_session *vsession = TAILQ_FIRST(&vdev->vsessions);
 	struct vhost_session_fn_ctx *ev_ctx;
@@ -1096,6 +1100,7 @@ vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 
 	ev_ctx->vdev = vdev;
 	ev_ctx->cb_fn = fn;
+	ev_ctx->cpl_fn = cpl_fn;
 	ev_ctx->user_ctx = arg;
 
 	assert(vdev->pending_async_op_num < UINT32_MAX);
