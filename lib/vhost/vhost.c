@@ -373,7 +373,7 @@ static int
 vhost_session_set_coalescing(struct spdk_vhost_dev *vdev,
 			     struct spdk_vhost_session *vsession, void *ctx)
 {
-	if (vdev == NULL || vsession == NULL) {
+	if (vsession == NULL) {
 		/* nothing to do */
 		return 0;
 	}

@@ -193,9 +193,7 @@ struct spdk_vhost_dev {
 /**
  * Synchronized vhost session event used for backend callbacks.
  *
- * \param vdev vhost device. If the device has been deleted
- * in the meantime, this function will be called one last
- * time with vdev == NULL.
+ * \param vdev vhost device.
  * \param vsession vhost session. If all sessions have been
  * iterated through, this function will be called one last
  * time with vsession == NULL.

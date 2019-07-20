@@ -563,11 +563,6 @@ vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 {
 	struct spdk_vhost_blk_session *bvsession;
 
-	if (vdev == NULL) {
-		/* Nothing to do */
-		return 0;
-	}
-
 	if (vsession == NULL) {
 		/* All sessions have been notified, time to close the bdev */
 		struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
