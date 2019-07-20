@@ -288,8 +288,6 @@ struct spdk_nvmf_tcp_transport {
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
 };
 
-static void spdk_nvmf_tcp_qpair_process_pending(struct spdk_nvmf_tcp_transport *ttransport,
-		struct spdk_nvmf_tcp_qpair *tqpair);
 static bool spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				      struct spdk_nvmf_tcp_req *tcp_req);
 static void spdk_nvmf_tcp_handle_pending_c2h_data_queue(struct spdk_nvmf_tcp_qpair *tqpair);
@@ -782,7 +780,6 @@ spdk_nvmf_tcp_qpair_flush_pdus_internal(struct spdk_nvmf_tcp_qpair *tqpair)
 	struct nvme_tcp_pdu *pdu;
 	int pdu_length;
 	TAILQ_HEAD(, nvme_tcp_pdu) completed_pdus_list;
-	struct spdk_nvmf_tcp_transport *ttransport;
 
 	pdu = TAILQ_FIRST(&tqpair->send_queue);
 
@@ -849,9 +846,6 @@ spdk_nvmf_tcp_qpair_flush_pdus_internal(struct spdk_nvmf_tcp_qpair *tqpair)
 		pdu->cb_fn(pdu->cb_arg);
 		spdk_nvmf_tcp_pdu_put(tqpair, pdu);
 	}
-
-	ttransport = SPDK_CONTAINEROF(tqpair->qpair.transport, struct spdk_nvmf_tcp_transport, transport);
-	spdk_nvmf_tcp_qpair_process_pending(ttransport, tqpair);
 
 	return TAILQ_EMPTY(&tqpair->send_queue) ? 0 : 1;
 }
