@@ -132,7 +132,7 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 
 	rc = spdk_vhost_vq_get_desc(vsession, vq, req_idx, &desc, &desc_table, &desc_table_size);
 	if (rc != 0) {
-		SPDK_ERRLOG("%s: Invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
+		SPDK_ERRLOG("%s: invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
 		return -1;
 	}
 
@@ -143,14 +143,14 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 		 * Should not happen if request is well formatted, otherwise this is a BUG.
 		 */
 		if (spdk_unlikely(cnt == *iovs_cnt)) {
-			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Max IOVs in request reached (req_idx = %"PRIu16").\n",
-				      req_idx);
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "%s: max IOVs in request reached (req_idx = %"PRIu16").\n",
+				      vsession->name, req_idx);
 			return -1;
 		}
 
 		if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vsession, iovs, &cnt, desc))) {
-			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
-				      req_idx, cnt);
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "%s: invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
+				      vsession->name, req_idx, cnt);
 			return -1;
 		}
 
@@ -160,8 +160,8 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 
 		rc = spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_size);
 		if (rc != 0) {
-			SPDK_ERRLOG("%s: Descriptor chain at index %"PRIu16" terminated unexpectedly.\n",
-				    vdev->name, req_idx);
+			SPDK_ERRLOG("%s: descriptor chain at index %"PRIu16" terminated unexpectedly.\n",
+				    vsession->name, req_idx);
 			return -1;
 		} else if (desc == NULL) {
 			break;
@@ -171,7 +171,7 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 		if (spdk_unlikely(desc_handled_cnt > desc_table_size)) {
 			/* Break a cycle and report an error, if any. */
 			SPDK_ERRLOG("%s: found a cycle in the descriptor chain: desc_table_size = %d, desc_handled_cnt = %d.\n",
-				    vdev->name, desc_table_size, desc_handled_cnt);
+				    vsession->name, desc_table_size, desc_handled_cnt);
 			return -1;
 		}
 	}
@@ -237,7 +237,7 @@ blk_request_queue_io(struct spdk_vhost_blk_task *task)
 
 	rc = spdk_bdev_queue_io_wait(bdev, bvsession->io_channel, &task->bdev_io_wait);
 	if (rc != 0) {
-		SPDK_ERRLOG("Queue io failed in vhost_blk, rc=%d\n", rc);
+		SPDK_ERRLOG("%s: failed to queue I/O, rc=%d\n", bvsession->vsession.name, rc);
 		invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
 	}
 }
@@ -419,7 +419,6 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 static void
 process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	struct spdk_vhost_blk_task *task;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	int rc;
@@ -437,7 +436,7 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 
 		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
 			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
-				    bvdev->vdev.name, reqs[i], vq->vring.size);
+				    vsession->name, reqs[i], vq->vring.size);
 			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
@@ -445,7 +444,7 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 		task = &((struct spdk_vhost_blk_task *)vq->tasks)[reqs[i]];
 		if (spdk_unlikely(task->used)) {
 			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
-				    bvdev->vdev.name, reqs[i]);
+				    vsession->name, reqs[i]);
 			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
@@ -602,7 +601,7 @@ bdev_remove_cb(void *remove_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
 
-	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
+	SPDK_WARNLOG("%s: hot-removing bdev - all further requests will fail.\n",
 		     bvdev->vdev.name);
 
 	spdk_vhost_lock();
@@ -632,7 +631,6 @@ static int
 alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 {
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
-	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	struct spdk_vhost_virtqueue *vq;
 	struct spdk_vhost_blk_task *task;
 	uint32_t task_cnt;
@@ -648,8 +646,8 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 		task_cnt = vq->vring.size;
 		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
 			/* sanity check */
-			SPDK_ERRLOG("Controller %s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
-				    bvdev->vdev.name, i, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
+			SPDK_ERRLOG("%s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
+				    vsession->name, i, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
 			free_task_pool(bvsession);
 			return -1;
 		}
@@ -657,8 +655,8 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 					 SPDK_CACHE_LINE_SIZE, NULL,
 					 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (vq->tasks == NULL) {
-			SPDK_ERRLOG("Controller %s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
-				    bvdev->vdev.name, task_cnt, i);
+			SPDK_ERRLOG("%s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
+				    vsession->name, task_cnt, i);
 			free_task_pool(bvsession);
 			return -1;
 		}
@@ -684,7 +682,8 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 
 	bvsession = to_blk_session(vsession);
 	if (bvsession == NULL) {
-		SPDK_ERRLOG("Trying to start non-blk controller as a blk one.\n");
+		SPDK_ERRLOG("%s: trying to start non-blk session as a blk one.\n",
+			    vdev->name);
 		rc = -1;
 		goto out;
 	}
@@ -696,7 +695,7 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = 0; i < vsession->max_queues; i++) {
 		if (vsession->virtqueue[i].vring.desc == NULL) {
-			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vdev->name, i);
+			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vsession->name, i);
 			rc = -1;
 			goto out;
 		}
@@ -704,7 +703,7 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 
 	rc = alloc_task_pool(bvsession);
 	if (rc != 0) {
-		SPDK_ERRLOG("%s: failed to alloc task pool.\n", bvdev->vdev.name);
+		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vsession->name);
 		goto out;
 	}
 
@@ -712,7 +711,7 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 		bvsession->io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
 		if (!bvsession->io_channel) {
 			free_task_pool(bvsession);
-			SPDK_ERRLOG("Controller %s: IO channel allocation failed\n", vdev->name);
+			SPDK_ERRLOG("%s: I/O channel allocation failed\n", vsession->name);
 			rc = -1;
 			goto out;
 		}
@@ -720,8 +719,8 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 
 	bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
 				     bvsession, 0);
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
-		     vdev->name, spdk_env_get_current_core());
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: started poller on lcore %d\n",
+		     vsession->name, spdk_env_get_current_core());
 out:
 	spdk_vhost_session_start_done(vsession, rc);
 	return rc;
@@ -764,7 +763,8 @@ destroy_session_poller_cb(void *arg)
 		spdk_vhost_vq_used_signal(vsession, &vsession->virtqueue[i]);
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n", vsession->vdev->name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: stopping poller on lcore %d\n",
+		     vsession->name, spdk_env_get_current_core());
 
 	if (bvsession->io_channel) {
 		spdk_put_io_channel(bvsession->io_channel);
@@ -1008,7 +1008,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	spdk_vhost_lock();
 	bdev = spdk_bdev_get_by_name(dev_name);
 	if (bdev == NULL) {
-		SPDK_ERRLOG("Controller %s: bdev '%s' not found\n",
+		SPDK_ERRLOG("%s: bdev '%s' not found\n",
 			    name, dev_name);
 		ret = -ENODEV;
 		goto out;
@@ -1022,7 +1022,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	ret = spdk_bdev_open(bdev, true, bdev_remove_cb, bvdev, &bvdev->bdev_desc);
 	if (ret != 0) {
-		SPDK_ERRLOG("Controller %s: could not open bdev '%s', error=%d\n",
+		SPDK_ERRLOG("%s: could not open bdev '%s', error=%d\n",
 			    name, dev_name, ret);
 		goto out;
 	}
@@ -1049,10 +1049,10 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	}
 
 	if (features && rte_vhost_driver_enable_features(bvdev->vdev.path, features)) {
-		SPDK_ERRLOG("Controller %s: failed to enable features 0x%"PRIx64"\n", name, features);
+		SPDK_ERRLOG("%s: failed to enable features 0x%"PRIx64"\n", name, features);
 
 		if (spdk_vhost_dev_unregister(&bvdev->vdev) != 0) {
-			SPDK_ERRLOG("Controller %s: failed to remove controller\n", name);
+			SPDK_ERRLOG("%s: failed to remove device\n", name);
 		}
 
 		spdk_bdev_close(bvdev->bdev_desc);
@@ -1060,7 +1060,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: using bdev '%s'\n", name, dev_name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: using bdev '%s'\n", name, dev_name);
 out:
 	if (ret != 0 && bvdev) {
 		free(bvdev);
