@@ -127,6 +127,8 @@ struct spdk_vhost_session {
 
 	/* Unique session ID. */
 	uint64_t id;
+	/* Unique session name. */
+	char *name;
 
 	struct vhost_poll_group *poll_group;
 

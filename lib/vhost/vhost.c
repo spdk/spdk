@@ -1373,8 +1373,15 @@ new_connection(int vid)
 	memset(vsession, 0, sizeof(*vsession) + vdev->backend->session_ctx_size);
 
 	vsession->vdev = vdev;
-	vsession->id = vdev->vsessions_num++;
 	vsession->vid = vid;
+	vsession->id = vdev->vsessions_num++;
+	vsession->name = spdk_sprintf_alloc("%ss%u", vdev->name, vsession->vid);
+	if (vsession->name == NULL) {
+		SPDK_ERRLOG("vsession alloc failed\n");
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		free(vsession);
+		return -1;
+	}
 	vsession->poll_group = NULL;
 	vsession->started = false;
 	vsession->initialized = false;
@@ -1406,6 +1413,7 @@ destroy_connection(int vid)
 	}
 
 	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);
+	free(vsession->name);
 	free(vsession);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
