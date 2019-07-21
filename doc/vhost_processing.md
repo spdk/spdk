@@ -76,7 +76,12 @@ communicates with SPDK Vhost-SCSI device.
 
 ![QEMU/SPDK vhost data flow](img/qemu_vhost_data_flow.svg)
 
-# Device initialization {#vhost_processing_init}
+# Vhost overview {#vhost_processing_overview}
+
+This section briefly describes how vhost protocol works without going into
+any SPDK specific code.
+
+## Device initialization {#vhost_processing_init}
 
 All initialization and management information is exchanged using Vhost-user
 messages. The connection always starts with the feature negotiation. Both
@@ -101,8 +106,8 @@ The Master will send new memory regions after each memory change - usually
 hotplug/hotremove. The previous mappings will be removed.
 
 Drivers may also request a device config, consisting of e.g. disk geometry.
-Vhost-SCSI drivers, however, don't need to implement this functionality
-as they use common SCSI I/O to inquiry the underlying disk(s).
+Currently only Vhost-Block drivers do it, SCSI drivers use the common SCSI
+I/O to inquiry the underlying disk(s).
 
 Afterwards, the driver requests the number of maximum supported queues and
 starts sending virtqueue data, which consists of:
@@ -184,7 +189,7 @@ proper data and interrupts the guest by doing an eventfd_write on the call
 descriptor for proper virtqueue. There are multiple interrupt coalescing
 features involved, but they are not be discussed in this document.
 
-## SPDK optimizations {#vhost_spdk_optimizations}
+## Poll-mode optimizations {#vhost_spdk_optimizations}
 
 Due to its poll-mode nature, SPDK vhost removes the requirement for I/O submission
 notifications, drastically increasing the vhost server throughput and decreasing
@@ -193,3 +198,501 @@ to mitigate the I/O completion interrupt overhead (irqfd, vDPA), but those won't
 be discussed in this document. For the highest performance, a poll-mode @ref virtio
 can be used, as it suppresses all I/O completion interrupts, making the I/O
 path to fully bypass the QEMU/KVM overhead.
+
+# SPDK implementation {#vhost_implementation_pg}
+
+This section describes how SPDK vhost works from the code perspective. It
+assumes the reader is already familiar with @ref vhost. (TODO fix title; should
+include "User Guide")
+
+## Usability {#vhost_implementation_usability}
+
+SPDK Vhost is configurable with C APIs in `include/spdk/vhost.h` as well as
+corresponding RPC commands built exactly on top of those APIs.
+
+The user can create vhost **devices** that correspond to Unix domain socket files.
+When external application connects to such socket, an SPDK vhost **session** is
+created. Whenever the user changes a vhost device, all sessions are updated
+automatically and there's no possibility to configure specific sessions.
+
+## Device types {#vhost_implementation_device_types}
+
+SPDK vhost implements two device types - Vhost-SCSI and Vhost-Block. They're also
+called device **backends**. Vhost-SCSI code is all contained in `vhost_scsi.c`
+file [TODO link], and Vhost-Block in `vhost_blk.c` [TODO]. Those two files
+have completely different code, but they share a common base via `vhost_internal.h` [TODO]
+(and its implementation in `vhost.c` [TODO])
+
+That common interface takes care of overall device initialization, removal,
+memory registration, dequeuing generic virtio descriptors from virtqueues, as
+well as sending interrupts. The implementation of specific backend is mostly
+concerned around handling its specific I/O type and providing additional
+configuration (like hotplugging LUNs in Vhost-SCSI).
+
+When a vhost device is created, it must be supplied with a
+struct spdk_vhost_dev_backend object defining a couple of callbacks:
+
+```
+  /** Valid features for this kind of device. */
+  uint64_t virtio_features;
+
+  /** Features which are not implemented by this backend yet. */
+  uint64_t disabled_features;
+
+  /** Allocate a new session object for the given device */
+  struct spdk_vhost_session *(*new_session)(struct spdk_vhost_dev *vdev);
+
+  /** Free the provided session object. */
+  void (*free_session)(struct spdk_vhost_session *vsession);
+
+  /** Start polling I/O on the provided session. */
+  void (*start_session)(struct spdk_vhost_session *vsession);
+
+  /** Stop polling I/O. */
+  int (*stop_session)(struct spdk_vhost_session *vsession);
+
+  /**
+   * Respond to a Virtio-PCI config request by filling the entire
+   * *config* buffer (up to *len* bytes). Optional, can be NULL.
+   */
+  int (*get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
+
+  /**
+   * Handle a Virtio-PCI config write at specified *offset* and *len*
+   * in *config*. Optional, can be NULL.
+   */
+  int (*set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
+		    uint32_t offset, uint32_t size, uint32_t flags);
+
+  /** Dump any backend-specific information into the provided JSON context. */
+  void (*dump_info_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+
+  /** Write an RPC request capable of recreating this vhost device. */
+  void (*write_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+
+  /** Synchronously remove this device. */
+  int (*remove_device)(struct spdk_vhost_dev *vdev);
+```
+
+The most interesting are `start_session`/`stop_session`, which are described
+in a separate section @ref vhost_threading_start_pollers.
+
+To give an overview of interaction between the generic vhost.c and a backend:
+
+@startuml
+
+box "SPDK" #BlanchedAlmond
+ participant "vhost.c" as vhost
+ participant "vhost_blk.c" as blk
+end box
+
+hnote over blk : vhost_blk_construct
+blk -> vhost  : spdk_vhost_dev_register
+[<- vhost : create a unix domain\nsocket and do accept()
+
+|||
+
+[-> vhost : new connection\nis accepted and\npoll()-ed
+vhost -> blk : backend->new_session
+blk -> vhost : struct spdk_vhost_session *
+
+|||
+
+[-> vhost : vhost messages\narrive [...]
+vhost -> vhost : read backend->virtio_features
+
+vhost -> blk : backend->get_config
+blk -> vhost : struct virtio_blk_config
+
+|||
+
+vhost -> blk : backend->start_session
+activate blk
+note right : start I/O pollers
+blk -> vhost : vhost_session_start_done
+
+|||
+
+vhost -> blk : backend->dump_info_json
+blk -> vhost : spdk_json_write_[...]
+
+[-> vhost : connection is\nterminated
+
+vhost -> blk : backend->stop_session
+blk -> vhost : vhost_session_stop_done()
+deactivate blk
+
+vhost -> blk : backend->free_session
+
+|||
+
+hnote over vhost : spdk_vhost_dev_remove
+vhost -> blk : backend->free_device
+blk -> vhost : vhost_dev_unregister
+
+@enduml
+
+## Operational Basics {#vhost_implementation_basics}
+
+Vhost lib does not spawn any threads, pollers, and doesn't do any continuous
+work unless the first vhost device is created with spdk_vhost_scsi_dev_construct(),
+spdk_vhost_blk_construct(), or RPCs `construct_vhost_scsi_controller` and
+`construct_vhost_blk_controller`.
+
+When a vhost device is created, first thing SPDK does is it creates a new unix
+domain socket with rte_vhost API, namely
+rte_vhost_driver_register(path_to_socket, ...).
+
+rte_vhost is a DPDK's library for polling Vhost-user Unix domain sockets and
+processing the incoming requests. It implements the Vhost-user protocol (TODO link).
+It was initially targetting vhost-net only, but since the vhost-user protocol
+is mostly device-agnostic, SPDK makes use of it for storage as well.
+
+Then, SPDK calls rte_vhost_driver_callback_register() which tells rte_vhost to
+call SPDK-specific callbacks e.g. when vhost driver has initialized the device
+by sending appropriate Vhost-user messages. Within those callbacks SPDK could
+start polling the I/O queues. The actual callback list looks as follows:
+
+```
+struct vhost_device_ops {
+	/** new connection was accepted on the unix domain socket */
+	int (*new_connection)(int vid);
+	/** socket connection was dropped */
+	void (*destroy_connection)(int vid);
+	/** start polling virtqueues on one connection */
+	int (*new_device)(int vid);
+	/** stop polling the virtqueues */
+	void (*destroy_device)(int vid);
+
+	<SNIP> - there's a few more callbacks, but SPDK doesn't use them
+};
+```
+
+new_device/destroy_device are named really inaccurately and that's because they
+were present before new_connection/destroy_connection. They could use a rename,
+but API stability is a priority for DPDK.
+
+rte_vhost uses `vid` to identify connections. It's a unique number that can be
+passed to other rte_vhost APIs. For instance, to get the socket path on which
+the connection was made, rte_vhost_get_ifname(int vid, ...) can be used.
+(Again, the API function name is inaccurate.)
+
+There's one additional, major step in the rte_vhost initialization process that's
+described in a separate section -> @ref vhost_rte_vhost_workarounds.
+
+Next step for SPDK is to call rte_vhost_driver_start(path_to_socket) which
+may start a background, unaffinitized pthread to poll all vhost unix domain
+sockets with a blocking poll(). The rte_vhost function needs to be called for
+each vhost device, but there will be only one pthread created.
+
+## Threading {#vhost_threading}
+
+@startuml
+
+participant QEMU as qemu
+
+box "SPDK" #BlanchedAlmond
+ participant "rte_vhost" as rte
+ participant "Primary thread" as init
+ participant "Thread #2" as t2
+ participant "Thread #3" as t3
+end box
+
+hnote over init : vhost lib is initialized
+hnote over init : vhost device is created
+init -> rte  : create new unix domain socket
+note left : start pthread\ndoing poll()
+activate rte
+
+init -> rte  : register callbacks
+
+qemu -> rte  : VM boot
+rte  -> init : new session cb
+activate rte
+rte  -> init : start session cb
+init -> t2   : start pollers
+activate t2
+t2   -> init : done
+init -> rte  : done
+rte  -> qemu : done
+deactivate rte
+
+qemu -> rte  : VM shutdown
+activate rte
+rte  -> init : stop session cb
+init -> t2   : stop pollers
+deactivate t2
+t2   -> init : done
+init -> rte  : done
+rte  -> qemu : done
+deactivate rte
+
+hnote over init : vhost device is removed
+
+@enduml
+
+### Initialization {#vhost_threading_init}
+
+Upon initialization, the vhost lib will gather information about all available
+spdk threads and will create a poll group object for each thread using
+spdk_for_each_thread(). The "poll group" objects are named like that in attempt
+to mimic SPDK NVMe-oF target, but essentially they're wrappers for spdk threads.
+They allow the vhost lib to store additional per-thread metadata, e.g. a refcount
+of vhost devices polled on each thread that can be used for simple round-robin
+scheduling.
+
+SPDK Vhost is meant to be managed on a single thread only and this applies to all
+APIs exported in `include/spdk/vhost.h`. The SPDK thread that calls spdk_vhost_init()
+will be internally stored in the lib and will be the only capable of calling
+any other vhost APIs. The vhost lib will also internally schedule messages to
+that thread whenever it needs to change e.g. a vhost device object. The thread
+reference is stored in g_vhost_init_thread.
+
+In a typical application utilizing SPDK app framework, vhost lib will be
+automatically initialized by a vhost subsystem (TODO link here) on the master
+thread - the same one that handles the overall initialization, shutdown, RPC
+server, etc.
+
+### rte_vhost {#vhost_threading_rte_vhost}
+
+The callbacks from rte_vhost are called synchronously. Within each rte_vhost
+callback we send a message to g_vhost_init_thread and do a blocking wait on
+a semaphore until it signals completion.
+
+Each rte_vhost callback in SPDK calls vhost_xxx(vid, fn_t fn) [TODO]
+
+As soon as the rte_vhost thread accepts a connection, it calls our new_connection
+callback, which in turn calls spdk_vhost_dev_backend->new_session. new_session
+is supposed to return a unique spdk_vhost_session object, but backends will likely
+allocate a buffer slightly bigger than struct spdk_vhost_session to be able to
+store additional per-session metadata:
+
+```
+struct spdk_vhost_blk_session {
+	/* The session itself */
+	struct spdk_vhost_session vsession;
+
+	/* Vhost-Block-specific metadata */
+	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_poller *requestq_poller;
+	struct spdk_io_channel *io_channel;
+	struct spdk_poller *stop_poller;
+};
+```
+
+At this point the session is just a dull object which can't be used for anything.
+Nevertheless, the rte_vhost new_connection callback allows SPDK to:
+ a) know there's actually someone using the socket
+ b) register a custom vhost-user message parsing callback (see @ref vhost_rte_vhost_workarounds)
+
+Each session object stores its `vid`, which will be used to find it from all
+subsequent rte_vhost callbacks -> spdk_vhost_session_find_by_vid(vid).
+
+Once rte_vhost receives information about vhost features supported by the driver,
+then the shared memory, and finally the virtqueues, it tells SPDK to start polling
+by calling vhost_device_ops->new_device. As always, SPDK redirect all the action to
+g_vhost_init_thread, where the previously-allocated spdk_vhost_session object is
+looked up.
+
+rte_vhost provides us with following APIs:
+
+rte_vhost_get_vhost_vring(vid, ...);
+rte_vhost_get_vring_base(vid, ...);
+rte_vhost_get_negotiated_features(vid, ...);
+rte_vhost_get_mem_table(vid, ...);
+
+SPDK calls those just once at this point and caches their results in
+struct spdk_vhost_session. They will used in the hot I/O path later on.
+As a part of new_device callback, SPDK also registers the entire vhost shared
+memory of this session for DMA with spdk_mem_register(). This can be a *very*
+long operation, especially if there's an NVMe-oF RDMA connection in SPDK.
+
+Once that's done, SPDK tells the session's backend that session is ready to be
+polled. spdk_vhost_dev_backend->start_session gets called, which is supposed
+to start a poller for processing I/O requests in a format specific to that
+backend. See @ref vhost_threading_start_pollers for details.
+
+Once the session is "started" and any vhost-user message is received, rte_vhost
+will stop the session by calling vhost_device_ops->destroy_device. Then it will
+process the message (e.g. about a new memory hotplug/hotremove or new virtqueues)
+and (possibly) start the session again.
+
+`destroy_device` is in fact the most problematic rte_vhost callback. As soon as
+it returns, rte_vhost expects us not to look at any I/O queues anymore. To be
+worse, rte_vhost could also unmap the entire shared memory right after this
+callback returns, so there must be no pending DMA I/Os in SPDK at that point as
+well. This implies that SPDK needs to block and wait inside rte_vhost callback
+until all such I/Os are completed.
+
+Similarily to session start, session stop will be mostly handed over to the
+session's backend -> spdk_vhost_dev_backend->stop_session.
+
+Currently Vhost-Block and Vhost-SCSI backends stop the I/O pollers in that
+callback and register another poller waiting for the pending I/O to complete.
+Once that's done, spdk_vhost_session_stop_done() is called (on any thread),
+which results in unregistering the shared memory (spdk_mem_unregister())
+
+### Starting I/O pollers {#vhost_threading_start_pollers}
+
+*This part is a subject to change*
+
+Once spdk_vhost_dev_backend->start_session is called, the backend is responsible
+for picking a poll group on which the pollers should be started.
+
+Vhost-Block simply calls vhost_get_poll_group() for each session to assign it
+a poll group in a round-robin fashion, then sends a message to that poll group's
+thread with vhost_session_send_event(), then starts a poller there and
+immediately calls vhost_session_start_done(), which practically completes DPDK's
+new_device callback.
+
+Vhost-SCSI is slightly more complicated because it's only capable of polling
+all sessions for a single device on a single thread. It gets a poll group in
+a round-robin fashion only when the first session for a given device is created,
+then reuses the same poll group for subsequent sessions on that device.
+
+vhost_session_start_done() needs to be called on the thread designated for this
+session's pollers. Even though it's the backend that manages the pollers, the
+generic vhost layer still needs to know on which thread those pollers run to be
+able to properly schedule any session-changing spdk_thread_msg(s) ->
+vhost_dev_foreach_session().
+
+Each session can be accessed on only one thread at a time. Even if a session
+has multiple I/O queues, all of them need to polled on a single thread.
+
+### Device management at runtime
+
+To keep the threading as simple as possible, there can be only one management
+operation done at a time. This means that any management operation will immediately
+fail if there's another asynchronous operation pending. This behavior is mostly
+transparent to e.g. rpc.py users, because any request effectively blocks until
+it's completed.
+
+All device-changing actions are implemented roughly as follows:
+
+```
+ * struct spdk_vhost_dev *vdev = spdk_vhost_dev_find("socket_basename");
+ * spdk_vhost_scsi_dev_add_tgt(vdev, ...);
+   * verify there are no other asynchronous operations happening on that vdev
+   * verify vdev->backend == &g_vhost_scsi_device_backend
+   * downcast vdev to scsi-specific struct (svdev)
+   * check if the requested action is valid - for adding a new SCSI target
+     check e.g. if the requested SCSI slot is not occupied yet. This usually
+     just acceses a field in svdev
+   * if the slot is empty, put the new target there - set a field in svdev
+   * call vhost_dev_foreach_session() and ask each session to update itself
+     * call provided callback on each session's thread
+       * copy the corresponding SCSI target information from svdev to the
+         Vhost-SCSI session object (without disrupting any I/O)
+     * call the completion callback back on the g_vhost_init_thread
+       * complete the RPC request, print a message, etc
+```
+
+[TODO diagram?]
+
+We manage to be thread-safe without using any locks, because
+ 1) all the device management happens on a single thread
+ 2) the device can't be changed while we iterate through sessions
+
+#2 is true, because there can't be any other management operations happening
+until this one completes. All actions triggered directly by the user will
+immediately fail, and handling rte_vhost callbacks will be simply delayed
+until the management operation is done - the rte_vhost background thread will
+kindly wait on a semaphore as long as we need.
+
+[TODO describe the hotremove case; slightly more complex]
+
+Just for reference, vhost_dev_foreach_session() has the following signature:
+
+```
+  /**
+   * Call provided function for each session of the provide vhost device.
+   *
+   * \param vdev vhost device.
+   * \param fn function to call for each session. If the session is being polled,
+   * the function will be called on the very same thread it's polled on. Otherwise
+   * the function will be called on g_vhost_init_thread. This function is called
+   * one-by-one. There won't be two executions at the same time.
+   * \param cpl_fn function to be called after *fn* has been called for all
+   * sessions.
+   * \param arg additional argument to *fn* and *cpl_fn*
+   */
+  void vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
+                                 spdk_vhost_session_fn fn,
+                                 spdk_vhost_dev_fn cpl_fn,
+                                 void *arg);
+```
+
+## rte_vhost workarounds {#vhost_rte_vhost_workarounds}
+
+rte_vhost is not fully compliant with the Vhost-user specification and doesn't
+handle all Vhost-user messages as it should. While rte_vhost works for DPDK-internal
+vhost-net implementation, there are certain problems when using it for Vhost-SCSI
+and Vhost-Block.
+
+Historically, SPDK vhost was shipped with an internal fork of rte_vhost lib
+which had a few storage-specific changes applied. Those changes were rejected
+in the upstream repository, but eventually we've managed to upstream rte_vhost
+APIs to hook directly into the Vhost-user message handling code. Namely, we've
+added rte_vhost_extern_callback_register(vid, ...). This allowed us to apply
+the same changes (or more precisely - workarounds) to rte_vhost from SPDK,
+without altering the rte_vhost code itself. Those APIs were introduced in DPDK
+19.05, and SPDK 19.04+ could already utilize them. The internal rte_vhost fork
+in SPDK is still kept around to support older DPDK versions, but it will be
+eventually removed.
+
+SPDK 19.07+ will use the upstream rte_vhost by default, but it can be forced to
+use the internal fork if configured with `./configure --with-internal-vhost-lib`.
+
+Fixing rte_vhost to be fully spec compliant would be a huge undertaking, so
+we've decided to stick with just a few workarounds that allow SPDK to be used
+with standard QEMU.
+
+All SPDK workarounds for the upstream rte_vhost are located in a separate file
+`rte_vhost_compat.c` (TODO link). The file contains fair description for each
+workaround. To quote some of them:
+
+```
+  case VHOST_USER_SET_MEM_TABLE:
+	  /* rte_vhost will unmap previous memory that SPDK may still
+	   * have pending DMA operations on. We can't let that happen,
+	   * so stop the device before letting rte_vhost unmap anything.
+	   * This will block until all pending I/Os are finished.
+	   * We will start the device again from the post-processing
+	   * message handler.
+	   */
+```
+
+```
+  case VHOST_USER_SET_VRING_CALL:
+	  /* rte_vhost will close the previous callfd and won't notify
+	   * us about any change. This will effectively make SPDK fail
+	   * to deliver any subsequent interrupts until a session is
+	   * restarted. We stop the session here before closing the previous
+	   * fd (so that all interrupts must have been delivered by the
+	   * time the descriptor is closed) and start right after (which
+	   * will make SPDK retrieve the latest, up-to-date callfd from
+	   * rte_vhost.
+	   */
+```
+
+```
+  case VHOST_USER_SET_FEATURES:
+	  /* rte_vhost requires all queues to be fully initialized in order
+	   * to start I/O processing. This behavior is not compliant with the
+	   * vhost-user specification and doesn't work with QEMU 2.12+, which
+	   * will only initialize 1 I/O queue for the SeaBIOS boot.
+	   * Theoretically, we should start polling each virtqueue individually
+	   * after receiving its SET_VRING_KICK message, but rte_vhost is not
+	   * designed to poll individual queues. So here we use a workaround
+	   * to detect when the vhost session could be potentially at that SeaBIOS
+	   * stage and we mark it to start polling as soon as its first virtqueue
+	   * gets initialized. This doesn't hurt any non-QEMU vhost slaves
+	   * and allows QEMU 2.12+ to boot correctly. SET_FEATURES could be sent
+	   * at any time, but QEMU will send it at least once on SeaBIOS
+	   * initialization - whenever powered-up or rebooted.
+```
+
+[TODO describe that last one]
+[TODO describe SeaBIOS and QEMU 2.12 relationship]
+
+[TODO describe GET/SET_CONFIG]
