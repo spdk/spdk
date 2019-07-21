@@ -336,13 +336,13 @@ static int netlink_addr_msg(uint32_t ifc_idx, uint32_t ip_address, uint32_t crea
 	struct rtattr *rta;
 
 	if (spdk_interface_available(ifc_idx)) {
-		return -1;
+		return -ENODEV;
 	}
 
 	fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
 	if (fd < 0) {
 		SPDK_ERRLOG("socket failed!\n");
-		return -1;
+		return errno;
 	}
 
 	/* setup local address & bind using this address. */

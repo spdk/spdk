@@ -63,15 +63,26 @@ spdk_rpc_add_ip_address(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_ip_address req = {};
 	struct spdk_json_write_ctx *w;
+	int ret_val = 0;
 
 	if (spdk_json_decode_object(params, rpc_ip_address_decoders,
 				    SPDK_COUNTOF(rpc_ip_address_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NET, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
 		goto invalid;
 	}
 
-	if (spdk_interface_add_ip_address(req.ifc_index, req.ip_address)) {
+	ret_val = spdk_interface_add_ip_address(req.ifc_index, req.ip_address);
+	if (ret_val) {
+		if (ret_val == -ENODEV) {
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
+							     "Interface %d not available", req.ifc_index);
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 strerror(ret_val));
+		}
 		goto invalid;
 	}
 
@@ -83,7 +94,6 @@ spdk_rpc_add_ip_address(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_ip_address(&req);
 }
 SPDK_RPC_REGISTER("add_ip_address", spdk_rpc_add_ip_address, SPDK_RPC_RUNTIME)
@@ -94,15 +104,26 @@ spdk_rpc_delete_ip_address(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_ip_address req = {};
 	struct spdk_json_write_ctx *w;
+	int ret_val = 0;
 
 	if (spdk_json_decode_object(params, rpc_ip_address_decoders,
 				    SPDK_COUNTOF(rpc_ip_address_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NET, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
 		goto invalid;
 	}
 
-	if (spdk_interface_delete_ip_address(req.ifc_index, req.ip_address)) {
+	ret_val = spdk_interface_delete_ip_address(req.ifc_index, req.ip_address);
+	if (ret_val) {
+		if (ret_val == -ENODEV) {
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_STATE,
+							     "Interface %d not available", req.ifc_index);
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 strerror(ret_val));
+		}
 		goto invalid;
 	}
 
@@ -114,7 +135,6 @@ spdk_rpc_delete_ip_address(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_ip_address(&req);
 }
 SPDK_RPC_REGISTER("delete_ip_address", spdk_rpc_delete_ip_address, SPDK_RPC_RUNTIME)
