@@ -176,7 +176,7 @@ vhost_scsi_task_free_cb(struct spdk_scsi_task *scsi_task)
 	task->used = false;
 }
 
-static int
+static void
 remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 		unsigned scsi_tgt_num)
 {
@@ -195,7 +195,6 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 	}
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: removed target 'Target %u'\n",
 		     svdev->vdev.name, scsi_tgt_num);
-	return 0;
 }
 
 static int
@@ -216,7 +215,8 @@ vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
 			return 0;
 		}
 
-		return remove_scsi_tgt(svdev, scsi_tgt_num);
+		remove_scsi_tgt(svdev, scsi_tgt_num);
+		return 0;
 	}
 
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
@@ -1060,7 +1060,6 @@ vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 	unsigned scsi_tgt_num = ctx->scsi_tgt_num;
 	struct spdk_vhost_scsi_session *svsession;
 	struct spdk_scsi_dev_session_state *state;
-	int rc = 0;
 
 	if (vsession == NULL) {
 		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
@@ -1068,11 +1067,11 @@ vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 
 		if (!ctx->async_fini) {
 			/* there aren't any active sessions, so remove the dev and exit */
-			rc = remove_scsi_tgt(svdev, scsi_tgt_num);
+			remove_scsi_tgt(svdev, scsi_tgt_num);
 		}
 
 		free(ctx);
-		return rc;
+		return 0;
 	}
 
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
