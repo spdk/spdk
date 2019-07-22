@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac33d787_793bdb81",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-22T05:34:53Z",
+      "side": 1,
+      "message": "Preinitializing this memory produces some additional overhead.\n\nIn thread.c we memset a similar array under #ifdef DEBUG:\n\n   361 #ifdef DEBUG\n   362         /*\n   363          * spdk_ring_dequeue() fills messages and returns how many entries it wrote,\n   364          * so we will never actually read uninitialized data from events, but just to be sure\n   365          * (and to silence a static analyzer false positive), initialize the array to NULL pointers.\n   366          */\n   367         memset(messages, 0, sizeof(messages));\n   368 #endif\n\nCould we do the same here?",
+      "range": {
+        "startLine": 426,
+        "startChar": 45,
+        "endLine": 426,
+        "endChar": 50
+      },
+      "revId": "af0b340ba3f061d911ad0dd59ee5cac663b4761d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
