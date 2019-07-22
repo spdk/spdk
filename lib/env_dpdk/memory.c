@@ -935,6 +935,8 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 {
 	uintptr_t paddr;
 
+	/* Silence static analyzers */
+	assert(vaddr != 0);
 	paddr = rte_mem_virt2iova((void *)vaddr);
 	if (paddr == RTE_BAD_IOVA) {
 		/*
