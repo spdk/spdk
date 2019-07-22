@@ -547,7 +547,8 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	ch->poller = spdk_poller_register(bdev_nvme_poll, ch, nvme_bdev_ctrlr->opts.nvme_ioq_poll_period_us);
+	ch->poller = spdk_poller_register(bdev_nvme_poll, ch,
+					  nvme_bdev_ctrlr->opts.nvme_ioq_poll_period_us);
 	return 0;
 }
 
@@ -1092,16 +1093,10 @@ spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts)
 	*opts = g_opts;
 }
 
-int
+void
 spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
-	if (g_bdev_nvme_init_thread != NULL) {
-		return -EPERM;
-	}
-
 	g_opts = *opts;
-
-	return 0;
 }
 
 struct set_nvme_hotplug_ctx {
