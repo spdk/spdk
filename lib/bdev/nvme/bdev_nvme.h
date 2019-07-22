@@ -58,7 +58,7 @@ struct spdk_bdev_nvme_opts {
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, int rc);
 struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
 void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
-int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
+void spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
 
 int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
