@@ -93,6 +93,30 @@
       "revId": "84c4126eb88f3b41714f26d2fd971a888f0938f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5b96ee1_8af69b31",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-22T03:58:26Z",
+      "side": 1,
+      "message": "You might want to just iterate through get_nvme_controllers RPC output and remove all NVMe controllers\n\nThe code could do roughly:\nfor bdev in get_bdevs:\n  if get_bdev_destroy_method(bdev): // undefined for nvme\n    // remove the bdev (passthru, split, lvol, etc)\n\nfor nvme in get_nvme_controllers:\n  delete_nvme_controller ...\n\n\nIt doesn\u0027t actually matter if we delete nvmes before or after the other bdevs. Only lvols on top of NVMe could make a difference, but this script doesn\u0027t seem to delete them today so we don\u0027t need to care.",
+      "parentUuid": "41a03bc5_0edaa9bd",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 72
+      },
+      "revId": "84c4126eb88f3b41714f26d2fd971a888f0938f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
