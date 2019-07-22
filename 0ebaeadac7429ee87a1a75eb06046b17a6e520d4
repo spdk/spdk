@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "101c6f1f_8a9f8225",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2647,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-22T07:18:34Z",
+      "side": 1,
+      "message": "Instead of removing tcp_qpair_process_pending() from tcp_qpair_flush_pdus_internal(), can we change this to (tqpair-\u003erecv_state \u003d\u003d ERROR || tqpair-\u003estate \u003e\u003d EXITING) ?",
+      "revId": "0ebaeadac7429ee87a1a75eb06046b17a6e520d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
