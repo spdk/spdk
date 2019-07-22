@@ -1045,6 +1045,9 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 {
 	struct spdk_reduce_vol *vol = req->vol;
 	uint32_t i;
+	uint64_t chunk_offset;
+	uint8_t *buf;
+	int j;
 
 	req->chunk_map_index = spdk_bit_array_find_first_clear(vol->allocated_chunk_maps, 0);
 
@@ -1060,6 +1063,16 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	req->chunk_is_compressed = (req->num_io_units != vol->backing_io_units_per_chunk);
 	req->chunk->compressed_size =
 		req->chunk_is_compressed ? compressed_size : vol->params.chunk_size;
+
+	/* if the chunk is uncompressed we need to copy the data to the host buffers. */
+	if (req->chunk_is_compressed == false) {
+		chunk_offset = req->offset % vol->logical_blocks_per_chunk;
+		buf = req->decomp_buf + chunk_offset * vol->params.logical_block_size;
+		for (j = 0; j < req->iovcnt; j++) {
+			memcpy(buf, req->iov[j].iov_base, req->iov[j].iov_len);
+			buf += req->iov[j].iov_len;
+		}
+	}
 
 	for (i = 0; i < req->num_io_units; i++) {
 		req->chunk->io_unit_index[i] = spdk_bit_array_find_first_clear(vol->allocated_backing_io_units, 0);
