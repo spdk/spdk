@@ -1127,7 +1127,6 @@ _spdk_blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 	struct spdk_blob_persist_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
-	void				*tmp;
 	size_t				i;
 
 	/* Release all clusters that were truncated */
@@ -1145,9 +1144,14 @@ _spdk_blob_persist_clear_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 		blob->active.clusters = NULL;
 		blob->active.cluster_array_size = 0;
 	} else if (blob->active.num_clusters != blob->active.cluster_array_size) {
+#ifndef __clang_analyzer__
+		void *tmp;
+
+		/* scan-build really can't figure reallocs, workaround it */
 		tmp = realloc(blob->active.clusters, sizeof(uint64_t) * blob->active.num_clusters);
 		assert(tmp != NULL);
 		blob->active.clusters = tmp;
+#endif
 		blob->active.cluster_array_size = blob->active.num_clusters;
 	}
 
