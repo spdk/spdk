@@ -89,6 +89,7 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 	ctrlr->free_io_qids = NULL;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_procs);
+	MOCK_CLEAR(spdk_zmalloc);
 	nvme_qpair_init(qpair, 1, ctrlr, 0, 32);
 }
 
@@ -327,6 +328,7 @@ test_nvme_qpair_add_cmd_error_injection(void)
 	ctrlr.adminq = &qpair;
 
 	/* Admin error injection at submission path */
+	MOCK_CLEAR(spdk_zmalloc);
 	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, NULL,
 			SPDK_NVME_OPC_GET_FEATURES, true, 5000, 1,
 			SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_INVALID_FIELD);
