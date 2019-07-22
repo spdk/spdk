@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d984fbad_75aad73e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 1405,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-22T04:40:45Z",
+      "side": 1,
+      "message": "for each NVMe I/O queue\n\nCan you print the default value here as well?",
+      "range": {
+        "startLine": 1405,
+        "startChar": 89,
+        "endLine": 1405,
+        "endChar": 112
+      },
+      "revId": "a58a88191196504e43009cd27c68834785407fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61637cc3_8b882696",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-22T04:40:45Z",
+      "side": 1,
+      "message": "please put this change in a separate patch. I\u0027m not quite sure why we need it in this one.",
+      "range": {
+        "startLine": 111,
+        "startChar": 23,
+        "endLine": 111,
+        "endChar": 39
+      },
+      "revId": "a58a88191196504e43009cd27c68834785407fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ad12b9d_c058582f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-22T04:40:45Z",
+      "side": 1,
+      "message": "for each NVMe I/O queue\n\nCan you print the default value here as well?",
+      "range": {
+        "startLine": 317,
+        "startChar": 60,
+        "endLine": 317,
+        "endChar": 82
+      },
+      "revId": "a58a88191196504e43009cd27c68834785407fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e06729d5_6b61c463",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-22T04:40:45Z",
+      "side": 1,
+      "message": "for each NVMe I/O queue",
+      "range": {
+        "startLine": 288,
+        "startChar": 62,
+        "endLine": 288,
+        "endChar": 85
+      },
+      "revId": "a58a88191196504e43009cd27c68834785407fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
