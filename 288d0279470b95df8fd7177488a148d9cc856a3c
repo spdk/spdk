@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecb615a9_117e5ec6",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-22T04:27:25Z",
+      "side": 1,
+      "message": "Error bdevs can be actually created on top of inexistent bdevs. Splits and passthru bdevs work the same way.\n\nHere we\u0027ve saved the name of the base bdev and even if such bdev doesn\u0027t exist now, we\u0027ll create an error bdev as soon as the base is created - see the examine callback at line #475.\n\nThe current behavior is expected and that\u0027s why this patch fails the tests at the moment.",
+      "range": {
+        "startLine": 312,
+        "startChar": 6,
+        "endLine": 312,
+        "endChar": 28
+      },
+      "revId": "288d0279470b95df8fd7177488a148d9cc856a3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
