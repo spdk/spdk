@@ -1486,6 +1486,7 @@ bdev_histograms_mt(void)
 	poll_threads();
 	CU_ASSERT(g_status == 0);
 	CU_ASSERT(g_bdev.bdev.internal.histogram_enabled == true);
+	SPDK_CU_ASSERT_FATAL(g_histogram == histogram);
 	SPDK_CU_ASSERT_FATAL(g_histogram != NULL);
 
 	g_count = 0;
