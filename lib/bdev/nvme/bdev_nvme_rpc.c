@@ -84,7 +84,6 @@ spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_bdev_nvme_opts opts;
 	struct spdk_json_write_ctx *w;
-	int rc;
 
 	spdk_bdev_nvme_get_opts(&opts);
 	if (params && spdk_json_decode_object(params, rpc_bdev_nvme_options_decoders,
@@ -96,11 +95,7 @@ spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	rc = spdk_bdev_nvme_set_opts(&opts);
-	if (rc) {
-		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		return;
-	}
+	spdk_bdev_nvme_set_opts(&opts);
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
