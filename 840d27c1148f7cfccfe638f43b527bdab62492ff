@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "778bcf74_2f281249",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-07-22T00:34:21Z",
+      "side": 1,
+      "message": "You can remove this declaration as well now that the only use is after the definition of this function.",
+      "revId": "840d27c1148f7cfccfe638f43b527bdab62492ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
