@@ -463,6 +463,7 @@ test_reloc_single_lbk(void)
 	set_band_valid_map(band, TEST_RELOC_OFFSET, 1);
 
 	ftl_reloc_add(reloc, band, TEST_RELOC_OFFSET, 1, 0);
+	SPDK_CU_ASSERT_FATAL(breloc == TAILQ_FIRST(&reloc->pending_queue));
 	ftl_reloc_add_active_queue(breloc);
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, 1);
