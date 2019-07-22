@@ -4,6 +4,8 @@ rootdir=$(readlink -f $(dirname $0))/../..
 source $rootdir/test/common/autotest_common.sh
 source "$rootdir/scripts/common.sh"
 
+TEST_TIMEOUT=1200
+
 VHOST_APP="$rootdir/app/vhost/vhost -p 0"
 FUZZ_RPC_SOCK="/var/tmp/spdk_fuzz.sock"
 FUZZ_APP="$rootdir/test/app/fuzz/vhost_fuzz/vhost_fuzz -r $FUZZ_RPC_SOCK --wait-for-rpc"
@@ -11,6 +13,14 @@ FUZZ_APP="$rootdir/test/app/fuzz/vhost_fuzz/vhost_fuzz -r $FUZZ_RPC_SOCK --wait-
 vhost_rpc_py="$rootdir/scripts/rpc.py"
 fuzz_generic_rpc_py="$rootdir/scripts/rpc.py -s $FUZZ_RPC_SOCK"
 fuzz_specific_rpc_py="$rootdir/test/app/fuzz/common/fuzz_rpc.py -s $FUZZ_RPC_SOCK"
+
+# This argument is used in addition to the test arguments in autotest_common.sh
+for i in "$@"; do
+    case "$i" in
+        --timeout=*)
+            TEST_TIMEOUT="${i#*=}"
+    esac
+done
 
 timing_enter vhost_fuzz_test
 
@@ -25,7 +35,7 @@ waitforlisten $vhostpid
 
 trap "killprocess $vhostpid; exit 1" SIGINT SIGTERM exit
 
-$FUZZ_APP -t 1200 2>$output_dir/vhost_autofuzz_output1.txt &
+$FUZZ_APP -t $TEST_TIMEOUT 2>$output_dir/vhost_autofuzz_output1.txt &
 fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 
@@ -60,7 +70,9 @@ $fuzz_generic_rpc_py start_subsystem_init
 wait $fuzzpid
 
 trap - SIGINT SIGTERM exit
-
+set +e
 killprocess $vhostpid
+echo $?
+set -e
 killprocess $fuzzpid
 timing_exit vhost_fuzz_test
