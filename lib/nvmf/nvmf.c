@@ -111,7 +111,6 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_poll_group *group = ctx_buf;
 	struct spdk_nvmf_transport *transport;
-	uint32_t sid;
 
 	TAILQ_INIT(&group->tgroups);
 	TAILQ_INIT(&group->qpairs);
@@ -124,20 +123,6 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	group->sgroups = calloc(tgt->max_subsystems, sizeof(struct spdk_nvmf_subsystem_poll_group));
 	if (!group->sgroups) {
 		return -ENOMEM;
-	}
-
-	for (sid = 0; sid < tgt->max_subsystems; sid++) {
-		struct spdk_nvmf_subsystem *subsystem;
-
-		subsystem = tgt->subsystems[sid];
-		if (!subsystem) {
-			continue;
-		}
-
-		if (spdk_nvmf_poll_group_add_subsystem(group, subsystem, NULL, NULL) != 0) {
-			spdk_nvmf_tgt_destroy_poll_group(io_device, ctx_buf);
-			return -1;
-		}
 	}
 
 	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
@@ -1007,6 +992,8 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 {
 	int rc = 0;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = &group->sgroups[subsystem->id];
+
+	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
 
 	TAILQ_INIT(&sgroup->queued);
 
