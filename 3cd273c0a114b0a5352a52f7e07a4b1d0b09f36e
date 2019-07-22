@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e165d01_a9261dbe",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-22T15:47:47Z",
+      "side": 1,
+      "message": "Looking at the recv/write paths, is there a reason why we don\u0027t use app_recv_stream_raw() here ?",
+      "range": {
+        "startLine": 884,
+        "startChar": 0,
+        "endLine": 889,
+        "endChar": 2
+      },
+      "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "285ccdef_b9011250",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-22T15:47:47Z",
+      "side": 1,
+      "message": "Doesn\u0027t changing this new argument to 1, basically eliminate the need for lines 949-952 ?",
+      "range": {
+        "startLine": 947,
+        "startChar": 6,
+        "endLine": 947,
+        "endChar": 20
+      },
+      "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0792517_e3e9842f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-22T15:47:47Z",
+      "side": 1,
+      "message": "Shouldn\u0027t rc be verified before ?",
+      "range": {
+        "startLine": 949,
+        "startChar": 0,
+        "endLine": 952,
+        "endChar": 3
+      },
+      "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1427367_649a71b8",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1347,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-22T15:47:47Z",
+      "side": 1,
+      "message": "Since function vl_api_bind_sock_reply_t_handler() does nothing, is it required to assign a callback ?",
+      "range": {
+        "startLine": 1347,
+        "startChar": 1,
+        "endLine": 1347,
+        "endChar": 36
+      },
+      "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d13ae848_fa48b21f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1349,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-22T15:47:47Z",
+      "side": 1,
+      "message": "Should this function see similar make over since there is SESSION_CTRL_EVT_DISCONNECTED_REPLY evt type ?",
+      "range": {
+        "startLine": 1349,
+        "startChar": 1,
+        "endLine": 1349,
+        "endChar": 54
+      },
+      "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
