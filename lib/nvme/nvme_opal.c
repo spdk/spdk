@@ -864,7 +864,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 			supported = true;
 			break;
 		default:
-			SPDK_NOTICELOG("Unknow feature code: %d\n", feature_code);
+			SPDK_INFOLOG(SPDK_LOG_OPAL, "Unknow feature code: %d\n", feature_code);
 		}
 		cpos += body->tper.length + 4;
 	}
