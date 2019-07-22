@@ -34,6 +34,24 @@
       "revId": "7a95a7bb19ecbd593aeb407d19036c947125a5a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3046f32_f65e4b92",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-22T04:51:29Z",
+      "side": 1,
+      "message": "Agreed, I\u0027ll merge the patch anyway though.",
+      "parentUuid": "f87d4054_48200cfb",
+      "revId": "7a95a7bb19ecbd593aeb407d19036c947125a5a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
