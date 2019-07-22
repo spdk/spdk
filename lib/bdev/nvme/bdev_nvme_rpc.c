@@ -108,7 +108,8 @@ spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
 
 	return;
 }
-SPDK_RPC_REGISTER("set_bdev_nvme_options", spdk_rpc_set_bdev_nvme_options, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("set_bdev_nvme_options", spdk_rpc_set_bdev_nvme_options,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 struct rpc_bdev_nvme_hotplug {
 	bool enabled;
