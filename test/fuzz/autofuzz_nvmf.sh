@@ -7,6 +7,16 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+TEST_TIMEOUT=1200
+
+# This argument is used in addition to the test arguments in autotest_common.sh
+for i in "$@"; do
+        case "$i" in
+                --timeout=*)
+                        TEST_TIMEOUT="${i#*=}"
+        esac
+done
+
 nvmftestinit
 
 timing_enter nvmf_fuzz_test
@@ -29,7 +39,7 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # Note that we chose a consistent seed to ensure that this test is consistent in nightly builds.
-$rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0xF0 -r "/var/tmp/nvme_fuzz" -t 12 -C $testdir/nvmf_fuzz.conf -N -a 2>$output_dir/nvmf_autofuzz_logs.txt
+$rootdir/test/app/fuzz/nvme_fuzz/nvme_fuzz -m 0xF0 -r "/var/tmp/nvme_fuzz" -t $TEST_TIMEOUT -C $testdir/nvmf_fuzz.conf -N -a 2>$output_dir/nvmf_autofuzz_logs.txt
 
 rm -f $testdir/nvmf_fuzz.conf
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
