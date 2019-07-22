@@ -73,6 +73,11 @@ else
 	export DEPENDENCY_DIR
 fi
 
+if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+	# blockdev.sh in SPDK 19.04 is not able to run with ASAN
+	export SPDK_RUN_ASAN=0
+fi
+
 if [ ! -z "$HUGEMEM" ]; then
 	export HUGEMEM
 fi
