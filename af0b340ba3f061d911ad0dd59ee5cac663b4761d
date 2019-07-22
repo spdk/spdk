@@ -22,6 +22,30 @@
       "revId": "af0b340ba3f061d911ad0dd59ee5cac663b4761d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d3996c7_0cebcd65",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-07-22T06:04:47Z",
+      "side": 1,
+      "message": "yes, it could. Will follow your suggestions.",
+      "parentUuid": "ac33d787_793bdb81",
+      "range": {
+        "startLine": 426,
+        "startChar": 45,
+        "endLine": 426,
+        "endChar": 50
+      },
+      "revId": "af0b340ba3f061d911ad0dd59ee5cac663b4761d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
