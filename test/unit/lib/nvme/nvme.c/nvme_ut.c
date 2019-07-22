@@ -727,6 +727,7 @@ test_nvme_ctrlr_probe(void)
 	void *cb_ctx = NULL;
 	struct spdk_nvme_ctrlr *dummy = NULL;
 
+	TAILQ_INIT(&probe_ctx.init_ctrlrs);
 	nvme_driver_init();
 
 	/* test when probe_cb returns false */
