@@ -1250,6 +1250,9 @@ _read_decompress_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	struct spdk_reduce_vol *vol = req->vol;
+	uint64_t chunk_offset;
+	uint8_t *buf;
+	int i;
 
 	/* Negative reduce_errno indicates failure for compression operations. */
 	if (reduce_errno < 0) {
@@ -1264,6 +1267,18 @@ _read_decompress_done(void *_req, int reduce_errno)
 	if ((uint32_t)reduce_errno != vol->params.chunk_size) {
 		_reduce_vol_complete_req(req, -EIO);
 		return;
+	}
+
+	/* If the chunk was compressed, the data would have been sent to the
+	 *  host buffers by the decompression operation, if not we need to memcpy here.
+	 */
+	if (req->chunk_is_compressed == false) {
+		chunk_offset = req->offset % vol->logical_blocks_per_chunk;
+		buf = req->decomp_buf + chunk_offset * vol->params.logical_block_size;
+		for (i = 0; i < req->iovcnt; i++) {
+			memcpy(req->iov[i].iov_base, buf, req->iov[i].iov_len);
+			buf += req->iov[i].iov_len;
+		}
 	}
 
 	_reduce_vol_complete_req(req, 0);
