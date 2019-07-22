@@ -71,15 +71,7 @@ basic message passing framework and defines a few key primitives.
 First, spdk_thread is an abstraction for a thread of execution and
 spdk_poller is an abstraction for a function that should be
 periodically called on the given thread. On each system thread that the user
-wishes to use with SPDK, they must first call spdk_allocate_thread(). This
-function takes three function pointers - one that will be called to pass a
-message to this thread, one that will be called to request that a poller be
-started on this thread, and finally one to request that a poller be stopped.
-*The implementation of these functions is not provided by this library*. Many
-applications already have facilities for passing messages, so to ease
-integration with existing code bases we've left the implementation up to the
-user. However, for users starting from scratch, see the following section on
-the event framework for an SPDK-provided implementation.
+wishes to use with SPDK, they must first call spdk_thread_create().
 
 The library also defines two other abstractions: spdk_io_device and
 spdk_io_channel. In the course of implementing SPDK we noticed the
@@ -105,7 +97,7 @@ all threads for which there is an io_channel for a given io_device.
 
 As the number of example applications in SPDK grew, it became clear that a
 large portion of the code in each was implementing the basic message passing
-infrastructure required to call spdk_allocate_thread(). This includes spawning
+infrastructure required to call spdk_thread_create(). This includes spawning
 one thread per core, pinning each thread to a unique core, and allocating
 lockless rings between the threads for message passing. Instead of
 re-implementing that infrastructure for each example application, SPDK
@@ -113,11 +105,11 @@ provides the SPDK @ref event. This library handles setting up all of the
 message passing infrastructure, installing signal handlers to cleanly
 shutdown, implements periodic pollers, and does basic command line parsing.
 When started through spdk_app_start(), the library automatically spawns all of
-the threads requested, pins them, and calls spdk_allocate_thread() with
-appropriate function pointers for each one. This makes it much easier to
-implement a brand new SPDK application and is the recommended method for those
-starting out. Only established applications with sufficient message passing
-infrastructure should consider directly integrating the lower level libraries.
+the threads requested, pins them, and calls spdk_thread_create(). This makes
+it much easier to implement a brand new SPDK application and is the recommended
+method for those starting out. Only established applications with sufficient
+message passing infrastructure should consider directly integrating the lower
+level libraries.
 
 # Limitations of the C Language
 
