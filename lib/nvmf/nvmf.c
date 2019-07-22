@@ -1008,6 +1008,11 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 	int rc = 0;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = &group->sgroups[subsystem->id];
 
+	/* sgroup has been activated when creating poll_group */
+	if (sgroup->state == SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+		goto fini;
+	}
+
 	TAILQ_INIT(&sgroup->queued);
 
 	rc = poll_group_update_subsystem(group, subsystem);
