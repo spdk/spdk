@@ -1273,6 +1273,9 @@ static void
 _read_read_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
+	uint64_t chunk_offset;
+	uint8_t *buf;
+	int i;
 
 	if (reduce_errno != 0) {
 		req->reduce_errno = reduce_errno;
@@ -1291,6 +1294,17 @@ _read_read_done(void *_req, int reduce_errno)
 	if (req->chunk_is_compressed) {
 		_reduce_vol_decompress_chunk(req, _read_decompress_done);
 	} else {
+
+		/* If the chunk was compressed, the data would have been sent to the
+		 *  host buffers by the decompression operation, if not we need to memcpy here.
+		 */
+		chunk_offset = req->offset % req->vol->logical_blocks_per_chunk;
+		buf = req->decomp_buf + chunk_offset * req->vol->params.logical_block_size;
+		for (i = 0; i < req->iovcnt; i++) {
+			memcpy(req->iov[i].iov_base, buf, req->iov[i].iov_len);
+			buf += req->iov[i].iov_len;
+		}
+
 		_read_decompress_done(req, req->chunk->compressed_size);
 	}
 }
