@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "583a2188_091e5ac9",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1489,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-23T00:37:39Z",
+      "side": 1,
+      "message": "Can we change line 1501: spdk_histogram_data_free(g_histogram); to\nspdk_histogram_data_free(histogram); for this issue?",
+      "revId": "6393426e3ce6c6cf95ce6349aa89472de7ed9462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
