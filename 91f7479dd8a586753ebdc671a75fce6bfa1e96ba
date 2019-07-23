@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a36c1285_3e0984ad",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 4371,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-23T11:50:50Z",
+      "side": 1,
+      "message": "This kind of change would probably be welcome in places where we iterate over/modify g_bdev_mgr.bdevs in another set of patches.",
+      "range": {
+        "startLine": 4371,
+        "startChar": 1,
+        "endLine": 4371,
+        "endChar": 39
+      },
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ec05d05_d7263a8e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 4382,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-23T11:50:50Z",
+      "side": 1,
+      "message": "Please unlock the mutex",
+      "range": {
+        "startLine": 4382,
+        "startChar": 2,
+        "endLine": 4382,
+        "endChar": 65
+      },
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
