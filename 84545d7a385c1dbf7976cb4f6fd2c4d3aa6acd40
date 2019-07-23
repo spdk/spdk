@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4392bfbd_ee8cc3ad",
+        "filename": "lib/event/subsystems/vmd/vmd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-23T08:17:01Z",
+      "side": 1,
+      "message": "Why is this parameter optional ? If not provided, nothing happens in call below.",
+      "range": {
+        "startLine": 46,
+        "startChar": 1,
+        "endLine": 46,
+        "endChar": 85
+      },
+      "revId": "84545d7a385c1dbf7976cb4f6fd2c4d3aa6acd40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7110f116_aae3a77a",
+        "filename": "lib/event/subsystems/vmd/vmd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-23T08:17:01Z",
+      "side": 1,
+      "message": "Is it ok to init VMD multiple times or before the subsystem init start ?",
+      "range": {
+        "startLine": 67,
+        "startChar": 2,
+        "endLine": 67,
+        "endChar": 23
+      },
+      "revId": "84545d7a385c1dbf7976cb4f6fd2c4d3aa6acd40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd940bc0_5ae3c99b",
+        "filename": "lib/event/subsystems/vmd/vmd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-23T08:17:01Z",
+      "side": 1,
+      "message": "Is there a reason why this can be called only in STARTUP, as opposed to startup and runtime ?",
+      "range": {
+        "startLine": 79,
+        "startChar": 53,
+        "endLine": 79,
+        "endChar": 69
+      },
+      "revId": "84545d7a385c1dbf7976cb4f6fd2c4d3aa6acd40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
