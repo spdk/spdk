@@ -104,7 +104,7 @@ fi
 
 function set_default() {
 	echo "ifeq (\$(origin $1),default)"
-	echo "$1 = $2"
+	echo "$1=$2"
 	echo "endif"
 	echo ""
 }

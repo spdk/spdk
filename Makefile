@@ -97,11 +97,6 @@ pkgdep:
 
 $(DIRS-y): mk/cc.mk include/spdk/config.h
 
-mk/cc.mk:
-	$(Q)scripts/detect_cc.sh --cc="$(CC)" --cxx="$(CXX)" --lto="$(CONFIG_LTO)" --ld="$(LD)" > $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
-	rm -f $@.tmp
-
 include/spdk/config.h: mk/config.mk scripts/genconfig.py
 	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
 	test -z "$$PYCMD" && PYCMD=python ; \
