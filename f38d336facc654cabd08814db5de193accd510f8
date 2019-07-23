@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d71c3f5_4792358d",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-23T17:28:18Z",
+      "side": 1,
+      "message": "Will update the documentation to reflect the approach.",
+      "revId": "f38d336facc654cabd08814db5de193accd510f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e65ce485_48159ab8",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-23T17:28:18Z",
+      "side": 1,
+      "message": "should we name header file as \u0027fc_lld.h\u0027?",
+      "revId": "f38d336facc654cabd08814db5de193accd510f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "112fbe97_3c010414",
+        "filename": "lib/nvmf/fc_lld.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-23T17:28:18Z",
+      "side": 1,
+      "message": "Just to be clear, without LLD ops registration and moving to API calls will limit to single LLD for now. This is probably safe as multiple LLD config is not going to be requirement for enterprise storage solutions provider.",
+      "revId": "f38d336facc654cabd08814db5de193accd510f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa17fa1f_340701b5",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-07-23T17:28:18Z",
+      "side": 1,
+      "message": "Will adapt UT to new code changes and make it work.",
+      "revId": "f38d336facc654cabd08814db5de193accd510f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
