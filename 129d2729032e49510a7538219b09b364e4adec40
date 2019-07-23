@@ -22,6 +22,30 @@
       "revId": "129d2729032e49510a7538219b09b364e4adec40",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "115213cf_7c246bc5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-23T21:56:19Z",
+      "side": 1,
+      "message": "actually wrong because if the value in io_unit_index[] was all F\u0027s then it has no associated with the bit array, we could have been clearing a bit that was actually in use in another chunk map somewhere.",
+      "parentUuid": "bb7c538a_0bf41750",
+      "range": {
+        "startLine": 26,
+        "startChar": 53,
+        "endLine": 26,
+        "endChar": 69
+      },
+      "revId": "129d2729032e49510a7538219b09b364e4adec40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
