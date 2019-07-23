@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6880a609_d98fec77",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-23T22:01:52Z",
+      "side": 1,
+      "message": "I know the debug message wasn\u0027t changed here but the English isn\u0027t the best, should be \"tried\" instead of \"try\" or just shorten to the same as you did below.",
+      "revId": "914ae25fe616c81aa95f7409ff6739a203f37dd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
