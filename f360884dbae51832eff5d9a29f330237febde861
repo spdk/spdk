@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52f912ea_e9c7e36c",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-23T04:04:44Z",
+      "side": 1,
+      "message": "How about just:\n\nInvalid log level",
+      "range": {
+        "startLine": 121,
+        "startChar": 8,
+        "endLine": 121,
+        "endChar": 19
+      },
+      "revId": "f360884dbae51832eff5d9a29f330237febde861",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a7ac7fb_c7f0be08",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-23T04:04:44Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 197,
+        "startChar": 8,
+        "endLine": 197,
+        "endChar": 19
+      },
+      "revId": "f360884dbae51832eff5d9a29f330237febde861",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
