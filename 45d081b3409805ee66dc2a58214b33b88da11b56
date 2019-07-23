@@ -36,6 +36,23 @@
     },
     {
       "key": {
+        "uuid": "8c3b10c0_a9fc29f0",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-23T08:11:25Z",
+      "side": 1,
+      "message": "Unnecessary line.",
+      "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e31113b4_2576d33e",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 1
