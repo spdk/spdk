@@ -126,8 +126,11 @@ Added spdk_bdev_*_with_md() functions allowing for IO with metadata being transf
 separate buffer. To check support for separatate metadata, use spdk_bdev_is_md_separate().
 
 All bdevs now have a UUID. For devices whose backing hardware does not provide a UUID,
-one is automatically generated.
-Across runs of SPDK, bdevs whose UUID is automatically generated may change.
+one is automatically generated. Across runs of SPDK, bdevs whose UUID is automatically
+generated may change.
+
+A new virtual bdev module `compress` has been added to provide compression services on top of
+a thinly provisioned logical volume.  See documentation for complete details.
 
 ### nvme
 
