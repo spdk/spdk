@@ -41,6 +41,9 @@ would expect the drive to see the slowest 1% of I/O report. For underlying drive
 significant latency, the latency values provided to the drive will be additive. This should be
 taken into account if trying to achieve an artificial latency on top of an nvme drive or aio device.
 
+A new virtual bdev module `compress` has been added to provide compression services on top of
+a thinly provisioned logical volume.  See documentation for complete details.  
+
 ### nvme
 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
