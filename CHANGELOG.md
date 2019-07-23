@@ -86,6 +86,9 @@ DIF reference tag remapping is now supported for partition type virtual bdev
 modules. When using partition type virtual bdevs, block address space is
 remapped during I/O processing and DIF reference tag is remapped accordingly.
 
+A new virtual bdev module `compress` has been added to provide compression services on top of
+a thinly provisioned logical volume.  See documentation for complete details.  
+
 ### nvme
 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
