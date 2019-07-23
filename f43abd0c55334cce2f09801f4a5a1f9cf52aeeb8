@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b4ab9f6_e2f0cdbe",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-23T19:58:00Z",
+      "side": 1,
+      "message": "You can\u0027t pass backing_io_unit_size here - it\u0027s in bytes.  I think you still need to keep the io_units_per_chunk variable and calculation, and then just pass that value to _reduce_vol_get_chunk_struct_size.",
+      "revId": "f43abd0c55334cce2f09801f4a5a1f9cf52aeeb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
