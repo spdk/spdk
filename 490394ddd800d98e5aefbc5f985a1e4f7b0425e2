@@ -70,6 +70,23 @@
       "revId": "490394ddd800d98e5aefbc5f985a1e4f7b0425e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0caa7337_217152fe",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-23T15:47:07Z",
+      "side": 1,
+      "message": "I\u0027m not sure this is actually thread safe. What other places are referencing this structure? Are they possibly accessing it while these values are updated?",
+      "revId": "490394ddd800d98e5aefbc5f985a1e4f7b0425e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
