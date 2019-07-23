@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1eaff54_73f38159",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-23T08:06:58Z",
+      "side": 1,
+      "message": "Let\u0027s set the default value here.",
+      "range": {
+        "startLine": 110,
+        "startChar": 22,
+        "endLine": 110,
+        "endChar": 23
+      },
+      "revId": "490394ddd800d98e5aefbc5f985a1e4f7b0425e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
