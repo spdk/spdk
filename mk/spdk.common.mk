@@ -80,7 +80,11 @@ COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-fie
 ifneq ($(filter powerpc%,$(TARGET_MACHINE)),)
 COMMON_CFLAGS += -mcpu=$(TARGET_ARCHITECTURE)
 else ifeq ($(TARGET_MACHINE),aarch64)
+ifeq ($(TARGET_ARCHITECTURE),native)
 COMMON_CFLAGS += -march=armv8-a+crc
+else
+COMMON_CFLAGS += -march=$(TARGET_ARCHITECTURE)
+endif
 COMMON_CFLAGS += -DPAGE_SIZE=$(shell getconf PAGESIZE)
 else
 COMMON_CFLAGS += -march=$(TARGET_ARCHITECTURE)
