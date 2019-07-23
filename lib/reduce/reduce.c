@@ -1186,7 +1186,7 @@ _write_decompress_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t chunk_offset, ttl_len = 0;
+	uint64_t chunk_offset, remainder, ttl_len = 0;
 	int i;
 
 	/* Negative reduce_errno indicates failure for compression operations. */
@@ -1221,9 +1221,10 @@ _write_decompress_done(void *_req, int reduce_errno)
 	}
 	req->decomp_iovcnt += req->iovcnt;
 
-	if (ttl_len < req->vol->params.chunk_size) {
+	remainder = vol->params.chunk_size - ttl_len;
+	if (remainder) {
 		req->decomp_iov[req->decomp_iovcnt].iov_base = req->decomp_buf + ttl_len;
-		req->decomp_iov[req->decomp_iovcnt].iov_len = req->vol->params.chunk_size - ttl_len;
+		req->decomp_iov[req->decomp_iovcnt].iov_len = remainder;
 		ttl_len += req->decomp_iov[req->decomp_iovcnt].iov_len;
 		req->decomp_iovcnt++;
 	}
@@ -1445,7 +1446,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	struct spdk_reduce_vol *vol = req->vol;
 	uint64_t chunk_offset, ttl_len = 0;
 	uint64_t remainder = 0;
-	uint32_t lbsize, lb_per_chunk;
+	uint32_t lbsize;
 	int i;
 
 	TAILQ_INSERT_TAIL(&req->vol->executing_requests, req, tailq);
@@ -1460,11 +1461,10 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	}
 
 	lbsize = vol->params.logical_block_size;
-	lb_per_chunk = vol->logical_blocks_per_chunk;
 	req->decomp_iovcnt = 0;
 
 	/* Note: point to our zero buf for offset into the chunk. */
-	chunk_offset = req->offset % lb_per_chunk;
+	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
 	if (chunk_offset != 0) {
 		ttl_len += chunk_offset * lbsize;
 		req->decomp_iov[0].iov_base = g_zero_buf;
@@ -1472,7 +1472,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 		req->decomp_iovcnt = 1;
 	}
 
-	/* now the user data iov, direct to the user buffer */
+	/* now the user data iov, direct from the user buffer */
 	for (i = 0; i < req->iovcnt; i++) {
 		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
 		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
@@ -1480,9 +1480,8 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	}
 	req->decomp_iovcnt += req->iovcnt;
 
-	chunk_offset += req->length;
-	if (chunk_offset != lb_per_chunk) {
-		remainder = (lb_per_chunk - chunk_offset) * lbsize;
+	remainder = vol->params.chunk_size - ttl_len;
+	if (remainder) {
 		req->decomp_iov[req->decomp_iovcnt].iov_base = g_zero_buf;
 		req->decomp_iov[req->decomp_iovcnt].iov_len = remainder;
 		ttl_len += req->decomp_iov[req->decomp_iovcnt].iov_len;
