@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f792e8b_f56e9326",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-23T15:45:22Z",
+      "side": 1,
+      "message": "Karol\nThere are a couple of things that need to happen with URING to get the best performance\n1. When loading the nvme driver we need to set the poll_queue as shown below.\nmodprobe nvme poll_queues\u003d8\n\n2. We also need to need to set a few devices parameters to get the best performance. We use the following script.\n\nfor dev in $DEVS; do\n        echo \"Prep /dev/$dev\"\n        SYSFS\u003d/sys/block/$dev/queue\n\n        echo 0 \u003e $SYSFS/iostats\n        echo 0 \u003e $SYSFS/rq_affinity\n        echo 2 \u003e $SYSFS/nomerges\n        echo 0 \u003e $SYSFS/io_poll_delay\ndone",
+      "range": {
+        "startLine": 68,
+        "startChar": 1,
+        "endLine": 68,
+        "endChar": 33
+      },
+      "revId": "3454b71028ca663af5726a03b64a9629afcfb356",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
