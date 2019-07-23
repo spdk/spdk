@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "204a281b_e7221638",
+        "filename": "test/vmd/vmd.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-23T07:44:40Z",
+      "side": 1,
+      "message": "This part will fail if there are more than one NVMe device behind VMD, since name of the controller has to be unique. You probably want to avoid using hard-coded name.",
+      "range": {
+        "startLine": 55,
+        "startChar": 29,
+        "endLine": 55,
+        "endChar": 37
+      },
+      "revId": "3bec1abca07cbaa6067af7bf366b3fd3052f1b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
