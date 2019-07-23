@@ -349,11 +349,13 @@ CC_TYPE=$(cat mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
 
 BUILD_CMD="$CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS"
 
-# Detect architecture and force no isal if non x86 archtecture
-arch=$(uname -m)
-if [[ $arch != x86_64* ]]; then
-	echo "Notice: ISAL auto-disabled due to CPU incompatiblity."
-	CONFIG[ISAL]=n
+# Detect architecture and force no ISA-L if non-x86 archtecture
+if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+	arch=$($CC -dumpmachine)
+	if [[ $arch != x86_64* ]]; then
+		echo "Notice: ISA-L disabled due to CPU incompatiblity."
+		CONFIG[ISAL]=n
+	fi
 fi
 
 if [[ "${CONFIG[ISAL]}" = "n" ]] && [[ "${CONFIG[REDUCE]}" = "y" ]]; then
