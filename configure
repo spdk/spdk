@@ -16,6 +16,7 @@ function usage()
 	echo " -h, --help                Display this help and exit"
 	echo ""
 	echo " --prefix=path             Configure installation prefix (default: /usr/local)"
+	echo " --target-arch=arch        Target build architecture. Must be a valid GNU arch. Default: native"
 	echo ""
 	echo " --enable-debug            Configure for debug builds"
 	echo " --enable-log-bt           Enable support of backtrace printing in SPDK logs (requires libunwind)."
@@ -118,6 +119,9 @@ for i in "$@"; do
 			;;
 		--prefix=*)
 			CONFIG[PREFIX]="${i#*=}"
+			;;
+		--target-arch=*)
+			CONFIG[ARCH]="${i#*=}"
 			;;
 		--enable-debug)
 			CONFIG[DEBUG]=y

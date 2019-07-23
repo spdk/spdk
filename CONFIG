@@ -34,6 +34,9 @@
 # Installation prefix
 CONFIG_PREFIX="/usr/local"
 
+# Target architecture
+CONFIG_ARCH=native
+
 # Build with debug logging. Turn off for performance testing and normal usage
 CONFIG_DEBUG=n
 

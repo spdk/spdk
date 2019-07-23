@@ -72,7 +72,7 @@ ifneq ($(filter freebsd%,$(TARGET_TRIPLET_WORDS)),)
 OS = FreeBSD
 endif
 
-TARGET_ARCHITECTURE ?= native
+TARGET_ARCHITECTURE ?= $(CONFIG_ARCH)
 TARGET_MACHINE := $(firstword $(TARGET_TRIPLET_WORDS))
 
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
