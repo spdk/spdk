@@ -21,6 +21,7 @@ function usage()
 	err " --cxx=path                C++ compiler to use"
 	err " --ld=path                 Linker to use"
 	err " --lto=[y|n]               Attempt to configure for LTO"
+	err " --cross-prefix=prefix     Use the given prefix for the cross compiler toolchain"
 }
 
 
@@ -51,6 +52,11 @@ for i in "$@"; do
 				LD="${i#*=}"
 			fi
 			;;
+		--cross-prefix=*)
+			if [[ -n "${i#*=}" ]]; then
+				CROSS_PREFIX="${i#*=}"
+			fi
+			;;
 		--)
 			break
 			;;
@@ -65,6 +71,7 @@ done
 : ${CXX=c++}
 : ${LD=ld}
 : ${LTO=n}
+: ${CROSS_PREFIX=}
 
 CC_TYPE=$($CC -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')
 CXX_TYPE=$($CXX -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')
@@ -102,6 +109,53 @@ if [ "$LTO" = "y" ]; then
 	fi
 fi
 
+if [ ! -z "$CROSS_PREFIX" ]; then
+	expected_prefix=$($CC -dumpmachine)
+
+	if [ ! "$expected_prefix" = "$CROSS_PREFIX" ]; then
+		err "Cross prefix specified ($CROSS_PREFIX) does not match prefix of $CC ($expected_prefix)."
+
+		# Try to fix this automatically. Maybe the user set CROSS_PREFIX but not CC.
+		CC=$CROSS_PREFIX-$CC
+		if hash $CC 2>/dev/null; then
+			expected_prefix=$($CC -dumpmachine)
+
+			if [ "$expected_prefix" = "$CROSS_PREFIX" ]; then
+				err "Automatically changed CC to $CC"
+			else
+				err "Set CC to the appropriate compiler."
+				exit 1
+			fi
+		else
+			err "Set CC to the appropriate compiler."
+			exit 1
+		fi
+
+	fi
+
+	expected_prefix=$($CXX -dumpmachine)
+
+	if [ ! "$expected_prefix" = "$CROSS_PREFIX" ]; then
+		err "Cross prefix specified ($CROSS_PREFIX) does not match prefix of $CXX ($expected_prefix)."
+
+		# Try to fix this automatically. Maybe the user set CROSS_PREFIX but not CXX.
+		CXX=$CROSS_PREFIX-$CXX
+		if hash $CXX 2>/dev/null; then
+			expected_prefix=$($CXX -dumpmachine)
+
+			if [ "$expected_prefix" = "$CROSS_PREFIX" ]; then
+				err "Automatically changed CXX to $CXX"
+			else
+				err "Set CXX to the appropriate compiler."
+				exit 1
+			fi
+		else
+			err "Set CXX to the appropriate compiler."
+			exit 1
+		fi
+	fi
+fi
+
 function set_default() {
 	echo "ifeq (\$(origin $1),default)"
 	echo "$1=$2"
@@ -116,3 +170,7 @@ set_default LD $LD
 echo "CCAR=$CCAR"
 echo "CC_TYPE=$CC_TYPE"
 echo "LD_TYPE=$LD_TYPE"
+
+if [ ! -z "$CROSS_PREFIX" ]; then
+	echo "CROSS_PREFIX=$CROSS_PREFIX"
+fi
