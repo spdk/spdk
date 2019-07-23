@@ -119,6 +119,59 @@ To remove a block device representation use the delete_rbd_bdev command.
 
 `rpc.py delete_rbd_bdev Rbd0`
 
+# Compression Virtual Bdev Module {#bdev_config_compress}
+
+The compression bdev module can be configured to provide compression/decompression
+services for an underlying thinly provisioned logical volume. Although the underlying
+module can be anything (i.e. NVME bdev) the overall compression benefits will not realized
+unless the data stored on disk is placed appropriately. The compression vbdev module
+relies on an internal SPDK library called `reduce` to accomplish this, see @ref reduce
+for detailed information.
+
+The vbdev module relies on the DPDK CompressDev Framework to provide all compression
+functionality. The framework provides support for many different software only
+compression modules as well as hardware assisted support for Intel QAT. At this
+time the vbdev module supports the DPDK drivers for ISAL and QAT.
+
+Persistent memory is used to store metadata associated with the layout of the data on the
+backing device. SPDK relies on [PMDK](http://pmem.io/pmdk/) to interface persistent memory so any hardware
+supported by PMDK should work. If the directory for PMEM supplied upon vbdev creation does
+not point to persistent memory (i.e. a regular filesystem) performance will be severely
+impacted.  The vbdev module and reduce libraries were designed to use persistent memory for
+any production use.
+
+Example command
+
+`rpc.py construct_compress_bdev -p /pememm_files -b myLvol`
+
+In this example, a compression vbdev is created using persistent memory that is mapped to
+the directory `pm_files` on top of the existing thinly provisioned logical volume `myLvol`.
+The resulting compression bdev will be named `COMP_LVS/myLvol` where LVS is the name of the
+logical volume store that `myLvol` resides on.
+
+The logical volume is referred to as the backing device and once the compression vbdev is
+created it cannot be separated from the persistent memory file that will be created in
+the specified directory.  If the persistent memory file is not available, the compression
+vbdev will also not be available.
+
+By default the vbdev module will choose the QAT driver if the hardware and drivers are
+available and loaded.  If not, it will revert to the software only ISAL driver. By using
+the following command, the driver may be specified however this is not persistent so it
+must be done either upon creation or before the underlying logical volume is loaded to
+be honored. In the example below, `0` is telling the vbdev module to use QAT if available
+otherwise use ISAL, this is the default and if sufficient the command is not required. Passing
+a value of 1 tells the driver to use QAT and if not available then the creation or loading
+the vbdev should fail to create or load.  A value of '2' as shown below tells the module
+to use ISAL and if for some reason it is not available, the vbdev should fail to create or load.
+
+`rpc.py set_compress_pmd -p 2'
+
+To remove a compression vbdev, use the following command which will also delete the PMEM
+file.  If the logical volume is deleted the PMEM file will not be removed and the
+compression vbdev will not be available.
+
+`rpc.py delete_compress_bdev COMP_LVS/myLvol`
+
 # Crypto Virtual Bdev Module {#bdev_config_crypto}
 
 The crypto virtual bdev module can be configured to provide at rest data encryption
