@@ -1498,7 +1498,7 @@ bdev_histograms_mt(void)
 	CU_ASSERT(g_status == 0);
 	CU_ASSERT(g_bdev.bdev.internal.histogram_enabled == false);
 
-	spdk_histogram_data_free(g_histogram);
+	spdk_histogram_data_free(histogram);
 
 	/* Tear down the channels */
 	set_thread(0);
