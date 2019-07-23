@@ -1223,6 +1223,8 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	pthread_mutex_unlock(&g_ftl_queue_lock);
 
 	assert(LIST_EMPTY(&dev->wptr_list));
+	assert(ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_INTERNAL) == 0);
+	assert(ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_USER) == 0);
 
 	ftl_dev_dump_bands(dev);
 	ftl_dev_dump_stats(dev);
