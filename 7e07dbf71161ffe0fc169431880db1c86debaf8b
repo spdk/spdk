@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc26d4d7_cdb6e209",
+        "filename": "test/nvmf/nvmf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-23T05:54:42Z",
+      "side": 1,
+      "message": "Hi Seth,\n\nWill you add any comment like\n\nshutdown currently fails frequently with tcp transport - see issue #872.",
+      "revId": "7e07dbf71161ffe0fc169431880db1c86debaf8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
