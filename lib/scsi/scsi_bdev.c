@@ -1159,100 +1159,6 @@ bdev_scsi_mode_sense(struct spdk_bdev *bdev, int md,
 	return total;
 }
 
-static int
-bdev_scsi_mode_select_page(struct spdk_bdev *bdev,
-			   uint8_t *cdb, int pf, int sp,
-			   uint8_t *data, size_t len)
-{
-	size_t hlen, plen;
-	int spf, page, subpage;
-	int rc;
-
-	/* vendor specific */
-	if (pf == 0) {
-		return 0;
-	}
-
-	if (len < 1) {
-		return 0;
-	}
-
-	spf = !!(data[0] & 0x40);
-	page = data[0] & 0x3f;
-	if (spf) {
-		/* Sub_page mode page format */
-		hlen = 4;
-		if (len < hlen) {
-			return 0;
-		}
-		subpage = data[1];
-
-		plen = from_be16(&data[2]);
-	} else {
-		/* Page_0 mode page format */
-		hlen = 2;
-		if (len < hlen) {
-			return 0;
-		}
-		subpage = 0;
-		plen = data[1];
-	}
-
-	plen += hlen;
-	if (len < plen) {
-		return 0;
-	}
-
-	switch (page) {
-	case 0x08: { /* Caching */
-		/* int wce; */
-
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "MODE_SELECT Caching\n");
-		if (subpage != 0x00) {
-			break;
-		}
-
-		if (plen != 0x12 + hlen) {
-			/* unknown format */
-			break;
-		}
-
-		/* TODO: */
-#if 0
-		wce = data[2] & 0x4; /* WCE */
-
-		fd = bdev->fd;
-
-		rc = fcntl(fd, F_GETFL, 0);
-		if (rc != -1) {
-			if (wce) {
-				SPDK_DEBUGLOG(SPDK_LOG_SCSI, "MODE_SELECT Writeback cache enable\n");
-				rc = fcntl(fd, F_SETFL, (rc & ~O_FSYNC));
-				bdev->write_cache = 1;
-			} else {
-				rc = fcntl(fd, F_SETFL, (rc | O_FSYNC));
-				bdev->write_cache = 0;
-			}
-		}
-#endif
-
-		break;
-	}
-	default:
-		/* not supported */
-		break;
-	}
-
-	len -= plen;
-	if (len != 0) {
-		rc = bdev_scsi_mode_select_page(bdev, cdb, pf, sp, &data[plen], len);
-		if (rc < 0) {
-			return rc;
-		}
-	}
-	return 0;
-}
-
 static void
 bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 			    void *cb_arg)
@@ -1799,8 +1705,7 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 	uint8_t *data = NULL;
 	int rc = 0;
 	int pllen, md = 0;
-	int pf, sp;
-	int bdlen = 0, llba;
+	int llba;
 	int dbd, pc, page, subpage;
 	int cmd_parsed = 0;
 
@@ -1878,34 +1783,11 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		data_len = rc;
 		if (cdb[0] == SPDK_SPC_MODE_SELECT_6) {
 			rc = bdev_scsi_check_len(task, data_len, 4);
-			if (rc >= 0) {
-				bdlen = data[3];
-			}
-
 		} else {
 			rc = bdev_scsi_check_len(task, data_len, 8);
-			if (rc >= 0) {
-				bdlen = from_be16(&data[6]);
-			}
 		}
 
 		if (rc < 0) {
-			break;
-		}
-		pf = !!(cdb[1] & 0x10);
-		sp = !!(cdb[1] & 0x1);
-
-		/* page data */
-		rc = bdev_scsi_mode_select_page(
-			     bdev, cdb,
-			     pf, sp,
-			     &data[md + bdlen],
-			     pllen - (md + bdlen));
-		if (rc < 0) {
-			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-						  SPDK_SCSI_SENSE_NO_SENSE,
-						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			break;
 		}
 
