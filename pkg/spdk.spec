@@ -40,7 +40,7 @@ BuildRequires: doxygen mscgen graphviz
 Requires: dpdk >= 17.11, numactl-libs, openssl-libs
 Requires: libiscsi, libaio, libuuid
 # NVMe over Fabrics
-Requires: librdmacm, librdmacm
+Requires: librdmacm
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
