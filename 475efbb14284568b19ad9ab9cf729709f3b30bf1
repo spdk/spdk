@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f57843d_135fb831",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T23:01:34Z",
+      "side": 1,
+      "message": "is the trailing dash needed?  it looks like the dpdkbuild/Makefile adds the dash",
+      "revId": "475efbb14284568b19ad9ab9cf729709f3b30bf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48785a35_b853b666",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T23:01:34Z",
+      "side": 1,
+      "message": "looks good - but I think you can remove trailing semicolon here too",
+      "revId": "475efbb14284568b19ad9ab9cf729709f3b30bf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
