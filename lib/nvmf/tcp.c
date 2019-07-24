@@ -659,7 +659,7 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_tcp_port *port;
-	int trsvcid_int;
+	int trsvcid_int, rc;
 	uint8_t adrfam;
 
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
@@ -707,6 +707,16 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		free(port);
 		pthread_mutex_unlock(&ttransport->lock);
 		return -errno;
+	}
+
+	if (transport->opts.sock_priority) {
+		rc = spdk_sock_set_priority(port->listen_sock, transport->opts.sock_priority);
+		if (rc) {
+			SPDK_ERRLOG("Failed to set the priority of the socket=%p\n", port->listen_sock);
+			free(port);
+			pthread_mutex_unlock(&ttransport->lock);
+			return -errno;
+		}
 	}
 
 	if (spdk_sock_is_ipv4(port->listen_sock)) {
