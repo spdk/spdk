@@ -86,8 +86,11 @@ function usage()
 	echo ""
 	echo "Environment variables:"
 	echo ""
+	echo "CC                         C compiler"
 	echo "CFLAGS                     C compiler flags"
+	echo "CXX                        C++ compiler"
 	echo "CXXFLAGS                   C++ compiler flags"
+	echo "LD                         Linker"
 	echo "LDFLAGS                    Linker flags"
 	echo "DESTDIR                    Destination for 'make install'"
 	echo ""
@@ -99,8 +102,6 @@ sed -r 's/CONFIG_([[:alnum:]_]+)=(.*)/CONFIG[\1]=\2/g' CONFIG > CONFIG.sh
 declare -A CONFIG
 source CONFIG.sh
 rm CONFIG.sh
-
-BUILD_CMD="${CC:-cc} -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS"
 
 function check_dir() {
 	arg="$1"
@@ -339,6 +340,14 @@ for i in "$@"; do
 			exit 1
 	esac
 done
+
+# Detect the compiler toolchain
+scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" > mk/cc.mk;
+
+CC=$(cat mk/cc.mk | grep "CC=" | cut -d "=" -f 2)
+CC_TYPE=$(cat mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
+
+BUILD_CMD="$CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS"
 
 # Detect architecture and force no isal if non x86 archtecture
 arch=$(uname -m)
@@ -625,7 +634,6 @@ if [[ "${CONFIG[PGO_CAPTURE]}" = "y" && "${CONFIG[PGO_USE]}" = "y" ]]; then
 	echo "ERROR: --enable-pgo-capture and --enable-pgo-use are mutually exclusive."
 	exit 1
 elif [[ "${CONFIG[PGO_USE]}" = "y" ]]; then
-	CC_TYPE=$($rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" | grep "CC_TYPE" | cut -d "=" -f 2)
 	if [[ "$CC_TYPE" = "clang" ]]; then
 		# For clang we need to run an extra step on gathered profiling data.
 		echo "Generating suitable profile data"

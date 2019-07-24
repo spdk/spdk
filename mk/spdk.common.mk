@@ -138,10 +138,6 @@ endif
 ifeq ($(OS),FreeBSD)
 SYS_LIBS += -L/usr/local/lib
 COMMON_CFLAGS += -I/usr/local/include
-# Default to lld on FreeBSD
-ifeq ($(origin LD),default)
-LD = ld.lld
-endif
 endif
 
 # Attach only if PMDK lib specified with configure
