@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e08360fa_d07d465c",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1275,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T19:40:24Z",
+      "side": 1,
+      "message": "Should we just put this code in _read_read_done, in the else clause (i.e. line 1309 below).  Then we just re-use the existing req-\u003echunk_is_compressed check.  I think that makes the code a bit more clear, but I\u0027m not dead set on it.",
+      "revId": "2f5e13f6757a726ab5c420775b7318914316309a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
