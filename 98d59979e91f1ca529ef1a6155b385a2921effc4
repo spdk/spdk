@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9dc7a517_71c4892c",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T22:54:48Z",
+      "side": 1,
+      "message": "remove mk/cc.mk here?\n\nI\u0027m wondering if we should have something here that at least prints some kind of useful error if mk/cc.mk isn\u0027t found.  That would indicate that configure hasn\u0027t been run yet.",
+      "revId": "98d59979e91f1ca529ef1a6155b385a2921effc4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29afe068_53a691f9",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T22:54:48Z",
+      "side": 1,
+      "message": "is the trailing semicolon needed?",
+      "revId": "98d59979e91f1ca529ef1a6155b385a2921effc4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
