@@ -46,11 +46,12 @@ else
 DPDK_OPTS += CONFIG_RTE_LIBRTE_ETHER=n
 endif
 
-# We commented out this build option in our DPDK fork, but DPDK makefiles check
-# its value specifically against 'n' to set linking flags properly. Set it here
-# to 'n' for now.
-# TODO allow DPDK to be built as shared library
+ifeq ($(CONFIG_SHARED),y)
+DPDK_OPTS += CONFIG_RTE_BUILD_SHARED_LIB=y
+DPDK_LDFLAGS+= -rpath $(SPDK_ROOT_DIR)/dpdk/build/lib
+else
 DPDK_OPTS += CONFIG_RTE_BUILD_SHARED_LIB=n
+endif
 
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_FRAMEWORK = y
