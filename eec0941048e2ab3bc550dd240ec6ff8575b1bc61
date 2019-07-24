@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c3982b4_75b5cf50",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1016778
+      },
+      "writtenOn": "2019-07-24T09:29:05Z",
+      "side": 1,
+      "message": "This (combined with the change in https://review.gerrithub.io/c/spdk/dpdk/+/463029) worked for me, only lots of link warning reported:\n\n LINK examples/bdev/hello_world/hello_bdev\n/bin/ld.bfd: warning: librte_ethdev.so.12.1, needed by /home/yaweiniu/source/daos/_build.external/spdk/dpdk/build/lib/librte_bus_pci.so, not found (try using -rpath or -rpath-link)\n  LINK examples/blob/hello_world/hello_blob\n/bin/ld.bfd: warning: librte_ethdev.so.12.1, needed by /home/yaweiniu/source/daos/_build.external/spdk/dpdk/build/lib/librte_bus_pci.so, not found (try using -rpath or -rpath-link)\n\nBTW, shouldn\u0027t we install all the DPDK libs along with SPDK libs?",
+      "revId": "eec0941048e2ab3bc550dd240ec6ff8575b1bc61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
