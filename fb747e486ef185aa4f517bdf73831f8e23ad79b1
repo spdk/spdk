@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89575a19_c89da979",
+        "filename": "autotest.sh",
+        "patchSetId": 66
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T19:59:35Z",
+      "side": 1,
+      "message": "I\u0027m really not sure what the timing_enter/timing_exit lib calls are supposed to designate.  I noticed that this new test was added inside of them though.  I\u0027m wondering if it really belongs outside of them though, further down, at the same level as BLOBFS, PMEM and LVOL?",
+      "revId": "fb747e486ef185aa4f517bdf73831f8e23ad79b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ceac19e9_284f9fab",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 66
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T19:59:35Z",
+      "side": 1,
+      "message": "these compress_cleanup calls in the traps don\u0027t pass $1 and $2\n\nI think the error handling probably needs some extra checks - it\u0027s possible you could get there without the compressed volume getting created.",
+      "revId": "fb747e486ef185aa4f517bdf73831f8e23ad79b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3952ef6a_5f345f11",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 66
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T19:59:35Z",
+      "side": 1,
+      "message": "I prefer just passing -l lvs0 instead of -u $lvs_u.  It avoids having to do the extra variables.  Then you can also avoid the lvb_u assignment, by using the alias for the lvol (lvs0/lvb0) instead of $lvb_u.\n\nBut now I\u0027m wondering what the compress volume would prepend COMP_ to?  Will it always use the name that\u0027s passed but the user?",
+      "revId": "fb747e486ef185aa4f517bdf73831f8e23ad79b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
