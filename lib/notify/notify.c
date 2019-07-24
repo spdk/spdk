@@ -41,7 +41,9 @@
 
 #include "spdk/notify.h"
 
-#define SPDK_NOTIFY_MAX_EVENTS	1024
+#define SPDK_NOTIFY_MAX_EVENTS		1024
+/* Data queue is larger to store also events that are being processed */
+#define SPDK_NOTIFY_MAX_EVENTS_DATA	(SPDK_NOTIFY_MAX_EVENTS * 2)
 
 struct spdk_notify_type {
 	char name[SPDK_NOTIFY_MAX_NAME_SIZE];
@@ -49,8 +51,17 @@ struct spdk_notify_type {
 };
 
 pthread_mutex_t g_events_lock = PTHREAD_MUTEX_INITIALIZER;
-static struct spdk_notify_event g_events[SPDK_NOTIFY_MAX_EVENTS];
-static uint64_t g_events_head;
+
+static struct event_queue {
+	/* Data queue */
+	volatile int64_t in_tail_alloc;
+	volatile int64_t in_tail_pending;
+	struct spdk_notify_event in[SPDK_NOTIFY_MAX_EVENTS_DATA];
+	/* Event queue */
+	volatile int64_t out_tail_alloc;
+	volatile int64_t out_tail;
+	struct spdk_notify_event *out[SPDK_NOTIFY_MAX_EVENTS];
+} g_queue;
 
 static TAILQ_HEAD(, spdk_notify_type) g_notify_types = TAILQ_HEAD_INITIALIZER(g_notify_types);
 
@@ -115,16 +126,64 @@ spdk_notify_send(const char *type, const char *ctx)
 	uint64_t head;
 	struct spdk_notify_event *ev;
 
-	pthread_mutex_lock(&g_events_lock);
-	head = g_events_head;
-	g_events_head++;
+	uint64_t in_tail_pending = __sync_add_and_fetch(&g_queue.in_tail_pending, 1);
+	if (in_tail_pending > SPDK_NOTIFY_MAX_EVENTS_DATA - SPDK_NOTIFY_MAX_EVENTS) {
+		/* If number of actually processed events is larger than the
+		 * data queue back buffer, let producer to retry later or drop event
+		 */
+		__sync_sub_and_fetch(&g_queue.in_tail_pending, 1);
+		return 0; /* -EAGAIN ? */
+	}
 
-	ev = &g_events[head % SPDK_NOTIFY_MAX_EVENTS];
+	/* Allocate space for data and copy it to the data queue */
+	uint64_t in_tail_alloc = __sync_fetch_and_add(&g_queue.in_tail_alloc, 1);
+	ev = &g_queue.in[in_tail_alloc % SPDK_NOTIFY_MAX_EVENTS_DATA];
 	spdk_strcpy_pad(ev->type, type, sizeof(ev->type), '\0');
 	spdk_strcpy_pad(ev->ctx, ctx, sizeof(ev->ctx), '\0');
-	pthread_mutex_unlock(&g_events_lock);
+
+	/* Now put the pointer from data queue to the output queue */
+	head = __sync_fetch_and_add(&g_queue.out_tail_alloc, 1);
+	g_queue.out[head % SPDK_NOTIFY_MAX_EVENTS] = ev;
+
+	/* Now we know that all data is valid */
+	__sync_fetch_and_add(&g_queue.out_tail, 1);
+	__sync_sub_and_fetch(&g_queue.in_tail_pending, 1);
 
 	return head;
+}
+
+static int
+_spdk_event_get(struct spdk_notify_event *msg, int64_t index)
+{
+	struct spdk_notify_event *m;
+	int64_t out_tail;
+
+	out_tail = __sync_fetch_and_add(&g_queue.out_tail, 0);
+	if (index >= out_tail) {
+		/* Message is not available yet, so try another time */
+		return -EAGAIN;
+	}
+	if (index < out_tail - SPDK_NOTIFY_MAX_EVENTS - 1) {
+		/* Message is not available anymore */
+		return -1;
+	}
+
+	/* Get the pointer to data */
+	m = __sync_fetch_and_add(&g_queue.out[index % SPDK_NOTIFY_MAX_EVENTS], 0);
+	if (m == NULL) {
+		/* This should never happen */
+		return -1;
+	}
+	/* We need to copy event here to prevent data corruption */
+	memcpy(msg, m, sizeof(struct spdk_notify_event));
+
+	/* Revalidate data to make sure it wasn't overwritten meantime */
+	out_tail = __sync_fetch_and_add(&g_queue.out_tail, 0);
+	if (index < out_tail - SPDK_NOTIFY_MAX_EVENTS - 1) {
+		return -1;
+	}
+
+	return 0;
 }
 
 uint64_t
@@ -132,19 +191,18 @@ spdk_notify_foreach_event(uint64_t start_idx, uint64_t max,
 			  spdk_notify_foreach_event_cb cb_fn, void *ctx)
 {
 	uint64_t i;
+	struct spdk_notify_event ev;
 
-	pthread_mutex_lock(&g_events_lock);
+	for (i = 0; i < max; start_idx++, i++) {
 
-	if (g_events_head > SPDK_NOTIFY_MAX_EVENTS && start_idx < g_events_head - SPDK_NOTIFY_MAX_EVENTS) {
-		start_idx = g_events_head - SPDK_NOTIFY_MAX_EVENTS;
-	}
+		if (_spdk_event_get(&ev, start_idx)) {
+			break;
+		}
 
-	for (i = 0; start_idx < g_events_head && i < max; start_idx++, i++) {
-		if (cb_fn(start_idx, &g_events[start_idx % SPDK_NOTIFY_MAX_EVENTS], ctx)) {
+		if (cb_fn(start_idx, &ev, ctx)) {
 			break;
 		}
 	}
-	pthread_mutex_unlock(&g_events_lock);
 
 	return i;
 }
