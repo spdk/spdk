@@ -61,10 +61,21 @@ for i in "$@"; do
 	esac
 done
 
+OS=$(uname)
+
 : ${CC=cc}
 : ${CXX=c++}
-: ${LD=ld}
+: ${LD=}
 : ${LTO=n}
+
+if [ -z "$LD" ]; then
+	if [ "$OS" = "Linux" ]; then
+		LD=ld
+	fi
+	if [ "$OS" = "FreeBSD" ]; then
+		LD=ld.lld
+	fi
+fi
 
 CC_TYPE=$($CC -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')
 CXX_TYPE=$($CXX -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')
@@ -104,7 +115,7 @@ fi
 
 function set_default() {
 	echo "ifeq (\$(origin $1),default)"
-	echo "$1 = $2"
+	echo "$1=$2"
 	echo "endif"
 	echo ""
 }
