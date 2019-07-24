@@ -1791,6 +1791,11 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 			break;
 		}
 
+		rc = bdev_scsi_check_len(task, data_len, pllen);
+		if (rc < 0) {
+			break;
+		}
+
 		rc = pllen;
 		data_len = 0;
 		break;
