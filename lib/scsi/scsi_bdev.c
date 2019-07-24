@@ -1779,14 +1779,9 @@ bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		if (rc < 0) {
 			break;
 		}
-
 		data_len = rc;
-		if (cdb[0] == SPDK_SPC_MODE_SELECT_6) {
-			rc = bdev_scsi_check_len(task, data_len, 4);
-		} else {
-			rc = bdev_scsi_check_len(task, data_len, 8);
-		}
 
+		rc = bdev_scsi_check_len(task, data_len, spdk_max(pllen, md));
 		if (rc < 0) {
 			break;
 		}
