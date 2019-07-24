@@ -712,7 +712,7 @@ void spdk_blob_io_read(struct spdk_blob *blob, struct spdk_io_channel *channel,
 		       spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
- * Write the data described by 'iov' to 'length' pages beginning at 'offset' pages
+ * Write the data described by 'iov' to 'length' io_units beginning at 'offset' io_units
  * into the blob.
  *
  * \param blob Blob to write.
@@ -729,7 +729,7 @@ void spdk_blob_io_writev(struct spdk_blob *blob, struct spdk_io_channel *channel
 			 spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
- * Read 'length' pages starting at 'offset' pages into the blob into the memory
+ * Read 'length' io_units starting at 'offset' io_units into the blob into the memory
  * described by 'iov'.
  *
  * \param blob Blob to read.
@@ -746,13 +746,13 @@ void spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
- * Unmap 'length' pages beginning at 'offset' pages on the blob as unused. Unmapped
- * pages may allow the underlying storage media to behave more effciently.
+ * Unmap 'length' io_units beginning at 'offset' io_units on the blob as unused. Unmapped
+ * io_units may allow the underlying storage media to behave more effciently.
  *
  * \param blob Blob to unmap.
  * \param channel I/O channel used to submit requests.
  * \param offset Offset is in io units from the beginning of the blob.
- * \param length Size of unmap area in pages.
+ * \param length Size of unmap area in io_units.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
