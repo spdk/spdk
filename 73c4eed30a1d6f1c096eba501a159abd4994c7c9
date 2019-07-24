@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f754611c_9b506093",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-24T13:16:29Z",
+      "side": 1,
+      "message": "rc is expected to be negative, so maybe it is better to negate it so that strerror will display description instead of like \"Unknown Error -12\". That is how we did it in other patches on RPC messages improvement.",
+      "range": {
+        "startLine": 160,
+        "startChar": 48,
+        "endLine": 160,
+        "endChar": 61
+      },
+      "revId": "73c4eed30a1d6f1c096eba501a159abd4994c7c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f16705cc_18e63f66",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-24T13:16:29Z",
+      "side": 1,
+      "message": "rc is expected to be negative, so maybe it is better to negate it so that strerror will display description instead of like \"Unknown Error -12\". That is how we did it in other patches on RPC messages improvement.",
+      "range": {
+        "startLine": 345,
+        "startChar": 79,
+        "endLine": 345,
+        "endChar": 96
+      },
+      "revId": "73c4eed30a1d6f1c096eba501a159abd4994c7c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
