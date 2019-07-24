@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4a84e29_8c6350b1",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T21:26:24Z",
+      "side": 1,
+      "message": "trailing whitespace",
+      "revId": "2b2bf1c418d6ec786d6ba77557e8ca18458917c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a84b0bf_50093030",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T21:26:24Z",
+      "side": 1,
+      "message": "called libreduce to accomplish this?",
+      "revId": "2b2bf1c418d6ec786d6ba77557e8ca18458917c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a37f856e_20d1ee0f",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T21:26:24Z",
+      "side": 1,
+      "message": "\"only\" duplicated\n\nas well as hardware...\n\nI think you can just say \"for Intel QAT\".  There are QAT instantiations that aren\u0027t boards - i.e. built into the chipset.",
+      "revId": "2b2bf1c418d6ec786d6ba77557e8ca18458917c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a2fe038_6eaeb03b",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T21:26:24Z",
+      "side": 1,
+      "message": "severely",
+      "revId": "2b2bf1c418d6ec786d6ba77557e8ca18458917c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42f54a9c_ce7770e1",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T21:26:24Z",
+      "side": 1,
+      "message": "I\u0027d suggest not using ~ in the directory for the example.  I think the shell would expand that before passing it to the script, but an explicit path name may be more clear.",
+      "revId": "2b2bf1c418d6ec786d6ba77557e8ca18458917c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1092f506_29114247",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T21:26:24Z",
+      "side": 1,
+      "message": "I think this should be COMP_myLvol?  You may want to mention the COMP_ prefix somewhere in the text above.",
+      "revId": "2b2bf1c418d6ec786d6ba77557e8ca18458917c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
