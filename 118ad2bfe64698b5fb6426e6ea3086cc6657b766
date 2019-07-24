@@ -22,6 +22,30 @@
       "revId": "118ad2bfe64698b5fb6426e6ea3086cc6657b766",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d48d71a2_9e1f2f0e",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1346,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-07-24T11:11:24Z",
+      "side": 1,
+      "message": "In this version of VPP SESSION_CTRL_EVT_DISCONNECTED_REPLY can be used only as an answer on SESSION_CTRL_EVT_DISCONNECTED. It seems that for client path we never receive SESSION_CTRL_EVT_DISCONNECTED_REPLY from VPP, so this is the only way to check if disconnection success.",
+      "parentUuid": "cadc50ec_f9ecd5cb",
+      "range": {
+        "startLine": 1346,
+        "startChar": 1,
+        "endLine": 1346,
+        "endChar": 58
+      },
+      "revId": "118ad2bfe64698b5fb6426e6ea3086cc6657b766",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }

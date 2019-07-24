@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "37ef5fe7_c642ef32",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-07-24T11:11:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5e165d01_a9261dbe",
+      "range": {
+        "startLine": 884,
+        "startChar": 0,
+        "endLine": 889,
+        "endChar": 2
+      },
+      "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "285ccdef_b9011250",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 17
@@ -45,6 +69,30 @@
       "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa7461ee_b7b7e318",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-07-24T11:11:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "285ccdef_b9011250",
+      "range": {
+        "startLine": 947,
+        "startChar": 6,
+        "endLine": 947,
+        "endChar": 20
+      },
+      "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "1d7dd1f7_a753135f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-07-24T11:11:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b0792517_e3e9842f",
+      "range": {
+        "startLine": 949,
+        "startChar": 0,
+        "endLine": 952,
+        "endChar": 3
+      },
+      "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1427367_649a71b8",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 17
@@ -82,6 +154,30 @@
       "writtenOn": "2019-07-22T15:47:47Z",
       "side": 1,
       "message": "Since function vl_api_bind_sock_reply_t_handler() does nothing, is it required to assign a callback ?",
+      "range": {
+        "startLine": 1347,
+        "startChar": 1,
+        "endLine": 1347,
+        "endChar": 36
+      },
+      "revId": "3cd273c0a114b0a5352a52f7e07a4b1d0b09f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd104e90_5415260e",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1347,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-07-24T11:11:24Z",
+      "side": 1,
+      "message": "No, it just generates a warning in VPP, but this event is duplicated on the message queue, so can be removed.",
+      "parentUuid": "d1427367_649a71b8",
       "range": {
         "startLine": 1347,
         "startChar": 1,

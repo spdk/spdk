@@ -22,6 +22,30 @@
       "revId": "9367d7622acd13114294d9b670a99d05d1f61a2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e5237ca_030b9878",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-07-24T11:11:24Z",
+      "side": 0,
+      "message": "Ack",
+      "parentUuid": "6528d654_b5566c6b",
+      "range": {
+        "startLine": 292,
+        "startChar": 1,
+        "endLine": 292,
+        "endChar": 88
+      },
+      "revId": "9367d7622acd13114294d9b670a99d05d1f61a2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
