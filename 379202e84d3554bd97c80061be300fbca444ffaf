@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "eec92721_b6485a4d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-24T13:59:33Z",
+      "side": 1,
+      "message": "supports",
+      "range": {
+        "startLine": 452,
+        "startChar": 18,
+        "endLine": 452,
+        "endChar": 26
+      },
+      "revId": "379202e84d3554bd97c80061be300fbca444ffaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1c4c487_4a1115c4",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-24T13:59:33Z",
+      "side": 1,
+      "message": "supports",
+      "range": {
+        "startLine": 455,
+        "startChar": 26,
+        "endLine": 455,
+        "endChar": 34
+      },
+      "revId": "379202e84d3554bd97c80061be300fbca444ffaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "09ba930d_69ee8691",
         "filename": "include/spdk/bdev_module.h",
         "patchSetId": 2
