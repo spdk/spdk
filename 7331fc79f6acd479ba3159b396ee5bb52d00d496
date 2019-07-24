@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3de91eb_2658f361",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-24T14:03:04Z",
+      "side": 1,
+      "message": "retrieve",
+      "range": {
+        "startLine": 97,
+        "startChar": 56,
+        "endLine": 97,
+        "endChar": 63
+      },
+      "revId": "7331fc79f6acd479ba3159b396ee5bb52d00d496",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c03a9ef_4deacf02",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-07-24T14:03:04Z",
+      "side": 1,
+      "message": "of storing",
+      "range": {
+        "startLine": 98,
+        "startChar": 39,
+        "endLine": 98,
+        "endChar": 48
+      },
+      "revId": "7331fc79f6acd479ba3159b396ee5bb52d00d496",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
