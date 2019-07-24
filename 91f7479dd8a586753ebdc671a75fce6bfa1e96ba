@@ -2,6 +2,125 @@
   "comments": [
     {
       "key": {
+        "uuid": "8cb8e2d2_ec048cea",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T23:34:59Z",
+      "side": 1,
+      "message": "I think we should only pass the event type.  The event type should indicate what functions (if any) the receiver should call to get additional information.\n\nThis is similar to how NVMe AER works.  AER just indicates what kind of event occurred.  The tells the host driver which log page to read to get more information about the event.",
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6900b94_79155023",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T23:34:59Z",
+      "side": 1,
+      "message": "I think for this new function, we should require that the user pass a callback function.  We do have some existing spdk_bdev_open callers that don\u0027t provide a callback function - that\u0027s fine for now, but I think it\u0027s bad practice (shouldn\u0027t you always want to know if your bdev has been removed?)\n\nThen just change spdk_bdev_open to use a dummy callback if the user doesn\u0027t pass one.",
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0a1e865_4ef51ba3",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T23:34:59Z",
+      "side": 1,
+      "message": "Let\u0027s just say \"asynchronous event such as bdev removal\".  Let\u0027s leave \"resize\" out.",
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b014a10e_6e6fd639",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 4196,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T23:34:59Z",
+      "side": 1,
+      "message": "should we still pass the bdev here?  I know it\u0027s being removed, but the bdev is still technically valid until the upper layer has closed it",
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3606eb71_4fa0c34c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 4217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T23:34:59Z",
+      "side": 1,
+      "message": "remove_cb \u003d\u003e event_cb\n\nSince remove_cb is deprecated, let\u0027s just say event_cb (although technically it could be either)",
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e45bfc5c_ee291157",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 4219,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T23:34:59Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f92e0f3d_3899483e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 4283,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-24T23:34:59Z",
+      "side": 1,
+      "message": "let\u0027s make these changes in a separate patch - then the spdk_bdev_open_ext patch just calls this new function and doesn\u0027t worry about the refactoring",
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a36c1285_3e0984ad",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 12
