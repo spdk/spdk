@@ -76,11 +76,16 @@ struct compress_dev {
 };
 static TAILQ_HEAD(, compress_dev) g_compress_devs = TAILQ_HEAD_INITIALIZER(g_compress_devs);
 
+/* Although ISAL PMD reports 'unlimited' qpairs, it has an unplanned limit of 99 due to
+ * the length of the internal ring name that it creates, it breaks a limit in the generic
+ * ring code and fails the qp initialization.
+ */
+#define MAX_NUM_QP 99
 /* Global list and lock for unique device/queue pair combos */
 struct comp_device_qp {
 	struct compress_dev		*device;	/* ptr to compression device */
 	uint8_t				qp;		/* queue pair for this node */
-	bool				in_use;		/* whether this node is in use or not */
+	struct spdk_thread		*thread;	/* thead that this qp is assigned to */
 	TAILQ_ENTRY(comp_device_qp)	link;
 };
 static TAILQ_HEAD(, comp_device_qp) g_comp_device_qp = TAILQ_HEAD_INITIALIZER(g_comp_device_qp);
@@ -188,10 +193,10 @@ shinfo_free_cb(void *arg1, void *arg2)
 
 /* Called by vbdev_init_compress_drivers() to init each discovered compression device */
 static int
-create_compress_dev(uint8_t index, uint16_t num_lcores)
+create_compress_dev(uint8_t index)
 {
 	struct compress_dev *device;
-	uint16_t q_pairs = num_lcores;
+	uint16_t q_pairs;
 	uint8_t cdev_id;
 	int rc, i;
 	struct comp_device_qp *dev_qp;
@@ -209,9 +214,9 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 
 	/* Zero means no limit so choose number of lcores. */
 	if (device->cdev_info.max_nb_queue_pairs == 0) {
-		q_pairs = num_lcores;
+		q_pairs = MAX_NUM_QP;
 	} else {
-		q_pairs = spdk_min(device->cdev_info.max_nb_queue_pairs, num_lcores);
+		q_pairs = spdk_min(device->cdev_info.max_nb_queue_pairs, MAX_NUM_QP);
 	}
 
 	/* Configure the compression device. */
@@ -236,7 +241,7 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 						      rte_socket_id());
 		if (rc) {
 			SPDK_ERRLOG("Failed to setup queue pair on "
-				    "compressdev %u\n", cdev_id);
+				    "compressdev %u with error %u\n", cdev_id, rc);
 			rc = -EINVAL;
 			goto err;
 		}
@@ -279,7 +284,7 @@ create_compress_dev(uint8_t index, uint16_t num_lcores)
 		}
 		dev_qp->device = device;
 		dev_qp->qp = i;
-		dev_qp->in_use = false;
+		dev_qp->thread = NULL;
 		TAILQ_INSERT_TAIL(&g_comp_device_qp, dev_qp, link);
 	}
 
@@ -308,7 +313,6 @@ static int
 vbdev_init_compress_drivers(void)
 {
 	uint8_t cdev_count, i;
-	uint16_t num_lcores = rte_lcore_count();
 	struct compress_dev *tmp_dev;
 	struct compress_dev *device;
 	int rc;
@@ -352,7 +356,7 @@ vbdev_init_compress_drivers(void)
 
 	/* Init all devices */
 	for (i = 0; i < cdev_count; i++) {
-		rc = create_compress_dev(i, num_lcores);
+		rc = create_compress_dev(i);
 		if (rc != 0) {
 			goto error_create_compress_devs;
 		}
@@ -1200,11 +1204,16 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 		/* Now assign a q pair */
 		pthread_mutex_lock(&g_comp_device_qp_lock);
 		TAILQ_FOREACH(device_qp, &g_comp_device_qp, link) {
-			if ((strcmp(device_qp->device->cdev_info.driver_name, comp_bdev->drv_name) == 0) &&
-			    (device_qp->in_use == false)) {
-				comp_bdev->device_qp = device_qp;
-				device_qp->in_use = true;
-				break;
+			if ((strcmp(device_qp->device->cdev_info.driver_name, comp_bdev->drv_name) == 0)) {
+				if (device_qp->thread == spdk_get_thread()) {
+					comp_bdev->device_qp = device_qp;
+					break;
+				}
+				if (device_qp->thread == NULL) {
+					comp_bdev->device_qp = device_qp;
+					device_qp->thread = spdk_get_thread();
+					break;
+				}
 			}
 		}
 		pthread_mutex_unlock(&g_comp_device_qp_lock);
@@ -1220,7 +1229,7 @@ static void
 _clear_qp_and_put_channel(struct vbdev_compress *comp_bdev)
 {
 	pthread_mutex_lock(&g_comp_device_qp_lock);
-	comp_bdev->device_qp->in_use = false;
+	comp_bdev->device_qp->thread = NULL;
 	pthread_mutex_unlock(&g_comp_device_qp_lock);
 
 	spdk_put_io_channel(comp_bdev->base_ch);
