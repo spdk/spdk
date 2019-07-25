@@ -129,7 +129,7 @@ spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
 	size_t zero_len = 0;
 	struct iovec *tmp;
 
-	if (tgt->discovery_log_page == NULL ||
+	if (offset == 0 || tgt->discovery_log_page == NULL ||
 	    tgt->discovery_log_page->genctr != tgt->discovery_genctr) {
 		nvmf_update_discovery_log(tgt, hostnqn);
 	}
