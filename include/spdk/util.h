@@ -120,6 +120,23 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
 	return (num + divisor - 1) / divisor;
 }
 
+
+/**
+ * Scan build is really pessimistic and assumes that mempool functions can
+ * dequeue NULL buffers even if they return success. This is obviously a false
+ * possitive, but the mempool dequeue can be done in a DPDK inline function that
+ * we can't decorate with usual assert(buf != NULL). Instead, we'll
+ * preinitialize the dequeued buffer array with some dummy objects.
+ */
+#define SPDK_CLANG_ANALYZER_PREINIT_PTR_ARRAY(arr, arr_size, buf_size) \
+	do { \
+		static char dummy_buf[buf_size]; \
+		int i; \
+		for (i = 0; i < arr_size; i++) { \
+			arr[i] = (void *)dummy_buf; \
+		} \
+	} while (0)
+
 #ifdef __cplusplus
 }
 #endif
