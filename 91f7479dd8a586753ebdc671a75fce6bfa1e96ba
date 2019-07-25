@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "89fecc59_842f8fe4",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-25T09:36:47Z",
+      "side": 1,
+      "message": "Not really - what if you want to open a bdev for roughly just a few moments? You don\u0027t need all the complexity of handling hotremoval - you\u0027ll close the bdev soon anyway.\n\nOne example could be gpt bdev examine. You open a bdev, issue one READ, create gpt vbdevs and finally close the bdev. There\u0027s no need to interrupt this process.",
+      "parentUuid": "a6900b94_79155023",
+      "revId": "91f7479dd8a586753ebdc671a75fce6bfa1e96ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b0a1e865_4ef51ba3",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 12
