@@ -137,7 +137,9 @@ spdk_sock_remove_sock_group_from_map_table(struct spdk_sock_group *group)
 
 	pthread_mutex_lock(&g_map_table_mutex);
 	STAILQ_FOREACH(entry, &g_placement_id_map, link) {
-		STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
+		if (entry->group == group) {
+			STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
+		}
 	}
 	pthread_mutex_unlock(&g_map_table_mutex);
 
