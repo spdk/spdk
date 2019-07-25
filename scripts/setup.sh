@@ -13,7 +13,7 @@ function usage()
 		options="[config|reset|help]"
 	fi
 
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Helper script for allocating hugepages and binding NVMe, I/OAT, VMD and Virtio devices"
 	echo "to a generic VFIO kernel driver. If VFIO is not available on the system, this script"
 	echo "will fall back to UIO. NVMe and Virtio devices with active mountpoints will be ignored."

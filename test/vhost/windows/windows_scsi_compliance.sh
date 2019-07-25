@@ -18,7 +18,7 @@ rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 function usage()
 {
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Windows Server scsi compliance test"
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo "  --vm-ssh-pass=PASSWORD    Text password for the VM"
