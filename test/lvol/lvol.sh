@@ -12,7 +12,7 @@ x=""
 rpc_py="$rootdir/scripts/rpc.py "
 
 function usage() {
-    [[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+    [[ -n $2 ]] && ( echo "$2"; echo ""; )
     echo "Shortcut script for doing automated lvol tests"
     echo "Usage: $(basename $1) [OPTIONS]"
     echo

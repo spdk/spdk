@@ -9,7 +9,7 @@ function migration_tc2_cleanup_nvmf_tgt()
 		return
 	fi
 
-	if [[ ! -z "$1" ]]; then
+	if [[ -n "$1" ]]; then
 		trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 		pkill --signal $1 -F $nvmf_dir/nvmf_tgt.pid || true
 		sleep 5

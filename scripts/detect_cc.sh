@@ -120,7 +120,7 @@ if [ "$LTO" = "y" ]; then
 	fi
 fi
 
-if [ ! -z "$CROSS_PREFIX" ]; then
+if [ -n "$CROSS_PREFIX" ]; then
 	expected_prefix=$($CC -dumpmachine)
 
 	if [ ! "$expected_prefix" = "$CROSS_PREFIX" ]; then
@@ -182,6 +182,6 @@ echo "CCAR=$CCAR"
 echo "CC_TYPE=$CC_TYPE"
 echo "LD_TYPE=$LD_TYPE"
 
-if [ ! -z "$CROSS_PREFIX" ]; then
+if [ -n "$CROSS_PREFIX" ]; then
 	echo "CROSS_PREFIX=$CROSS_PREFIX"
 fi
