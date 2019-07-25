@@ -133,11 +133,13 @@ spdk_sock_map_lookup(int placement_id, struct spdk_sock_group **group)
 static void
 spdk_sock_remove_sock_group_from_map_table(struct spdk_sock_group *group)
 {
-	struct spdk_sock_placement_id_entry *entry;
+	struct spdk_sock_placement_id_entry *entry, *tmp;
 
 	pthread_mutex_lock(&g_map_table_mutex);
-	STAILQ_FOREACH(entry, &g_placement_id_map, link) {
-		STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
+	STAILQ_FOREACH_SAFE(entry, &g_placement_id_map, link, tmp) {
+		if (entry->group == group) {
+			STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
+		}
 	}
 	pthread_mutex_unlock(&g_map_table_mutex);
 
