@@ -22,7 +22,7 @@ ISCSI_TGT_CM=0x02
 # Performance test for iscsi_tgt, run on devices with proper hardware support (target and inititator)
 function usage()
 {
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Usage: $(basename $1) [options]"
 	echo "-h, --help                Print help and exit"
 	echo "    --fiopath=PATH        Path to fio directory on initiator. [default=$FIO_PATH]"

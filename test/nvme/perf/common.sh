@@ -304,7 +304,7 @@ function run_bdevperf(){
 function usage()
 {
 	set +x
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Run NVMe PMD/BDEV performance test. Change options for easier debug and setup configuration"
 	echo "Usage: $(basename $1) [options]"
 	echo "-h, --help                Print help and exit"

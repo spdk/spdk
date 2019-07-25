@@ -96,7 +96,7 @@ function notice()
 
 function get_vhost_dir()
 {
-	if [[ ! -z "$1" ]]; then
+	if [[ -n "$1" ]]; then
 		assert_number "$1"
 		local vhost_num=$1
 	else
@@ -112,7 +112,7 @@ function vhost_list_all()
 	local vhost_list="$(echo $TARGET_DIR/[0-9]*)"
 	shopt -u nullglob
 
-	if [[ ! -z "$vhost_list" ]]; then
+	if [[ -n "$vhost_list" ]]; then
 		vhost_list="$(basename --multiple $vhost_list)"
 		echo "${vhost_list//vhost/}"
 	fi
@@ -197,7 +197,7 @@ function vhost_kill()
 {
 	local rc=0
 	local vhost_num=0
-	if [[ ! -z "$1" ]]; then
+	if [[ -n "$1" ]]; then
 		vhost_num=$1
 		assert_number "$vhost_num"
 	fi
@@ -251,7 +251,7 @@ function vhost_kill()
 function vhost_rpc
 {
 	local vhost_num=0
-	if [[ ! -z "$1" ]]; then
+	if [[ -n "$1" ]]; then
 		vhost_num=$1
 		assert_number "$vhost_num"
 	fi
@@ -465,7 +465,7 @@ function vm_kill()
 function vm_list_all()
 {
 	local vms="$(shopt -s nullglob; echo $VM_DIR/[0-9]*)"
-	if [[ ! -z "$vms" ]]; then
+	if [[ -n "$vms" ]]; then
 		basename --multiple $vms
 	fi
 }
@@ -574,7 +574,7 @@ function vm_setup()
 	done
 
 	# Find next directory we can use
-	if [[ ! -z $force_vm ]]; then
+	if [[ -n $force_vm ]]; then
 		vm_num=$force_vm
 
 		vm_num_is_valid $vm_num || return 1
@@ -598,18 +598,18 @@ function vm_setup()
 		return 1
 	fi
 
-	if [[ ! -z "$vm_migrate_to" && ! -z "$vm_incoming" ]]; then
+	if [[ -n "$vm_migrate_to" && -n "$vm_incoming" ]]; then
 		error "'--incoming' and '--migrate-to' cannot be used together"
 		return 1
-	elif [[ ! -z "$vm_incoming" ]]; then
-		if [[ ! -z "$os_mode" || ! -z "$os_img" ]]; then
+	elif [[ -n "$vm_incoming" ]]; then
+		if [[ -n "$os_mode" || -n "$os_img" ]]; then
 			error "'--incoming' can't be used together with '--os' nor '--os-mode'"
 			return 1
 		fi
 
 		os_mode="original"
 		os="$VM_DIR/$vm_incoming/os.qcow2"
-	elif [[ ! -z "$vm_migrate_to" ]]; then
+	elif [[ -n "$vm_migrate_to" ]]; then
 		[[ "$os_mode" != "backing" ]] && warning "Using 'backing' mode for OS since '--migrate-to' is used"
 		os_mode=backing
 	fi
@@ -693,7 +693,7 @@ function vm_setup()
 	cmd+="-m $guest_memory --enable-kvm -cpu host -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize ${eol}"
 	cmd+="-object memory-backend-file,id=mem,size=${guest_memory}M,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
 	[[ $os_mode == snapshot ]] && cmd+="-snapshot ${eol}"
-	[[ ! -z "$vm_incoming" ]] && cmd+=" -incoming tcp:0:$migration_port ${eol}"
+	[[ -n "$vm_incoming" ]] && cmd+=" -incoming tcp:0:$migration_port ${eol}"
 	cmd+="-monitor telnet:127.0.0.1:$monitor_port,server,nowait ${eol}"
 	cmd+="-numa node,memdev=mem ${eol}"
 	cmd+="-pidfile $qemu_pid_file ${eol}"
@@ -724,7 +724,7 @@ function vm_setup()
 				local raw_name="RAWSCSI"
 				local raw_disk=$vm_dir/test.img
 
-				if [[ ! -z $disk ]]; then
+				if [[ -n $disk ]]; then
 					[[ ! -b $disk ]] && touch $disk
 					local raw_disk=$(readlink -f $disk)
 				fi
@@ -791,7 +791,7 @@ function vm_setup()
 		return 1
 	fi
 
-	[[ ! -z $qemu_args ]] && cmd+=" $qemu_args ${eol}"
+	[[ -n $qemu_args ]] && cmd+=" $qemu_args ${eol}"
 	# remove last $eol
 	cmd="${cmd%\\\\\\n  }"
 
@@ -1073,7 +1073,7 @@ function run_fio()
 		esac
 	done
 
-	if [[ ! -z "$fio_bin" && ! -r "$fio_bin" ]]; then
+	if [[ -n "$fio_bin" && ! -r "$fio_bin" ]]; then
 		error "FIO binary '$fio_bin' does not exist"
 		return 1
 	fi
@@ -1094,7 +1094,7 @@ function run_fio()
 
 		vm_exec $vm_num cat /root/$job_fname
 		if ! $run_server_mode; then
-			if [[ ! -z "$fio_bin" ]]; then
+			if [[ -n "$fio_bin" ]]; then
 				cat $fio_bin | vm_exec $vm_num 'cat > /root/fio; chmod +x /root/fio'
 			fi
 
@@ -1110,7 +1110,7 @@ function run_fio()
 	fi
 
 	$rootdir/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
-		$([[ ! -z "$fio_bin" ]] && echo "--fio-bin=$fio_bin") \
+		$([[ -n "$fio_bin" ]] && echo "--fio-bin=$fio_bin") \
 		--out=$out $json ${fio_disks%,}
 }
 

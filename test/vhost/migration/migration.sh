@@ -20,7 +20,7 @@ RDMA_TARGET_IP=""
 RDMA_INITIATOR_IP=""
 function usage()
 {
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for doing automated test of live migration."
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo
@@ -58,7 +58,7 @@ done
 
 vhosttestinit
 
-[[ ! -z "$test_cases" ]] || fail "Need '--test-cases=' parameter"
+[[ -n "$test_cases" ]] || fail "Need '--test-cases=' parameter"
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 
@@ -69,7 +69,7 @@ function vm_monitor_send()
 	local vm_dir="$VM_DIR/$1"
 	local vm_monitor_port=$(cat $vm_dir/monitor_port)
 
-	[[ ! -z "$vm_monitor_port" ]] || fail "No monitor port!"
+	[[ -n "$vm_monitor_port" ]] || fail "No monitor port!"
 
 	shift 2
 	nc 127.0.0.1 $vm_monitor_port "$@" > $cmd_result_file
