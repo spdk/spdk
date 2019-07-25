@@ -87,6 +87,24 @@
       "revId": "490394ddd800d98e5aefbc5f985a1e4f7b0425e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c7267be_55cbdc14",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-25T03:02:05Z",
+      "side": 1,
+      "message": "The only race condition here is RPC and real hotplug can happen at the same time, but for the real scenarios, we will call this RPC before construct_nvme_bdev, this is safe for that usage.",
+      "parentUuid": "0caa7337_217152fe",
+      "revId": "490394ddd800d98e5aefbc5f985a1e4f7b0425e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
