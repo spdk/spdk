@@ -207,7 +207,7 @@ if [ ${DRY_RUN} != 1 ]; then
 	mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
 	cp ${DIR}/Vagrantfile ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}
 	pushd "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
-	if [ ! -z "${http_proxy}" ]; then
+	if [ -n "${http_proxy}" ]; then
 		export http_proxy
 		export https_proxy
 		if vagrant plugin list | grep -q vagrant-proxyconf; then
