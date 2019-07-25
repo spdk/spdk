@@ -86,6 +86,12 @@ DIF reference tag remapping is now supported for partition type virtual bdev
 modules. When using partition type virtual bdevs, block address space is
 remapped during I/O processing and DIF reference tag is remapped accordingly.
 
+Added `spdk_bdev_*_with_md()` functions allowing for IO with metadata being transferred in
+separate buffer. To check support for separatate metadata, use `spdk_bdev_is_md_separate()`.
+
+All bdevs now have a UUID, it is passed from user or generatated at registration time.
+Depending on bdev type, UUID might not be persistend between the application runs.
+
 ### nvme
 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
@@ -111,6 +117,14 @@ structure to allow caller to override the virtual and optionally physical addres
 of the submission and completion queue pair to be created.  This is supported on
 the PCIe transport only.
 
+Added `disable_error_logging` to `struct spdk_nvme_ctrlr_opts`, which disables
+logging of failed requests. By default logging is enabled.
+
+Added `spdk_nvme_qpair_print_command()`, `spdk_nvme_qpair_print_completion()` and
+`spdk_nvme_cpl_get_status_string()`. Allowing for easier display of error messages.
+
+Added support for NVMe Sanitize command.
+
 ### env
 
 The parameter `free_space` has been added to spdk_ring_enqueue() to wait when
@@ -119,6 +133,9 @@ the ring.
 
 A new API `spdk_mempool_lookup` has been added to lookup the memory pool created
 by the primary process.
+
+Added new API `spdk_pci_get_first_device()` and `spdk_pci_get_next_device()` to allow
+iterating over
 
 ### sock
 
@@ -138,9 +155,28 @@ Added thread_get_stats RPC method to retrieve existing statistics.
 
 Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
 
+Function `spdk_jsonrpc_begin_result()` now always succeeds and returns valid
+pointer for JSON write context.
+
+Added SPDK_RPC_REGISTER_ALIAS_DEPRECATED to help with deprecation process,
+when renaming existing RPC. First time a deprecated alias is used,
+it will print a warning message.
+
 ### blobstore
 
 A snapshot can now be deleted if there is only a single clone on top of it.
+
+### thread
+
+Exposed `spdk_set_thread()` in order for applications to associate
+with SPDK thread when necessary.
+
+Added `spdk_thread_destroy()` to allow framework polling the thread to
+release resources associated with that thread.
+
+### vhost
+
+Added completion callback to vhost library initalization `spdk_vhost_init()`.
 
 ## v19.04:
 
