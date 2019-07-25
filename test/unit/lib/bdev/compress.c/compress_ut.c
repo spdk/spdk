@@ -233,6 +233,8 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt
 #include "bdev/compress/vbdev_compress.c"
 
 /* SPDK stubs */
+DEFINE_STUB(spdk_bdev_get_aliases, const struct spdk_bdev_aliases_list *,
+	    (const struct spdk_bdev *bdev), NULL);
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *g_bdev_io));
 DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
