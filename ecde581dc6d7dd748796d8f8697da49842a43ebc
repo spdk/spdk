@@ -16,6 +16,24 @@
       "revId": "ecde581dc6d7dd748796d8f8697da49842a43ebc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d94c5dd0_7b6acaac",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-25T00:06:17Z",
+      "side": 1,
+      "message": "Never mind - I understand now after looking at future patches.",
+      "parentUuid": "65d73f55_8d738f82",
+      "revId": "ecde581dc6d7dd748796d8f8697da49842a43ebc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
