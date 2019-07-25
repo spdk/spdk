@@ -228,6 +228,39 @@ else
 	echo "You do not have pycodestyle or pep8 installed so your Python style is not being checked!"
 fi
 
+if hash shellcheck; then
+	echo -n "Checking Bash style..."
+
+	# Currently we have a lot of errors, warnings and styling problem messages.
+	# Exclude list currently holds all of reported errors and is subject to change.
+	# For more infoamation about the topic and a list of human-friendly error descripions
+	# go to: https://trello.com/c/29Z90j1W
+	# Error descriptions can also be found at: https://github.com/koalaman/shellcheck/wiki
+	SHCK_EXCLUDE="SC1001,SC1003,SC1004,SC1009,SC1010,SC1019,SC1020,SC1072,SC1073,\
+SC1083,SC1087,SC1090,SC1091,SC1113,SC2001,SC2002,SC2003,SC2004,SC2005,SC2006,\
+SC2007,SC2009,SC2010,SC2012,SC2013,SC2015,SC2016,SC2018,SC2019,SC2022,SC2026,\
+SC2027,SC2030,SC2031,SC2034,SC2035,SC2039,SC2043,SC2044,SC2045,SC2046,SC2048,\
+SC2059,SC2064,SC2068,SC2070,SC2074,SC2086,SC2088,SC2089,SC2090,SC2091,SC2094,\
+SC2097,SC2098,SC2103,SC2115,SC2116,SC2119,SC2120,SC2121,SC2124,SC2126,SC2128,\
+SC2129,SC2140,SC2142,SC2143,SC2145,SC2146,SC2148,SC2152,SC2153,SC2154,SC2155,\
+SC2162,SC2164,SC2165,SC2166,SC2167,SC2174,SC2178,SC2181,SC2191,SC2192,SC2195,\
+SC2199,SC2206,SC2207,SC2209,SC2214,SC2219,SC2220,SC2223,SC2230,SC2231,SC2233,SC2235,SC2236"
+	SHCH_ARGS=" -e $SHCK_EXCLUDE"
+
+	error=0
+	git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS > shellcheck.log || error=1
+	if [ $error -ne 0 ]; then
+		echo " Bash formatting errors detected"
+		cat shellcheck.log
+		rc=1
+	else
+		echo " OK"
+	fi
+	rm -f shellcheck.log
+else
+	echo "You do not have shellcheck installed so your Bash style is not being checked!"
+fi
+
 # Check if any of the public interfaces were modified by this patch.
 # Warn the user to consider updating the changelog any changes
 # are detected.
