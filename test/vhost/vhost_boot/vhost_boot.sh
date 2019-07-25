@@ -27,7 +27,7 @@ function err_clean
 
 function usage()
 {
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Usage: $(basename $1) vm_image=PATH [-h|--help]"
 	echo "-h, --help            Print help and exit"
 	echo "    --vm_image=PATH   Path to VM image used in these tests"

@@ -213,7 +213,7 @@ fi
 # By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.
 # If a DPDK installation is found in a well-known location though, WITH_DPDK_DIR will be
 # set which will override the default and use that DPDK installation instead.
-if [ ! -z "$WITH_DPDK_DIR" ]; then
+if [ -n "$WITH_DPDK_DIR" ]; then
 	config_params+=" --with-dpdk=$WITH_DPDK_DIR"
 fi
 
@@ -306,7 +306,7 @@ function process_core() {
 			exe=$(eu-readelf -n "$core" | grep -oP -m1 "$exe.+")
 		fi
 		echo "exe for $core is $exe"
-		if [[ ! -z "$exe" ]]; then
+		if [[ -n "$exe" ]]; then
 			if hash gdb &>/dev/null; then
 				gdb -batch -ex "thread apply all bt full" $exe $core
 			fi
@@ -816,7 +816,7 @@ function freebsd_update_contigmem_mod()
 {
 	if [ $(uname) = FreeBSD ]; then
 		kldunload contigmem.ko || true
-		if [ ! -z "$WITH_DPDK_DIR" ]; then
+		if [ -n "$WITH_DPDK_DIR" ]; then
 			echo "Warning: SPDK only works on FreeBSD with patches that only exist in SPDK's dpdk submodule"
 			cp -f "$WITH_DPDK_DIR/kmod/contigmem.ko" /boot/modules/
 			cp -f "$WITH_DPDK_DIR/kmod/contigmem.ko" /boot/kernel/

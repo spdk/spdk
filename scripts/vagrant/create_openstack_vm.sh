@@ -15,7 +15,7 @@ mkdir -vp "${VAGRANT_TARGET}/${VAGRANT_DISTRO}"
 cp "${testdir}/Vagrantfile_openstack_vm" "${VAGRANT_TARGET}/${VAGRANT_DISTRO}/Vagrantfile"
 
 pushd "${VAGRANT_TARGET}/${VAGRANT_DISTRO}"
-if [ ! -z "${http_proxy}" ]; then
+if [ -n "${http_proxy}" ]; then
 	export http_proxy
 fi
 
