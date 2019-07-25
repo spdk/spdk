@@ -146,8 +146,7 @@ static bool g_qat_available = false;
 static bool g_isal_available = false;
 
 /* Create shrared (between all ops per PMD) compress xforms. */
-static struct rte_comp_xform g_comp_xform = (struct rte_comp_xform)
-{
+static struct rte_comp_xform g_comp_xform = {
 	.type = RTE_COMP_COMPRESS,
 	.compress = {
 		.algo = RTE_COMP_ALGO_DEFLATE,
@@ -159,8 +158,7 @@ static struct rte_comp_xform g_comp_xform = (struct rte_comp_xform)
 	}
 };
 /* Create shrared (between all ops per PMD) decompress xforms. */
-static struct rte_comp_xform g_decomp_xform = (struct rte_comp_xform)
-{
+static struct rte_comp_xform g_decomp_xform = {
 	.type = RTE_COMP_DECOMPRESS,
 	.decompress = {
 		.algo = RTE_COMP_ALGO_DEFLATE,
