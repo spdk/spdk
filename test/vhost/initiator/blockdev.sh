@@ -12,7 +12,7 @@ virtio_with_unmap=""
 
 function usage()
 {
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Script for running vhost initiator tests."
 	echo "Usage: $(basename $1) [-h|--help] [--fiobin=PATH]"
 	echo "-h, --help            Print help and exit"

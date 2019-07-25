@@ -7,7 +7,7 @@ source $rootdir/test/vhost/common.sh
 
 function usage()
 {
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for running vhost app."
 	echo "Usage: $(basename $1) [-x] [-h|--help] [--clean-build]"
 	echo "-h, --help           print help and exit"
