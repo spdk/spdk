@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2eb558c_08eb9a76",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1868,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-25T00:36:14Z",
+      "side": 1,
+      "message": "data_len has the default value -1 here, you should move this part before the bdev_scsi_mode_select_page().",
+      "revId": "a9f52f0f6fc320f53ce2fc4ade28c33c389445b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
