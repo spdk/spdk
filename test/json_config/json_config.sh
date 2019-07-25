@@ -104,7 +104,7 @@ function json_config_test_start_app() {
 	local app=$1
 	shift
 
-	[[ ! -z "${#app_socket[$app]}" ]] # Check app type
+	[[ -n "${#app_socket[$app]}" ]] # Check app type
 	[[ -z "${app_pid[$app]}" ]] # Assert if app is not running
 
 	local app_extra_params=""
@@ -126,8 +126,8 @@ function json_config_test_shutdown_app() {
 	local app=$1
 
 	# Check app type && assert app was started
-	[[ ! -z "${#app_socket[$app]}" ]]
-	[[ ! -z "${app_pid[$app]}" ]]
+	[[ -n "${#app_socket[$app]}" ]]
+	[[ -n "${app_pid[$app]}" ]]
 
 	# kill_instance RPC will trigger ASAN
 	kill -SIGINT ${app_pid[$app]}
@@ -140,7 +140,7 @@ function json_config_test_shutdown_app() {
 		sleep 0.5
 	done
 
-	if [[ ! -z "${app_pid[$app]}" ]]; then
+	if [[ -n "${app_pid[$app]}" ]]; then
 		echo "SPDK $app shutdown timeout"
 		return 1
 	fi
@@ -262,7 +262,7 @@ function cleanup_bdev_subsystem_config() {
 		rm -f /tmp/sample_aio
 	fi
 
-	if [[ $SPDK_TEST_PMDK -eq 1 && ! -z "$pmem_pool_file" && -f "$pmem_pool_file" ]]; then
+	if [[ $SPDK_TEST_PMDK -eq 1 && -n "$pmem_pool_file" && -f "$pmem_pool_file" ]]; then
 		tgt_rpc delete_pmem_bdev pmem1
 		tgt_rpc delete_pmem_pool $pmem_pool_file
 		rm -f $pmem_pool_file
@@ -384,7 +384,7 @@ function json_config_test_fini() {
 	timing_enter $FUNCNAME
 	local ret=0
 
-	if [[ ! -z "${app_pid[initiator]}" ]]; then
+	if [[ -n "${app_pid[initiator]}" ]]; then
 		if ! json_config_test_shutdown_app initiator; then
 			kill -9 ${app_pid[initiator]}
 			app_pid[initiator]=
@@ -392,7 +392,7 @@ function json_config_test_fini() {
 		fi
 	fi
 
-	if [[ ! -z "${app_pid[target]}" ]]; then
+	if [[ -n "${app_pid[target]}" ]]; then
 
 		# Remove any artifacts we created (files, lvol etc)
 		cleanup_bdev_subsystem_config
@@ -412,7 +412,7 @@ function json_config_test_fini() {
 }
 
 function json_config_clear() {
-	[[ ! -z "${#app_socket[$1]}" ]] # Check app type
+	[[ -n "${#app_socket[$1]}" ]] # Check app type
 	$rootdir/test/json_config/clear_config.py -s ${app_socket[$1]} clear_config
 
 	# Check if config is clean.
