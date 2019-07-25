@@ -630,10 +630,11 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		}
 	}
 
-	/* Allocate crypto operations. */
-#ifdef DEBUG
-	memset(crypto_ops, 0, sizeof(crypto_ops));
+#ifdef __clang_analyzer__
+	/* silence scan-build false positive */
+	SPDK_CLANG_ANALYZER_PREINIT_PTR_ARRAY(crypto_ops, MAX_ENQUEUE_ARRAY_SIZE, 0x1000);
 #endif
+	/* Allocate crypto operations. */
 	allocated = rte_crypto_op_bulk_alloc(g_crypto_op_mp,
 					     RTE_CRYPTO_OP_TYPE_SYMMETRIC,
 					     crypto_ops, cryop_cnt);
