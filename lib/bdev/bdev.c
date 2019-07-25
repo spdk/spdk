@@ -4277,11 +4277,15 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
-int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+static void
+_spdk_bdev_dummy_event_cb(void *remove_ctx)
 {
-	struct spdk_bdev_desc *desc;
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev remove event received");
+}
+
+static int
+_spdk_bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
+{
 	struct spdk_thread *thread;
 	struct set_qos_limit_ctx *ctx;
 
@@ -4291,27 +4295,16 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		return -ENOTSUP;
 	}
 
-	desc = calloc(1, sizeof(*desc));
-	if (desc == NULL) {
-		SPDK_ERRLOG("Failed to allocate memory for bdev descriptor\n");
-		return -ENOMEM;
-	}
-
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Opening descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
 
 	desc->bdev = bdev;
 	desc->thread = thread;
-	desc->remove_cb = remove_cb;
-	desc->remove_ctx = remove_ctx;
 	desc->write = write;
-	*_desc = desc;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
 		pthread_mutex_unlock(&bdev->internal.mutex);
-		free(desc);
-		*_desc = NULL;
 		return -EBUSY;
 	}
 
@@ -4319,8 +4312,6 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		SPDK_ERRLOG("Could not open %s - %s module already claimed it\n",
 			    bdev->name, bdev->internal.claim_module->name);
 		pthread_mutex_unlock(&bdev->internal.mutex);
-		free(desc);
-		*_desc = NULL;
 		return -EPERM;
 	}
 
@@ -4330,8 +4321,6 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		if (ctx == NULL) {
 			SPDK_ERRLOG("Failed to allocate memory for QoS context\n");
 			pthread_mutex_unlock(&bdev->internal.mutex);
-			free(desc);
-			*_desc = NULL;
 			return -ENOMEM;
 		}
 		ctx->bdev = bdev;
@@ -4345,6 +4334,37 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
 	return 0;
+}
+
+int
+spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+	       void *remove_ctx, struct spdk_bdev_desc **_desc)
+{
+	struct spdk_bdev_desc *desc;
+	int rc;
+
+	desc = calloc(1, sizeof(*desc));
+	if (desc == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for bdev descriptor\n");
+		return -ENOMEM;
+	}
+
+	if (remove_cb == NULL) {
+		remove_cb = _spdk_bdev_dummy_event_cb;
+	}
+
+	desc->remove_cb = remove_cb;
+	desc->remove_ctx = remove_ctx;
+
+	*_desc = desc;
+
+	rc = _spdk_bdev_open(bdev, write, desc);
+	if (rc != 0) {
+		free(desc);
+		*_desc = NULL;
+	}
+
+	return rc;
 }
 
 void
