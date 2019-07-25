@@ -23,11 +23,11 @@ $spdkcli_job "'/bdevs/malloc create 32 512 Malloc0' 'Malloc0' True
 '/bdevs/malloc create 32 512 Malloc1' 'Malloc1' True
 "
 pci_blk=$(lspci -nn -D | grep '1af4:1001' | head -1 | awk '{print $1;}')
-if [ ! -z $pci_blk ]; then
+if [ -n "$pci_blk" ]; then
 	$spdkcli_job "'/bdevs/virtioblk_disk create virtioblk_pci pci $pci_blk' 'virtioblk_pci' True"
 fi
 pci_scsi=$(lspci -nn -D | grep '1af4:1004' | head -1 | awk '{print $1;}')
-if [ ! -z $pci_scsi ]; then
+if [ -n "$pci_scsi" ]; then
 	$spdkcli_job "'/bdevs/virtioscsi_disk create virtioscsi_pci pci $pci_scsi' 'virtioscsi_pci' True"
 fi
 $spdkcli_job "'/vhost/scsi create sample_scsi' 'sample_scsi' True
@@ -37,7 +37,7 @@ $spdkcli_job "'/vhost/scsi create sample_scsi' 'sample_scsi' True
 timing_exit spdkcli_create_virtio_pci_config
 
 timing_enter spdkcli_check_match
-if [ ! -z $pci_blk ]  && [ ! -z $pci_scsi ]; then
+if [ -n "$pci_blk" ]  && [ -n "$pci_scsi" ]; then
         MATCH_FILE="spdkcli_virtio_pci.test"
         SPDKCLI_BRANCH="/bdevs"
         check_match
@@ -64,10 +64,10 @@ $spdkcli_job "'/vhost/block delete sample_block' 'sample_block'
 '/vhost/scsi/sample_scsi remove_target 0' 'Malloc0'
 '/vhost/scsi delete sample_scsi' 'sample_scsi'
 "
-if [ ! -z $pci_blk ]; then
+if [ -n "$pci_blk" ]; then
 	$spdkcli_job "'/bdevs/virtioblk_disk delete virtioblk_pci' 'virtioblk_pci'"
 fi
-if [ ! -z $pci_scsi ]; then
+if [ -n "$pci_scsi" ]; then
 	$spdkcli_job "'/bdevs/virtioscsi_disk delete virtioscsi_pci' 'virtioscsi_pci'"
 fi
 $spdkcli_job "'/bdevs/malloc delete Malloc0' 'Malloc0'
