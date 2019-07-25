@@ -105,6 +105,24 @@
       "revId": "490394ddd800d98e5aefbc5f985a1e4f7b0425e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "331b44fb_0433304b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-25T18:00:49Z",
+      "side": 1,
+      "message": "I looked over the usage and I don\u0027t think this is going to work without some more thought. There are a number of places where these values are referenced at run time. Specifically, action_on_timeout and timeout_us is used on the timeout path from multiple threads. The two poll periods are only used when the device is first created today, but if we ever wanted to dynamically start and stop pollers they\u0027d be a problem. And finally the retry_count is the trickiest of all because that needs to get assigned to the global spdk_nvme_retry_count, but that value is getting used from within the main I/O path.\n\nI think for this to work we need to make a copy of these values and place them into the bdev. When the user updates the \"default\" version of these opts via RPC, it should only apply to new bdevs created (by copying the opts into the bdev on creation).\n\nThe hardest part of that copying strategy is fixing spdk_nvme_retry_count, which needs to be a cached value in the spdk_nvme_ctrlr or spdk_nvme_qpair I think.",
+      "parentUuid": "5c7267be_55cbdc14",
+      "revId": "490394ddd800d98e5aefbc5f985a1e4f7b0425e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
