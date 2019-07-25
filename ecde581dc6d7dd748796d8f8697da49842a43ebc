@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65d73f55_8d738f82",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-25T00:04:21Z",
+      "side": 1,
+      "message": "if this is defined in the public header, then can\u0027t the caller allocate structure and be responsible for freeing it?\n\nI guess I don\u0027t understand why the library has to allocate the stat structure",
+      "revId": "ecde581dc6d7dd748796d8f8697da49842a43ebc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
