@@ -44,7 +44,6 @@
 extern "C" {
 #endif
 
-#include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf_spec.h"
@@ -2372,7 +2371,6 @@ void spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair,
 void spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
 				      struct spdk_nvme_cpl *cpl);
 
-#ifdef SPDK_CONFIG_RDMA
 struct ibv_context;
 struct ibv_pd;
 struct ibv_mr;
@@ -2417,8 +2415,6 @@ struct spdk_nvme_rdma_hooks {
  * \param hooks for initializing global hooks
  */
 void spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
-
-#endif
 
 #ifdef __cplusplus
 }
