@@ -18,7 +18,7 @@ if [ ${#qat_pci_bdfs[@]} -eq 0 ]; then
 	exit 0
 fi
 
-if [ ! -z $1 ]; then
+if [ -n "$1" ]; then
 	driver_to_bind=$1
 fi
 

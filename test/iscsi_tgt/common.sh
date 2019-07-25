@@ -66,7 +66,7 @@ function cleanup_veth_interfaces() {
 function iscsitestinit() {
 	if [ "$1" == "iso" ]; then
 		$rootdir/scripts/setup.sh
-		if [ ! -z "$2" ]; then
+		if [ -n "$2" ]; then
 			create_veth_interfaces $2
 		else
 			# default to posix
@@ -92,7 +92,7 @@ function waitforiscsidevices() {
 
 function iscsitestfini() {
 	if [ "$1" == "iso" ]; then
-		if [ ! -z "$2" ]; then
+		if [ -n "$2" ]; then
 			cleanup_veth_interfaces $2
 		else
 			# default to posix

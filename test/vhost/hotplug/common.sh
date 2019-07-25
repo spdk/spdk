@@ -18,7 +18,7 @@ blk_hot_remove_test=0
 
 
 function usage() {
-    [[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+    [[ -n $2 ]] && ( echo "$2"; echo ""; )
     echo "Shortcut script for doing automated hotattach/hotdetach test"
     echo "Usage: $(basename $1) [OPTIONS]"
     echo
