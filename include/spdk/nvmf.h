@@ -866,7 +866,6 @@ int spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 void
 spdk_nvmf_tgt_transport_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
 
-#ifdef SPDK_CONFIG_RDMA
 /**
  * \brief Set the global hooks for the RDMA transport, if necessary.
  *
@@ -879,9 +878,7 @@ spdk_nvmf_tgt_transport_write_config_json(struct spdk_json_write_ctx *w, struct 
  *
  * \param hooks for initializing global hooks
  */
-void
-spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
-#endif
+void spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
 #ifdef __cplusplus
 }
