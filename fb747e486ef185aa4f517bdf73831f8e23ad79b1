@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "55083f79_d6fcfa98",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 66
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-25T21:35:18Z",
+      "side": 1,
+      "message": "actually just using aliases I don\u0027t need to pass anything anymore.  looking into error checking",
+      "parentUuid": "ceac19e9_284f9fab",
+      "revId": "fb747e486ef185aa4f517bdf73831f8e23ad79b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3952ef6a_5f345f11",
         "filename": "test/compress/compress.sh",
         "patchSetId": 66
@@ -65,6 +83,24 @@
       "side": 1,
       "message": "So there was an issue with passing -l lv0 that I have on my todo list, I\u0027ll put it on github so I don\u0027t forgeti.  But either want COMP_ prepends to the UUID as that\u0027s the reported name of the underlying lvol. I just accepted that as OK but can look more into using the alias btu would also have to figure out why passing the alias to the create RPC doesn\u0027t work...",
       "parentUuid": "3952ef6a_5f345f11",
+      "revId": "fb747e486ef185aa4f517bdf73831f8e23ad79b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e099641a_9064453c",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 66
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-25T21:35:18Z",
+      "side": 1,
+      "message": "the issue was mine, passing lvs0/lv0 works fine and results in COMP_lvs0/lvo\n\nand to be clear, the COMP_ is pre-pended to whatever is passed in the RPC call for the -b parm",
+      "parentUuid": "1bef1ce8_8a34d59c",
       "revId": "fb747e486ef185aa4f517bdf73831f8e23ad79b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
