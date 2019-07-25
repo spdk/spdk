@@ -630,10 +630,23 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		}
 	}
 
-	/* Allocate crypto operations. */
-#ifdef DEBUG
-	memset(crypto_ops, 0, sizeof(crypto_ops));
+#ifdef __clang_analyzer__
+	/* Scan build is really pessimistic and assumes that mempool functions can
+	 * dequeue NULL buffers even if they return success. This is obviously a false
+	 * possitive, but the mempool dequeue is done in a DPDK inline function that
+	 * we can't decorate with usual assert(buf != NULL). Instead, we'll
+	 * preinitialize the dequeued buffer array with some dummy objects.
+	 */
+	do {
+		static char dummy_buf[0x1000];
+		int i;
+
+		for (i = 0; i < MAX_ENQUEUE_ARRAY_SIZE; i++) {
+			crypto_ops[i] = (struct rte_crypto_op *)dummy_buf;
+		}
+	} while (0);
 #endif
+	/* Allocate crypto operations. */
 	allocated = rte_crypto_op_bulk_alloc(g_crypto_op_mp,
 					     RTE_CRYPTO_OP_TYPE_SYMMETRIC,
 					     crypto_ops, cryop_cnt);
