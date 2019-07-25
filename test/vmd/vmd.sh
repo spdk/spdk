@@ -7,7 +7,7 @@ source $rootdir/test/common/autotest_common.sh
 
 pci_devs=$($rootdir/app/spdk_lspci/spdk_lspci | grep "NVMe disk behind VMD" | awk '{print $1}')
 
-if [ -z $pci_devs]; then
+if [ -z $pci_devs ]; then
         echo "Couldn't find any NVMe device behind a VMD."
         exit 1
 fi
