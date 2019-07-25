@@ -922,7 +922,6 @@ void
 spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
 		struct spdk_nvmf_transport_poll_group_stat *stat);
 
-#ifdef SPDK_CONFIG_RDMA
 /**
  * \brief Set the global hooks for the RDMA transport, if necessary.
  *
@@ -935,9 +934,7 @@ spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
  *
  * \param hooks for initializing global hooks
  */
-void
-spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
-#endif
+void spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
 #ifdef __cplusplus
 }
