@@ -1,0 +1,303 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32b9fb65_fc16a5f2",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "This function is almost a 1:1 copy of get_nvme_name_from_bdf.\nIs there any way to re-use it?\n\nIn get_nvme_name_from_bdev an \"array\" is returned - can you just call this function and return the number of elements in the array?\nThat way you could just use plain \"return\" or at least \"echo\" at the end of the function instead of doing eval $2",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 35
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cb61e06_ece931a6",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "This can probably be removed.",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 38
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d6a0bb3_26e2b965",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "No need for double pipe, tr -d \".:\" should work just fine.\n\nBtw, can you try getting rid of echo to?\nMaybe with:\nbdf_str\u003d$(tr -d .: \u003c\u003c\u003c $bdf)",
+      "range": {
+        "startLine": 188,
+        "startChar": 19,
+        "endLine": 188,
+        "endChar": 48
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01041990_0b8d15eb",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "mixed tabs spaces?",
+      "range": {
+        "startLine": 188,
+        "startChar": 2,
+        "endLine": 188,
+        "endChar": 8
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bbd4878_404f4e43",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "Shellcheck reports \"SC2154: ns_count is referenced but not assigned.\" here, because you do \"eval $2\" in get_number_of_namespaces.\n\nThis can be improved if we modify get_number_of_namespaces as described earlier.",
+      "range": {
+        "startLine": 189,
+        "startChar": 0,
+        "endLine": 190,
+        "endChar": 47
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15ebce52_e9b63f8f",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "You can use -f option when running spdk_tgt",
+      "range": {
+        "startLine": 197,
+        "startChar": 1,
+        "endLine": 197,
+        "endChar": 36
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7b82a84_e2417bda",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you set a trap for killing spdk_tgt just before that?",
+      "range": {
+        "startLine": 198,
+        "startChar": 1,
+        "endLine": 198,
+        "endChar": 24
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3656d51c_76c5406d",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "Do we really need to do this check?\nIf the script runs with -e option then in case of fail @ line 201 we will exit.\n\nIf this check is really necessary then if can be modified to not use string comparison, but actual return code instead using \"! grep -q ...\"",
+      "range": {
+        "startLine": 204,
+        "startChar": 9,
+        "endLine": 204,
+        "endChar": 72
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8754309e_f2fb6bb0",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "Btw, do we have trap set anywhere? Exiting like this will leave spdk_tgt running in the background",
+      "range": {
+        "startLine": 205,
+        "startChar": 17,
+        "endLine": 205,
+        "endChar": 23
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24fa7e12_15d0c388",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "Consider using grep -c instead of grep|wc -l",
+      "range": {
+        "startLine": 211,
+        "startChar": 55,
+        "endLine": 211,
+        "endChar": 73
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6838e80_d6e7b9d0",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "get_bdevs | jq -r \".[] | del(.name, .uuid, .id)\"",
+      "range": {
+        "startLine": 221,
+        "startChar": 39,
+        "endLine": 221,
+        "endChar": 135
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a730d454_9e484e7a",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 222,
+        "startChar": 68,
+        "endLine": 222,
+        "endChar": 137
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "889d1e0f_2aea54f7",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T08:31:02Z",
+      "side": 1,
+      "message": "That compares two JSONs right? I am very skeptical about comparing them using plain string comparison in bash...\nI didn\u0027t try this myself but maybe you could do:\njq -n --argjson a \"$a\" --argjson b \"$b\" \u0027$a \u003d\u003d $b\u0027\nAs suggested in here: https://stackoverflow.com/questions/52488950/jq-to-diff-json-in-bash",
+      "range": {
+        "startLine": 223,
+        "startChar": 25,
+        "endLine": 225,
+        "endChar": 27
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
