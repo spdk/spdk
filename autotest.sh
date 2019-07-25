@@ -192,7 +192,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	timing_exit lib
 
 	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
-		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
+		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix --transport=$SPDK_TEST_NVMF_TRANSPORT
+		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh vpp --transport=$SPDK_TEST_NVMF_TRANSPORT
 		run_test suite ./test/spdkcli/iscsi.sh
 
 		# Run raid spdkcli test under iSCSI since blockdev tests run on systems that can't run spdkcli yet
