@@ -1203,6 +1203,38 @@ spdk_iscsi_poll_group_get_current(void)
 	return &g_spdk_iscsi.poll_group[lcore];
 }
 
+static uint32_t g_next_core = SPDK_ENV_LCORE_ID_ANY;
+
+struct spdk_iscsi_poll_group *
+spdk_iscsi_poll_group_get_next_possible(struct spdk_cpuset *cpumask)
+{
+	uint32_t i, lcore;
+
+	lcore = SPDK_ENV_LCORE_ID_ANY;
+
+	for (i = 0; i < spdk_env_get_core_count(); i++) {
+		if (g_next_core > spdk_env_get_last_core()) {
+			g_next_core = spdk_env_get_first_core();
+		}
+
+		lcore = g_next_core;
+		g_next_core = spdk_env_get_next_core(g_next_core);
+
+		if (!spdk_cpuset_get_cpu(cpumask, lcore)) {
+			continue;
+		}
+
+		break;
+	}
+
+	if (i > spdk_env_get_core_count()) {
+		SPDK_ERRLOG("Unable to schedule connection on allowed CPU core. Scheduling on first core instead.\n");
+		lcore = spdk_env_get_first_core();
+	}
+
+	return &g_spdk_iscsi.poll_group[lcore];
+}
+
 static void
 iscsi_poll_group_create(void *ctx)
 {

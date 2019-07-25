@@ -390,6 +390,8 @@ struct spdk_iscsi_opts *spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src);
 void spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w);
 
 struct spdk_iscsi_poll_group *spdk_iscsi_poll_group_get_current(void);
+struct spdk_iscsi_poll_group *spdk_iscsi_poll_group_get_next_possible(
+	struct spdk_cpuset *cpumask);
 
 int spdk_iscsi_set_discovery_auth(bool disable_chap, bool require_chap,
 				  bool mutual_chap, int32_t chap_group);

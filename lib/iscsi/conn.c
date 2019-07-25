@@ -1403,14 +1403,12 @@ iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 	iscsi_poll_group_add_conn(pg, conn);
 }
 
-static uint32_t g_next_core = SPDK_ENV_LCORE_ID_ANY;
-
 void
 spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_event		*event;
 	struct spdk_iscsi_tgt_node	*target;
-	uint32_t			i;
+	struct spdk_iscsi_poll_group	*pg;
 	uint32_t			lcore;
 
 	lcore = SPDK_ENV_LCORE_ID_ANY;
@@ -1421,25 +1419,9 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 		return;
 	}
 
-	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		if (g_next_core > spdk_env_get_last_core()) {
-			g_next_core = spdk_env_get_first_core();
-		}
-
-		lcore = g_next_core;
-		g_next_core = spdk_env_get_next_core(g_next_core);
-
-		if (!spdk_cpuset_get_cpu(&conn->portal->cpumask, lcore)) {
-			continue;
-		}
-
-		break;
-	}
-
-	if (i >= spdk_env_get_core_count()) {
-		SPDK_ERRLOG("Unable to schedule connection on allowed CPU core. Scheduling on first core instead.\n");
-		lcore = spdk_env_get_first_core();
-	}
+	pg = spdk_iscsi_poll_group_get_next_possible(&conn->portal->cpumask);
+	assert(pg != NULL);
+	lcore = pg->core;
 
 	target = conn->sess->target;
 	pthread_mutex_lock(&target->mutex);
