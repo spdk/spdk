@@ -16,6 +16,24 @@
       "revId": "2b56f48923d0ab3ab2ad01ea7f5d8e245354db44",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26182357_a954ffaa",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2770,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-07-25T13:08:06Z",
+      "side": 1,
+      "message": "I think that this is nearly equal, so I remove it and think that put it in the sock poll group is OK. \n\nThe reason we failed the shutdown test, it is related with recursive calling, though it works correct in the normal path.",
+      "parentUuid": "4b59bb53_28c3a5f3",
+      "revId": "2b56f48923d0ab3ab2ad01ea7f5d8e245354db44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
