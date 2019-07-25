@@ -101,6 +101,13 @@ DIF reference tag remapping is now supported for partition type virtual bdev
 modules. When using partition type virtual bdevs, block address space is
 remapped during I/O processing and DIF reference tag is remapped accordingly.
 
+Added spdk_bdev_*_with_md() functions allowing for IO with metadata being transferred in
+separate buffer. To check support for separatate metadata, use spdk_bdev_is_md_separate().
+
+All bdevs now have a UUID. For devices whose backing hardware does not provide a UUID,
+one is automatically generated.
+Across runs of SPDK, bdevs whose UUID is automatically generated may change.
+
 ### nvme
 
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
@@ -125,6 +132,14 @@ Added additional options to the spdk_nvme_ctrlr_alloc_qpair() option parameter
 structure to allow caller to override the virtual and optionally physical address
 of the submission and completion queue pair to be created.  This is supported on
 the PCIe transport only.
+
+Added `disable_error_logging` to struct spdk_nvme_ctrlr_opts, which disables
+logging of failed requests. By default logging is enabled.
+
+Added spdk_nvme_qpair_print_command(), spdk_nvme_qpair_print_completion() and
+spdk_nvme_cpl_get_status_string(). Allowing for easier display of error messages.
+
+Added support for NVMe Sanitize command.
 
 ### env
 
@@ -194,6 +209,14 @@ DPDK versions, but is considered legacy and will be eventually removed.
 version is >= 19.05.
 
 spdk_vhost_init() is now asynchronous and accepts a completion callback.
+
+### thread
+
+Exposed spdk_set_thread() in order for applications to associate
+with SPDK thread when necessary.
+
+Added spdk_thread_destroy() to allow framework polling the thread to
+release resources associated with that thread.
 
 ## v19.04:
 
