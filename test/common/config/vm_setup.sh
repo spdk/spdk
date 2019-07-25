@@ -368,7 +368,7 @@ while getopts 'iuht:c:-:' optchar; do
     esac
 done
 
-if [ ! -z "$CONF_PATH" ]; then
+if [ -n "$CONF_PATH" ]; then
     if [ ! -f "$CONF_PATH" ]; then
         echo Configuration file does not exist: "$CONF_PATH"
         exit 1

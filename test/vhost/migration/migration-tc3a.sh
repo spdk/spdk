@@ -69,7 +69,7 @@ function check_rdma_connection()
 function host1_cleanup_nvmf()
 {
 	notice "Shutting down nvmf_tgt on local server"
-	if [[ ! -z "$1" ]]; then
+	if [[ -n "$1" ]]; then
 		pkill --signal $1 -F $nvmf_dir/nvmf_tgt.pid
 	else
 		pkill -F $nvmf_dir/nvmf_tgt.pid
