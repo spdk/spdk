@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d8c5fbd_9fa05695",
+        "filename": "test/nvme/hw_hotplug.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T07:09:59Z",
+      "side": 1,
+      "message": "We could replace that with something like waitforblk from nvmf common scripts.",
+      "range": {
+        "startLine": 9,
+        "startChar": 1,
+        "endLine": 9,
+        "endChar": 8
+      },
+      "revId": "eb8f7a2cd19330c3e27bc8c73dc491928ef8ee99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec72b417_d8b65c7e",
+        "filename": "test/nvme/hw_hotplug.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T07:09:59Z",
+      "side": 1,
+      "message": "Hotplug app does not have a RPC function so we cannot do waitforlisten.\nBut I think we can avoid hardcoded sleep by redirecting output of the app to some file ( | tee -a log.txt ) and look for \"Initialization complete. Starting I/O...\" string. This notifies us that all NVMe controllers have been initialized.",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 8
+      },
+      "revId": "eb8f7a2cd19330c3e27bc8c73dc491928ef8ee99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c9adae4_54204246",
+        "filename": "test/nvme/hw_hotplug.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-25T07:09:59Z",
+      "side": 1,
+      "message": "These sleeps should be justified in comments if cannot be avoided.\nAlso - let\u0027s move the value to a variable.",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 8
+      },
+      "revId": "eb8f7a2cd19330c3e27bc8c73dc491928ef8ee99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
