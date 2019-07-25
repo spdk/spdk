@@ -20,10 +20,10 @@ SYSTEM=`uname -s`
 exec 1>&2
 
 if [ "$SYSTEM" = "FreeBSD" ]; then
-	MAKE="gmake MAKE=gmake -j ${nproc}"
+	MAKE="gmake MAKE=gmake -j $(sysctl -a | grep -E -i 'hw.ncpu' | awk '{print $2}')"
 	COMP="clang"
 else
-	MAKE="make -j ${nproc}"
+	MAKE="make -j $(nproc)"
 	COMP="gcc"
 fi
 
