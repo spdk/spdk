@@ -1975,6 +1975,29 @@ bdev_write_zeroes(void)
 	poll_threads();
 }
 
+static void
+bdev_open_while_hotremove(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc[2] = {};
+	int rc;
+
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open(bdev, false, NULL, NULL, &desc[0]);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc[0] != NULL);
+
+	spdk_bdev_unregister(bdev, NULL, NULL);
+
+	rc = spdk_bdev_open(bdev, false, NULL, NULL, &desc[1]);
+	CU_ASSERT(rc == -ENODEV);
+	SPDK_CU_ASSERT_FATAL(desc[1] == NULL);
+
+	spdk_bdev_close(desc[0]);
+	free_bdev(bdev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2006,7 +2029,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_io_alignment_with_boundary", bdev_io_alignment_with_boundary) == NULL ||
 		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL ||
 		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL ||
-		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL
+		CU_add_test(suite, "bdev_write_zeroes", bdev_write_zeroes) == NULL ||
+		CU_add_test(suite, "bdev_open_while_hotremove", bdev_open_while_hotremove) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
