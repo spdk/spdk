@@ -3052,6 +3052,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 				SPDK_ERRLOG("Unable to allocate resources for shared receive queue.\n");
 				spdk_nvmf_rdma_poll_group_destroy(&rgroup->group);
 				pthread_mutex_unlock(&rtransport->lock);
+				return NULL;
 			}
 		}
 
