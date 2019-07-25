@@ -39,11 +39,11 @@ $vhost_rpc_py construct_vhost_scsi_controller naa.VhostScsi0.2
 $vhost_rpc_py add_vhost_scsi_lun naa.VhostScsi0.2 0 Malloc2
 
 # test the vhost blk controller with valid data buffers.
-$fuzz_specific_rpc_py fuzz_vhost_create_dev -s `pwd`/Vhost.1 -b -v
+$fuzz_specific_rpc_py fuzz_vhost_create_dev -s $(pwd)/Vhost.1 -b -v
 # test the vhost scsi I/O queue with valid data buffers on a valid lun.
-$fuzz_specific_rpc_py fuzz_vhost_create_dev -s `pwd`/naa.VhostScsi0.1 -l -v
+$fuzz_specific_rpc_py fuzz_vhost_create_dev -s $(pwd)/naa.VhostScsi0.1 -l -v
 # test the vhost scsi management queue with valid data buffers.
-$fuzz_specific_rpc_py fuzz_vhost_create_dev -s `pwd`/naa.VhostScsi0.2 -v -m
+$fuzz_specific_rpc_py fuzz_vhost_create_dev -s $(pwd)/naa.VhostScsi0.2 -v -m
 # The test won't actually begin until this option is passed in.
 $fuzz_generic_rpc_py start_subsystem_init
 
@@ -56,9 +56,9 @@ waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 # re-evaluate fuzzpid
 trap "killprocess $vhostpid; killprocess $fuzzpid; exit 1" SIGINT SIGTERM exit
 
-$fuzz_specific_rpc_py fuzz_vhost_create_dev -s `pwd`/Vhost.1 -b -v
-$fuzz_specific_rpc_py fuzz_vhost_create_dev -s `pwd`/naa.VhostScsi0.1 -l -v
-$fuzz_specific_rpc_py fuzz_vhost_create_dev -s `pwd`/naa.VhostScsi0.2 -v -m
+$fuzz_specific_rpc_py fuzz_vhost_create_dev -s $(pwd)/Vhost.1 -b -v
+$fuzz_specific_rpc_py fuzz_vhost_create_dev -s $(pwd)/naa.VhostScsi0.1 -l -v
+$fuzz_specific_rpc_py fuzz_vhost_create_dev -s $(pwd)/naa.VhostScsi0.2 -v -m
 $fuzz_generic_rpc_py start_subsystem_init
 
 wait $fuzzpid
