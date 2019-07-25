@@ -13,7 +13,7 @@ x=""
 
 function usage()
 {
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for automated readonly test for vhost-block"
 	echo "For test details check test_plan.md"
 	echo

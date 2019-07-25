@@ -3,16 +3,16 @@ spdk_clear_config_py="$rootdir/test/json_config/clear_config.py"
 
 function on_error_exit() {
 	set +e
-	if [ ! -z $spdk_tgt_pid ]; then
+	if [ -n "$spdk_tgt_pid" ]; then
 		killprocess $spdk_tgt_pid
 	fi
-	if [ ! -z $nvmf_tgt_pid ]; then
+	if [ -n "$nvmf_tgt_pid" ]; then
 		killprocess $nvmf_tgt_pid
 	fi
-	if [ ! -z $iscsi_tgt_pid ]; then
+	if [ -n "$iscsi_tgt_pid" ]; then
 		killprocess $iscsi_tgt_pid
 	fi
-	if [ ! -z $vhost_tgt_pid ]; then
+	if [ -n "$vhost_tgt_pid" ]; then
 		killprocess $vhost_tgt_pid
 	fi
 	rm -f $testdir/${MATCH_FILE} $testdir/match_files/spdkcli_details_vhost.test /tmp/sample_aio /tmp/sample_pmem
