@@ -49,7 +49,7 @@ function raid_unmap_data_verify() {
 }
 
 function on_error_exit() {
-	if [ ! -z $raid_pid ]; then
+	if [ -n "$raid_pid" ]; then
 		killprocess $raid_pid
 	fi
 

@@ -13,7 +13,7 @@ vm_image="/home/sys_sgsw/windows_server.qcow2"
 
 function usage()
 {
-	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	[[ -n $2 ]] && ( echo "$2"; echo ""; )
 	echo "Windows Server automated test"
 	echo "Usage: $(basename $1) [OPTIONS]"
 	echo "--vm-ssh-pass=PASSWORD    Text password for the VM"
