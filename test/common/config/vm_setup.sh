@@ -237,7 +237,7 @@ function install_vpp()
             fi
         else
             git clone "${GIT_REPO_VPP}"
-            git -C ./vpp checkout stable/1904
+            git -C ./vpp checkout v19.04.2
 
             if [ "${OSID}" == 'fedora' ]; then
                 if [ ${OSVERSION} -eq 29 ]; then

@@ -16,7 +16,7 @@ VPP [Quick Start Guide](https://wiki.fd.io/view/VPP).
 Clone and checkout VPP
 ~~~
 git clone https://gerrit.fd.io/r/vpp && cd vpp
-git checkout stable/1904
+git checkout v19.04.2
 ~~~
 
 Install VPP build dependencies
