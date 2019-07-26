@@ -105,6 +105,24 @@
       "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1494b28_51e59935",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-26T23:42:11Z",
+      "side": 1,
+      "message": "yeah, the two if\u0027s I added below based on your comments are false so we kill the svc and remove any pmem files that might have been created",
+      "parentUuid": "cbc9089d_3fe48529",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
