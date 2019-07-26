@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "1462d9cb_8763dbb5",
+        "filename": "autotest.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T23:38:52Z",
+      "side": 1,
+      "message": "I just meant, why put SPDK_TEST_REDUCE under lib?  It seems like it fits better with the other bdev-specific tests further down (lvol, rbd, pmdk, ocf, ftl).\n\nI don\u0027t understand why these specific timing_enter/exit lib calls even exist.  It\u0027s hard for me to see why some of these are \"lib\" but others aren\u0027t.  So I guess I\u0027m fine with where you put it here.",
+      "parentUuid": "af497db9_9f6b89b9",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "320bc6ee_cb77d0a3",
         "filename": "test/compress/compress.sh",
         "patchSetId": 76
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "it will timeout after like 5 secs I think, its in the common function.  I\u0027ve tested this path too by accident :) It will timeout just drop through",
       "parentUuid": "320bc6ee_cb77d0a3",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbc9089d_3fe48529",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T23:38:52Z",
+      "side": 1,
+      "message": "what happens when it times out though?  does it skip the rest of the cleanup function?",
+      "parentUuid": "a9850e73_af9fdf0a",
       "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
