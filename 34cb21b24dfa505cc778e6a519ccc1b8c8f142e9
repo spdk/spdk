@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2cbc7f6b_83f00035",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1235,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T19:47:24Z",
+      "side": 1,
+      "message": "let\u0027s add an assert(false) and a SPDK_ERRLOG here",
+      "revId": "34cb21b24dfa505cc778e6a519ccc1b8c8f142e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
