@@ -87,8 +87,6 @@ struct spdk_reduce_chunk_map {
 	uint64_t		io_unit_index[0];
 };
 
-#define REDUCE_MAX_IOVECS	32
-
 struct spdk_reduce_vol_request {
 	/**
 	 *  Scratch buffer used for uncompressed chunk.  This is used for:
