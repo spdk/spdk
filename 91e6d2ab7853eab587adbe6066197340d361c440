@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0b57d6b_aa4eb5a6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2099,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T18:23:22Z",
+      "side": 1,
+      "message": "I don\u0027t think this works here.  There are a number of places where the state gets advanced outside of this function - data for those transitions would be missed.\n\nFor example, see case RDMA_WR_TYPE_SEND in spdk_nvmf_rdma_poller_poll.  It advances state to RDMA_REQUEST_STATE_COMPLETED, and then calls spdk_nvmf_rdma_request_process (this function).  prev_state \u003d\u003d RDMA_REQUEST_STATE_COMPLETED, so you wouldn\u0027t update the latencies here.\n\nTo do this properly we\u0027d probably need to add a macro that\u0027s always used to advance the request state.  But I\u0027m not sure that\u0027s something we should try to add for 19.07.",
+      "revId": "91e6d2ab7853eab587adbe6066197340d361c440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
