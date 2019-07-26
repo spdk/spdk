@@ -1863,7 +1863,7 @@ bdev_histograms(void)
 	poll_threads();
 	CU_ASSERT(g_status == -EFAULT);
 
-	spdk_histogram_data_free(g_histogram);
+	spdk_histogram_data_free(histogram);
 	spdk_put_io_channel(ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
