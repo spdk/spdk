@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "780d8bb1_df44d03d",
+        "filename": "test/vmd/config/vmd.json",
+        "patchSetId": 9
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-26T13:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a7d94e9f_f0ca4da6",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 11
+      },
+      "revId": "09a785d119e3c51894a52ecebefc02ed6e031ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "02e3db8c_271b219e",
         "filename": "test/vmd/vmd.sh",
         "patchSetId": 9
@@ -45,6 +69,30 @@
       "revId": "09a785d119e3c51894a52ecebefc02ed6e031ae9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85aaa5b0_e51f43b0",
+        "filename": "test/vmd/vmd.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-26T13:49:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "02e3db8c_271b219e",
+      "range": {
+        "startLine": 51,
+        "startChar": 19,
+        "endLine": 51,
+        "endChar": 21
+      },
+      "revId": "09a785d119e3c51894a52ecebefc02ed6e031ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
