@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7faa9755_dafec949",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1476,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T21:50:56Z",
+      "side": 1,
+      "message": "I\u0027d keep the comment here \"Save the pg in the target node so it can be used for any other connections to this target node.\"",
+      "revId": "cca3630d56ec76f6b327469e6535092deb7c806c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7862784f_6aa8bf26",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T21:50:56Z",
+      "side": 1,
+      "message": "should we just remove this int32 instead of saying lcore_id \u003d 0?",
+      "revId": "cca3630d56ec76f6b327469e6535092deb7c806c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ed94f5c_e2d2d999",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1197,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T21:50:56Z",
+      "side": 1,
+      "message": "(picking fairly random place to make this comment)\n\nI think this should probably be broken up into two patches.  One that creates this new io_device and uses io_channels for the poll groups.  Then another that changes the allocation scheme.\n\nAs a stop-gap, the first patch could still assign the pg-\u003ecore since right now we know we only have one pg per core.  That can then get removed in the second patch when you no longer need the -\u003ecore.\n\nBut I\u0027ll leave this up to you.  I guess it\u0027s fine as-is.",
+      "revId": "cca3630d56ec76f6b327469e6535092deb7c806c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
