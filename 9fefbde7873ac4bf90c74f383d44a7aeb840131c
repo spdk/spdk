@@ -16,6 +16,24 @@
       "revId": "9fefbde7873ac4bf90c74f383d44a7aeb840131c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0cadd75_40154e15",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T15:33:07Z",
+      "side": 1,
+      "message": "I doubt just removing the memset would work, but I\u0027ll try it on my system.\n\nThe other option would be to put the __clang_analyzer__ ifdef around the rte_crypto.h #include.  That was the direction I was originally thinking to avoid any ugly hacks.",
+      "parentUuid": "6b5c9734_257b0bc7",
+      "revId": "9fefbde7873ac4bf90c74f383d44a7aeb840131c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
