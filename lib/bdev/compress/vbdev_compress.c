@@ -1238,7 +1238,7 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-_clear_qp_and_put_channel(struct vbdev_compress *comp_bdev)
+_channel_cleanup(struct vbdev_compress *comp_bdev)
 {
 	/* Note: comp_bdevs can share a device_qp if they are
 	 * on the same thread so we leave the device_qp element
@@ -1257,7 +1257,7 @@ _comp_bdev_ch_destroy_cb(void *arg)
 
 	pthread_mutex_lock(&comp_bdev->reduce_lock);
 	if (comp_bdev->ch_count == 0) {
-		_clear_qp_and_put_channel(comp_bdev);
+		_channel_cleanup(comp_bdev);
 	}
 	pthread_mutex_unlock(&comp_bdev->reduce_lock);
 }
@@ -1279,7 +1279,7 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 			spdk_thread_send_msg(comp_bdev->reduce_thread,
 					     _comp_bdev_ch_destroy_cb, comp_bdev);
 		} else {
-			_clear_qp_and_put_channel(comp_bdev);
+			_channel_cleanup(comp_bdev);
 		}
 	}
 	pthread_mutex_unlock(&comp_bdev->reduce_lock);
