@@ -2,6 +2,18 @@
 
 ## v19.07: (Upcoming Release)
 
+### vmd
+
+EXPERIMENTAL: Added Intel Volume Management Device (VMD) driver. VMD is an integrated
+controller inside the CPU PCIe root complex. It enables virtual HBAs for the connected
+NVMe SSDs. `spdk_vmd_init()` enumerates NVMe SSDs behind VMD device and hook them into
+SPDK PCI subsystem. `spdk_nvme_probe()` or `spdk_nvme_connect()` can be used to connect
+NVMe driver to the device located at the given transport ID.
+
+To obtain transport ID of NVMe SSD behind VMD `spdk_lspci` can be used.
+
+Current implementation does not support hotplug.
+
 ### blobfs
 
 Blobfs file asynchronous operations were added to public APIs.
