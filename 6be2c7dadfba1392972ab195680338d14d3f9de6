@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19692a1d_9f8af43d",
+        "filename": "autotest.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T22:43:24Z",
+      "side": 1,
+      "message": "I think you missed this comment from my earlier review:\n\nI\u0027m really not sure what the timing_enter/timing_exit lib calls are supposed to designate (but that\u0027s not from your patch).  I noticed that this new test was added inside of them though.  I\u0027m wondering if it really belongs outside of them though, further down, at the same level as BLOBFS, PMEM and LVOL?",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "320bc6ee_cb77d0a3",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T22:43:24Z",
+      "side": 1,
+      "message": "Won\u0027t this hang if COMP_lvs0/lv0 never got created?  Line 22 below seems to be checking for that case.\n\nI think since this test is putting an lvolstore on the NVMe namespace, the easiest and most brute force method would just be to use nbd to write zeroes to the first 1MB or so of the NVMe namespace.  So just wait for Nvme0n1 to appear, and the nbd disk and write zeroes.  I think there might be code already that does this for GPT tests.",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
