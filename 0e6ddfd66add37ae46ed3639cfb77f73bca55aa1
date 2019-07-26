@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de8ee3ee_24f7926b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T19:26:03Z",
+      "side": 0,
+      "message": "why remove this check?  it\u0027s not related to adding io_queue_requests field\n\nmaybe it\u0027s related to next patch?",
+      "revId": "0e6ddfd66add37ae46ed3639cfb77f73bca55aa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
