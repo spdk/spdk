@@ -1226,12 +1226,15 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 			}
 		}
 		pthread_mutex_unlock(&g_comp_device_qp_lock);
-		assert(comp_bdev->device_qp);
 	}
 	comp_bdev->ch_count++;
 	pthread_mutex_unlock(&comp_bdev->reduce_lock);
 
-	return 0;
+	if (comp_bdev->device_qp != NULL) {
+		return 0;
+	} else {
+		return -ENOMEM;
+	}
 }
 
 static void
