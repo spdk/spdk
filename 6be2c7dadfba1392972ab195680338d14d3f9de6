@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "af497db9_9f6b89b9",
+        "filename": "autotest.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-26T23:33:18Z",
+      "side": 1,
+      "message": "Hmmm, I always though they bracketed sections for the frame graph and could/should be nested like this.  That\u0027s what it looks like checking out the last timing graph.  I thought you meant I was being too granular but I think what\u0027s here is OK.",
+      "parentUuid": "19692a1d_9f8af43d",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "320bc6ee_cb77d0a3",
         "filename": "test/compress/compress.sh",
         "patchSetId": 76
@@ -30,6 +48,24 @@
       "writtenOn": "2019-07-26T22:43:24Z",
       "side": 1,
       "message": "Won\u0027t this hang if COMP_lvs0/lv0 never got created?  Line 22 below seems to be checking for that case.\n\nI think since this test is putting an lvolstore on the NVMe namespace, the easiest and most brute force method would just be to use nbd to write zeroes to the first 1MB or so of the NVMe namespace.  So just wait for Nvme0n1 to appear, and the nbd disk and write zeroes.  I think there might be code already that does this for GPT tests.",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9850e73_af9fdf0a",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-26T23:33:18Z",
+      "side": 1,
+      "message": "it will timeout after like 5 secs I think, its in the common function.  I\u0027ve tested this path too by accident :) It will timeout just drop through",
+      "parentUuid": "320bc6ee_cb77d0a3",
       "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
