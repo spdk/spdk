@@ -1242,7 +1242,7 @@ iscsi_poll_group_create(void *ctx)
 
 	assert(g_spdk_iscsi.poll_group != NULL);
 	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
-	pg->core = spdk_env_get_current_core();
+	pg->thread = spdk_get_thread();
 
 	STAILQ_INIT(&pg->connections);
 	pg->sock_group = spdk_sock_group_create(NULL);

@@ -44,6 +44,7 @@ struct spdk_iscsi_init_grp;
 struct spdk_iscsi_portal_grp;
 struct spdk_iscsi_portal;
 struct spdk_json_write_ctx;
+struct spdk_thread;
 
 #define MAX_TARGET_MAP			256
 #define SPDK_TN_TAG_MAX			0x0000ffff
@@ -83,7 +84,7 @@ struct spdk_iscsi_tgt_node {
 	 *  target node.
 	 */
 	uint32_t num_active_conns;
-	int lcore;
+	struct spdk_thread *thread;
 
 	int num_pg_maps;
 	TAILQ_HEAD(, spdk_iscsi_pg_map) pg_map_head;

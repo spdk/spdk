@@ -280,7 +280,7 @@ struct spdk_iscsi_sess {
 };
 
 struct spdk_iscsi_poll_group {
-	uint32_t					core;
+	struct spdk_thread				*thread;
 	struct spdk_poller				*poller;
 	struct spdk_poller				*nop_poller;
 	STAILQ_HEAD(connections, spdk_iscsi_conn)	connections;
