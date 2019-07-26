@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb249cfc_373ba983",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-26T06:00:08Z",
+      "side": 1,
+      "message": "A question to Ben, can we consider defining struct spdk_thread in the header, then inlining this function?",
+      "range": {
+        "startLine": 560,
+        "startChar": 9,
+        "endLine": 560,
+        "endChar": 29
+      },
+      "revId": "e6f826a467e8f342833b3dca30a710f6d44477e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
