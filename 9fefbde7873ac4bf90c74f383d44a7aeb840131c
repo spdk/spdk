@@ -88,6 +88,24 @@
       "revId": "9fefbde7873ac4bf90c74f383d44a7aeb840131c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc775118_fe1dfcb1",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T22:23:45Z",
+      "side": 1,
+      "message": "Hmmm - I misunderstood how scan-build used this __clang_analyzer__ token.\n\nThe compilation still succeeds (since it would be a #ifndef) but scan-build just doesn\u0027t read the header file when doing the static analysis.  I thought it would at least read the file but just not report any errors on code in that file.\n\nWhat if instead you just did:\n\n#ifndef __clang_analyzer__\nallocated \u003d rte_crypto_op_blah_blah_blah...;\n#else\nallocated \u003d cryop_cnt;\n#endif\n\nWell, no - that doesn\u0027t work either.  It still think crypto_ops didn\u0027t get initialized.  It also throws an error on the src_mbufs array.\n\nMaybe this is the \u0027best\u0027 solution for now.  I\u0027d still like to think about it some more though.  This is really nasty.  I\u0027m going to file an LLVM bug on this regression too.",
+      "parentUuid": "fb34c825_167f02d8",
+      "revId": "9fefbde7873ac4bf90c74f383d44a7aeb840131c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
