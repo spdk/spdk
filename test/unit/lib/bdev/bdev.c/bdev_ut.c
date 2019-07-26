@@ -1277,7 +1277,7 @@ static void
 bdev_io_split_with_io_wait(void)
 {
 	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_channel *channel;
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
