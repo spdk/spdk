@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07e93a8b_eb25533f",
+        "filename": "lib/net/net_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-26T10:51:42Z",
+      "side": 1,
+      "message": "What means socket? SoMaybe socket() failed or failed to create socket or socket creation failed",
+      "revId": "ef68221fbbc673a019a952020f2d96c380306ec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
