@@ -1193,6 +1193,16 @@ iscsi_poll_group_handle_nop(void *ctx)
 	return -1;
 }
 
+struct spdk_iscsi_poll_group *
+spdk_iscsi_poll_group_get_current(void)
+{
+	uint32_t lcore;
+
+	lcore = spdk_env_get_current_core();
+
+	return &g_spdk_iscsi.poll_group[lcore];
+}
+
 static void
 iscsi_poll_group_create(void *ctx)
 {

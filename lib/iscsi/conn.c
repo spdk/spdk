@@ -209,7 +209,6 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 {
 	struct spdk_iscsi_poll_group *pg;
 	struct spdk_iscsi_conn *conn;
-	uint32_t lcore;
 	int bufsize, i, rc;
 
 	conn = allocate_conn();
@@ -300,8 +299,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 
-	lcore = spdk_env_get_current_core();
-	pg = &g_spdk_iscsi.poll_group[lcore];
+	pg = spdk_iscsi_poll_group_get_current();
 
 	iscsi_poll_group_add_conn(pg, conn);
 	return 0;
@@ -1394,15 +1392,14 @@ iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 {
 	struct spdk_iscsi_conn *conn = arg1;
 	struct spdk_iscsi_poll_group *pg;
-	uint32_t lcore;
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		iscsi_conn_open_luns(conn);
 	}
 
-	/* The poller has been unregistered, so now we can re-register it on the new core. */
-	lcore = spdk_env_get_current_core();
-	pg = &g_spdk_iscsi.poll_group[lcore];
+	/* The poller has been unregistered, so now we can re-register it on the
+	 * current poll group. */
+	pg = spdk_iscsi_poll_group_get_current();
 	iscsi_poll_group_add_conn(pg, conn);
 }
 
