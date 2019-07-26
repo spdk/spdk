@@ -2,6 +2,13 @@
 
 ## v19.07: (Upcoming Release)
 
+### ftl
+
+EXPERIMENTAL: Added ability to mirror writes to persistent write buffer cache
+to allow for recovery from dirty shutdown event.
+
+Added handling of Asynchronous Nand Management Events (ANM).
+
 ### blobfs
 
 Blobfs file asynchronous operations were added to public APIs.
