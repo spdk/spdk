@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c1fa475_03ba4d28",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1091,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T17:44:06Z",
+      "side": 1,
+      "message": "I think you should increment total_len and move the assert out of the if statement.  You set total_len on line 1072 and increment total_len on line 1084 even when rmw \u003d\u003d true, so I think you might as well increment total_len in all cases here too just for consistency.  Then you also get the total_len assert in the rmw\u003d\u003dtrue case too.",
+      "revId": "0e9a406e2d480c29195bb3053e14b6bad3ce96d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
