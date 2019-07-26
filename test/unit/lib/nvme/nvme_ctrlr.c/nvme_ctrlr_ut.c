@@ -63,6 +63,7 @@ uint32_t set_size = 1;
 
 int set_status_cpl = -1;
 
+DEFINE_STUB(spdk_iommu_is_enabled, bool, (void), false);
 DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 	    (struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_t host_id_size,
 	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
