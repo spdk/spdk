@@ -42,7 +42,7 @@
 #include "spdk/string.h"
 
 static bool g_shutdown_started = false;
-
+static uint16_t g_aquired_channles_num = 0;
 /* raid bdev config as read from config file */
 struct raid_config	g_raid_config = {
 	.raid_bdev_config_head = TAILQ_HEAD_INITIALIZER(g_raid_config.raid_bdev_config_head),
@@ -120,6 +120,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 			return -ENOMEM;
 		}
 	}
+	g_aquired_channles_num = raid_bdev->num_base_bdevs;
 
 	return 0;
 }
@@ -138,14 +139,13 @@ static void
 raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct raid_bdev_io_channel *raid_ch = ctx_buf;
-	struct raid_bdev            *raid_bdev = io_device;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destroy_cb\n");
 
-	assert(raid_bdev != NULL);
 	assert(raid_ch != NULL);
 	assert(raid_ch->base_channel);
-	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+
+	for (uint32_t i = 0; i < g_aquired_channles_num; i++) {
 		/* Free base bdev channels */
 		assert(raid_ch->base_channel[i] != NULL);
 		spdk_put_io_channel(raid_ch->base_channel[i]);
