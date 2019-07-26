@@ -451,7 +451,7 @@ ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state)
 
 	case FTL_BAND_STATE_CLOSED:
 		if (band->state != FTL_BAND_STATE_CLOSED) {
-			assert(band->state == FTL_BAND_STATE_CLOSING);
+			assert(band->state == FTL_BAND_STATE_CLOSING || band->high_prio);
 			_ftl_band_set_closed(band);
 		}
 		break;
