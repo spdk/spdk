@@ -63,6 +63,14 @@ uint32_t set_size = 1;
 
 int set_status_cpl = -1;
 
+bool g_iommu_enabled = false;
+
+bool
+spdk_iommu_is_enabled(void)
+{
+	return g_iommu_enabled;
+}
+
 DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 	    (struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_t host_id_size,
 	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
@@ -1793,7 +1801,11 @@ test_nvme_ctrlr_init_delay(void)
 	g_ut_nvme_regs.cc.bits.en = 0;
 	g_ut_nvme_regs.csts.bits.rdy = 0;
 
-	/* Delay initiation and default time is 2s */
+	/* Delay initiation and default time is 2s.  Note this is only when
+	 * iommu is enabled, so set g_iommu_enabled = true to ensure the
+	 * driver goes down that path. */
+	g_iommu_enabled = true;
+
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
@@ -1836,6 +1848,8 @@ test_nvme_ctrlr_init_delay(void)
 
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
+
+	g_iommu_enabled = false;
 }
 
 int main(int argc, char **argv)

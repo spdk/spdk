@@ -2032,18 +2032,20 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	switch (ctrlr->state) {
 	case NVME_CTRLR_STATE_INIT_DELAY:
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, ready_timeout_in_ms);
-		/*
-		 * Controller may need some delay before it's enabled.
-		 *
-		 * This is a workaround for an issue where the PCIe-attached NVMe controller
-		 * is not ready after VFIO reset. We delay the initialization rather than the
-		 * enabling itself, because this is required only for the very first enabling
-		 * - directly after a VFIO reset.
-		 *
-		 * TODO: Figure out what is actually going wrong.
-		 */
-		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Adding 2 second delay before initializing the controller\n");
-		ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (2000 * spdk_get_ticks_hz() / 1000);
+		if (spdk_iommu_is_enabled()) {
+			/*
+			 * Controller may need some delay before it's enabled.
+			 *
+			 * This is a workaround for an issue where the PCIe-attached NVMe controller
+			 * is not ready after VFIO reset. We delay the initialization rather than the
+			 * enabling itself, because this is required only for the very first enabling
+			 * - directly after a VFIO reset.
+			 *
+			 * TODO: Figure out what is actually going wrong.
+			 */
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Adding 2 second delay before initializing the controller\n");
+			ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (2000 * spdk_get_ticks_hz() / 1000);
+		}
 		break;
 
 	case NVME_CTRLR_STATE_INIT:
