@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f571a565_7dc4abf3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-26T07:38:04Z",
+      "side": 1,
+      "message": "Please start the commit title with name of the library this patch modifies.\n\nIn this case:\njsonrpc: tolerate null json value for parameters in json-rpc call\n\nIt makes the patch more visible for people who should review it.",
+      "revId": "a4fd3be07766e9e1d76b17f91865dc42064c35c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
