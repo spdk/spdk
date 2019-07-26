@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33634f1a_bd1ace4e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-26T19:29:36Z",
+      "side": 1,
+      "message": "Comment here is wrong",
+      "revId": "b1b0b841744a00b1a830a749f352a74f0d0cdf9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "976e4e33_4b814c23",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1216,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-26T19:29:36Z",
+      "side": 1,
+      "message": "This isn\u0027t really a problem, but sometimes in unit tests spdk_get_thread() won\u0027t be set up right and will return NULL, and that would match device_qp-\u003ethread. It\u0027s probably safer to put the second check first.",
+      "revId": "b1b0b841744a00b1a830a749f352a74f0d0cdf9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
