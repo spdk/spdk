@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "0d57b699_5e6882f5",
+        "filename": "autotest.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-26T23:54:13Z",
+      "side": 1,
+      "message": "I\u0027m note I understand what you mean by \" ust meant, why put SPDK_TEST_REDUCE under lib?\".  Do you mean the location of compress.sh? Let me know what you\u0027d like to see moved/shuffled/tweak and I\u0027ll be happy to do it :)",
+      "parentUuid": "1462d9cb_8763dbb5",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "320bc6ee_cb77d0a3",
         "filename": "test/compress/compress.sh",
         "patchSetId": 76
