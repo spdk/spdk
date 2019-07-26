@@ -56,14 +56,6 @@ static void usage(void)
 static bool
 conns_compare(struct spdk_iscsi_conn *first, struct spdk_iscsi_conn *second)
 {
-	if (first->lcore < second->lcore) {
-		return true;
-	}
-
-	if (first->lcore > second->lcore) {
-		return false;
-	}
-
 	if (first->id < second->id) {
 		return true;
 	}
@@ -110,9 +102,8 @@ print_connections(void)
 	stable_sort(v.begin(), v.end(), conns_compare);
 	for (iter = v.begin(); iter != v.end(); iter++) {
 		conn = *iter;
-		printf("lcore %2d conn %3d T:%-8s I:%s (%s)\n",
-		       conn->lcore, conn->id,
-		       conn->target_short_name, conn->initiator_name,
+		printf("conn %3d T:%-8s I:%s (%s)\n",
+		       conn->id, conn->target_short_name, conn->initiator_name,
 		       conn->initiator_addr);
 	}
 
