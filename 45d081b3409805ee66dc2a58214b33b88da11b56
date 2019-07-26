@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7b5579d4_417d6058",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1015543
+      },
+      "writtenOn": "2019-07-26T15:44:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50ac9834_6afa6949",
+      "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "978531ea_5c058c03",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a150308b_6bebd2d0",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1015543
+      },
+      "writtenOn": "2019-07-26T15:44:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "978531ea_5c058c03",
+      "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c3b10c0_a9fc29f0",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 1
@@ -50,6 +86,24 @@
       "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d7a845d_6895de2b",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1015543
+      },
+      "writtenOn": "2019-07-26T15:44:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8c3b10c0_a9fc29f0",
+      "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -76,6 +130,30 @@
     },
     {
       "key": {
+        "uuid": "09e65f3b_3987ea0b",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1015543
+      },
+      "writtenOn": "2019-07-26T15:44:25Z",
+      "side": 1,
+      "message": "Thanks, I\u0027ve changed the code here to free all pending requests explicitly.",
+      "parentUuid": "e31113b4_2576d33e",
+      "range": {
+        "startLine": 153,
+        "startChar": 2,
+        "endLine": 153,
+        "endChar": 19
+      },
+      "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54877267_5bd286e5",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 1
@@ -99,6 +177,30 @@
     },
     {
       "key": {
+        "uuid": "cc5cea56_f8e37260",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1015543
+      },
+      "writtenOn": "2019-07-26T15:44:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "54877267_5bd286e5",
+      "range": {
+        "startLine": 739,
+        "startChar": 3,
+        "endLine": 739,
+        "endChar": 19
+      },
+      "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b35135e5_f7dc3a4e",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 1
@@ -113,6 +215,24 @@
       "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6507d5d8_7590d2c4",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1015543
+      },
+      "writtenOn": "2019-07-26T15:44:25Z",
+      "side": 1,
+      "message": "The request is removed from the queue in the complete_conn_req() callback.",
+      "parentUuid": "b35135e5_f7dc3a4e",
+      "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -136,6 +256,30 @@
       "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57e84049_a04497f7",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1015543
+      },
+      "writtenOn": "2019-07-26T15:44:25Z",
+      "side": 1,
+      "message": "I\u0027ve removed the assert but I don\u0027t understand what you mean with \"not probable\" part.",
+      "parentUuid": "5e2358c1_fc5fd8f3",
+      "range": {
+        "startLine": 742,
+        "startChar": 3,
+        "endLine": 744,
+        "endChar": 3
+      },
+      "revId": "45d081b3409805ee66dc2a58214b33b88da11b56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
