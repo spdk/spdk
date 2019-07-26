@@ -40,8 +40,6 @@ function usage() {
                                     255: 'delete_lvol_store_persistent_positive',
                                     300: 'destroy_lvol_store_nonexistent_lvs_uuid',
                                     301: 'delete_lvol_store_underlying_bdev',
-                                    350: 'nested_destroy_logical_volume_negative',
-                                    400: 'nested_construct_logical_volume_positive',
                                     450: 'construct_lvs_nonexistent_bdev',
                                     451: 'construct_lvs_on_bdev_twice',
                                     452: 'construct_lvs_name_twice',
