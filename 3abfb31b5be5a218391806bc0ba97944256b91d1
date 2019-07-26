@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "efe75cf3_bc77a405",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32b9fb65_fc16a5f2",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 35
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5cb61e06_ece931a6",
         "filename": "test/nvme/nvme.sh",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "485df0a0_8a1ecbe4",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5cb61e06_ece931a6",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 38
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -94,6 +142,54 @@
     },
     {
       "key": {
+        "uuid": "26bd1ae7_0908742a",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d6a0bb3_26e2b965",
+      "range": {
+        "startLine": 188,
+        "startChar": 19,
+        "endLine": 188,
+        "endChar": 48
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb7ba446_1e550e94",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "01041990_0b8d15eb",
+      "range": {
+        "startLine": 188,
+        "startChar": 2,
+        "endLine": 188,
+        "endChar": 8
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bbd4878_404f4e43",
         "filename": "test/nvme/nvme.sh",
         "patchSetId": 4
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "efbbaf50_d205eaa6",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9bbd4878_404f4e43",
+      "range": {
+        "startLine": 189,
+        "startChar": 0,
+        "endLine": 190,
+        "endChar": 47
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15ebce52_e9b63f8f",
         "filename": "test/nvme/nvme.sh",
         "patchSetId": 4
@@ -128,6 +248,30 @@
       "writtenOn": "2019-07-25T08:31:02Z",
       "side": 1,
       "message": "You can use -f option when running spdk_tgt",
+      "range": {
+        "startLine": 197,
+        "startChar": 1,
+        "endLine": 197,
+        "endChar": 36
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5be0bdc_4c20c12b",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "This will require additional delay to wait for pid file to be created which complicates this code.",
+      "parentUuid": "15ebce52_e9b63f8f",
       "range": {
         "startLine": 197,
         "startChar": 1,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "9140e0ea_cc8ad8ef",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b7b82a84_e2417bda",
+      "range": {
+        "startLine": 198,
+        "startChar": 1,
+        "endLine": 198,
+        "endChar": 24
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3656d51c_76c5406d",
         "filename": "test/nvme/nvme.sh",
         "patchSetId": 4
@@ -174,6 +342,30 @@
       "writtenOn": "2019-07-25T08:31:02Z",
       "side": 1,
       "message": "Do we really need to do this check?\nIf the script runs with -e option then in case of fail @ line 201 we will exit.\n\nIf this check is really necessary then if can be modified to not use string comparison, but actual return code instead using \"! grep -q ...\"",
+      "range": {
+        "startLine": 204,
+        "startChar": 9,
+        "endLine": 204,
+        "endChar": 72
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de53c397_3b2ead5e",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "This one is here to check if controller is created correctly even if we get success in line 201. This case is mostly targeted for NVMe with no namespaces, but as we are doing it we can check each NVMe anyway.",
+      "parentUuid": "3656d51c_76c5406d",
       "range": {
         "startLine": 204,
         "startChar": 9,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "69708cdc_24773dd1",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8754309e_f2fb6bb0",
+      "range": {
+        "startLine": 205,
+        "startChar": 17,
+        "endLine": 205,
+        "endChar": 23
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24fa7e12_15d0c388",
         "filename": "test/nvme/nvme.sh",
         "patchSetId": 4
@@ -229,6 +445,30 @@
       "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3761bb14_eb3b7043",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "24fa7e12_15d0c388",
+      "range": {
+        "startLine": 211,
+        "startChar": 55,
+        "endLine": 211,
+        "endChar": 73
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "e3bc2d78_fd312149",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6838e80_d6e7b9d0",
+      "range": {
+        "startLine": 221,
+        "startChar": 39,
+        "endLine": 221,
+        "endChar": 135
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a730d454_9e484e7a",
         "filename": "test/nvme/nvme.sh",
         "patchSetId": 4
@@ -278,6 +542,30 @@
     },
     {
       "key": {
+        "uuid": "856917fb_19d1a93a",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a730d454_9e484e7a",
+      "range": {
+        "startLine": 222,
+        "startChar": 68,
+        "endLine": 222,
+        "endChar": 137
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "889d1e0f_2aea54f7",
         "filename": "test/nvme/nvme.sh",
         "patchSetId": 4
@@ -298,6 +586,30 @@
       "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35a0e08f_e2463bdf",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-26T13:21:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "889d1e0f_2aea54f7",
+      "range": {
+        "startLine": 223,
+        "startChar": 25,
+        "endLine": 225,
+        "endChar": 27
+      },
+      "revId": "3abfb31b5be5a218391806bc0ba97944256b91d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
