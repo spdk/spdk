@@ -780,6 +780,11 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 	struct ftl_band_reloc *breloc = &reloc->brelocs[band->id];
 	size_t i, prev_lbks = breloc->num_lbks;
 
+	/* No need to add anything if already at high prio - whole band should be relocated */
+	if (!prio && band->high_prio) {
+		return;
+	}
+
 	pthread_spin_lock(&band->lba_map.lock);
 	if (band->lba_map.num_vld == 0) {
 		pthread_spin_unlock(&band->lba_map.lock);
