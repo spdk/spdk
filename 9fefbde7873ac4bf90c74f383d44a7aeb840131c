@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b5c9734_257b0bc7",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-26T15:19:57Z",
+      "side": 1,
+      "message": "So we actually don\u0027t *need* this memset.  The crypto_ops array of pointers will get populated with rte_crypto_op_bulk_alloc() and when freed they should be cleared.  I haven\u0027t tested it but can if you\u0027d like me to. This stuff below is yucky :)",
+      "revId": "9fefbde7873ac4bf90c74f383d44a7aeb840131c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
