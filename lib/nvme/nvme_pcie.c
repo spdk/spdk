@@ -1355,7 +1355,9 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		    !qpair->ctrlr->is_resetting) {
 			req = STAILQ_FIRST(&qpair->queued_req);
 			STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-			nvme_qpair_submit_request(qpair, req);
+			if (nvme_qpair_submit_request(qpair, req) != 0) {
+				STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+			}
 		}
 	}
 }
