@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f6b1dca_68dc8377",
+        "filename": "test/vmd/vmd.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-26T15:06:10Z",
+      "side": 1,
+      "message": "I\u0027m no bash expert by any stretch but I think most of our tests put the trap after the pid is defined, so this would be at line 48.  I assume this still works then?\n\nalso what about the \"trep -\" call?",
+      "revId": "6326877af243b65fd0dc2bd317d8d11d152223af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
