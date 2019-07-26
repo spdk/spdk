@@ -16,6 +16,24 @@
       "revId": "00cc407892fc38196bc59dfe567591064c798e7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "324e0100_90f13614",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1015543
+      },
+      "writtenOn": "2019-07-26T17:51:09Z",
+      "side": 1,
+      "message": "Because we don\u0027t care what the status is at this point, and always want to free/destroy the context.",
+      "parentUuid": "28b9488a_ccbc280c",
+      "revId": "00cc407892fc38196bc59dfe567591064c798e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
