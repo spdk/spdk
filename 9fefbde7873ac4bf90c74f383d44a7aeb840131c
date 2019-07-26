@@ -106,6 +106,24 @@
       "revId": "9fefbde7873ac4bf90c74f383d44a7aeb840131c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab83d367_3dabdbeb",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T22:35:26Z",
+      "side": 1,
+      "message": "Instead of dummy_buf, can you just make it a struct rte_crypto_op?  That seemed to work on my system.\n\nI didn\u0027t need the do/while either.\n\nWhat a pain.",
+      "parentUuid": "cc775118_fe1dfcb1",
+      "revId": "9fefbde7873ac4bf90c74f383d44a7aeb840131c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
