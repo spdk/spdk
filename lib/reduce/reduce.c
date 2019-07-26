@@ -118,6 +118,7 @@ struct spdk_reduce_vol_request {
 	uint8_t					*comp_buf;
 	struct iovec				*comp_buf_iov;
 	struct iovec				*iov;
+	bool					rmw;
 	struct spdk_reduce_vol			*vol;
 	int					type;
 	int					reduce_errno;
@@ -1045,7 +1046,7 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 {
 	struct spdk_reduce_vol *vol = req->vol;
 	uint32_t i;
-	uint64_t chunk_offset;
+	uint64_t chunk_offset, remainder, total_len = 0;
 	uint8_t *buf;
 	int j;
 
@@ -1067,10 +1068,28 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	/* if the chunk is uncompressed we need to copy the data from the host buffers. */
 	if (req->chunk_is_compressed == false) {
 		chunk_offset = req->offset % vol->logical_blocks_per_chunk;
-		buf = req->decomp_buf + chunk_offset * vol->params.logical_block_size;
+		buf = req->decomp_buf;
+		total_len = chunk_offset * vol->params.logical_block_size;
+
+		/* zero any offset into chunk */
+		if (req->rmw == false && chunk_offset) {
+			memset(buf, 0, total_len);
+		}
+		buf += total_len;
+
+		/* copy the data */
 		for (j = 0; j < req->iovcnt; j++) {
 			memcpy(buf, req->iov[j].iov_base, req->iov[j].iov_len);
 			buf += req->iov[j].iov_len;
+			total_len += req->iov[j].iov_len;
+		}
+
+		/* zero any remainder */
+		remainder = vol->params.chunk_size - total_len;
+		if (req->rmw == false && remainder) {
+			memset(buf, 0, remainder);
+			total_len += remainder;
+			assert(total_len == vol->params.chunk_size);
 		}
 	}
 
@@ -1454,6 +1473,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 			/* Read old chunk, then overwrite with data from this write
 			 *  operation.
 			 */
+			req->rmw = true;
 			_reduce_vol_read_chunk(req, _write_read_done);
 			return;
 		}
@@ -1461,6 +1481,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 
 	lbsize = vol->params.logical_block_size;
 	req->decomp_iovcnt = 0;
+	req->rmw = false;
 
 	/* Note: point to our zero buf for offset into the chunk. */
 	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
