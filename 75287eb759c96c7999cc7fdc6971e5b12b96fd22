@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f9c4b73_789d5663",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-26T19:53:46Z",
+      "side": 1,
+      "message": "persisted. But I\u0027d reword it to say this:\n\nAll bdevs now have a UUID. For devices whose backing hardware does not provide a UUID, one is automatically generated. Across runs of SPDK, bdevs whose UUID is automatically generated may change.",
+      "revId": "75287eb759c96c7999cc7fdc6971e5b12b96fd22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83d47cac_8c069558",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-26T19:53:46Z",
+      "side": 1,
+      "message": "you forgot a",
+      "revId": "75287eb759c96c7999cc7fdc6971e5b12b96fd22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
