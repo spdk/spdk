@@ -751,6 +751,7 @@ test_nvme_ctrlr_probe(void)
 	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == 0);
 	dummy = TAILQ_FIRST(&probe_ctx.init_ctrlrs);
+	SPDK_CU_ASSERT_FATAL(dummy != NULL);
 	CU_ASSERT(dummy == ut_nvme_transport_ctrlr_construct);
 	TAILQ_REMOVE(&probe_ctx.init_ctrlrs, dummy, tailq);
 	MOCK_CLEAR_P(nvme_transport_ctrlr_construct);
