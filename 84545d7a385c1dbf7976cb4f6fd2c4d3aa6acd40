@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "d5f6ba6e_ceaaa07e",
+        "filename": "lib/event/subsystems/vmd/vmd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-26T12:30:00Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "55bff17b_f342551c",
+      "range": {
+        "startLine": 67,
+        "startChar": 2,
+        "endLine": 67,
+        "endChar": 23
+      },
+      "revId": "84545d7a385c1dbf7976cb4f6fd2c4d3aa6acd40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd940bc0_5ae3c99b",
         "filename": "lib/event/subsystems/vmd/vmd_rpc.c",
         "patchSetId": 6
@@ -140,6 +164,30 @@
       "revId": "84545d7a385c1dbf7976cb4f6fd2c4d3aa6acd40",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bcf8dab_82fc05e2",
+        "filename": "lib/event/subsystems/vmd/vmd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-26T12:30:00Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "aa3745f5_5e9d335a",
+      "range": {
+        "startLine": 79,
+        "startChar": 53,
+        "endLine": 79,
+        "endChar": 69
+      },
+      "revId": "84545d7a385c1dbf7976cb4f6fd2c4d3aa6acd40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
