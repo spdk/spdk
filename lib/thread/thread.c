@@ -628,6 +628,12 @@ spdk_thread_get_name(const struct spdk_thread *thread)
 	return thread->name;
 }
 
+uint64_t
+spdk_thread_get_time(const struct spdk_thread *thread)
+{
+	return thread->tsc_last;
+}
+
 int
 spdk_thread_get_stats(struct spdk_thread_stats *stats)
 {
@@ -1269,6 +1275,5 @@ end:
 
 	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
-
 
 SPDK_LOG_REGISTER_COMPONENT("thread", SPDK_LOG_THREAD)
