@@ -142,9 +142,10 @@ raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destroy_cb\n");
 
-	assert(raid_bdev != NULL);
-	assert(raid_ch != NULL);
-	assert(raid_ch->base_channel);
+	if (!raid_bdev || !raid_ch || !raid_ch->base_channel) {
+		return;
+	}
+
 	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/* Free base bdev channels */
 		assert(raid_ch->base_channel[i] != NULL);
@@ -183,6 +184,7 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 		raid_bdev->config->raid_bdev = NULL;
 	}
 	free(raid_bdev);
+	raid_bdev = NULL;
 }
 
 /*
