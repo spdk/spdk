@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d030c1f_3793ac6e",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T20:43:45Z",
+      "side": 1,
+      "message": "it\u0027s \u003d\u003e its",
+      "revId": "0ede3584e8729ee3a08ed1a515a7336f619636b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f944fff_9b3c7af6",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-26T20:43:45Z",
+      "side": 1,
+      "message": "This comment is a bit unclear.  Could you take a look?\n\nI\u0027d also suggest putting the comment inside of the if() block, since it only applies if the if statement is true.",
+      "revId": "0ede3584e8729ee3a08ed1a515a7336f619636b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
