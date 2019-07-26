@@ -54,14 +54,14 @@
 #define NUM_MAX_XFORMS 2
 #define NUM_MAX_INFLIGHT_OPS 128
 #define DEFAULT_WINDOW_SIZE 15
-#define MAX_MBUFS_PER_OP 16
+#define MAX_MBUFS_PER_OP REDUCE_MAX_IOVECS
 #define CHUNK_SIZE (1024 * 16)
 #define COMP_BDEV_NAME "compress"
 #define BACKING_IO_SZ (4 * 1024)
 
 #define ISAL_PMD "compress_isal"
 #define QAT_PMD "compress_qat"
-#define NUM_MBUFS		512
+#define NUM_MBUFS		1024
 #define POOL_CACHE_SIZE		256
 
 static enum compress_pmd g_opts;
@@ -590,7 +590,8 @@ comp_dev_poller(void *args)
 			/* tell reduce this is done and what the bytecount was */
 			reduce_args->cb_fn(reduce_args->cb_arg, deq_ops[i]->produced);
 		} else {
-			SPDK_ERRLOG("deque status %u\n", deq_ops[i]->status);
+			SPDK_NOTICELOG("FYI storing data uncompressed due to deque status %u\n",
+				       deq_ops[i]->status);
 
 			/* Reduce will simply store uncompressed on neg errno value. */
 			reduce_args->cb_fn(reduce_args->cb_arg, -EINVAL);
