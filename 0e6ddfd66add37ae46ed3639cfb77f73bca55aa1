@@ -16,6 +16,24 @@
       "revId": "0e6ddfd66add37ae46ed3639cfb77f73bca55aa1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "234d08fa_5abda3fe",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-27T01:04:32Z",
+      "side": 0,
+      "message": "Actually it\u0027s a bug, because existing RPC set to RPC_START_UP, but the g_bdev_nvme_init_thread is not initialized for the start up, maybe I can move it to the later patch.",
+      "parentUuid": "de8ee3ee_24f7926b",
+      "revId": "0e6ddfd66add37ae46ed3639cfb77f73bca55aa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
