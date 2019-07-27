@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "2a3ec228_e4fd2f24",
+        "filename": "autotest.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-27T00:11:41Z",
+      "side": 1,
+      "message": "I meant where these three lines get inserted into this file.  But I\u0027m being overly pedantic.  Just ignore all of this - what you have is fine.",
+      "parentUuid": "0d57b699_5e6882f5",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "320bc6ee_cb77d0a3",
         "filename": "test/compress/compress.sh",
         "patchSetId": 76
@@ -138,6 +156,41 @@
       "side": 1,
       "message": "yeah, the two if\u0027s I added below based on your comments are false so we kill the svc and remove any pmem files that might have been created",
       "parentUuid": "cbc9089d_3fe48529",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f415d42_45bb8c80",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-27T00:11:41Z",
+      "side": 1,
+      "message": "I don\u0027t think so.  set -e is still in effect, so when waitforbdev times out, it returns 1 and the rest of this won\u0027t get executed.\n\nYou could just set +e before calling waitforbdev and explain why.  Then set -e immediately afterwards.",
+      "parentUuid": "b1494b28_51e59935",
+      "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b102d3c_b2923054",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-27T00:11:41Z",
+      "side": 1,
+      "message": "I don\u0027t this trap clear is needed.  In the normal case, you clear the trap before this function is called.  And I don\u0027t think clearing it in the error case (i.e. this function runs as part of the trap) is helpful.",
       "revId": "6be2c7dadfba1392972ab195680338d14d3f9de6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
