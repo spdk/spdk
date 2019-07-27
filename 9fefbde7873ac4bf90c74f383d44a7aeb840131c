@@ -124,6 +124,24 @@
       "revId": "9fefbde7873ac4bf90c74f383d44a7aeb840131c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4dcd6608_a087d14b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-27T15:14:41Z",
+      "side": 1,
+      "message": "I can\u0027t do that either -\nThe object here is supposed to have additional space at the end of struct rte_crypto_op, which is also memset by rte_crypto_op_bulk_alloc. I have to setup a buffer with at least sizeof(struct rte_crypto_op) + sizeof(struct rte_crypto_sym_op) and it was just easier to setup a buffer with size 0x1000, which is way above that.",
+      "parentUuid": "ab83d367_3dabdbeb",
+      "revId": "9fefbde7873ac4bf90c74f383d44a7aeb840131c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
