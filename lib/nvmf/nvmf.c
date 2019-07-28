@@ -1242,5 +1242,6 @@ spdk_nvmf_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 	ch = spdk_get_io_channel(tgt);
 	group = spdk_io_channel_get_ctx(ch);
 	*stat = group->stat;
+	spdk_put_io_channel(ch);
 	return 0;
 }
