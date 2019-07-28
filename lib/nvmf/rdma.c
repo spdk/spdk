@@ -3698,6 +3698,7 @@ spdk_nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 
 	ch = spdk_get_io_channel(tgt);
 	group = spdk_io_channel_get_ctx(ch);;
+	spdk_put_io_channel(ch);
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (SPDK_NVME_TRANSPORT_RDMA == tgroup->transport->ops->type) {
 			*stat = calloc(1, sizeof(struct spdk_nvmf_transport_poll_group_stat));
