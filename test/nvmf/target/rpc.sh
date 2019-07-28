@@ -7,11 +7,41 @@ source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+function jcount()
+{
+    local filter=$1
+    jq "$filter" | wc -l
+}
+
+function jsum()
+{
+    local filter=$1
+    jq "$filter" | awk '{s+=$1}END{print s}'
+}
+
 timing_enter rpc
 nvmftestinit
 nvmfappstart "-m 0xF"
 
+stats=$($rpc_py nvmf_get_stats)
+# Expect 4 poll groups (from CPU mask) and no transports yet
+[ "4" -eq $(jcount .poll_groups[].name <<< "$stats") ]
+[ "null" == $(jq .poll_groups[0].transports[0] <<< "$stats") ]
+
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+
+stats=$($rpc_py nvmf_get_stats)
+# Expect no QPs
+[ "0" -eq $(jsum .poll_groups[].admin_qpairs <<< "$stats") ]
+[ "0" -eq $(jsum .poll_groups[].io_qpairs <<< "$stats") ]
+# Transport statistics is currently implemented for RDMA only
+if [ 'rdma' == $TEST_TRANSPORT ]; then
+    # Expect RDMA transport and some devices
+    [ "1" -eq $(jcount .poll_groups[0].transports[].trtype <<< "$stats") ]
+    transport_type=$(jq -r .poll_groups[0].transports[0].trtype <<< "$stats")
+    [ "${transport_type,,}" == "${TEST_TRANSPORT,,}" ]
+    [ "0" -lt $(jcount .poll_groups[0].transports[0].devices[].name <<< "$stats") ]
+fi
 
 # set times for subsystem construct/delete
 if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -82,6 +112,17 @@ do
 
 	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 done
+
+stats=$($rpc_py nvmf_get_stats)
+# Expect some admin and IO qpairs
+[ "0" -lt $(jsum .poll_groups[].admin_qpairs <<< "$stats") ]
+[ "0" -lt $(jsum .poll_groups[].io_qpairs <<< "$stats") ]
+# Transport statistics is currently implemented for RDMA only
+if [ 'rdma' == $TEST_TRANSPORT ]; then
+    # Expect non-zero completions and request latencies accumulated
+    [ "0" -lt $(jsum .poll_groups[].transports[].devices[].completions <<< "$stats") ]
+    [ "0" -lt $(jsum .poll_groups[].transports[].devices[].request_latency <<< "$stats") ]
+fi
 
 trap - SIGINT SIGTERM EXIT
 
