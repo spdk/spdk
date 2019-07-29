@@ -16,6 +16,24 @@
       "revId": "91e6d2ab7853eab587adbe6066197340d361c440",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2747e488_9b5aab6d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2099,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-07-29T10:25:27Z",
+      "side": 1,
+      "message": "I see what you mean.\nI think we can abandon this patch for now. This stat is too detailed for normal usage.\nWhat do you think?",
+      "parentUuid": "c0b57d6b_aa4eb5a6",
+      "revId": "91e6d2ab7853eab587adbe6066197340d361c440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
