@@ -50,13 +50,12 @@ Legacy INI style configuration for SPDK applications will become deprecated in S
 and removed in SPDK 20.01. Please consider moving to JSON-RPC configuration files and/or
 RPC driven run-time configuration.
 
-### NVMe-oF Target (FC)
+### nvmf
 
-New Fibre Channel transport for NVMe over Fabrics target. Requires an FC HBA to use.
-Also, requires a Fibre Channel HBA low level driver (lld) library. The driver library
-and API header file path can be provided as an argument to "--with-fc".
-
-### NVMe-oF Target
+EXPERIMENTAL: A Fibre Channel transport that supports Broadcom HBAs has been
+added. This depends on the FC HBA driver at
+https://github.com/ecdufcdrvr/bcmufctdrvr. See [the documentation](https://spdk.io/doc/nvmf.html#nvmf_fc_transport)
+for more information.
 
 Persistent reservation emulation has been added to the NVMe-oF target. Persistent reservation
 state is stored in a JSON file on the local filesystem between target restart. To support this,
