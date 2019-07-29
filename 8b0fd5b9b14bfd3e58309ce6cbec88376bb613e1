@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d49c3a78_3f7d4d75",
+        "filename": "doc/bdev.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-29T17:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8c636f33_b0cdef5d",
+      "range": {
+        "startLine": 126,
+        "startChar": 82,
+        "endLine": 126,
+        "endChar": 90
+      },
+      "revId": "8b0fd5b9b14bfd3e58309ce6cbec88376bb613e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9954d1b1_974574e5",
         "filename": "doc/bdev.md",
         "patchSetId": 6
