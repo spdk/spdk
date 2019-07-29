@@ -34,6 +34,24 @@
       "revId": "6326877af243b65fd0dc2bd317d8d11d152223af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3baa3083_805504a4",
+        "filename": "test/vmd/vmd.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-29T04:17:24Z",
+      "side": 1,
+      "message": "FYI, this would work if there were single quotes used. Then svcpid evaluation would be deferred until the trap is executed.\n\nThere are double quotes used right now, so we end up setting the trap to \u0027killprocess ; exit 1\u0027 since svcpid is unset.\n\nI agree this should be moved after svcpid is defined.",
+      "parentUuid": "0a7bb800_6cd3a395",
+      "revId": "6326877af243b65fd0dc2bd317d8d11d152223af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
