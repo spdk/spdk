@@ -314,6 +314,24 @@ Bdevs claimed by the `examine_config` callback will be now further examined in t
 spdk_bdev_io_get_io_channel() was added as a convenient way to get an io_channel
 from a bdev_io.
 
+### ocf
+
+Updated OCF submodule to OCF v19.3.2
+
+Added support for many-to-one configuration for OCF bdev.
+Multiple core devices can now be cached on single cache device.
+
+Added persistent metadata support, allowing to restore cache state after shutdown.
+During start of SPDK application, the devices are examined and if OCF metadata
+is present - appropriate OCF bdevs will be recreated.
+
+Added Write-Back mode support. In this mode, data is first written to
+caching device and periodically synchronized to the core devices.
+Dirty data is saved as persistent metadata on cache device,
+allowing for safe restore during application restart.
+For more details please see OCF documentation:
+[OpenCAS cache configuration](https://open-cas.github.io/cache_configuration.html)
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
