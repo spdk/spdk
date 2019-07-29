@@ -209,6 +209,37 @@ To remove the vbdev use the delete_crypto_bdev command.
 
 `rpc.py delete_crypto_bdev CryNvmeA`
 
+# Delay Bdev Module {#bdev_config_delay}
+
+The delay vbdev module is intended to apply a predetermined additional latency on top of a lower
+level bdev. This enables the simulation of the latency characteristics of a device during the functional
+or scalability testing of an SPDK application. For example, to simulate the effect of drive latency when
+processing I/Os, one could configure a NULL bdev with a delay bdev on top of it.
+
+The delay bdev module is not intended to provide a high fidelity replication of a specific NVMe drive's latency,
+instead it's main purpose is to provide a "big picture" understanding of how a generic latency affects a given
+application.
+
+A delay bdev is created using the `bdev_delay_create` RPC. THis rpc takes 6 arguments, one for the name
+of the delay bdev and one for the name of the base bdev. The remaining four arguments represent the following
+latency values: average read latency, average write latency, p99 read latency, and p99 write latency.
+Within the context of the delay bdev p99 latency means that one percent of the I/O will be delayed by at
+least by the value of the p99 latency before being completed to the upper level protocol. All of the latency values
+are measured in microseconds.
+
+Example command:
+
+`rpc.py bdev_delay_create -b Null0 -d delay0 -r 10 --nine-nine-read-latency 50 -w 30 --nine-nine-write-latency 90`
+
+This command will create a delay bdev with average read and write latencies of 10 and 30 microseconds and p99 read
+and write latencies of 50 and 90 microseconds respectively.
+
+A delay bdev can be deleted using the `bdev_delay_delete` RPC
+
+Example command:
+
+`rpc.py bdev_delay_delete delay0`
+
 # GPT (GUID Partition Table) {#bdev_config_gpt}
 
 The GPT virtual bdev driver is enabled by default and does not require any configuration.
