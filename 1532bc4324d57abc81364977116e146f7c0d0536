@@ -45,6 +45,30 @@
       "revId": "1532bc4324d57abc81364977116e146f7c0d0536",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f70ae6bc_c74b96e1",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-07-29T14:06:23Z",
+      "side": 1,
+      "message": "it is used at #299",
+      "parentUuid": "c50dc996_3200167f",
+      "range": {
+        "startLine": 253,
+        "startChar": 2,
+        "endLine": 253,
+        "endChar": 4
+      },
+      "revId": "1532bc4324d57abc81364977116e146f7c0d0536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
