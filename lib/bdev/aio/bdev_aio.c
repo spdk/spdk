@@ -304,7 +304,7 @@ bdev_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *u
 #if defined(__i386__) || defined(__x86_64__)
 	spdk_compiler_barrier();
 #else
-	spdk_mb();
+	spdk_smp_mb();
 #endif
 	ring->head = (head + count) % ring->size;
 
