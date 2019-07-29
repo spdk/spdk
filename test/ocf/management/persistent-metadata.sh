@@ -4,27 +4,27 @@ curdir=$(dirname $(readlink -f "$BASH_SOURCE"))
 rootdir=$(readlink -f $curdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 
+function clear_nvme()
+{
+# Clear metadata on NVMe device
+$rootdir/scripts/setup.sh reset
+dd if=/dev/zero of=/dev/nvme0n1 bs=1M count=1000 oflag=direct
+$rootdir/scripts/setup.sh
+}
+
+clear_nvme
+
 rpc_py=$rootdir/scripts/rpc.py
 
-rm -f aio*
-truncate -s 128M aio0
-truncate -s 128M aio1
-truncate -s 128M aio2
-truncate -s 128M aio3
-truncate -s 128M aio4
-truncate -s 128M aio5
-truncate -s 128M aio6
+nvme_cfg=$($rootdir/scripts/gen_nvme.sh)
 
-echo "
-[AIO]
-  AIO ./aio0 aio0 512
-  AIO ./aio1 aio1 512
-  AIO ./aio2 aio2 512
-  AIO ./aio3 aio3 512
-  AIO ./aio4 aio4 512
-  AIO ./aio5 aio5 512
-  AIO ./aio6 aio6 512
-" > $curdir/config
+config="
+$nvme_cfg
+
+[Split]
+  Split Nvme0n1 8 128
+"
+echo "$config" > $curdir/config
 
 $rootdir/app/iscsi_tgt/iscsi_tgt -c $curdir/config &
 spdk_pid=$!
@@ -33,10 +33,10 @@ waitforlisten $spdk_pid
 
 # Create ocf on persistent storage
 
-$rpc_py construct_ocf_bdev ocfWT  wt aio0 aio1
-$rpc_py construct_ocf_bdev ocfPT  pt aio2 aio3
-$rpc_py construct_ocf_bdev ocfWB0 wb aio4 aio5
-$rpc_py construct_ocf_bdev ocfWB1 wb aio4 aio6
+$rpc_py construct_ocf_bdev ocfWT  wt Nvme0n1p0 Nvme0n1p1
+$rpc_py construct_ocf_bdev ocfPT  pt Nvme0n1p2 Nvme0n1p3
+$rpc_py construct_ocf_bdev ocfWB0 wb Nvme0n1p4 Nvme0n1p5
+$rpc_py construct_ocf_bdev ocfWB1 wb Nvme0n1p4 Nvme0n1p6
 
 # Sorting bdevs because we dont guarantee that they are going to be
 # in the same order after shutdown
@@ -63,4 +63,6 @@ diff ocf_bdevs ocf_bdevs_verify
 trap - SIGINT SIGTERM EXIT
 
 killprocess $spdk_pid
-rm -f aio* $curdir/config ocf_bdevs ocf_bdevs_verify
+rm -f $curdir/config ocf_bdevs ocf_bdevs_verify
+
+clear_nvme
