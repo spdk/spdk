@@ -224,12 +224,21 @@ A snapshot can now be deleted if there is only a single clone on top of it.
 
 ### build
 
-Cross compilation is now supported with an extra configure option:
-`./configure --target-arch=aarm64`
+Preliminary support for cross compilation is now available. Targeting an older
+CPU on the same architecture using your native compiler can be accomplished by
+using the `--target-arch` option to `configure` as follows:
 
-Additionally, a prefix to the toolchain can be provided to automatically set up
-CC and CXX:
-`./configure --target-arch=aarm64 --cross-prefix=aarch64-linux-gnu`
+~~~
+./configure --target-arch=broadwell
+~~~
+
+Additionally, some support for cross-compiling to other architectures has been
+added via the `--cross-prefix` argument to `configure`. To cross-compile, set CC
+and CXX to the cross compilers, then run configure as follows:
+
+~~~
+./configure --target-arch=aarm64 --cross-prefix=aarch64-linux-gnu
+~~~
 
 ### vhost
 
