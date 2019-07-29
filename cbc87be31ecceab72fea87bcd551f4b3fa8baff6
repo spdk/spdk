@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bf2a222_93335327",
+        "filename": "test/nvmf/target/rpc.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-29T16:22:53Z",
+      "side": 1,
+      "message": "I feel like this might confuse people.  The stats test here is fine - I\u0027m just looking back at how these stats are counted.\n\nI think people will expect this to be the *current* number of admin or io qpairs - not the number of admin or io qpairs that have been created since the target started.  I think this patch is fine for now (it\u0027s testing the current implementation) but I feel like we should either change how these are counted, or add additional stats like \"current_admin_qpairs\" and \"current_io_qpairs\".",
+      "revId": "cbc87be31ecceab72fea87bcd551f4b3fa8baff6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
