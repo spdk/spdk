@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "114eabc5_285430cb",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-29T21:57:59Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d4903dfa_ff67d39a",
+      "revId": "d3dc4af8463f3c477afc84031be0b9342661955c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ce94329_1cbefbeb",
         "filename": "test/compress/compress.sh",
         "patchSetId": 78
@@ -50,6 +68,24 @@
       "revId": "d3dc4af8463f3c477afc84031be0b9342661955c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc9a6a2b_a2a95551",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-29T21:57:59Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2ce94329_1cbefbeb",
+      "revId": "d3dc4af8463f3c477afc84031be0b9342661955c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
