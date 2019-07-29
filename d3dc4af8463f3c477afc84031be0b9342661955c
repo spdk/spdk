@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "628f0137_5461af9b",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-29T20:43:40Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to do any of this to correctly clean up. Instead, you can just delete the pmem file. Won\u0027t that invalidate the compress dev?",
+      "revId": "d3dc4af8463f3c477afc84031be0b9342661955c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4903dfa_ff67d39a",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-29T20:43:40Z",
+      "side": 1,
+      "message": "Probably safer to do this:\n\nQD\u003d32\nRUNTIME\u003d3\nIOSIZE\u003d4096\n\nif [ $RUN_NIGHTLY -eq 1 ]; then\n    QD\u003d64\n...",
+      "revId": "d3dc4af8463f3c477afc84031be0b9342661955c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ce94329_1cbefbeb",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-29T20:43:40Z",
+      "side": 1,
+      "message": "Put bdevperf_pid\u003d$! on next line",
+      "revId": "d3dc4af8463f3c477afc84031be0b9342661955c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
