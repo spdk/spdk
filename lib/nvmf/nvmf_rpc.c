@@ -1602,12 +1602,12 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 	spdk_json_write_named_uint32(w, "max_aq_depth", opts->max_aq_depth);
 	spdk_json_write_named_uint32(w, "num_shared_buffers", opts->num_shared_buffers);
 	spdk_json_write_named_uint32(w, "buf_cache_size", opts->buf_cache_size);
+	spdk_json_write_named_bool(w, "dif_insert_or_strip", opts->dif_insert_or_strip);
 	if (type == SPDK_NVME_TRANSPORT_RDMA) {
 		spdk_json_write_named_uint32(w, "max_srq_depth", opts->max_srq_depth);
 		spdk_json_write_named_bool(w, "no_srq", opts->no_srq);
 	} else if (type == SPDK_NVME_TRANSPORT_TCP) {
 		spdk_json_write_named_bool(w, "c2h_success", opts->c2h_success);
-		spdk_json_write_named_bool(w, "dif_insert_or_strip", opts->dif_insert_or_strip);
 		spdk_json_write_named_uint32(w, "sock_priority", opts->sock_priority);
 	}
 
