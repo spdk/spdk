@@ -2673,7 +2673,10 @@ _nvmf_rdma_try_disconnect(void *ctx)
 static inline void
 spdk_nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	if (__sync_bool_compare_and_swap(&rqpair->disconnect_started, false, true)) {
+	bool expected = false;
+
+	if (__atomic_compare_exchange_n(&rqpair->disconnect_started, &expected, true, false,
+					__ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
 		_nvmf_rdma_try_disconnect(&rqpair->qpair);
 	}
 }
