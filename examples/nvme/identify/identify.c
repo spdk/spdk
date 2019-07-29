@@ -1248,7 +1248,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	}
 	printf("\n");
 
-	if (features[SPDK_NVME_FEAT_ARBITRATION].valid) {
+	if (features[SPDK_NVME_FEAT_ARBITRATION].valid && (cap.bits.ams & SPDK_NVME_CAP_AMS_WRR)) {
 		uint32_t arb = features[SPDK_NVME_FEAT_ARBITRATION].result;
 		unsigned ab, lpw, mpw, hpw;
 
