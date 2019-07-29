@@ -760,8 +760,10 @@ ftl_wptr_pad_band(struct ftl_wptr *wptr)
 	size_t blocks_left, rwb_size, pad_size;
 
 	blocks_left = ftl_wptr_user_lbks_left(wptr);
+	assert(size < blocks_left);
+	assert(blocks_left % dev->xfer_size == 0);
 	rwb_size = ftl_rwb_size(dev->rwb) - size;
-	pad_size = spdk_min(blocks_left, rwb_size);
+	pad_size = spdk_min(blocks_left - size, rwb_size);
 
 	/* Pad write buffer until band is full */
 	ftl_rwb_pad(dev, pad_size);
