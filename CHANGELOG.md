@@ -156,6 +156,15 @@ to attach/detach PCI devices are no longer thread safe. They are now meant to
 be called from only a single thread only, the same only that called spdk_env_init().
 This applies to the newly added APIs as well.
 
+### vpp
+
+SPDK now supports VPP version 19.04.2, up from VPP 18.01.
+
+VPP socket abstraction now uses VPP Session API, instead of VLC (VPP Communications Library).
+This allows for better control over sessions and queues.
+Please see VPP documentation for more details:
+[VPP Host Stack](https://wiki.fd.io/view/VPP/HostStack)
+
 ### sock
 
 Add spdk_sock_get_optimal_sock_group(), which returns the optimal sock group for
