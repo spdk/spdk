@@ -22,6 +22,15 @@ and `spdk_dix_remap_ref_tag` have been added to remap DIF reference tag.
 New APIs `spdk_dif_update_crc32c` and `spdk_dif_update_crc32c_stream` have been
 added to compute CRC-32C checksum for extended LBA payload.
 
+Bdevperf and bdevio applications now support starting tests with application specific
+RPCs. Please see helper Python scripts in their respective directories.
+This is a move towards simpler RPC-only configuration for all main
+and auxiliary applications.
+
+Legacy INI style configuration for SPDK applications will become deprecated in SPDK 19.10,
+and removed in SPDK 20.01. Please consider moving to JSON-RPC configuration files and/or
+RPC driven run-time configuration.
+
 ### NVMe-oF Target (FC)
 
 New Fibre Channel transport for NVMe over Fabrics target. Requires an FC HBA to use.
