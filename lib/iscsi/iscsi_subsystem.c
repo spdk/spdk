@@ -1196,43 +1196,63 @@ iscsi_poll_group_handle_nop(void *ctx)
 struct spdk_iscsi_poll_group *
 spdk_iscsi_poll_group_get_current(void)
 {
-	uint32_t lcore;
+	struct spdk_iscsi_poll_group *pg;
+	struct spdk_thread *thread;
 
-	lcore = spdk_env_get_current_core();
+	thread = spdk_get_thread();
 
-	return &g_spdk_iscsi.poll_group[lcore];
+	TAILQ_FOREACH(pg, &g_spdk_iscsi.poll_group_head, link) {
+		if (pg->thread == thread) {
+			return pg;
+		}
+	}
+
+	assert(false);
+
+	return NULL;
 }
 
-static uint32_t g_next_core = SPDK_ENV_LCORE_ID_ANY;
+static struct spdk_iscsi_poll_group *
+iscsi_poll_group_get_next(void)
+{
+	struct spdk_iscsi_poll_group *pg;
+
+	pg = g_spdk_iscsi.next_poll_group;
+
+	g_spdk_iscsi.next_poll_group = TAILQ_NEXT(pg, link);
+	if (g_spdk_iscsi.next_poll_group == NULL) {
+		g_spdk_iscsi.next_poll_group = TAILQ_FIRST(&g_spdk_iscsi.poll_group_head);
+	}
+
+	return pg;
+}
+
+static struct spdk_iscsi_poll_group *
+iscsi_poll_group_get_first(void)
+{
+	return TAILQ_FIRST(&g_spdk_iscsi.poll_group_head);
+}
 
 struct spdk_iscsi_poll_group *
 spdk_iscsi_poll_group_get_next_possible(struct spdk_cpuset *cpumask)
 {
-	uint32_t i, lcore;
+	struct spdk_cpuset tmp;
+	struct spdk_iscsi_poll_group *pg, *start;
 
-	lcore = SPDK_ENV_LCORE_ID_ANY;
+	start = pg = iscsi_poll_group_get_next();
 
-	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		if (g_next_core > spdk_env_get_last_core()) {
-			g_next_core = spdk_env_get_first_core();
+	do {
+		spdk_cpuset_copy(&tmp, cpumask);
+		spdk_cpuset_and(&tmp, spdk_thread_get_cpumask(pg->thread));
+		if (spdk_cpuset_equal(&tmp, spdk_thread_get_cpumask(pg->thread))) {
+			return pg;
 		}
+		pg = iscsi_poll_group_get_next();
+	} while (start != pg);
 
-		lcore = g_next_core;
-		g_next_core = spdk_env_get_next_core(g_next_core);
+	SPDK_ERRLOG("Unable to find any poll group. So return the first one instead.\n");
 
-		if (!spdk_cpuset_get_cpu(cpumask, lcore)) {
-			continue;
-		}
-
-		break;
-	}
-
-	if (i > spdk_env_get_core_count()) {
-		SPDK_ERRLOG("Unable to schedule connection on allowed CPU core. Scheduling on first core instead.\n");
-		lcore = spdk_env_get_first_core();
-	}
-
-	return &g_spdk_iscsi.poll_group[lcore];
+	return iscsi_poll_group_get_first();
 }
 
 static void
@@ -1240,8 +1260,13 @@ iscsi_poll_group_create(void *ctx)
 {
 	struct spdk_iscsi_poll_group *pg;
 
-	assert(g_spdk_iscsi.poll_group != NULL);
-	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	pg = calloc(1, sizeof(*pg));
+	if (pg == NULL) {
+		SPDK_ERRLOG("Not enough memory to allocate poll groups\n");
+		spdk_app_stop(-ENOMEM);
+		return;
+	}
+
 	pg->thread = spdk_get_thread();
 
 	STAILQ_INIT(&pg->connections);
@@ -1251,35 +1276,35 @@ iscsi_poll_group_create(void *ctx)
 	pg->poller = spdk_poller_register(iscsi_poll_group_poll, pg, 0);
 	/* set the period to 1 sec */
 	pg->nop_poller = spdk_poller_register(iscsi_poll_group_handle_nop, pg, 1000000);
+
+	TAILQ_INSERT_TAIL(&g_spdk_iscsi.poll_group_head, pg, link);
 }
 
 static void
 iscsi_poll_group_destroy(void *ctx)
 {
-	struct spdk_iscsi_poll_group *pg;
+	struct spdk_iscsi_poll_group *pg, *tmp;
+	struct spdk_thread *thread;
 
-	assert(g_spdk_iscsi.poll_group != NULL);
-	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
-	assert(pg->poller != NULL);
-	assert(pg->sock_group != NULL);
+	thread = spdk_get_thread();
 
-	spdk_sock_group_close(&pg->sock_group);
-	spdk_poller_unregister(&pg->poller);
-	spdk_poller_unregister(&pg->nop_poller);
+	TAILQ_FOREACH_SAFE(pg, &g_spdk_iscsi.poll_group_head, link, tmp) {
+		if (pg->thread == thread) {
+			TAILQ_REMOVE(&g_spdk_iscsi.poll_group_head, pg, link);
+
+			spdk_sock_group_close(&pg->sock_group);
+			spdk_poller_unregister(&pg->poller);
+			spdk_poller_unregister(&pg->nop_poller);
+
+			free(pg);
+			return;
+		}
+	}
 }
 
 static void
 initialize_iscsi_poll_group(spdk_msg_fn cpl)
 {
-	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
-
-	g_spdk_iscsi.poll_group = calloc(g_num_poll_groups, sizeof(struct spdk_iscsi_poll_group));
-	if (!g_spdk_iscsi.poll_group) {
-		SPDK_ERRLOG("Failed to allocated iscsi poll group\n");
-		iscsi_init_complete(-1);
-		return;
-	}
-
 	/* Send a message to each thread and create a poll group */
 	spdk_for_each_thread(iscsi_poll_group_create, NULL, cpl);
 }
@@ -1412,7 +1437,6 @@ iscsi_fini_done(void *arg)
 	iscsi_auth_groups_destroy();
 	free(g_spdk_iscsi.authfile);
 	free(g_spdk_iscsi.nodebase);
-	free(g_spdk_iscsi.poll_group);
 
 	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
 	g_fini_cb_fn(g_fini_cb_arg);
@@ -1421,11 +1445,7 @@ iscsi_fini_done(void *arg)
 void
 spdk_shutdown_iscsi_conns_done(void)
 {
-	if (g_spdk_iscsi.poll_group) {
-		spdk_for_each_thread(iscsi_poll_group_destroy, NULL, iscsi_fini_done);
-	} else {
-		iscsi_fini_done(NULL);
-	}
+	spdk_for_each_thread(iscsi_poll_group_destroy, NULL, iscsi_fini_done);
 }
 
 void
