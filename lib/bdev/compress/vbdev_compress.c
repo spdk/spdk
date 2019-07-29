@@ -61,7 +61,7 @@
 
 #define ISAL_PMD "compress_isal"
 #define QAT_PMD "compress_qat"
-#define NUM_MBUFS		1024
+#define NUM_MBUFS		8192
 #define POOL_CACHE_SIZE		256
 
 static enum compress_pmd g_opts;
