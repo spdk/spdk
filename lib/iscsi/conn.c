@@ -603,13 +603,14 @@ iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
 }
 
 static void
-_iscsi_conn_remove_lun(void *arg1, void *arg2)
+iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 {
-	struct spdk_iscsi_conn *conn = arg1;
-	struct spdk_scsi_lun *lun = arg2;
+	struct spdk_iscsi_conn *conn = remove_ctx;
 	int lun_id = spdk_scsi_lun_get_id(lun);
 	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
 	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task;
+
+	assert(conn->lcore == spdk_env_get_current_core());
 
 	/* If a connection is already in stating status, just return */
 	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
@@ -646,17 +647,6 @@ _iscsi_conn_remove_lun(void *arg1, void *arg2)
 	}
 
 	iscsi_conn_close_lun(conn, lun_id);
-}
-
-static void
-iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
-{
-	struct spdk_iscsi_conn *conn = remove_ctx;
-	struct spdk_event *event;
-
-	event = spdk_event_allocate(conn->lcore, _iscsi_conn_remove_lun,
-				    conn, lun);
-	spdk_event_call(event);
 }
 
 static void
