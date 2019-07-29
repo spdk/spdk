@@ -57,6 +57,12 @@ extern "C" {
 /* Ceiling division of unsigned integers */
 #define SPDK_CEIL_DIV(x,y) (((x)+(y)-1)/(y))
 
+/* The following will automatically generate several version of
+ * this function, targeted at different architectures. This
+ * is only supported by GCC 6 or newer. */
+#if defined(__GNUC__) && __GNUC__ < 6 && !defined(__clang__)
+__attribute__((target_clones("bmi", "arch=core2", "arch=atom", "default")))
+#endif
 static inline uint32_t
 spdk_u32log2(uint32_t x)
 {
@@ -73,6 +79,12 @@ spdk_align32pow2(uint32_t x)
 	return 1u << (1 + spdk_u32log2(x - 1));
 }
 
+/* The following will automatically generate several version of
+ * this function, targeted at different architectures. This
+ * is only supported by GCC 6 or newer. */
+#if defined(__GNUC__) && __GNUC__ > 6 && !defined(__clang__)
+__attribute__((target_clones("bmi", "arch=core2", "arch=atom", "default")))
+#endif
 static inline uint64_t
 spdk_u64log2(uint64_t x)
 {
