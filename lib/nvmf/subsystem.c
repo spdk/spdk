@@ -376,6 +376,7 @@ spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 			      enum spdk_nvmf_subsystem_state state)
 {
 	enum spdk_nvmf_subsystem_state actual_old_state, expected_old_state;
+	bool exchanged;
 
 	switch (state) {
 	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
@@ -404,8 +405,10 @@ spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 		return -1;
 	}
 
-	actual_old_state = __sync_val_compare_and_swap(&subsystem->state, expected_old_state, state);
-	if (actual_old_state != expected_old_state) {
+	actual_old_state = expected_old_state;
+	exchanged = __atomic_compare_exchange_n(&subsystem->state, &actual_old_state, state, false,
+						__ATOMIC_RELAXED, __ATOMIC_RELAXED);
+	if (spdk_unlikely(exchanged == false)) {
 		if (actual_old_state == SPDK_NVMF_SUBSYSTEM_RESUMING &&
 		    state == SPDK_NVMF_SUBSYSTEM_ACTIVE) {
 			expected_old_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
@@ -415,7 +418,9 @@ spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 		    state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING) {
 			expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
 		}
-		actual_old_state = __sync_val_compare_and_swap(&subsystem->state, expected_old_state, state);
+		actual_old_state = expected_old_state;
+		__atomic_compare_exchange_n(&subsystem->state, &actual_old_state, state, false,
+							__ATOMIC_RELAXED, __ATOMIC_RELAXED);
 	}
 	assert(actual_old_state == expected_old_state);
 	return actual_old_state - expected_old_state;
