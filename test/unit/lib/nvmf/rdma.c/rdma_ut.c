@@ -76,6 +76,8 @@ DEFINE_STUB_V(spdk_nvmf_request_exec, (struct spdk_nvmf_request *req));
 DEFINE_STUB(spdk_nvme_transport_id_compare, int, (const struct spdk_nvme_transport_id *trid1,
 		const struct spdk_nvme_transport_id *trid2), 0);
 DEFINE_STUB_V(spdk_nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
+DEFINE_STUB(spdk_nvmf_request_get_dif_ctx, bool, (struct spdk_nvmf_request *req,
+		struct spdk_dif_ctx *dif_ctx), false);
 
 void
 spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
@@ -154,6 +156,9 @@ static void reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 	rdma_req->data.wr.num_sge = 0;
 	rdma_req->data.wr.wr.rdma.remote_addr = 0;
 	rdma_req->data.wr.wr.rdma.rkey = 0;
+	rdma_req->elba_length = 0;
+	rdma_req->orig_length = 0;
+	rdma_req->dif_insert_or_strip = false;
 
 	for (i = 0; i < SPDK_NVMF_MAX_SGL_ENTRIES; i++) {
 		rdma_req->req.iov[i].iov_base = 0;
@@ -170,7 +175,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 {
 	struct spdk_nvmf_rdma_transport rtransport;
 	struct spdk_nvmf_rdma_device device;
-	struct spdk_nvmf_rdma_request rdma_req;
+	struct spdk_nvmf_rdma_request rdma_req = {};
 	struct spdk_nvmf_rdma_recv recv;
 	struct spdk_nvmf_rdma_poll_group group;
 	struct spdk_nvmf_rdma_qpair rqpair;
