@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1303299_9e40429b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4315,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-29T19:10:20Z",
+      "side": 1,
+      "message": "This is a good catch.  I\u0027m just not sure -EBUSY is the right code to return.  It kind of suggests that the user should try again later.  Maybe -ENODEV would be better?",
+      "revId": "940b462319d7a304070a9539fabbbccfa7a29b6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
