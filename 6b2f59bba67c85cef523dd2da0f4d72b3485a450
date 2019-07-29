@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e9567bb_eb6519de",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 4413,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-29T19:15:51Z",
+      "side": 1,
+      "message": "similar to previous patch - wait to assign *_desc until after _spdk_bdev_open succeeds",
+      "revId": "6b2f59bba67c85cef523dd2da0f4d72b3485a450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1874ccc_e8710965",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2007,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-29T19:15:51Z",
+      "side": 1,
+      "message": "you use the same \u0026desc here - maybe have desc1 and desc2?  then you could pass desc1 and desc2 as the context pointers and close the descriptors in the callbacks",
+      "revId": "6b2f59bba67c85cef523dd2da0f4d72b3485a450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f78af7b9_d7b554b0",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2013,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-29T19:15:51Z",
+      "side": 1,
+      "message": "unregistering",
+      "revId": "6b2f59bba67c85cef523dd2da0f4d72b3485a450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
