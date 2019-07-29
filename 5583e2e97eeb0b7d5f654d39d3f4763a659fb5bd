@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90b4c709_07219b8d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4359,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-29T19:08:49Z",
+      "side": 1,
+      "message": "I\u0027d suggest waiting to assign *_desc until after you know the _spdk_bdev_open succeeded.  Otherwise you set it here and then clear it to NULL if it fails.  Just makes the code a bit cleaner is all.\n\nRest of this patch looks good.",
+      "revId": "5583e2e97eeb0b7d5f654d39d3f4763a659fb5bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
