@@ -375,50 +375,51 @@ static int
 spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 			      enum spdk_nvmf_subsystem_state state)
 {
-	enum spdk_nvmf_subsystem_state actual_old_state, expected_old_state;
+	enum spdk_nvmf_subsystem_state old_state;
+	bool exchanged;
 
 	switch (state) {
 	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
-		expected_old_state = SPDK_NVMF_SUBSYSTEM_DEACTIVATING;
+		old_state = SPDK_NVMF_SUBSYSTEM_DEACTIVATING;
 		break;
 	case SPDK_NVMF_SUBSYSTEM_ACTIVATING:
-		expected_old_state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
+		old_state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 		break;
 	case SPDK_NVMF_SUBSYSTEM_ACTIVE:
-		expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
+		old_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
 		break;
 	case SPDK_NVMF_SUBSYSTEM_PAUSING:
-		expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+		old_state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 		break;
 	case SPDK_NVMF_SUBSYSTEM_PAUSED:
-		expected_old_state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+		old_state = SPDK_NVMF_SUBSYSTEM_PAUSING;
 		break;
 	case SPDK_NVMF_SUBSYSTEM_RESUMING:
-		expected_old_state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+		old_state = SPDK_NVMF_SUBSYSTEM_PAUSED;
 		break;
 	case SPDK_NVMF_SUBSYSTEM_DEACTIVATING:
-		expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+		old_state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 		break;
 	default:
 		assert(false);
 		return -1;
 	}
 
-	actual_old_state = __sync_val_compare_and_swap(&subsystem->state, expected_old_state, state);
-	if (actual_old_state != expected_old_state) {
-		if (actual_old_state == SPDK_NVMF_SUBSYSTEM_RESUMING &&
-		    state == SPDK_NVMF_SUBSYSTEM_ACTIVE) {
-			expected_old_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
+	exchanged = __atomic_compare_exchange_n(&subsystem->state, &old_state, state, false,
+						__ATOMIC_RELAXED, __ATOMIC_RELAXED);
+	if (spdk_unlikely(exchanged == false)) {
+		if (old_state == SPDK_NVMF_SUBSYSTEM_RESUMING && state == SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+			old_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
 		}
 		/* This is for the case when activating the subsystem fails. */
-		if (actual_old_state == SPDK_NVMF_SUBSYSTEM_ACTIVATING &&
-		    state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING) {
-			expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
+		if (old_state == SPDK_NVMF_SUBSYSTEM_ACTIVATING && state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING) {
+			old_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
 		}
-		actual_old_state = __sync_val_compare_and_swap(&subsystem->state, expected_old_state, state);
+		__atomic_compare_exchange_n(&subsystem->state, &old_state, state, false,
+					    __ATOMIC_RELAXED, __ATOMIC_RELAXED);
 	}
-	assert(actual_old_state == expected_old_state);
-	return actual_old_state - expected_old_state;
+	assert(exchanged == true);
+	return exchanged ? 0 : -1;
 }
 
 struct subsystem_state_change_ctx {
