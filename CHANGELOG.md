@@ -29,7 +29,7 @@ and `spdk_dix_remap_ref_tag` have been added to remap DIF reference tag.
 New APIs `spdk_dif_update_crc32c` and `spdk_dif_update_crc32c_stream` have been
 added to compute CRC-32C checksum for extended LBA payload.
 
-### NVME-oF Target (FC)
+### NVMe-oF Target (FC)
 
 New Fibre Channel transport for NVMe over Fabrics target. Requires an FC HBA to use.
 Also, requires a Fibre Channel HBA low level driver (lld) library. The driver library
@@ -135,6 +135,12 @@ the ring.
 A new API `spdk_mempool_lookup` has been added to lookup the memory pool created
 by the primary process.
 
+Added spdk_pci_get_first_device() and spdk_pci_get_next_device() to allow
+iterating over PCI devices detected by SPDK. Because of this, all SPDK APIs
+to attach/detach PCI devices are no longer thread safe. They are now meant to
+be called from only a single thread only, the same only that called spdk_env_init().
+This applies to the newly added APIs as well.
+
 ### sock
 
 Add spdk_sock_get_optimal_sock_group(), which returns the optimal sock group for
@@ -153,9 +159,41 @@ Added thread_get_stats RPC method to retrieve existing statistics.
 
 Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
 
+Response buffers for RPC requests are now always pre-allocated, which implies
+that all spdk_jsonrpc_begin_result() calls always succeed and return a valid
+buffer for JSON response. RPC calls no longer need to check if the buffer is
+non-NULL.
+
+Added SPDK_RPC_REGISTER_ALIAS_DEPRECATED to help with deprecation process when
+renaming existing RPC. First time a deprecated alias is used, it will print
+a warning message.
+
+RPC `get_rpc_methods` was renamed `rpc_get_methods`. The old name is still usable,
+but is now deprecated.
+
 ### blobstore
 
 A snapshot can now be deleted if there is only a single clone on top of it.
+
+### build
+
+Cross compilation is now supported with an extra configure option:
+`./configure --target-arch=aarm64`
+
+Additionally, a prefix to the toolchain can be provided to automatically set up
+CC and CXX:
+`./configure --target-arch=aarm64 --cross-prefix=aarch64-linux-gnu`
+
+### vhost
+
+By default, SPDK will now rely on upstream DPDK's rte_vhost instead of its fork
+located inside SPDK repo. The internal fork is still kept around to support older
+DPDK versions, but is considered legacy and will be eventually removed.
+
+`configure` will now automatically use the upstream rte_vhost if the used DPDK
+version is >= 19.05.
+
+spdk_vhost_init() is now asynchronous and accepts a completion callback.
 
 ## v19.04:
 
