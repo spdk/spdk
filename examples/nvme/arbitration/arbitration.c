@@ -994,11 +994,14 @@ static int
 get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid)
 {
 	struct spdk_nvme_cmd cmd = {};
+	struct feature *feature = &features[fid];
+
+	feature->valid = false;
 
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd.cdw10 = fid;
 
-	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, get_feature_completion, &features[fid]);
+	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, get_feature_completion, feature);
 }
 
 static void
