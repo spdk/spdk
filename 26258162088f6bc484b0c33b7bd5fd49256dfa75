@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac11dfe2_10c10e64",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 80
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-29T22:39:41Z",
+      "side": 1,
+      "message": "Better to do smaller I/O with higher queue depth - 16x128k usually saturates easily.",
+      "revId": "26258162088f6bc484b0c33b7bd5fd49256dfa75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9196626e_9fa8ff28",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 80
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-07-29T22:39:41Z",
+      "side": 1,
+      "message": "Don\u0027t run perf in the background. You can do the rm -rf /tmp/pmem first, then run perf and do || true so that it keeps running even if it fails.",
+      "revId": "26258162088f6bc484b0c33b7bd5fd49256dfa75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
