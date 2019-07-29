@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6a586fa_acd4b140",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-29T04:27:23Z",
+      "side": 1,
+      "message": "Can we create a trello card with a human-friendly list of all checks that we\u0027ve disabled? I think it would be the only reasonable way to keep this list maintainable. It would be also a good read for someone who\u0027s about to write more bash.",
+      "range": {
+        "startLine": 236,
+        "startChar": 39,
+        "endLine": 236,
+        "endChar": 68
+      },
+      "revId": "1532bc4324d57abc81364977116e146f7c0d0536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c50dc996_3200167f",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-07-29T04:27:23Z",
+      "side": 1,
+      "message": "Ha, we set it everywhere but it\u0027s not used anywhere. I guess everyone\u0027s doing a copy/paste? :)",
+      "range": {
+        "startLine": 253,
+        "startChar": 2,
+        "endLine": 253,
+        "endChar": 4
+      },
+      "revId": "1532bc4324d57abc81364977116e146f7c0d0536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
