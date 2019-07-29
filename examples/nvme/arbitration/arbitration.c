@@ -110,7 +110,7 @@ static struct ctrlr_entry *g_controllers	= NULL;
 static struct ns_entry *g_namespaces		= NULL;
 static struct worker_thread *g_workers		= NULL;
 
-static struct feature features[256];
+static struct feature features[SPDK_NVME_FEAT_ARBITRATION + 1] = {};
 
 static struct arb_context g_arbitration = {
 	.shm_id					= -1,
