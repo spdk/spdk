@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "38670b31_aebd565a",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 78
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-29T22:12:43Z",
+      "side": 1,
+      "message": "forgot to answer this: yes the comp bdev would not load but it will try and fail every time.  This is sort of post release clean we need to do, the the pmem file and comp_vol are separated you have to manually kill whoever is left.  If the pmem file is gone you can\u0027t even load the comp bdev to delete it via RPC.  I\u0027ll got add a github issue for that right now, it\u0027s always been that way",
+      "parentUuid": "628f0137_5461af9b",
+      "revId": "d3dc4af8463f3c477afc84031be0b9342661955c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d4903dfa_ff67d39a",
         "filename": "test/compress/compress.sh",
         "patchSetId": 78
