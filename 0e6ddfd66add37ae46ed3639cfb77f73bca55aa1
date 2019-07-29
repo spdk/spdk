@@ -34,6 +34,24 @@
       "revId": "0e6ddfd66add37ae46ed3639cfb77f73bca55aa1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3afbc0c_1fa1197c",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-29T16:49:44Z",
+      "side": 0,
+      "message": "Ah - OK.  Well I think that should be a separate patch completely then.  And probably we should get it in for 19.07 release.",
+      "parentUuid": "234d08fa_5abda3fe",
+      "revId": "0e6ddfd66add37ae46ed3639cfb77f73bca55aa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
