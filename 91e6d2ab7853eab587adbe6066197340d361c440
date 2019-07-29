@@ -34,6 +34,24 @@
       "revId": "91e6d2ab7853eab587adbe6066197340d361c440",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41b731e4_ac88bef4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2099,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-29T16:43:25Z",
+      "side": 1,
+      "message": "I agree.  I think the other stats you\u0027ve collected so far are good enough for now.  We can look at a newer version of this in the future.\n\nI\u0027m removing the 19.07 tag from this patch.  I think you can abandon this patch too (most likely a future implementation would look a lot different).",
+      "parentUuid": "2747e488_9b5aab6d",
+      "revId": "91e6d2ab7853eab587adbe6066197340d361c440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
