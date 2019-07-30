@@ -884,7 +884,6 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_conn *conns = g_conns_array;
 	int i;
-	uint16_t tsih;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -898,36 +897,7 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
 		struct spdk_iscsi_conn *c = &conns[i];
 
-		if (!c->is_valid) {
-			continue;
-		}
-
-		spdk_json_write_object_begin(w);
-
-		spdk_json_write_named_int32(w, "id", c->id);
-
-		spdk_json_write_named_int32(w, "cid", c->cid);
-
-		/*
-		 * If we try to return data for a connection that has not
-		 *  logged in yet, the session will not be set.  So in this
-		 *  case, return -1 for the tsih rather than segfaulting
-		 *  on the null c->sess.
-		 */
-		if (c->sess == NULL) {
-			tsih = -1;
-		} else {
-			tsih = c->sess->tsih;
-		}
-		spdk_json_write_named_int32(w, "tsih", tsih);
-
-		spdk_json_write_named_string(w, "initiator_addr", c->initiator_addr);
-
-		spdk_json_write_named_string(w, "target_addr", c->target_addr);
-
-		spdk_json_write_named_string(w, "target_node_name", c->target_short_name);
-
-		spdk_json_write_object_end(w);
+		spdk_iscsi_conn_info_json(w, c);
 	}
 	spdk_json_write_array_end(w);
 
