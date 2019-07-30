@@ -35,25 +35,35 @@
 
 #if defined(__linux__)
 #include <sys/epoll.h>
+#include <libaio.h>
 #elif defined(__FreeBSD__)
 #include <sys/event.h>
 #endif
 
 #include "spdk/log.h"
 #include "spdk/sock.h"
+#include "spdk/string.h"
 #include "spdk_internal/sock.h"
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
+#define SPDK_AIO_QUEUE_DEPTH 1024
 
 struct spdk_posix_sock {
 	struct spdk_sock	base;
 	int			fd;
+#if defined(__linux__)
+	io_context_t		io_ctx;
+	bool			in_group;
+#endif
 };
 
 struct spdk_posix_sock_group_impl {
 	struct spdk_sock_group_impl	base;
 	int				fd;
+#if defined(__linux__)
+	io_context_t			io_ctx;
+#endif
 };
 
 static int
@@ -347,6 +357,7 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	}
 
 	new_sock->fd = rc;
+	new_sock->in_group = false;
 	return &new_sock->base;
 }
 
@@ -368,8 +379,31 @@ static ssize_t
 spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	struct iocb iocb;
+	struct iocb *iocbs[1];
+	struct io_event events[1];
+	int rc;
 
-	return recv(sock->fd, buf, len, MSG_DONTWAIT);
+	if (sock->in_group) {
+		io_prep_pread(&iocb, sock->fd, buf, len, 0);
+
+		iocbs[0] = &iocb;
+
+		rc = io_submit(sock->io_ctx, 1, iocbs);
+		if (rc != 1) {
+			SPDK_ERRLOG("io_submit failed! %d (%s)\n", rc, spdk_strerror(-rc));
+			return -1;
+		}
+
+		if (io_getevents(sock->io_ctx, 1, 1, events, NULL) != 1) {
+			SPDK_ERRLOG("io_getevents failed! %d (%s)\n", rc, spdk_strerror(-rc));
+			return -1;
+		}
+
+		return events[0].res;
+	} else {
+		return recv(sock->fd, buf, len, MSG_DONTWAIT);
+	}
 }
 
 static ssize_t
@@ -525,6 +559,14 @@ spdk_posix_sock_group_impl_create(void)
 		return NULL;
 	}
 
+#if defined(__linux__)
+	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &group_impl->io_ctx) < 0) {
+		SPDK_ERRLOG("async I/O context setup failure\n");
+		close(fd);
+		return NULL;
+	}
+#endif
+
 	group_impl->fd = fd;
 
 	return &group_impl->base;
@@ -545,6 +587,9 @@ spdk_posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct 
 	event.data.ptr = sock;
 
 	rc = epoll_ctl(group->fd, EPOLL_CTL_ADD, sock->fd, &event);
+
+	sock->in_group = true;
+	sock->io_ctx = group->io_ctx;
 #elif defined(__FreeBSD__)
 	struct kevent event;
 	struct timespec ts = {0};
@@ -619,6 +664,10 @@ static int
 spdk_posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
+
+#if defined(__linux__)
+	io_destroy(group->io_ctx);
+#endif
 
 	return close(group->fd);
 }
