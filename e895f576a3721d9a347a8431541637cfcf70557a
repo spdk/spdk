@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c5bef54_ad0c5565",
+        "filename": "lib/iscsi/portal_grp.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-30T10:04:17Z",
+      "side": 1,
+      "message": "Please remove this include. I missed to do.",
+      "revId": "e895f576a3721d9a347a8431541637cfcf70557a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
