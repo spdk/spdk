@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f729e28_90d895fa",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T10:50:58Z",
+      "side": 1,
+      "message": "I think that\u0027s pretty sensitive.\nConsider changing to ns_count_${bdf_str}",
+      "range": {
+        "startLine": 175,
+        "startChar": 22,
+        "endLine": 175,
+        "endChar": 30
+      },
+      "revId": "fcce4b2fed4f43cdeb761e8f1660d9954ad1bfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d0e3c17_e2dd6814",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T10:50:58Z",
+      "side": 1,
+      "message": "If we don\u0027t necessarily have to do kill -9 then  I\u0027d change this to \"killprocess $spdk_pid\".\nKillprocess is in autotest_common.sh",
+      "range": {
+        "startLine": 182,
+        "startChar": 7,
+        "endLine": 182,
+        "endChar": 32
+      },
+      "revId": "fcce4b2fed4f43cdeb761e8f1660d9954ad1bfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b33e695_8e1bc347",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T10:50:58Z",
+      "side": 1,
+      "message": "Any reason why || true was added? I don\u0027t think we need to mask anything in this call.",
+      "range": {
+        "startLine": 197,
+        "startChar": 62,
+        "endLine": 197,
+        "endChar": 69
+      },
+      "revId": "fcce4b2fed4f43cdeb761e8f1660d9954ad1bfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
