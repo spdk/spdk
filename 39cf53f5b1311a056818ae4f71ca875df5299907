@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74a30172_daaffff0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-07-30T12:13:00Z",
+      "side": 1,
+      "message": "Please move it to separate condition or add handling in ftl_reloc_release()",
+      "revId": "39cf53f5b1311a056818ae4f71ca875df5299907",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
