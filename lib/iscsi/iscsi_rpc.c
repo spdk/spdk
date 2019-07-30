@@ -925,8 +925,6 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 		}
 		spdk_json_write_named_int32(w, "tsih", tsih);
 
-		spdk_json_write_named_int32(w, "lcore_id", c->lcore);
-
 		spdk_json_write_named_string(w, "initiator_addr", c->initiator_addr);
 
 		spdk_json_write_named_string(w, "target_addr", c->target_addr);
