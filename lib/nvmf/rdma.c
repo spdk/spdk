@@ -1546,7 +1546,7 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 
 			if (translation_len < sge_len) {
 				SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
-				return -EINVAL;
+				return -EFAULT;
 			}
 
 			remaining_io_buffer_length -= sge_len;
@@ -1616,7 +1616,7 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 
 		if (translation_len < req->iov[iovcnt].iov_len) {
 			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
-			return -EINVAL;
+			return -EFAULT;
 		}
 		i++;
 	}
@@ -1769,7 +1769,6 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		}
 
 		if (rc != 0) {
-			rc = -ENOMEM;
 			goto err_exit;
 		}
 
@@ -1845,9 +1844,19 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_req->elba_length = length;
 		}
 
-		if (spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length) < 0) {
+		rc = spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length);
+		if (rc == -ENOMEM) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
+			return 0;
+		} else if (rc == -EINVAL) {
+			SPDK_ERRLOG("SGL length exceeds the max I/O size\n");
+			return -1;
+		} else if (rc == -EFAULT) {
+			/* TODO: This error means that the buffer have been split over multiple
+			   memory regions. Need to find a solution to process such buffers in a way
+			   that they don't fail the request.
+			   Treat this return code as ENOMEM for a while - it will queue the request */
 			return 0;
 		}
 
@@ -1969,6 +1978,12 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		} else if (rc == -EINVAL) {
 			SPDK_ERRLOG("Multi SGL element request length exceeds the max I/O size\n");
 			return -1;
+		} else if (rc == -EFAULT) {
+			/* TODO: This error means that the buffer have been split over multiple
+			   memory regions. Need to find a solution to process such buffers in a way
+			   that they don't fail the request.
+			   Treat this return code as ENOMEM for a while - it will queue the request */
+			return 0;
 		}
 
 		/* backward compatible */
