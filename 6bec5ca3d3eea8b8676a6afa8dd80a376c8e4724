@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4198a26_44d4c364",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T12:29:25Z",
+      "side": 1,
+      "message": "This could be improved further by modifying check_available_nbd_disk function.\nnbd_rcp.c @ line 88 and 108 change to -EBUSY.\n\nThen use of spdk_jsonrpc_send_error_response_fmt() is not needed and you can just do spdk_jsonrpc_send_error_response(request, EBUSY, spdk_strerrno(rc))",
+      "range": {
+        "startLine": 207,
+        "startChar": 3,
+        "endLine": 208,
+        "endChar": 56
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e66555d_5665acfe",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T12:29:25Z",
+      "side": 1,
+      "message": "Similar as previous comment.\n\nChange nbd_rcp.c @ line 88 and 101 to... -ENODEV maybe?",
+      "range": {
+        "startLine": 214,
+        "startChar": 3,
+        "endLine": 215,
+        "endChar": 54
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b406f4cd_82dd36d5",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T12:29:25Z",
+      "side": 1,
+      "message": "Device was no t found so both error code and error message should mention that there is no such device. ENODEV?",
+      "range": {
+        "startLine": 223,
+        "startChar": 0,
+        "endLine": 224,
+        "endChar": 44
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f641f7dd_5f274e45",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T12:29:25Z",
+      "side": 1,
+      "message": "Capital letters at start of error sentence",
+      "range": {
+        "startLine": 224,
+        "startChar": 9,
+        "endLine": 224,
+        "endChar": 10
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c7f5a39_14bee2b0",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T12:29:25Z",
+      "side": 1,
+      "message": "According to decoder structure @ line 252  and to rpc.pt stop_nbd_dsik --help, nbd_device is not an optional parameter so this check is redundant and could be possibly removed.",
+      "range": {
+        "startLine": 302,
+        "startChar": 0,
+        "endLine": 306,
+        "endChar": 2
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16d9e28e_1b46702e",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T12:29:25Z",
+      "side": 1,
+      "message": "-ENODEV",
+      "range": {
+        "startLine": 311,
+        "startChar": 44,
+        "endLine": 311,
+        "endChar": 77
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6ceb7b9_f3b6ea01",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T12:29:25Z",
+      "side": 1,
+      "message": "Either spdk_strerrno(-ENODEV) or\n\"No such device: %s\", req.nbd_device",
+      "range": {
+        "startLine": 312,
+        "startChar": 7,
+        "endLine": 312,
+        "endChar": 31
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "634aa095_75f28a10",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T12:29:25Z",
+      "side": 1,
+      "message": "-ENODEV",
+      "range": {
+        "startLine": 404,
+        "startChar": 50,
+        "endLine": 404,
+        "endChar": 83
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f5209ce_1b8d3239",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T12:29:25Z",
+      "side": 1,
+      "message": "Either spdk_strerrno(-ENODEV) or\n\"No such device: %s\", req.nbd_device\n\nThere is a similar error on line 312 but there you send an error message with different contents, try to be consistent.",
+      "range": {
+        "startLine": 405,
+        "startChar": 13,
+        "endLine": 405,
+        "endChar": 46
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
