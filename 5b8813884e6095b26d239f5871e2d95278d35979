@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cce163de_b5f1e8a7",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-30T21:18:00Z",
+      "side": 1,
+      "message": "Is there not a need to check if got a ch? I notice in some of the nvmf code sometimes we check sometimes we don\u0027t",
+      "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d0571ea_c0d9f8a1",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1438,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-30T21:18:00Z",
+      "side": 1,
+      "message": "what will happen in this case? (since there\u0027s not return value)",
+      "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36a088f4_c595172f",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-30T21:18:00Z",
+      "side": 1,
+      "message": "does it add any value to print out the pg # here?",
+      "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3eb43056_84357213",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1196,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-30T21:18:00Z",
+      "side": 1,
+      "message": "I didn\u0027t see anywhere that a return value is used and it\u0027s always 0.  Just curious why this change?",
+      "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
