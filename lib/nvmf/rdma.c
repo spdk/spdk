@@ -1734,6 +1734,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	uint32_t				num_sgl_descriptors;
 	uint32_t				num_buffers = 0;
 	uint32_t				i;
+	uint32_t				length;
 	int					rc;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
@@ -1748,7 +1749,11 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
 
 	for (i = 0; i < num_sgl_descriptors; i++) {
-		num_buffers += SPDK_CEIL_DIV(desc->keyed.length, rtransport->transport.opts.io_unit_size);
+		length = desc->keyed.length;
+		if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
+			length = spdk_dif_get_length_with_md(length, &rdma_req->dif_ctx);
+		}
+		num_buffers += SPDK_CEIL_DIV(length, rtransport->transport.opts.io_unit_size);
 		desc++;
 	}
 	/* If the number of buffers is too large, then we know the I/O is larger than allowed. Fail it. */
@@ -1780,12 +1785,28 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		}
 
 		current_wr->num_sge = 0;
-		req->length += desc->keyed.length;
 
-		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, current_wr,
-					    desc->keyed.length);
+		length = desc->keyed.length;
+		req->length += length;
+
+		if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
+			rdma_req->orig_length += length;
+			length = spdk_dif_get_length_with_md(length, &rdma_req->dif_ctx);
+			rdma_req->elba_length += length;
+			rc = nvmf_rdma_fill_buffers_with_md_interleave(rtransport,
+					rgroup,
+					device,
+					&rdma_req->req,
+					current_wr,
+					length,
+					rdma_req->dif_ctx.block_size - rdma_req->dif_ctx.md_size,
+					rdma_req->dif_ctx.md_size);
+		} else {
+			rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, current_wr,
+						    length);
+		}
+
 		if (rc != 0) {
-			rc = -ENOMEM;
 			goto err_exit;
 		}
 
