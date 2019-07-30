@@ -70,7 +70,7 @@ static pthread_mutex_t g_conns_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_poller *g_shutdown_timer = NULL;
 
-static void iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
+static void iscsi_conn_full_feature_migrate(void *arg);
 static void iscsi_conn_stop(struct spdk_iscsi_conn *conn);
 static void iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group,
 			       struct spdk_sock *sock);
@@ -207,6 +207,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 {
 	struct spdk_iscsi_poll_group *pg;
 	struct spdk_iscsi_conn *conn;
+	struct spdk_io_channel *ch;
 	int bufsize, i, rc;
 
 	conn = allocate_conn();
@@ -296,10 +297,15 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 
-	conn->lcore = spdk_env_get_current_core();
-	pg = &g_spdk_iscsi.poll_group[conn->lcore];
+	/* Get the acceptor poll group */
+	pg = portal->acceptor_pg;
 
+	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(pg)) == spdk_get_thread());
+
+	conn->pg = pg;
 	iscsi_poll_group_add_conn(pg, conn);
+
+	spdk_put_io_channel(ch);
 	return 0;
 
 error_return:
@@ -477,15 +483,11 @@ _iscsi_conn_check_shutdown(void *arg)
 static void
 _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *pg;
 	int rc;
 
 	spdk_clear_all_transfer_task(conn, NULL, NULL);
 
-	assert(conn->lcore == spdk_env_get_current_core());
-	pg = &g_spdk_iscsi.poll_group[conn->lcore];
-
-	iscsi_poll_group_remove_conn(pg, conn);
+	iscsi_poll_group_remove_conn(conn->pg, conn);
 	spdk_sock_close(&conn->sock);
 	spdk_poller_unregister(&conn->logout_timer);
 
@@ -610,7 +612,8 @@ iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 	struct spdk_iscsi_pdu *pdu, *tmp_pdu;
 	struct spdk_iscsi_task *iscsi_task, *tmp_iscsi_task;
 
-	assert(conn->lcore == spdk_env_get_current_core());
+	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)) ==
+	       spdk_get_thread());
 
 	/* If a connection is already in stating status, just return */
 	if (conn->state >= ISCSI_CONN_STATE_EXITING) {
@@ -703,7 +706,8 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 		iscsi_conn_close_luns(conn);
 	}
 
-	assert(conn->lcore == spdk_env_get_current_core());
+	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)) ==
+	       spdk_get_thread());
 }
 
 void
@@ -1393,54 +1397,32 @@ iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *s
 }
 
 static void
-iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
+iscsi_conn_full_feature_migrate(void *arg)
 {
-	struct spdk_iscsi_conn *conn = arg1;
-	struct spdk_iscsi_poll_group *pg;
+	struct spdk_iscsi_conn *conn = arg;
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		iscsi_conn_open_luns(conn);
 	}
 
-	/* The poller has been unregistered, so now we can re-register it on the new core. */
-	conn->lcore = spdk_env_get_current_core();
-	pg = &g_spdk_iscsi.poll_group[conn->lcore];
-	iscsi_poll_group_add_conn(pg, conn);
+	/* Add this connection to the assigned poll group. */
+	iscsi_poll_group_add_conn(conn->pg, conn);
 }
 
-static uint32_t g_next_core = SPDK_ENV_LCORE_ID_ANY;
+static struct spdk_iscsi_poll_group *g_next_pg = NULL;
 
 void
 spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_poll_group	*pg;
-	struct spdk_event		*event;
 	struct spdk_iscsi_tgt_node	*target;
-	uint32_t			i;
-	uint32_t			lcore;
-
-	lcore = SPDK_ENV_LCORE_ID_ANY;
 
 	if (conn->sess->session_type != SESSION_TYPE_NORMAL) {
 		/* Leave all non-normal sessions on the acceptor
 		 * thread. */
 		return;
 	}
-
-	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		if (g_next_core > spdk_env_get_last_core()) {
-			g_next_core = spdk_env_get_first_core();
-		}
-
-		lcore = g_next_core;
-		g_next_core = spdk_env_get_next_core(g_next_core);
-		break;
-	}
-
-	if (i >= spdk_env_get_core_count()) {
-		SPDK_ERRLOG("Unable to schedule connection on allowed CPU core. Scheduling on first core instead.\n");
-		lcore = spdk_env_get_first_core();
-	}
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 
 	target = conn->sess->target;
 	pthread_mutex_lock(&target->mutex);
@@ -1448,29 +1430,39 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	if (target->num_active_conns == 1) {
 		/**
 		 * This is the only active connection for this target node.
-		 *  Save the lcore in the target node so it can be used for
-		 *  any other connections to this target node.
+		 *  Pick a poll group using round-robin.
 		 */
-		target->lcore = lcore;
+		if (g_next_pg == NULL) {
+			g_next_pg = TAILQ_FIRST(&g_spdk_iscsi.poll_group_head);
+			assert(g_next_pg != NULL);
+		}
+
+		pg = g_next_pg;
+		g_next_pg = TAILQ_NEXT(g_next_pg, link);
+
+		/* Save the pg in the target node so it can be used for any other connections to this target node. */
+		target->pg = pg;
 	} else {
 		/**
 		 * There are other active connections for this target node.
-		 *  Ignore the lcore specified by the allocator and use the
-		 *  the target node's lcore to ensure this connection runs on
-		 *  the same lcore as other connections for this target node.
 		 */
-		lcore = target->lcore;
+		pg = target->pg;
 	}
-	pthread_mutex_unlock(&target->mutex);
 
-	assert(conn->lcore == spdk_env_get_current_core());
-	pg = &g_spdk_iscsi.poll_group[conn->lcore];
-	iscsi_poll_group_remove_conn(pg, conn);
+	pthread_mutex_unlock(&target->mutex);
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+	assert(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)) ==
+	       spdk_get_thread());
+
+	/* Remove this connection from the previous poll group */
+	iscsi_poll_group_remove_conn(conn->pg, conn);
 
 	conn->last_nopin = spdk_get_ticks();
-	event = spdk_event_allocate(lcore, iscsi_conn_full_feature_migrate,
-				    conn, NULL);
-	spdk_event_call(event);
+	conn->pg = pg;
+
+	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(pg)),
+			     iscsi_conn_full_feature_migrate, conn);
 }
 
 static int
