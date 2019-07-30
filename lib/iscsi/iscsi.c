@@ -1182,7 +1182,7 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 			struct spdk_iscsi_pdu *rsp_pdu, struct iscsi_param *params)
 {
 	struct iscsi_bhs_login_rsp *rsph;
-	int rc;
+	int rc = 0;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	rsph->version_max = ISCSI_VERSION;
@@ -1217,20 +1217,19 @@ iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 		rc = spdk_iscsi_copy_param2var(conn);
 		if (rc < 0) {
 			SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
-			spdk_iscsi_param_free(params);
-			return -1;
+			goto end;
 		}
 		/* check value */
 		rc = iscsi_check_values(conn);
 		if (rc < 0) {
 			SPDK_ERRLOG("iscsi_check_values() failed\n");
-			spdk_iscsi_param_free(params);
-			return -1;
+			goto end;
 		}
 	}
 
+end:
 	spdk_iscsi_param_free(params);
-	return 0;
+	return rc;
 }
 
 /*
