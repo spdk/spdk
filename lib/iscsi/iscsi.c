@@ -1458,9 +1458,9 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_pdu *rsp_pdu,
 			      char *initiator_port_name,
 			      struct iscsi_param *params,
-			      struct spdk_iscsi_tgt_node **target,
 			      int cid)
 {
+	struct spdk_iscsi_tgt_node *target = NULL;
 	const char *target_name;
 	const char *target_short_name;
 	struct iscsi_bhs_login_rsp *rsph;
@@ -1494,16 +1494,16 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	}
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	rc = iscsi_op_login_check_target(conn, rsp_pdu, target_name, target);
+	rc = iscsi_op_login_check_target(conn, rsp_pdu, target_name, &target);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
 	if (rc < 0) {
 		return rc;
 	}
 
-	conn->target = *target;
-	conn->dev = (*target)->dev;
-	conn->target_port = spdk_scsi_dev_find_port_by_id((*target)->dev,
+	conn->target = target;
+	conn->dev = target->dev;
+	conn->target_port = spdk_scsi_dev_find_port_by_id(target->dev,
 			    conn->portal->group->tag);
 
 	rc = iscsi_op_login_check_session(conn, rsp_pdu,
@@ -1513,12 +1513,12 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	}
 
 	/* force target flags */
-	pthread_mutex_lock(&((*target)->mutex));
-	rc = iscsi_op_login_negotiate_chap_param(conn, *target);
-	pthread_mutex_unlock(&((*target)->mutex));
+	pthread_mutex_lock(&target->mutex);
+	rc = iscsi_op_login_negotiate_chap_param(conn, target);
+	pthread_mutex_unlock(&target->mutex);
 
 	if (rc == 0) {
-		rc = iscsi_op_login_negotiate_digest_param(conn, *target);
+		rc = iscsi_op_login_negotiate_digest_param(conn, target);
 	}
 
 	if (rc != 0) {
@@ -1622,12 +1622,14 @@ static int
 iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_pdu *rsp_pdu,
 			     char *initiator_port_name,
-			     enum session_type session_type,
-			     struct spdk_iscsi_tgt_node *target, int cid)
+			     enum session_type session_type, int cid)
 {
 	int rc = 0;
+	struct spdk_iscsi_tgt_node *target;
 	struct iscsi_bhs_login_rsp *rsph;
 	struct spdk_scsi_port *initiator_port;
+
+	target = conn->target;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	conn->authenticated = false;
@@ -1692,12 +1694,12 @@ static int
 iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 			       struct spdk_iscsi_pdu *rsp_pdu,
 			       enum session_type session_type,
-			       int alloc_len,
-			       struct spdk_iscsi_tgt_node *target)
+			       int alloc_len)
 {
 	char buf[MAX_TMPBUF];
 	const char *val;
 	int rc = 0;
+	struct spdk_iscsi_tgt_node *target = conn->target;
 	struct spdk_iscsi_portal *portal = conn->portal;
 
 	/* declarative parameters */
@@ -1773,7 +1775,6 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	enum session_type session_type;
 	char initiator_port_name[MAX_INITIATOR_PORT_NAME];
 	struct iscsi_bhs_login_rsp *rsph;
-	struct spdk_iscsi_tgt_node *target = NULL;
 	int rc = 0;
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
@@ -1795,13 +1796,12 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	if (session_type == SESSION_TYPE_NORMAL) {
 		rc = iscsi_op_login_session_normal(conn, rsp_pdu,
 						   initiator_port_name,
-						   params, &target, cid);
+						   params, cid);
 		if (rc < 0) {
 			return rc;
 		}
 
 	} else if (session_type == SESSION_TYPE_DISCOVERY) {
-		target = NULL;
 		rsph->tsih = 0;
 
 		/* force target flags */
@@ -1820,7 +1820,7 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	}
 
 	rc = iscsi_op_login_set_conn_info(conn, rsp_pdu, initiator_port_name,
-					  session_type, target, cid);
+					  session_type, cid);
 	if (rc < 0) {
 		return rc;
 	}
@@ -1838,7 +1838,7 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	}
 
 	return iscsi_op_login_set_target_info(conn, rsp_pdu, session_type,
-					      alloc_len, target);
+					      alloc_len);
 }
 
 /*
