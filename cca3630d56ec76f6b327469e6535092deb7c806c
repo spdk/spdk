@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "d5e24fa9_f891f2b9",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-30T10:06:39Z",
+      "side": 1,
+      "message": "We can inline _iscsi_conn_remove_lun here. I add a patch to do that in front of this patch.",
+      "revId": "cca3630d56ec76f6b327469e6535092deb7c806c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7faa9755_dafec949",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 2
@@ -30,6 +47,24 @@
       "writtenOn": "2019-07-26T21:50:56Z",
       "side": 1,
       "message": "should we just remove this int32 instead of saying lcore_id \u003d 0?",
+      "revId": "cca3630d56ec76f6b327469e6535092deb7c806c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1cdf64d_a9e0f8c3",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-30T10:06:39Z",
+      "side": 1,
+      "message": "I agree.",
+      "parentUuid": "7862784f_6aa8bf26",
       "revId": "cca3630d56ec76f6b327469e6535092deb7c806c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
