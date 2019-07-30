@@ -1535,5 +1535,8 @@ spdk_iscsi_conn_info_json(struct spdk_json_write_ctx *w, struct spdk_iscsi_conn 
 
 	spdk_json_write_named_string(w, "target_node_name", conn->target_short_name);
 
+	spdk_json_write_named_string(w, "thread_name",
+				     spdk_thread_get_name(spdk_get_thread()));
+
 	spdk_json_write_object_end(w);
 }
