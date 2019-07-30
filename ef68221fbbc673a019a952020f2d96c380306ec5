@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "07b5782a_23d0841e",
+        "filename": "lib/net/net_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T11:40:06Z",
+      "side": 1,
+      "message": "Capital letter",
+      "range": {
+        "startLine": 81,
+        "startChar": 13,
+        "endLine": 81,
+        "endChar": 14
+      },
+      "revId": "ef68221fbbc673a019a952020f2d96c380306ec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "facb72d5_ed242081",
+        "filename": "lib/net/net_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T11:40:06Z",
+      "side": 1,
+      "message": "Capital letter",
+      "range": {
+        "startLine": 126,
+        "startChar": 13,
+        "endLine": 126,
+        "endChar": 14
+      },
+      "revId": "ef68221fbbc673a019a952020f2d96c380306ec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07e93a8b_eb25533f",
         "filename": "lib/net/net_rpc.c",
         "patchSetId": 3
@@ -13,6 +59,24 @@
       "writtenOn": "2019-07-26T10:51:42Z",
       "side": 1,
       "message": "What means socket? SoMaybe socket() failed or failed to create socket or socket creation failed",
+      "revId": "ef68221fbbc673a019a952020f2d96c380306ec5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7846e28_3a60c523",
+        "filename": "lib/net/net_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T11:40:06Z",
+      "side": 1,
+      "message": "Shuhei\u0027s right. This error message is too vague. You can also change this error message on line 84",
+      "parentUuid": "07e93a8b_eb25533f",
       "revId": "ef68221fbbc673a019a952020f2d96c380306ec5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
