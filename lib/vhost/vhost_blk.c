@@ -662,11 +662,12 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 	return 0;
 }
 
-static int
-vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
-		   struct spdk_vhost_session *vsession, void *unused)
+static void
+vhost_blk_start_cb(void *arg)
 {
+	struct spdk_vhost_session *vsession = arg;
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
+	struct spdk_vhost_dev *vdev = vsession->vdev;
 	struct spdk_vhost_blk_dev *bvdev;
 	int i, rc = 0;
 
@@ -705,17 +706,15 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 		     vsession->name, spdk_env_get_current_core());
 out:
 	vhost_session_start_done(vsession, rc);
-	return rc;
 }
 
-static int
+static void
 vhost_blk_start(struct spdk_vhost_session *vsession)
 {
 	struct vhost_poll_group *pg;
 
 	pg = vhost_get_poll_group(vsession->vdev->cpumask);
-	return vhost_session_send_event(pg, vsession, vhost_blk_start_cb,
-					3, "start session");
+	spdk_thread_send_msg(pg->thread, vhost_blk_start_cb, vsession);
 }
 
 static int
@@ -754,23 +753,21 @@ destroy_session_poller_cb(void *arg)
 	return -1;
 }
 
-static int
-vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
-		  struct spdk_vhost_session *vsession, void *unused)
+static void
+vhost_blk_stop_cb(void *arg)
 {
+	struct spdk_vhost_session *vsession = arg;
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 
 	spdk_poller_unregister(&bvsession->requestq_poller);
 	bvsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
 				 bvsession, 1000);
-	return 0;
 }
 
-static int
+static void
 vhost_blk_stop(struct spdk_vhost_session *vsession)
 {
-	return vhost_session_send_event(vsession->poll_group, vsession,
-					vhost_blk_stop_cb, 3, "stop session");
+	spdk_thread_send_msg(vsession->poll_group->thread, vhost_blk_stop_cb, vsession);
 }
 
 static void
