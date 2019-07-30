@@ -881,13 +881,42 @@ invalid:
 }
 SPDK_RPC_REGISTER("delete_portal_group", spdk_rpc_delete_portal_group, SPDK_RPC_RUNTIME)
 
+struct rpc_get_iscsi_connections_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+rpc_get_iscsi_connections_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct rpc_get_iscsi_connections_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	spdk_json_write_array_end(ctx->w);
+	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+
+	free(ctx);
+}
+
+static void
+rpc_get_iscsi_connections(struct spdk_io_channel_iter *i)
+{
+	struct rpc_get_iscsi_connections_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_iscsi_poll_group *pg = spdk_io_channel_get_ctx(ch);
+	struct spdk_iscsi_conn *conn;
+
+	STAILQ_FOREACH(conn, &pg->connections, link) {
+		spdk_iscsi_conn_info_json(ctx->w, conn);
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
 static void
 spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
-	struct spdk_json_write_ctx *w;
-	struct spdk_iscsi_conn *conns = g_conns_array;
-	int i;
+	struct rpc_get_iscsi_connections_ctx *ctx;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -895,17 +924,22 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
-	spdk_json_write_array_begin(w);
-
-	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
-		struct spdk_iscsi_conn *c = &conns[i];
-
-		spdk_iscsi_conn_info_json(w, c);
+	ctx = calloc(1, sizeof(struct rpc_get_iscsi_connections_ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate rpc_get_iscsi_conns_ctx struct\n");
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
 	}
-	spdk_json_write_array_end(w);
 
-	spdk_jsonrpc_end_result(request, w);
+	ctx->request = request;
+	ctx->w = spdk_jsonrpc_begin_result(request);
+
+	spdk_json_write_array_begin(ctx->w);
+
+	spdk_for_each_channel(&g_spdk_iscsi,
+			      rpc_get_iscsi_connections,
+			      ctx,
+			      rpc_get_iscsi_connections_done);
 }
 SPDK_RPC_REGISTER("get_iscsi_connections", spdk_rpc_get_iscsi_connections, SPDK_RPC_RUNTIME)
 
