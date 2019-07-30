@@ -247,6 +247,11 @@ and CXX to the cross compilers, then run configure as follows:
 
 ### vhost
 
+A security vulnerability has been identified and fixed in SPDK Vhost-SCSI target.
+A malicious client (e.g. a virtual machine) could send a carefully prepared,
+invalid I/O request to crash the entire SPDK process. All users of SPDK vhost
+are strongly recommended to update. All SPDK versions < 19.07 are affected.
+
 By default, SPDK will now rely on upstream DPDK's rte_vhost instead of its fork
 located inside SPDK repo. The internal fork is still kept around to support older
 DPDK versions, but is considered legacy and will be eventually removed.
@@ -811,6 +816,11 @@ to be physically contiguous.
 I/OAT driver can now reinitialize I/OAT channels after encountering DMA errors.
 
 ### iscsi target
+
+A security vulnerability has been identified and fixed in SPDK iSCSI target.
+A malicious client (e.g. an iSCSI initiator) could send a carefully prepared,
+invalid I/O request to crash the entire SPDK process. All users of SPDK iSCSI
+target are strongly recommended to update. All SPDK versions < 19.07 are affected.
 
 Parameter names of `set_iscsi_options` and `get_iscsi_global_params` RPC
 method for CHAP authentication in discovery sessions have been changed to
