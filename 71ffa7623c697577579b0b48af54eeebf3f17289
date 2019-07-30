@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "ce075ab7_87d4893c",
+        "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-30T10:04:07Z",
+      "side": 1,
+      "message": "This is actually made in previous test.",
+      "parentUuid": "8200dcd7_4f6b1693",
+      "range": {
+        "startLine": 301,
+        "startChar": 0,
+        "endLine": 307,
+        "endChar": 36
+      },
+      "revId": "71ffa7623c697577579b0b48af54eeebf3f17289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "512f9c9e_b101ffe9",
         "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
         "patchSetId": 2
@@ -68,6 +92,30 @@
       "revId": "71ffa7623c697577579b0b48af54eeebf3f17289",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e2ee8cd_0036d7b6",
+        "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-30T10:04:07Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "512f9c9e_b101ffe9",
+      "range": {
+        "startLine": 1011,
+        "startChar": 22,
+        "endLine": 1011,
+        "endChar": 35
+      },
+      "revId": "71ffa7623c697577579b0b48af54eeebf3f17289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
