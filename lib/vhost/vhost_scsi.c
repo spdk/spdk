@@ -1359,7 +1359,6 @@ vhost_scsi_start(struct spdk_vhost_session *vsession)
 {
 	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
 	struct spdk_vhost_scsi_dev *svdev;
-	int rc;
 
 	svdev = to_scsi_dev(vsession->vdev);
 	assert(svdev != NULL);
@@ -1369,15 +1368,8 @@ vhost_scsi_start(struct spdk_vhost_session *vsession)
 		svdev->poll_group = vhost_get_poll_group(svdev->vdev.cpumask);
 	}
 
-	rc = vhost_session_send_event(svdev->poll_group, vsession, vhost_scsi_start_cb,
-				      3, "start session");
-	if (rc != 0) {
-		if (svdev->vdev.active_session_num == 0) {
-			svdev->poll_group = NULL;
-		}
-	}
-
-	return rc;
+	return vhost_session_send_event(svdev->poll_group, vsession,
+					vhost_scsi_start_cb, 3, "start session");
 }
 
 static int
@@ -1463,19 +1455,8 @@ vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 static int
 vhost_scsi_stop(struct spdk_vhost_session *vsession)
 {
-	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
-	int rc;
-
-	rc = vhost_session_send_event(vsession->poll_group, vsession,
-				      vhost_scsi_stop_cb, 3, "stop session");
-	if (rc != 0) {
-		return rc;
-	}
-
-	if (vsession->vdev->active_session_num == 0) {
-		svsession->svdev->poll_group = NULL;
-	}
-	return 0;
+	return vhost_session_send_event(vsession->poll_group, vsession,
+					vhost_scsi_stop_cb, 3, "stop session");
 }
 
 static void
