@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "82f97a47_7b0f341d",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T05:53:43Z",
+      "side": 1,
+      "message": "Trello card already contains list of errors with human-friendly descriptions.\nHaven\u0027t looked inside trello card, have you?",
+      "parentUuid": "e6a586fa_acd4b140",
+      "range": {
+        "startLine": 236,
+        "startChar": 39,
+        "endLine": 236,
+        "endChar": 68
+      },
+      "revId": "1532bc4324d57abc81364977116e146f7c0d0536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c50dc996_3200167f",
         "filename": "scripts/check_format.sh",
         "patchSetId": 2
@@ -69,6 +93,30 @@
       "revId": "1532bc4324d57abc81364977116e146f7c0d0536",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b37adb8e_c6b01b51",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-30T05:53:43Z",
+      "side": 1,
+      "message": "Like Vitaliy says.",
+      "parentUuid": "f70ae6bc_c74b96e1",
+      "range": {
+        "startLine": 253,
+        "startChar": 2,
+        "endLine": 253,
+        "endChar": 4
+      },
+      "revId": "1532bc4324d57abc81364977116e146f7c0d0536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
