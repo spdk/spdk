@@ -707,7 +707,7 @@ function vm_setup()
 		cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
 	fi
 
-	if ( [[ $disks == '' ]] && [[ $disk_type_g == virtio* ]] ); then
+	if [[ $disks == '' ]] && [[ $disk_type_g == virtio* ]]; then
 		disks=1
 	fi
 
