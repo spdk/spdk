@@ -84,13 +84,23 @@ iscsi_portal_accept(void *arg)
 static void
 iscsi_acceptor_start(struct spdk_iscsi_portal *p)
 {
+	struct spdk_io_channel *ch;
+
 	p->acceptor_poller = spdk_poller_register(iscsi_portal_accept, p, ACCEPT_TIMEOUT_US);
+
+	ch = spdk_get_io_channel(&g_spdk_iscsi);
+	p->acceptor_pg = spdk_io_channel_get_ctx(ch);
 }
 
 static void
 iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
 {
+	struct spdk_io_channel *ch;
+
 	spdk_poller_unregister(&p->acceptor_poller);
+
+	ch = spdk_io_channel_from_ctx(p->acceptor_pg);
+	spdk_put_io_channel(ch);
 }
 
 static struct spdk_iscsi_portal *
