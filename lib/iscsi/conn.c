@@ -181,6 +181,7 @@ iscsi_poll_group_add_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi_co
 		return;
 	}
 
+	conn->poll_group = pg;
 	conn->is_stopped = false;
 	STAILQ_INSERT_TAIL(&pg->connections, conn, link);
 }
@@ -197,6 +198,7 @@ iscsi_poll_group_remove_conn(struct spdk_iscsi_poll_group *pg, struct spdk_iscsi
 
 	spdk_poller_unregister(&conn->flush_poller);
 
+	conn->poll_group = NULL;
 	conn->is_stopped = true;
 	STAILQ_REMOVE(&pg->connections, conn, spdk_iscsi_conn, link);
 }
@@ -207,6 +209,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 {
 	struct spdk_iscsi_poll_group *pg;
 	struct spdk_iscsi_conn *conn;
+	uint32_t lcore;
 	int bufsize, i, rc;
 
 	conn = allocate_conn();
@@ -296,8 +299,8 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 
-	conn->lcore = spdk_env_get_current_core();
-	pg = &g_spdk_iscsi.poll_group[conn->lcore];
+	lcore = spdk_env_get_current_core();
+	pg = &g_spdk_iscsi.poll_group[lcore];
 
 	iscsi_poll_group_add_conn(pg, conn);
 	return 0;
@@ -477,15 +480,11 @@ _iscsi_conn_check_shutdown(void *arg)
 static void
 _iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *pg;
 	int rc;
 
 	spdk_clear_all_transfer_task(conn, NULL, NULL);
 
-	assert(conn->lcore == spdk_env_get_current_core());
-	pg = &g_spdk_iscsi.poll_group[conn->lcore];
-
-	iscsi_poll_group_remove_conn(pg, conn);
+	iscsi_poll_group_remove_conn(conn->poll_group, conn);
 	spdk_sock_close(&conn->sock);
 	spdk_poller_unregister(&conn->logout_timer);
 
@@ -691,6 +690,7 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_tgt_node *target;
 
 	assert(conn->state == ISCSI_CONN_STATE_EXITED);
+	assert(conn->poll_group == NULL);
 
 	if (conn->sess != NULL &&
 	    conn->sess->session_type == SESSION_TYPE_NORMAL &&
@@ -702,8 +702,6 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 
 		iscsi_conn_close_luns(conn);
 	}
-
-	assert(conn->lcore == spdk_env_get_current_core());
 }
 
 void
@@ -1397,14 +1395,15 @@ iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 {
 	struct spdk_iscsi_conn *conn = arg1;
 	struct spdk_iscsi_poll_group *pg;
+	uint32_t lcore;
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		iscsi_conn_open_luns(conn);
 	}
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
-	conn->lcore = spdk_env_get_current_core();
-	pg = &g_spdk_iscsi.poll_group[conn->lcore];
+	lcore = spdk_env_get_current_core();
+	pg = &g_spdk_iscsi.poll_group[lcore];
 	iscsi_poll_group_add_conn(pg, conn);
 }
 
@@ -1413,7 +1412,6 @@ static uint32_t g_next_core = SPDK_ENV_LCORE_ID_ANY;
 void
 spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group	*pg;
 	struct spdk_event		*event;
 	struct spdk_iscsi_tgt_node	*target;
 	uint32_t			i;
@@ -1463,9 +1461,7 @@ spdk_iscsi_conn_schedule(struct spdk_iscsi_conn *conn)
 	}
 	pthread_mutex_unlock(&target->mutex);
 
-	assert(conn->lcore == spdk_env_get_current_core());
-	pg = &g_spdk_iscsi.poll_group[conn->lcore];
-	iscsi_poll_group_remove_conn(pg, conn);
+	iscsi_poll_group_remove_conn(conn->poll_group, conn);
 
 	conn->last_nopin = spdk_get_ticks();
 	event = spdk_event_allocate(lcore, iscsi_conn_full_feature_migrate,
