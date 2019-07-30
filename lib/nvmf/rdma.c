@@ -1890,10 +1890,14 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_req->elba_length = length;
 		}
 
-		if (spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length) < 0) {
-			/* No available buffers. Queue this request up. */
-			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
-			return 0;
+		rc = spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length);
+		if (rc < 0) {
+			if (rc == -ENOMEM) {
+				/* No available buffers. Queue this request up. */
+				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
+				return 0;
+			}
+			return -1;
 		}
 
 		/* backward compatible */
