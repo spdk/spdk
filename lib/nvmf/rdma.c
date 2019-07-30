@@ -2149,7 +2149,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 							       num_blocks, &rdma_req->dif_ctx);
 
 					if (rc != 0) {
-						SPDK_ERRLOG("DIF generate failed\n");
+						SPDK_ERRLOG("DIF generation failed\n");
+						rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 						spdk_nvmf_rdma_start_disconnect(rqpair);
 						break;
 					}
@@ -2181,6 +2182,21 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
 				/* restore the original length */
 				rdma_req->req.length = rdma_req->orig_length;
+
+				if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+					struct spdk_dif_error error_blk;
+					uint32_t num_blocks = SPDK_CEIL_DIV(rdma_req->elba_length, rdma_req->dif_ctx.block_size);
+
+					int rc = spdk_dif_verify(rdma_req->req.iov, rdma_req->req.iovcnt, num_blocks, &rdma_req->dif_ctx,
+								 &error_blk);
+					if (rc) {
+						SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n", error_blk.err_type,
+							    error_blk.err_offset);
+						rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+						spdk_nvmf_rdma_start_disconnect(rqpair);
+						break;
+					}
+				}
 			}
 			break;
 		case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING:
