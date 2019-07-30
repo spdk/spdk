@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fa4f4178_b119fc66",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-30T13:33:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8f729e28_90d895fa",
+      "range": {
+        "startLine": 175,
+        "startChar": 22,
+        "endLine": 175,
+        "endChar": 30
+      },
+      "revId": "fcce4b2fed4f43cdeb761e8f1660d9954ad1bfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d0e3c17_e2dd6814",
         "filename": "test/nvme/nvme.sh",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "bd462bc3_add011ed",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-30T13:33:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d0e3c17_e2dd6814",
+      "range": {
+        "startLine": 182,
+        "startChar": 7,
+        "endLine": 182,
+        "endChar": 32
+      },
+      "revId": "fcce4b2fed4f43cdeb761e8f1660d9954ad1bfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b33e695_8e1bc347",
         "filename": "test/nvme/nvme.sh",
         "patchSetId": 6
@@ -59,6 +107,30 @@
       "writtenOn": "2019-07-30T10:50:58Z",
       "side": 1,
       "message": "Any reason why || true was added? I don\u0027t think we need to mask anything in this call.",
+      "range": {
+        "startLine": 197,
+        "startChar": 62,
+        "endLine": 197,
+        "endChar": 69
+      },
+      "revId": "fcce4b2fed4f43cdeb761e8f1660d9954ad1bfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73dd6821_f8023562",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-30T13:33:46Z",
+      "side": 1,
+      "message": "This is for the case where there isn\u0027t any namespace and \u0027grep -c name\u0027 will return fail.",
+      "parentUuid": "3b33e695_8e1bc347",
       "range": {
         "startLine": 197,
         "startChar": 62,
