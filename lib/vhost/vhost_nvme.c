@@ -1114,7 +1114,6 @@ static int
 spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
 {
 	struct vhost_poll_group *pg;
-	int rc;
 
 	if (vsession->vdev->active_session_num > 0) {
 		/* We're trying to start a second session */
@@ -1123,14 +1122,8 @@ spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
 	}
 
 	pg = vhost_get_poll_group(vsession->vdev->cpumask);
-	rc = vhost_session_send_event(pg, vsession, spdk_vhost_nvme_start_cb,
-				      3, "start session");
-
-	if (rc != 0) {
-		vhost_put_poll_group(pg);
-	}
-
-	return rc;
+	return vhost_session_send_event(pg, vsession, spdk_vhost_nvme_start_cb,
+					3, "start session");
 }
 
 static void

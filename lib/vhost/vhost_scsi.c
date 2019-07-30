@@ -1358,7 +1358,6 @@ vhost_scsi_start(struct spdk_vhost_session *vsession)
 				      3, "start session");
 	if (rc != 0) {
 		if (svdev->vdev.active_session_num == 0) {
-			vhost_put_poll_group(svdev->poll_group);
 			svdev->poll_group = NULL;
 		}
 	}
@@ -1459,7 +1458,6 @@ vhost_scsi_stop(struct spdk_vhost_session *vsession)
 	}
 
 	if (vsession->vdev->active_session_num == 0) {
-		vhost_put_poll_group(svsession->svdev->poll_group);
 		svsession->svdev->poll_group = NULL;
 	}
 	return 0;

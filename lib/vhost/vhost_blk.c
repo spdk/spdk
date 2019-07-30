@@ -712,17 +712,10 @@ static int
 vhost_blk_start(struct spdk_vhost_session *vsession)
 {
 	struct vhost_poll_group *pg;
-	int rc;
 
 	pg = vhost_get_poll_group(vsession->vdev->cpumask);
-	rc = vhost_session_send_event(pg, vsession, vhost_blk_start_cb,
-				      3, "start session");
-
-	if (rc != 0) {
-		vhost_put_poll_group(pg);
-	}
-
-	return rc;
+	return vhost_session_send_event(pg, vsession, vhost_blk_start_cb,
+					3, "start session");
 }
 
 static int
