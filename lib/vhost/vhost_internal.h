@@ -94,7 +94,11 @@
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
 
-struct vhost_poll_group;
+struct vhost_poll_group {
+	struct spdk_thread *thread;
+	unsigned ref;
+	TAILQ_ENTRY(vhost_poll_group) tailq;
+};
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
