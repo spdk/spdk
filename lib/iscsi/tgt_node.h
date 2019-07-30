@@ -83,7 +83,7 @@ struct spdk_iscsi_tgt_node {
 	 *  target node.
 	 */
 	uint32_t num_active_conns;
-	int lcore;
+	struct spdk_iscsi_poll_group *pg;
 
 	int num_pg_maps;
 	TAILQ_HEAD(, spdk_iscsi_pg_map) pg_map_head;

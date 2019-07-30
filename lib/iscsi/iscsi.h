@@ -280,11 +280,11 @@ struct spdk_iscsi_sess {
 };
 
 struct spdk_iscsi_poll_group {
-	uint32_t					core;
 	struct spdk_poller				*poller;
 	struct spdk_poller				*nop_poller;
 	STAILQ_HEAD(connections, spdk_iscsi_conn)	connections;
 	struct spdk_sock_group				*sock_group;
+	TAILQ_ENTRY(spdk_iscsi_poll_group)		link;
 };
 
 struct spdk_iscsi_opts {
@@ -318,6 +318,7 @@ struct spdk_iscsi_globals {
 	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
 	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
 	TAILQ_HEAD(, spdk_iscsi_auth_group)	auth_group_head;
+	TAILQ_HEAD(, spdk_iscsi_poll_group)	poll_group_head;
 
 	int32_t timeout;
 	int32_t nopininterval;
@@ -344,7 +345,6 @@ struct spdk_iscsi_globals {
 	struct spdk_mempool *task_pool;
 
 	struct spdk_iscsi_sess	**session;
-	struct spdk_iscsi_poll_group *poll_group;
 };
 
 #define ISCSI_SECURITY_NEGOTIATION_PHASE	0
