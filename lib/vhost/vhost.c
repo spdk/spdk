@@ -890,16 +890,7 @@ vhost_get_poll_group(struct spdk_cpuset *cpumask)
 	}
 
 	assert(selected_pg != NULL);
-	assert(selected_pg->ref < UINT_MAX);
-	selected_pg->ref++;
 	return selected_pg;
-}
-
-void
-vhost_put_poll_group(struct vhost_poll_group *pg)
-{
-	assert(pg->ref > 0);
-	pg->ref--;
 }
 
 void
@@ -907,6 +898,10 @@ vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 {
 	if (response == 0) {
 		vsession->started = true;
+		assert(vsession->poll_group != NULL);
+		assert(vsession->poll_group->ref < UINT_MAX);
+		vsession->poll_group->ref++;
+
 		assert(vsession->vdev->active_session_num < UINT32_MAX);
 		vsession->vdev->active_session_num++;
 	}
@@ -920,6 +915,11 @@ vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
 {
 	if (response == 0) {
 		vsession->started = false;
+		assert(vsession->poll_group != NULL);
+		assert(vsession->poll_group->ref > 0);
+		vsession->poll_group->ref--;
+		vsession->poll_group = NULL;
+
 		assert(vsession->vdev->active_session_num > 0);
 		vsession->vdev->active_session_num--;
 	}
