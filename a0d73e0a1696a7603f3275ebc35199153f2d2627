@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd7b08e3_238bc184",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-07-30T09:02:34Z",
+      "side": 1,
+      "message": "You are describing the issue very clear in the commit message, instead of using a global variable here, can you try to move line 249: spdk_io_device_unregister(raid_bdev, NULL);\nin line 251:\nif (raid_bdev-\u003enum_base_bdevs_discovered \u003d\u003d 0) {\n    spdk_io_device_unregister(raid_bdev, NULL);\n}\n\nAnd you can use a callback here to call raid_bdev_cleanup() finally, I think it\u0027s more clear to me by this way.",
+      "revId": "a0d73e0a1696a7603f3275ebc35199153f2d2627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
