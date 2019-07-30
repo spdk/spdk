@@ -1502,3 +1502,40 @@ SPDK_TRACE_REGISTER_FN(iscsi_conn_trace, "iscsi_conn", TRACE_GROUP_ISCSI)
 	spdk_trace_register_description("ISCSI_PDU_COMPLETED", TRACE_ISCSI_PDU_COMPLETED,
 					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 0, 0, "");
 }
+
+void
+spdk_iscsi_conn_info_json(struct spdk_json_write_ctx *w, struct spdk_iscsi_conn *conn)
+{
+	uint16_t tsih;
+
+	if (!conn->is_valid) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_int32(w, "id", conn->id);
+
+	spdk_json_write_named_int32(w, "cid", conn->cid);
+
+	/*
+	 * If we try to return data for a connection that has not
+	 *  logged in yet, the session will not be set.  So in this
+	 *  case, return -1 for the tsih rather than segfaulting
+	 *  on the null conn->sess.
+	 */
+	if (conn->sess == NULL) {
+		tsih = -1;
+	} else {
+		tsih = conn->sess->tsih;
+	}
+	spdk_json_write_named_int32(w, "tsih", tsih);
+
+	spdk_json_write_named_string(w, "initiator_addr", conn->initiator_addr);
+
+	spdk_json_write_named_string(w, "target_addr", conn->target_addr);
+
+	spdk_json_write_named_string(w, "target_node_name", conn->target_short_name);
+
+	spdk_json_write_object_end(w);
+}

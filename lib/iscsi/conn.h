@@ -189,4 +189,5 @@ void spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_p
 
 void spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
 
+void spdk_iscsi_conn_info_json(struct spdk_json_write_ctx *w, struct spdk_iscsi_conn *conn);
 #endif /* SPDK_ISCSI_CONN_H */
