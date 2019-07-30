@@ -528,6 +528,27 @@ spdk_nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
 	}
 }
 
+static inline enum spdk_nvme_media_error_status_code
+spdk_nvmf_rdma_dif_error_to_compl_status(uint8_t err_type) {
+	enum spdk_nvme_media_error_status_code result;
+	switch (err_type)
+	{
+	case SPDK_DIF_REFTAG_ERROR:
+		result = SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR;
+		break;
+	case SPDK_DIF_APPTAG_ERROR:
+		result = SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR;
+		break;
+	case SPDK_DIF_GUARD_ERROR:
+		result = SPDK_NVME_SC_GUARD_CHECK_ERROR;
+		break;
+	default:
+		SPDK_UNREACHABLE();
+	}
+
+	return result;
+}
+
 static enum ibv_qp_state
 spdk_nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
 	enum ibv_qp_state old_state, new_state;
@@ -2148,6 +2169,25 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
 				/* restore the original length */
 				rdma_req->req.length = rdma_req->orig_length;
+
+				if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+					struct spdk_dif_error error_blk;
+
+					num_blocks = SPDK_CEIL_DIV(rdma_req->elba_length, rdma_req->dif_ctx.block_size);
+
+					rc = spdk_dif_verify(rdma_req->req.iov, rdma_req->req.iovcnt, num_blocks, &rdma_req->dif_ctx,
+							     &error_blk);
+					if (rc) {
+						struct spdk_nvme_cpl *rsp = &rdma_req->req.rsp->nvme_cpl;
+
+						SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n", error_blk.err_type,
+							    error_blk.err_offset);
+						rsp->status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
+						rsp->status.sc = spdk_nvmf_rdma_dif_error_to_compl_status(error_blk.err_type);
+						rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+						STAILQ_REMOVE(&rqpair->pending_rdma_write_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
+					}
+				}
 			}
 			break;
 		case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING:
