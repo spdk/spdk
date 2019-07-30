@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "80e80d7e_b4d613e0",
+        "filename": "test/nvme/hw_hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-30T12:21:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "512f88df_2133bbe8",
+      "revId": "9e7b521710f4cc0beb2a033f28bf84c24376363c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "162161a7_b9456932",
         "filename": "test/nvme/hw_hotplug.sh",
         "patchSetId": 6
@@ -39,6 +57,30 @@
       "revId": "9e7b521710f4cc0beb2a033f28bf84c24376363c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50012f66_e2c41f68",
+        "filename": "test/nvme/hw_hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-30T12:21:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "162161a7_b9456932",
+      "range": {
+        "startLine": 52,
+        "startChar": 1,
+        "endLine": 52,
+        "endChar": 10
+      },
+      "revId": "9e7b521710f4cc0beb2a033f28bf84c24376363c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
