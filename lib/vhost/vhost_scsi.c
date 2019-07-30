@@ -142,8 +142,8 @@ struct spdk_vhost_scsi_task {
 	struct spdk_vhost_virtqueue *vq;
 };
 
-static int vhost_scsi_start(struct spdk_vhost_session *vsession);
-static int vhost_scsi_stop(struct spdk_vhost_session *vsession);
+static void vhost_scsi_start(struct spdk_vhost_session *vsession);
+static void vhost_scsi_stop(struct spdk_vhost_session *vsession);
 static void vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev,
 				      struct spdk_json_write_ctx *w);
 static void vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
@@ -1293,10 +1293,10 @@ alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
 	return 0;
 }
 
-static int
-vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
-		    struct spdk_vhost_session *vsession, void *unused)
+static void
+vhost_scsi_start_cb(void *arg)
 {
+	struct spdk_vhost_session *vsession = arg;
 	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
 	struct spdk_vhost_scsi_dev *svdev = svsession->svdev;
 	struct spdk_scsi_dev_vhost_state *state;
@@ -1351,10 +1351,9 @@ vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 	}
 out:
 	vhost_session_start_done(vsession, rc);
-	return rc;
 }
 
-static int
+static void
 vhost_scsi_start(struct spdk_vhost_session *vsession)
 {
 	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
@@ -1368,8 +1367,7 @@ vhost_scsi_start(struct spdk_vhost_session *vsession)
 		svdev->poll_group = vhost_get_poll_group(svdev->vdev.cpumask);
 	}
 
-	return vhost_session_send_event(svdev->poll_group, vsession,
-					vhost_scsi_start_cb, 3, "start session");
+	spdk_thread_send_msg(svdev->poll_group->thread, vhost_scsi_start_cb, vsession);
 }
 
 static int
@@ -1428,10 +1426,10 @@ destroy_session_poller_cb(void *arg)
 	return -1;
 }
 
-static int
-vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
-		   struct spdk_vhost_session *vsession, void *unused)
+static void
+vhost_scsi_stop_cb(void *arg)
 {
+	struct spdk_vhost_session *vsession = arg;
 	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
 
 	/* Stop receiving new I/O requests */
@@ -1448,15 +1446,13 @@ vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 	 */
 	svsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
 				 svsession, 1000);
-
-	return 0;
 }
 
-static int
+static void
 vhost_scsi_stop(struct spdk_vhost_session *vsession)
 {
-	return vhost_session_send_event(vsession->poll_group, vsession,
-					vhost_scsi_stop_cb, 3, "stop session");
+	spdk_thread_send_msg(vsession->poll_group->thread,
+			     vhost_scsi_stop_cb, vsession);
 }
 
 static void

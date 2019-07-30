@@ -953,43 +953,6 @@ vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
 	sem_post(&g_dpdk_sem);
 }
 
-static void
-vhost_event_cb(void *arg1)
-{
-	struct vhost_session_fn_ctx *ctx = arg1;
-	struct spdk_vhost_session *vsession;
-
-	if (pthread_mutex_trylock(&g_vhost_mutex) != 0) {
-		spdk_thread_send_msg(spdk_get_thread(), vhost_event_cb, arg1);
-		return;
-	}
-
-	vsession = vhost_session_find_by_id(ctx->vdev, ctx->vsession_id);
-	ctx->cb_fn(ctx->vdev, vsession, NULL);
-	pthread_mutex_unlock(&g_vhost_mutex);
-}
-
-int
-vhost_session_send_event(struct vhost_poll_group *pg,
-			 struct spdk_vhost_session *vsession,
-			 spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
-			 const char *errmsg)
-{
-	struct vhost_session_fn_ctx ev_ctx = {0};
-
-	ev_ctx.vdev = vsession->vdev;
-	ev_ctx.vsession_id = vsession->id;
-	ev_ctx.cb_fn = cb_fn;
-
-	spdk_thread_send_msg(pg->thread, vhost_event_cb, &ev_ctx);
-
-	pthread_mutex_unlock(&g_vhost_mutex);
-	wait_for_semaphore(timeout_sec, errmsg);
-	pthread_mutex_lock(&g_vhost_mutex);
-
-	return g_dpdk_response;
-}
-
 static void foreach_session_continue(struct vhost_session_fn_ctx *ev_ctx,
 				     struct spdk_vhost_session *vsession);
 
@@ -1122,16 +1085,18 @@ _stop_session(struct spdk_vhost_session *vsession)
 {
 	struct spdk_vhost_dev *vdev = vsession->vdev;
 	struct spdk_vhost_virtqueue *q;
-	int rc;
 	uint16_t i;
 
-	rc = vdev->backend->stop_session(vsession);
-	if (rc != 0) {
+	vdev->backend->stop_session(vsession);
+	pthread_mutex_unlock(&g_vhost_mutex);
+
+	wait_for_semaphore(3, "session stop");
+	if (g_dpdk_response != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vsession->vid);
-		pthread_mutex_unlock(&g_vhost_mutex);
 		return;
 	}
 
+	pthread_mutex_lock(&g_vhost_mutex);
 	for (i = 0; i < vsession->max_queues; i++) {
 		q = &vsession->virtqueue[i];
 		if (q->vring.desc == NULL) {
@@ -1245,13 +1210,19 @@ start_device(int vid)
 	vhost_session_set_coalescing(vdev, vsession, NULL);
 	vhost_session_mem_register(vsession);
 	vsession->initialized = true;
-	rc = vdev->backend->start_session(vsession);
-	if (rc != 0) {
+	vdev->backend->start_session(vsession);
+	pthread_mutex_unlock(&g_vhost_mutex);
+
+	wait_for_semaphore(3, "session start");
+	if (g_dpdk_response != 0) {
+		pthread_mutex_lock(&g_vhost_mutex);
 		vhost_session_mem_unregister(vsession);
+		pthread_mutex_unlock(&g_vhost_mutex);
 		free(vsession->mem);
 		goto out;
 	}
 
+	return g_dpdk_response;
 out:
 	pthread_mutex_unlock(&g_vhost_mutex);
 	return rc;

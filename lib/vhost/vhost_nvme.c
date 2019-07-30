@@ -1075,10 +1075,11 @@ alloc_task_pool(struct spdk_vhost_nvme_dev *nvme)
 	return 0;
 }
 
-static int
-spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
-			 struct spdk_vhost_session *vsession, void *unused)
+static void
+spdk_vhost_nvme_start_cb(void *arg)
 {
+	struct spdk_vhost_session *vsession = arg;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 	struct spdk_vhost_nvme_ns *ns_dev;
 	uint32_t i;
@@ -1112,10 +1113,9 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 
 out:
 	vhost_session_start_done(vsession, rc);
-	return rc;
 }
 
-static int
+static void
 spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
 {
 	struct vhost_poll_group *pg;
@@ -1123,12 +1123,11 @@ spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
 	if (vsession->vdev->active_session_num > 0) {
 		/* We're trying to start a second session */
 		SPDK_ERRLOG("Vhost-NVMe devices can support only one simultaneous connection.\n");
-		return -1;
+		vhost_session_start_done(vsession, -1);
 	}
 
 	pg = vhost_get_poll_group(vsession->vdev->cpumask);
-	return vhost_session_send_event(pg, vsession, spdk_vhost_nvme_start_cb,
-					3, "start session");
+	spdk_thread_send_msg(pg->thread, spdk_vhost_nvme_start_cb, vsession);
 }
 
 static void
@@ -1190,15 +1189,16 @@ destroy_device_poller_cb(void *arg)
 	return -1;
 }
 
-static int
-spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
-			struct spdk_vhost_session *vsession, void *unused)
+static void
+spdk_vhost_nvme_stop_cb(void *arg)
 {
+	struct spdk_vhost_session *vsession = arg;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 
 	if (nvme == NULL) {
 		vhost_session_stop_done(vsession, -1);
-		return -1;
+		return;
 	}
 
 	free_task_pool(nvme);
@@ -1206,15 +1206,13 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 
 	spdk_poller_unregister(&nvme->requestq_poller);
 	nvme->stop_poller = spdk_poller_register(destroy_device_poller_cb, nvme, 1000);
-
-	return 0;
 }
 
-static int
+static void
 spdk_vhost_nvme_stop(struct spdk_vhost_session *vsession)
 {
-	return vhost_session_send_event(vsession->poll_group, vsession,
-					spdk_vhost_nvme_stop_cb, 3, "start session");
+	spdk_thread_send_msg(vsession->poll_group->thread,
+			     spdk_vhost_nvme_stop_cb, vsession);
 }
 
 static void
