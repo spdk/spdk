@@ -223,8 +223,17 @@ struct spdk_vhost_dev_backend {
 	 */
 	size_t session_ctx_size;
 
-	int (*start_session)(struct spdk_vhost_session *vsession);
-	int (*stop_session)(struct spdk_vhost_session *vsession);
+	/**
+	 * Start a new session of this particular backend. This event must
+	 * be completed with vhost_session_start_done().
+	 */
+	void (*start_session)(struct spdk_vhost_session *vsession);
+
+	/**
+	 * Stop a session of this particular backend. This event must
+	 * be completed with vhost_session_stop_done().
+	 */
+	void (*stop_session)(struct spdk_vhost_session *vsession);
 
 	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
 	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
@@ -332,35 +341,12 @@ void vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
 			       void *arg);
 
 /**
- * Call a function on the provided lcore and block until either
- * spdk_vhost_session_start_done() or spdk_vhost_session_stop_done()
- * is called.
- *
- * This must be called under the global vhost mutex, which this function
- * will unlock for the time it's waiting. It's meant to be called only
- * from start/stop session callbacks.
- *
- * \param pg designated session's poll group
- * \param vsession vhost session
- * \param cb_fn the function to call. The void *arg parameter in cb_fn
- * is always NULL.
- * \param timeout_sec timeout in seconds. This function will still
- * block after the timeout expires, but will print the provided errmsg.
- * \param errmsg error message to print once the timeout expires
- * \return return the code passed to spdk_vhost_session_event_done().
- */
-int vhost_session_send_event(struct vhost_poll_group *pg,
-			     struct spdk_vhost_session *vsession,
-			     spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
-			     const char *errmsg);
-
-/**
- * Finish a blocking spdk_vhost_session_send_event() call and finally
- * start the session. This must be called on the target lcore, which
- * will now receive all session-related messages (e.g. from
- * spdk_vhost_dev_foreach_session()).
- *
- * Must be called under the global vhost lock.
+ * Finish a start_session callback. This function called with the response
+ * code 0 must be called on the target lcore which will poll the session.
+ * The same thread from now on will receive all session-related messages
+ * e.g. from spdk_vhost_dev_foreach_session(). Calling with return code
+ * other than 0 can be done from any thread - it will effectively terminate
+ * the connection, immediately notifying the other endpoint (QEMU).
  *
  * \param vsession vhost session
  * \param response return code
@@ -368,15 +354,14 @@ int vhost_session_send_event(struct vhost_poll_group *pg,
 void vhost_session_start_done(struct spdk_vhost_session *vsession, int response);
 
 /**
- * Finish a blocking spdk_vhost_session_send_event() call and finally
- * stop the session. This must be called on the session's lcore which
- * used to receive all session-related messages (e.g. from
- * spdk_vhost_dev_foreach_session()). After this call, the session-
- * related messages will be once again processed by any arbitrary thread.
- *
- * Must be called under the global vhost lock.
- *
- * Must be called under the global vhost mutex.
+ * Finish a stop_session callback. Calling this function with response == 0
+ * must be done on the thread the session was started on, as it will untie
+ * the session from that thread - the session will be marked as stopped
+ * and will handle all session-related messages on any spdk thread again.
+ * Calling with return code other than 0 can be done from any thread and
+ * will prevent e.g. from unmapping the shared memory in order to handle
+ * a vhost-user message. This will likely result in terminating the
+ * connection though.
  *
  * \param vsession vhost session
  * \param response return code
