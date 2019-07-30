@@ -34,6 +34,24 @@
       "revId": "5583e2e97eeb0b7d5f654d39d3f4763a659fb5bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf74ca6a_b412b30e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4359,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-07-30T12:50:04Z",
+      "side": 1,
+      "message": "Actually we should still set it to NULL (or \u0027desc\u0027) when we fail. Overall this does not make that much of a difference since we return error, but it also breaks our unit tests as they relay on NULL value returned (which is reasonable) - see scan build from last patch.",
+      "parentUuid": "59231b20_782d8f8b",
+      "revId": "5583e2e97eeb0b7d5f654d39d3f4763a659fb5bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
