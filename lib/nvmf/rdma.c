@@ -271,6 +271,7 @@ struct spdk_nvmf_rdma_request {
 	bool					dif_insert_or_strip;
 	uint32_t				elba_length;
 	uint32_t				orig_length;
+	void					*md_buf;
 
 	STAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
@@ -497,6 +498,9 @@ struct spdk_nvmf_rdma_transport {
 	struct rdma_event_channel	*event_channel;
 
 	struct spdk_mempool		*data_wr_pool;
+
+	uint32_t			md_buf_size;
+	struct spdk_mempool		*md_buf_pool;
 
 	pthread_mutex_t			lock;
 
@@ -1891,8 +1895,10 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		uint64_t offset = sgl->address;
 		uint32_t max_len = rtransport->transport.opts.in_capsule_data_size;
 
+		length = sgl->unkeyed.length;
+
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
-			      offset, sgl->unkeyed.length);
+			      offset, length);
 
 		if (offset > max_len) {
 			SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
@@ -1902,21 +1908,72 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 		max_len -= (uint32_t)offset;
 
-		if (sgl->unkeyed.length > max_len) {
+		if (length > max_len) {
 			SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
-				    sgl->unkeyed.length, max_len);
+				    length, max_len);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
 		}
 
 		rdma_req->num_outstanding_data_wr = 0;
-		rdma_req->req.data = rdma_req->recv->buf + offset;
 		rdma_req->req.data_from_pool = false;
-		rdma_req->req.length = sgl->unkeyed.length;
+		rdma_req->req.length = length;
 
-		rdma_req->req.iov[0].iov_base = rdma_req->req.data;
-		rdma_req->req.iov[0].iov_len = rdma_req->req.length;
-		rdma_req->req.iovcnt = 1;
+		if (spdk_likely(!rdma_req->dif_insert_or_strip)) {
+			rdma_req->req.data = rdma_req->recv->buf + offset;
+			rdma_req->req.iov[0].iov_base = rdma_req->req.data;
+			rdma_req->req.iov[0].iov_len = length;
+			rdma_req->req.iovcnt = 1;
+		} else {
+			uint32_t data_block_size = rdma_req->dif_ctx.block_size - rdma_req->dif_ctx.md_size;
+			uint32_t num_blocks, i, iovcnt = 0;
+
+			if (spdk_likely(spdk_u32_is_pow2(length))) {
+				num_blocks = length >> spdk_u32log2(data_block_size);
+			} else {
+				num_blocks = length / data_block_size;
+				if (length % data_block_size != 0) {
+					SPDK_ERRLOG("In-capsule data length %u is not aligned to data block size %u\n",
+						    length, data_block_size);
+					rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+					return -1;
+				}
+			}
+
+			if (spdk_unlikely(num_blocks > SPDK_NVMF_MAX_SGL_ENTRIES)) {
+				SPDK_ERRLOG("Not enough iov entries to interleave data with metadata, "
+					    "use a smaller In-capsule data length\n");
+				assert(0);
+			}
+
+			rdma_req->md_buf = spdk_mempool_get(rtransport->md_buf_pool);
+			if (!rdma_req->md_buf) {
+				/* No available metadata buffers. Queue this request up */
+				return 0;
+			}
+			rdma_req->orig_length = length;
+			rdma_req->req.data = rdma_req->recv->buf + offset;
+			/* update length wrt metadata */
+			length = 0;
+
+			/* interleave data with metadata, the even iov item points to data block,
+			   the odd iov item points to metadata */
+			for (i = 0; i < num_blocks; i++) {
+				rdma_req->req.iov[iovcnt].iov_base = ((char *)rdma_req->req.data) + data_block_size * i;
+				rdma_req->req.iov[iovcnt].iov_len = data_block_size;
+				length += data_block_size;
+				++iovcnt;
+
+				rdma_req->req.iov[iovcnt].iov_base = ((char *)rdma_req->md_buf) + i *
+								     rdma_req->dif_ctx.md_size;
+				rdma_req->req.iov[iovcnt].iov_len = rdma_req->dif_ctx.md_size;
+				length += rdma_req->dif_ctx.md_size;
+				++iovcnt;
+			}
+
+			rdma_req->req.iovcnt = iovcnt;
+			rdma_req->elba_length = length;
+		}
 
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT &&
@@ -1969,6 +2026,10 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->dif_insert_or_strip = false;
 	rdma_req->elba_length = 0;
 	rdma_req->orig_length = 0;
+	if (rdma_req->md_buf) {
+		spdk_mempool_put(rtransport->md_buf_pool, rdma_req->md_buf);
+		rdma_req->md_buf = NULL;
+	}
 	memset(&rdma_req->dif_ctx, 0, sizeof(rdma_req->dif_ctx));
 	rqpair->qd--;
 
@@ -2396,6 +2457,25 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
+	if (spdk_unlikely(opts->dif_insert_or_strip && opts->in_capsule_data_size > 0)) {
+		/* Some heuristics to find an appropriate metadata buffer size.
+		   Assume that the min data block size is 512 and the corresponding max metadata size is 16
+		   Find the number of blocks and multiply it by the max metadata size */
+		uint32_t max_blocks_in_capsule = SPDK_CEIL_DIV(opts->in_capsule_data_size, 512);
+
+		rtransport->md_buf_size = max_blocks_in_capsule * 16;
+		rtransport->md_buf_pool = spdk_mempool_create("spdk_nvmf_rdma_metadata",
+					  opts->max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES,
+					  rtransport->md_buf_size,
+					  SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					  SPDK_ENV_SOCKET_ID_ANY);
+		if (!rtransport->md_buf_pool) {
+			SPDK_ERRLOG("Unable to allocate metadata pool for poll group\n");
+			spdk_nvmf_rdma_destroy(&rtransport->transport);
+			return NULL;
+		}
+	}
+
 	contexts = rdma_get_devices(NULL);
 	if (contexts == NULL) {
 		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
@@ -2567,6 +2647,20 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 	}
 
 	spdk_mempool_free(rtransport->data_wr_pool);
+
+	if (spdk_unlikely(transport->opts.dif_insert_or_strip)) {
+		if (rtransport->md_buf_pool != NULL) {
+			if (spdk_mempool_count(rtransport->md_buf_pool) !=
+			    (transport->opts.max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES)) {
+				SPDK_ERRLOG("transport metadata pool count is %zu but should be %u\n",
+					    spdk_mempool_count(rtransport->md_buf_pool),
+					    transport->opts.max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES);
+			}
+		}
+
+		spdk_mempool_free(rtransport->md_buf_pool);
+	}
+
 	pthread_mutex_destroy(&rtransport->lock);
 	free(rtransport);
 
