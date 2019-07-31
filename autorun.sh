@@ -12,6 +12,8 @@ if [[ ! -f $conf ]]; then
 	exit 1
 fi
 
+sed -i 's/RUN_NIGHTLY=0/RUN_NIGHTLY=1/' $conf
+
 echo "Test configuration:"
 cat "$conf"
 
