@@ -111,6 +111,30 @@
     },
     {
       "key": {
+        "uuid": "a0e17bcf_483f3ac9",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-31T13:16:33Z",
+      "side": 1,
+      "message": "Agreed that delete_ocf_bdev() should clear metadata (not zero out, at least just make spdk skip - if delete was performed). As far as I know, Marcin is aware and has this on his radar.\n\nEither way for the same reason we zero out the beginning of disks in autotest.sh, we do it here. This script can be ran standalone as well.\nScope of a test has to begin and end somewhere, I think that it is reasonable to have known state at beginning of the test and expected state at the end. Especially if someone is debugging this exact functionality, running it time and again.\nLets keep the clear_nvme at both ends of the test.",
+      "parentUuid": "f24fcad4_17bcef63",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 10
+      },
+      "revId": "2e772fd15557259ee0fb5047283f59b51bbd0550",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "af510658_1ff3ad0c",
         "filename": "test/ocf/management/persistent-metadata.sh",
         "patchSetId": 1
