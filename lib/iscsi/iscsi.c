@@ -1500,17 +1500,14 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
  * return session type
  */
 static enum session_type
-iscsi_op_login_session_type(struct spdk_iscsi_conn *conn,
-			    struct spdk_iscsi_pdu *rsp_pdu,
+iscsi_op_login_session_type(struct spdk_iscsi_conn *conn, uint16_t tsih,
 			    struct iscsi_param *params) {
 	const char *session_type_str;
-	struct iscsi_bhs_login_rsp *rsph;
 
-	rsph = (struct iscsi_bhs_login_rsp *) &rsp_pdu->bhs;
 	session_type_str = spdk_iscsi_param_get_val(params, "SessionType");
 	if (session_type_str == NULL)
 	{
-		if (rsph->tsih != 0) {
+		if (tsih != 0) {
 			return SESSION_TYPE_NORMAL;
 		} else {
 			SPDK_ERRLOG("SessionType is empty\n");
@@ -1749,7 +1746,7 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 		return rc;
 	}
 
-	session_type = iscsi_op_login_session_type(conn, rsp_pdu, params);
+	session_type = iscsi_op_login_session_type(conn, tsih, params);
 
 	/* Target Name and Port */
 	if (session_type == SESSION_TYPE_NORMAL) {
