@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53640de0_d53d6d75",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-31T09:41:21Z",
+      "side": 1,
+      "message": "The issue #815 itself provides reasoning for switching from AIO to NVMe - to re-enable the OCF tests on their own, while AIO is getting fixed.\nCan you mention that here, along with brief description of problem in AIO (from the issue) ?",
+      "revId": "2e772fd15557259ee0fb5047283f59b51bbd0550",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd6b327a_11f5c6c6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-31T09:41:21Z",
+      "side": 1,
+      "message": "next one",
+      "range": {
+        "startLine": 13,
+        "startChar": 50,
+        "endLine": 13,
+        "endChar": 57
+      },
+      "revId": "2e772fd15557259ee0fb5047283f59b51bbd0550",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7ec6a98_dee77506",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-31T09:41:21Z",
+      "side": 1,
+      "message": "Please indent contents of this function for readability.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 21
+      },
+      "revId": "2e772fd15557259ee0fb5047283f59b51bbd0550",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "438d0e5e_bf8b9e38",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-31T09:41:21Z",
+      "side": 1,
+      "message": "This device might not be the one used in tests below. Please note that helper scripts (setup.sh, and by consequence gen_nvme.sh) ignore mounted drives or OpenChannel devices.\nIn CI it would work, but when executed on dev machine - might dd someones drive they use. I\u0027d suggest following to get correct name:\n\nbdf\u003d$(iter_pci_class_code 01 08 02 | head -1)\nname\u003d$(get_nvme_name_from_bdf $bdf)\nmountpoints\u003d$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)\nif [ \"$mountpoints\" !\u003d \"0\" ]; then\n    exit 1\nfi\ndd if\u003d/dev/zero of\u003d/dev/$name bs\u003d1M count\u003d1000 oflag\u003ddirect\n\nSidenote: Above should probably end up in some common script in separate patch, since we do that all over the place. For this patch, it is ok to have it here independently.",
+      "range": {
+        "startLine": 11,
+        "startChar": 16,
+        "endLine": 11,
+        "endChar": 31
+      },
+      "revId": "2e772fd15557259ee0fb5047283f59b51bbd0550",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af510658_1ff3ad0c",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-31T09:41:21Z",
+      "side": 1,
+      "message": "Only 7 splits are used in test below.",
+      "range": {
+        "startLine": 25,
+        "startChar": 16,
+        "endLine": 25,
+        "endChar": 17
+      },
+      "revId": "2e772fd15557259ee0fb5047283f59b51bbd0550",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e0c8f2a_b31ff850",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-07-31T09:41:21Z",
+      "side": 1,
+      "message": "I realize this wasn\u0027t done before, but we should clean up the config file and clear NVMe when test fails.",
+      "range": {
+        "startLine": 53,
+        "startChar": 18,
+        "endLine": 53,
+        "endChar": 35
+      },
+      "revId": "2e772fd15557259ee0fb5047283f59b51bbd0550",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
