@@ -300,6 +300,7 @@ bdev_null_initialize(void)
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Null");
 	uint64_t size_in_mb, num_blocks;
 	int block_size, i, rc = 0;
+	int md_size;
 	struct spdk_bdev *bdev;
 	const char *name, *val;
 	struct spdk_null_bdev_opts opts = {};
@@ -362,11 +363,25 @@ bdev_null_initialize(void)
 			}
 		}
 
+		val = spdk_conf_section_get_nmval(sp, "Dev", i, 3);
+		if (val == NULL) {
+			md_size = 0;
+		} else {
+			md_size = (int)spdk_strtol(val, 10);
+			if (md_size < 0) {
+				SPDK_ERRLOG("Null entry %d: Invalid metadata size %s\n", i, val);
+				continue;
+			}
+		}
+
+		/* Let size be specified without metadata */
 		num_blocks = size_in_mb * (1024 * 1024) / block_size;
 
 		opts.name = name;
 		opts.num_blocks = num_blocks;
 		opts.block_size = block_size;
+		opts.md_size = md_size;
+		opts.md_interleave = true;
 		rc = create_null_bdev(&bdev, &opts);
 		if (rc) {
 			SPDK_ERRLOG("Could not create null bdev\n");
@@ -402,10 +417,11 @@ bdev_null_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n[Null]\n");
 
 	TAILQ_FOREACH(bdev, &g_null_bdev_head, tailq) {
-		null_bdev_size = bdev->bdev.blocklen * bdev->bdev.blockcnt;
+		null_bdev_size = (bdev->bdev.blocklen - bdev->bdev.md_len) * bdev->bdev.blockcnt;
 		null_bdev_size /= (1024 * 1024);
-		fprintf(fp, "  %s %" PRIu64 " %d\n",
-			bdev->bdev.name, null_bdev_size, bdev->bdev.blocklen);
+		fprintf(fp, "  Dev %s %" PRIu64 " %d %d\n",
+			bdev->bdev.name, null_bdev_size, bdev->bdev.blocklen - bdev->bdev.md_len,
+			bdev->bdev.md_len);
 	}
 }
 
