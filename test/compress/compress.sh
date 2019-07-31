@@ -26,9 +26,11 @@ waitforlisten $bdev_svc_pid
 bdf=$(iter_pci_class_code 01 08 02 | head -1)
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
 lvs_u=$($rpc_py construct_lvol_store Nvme0n1 lvs0)
+# per patch tests with QAT, nightly with ISAL
+if [ $RUN_NIGHTLY -eq 1 ]; then
+        $rpc_py set_compress_pmd -p 2
+fi
 $rpc_py construct_lvol_bdev -t -u $lvs_u lv0 100
-# this will force isal_pmd as some of the CI systems need a qat driver update
-$rpc_py set_compress_pmd -p 2
 compress_bdev=$($rpc_py construct_compress_bdev -b lvs0/lv0 -p /tmp)
 trap - SIGINT SIGTERM EXIT
 killprocess $bdev_svc_pid
@@ -39,7 +41,10 @@ $rootdir/test/bdev/bdevio/bdevio -w &
 bdevio_pid=$!
 trap "killprocess $bdevio_pid; compress_err_cleanup; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $bdevio_pid
-$rpc_py set_compress_pmd -p 2
+# per patch tests with QAT, nightly with ISAL
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	$rpc_py set_compress_pmd -p 2
+fi
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
 waitforbdev $compress_bdev
 $rootdir/test/bdev/bdevio/tests.py perform_tests
@@ -59,7 +64,10 @@ $rootdir/test/bdev/bdevperf/bdevperf -z -q $qd  -o $iosize -w verify -t $runtime
 bdevperf_pid=$!
 trap "killprocess $bdevperf_pid; compress_err_cleanup; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid
-$rpc_py set_compress_pmd -p 2
+# per patch tests with QAT, nightly with ISAL
+if [ $RUN_NIGHTLY -eq 1 ]; then
+        $rpc_py set_compress_pmd -p 2
+fi
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
 waitforbdev $compress_bdev
 $rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
