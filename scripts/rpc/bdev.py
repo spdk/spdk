@@ -189,14 +189,15 @@ def delete_malloc_bdev(client, name):
     return client.call('delete_malloc_bdev', params)
 
 
-def construct_null_bdev(client, num_blocks, block_size, name, uuid=None):
+def construct_null_bdev(client, num_blocks, block_size, name, uuid=None, md_size=None):
     """Construct a null block device.
 
     Args:
         num_blocks: size of block device in blocks
-        block_size: block size of device; must be a power of 2 and at least 512
+        block_size: block size of device; data part size must be a power of 2 and at least 512
         name: name of block device
         uuid: UUID of block device (optional)
+        md_size: metadata size of device (optional)
 
     Returns:
         Name of created block device.
@@ -205,6 +206,8 @@ def construct_null_bdev(client, num_blocks, block_size, name, uuid=None):
               'block_size': block_size}
     if uuid:
         params['uuid'] = uuid
+    if md_size:
+        params['md_size'] = md_size
     return client.call('construct_null_bdev', params)
 
 
