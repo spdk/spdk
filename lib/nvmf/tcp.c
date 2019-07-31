@@ -2783,6 +2783,8 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
 	}
 
+	group->delay_end_tick = spdk_get_ticks() + spdk_get_ticks_hz() * 750ULL / 1000000ULL;
+
 	return rc;
 }
 
