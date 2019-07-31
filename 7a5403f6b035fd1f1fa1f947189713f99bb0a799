@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "920b2b69_d159a993",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2019-07-31T06:49:41Z",
+      "side": 1,
+      "message": "use -\u003e Use",
+      "revId": "7a5403f6b035fd1f1fa1f947189713f99bb0a799",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "991aa0c9_e45a99c5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2019-07-31T06:49:41Z",
+      "side": 1,
+      "message": "can be choiced now -\u003e can support with different parameters on detailed fuzz tests.",
+      "revId": "7a5403f6b035fd1f1fa1f947189713f99bb0a799",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
