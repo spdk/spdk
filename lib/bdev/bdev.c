@@ -2431,6 +2431,12 @@ spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 	return bdev->blocklen;
 }
 
+uint32_t
+spdk_bdev_get_write_unit_size(const struct spdk_bdev *bdev)
+{
+	return bdev->write_unit_size;
+}
+
 uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 {
