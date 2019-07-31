@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2a03010_d7831200",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T17:24:21Z",
+      "side": 1,
+      "message": "same question as previous patch on zone state and if we want to save it and check it here (ie 6.1.1.2 Finish Zone\nA zone that is in either ZSE:Empty, ZSIO:Implicitly Opened, ZSEO:Explicitly Opened, or ZSC:Closed state)",
+      "revId": "ff953e6f8ca10f442eef7a575e338e541d60f924",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
