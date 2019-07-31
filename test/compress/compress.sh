@@ -8,65 +8,99 @@ plugindir=$rootdir/examples/bdev/fio_plugin
 rpc_py="$rootdir/scripts/rpc.py"
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
+source "$rootdir/test/nvmf/common.sh"
 
-function compress_err_cleanup() {
+function error_cleanup() {
+	# force delete pmem file and wipe on-disk metadata
 	rm -rf /tmp/pmem
 	$rootdir/examples/nvme/perf/perf -q 1 -o 131072 -w write -t 2
 }
 
-# use the bdev svc to create a compress bdev, this assumes
-# there is no other metadata on the nvme device, we will put a
-# compress vol on a thin provisioned lvol on nvme
-mkdir -p /tmp/pmem
-$rootdir/test/app/bdev_svc/bdev_svc &
-bdev_svc_pid=$!
-trap 'killprocess $bdev_svc_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $bdev_svc_pid
-bdf=$(iter_pci_class_code 01 08 02 | head -1)
-$rpc_py bdev_nvme_attach_controller -b "Nvme0" -t "pcie" -a $bdf
-lvs_u=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0)
-$rpc_py bdev_lvol_create -t -u $lvs_u lv0 100
-# this will force isal_pmd as some of the CI systems need a qat driver update
-$rpc_py set_compress_pmd -p 2
-compress_bdev=$($rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp)
-trap - SIGINT SIGTERM EXIT
-killprocess $bdev_svc_pid
+function destroy_vols() {
+	# Gracefully destroy the vols via bdev_compress_delete API.
+	# bdev_compress_delete will delete the on-disk metadata as well as
+	# the persistent memory file containing its metadata.
+	$rpc_py bdev_compress_delete COMP_lvs0/lv0
+	$rpc_py bdev_compress_delete COMP_lvs0/lv1
+	$rpc_py bdev_lvol_delete_lvstore -l lvs0
+}
 
-# run bdevio test
+function create_vols() {
+	$rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
+	$rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0
+	$rpc_py bdev_lvol_create -t -l lvs0 lv0 100
+	$rpc_py bdev_lvol_create -t -l lvs0 lv1 100
+	# use QAT for lv0, if the test system does not have QAT this will
+	# fail which is what we want
+	$rpc_py set_compress_pmd -p 1
+	$rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp/pmem
+	# use ISAL for lv1, if ISAL is for some reason not available this will
+	# fail which is what we want
+	$rpc_py set_compress_pmd -p 2
+	compress_bdev=$($rpc_py bdev_compress_create -b lvs0/lv1 -p /tmp/pmem)
+	waitforbdev $compress_bdev
+}
+
+function run_bdevio() {
+	$rootdir/test/bdev/bdevio/bdevio -w &
+	bdevio_pid=$!
+	trap 'killprocess $bdevio_pid; error_cleanup; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $bdevio_pid
+	create_vols
+	$rootdir/test/bdev/bdevio/tests.py perform_tests
+	destroy_vols
+	trap - SIGINT SIGTERM EXIT
+	killprocess $bdevio_pid
+}
+
+function run_bdevperf() {
+	$rootdir/test/bdev/bdevperf/bdevperf -z -q $1 -o $2 -w verify -t $3 &
+	bdevperf_pid=$!
+	trap 'killprocess $bdevperf_pid; error_cleanup; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $bdevperf_pid
+	create_vols
+	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
+	destroy_vols
+	trap - SIGINT SIGTERM EXIT
+	killprocess $bdevperf_pid
+}
+
 timing_enter compress_test
-$rootdir/test/bdev/bdevio/bdevio -w &
-bdevio_pid=$!
-trap 'killprocess $bdevio_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $bdevio_pid
-$rpc_py set_compress_pmd -p 2
-$rpc_py bdev_nvme_attach_controller -b "Nvme0" -t "pcie" -a $bdf
-waitforbdev $compress_bdev
-$rootdir/test/bdev/bdevio/tests.py perform_tests
-trap - SIGINT SIGTERM EXIT
-killprocess $bdevio_pid
+mkdir -p /tmp/pmem
+bdf=$(iter_pci_class_code 01 08 02 | head -1)
 
-#run bdevperf with slightly different params for nightly
-qd=32
-runtime=3
-iosize=4096
+# per patch bdevperf uses slightly different params than nightly
+run_bdevperf 32 4096 3
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	qd=64
-	runtime=30
-	iosize=16384
+	run_bdevio
+	run_bdevperf 64 16384 30
+
+	# run perf on nvmf target w/compressed vols
+	export TEST_TRANSPORT=tcp && nvmftestinit
+	nvmfappstart "-m 0x7"
+	trap "nvmftestfini; error_cleanup; exit 1" SIGINT SIGTERM EXIT
+
+	# Create an NVMe-oF subsystem and add compress bdevs as namespaces
+	$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
+	create_vols
+	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 COMP_lvs0/lv0
+	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 COMP_lvs0/lv1
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+
+	# Start random read writes in the background
+	$rootdir/examples/nvme/perf/perf -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -o 4096 -q 64 -s 512 -w randrw -t 30 -c 0x18 -M 50 &
+	perf_pid=$!
+
+	# Wait for I/O to complete
+	trap 'killprocess $perf_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
+	wait $perf_pid
+	destroy_vols
+
+	trap - SIGINT SIGTERM EXIT
+	nvmftestfini
 fi
-$rootdir/test/bdev/bdevperf/bdevperf -z -q $qd  -o $iosize -w verify -t $runtime &
-bdevperf_pid=$!
-trap 'killprocess $bdevperf_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
-waitforlisten $bdevperf_pid
-$rpc_py set_compress_pmd -p 2
-$rpc_py bdev_nvme_attach_controller -b "Nvme0" -t "pcie" -a $bdf
-waitforbdev $compress_bdev
-$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
 
-# now cleanup the vols, deleting the compression vol also deletes the pmem file
-$rpc_py bdev_compress_delete COMP_lvs0/lv0
-$rpc_py bdev_lvol_delete_lvstore -l lvs0
-
-trap - SIGINT SIGTERM EXIT
-killprocess $bdevperf_pid
+rm -rf /tmp/pmem
 timing_exit compress_test
