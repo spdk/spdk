@@ -125,32 +125,28 @@ static void
 op_login_check_target_test(void)
 {
 	struct spdk_iscsi_conn conn;
-	struct spdk_iscsi_pdu rsp_pdu;
-	struct spdk_iscsi_tgt_node *target;
+	struct spdk_iscsi_tgt_node *target = NULL;
 	int rc;
 
 	/* expect success */
 	snprintf(conn.initiator_name, sizeof(conn.initiator_name),
 		 "%s", UT_INITIATOR_NAME1);
 
-	rc = iscsi_op_login_check_target(&conn, &rsp_pdu,
-					 UT_TARGET_NAME1, &target);
+	rc = iscsi_op_login_check_target(&conn, UT_TARGET_NAME1, &target);
 	CU_ASSERT(rc == 0);
 
 	/* expect failure */
 	snprintf(conn.initiator_name, sizeof(conn.initiator_name),
 		 "%s", UT_INITIATOR_NAME1);
 
-	rc = iscsi_op_login_check_target(&conn, &rsp_pdu,
-					 UT_TARGET_NAME2, &target);
+	rc = iscsi_op_login_check_target(&conn, UT_TARGET_NAME2, &target);
 	CU_ASSERT(rc != 0);
 
 	/* expect failure */
 	snprintf(conn.initiator_name, sizeof(conn.initiator_name),
 		 "%s", UT_INITIATOR_NAME2);
 
-	rc = iscsi_op_login_check_target(&conn, &rsp_pdu,
-					 UT_TARGET_NAME1, &target);
+	rc = iscsi_op_login_check_target(&conn, UT_TARGET_NAME1, &target);
 	CU_ASSERT(rc != 0);
 }
 
