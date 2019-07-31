@@ -94,6 +94,54 @@
     },
     {
       "key": {
+        "uuid": "145255dd_6998d191",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-31T15:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b406f4cd_82dd36d5",
+      "range": {
+        "startLine": 223,
+        "startChar": 0,
+        "endLine": 224,
+        "endChar": 44
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdf7b712_0629c760",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-31T15:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f641f7dd_5f274e45",
+      "range": {
+        "startLine": 224,
+        "startChar": 9,
+        "endLine": 224,
+        "endChar": 10
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c7f5a39_14bee2b0",
         "filename": "lib/nbd/nbd_rpc.c",
         "patchSetId": 3
@@ -105,6 +153,30 @@
       "writtenOn": "2019-07-30T12:29:25Z",
       "side": 1,
       "message": "According to decoder structure @ line 252  and to rpc.pt stop_nbd_dsik --help, nbd_device is not an optional parameter so this check is redundant and could be possibly removed.",
+      "range": {
+        "startLine": 302,
+        "startChar": 0,
+        "endLine": 306,
+        "endChar": 2
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9526036b_b99d3ab1",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-31T15:17:47Z",
+      "side": 1,
+      "message": "User can force sending request without nbd_device",
+      "parentUuid": "8c7f5a39_14bee2b0",
       "range": {
         "startLine": 302,
         "startChar": 0,
@@ -140,6 +212,30 @@
     },
     {
       "key": {
+        "uuid": "3909914a_83548540",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-31T15:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "16d9e28e_1b46702e",
+      "range": {
+        "startLine": 311,
+        "startChar": 44,
+        "endLine": 311,
+        "endChar": 77
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b6ceb7b9_f3b6ea01",
         "filename": "lib/nbd/nbd_rpc.c",
         "patchSetId": 3
@@ -160,6 +256,30 @@
       "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd18eb83_ab4c7e52",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-31T15:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6ceb7b9_f3b6ea01",
+      "range": {
+        "startLine": 312,
+        "startChar": 7,
+        "endLine": 312,
+        "endChar": 31
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -186,6 +306,30 @@
     },
     {
       "key": {
+        "uuid": "d5999f39_a0ffabc4",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-31T15:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "634aa095_75f28a10",
+      "range": {
+        "startLine": 404,
+        "startChar": 50,
+        "endLine": 404,
+        "endChar": 83
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f5209ce_1b8d3239",
         "filename": "lib/nbd/nbd_rpc.c",
         "patchSetId": 3
@@ -206,6 +350,30 @@
       "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78b1d5b4_dc7d2b32",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-07-31T15:17:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f5209ce_1b8d3239",
+      "range": {
+        "startLine": 405,
+        "startChar": 13,
+        "endLine": 405,
+        "endChar": 46
+      },
+      "revId": "6bec5ca3d3eea8b8676a6afa8dd80a376c8e4724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
