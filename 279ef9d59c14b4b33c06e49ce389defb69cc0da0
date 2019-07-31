@@ -33,6 +33,24 @@
       "revId": "279ef9d59c14b4b33c06e49ce389defb69cc0da0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae725163_70724365",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-31T15:02:15Z",
+      "side": 1,
+      "message": "\u003e does it make sense to add github issues for these?\n\nI don\u0027t think so, there\u0027s too many, and we probably will leave a bunch of them as excluded, because we won\u0027t care for them (I think that most of errors \"Quote your variables because of whitespaces!\" will stay excluded, but that\u0027s up for a discussion)",
+      "parentUuid": "a5b7644e_d19ca243",
+      "revId": "279ef9d59c14b4b33c06e49ce389defb69cc0da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
