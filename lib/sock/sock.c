@@ -103,6 +103,7 @@ spdk_sock_map_release(int placement_id)
 			entry->ref--;
 			if (!entry->ref) {
 				STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
+				free(entry);
 			}
 			break;
 		}
@@ -139,6 +140,7 @@ spdk_sock_remove_sock_group_from_map_table(struct spdk_sock_group *group)
 	STAILQ_FOREACH_SAFE(entry, &g_placement_id_map, link, tmp) {
 		if (entry->group == group) {
 			STAILQ_REMOVE(&g_placement_id_map, entry, spdk_sock_placement_id_entry, link);
+			free(entry);
 		}
 	}
 	pthread_mutex_unlock(&g_map_table_mutex);
