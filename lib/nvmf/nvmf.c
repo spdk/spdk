@@ -92,9 +92,15 @@ spdk_nvmf_poll_group_poll(void *ctx)
 	struct spdk_nvmf_poll_group *group = ctx;
 	int rc;
 	int count = 0;
+	uint64_t now;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
+	now = spdk_thread_get_time(spdk_get_thread());
+
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		if (tgroup->delay_end_tick > now) {
+			continue;
+		}
 		rc = spdk_nvmf_transport_poll_group_poll(tgroup);
 		if (rc < 0) {
 			return -1;
