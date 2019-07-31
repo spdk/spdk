@@ -138,6 +138,8 @@ generated may change.
 A new virtual bdev module `compress` has been added to provide compression services on top of
 a thinly provisioned logical volume.  See documentation for complete details.
 
+Metadata support has been added to Null bdev module.
+
 ### nvme
 
 Added an optional parameter `--io-queue-requests` to RPC `set_bdev_nvme_options`, which

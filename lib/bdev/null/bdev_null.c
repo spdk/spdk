@@ -206,8 +206,10 @@ create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	null_disk->bdev.product_name = "Null disk";
 
 	null_disk->bdev.write_cache = 0;
-	null_disk->bdev.blocklen = opts->block_size;
+	null_disk->bdev.blocklen = opts->block_size + opts->md_size;
 	null_disk->bdev.blockcnt = opts->num_blocks;
+	null_disk->bdev.md_len = opts->md_size;
+	null_disk->bdev.md_interleave = opts->md_interleave;
 	if (opts->uuid) {
 		null_disk->bdev.uuid = *opts->uuid;
 	} else {

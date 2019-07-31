@@ -46,6 +46,8 @@ struct spdk_null_bdev_opts {
 	const struct spdk_uuid *uuid;
 	uint64_t num_blocks;
 	uint32_t block_size;
+	uint32_t md_size;
+	bool md_interleave;
 };
 
 int create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts);
