@@ -51,6 +51,24 @@
       "revId": "279ef9d59c14b4b33c06e49ce389defb69cc0da0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d363f83_f6fc30a6",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T17:44:53Z",
+      "side": 1,
+      "message": "OK, thanks",
+      "parentUuid": "ae725163_70724365",
+      "revId": "279ef9d59c14b4b33c06e49ce389defb69cc0da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
