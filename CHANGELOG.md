@@ -2,6 +2,47 @@
 
 ## v19.10: (Upcoming Release)
 
+### zdev
+
+Zdev (zoned device) is extension of bdev interface.
+Zoned device concept is based on NVMe TP4035 - Zoned Namespaces.
+
+Zoned device logical blocks space is divided into fixed-sized zones.
+Each zone is described by its start logical block address and capacity.
+Writes to a single zone need to be sequential. After zone is fully
+written it need to be reset to write to it again. Such writing schema
+could be very beneficial in terms of write amplification factor for
+NAND based devices.
+
+Flash Translation Layer (FTL) library will be consuming this interface
+in the future.
+
+Extending SPDK bdev interface will allow to use existing bdev infrastructure
+for this new type of devices.
+
+Zoned device have several properties defined in `spdk_zdev_info`
+structure:
+ - zone_size: default size of each zone
+ - max_open_zone: maximum number of open zones
+ - optimal_open_zones: optimal number of open zones to get
+		       best performance on writes
+
+`spdk_zdev_get_info()` can be used to retrieve zoned device
+properties.
+
+Single zone properties are defined in `spdk_zdev_zone_info` structure:
+ - start_lba: first logical block of z zone
+ - write_pointer: logical block address in the zone at which next
+		  write shall occur.
+ - capacity: maximum number of logical blocks that may be written
+	     in the zone when zone is empty.
+ - state: zone state
+
+Several zone states are defined: Empty, Open, Full, Closed, Read Only
+and Offline.
+
+To change zone state zone actions are defined: Close, Finish, Open and Reset.
+
 ## v19.07:
 
 ### ftl
