@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91e3fe14_67e623e9",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T14:52:14Z",
+      "side": 1,
+      "message": "I would consider shortening this to simply describe that the change happened and basically what it was.  I\u0027m assuming there\u0027s a good chunk of info in a subsequent patch with docs explaining this level of detail, you should refer to that here for more info. Folks will probably only read the changelog once and will be looking to docs for this much detail.",
+      "revId": "0d61ae693bb00f776d68144ff432d36618df416f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
