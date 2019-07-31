@@ -175,6 +175,7 @@ int
 create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts)
 {
 	struct null_bdev *null_disk;
+	uint32_t data_block_size;
 	int rc;
 
 	if (!opts) {
@@ -182,8 +183,22 @@ create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 		return -EINVAL;
 	}
 
-	if (opts->block_size % 512 != 0) {
-		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", opts->block_size);
+	if (opts->md_interleave) {
+		if (opts->block_size < opts->md_size) {
+			SPDK_ERRLOG("Interleaved metadata size can not be greater than block size.\n");
+			return -EINVAL;
+		}
+		data_block_size = opts->block_size - opts->md_size;
+	} else {
+		if (opts->md_size != 0) {
+			SPDK_ERRLOG("Metadata in separate buffer is not supported\n");
+			return -ENOTSUP;
+		}
+		data_block_size = opts->block_size;
+	}
+
+	if (data_block_size % 512 != 0) {
+		SPDK_ERRLOG("Data block size %u is not a multiple of 512.\n", opts->block_size);
 		return -EINVAL;
 	}
 
@@ -208,6 +223,8 @@ create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	null_disk->bdev.write_cache = 0;
 	null_disk->bdev.blocklen = opts->block_size;
 	null_disk->bdev.blockcnt = opts->num_blocks;
+	null_disk->bdev.md_len = opts->md_size;
+	null_disk->bdev.md_interleave = opts->md_interleave;
 	if (opts->uuid) {
 		null_disk->bdev.uuid = *opts->uuid;
 	} else {

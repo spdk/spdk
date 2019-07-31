@@ -39,6 +39,10 @@ A new RPC `bdev_compress_get_orphans` has been added to list compress bdevs
 that were not loaded due to a missing pm metadata file. In this state they
 can only be deleted.
 
+### null bdev
+
+Metadata support has been added to Null bdev module.
+
 ## v19.07:
 
 ### ftl
