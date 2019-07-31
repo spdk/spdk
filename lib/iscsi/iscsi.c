@@ -1562,35 +1562,29 @@ iscsi_op_login_initialize_port(struct spdk_iscsi_conn *conn,
 
 /*
  * This function is used to set the info in the connection data structure
- * return
- * 0: success
- * otherwise: error
+ * return detailed status
  */
 static int
 iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
-			     struct spdk_iscsi_pdu *rsp_pdu,
 			     char *initiator_port_name,
-			     enum session_type session_type)
+			     enum session_type session_type,
+			     uint64_t isid, uint32_t cmd_sn, uint32_t stat_sn)
 {
 	int rc = 0;
 	struct spdk_iscsi_tgt_node *target;
-	struct iscsi_bhs_login_rsp *rsph;
 	struct spdk_scsi_port *initiator_port;
 
 	target = conn->target;
 
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	conn->authenticated = false;
 	conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
 
 	if (conn->sess == NULL) {
 		/* create initiator port */
-		initiator_port = spdk_scsi_port_create(iscsi_get_isid(rsph->isid), 0, initiator_port_name);
+		initiator_port = spdk_scsi_port_create(isid, 0, initiator_port_name);
 		if (initiator_port == NULL) {
 			SPDK_ERRLOG("create_port() failed\n");
-			rsph->status_class = ISCSI_CLASS_TARGET_ERROR;
-			rsph->status_detail = ISCSI_LOGIN_STATUS_NO_RESOURCES;
-			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+			return ISCSI_LOGIN_STATUS_NO_RESOURCES;
 		}
 
 		/* new session */
@@ -1598,14 +1592,12 @@ iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 		if (rc < 0) {
 			spdk_scsi_port_free(&initiator_port);
 			SPDK_ERRLOG("create_sess() failed\n");
-			rsph->status_class = ISCSI_CLASS_TARGET_ERROR;
-			rsph->status_detail = ISCSI_LOGIN_STATUS_NO_RESOURCES;
-			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+			return ISCSI_LOGIN_STATUS_NO_RESOURCES;
 		}
 		/* initialize parameters */
 		conn->sess->initiator_port = initiator_port;
-		conn->StatSN = from_be32(&rsph->stat_sn);
-		conn->sess->isid = iscsi_get_isid(rsph->isid);
+		conn->StatSN = stat_sn;
+		conn->sess->isid = isid;
 
 		/* Initiator port TransportID */
 		spdk_scsi_port_set_iscsi_transport_id(conn->sess->initiator_port,
@@ -1622,8 +1614,8 @@ iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 			 */
 			conn->sess->queue_depth = 1;
 		}
-		conn->sess->ExpCmdSN = rsp_pdu->cmd_sn;
-		conn->sess->MaxCmdSN = rsp_pdu->cmd_sn + conn->sess->queue_depth - 1;
+		conn->sess->ExpCmdSN = cmd_sn;
+		conn->sess->MaxCmdSN = cmd_sn + conn->sess->queue_depth - 1;
 	}
 
 	conn->initiator_port = conn->sess->initiator_port;
@@ -1725,10 +1717,13 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	int rc = 0;
 	uint16_t tsih;
 	uint64_t isid;
+	uint32_t cmd_sn, stat_sn;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	tsih = from_be16(&rsph->tsih);
 	isid = iscsi_get_isid(rsph->isid);
+	cmd_sn = rsp_pdu->cmd_sn;
+	stat_sn = from_be32(&rsph->stat_sn);
 
 	conn->cid = cid;
 	conn->target = NULL;
@@ -1772,10 +1767,12 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
 
-	rc = iscsi_op_login_set_conn_info(conn, rsp_pdu, initiator_port_name,
-					  session_type);
-	if (rc < 0) {
-		return rc;
+	rc = iscsi_op_login_set_conn_info(conn, initiator_port_name, session_type,
+					  isid, cmd_sn, stat_sn);
+	if (rc != 0) {
+		rsph->status_class = ISCSI_CLASS_TARGET_ERROR;
+		rsph->status_detail = rc;
+		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
 
 	/* limit conns on discovery session */
