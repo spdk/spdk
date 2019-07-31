@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d961dc5_a7c4ae2e",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T14:43:56Z",
+      "side": 1,
+      "message": "I wonder if it makes sense to have a spdk_bdev_get_read_unit_size() that does the right thing based on write unit size and block unit size just to avoid confusion?",
+      "revId": "62f2e6f50df9c187ce8c60700f540580fe4dc13d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
