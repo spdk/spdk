@@ -24,7 +24,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
-CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,ocf"
+CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,ocf,shellcheck"
 LIBRXE_INSTALL=true
 
 OSID=$(source /etc/os-release && echo $ID)
@@ -300,6 +300,20 @@ function install_ocf()
     fi
 }
 
+function install_shellcheck()
+{
+    if echo $CONF | grep -q shellcheck; then
+        # Flamegraph is used for bash styling and syntax checking
+        if ! hash shellcheck; then
+            wget "$SHELLCHECK_BIN_URL"
+            tar -xf shellcheck-latest.linux.x86_64.tar.xz
+            sudo mv shellcheck-latest/shellcheck /usr/local/bin/shellcheck
+        else
+            echo "Shellcheck already installed. Skipping"
+        fi
+    fi
+}
+
 function usage()
 {
     echo "This script is intended to automate the environment setup for a linux virtual machine."
@@ -379,6 +393,7 @@ cd ~
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}; export GIT_REPO_INTEL_IPSEC_MB
 : ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads/intelr-quickassist-technology/qat1.7.l.4.3.0-00033.tar.gz}; export DRIVER_LOCATION_QAT
 : ${GIT_REPO_OCF=https://github.com/Open-CAS/ocf}; export GIT_REPO_OCF
+: ${SHELLCHECK_BIN_URL=https://storage.googleapis.com/shellcheck/shellcheck-latest.linux.x86_64.tar.xz}; export SHELLCHECK_BIN_URL
 
 jobs=$(($(nproc)*2))
 
@@ -548,6 +563,7 @@ install_nvmecli&
 install_libiscsi&
 install_qat&
 install_ocf&
+install_shellcheck&
 
 wait
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
