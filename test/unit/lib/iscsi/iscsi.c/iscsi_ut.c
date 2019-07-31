@@ -175,26 +175,20 @@ op_login_session_normal_test(void)
 	/* expect failure: NULL params for target name */
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
 					   NULL);
-	CU_ASSERT(rc != 0);
-	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
-	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_MISSING_PARMS);
+	CU_ASSERT(rc == ISCSI_LOGIN_MISSING_PARMS);
 
 	/* expect failure: incorrect key for target name */
 	param.next = NULL;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
 					   &param);
-	CU_ASSERT(rc != 0);
-	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
-	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_MISSING_PARMS);
+	CU_ASSERT(rc == ISCSI_LOGIN_MISSING_PARMS);
 
 	/* expect failure: NULL target name */
 	param.key = "TargetName";
 	param.val = NULL;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
 					   &param);
-	CU_ASSERT(rc != 0);
-	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
-	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_MISSING_PARMS);
+	CU_ASSERT(rc == ISCSI_LOGIN_MISSING_PARMS);
 
 	/* expect failure: session not found */
 	param.key = "TargetName";
@@ -205,9 +199,7 @@ op_login_session_normal_test(void)
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
 					   &param);
 	CU_ASSERT(conn.target_port == NULL);
-	CU_ASSERT(rc != 0);
-	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
-	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_CONN_ADD_FAIL);
+	CU_ASSERT(rc == ISCSI_LOGIN_CONN_ADD_FAIL);
 
 	/* expect failure: session found while tag is wrong */
 	g_spdk_iscsi.MaxSessions = UT_ISCSI_TSIH * 2;
@@ -219,9 +211,7 @@ op_login_session_normal_test(void)
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
 					   &param);
 	CU_ASSERT(conn.target_port == NULL);
-	CU_ASSERT(rc != 0);
-	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
-	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_CONN_ADD_FAIL);
+	CU_ASSERT(rc == ISCSI_LOGIN_CONN_ADD_FAIL);
 
 	/* expect suceess: drop the session */
 	rsph->tsih = 0; /* to create the session */

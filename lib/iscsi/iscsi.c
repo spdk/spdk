@@ -1428,9 +1428,7 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 
 /*
  * The function which is used to handle the part of normal login session
- * return:
- * 0, success;
- * SPDK_ISCSI_LOGIN_ERROR_PARAMETER, parameter error;
+ * return detailed status
  */
 static int
 iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
@@ -1441,18 +1439,14 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_tgt_node *target = NULL;
 	const char *target_name;
 	const char *target_short_name;
-	struct iscsi_bhs_login_rsp *rsph;
 	int rc = 0;
 
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	target_name = spdk_iscsi_param_get_val(params, "TargetName");
 
 	if (target_name == NULL) {
 		SPDK_ERRLOG("TargetName is empty\n");
 		/* Missing parameter */
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_MISSING_PARMS;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+		return ISCSI_LOGIN_MISSING_PARMS;
 	}
 
 	memset(conn->target_short_name, 0, MAX_TARGET_NAME);
@@ -1463,9 +1457,7 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 			SPDK_ERRLOG("Target Short Name (%s) is more than %u characters\n",
 				    target_short_name, MAX_TARGET_NAME);
 			/* Invalid request */
-			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-			rsph->status_detail = ISCSI_LOGIN_INVALID_LOGIN_REQUEST;
-			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+			return ISCSI_LOGIN_INVALID_LOGIN_REQUEST;
 		}
 		snprintf(conn->target_short_name, MAX_TARGET_NAME, "%s",
 			 target_short_name);
@@ -1476,9 +1468,7 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
 	if (rc != 0) {
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = rc;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+		return rc;
 	}
 
 	conn->target = target;
@@ -1489,9 +1479,7 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	rc = iscsi_op_login_check_session(conn, rsp_pdu,
 					  initiator_port_name);
 	if (rc != 0) {
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = rc;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+		return rc;
 	}
 
 	/* force target flags */
@@ -1505,11 +1493,10 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 
 	if (rc != 0) {
 		/* Invalid request */
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_INVALID_LOGIN_REQUEST;
+		return ISCSI_LOGIN_INVALID_LOGIN_REQUEST;
 	}
 
-	return rc;
+	return 0;
 }
 
 /*
@@ -1779,8 +1766,10 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 		rc = iscsi_op_login_session_normal(conn, rsp_pdu,
 						   initiator_port_name,
 						   params);
-		if (rc < 0) {
-			return rc;
+		if (rc != 0) {
+			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
+			rsph->status_detail = rc;
+			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 		}
 
 	} else if (session_type == SESSION_TYPE_DISCOVERY) {
