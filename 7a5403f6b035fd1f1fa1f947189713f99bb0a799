@@ -33,6 +33,74 @@
       "revId": "7a5403f6b035fd1f1fa1f947189713f99bb0a799",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f5b4ef6_524d7ba2",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2019-07-31T07:35:33Z",
+      "side": 1,
+      "message": "mutate -\u003e mutation",
+      "revId": "7a5403f6b035fd1f1fa1f947189713f99bb0a799",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad421b68_23f15d36",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2019-07-31T07:35:33Z",
+      "side": 1,
+      "message": "As mutate has different kind of parameters, is it possible to add the -h for the mutation of each parameter?",
+      "revId": "7a5403f6b035fd1f1fa1f947189713f99bb0a799",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8961bada_e1726de2",
+        "filename": "scripts/rpc/radamsa.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2019-07-31T07:35:33Z",
+      "side": 1,
+      "message": "not very clear about by one here? one in byte or bit?",
+      "revId": "7a5403f6b035fd1f1fa1f947189713f99bb0a799",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc4a9bb8_83ff629b",
+        "filename": "scripts/rpc/radamsa.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2019-07-31T07:35:33Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "7a5403f6b035fd1f1fa1f947189713f99bb0a799",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
