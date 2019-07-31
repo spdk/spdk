@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66ce92e5_f4bad98e",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-31T20:33:22Z",
+      "side": 1,
+      "message": "I would maybe say more specifically what error value is returned when a backing dev has compression metadata but the PM file can\u0027t be found.  I\u0027m not sure if we return a unique errno in that case, but we should.",
+      "revId": "7e95d8100e2479e74b49bc9e34cf18d9a8632a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc5d6a5b_fea6ce9c",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-07-31T20:33:22Z",
+      "side": 1,
+      "message": "This seems to indicate (if I\u0027m reading it correctly) that it will modify the backing device, I think it should only modify the backing device if it finds compression metadata.\n\nI\u0027d be fine adding a parameter to spdk_reduce_vol_destroy.  I know it changes the API, but this library is still new that I\u0027m not as concerned as if it was a change to nvme or lvol.",
+      "revId": "7e95d8100e2479e74b49bc9e34cf18d9a8632a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
