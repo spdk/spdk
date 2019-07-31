@@ -2437,6 +2437,12 @@ spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 	return bdev->blocklen;
 }
 
+uint32_t
+spdk_bdev_get_write_unit_size(const struct spdk_bdev *bdev)
+{
+	return bdev->write_unit_size;
+}
+
 uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 {
@@ -4071,6 +4077,11 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 			bdev->split_on_optimal_io_boundary = true;
 			bdev->optimal_io_boundary = SPDK_BDEV_LARGE_BUF_MAX_SIZE / bdev->blocklen;
 		}
+	}
+
+	/* If the user didn't specify a write unit size, set it to one. */
+	if (bdev->write_unit_size == 0) {
+		bdev->write_unit_size = 1;
 	}
 
 	TAILQ_INIT(&bdev->internal.open_descs);

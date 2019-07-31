@@ -369,6 +369,21 @@ const char *spdk_bdev_get_product_name(const struct spdk_bdev *bdev);
 uint32_t spdk_bdev_get_block_size(const struct spdk_bdev *bdev);
 
 /**
+ * Get the write unit size for this bdev.
+ *
+ * Write unit size is required number of logical blocks to perform write
+ * operation on block device.
+ *
+ * Unit of write unit size is logical block and the minimum of write unit
+ * size is one. Write operations must be multiple of write unit size.
+ *
+ * \param bdev Block device to query.
+ *
+ * \return The write unit size in logical blocks.
+ */
+uint32_t spdk_bdev_get_write_unit_size(const struct spdk_bdev *bdev);
+
+/**
  * Get size of block device in logical blocks.
  *
  * \param bdev Block device to query.
