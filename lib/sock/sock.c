@@ -456,14 +456,14 @@ spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 		assert(sock->cb_fn != NULL);
 		sock->cb_fn(sock->cb_arg, group, sock);
 	}
-	return 0;
+	return num_events;
 }
 
 int
 spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 {
 	struct spdk_sock_group_impl *group_impl = NULL;
-	int rc, final_rc = 0;
+	int rc, num_events = 0;
 
 	if (max_events < 1) {
 		errno = -EINVAL;
@@ -480,14 +480,16 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 
 	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
 		rc = spdk_sock_group_impl_poll_count(group_impl, group, max_events);
-		if (rc != 0) {
-			final_rc = rc;
+		if (rc < 0) {
+			num_events = -1;
 			SPDK_ERRLOG("group_impl_poll_count for net(%s) failed\n",
 				    group_impl->net_impl->name);
+		} else if (num_events >= 0) {
+			num_events += rc;
 		}
 	}
 
-	return final_rc;
+	return num_events;
 }
 
 int

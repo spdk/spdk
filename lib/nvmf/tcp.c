@@ -2776,10 +2776,9 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	rc = spdk_sock_group_poll(tgroup->sock_group);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", tgroup->sock_group);
-		return rc;
 	}
 
-	return 0;
+	return rc;
 }
 
 static int

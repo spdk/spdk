@@ -249,7 +249,7 @@ int spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock 
  *
  * \param group Group to poll.
  *
- * \return 0 on success, -1 on failure.
+ * \return the number of events on success, -1 on failure.
  */
 int spdk_sock_group_poll(struct spdk_sock_group *group);
 
