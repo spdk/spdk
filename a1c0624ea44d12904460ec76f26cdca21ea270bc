@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abdc2a20_7e688bc7",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-31T16:00:03Z",
+      "side": 1,
+      "message": "Can we reword this sentence to \n\"This enables the simulation of the latency characteristics of a device during the functional or scalability testing of an SPDK application.\"",
+      "range": {
+        "startLine": 162,
+        "startChar": 12,
+        "endLine": 162,
+        "endChar": 95
+      },
+      "revId": "a1c0624ea44d12904460ec76f26cdca21ea270bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99b3cc2b_a6fd96cb",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-31T16:00:03Z",
+      "side": 1,
+      "message": "Not needed.",
+      "range": {
+        "startLine": 163,
+        "startChar": 9,
+        "endLine": 163,
+        "endChar": 20
+      },
+      "revId": "a1c0624ea44d12904460ec76f26cdca21ea270bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5e43a21_9e27ed50",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-31T16:00:03Z",
+      "side": 1,
+      "message": "Can we reword this to\n... processing I/Os ...",
+      "range": {
+        "startLine": 163,
+        "startChar": 66,
+        "endLine": 163,
+        "endChar": 88
+      },
+      "revId": "a1c0624ea44d12904460ec76f26cdca21ea270bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ca18af5_3a44e72d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-07-31T16:00:03Z",
+      "side": 1,
+      "message": "Describe what the command does below.\n\"This command will create a delay bdev called \u0027delay0\u0027 on top of the Null bdev \u0027Null0\u0027 that has an average read latency of 10 microseconds, p99 read latency of 50 microseconds, average write latency of 30 microseconds and p99 write latency of 90 microseconds\"",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 114
+      },
+      "revId": "a1c0624ea44d12904460ec76f26cdca21ea270bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
