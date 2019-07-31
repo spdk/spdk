@@ -44,6 +44,7 @@ struct rpc_construct_null {
 	char *uuid;
 	uint64_t num_blocks;
 	uint32_t block_size;
+	uint32_t md_size;
 };
 
 static void
@@ -58,6 +59,7 @@ static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 	{"uuid", offsetof(struct rpc_construct_null, uuid), spdk_json_decode_string, true},
 	{"num_blocks", offsetof(struct rpc_construct_null, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct rpc_construct_null, block_size), spdk_json_decode_uint32},
+	{"md_size", offsetof(struct rpc_construct_null, md_size), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -106,6 +108,8 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 	opts.uuid = uuid;
 	opts.num_blocks = req.num_blocks;
 	opts.block_size = req.block_size;
+	opts.md_size = req.md_size;
+	opts.md_interleave = true;
 	rc = create_null_bdev(&bdev, &opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));

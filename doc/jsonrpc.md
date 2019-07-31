@@ -1243,6 +1243,7 @@ name                    | Optional | string      | Bdev name to use
 block_size              | Required | number      | Block size in bytes
 num_blocks              | Required | number      | Number of blocks
 uuid                    | Optional | string      | UUID of new bdev
+md_size                 | Optional | number      | Metadata size in bytes
 
 ### Result
 
@@ -1258,7 +1259,8 @@ Example request:
     "block_size": 4096,
     "num_blocks": 16384,
     "name": "Null0",
-    "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90"
+    "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90",
+    "md_size": 8
   },
   "jsonrpc": "2.0",
   "method": "construct_null_bdev",
