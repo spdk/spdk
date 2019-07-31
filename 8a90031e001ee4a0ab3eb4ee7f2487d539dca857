@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27df20df_c5c36628",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T17:30:43Z",
+      "side": 1,
+      "message": "same question as on the previous zone action commands, if we need/want to store and check states",
+      "revId": "8a90031e001ee4a0ab3eb4ee7f2487d539dca857",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
