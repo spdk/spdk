@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b4397fa_1ed2cc4a",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T16:20:35Z",
+      "side": 1,
+      "message": "just a suggestion - int he spec 0 is reserved in the ZONE action field so if you add a reserved here for the first value in the enum you will match the reset of up with the values in the spec",
+      "revId": "0e121321ae8a1666a320d2d0cf07d199bf9da96a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
