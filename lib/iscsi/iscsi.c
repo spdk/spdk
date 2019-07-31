@@ -1368,21 +1368,18 @@ iscsi_op_login_negotiate_digest_param(struct spdk_iscsi_conn *conn,
  */
 static int
 iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
-			     struct spdk_iscsi_pdu *rsp_pdu,
-			     char *initiator_port_name)
+			     char *initiator_port_name,
+			     uint16_t tsih, uint64_t isid)
 
 {
 	int rc = 0;
-	struct iscsi_bhs_login_rsp *rsph;
 
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	/* check existing session */
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "isid=%"PRIx64", tsih=%u, cid=%u\n",
-		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), conn->cid);
-	if (rsph->tsih != 0) {
+		      isid, tsih, conn->cid);
+	if (tsih != 0) {
 		/* multiple connections */
-		rc = append_iscsi_sess(conn, initiator_port_name,
-				       from_be16(&rsph->tsih));
+		rc = append_iscsi_sess(conn, initiator_port_name, tsih);
 	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
 		/* new session, drop old sess by the initiator */
 		spdk_iscsi_drop_conns(conn, initiator_port_name, 0 /* drop old */);
@@ -1432,9 +1429,8 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
  */
 static int
 iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
-			      struct spdk_iscsi_pdu *rsp_pdu,
-			      char *initiator_port_name,
-			      struct iscsi_param *params)
+			      char *initiator_port_name, uint16_t tsih,
+			      uint64_t isid, struct iscsi_param *params)
 {
 	struct spdk_iscsi_tgt_node *target = NULL;
 	const char *target_name;
@@ -1476,8 +1472,8 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	conn->target_port = spdk_scsi_dev_find_port_by_id(target->dev,
 			    conn->portal->group->tag);
 
-	rc = iscsi_op_login_check_session(conn, rsp_pdu,
-					  initiator_port_name);
+	rc = iscsi_op_login_check_session(conn, initiator_port_name,
+					  tsih, isid);
 	if (rc != 0) {
 		return rc;
 	}
@@ -1744,7 +1740,12 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	char initiator_port_name[MAX_INITIATOR_PORT_NAME];
 	struct iscsi_bhs_login_rsp *rsph;
 	int rc = 0;
+	uint16_t tsih;
+	uint64_t isid;
+
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	tsih = from_be16(&rsph->tsih);
+	isid = iscsi_get_isid(rsph->isid);
 
 	conn->cid = cid;
 	conn->target = NULL;
@@ -1763,9 +1764,8 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 
 	/* Target Name and Port */
 	if (session_type == SESSION_TYPE_NORMAL) {
-		rc = iscsi_op_login_session_normal(conn, rsp_pdu,
-						   initiator_port_name,
-						   params);
+		rc = iscsi_op_login_session_normal(conn, initiator_port_name,
+						   tsih, isid, params);
 		if (rc != 0) {
 			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
 			rsph->status_detail = rc;
