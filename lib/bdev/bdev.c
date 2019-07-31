@@ -1245,7 +1245,7 @@ _spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	 */
 	for (bdev = TAILQ_LAST(&g_bdev_mgr.bdevs, spdk_bdev_list);
 	     bdev; bdev = TAILQ_PREV(bdev, spdk_bdev_list, internal.link)) {
-		SPDK_ERRLOG("Unregistering claimed bdev '%s'!\n", bdev->name);
+		SPDK_WARNLOG("Unregistering claimed bdev '%s'!\n", bdev->name);
 		spdk_bdev_unregister(bdev, _spdk_bdev_finish_unregister_bdevs_iter, bdev);
 		return;
 	}
