@@ -178,7 +178,7 @@ op_login_session_normal_test(void)
 
 	/* expect failure: NULL params for target name */
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
-					   NULL, 0);
+					   NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
 	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_MISSING_PARMS);
@@ -186,7 +186,7 @@ op_login_session_normal_test(void)
 	/* expect failure: incorrect key for target name */
 	param.next = NULL;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
-					   &param, 0);
+					   &param);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
 	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_MISSING_PARMS);
@@ -195,7 +195,7 @@ op_login_session_normal_test(void)
 	param.key = "TargetName";
 	param.val = NULL;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
-					   &param, 0);
+					   &param);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
 	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_MISSING_PARMS);
@@ -207,7 +207,7 @@ op_login_session_normal_test(void)
 		 "%s", UT_INITIATOR_NAME1);
 	rsph->tsih = 1; /* to append the session */
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
-					   &param, 0);
+					   &param);
 	CU_ASSERT(conn.target_port == NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
@@ -221,7 +221,7 @@ op_login_session_normal_test(void)
 	rsph->tsih = UT_ISCSI_TSIH >> 8; /* to append the session */
 	sess.tag = 1;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
-					   &param, 0);
+					   &param);
 	CU_ASSERT(conn.target_port == NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
@@ -231,14 +231,14 @@ op_login_session_normal_test(void)
 	rsph->tsih = 0; /* to create the session */
 	g_spdk_iscsi.AllowDuplicateIsid = false;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
-					   &param, 0);
+					   &param);
 	CU_ASSERT(rc == 0);
 
 	/* expect suceess: create the session */
 	rsph->tsih = 0; /* to create the session */
 	g_spdk_iscsi.AllowDuplicateIsid = true;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
-					   &param, 0);
+					   &param);
 	CU_ASSERT(rc == 0);
 
 	free(g_spdk_iscsi.session);

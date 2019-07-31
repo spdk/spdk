@@ -97,7 +97,7 @@ static int iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
 static int create_iscsi_sess(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_tgt_node *target, enum session_type session_type);
 static uint8_t append_iscsi_sess(struct spdk_iscsi_conn *conn,
-				 const char *initiator_port_name, uint16_t tsih, uint16_t cid);
+				 const char *initiator_port_name, uint16_t tsih);
 
 static void remove_acked_pdu(struct spdk_iscsi_conn *conn, uint32_t ExpStatSN);
 
@@ -1371,7 +1371,7 @@ iscsi_op_login_negotiate_digest_param(struct spdk_iscsi_conn *conn,
 static int
 iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_pdu *rsp_pdu,
-			     char *initiator_port_name, int cid)
+			     char *initiator_port_name)
 
 {
 	int rc = 0;
@@ -1380,16 +1380,16 @@ iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	/* check existing session */
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "isid=%"PRIx64", tsih=%u, cid=%u\n",
-		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), cid);
+		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), conn->cid);
 	if (rsph->tsih != 0) {
 		/* multiple connections */
 		rc = append_iscsi_sess(conn, initiator_port_name,
-				       from_be16(&rsph->tsih), cid);
+				       from_be16(&rsph->tsih));
 		if (rc != 0) {
 			SPDK_ERRLOG("isid=%"PRIx64", tsih=%u, cid=%u:"
 				    "spdk_append_iscsi_sess() failed\n",
 				    iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih),
-				    cid);
+				    conn->cid);
 			/* Can't include in session */
 			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
 			rsph->status_detail = rc;
@@ -1456,8 +1456,7 @@ static int
 iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_pdu *rsp_pdu,
 			      char *initiator_port_name,
-			      struct iscsi_param *params,
-			      int cid)
+			      struct iscsi_param *params)
 {
 	struct spdk_iscsi_tgt_node *target = NULL;
 	const char *target_name;
@@ -1506,7 +1505,7 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 			    conn->portal->group->tag);
 
 	rc = iscsi_op_login_check_session(conn, rsp_pdu,
-					  initiator_port_name, cid);
+					  initiator_port_name);
 	if (rc < 0) {
 		return rc;
 	}
@@ -1621,7 +1620,7 @@ static int
 iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_pdu *rsp_pdu,
 			     char *initiator_port_name,
-			     enum session_type session_type, int cid)
+			     enum session_type session_type)
 {
 	int rc = 0;
 	struct spdk_iscsi_tgt_node *target;
@@ -1633,7 +1632,6 @@ iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	conn->authenticated = false;
 	conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
-	conn->cid = cid;
 
 	if (conn->sess == NULL) {
 		/* create initiator port */
@@ -1777,6 +1775,7 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	int rc = 0;
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
+	conn->cid = cid;
 	conn->target = NULL;
 	conn->dev = NULL;
 
@@ -1795,7 +1794,7 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	if (session_type == SESSION_TYPE_NORMAL) {
 		rc = iscsi_op_login_session_normal(conn, rsp_pdu,
 						   initiator_port_name,
-						   params, cid);
+						   params);
 		if (rc < 0) {
 			return rc;
 		}
@@ -1819,7 +1818,7 @@ iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	}
 
 	rc = iscsi_op_login_set_conn_info(conn, rsp_pdu, initiator_port_name,
-					  session_type, cid);
+					  session_type);
 	if (rc < 0) {
 		return rc;
 	}
@@ -4895,12 +4894,12 @@ get_iscsi_sess_by_tsih(uint16_t tsih)
 
 static uint8_t
 append_iscsi_sess(struct spdk_iscsi_conn *conn,
-		  const char *initiator_port_name, uint16_t tsih, uint16_t cid)
+		  const char *initiator_port_name, uint16_t tsih)
 {
 	struct spdk_iscsi_sess *sess;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "append session: init port name=%s, tsih=%u, cid=%u\n",
-		      initiator_port_name, tsih, cid);
+		      initiator_port_name, tsih, conn->cid);
 
 	sess = get_iscsi_sess_by_tsih(tsih);
 	if (sess == NULL) {
@@ -4912,14 +4911,14 @@ append_iscsi_sess(struct spdk_iscsi_conn *conn,
 	    (conn->target != sess->target)) {
 		/* no match */
 		SPDK_ERRLOG("no MCS session for init port name=%s, tsih=%d, cid=%d\n",
-			    initiator_port_name, tsih, cid);
+			    initiator_port_name, tsih, conn->cid);
 		return ISCSI_LOGIN_CONN_ADD_FAIL;
 	}
 
 	if (sess->connections >= sess->MaxConnections) {
 		/* no slot for connection */
 		SPDK_ERRLOG("too many connections for init port name=%s, tsih=%d, cid=%d\n",
-			    initiator_port_name, tsih, cid);
+			    initiator_port_name, tsih, conn->cid);
 		return ISCSI_LOGIN_TOO_MANY_CONNECTIONS;
 	}
 
