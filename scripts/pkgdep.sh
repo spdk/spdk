@@ -7,12 +7,19 @@ function usage()
 {
 	echo ""
 	echo "This script is intended to automate the installation of package dependencies to build SPDK."
-	echo "Please run this script as root user."
+	echo "Please run this script as root user or with sudo -E."
 	echo ""
 	echo "$0"
 	echo "  -h --help"
 	echo ""
 	exit 0
+}
+
+function install_shellcheck()
+{
+	wget -qO- "https://storage.googleapis.com/shellcheck/shellcheck-latest.linux.x86_64.tar.xz" | tar -xJvC ~/
+	mv ~/shellcheck-latest/shellcheck /usr/bin/spdk_shellcheck
+	rm -rf ~/shellcheck-latest/shellcheck
 }
 
 INSTALL_CRYPTO=false
@@ -73,6 +80,8 @@ if [ -s /etc/redhat-release ]; then
 	fi
 	# Additional dependencies for ISA-L used in compression
 	yum install -y autoconf automake libtool help2man
+	# Additional dependencies for bash styling checking
+	install_shellcheck
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
@@ -94,6 +103,8 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y autoconf automake libtool help2man
 	# Additional dependecies for nvmf performance test script
 	apt-get install -y python3-paramiko
+	# Additional dependencies for bash styling checking
+	install_shellcheck
 elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pycodestyle libuuid-devel sg3_utils pciutils
@@ -109,6 +120,8 @@ elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	zypper install -y doxygen mscgen graphviz
 	# Additional dependencies for ISA-L used in compression
 	zypper install -y autoconf automake libtool help2man
+	# Additional dependencies for bash styling checking
+	install_shellcheck
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	pkg install -y gmake cunit openssl git devel/astyle bash py27-pycodestyle \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
