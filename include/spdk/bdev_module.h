@@ -265,6 +265,9 @@ struct spdk_bdev {
 	/** Number of blocks */
 	uint64_t blockcnt;
 
+	/** Number of blocks required for write */
+	uint32_t write_unit_size;
+
 	/**
 	 * Specifies an alignment requirement for data buffers associated with an spdk_bdev_io.
 	 * 0 = no alignment requirement
