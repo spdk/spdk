@@ -2,6 +2,12 @@
 
 ## v19.10: (Upcoming Release)
 
+### bdev
+
+A new API was added to allow applications to delete a compressed volume even
+if the corresponding persistent memory file cannot be found.  The new API is
+called spdk_reduce_vol_force_destroy().
+
 ## v19.07:
 
 ### ftl

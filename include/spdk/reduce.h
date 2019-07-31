@@ -186,7 +186,8 @@ void spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
  * This will zero the metadata region on the backing device and delete the associated
  * pm metadata file.  If the backing device does not contain a compressed volume, the
  * cb_fn will be called with error status without modifying the backing device nor
- * deleting a pm file.
+ * deleting a pm file.  If the pm file cannot be found, the compressed volume will not
+ * be deleted.
  *
  * \param backing_dev Structure describing the backing device containing the compressed volume.
  * \param cb_fn Callback function to signal completion of the destruction process.
@@ -195,6 +196,23 @@ void spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 void spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev,
 			     spdk_reduce_vol_op_complete cb_fn,
 			     void *cb_arg);
+
+/**
+ * Forcefully Destroy an existing libreduce compressed volume.
+ *
+ * This will zero the metadata region on the backing device and delete the associated
+ * pm metadata file.  If the backing device does not contain a compressed volume, the
+ * cb_fn will be called with error status however modifying the backing device.  However
+ * if the backing device does contain a compressed volume but a matching pm file cannot
+ * be found, the compressed volume will still be deleted.
+ *
+ * \param backing_dev Structure describing the backing device containing the compressed volume.
+ * \param cb_fn Callback function to signal completion of the destruction process.
+ * \param cb_arg Argument to pass to the callback function.
+ */
+void spdk_reduce_vol_force_destroy(struct spdk_reduce_backing_dev *backing_dev,
+				   spdk_reduce_vol_op_complete cb_fn,
+				   void *cb_arg);
 
 /**
  * Read data from a libreduce compressed volume.
