@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a76ea00_f76eba23",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1789,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-07-31T01:13:15Z",
+      "side": 1,
+      "message": "rc \u003d bdev_scsi_check_len(task, data_len, md) may be better.\n\nOr further we may be able to simplify the line 1784 to 1797 to\n\nrc \u003d bdev_scsi_check_len(task, data_len, spdk_max(pllen, md)).\nif (rc \u003c 0) {\n  break;\n}",
+      "range": {
+        "startLine": 1784,
+        "startChar": 0,
+        "endLine": 1789,
+        "endChar": 0
+      },
+      "revId": "62f6d70262ef7dd3e347aebbc6805a543d55c21a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
