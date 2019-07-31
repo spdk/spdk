@@ -43,6 +43,10 @@ can only be deleted.
 
 Metadata support has been added to Null bdev module.
 
+### rpc
+
+Added optional parameter '--md-size'to 'construct_null_bdev' RPC method.
+
 ## v19.07:
 
 ### ftl
