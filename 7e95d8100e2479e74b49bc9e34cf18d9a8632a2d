@@ -69,6 +69,24 @@
       "revId": "7e95d8100e2479e74b49bc9e34cf18d9a8632a2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae1bfa38_63a49ecc",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T20:41:47Z",
+      "side": 1,
+      "message": "\"status however modifying\" was supposed to say \"status without modifying\". I have no idea why I typed that :)",
+      "parentUuid": "d8d32da6_64a4c3b7",
+      "revId": "7e95d8100e2479e74b49bc9e34cf18d9a8632a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
