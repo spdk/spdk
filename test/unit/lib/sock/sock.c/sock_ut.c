@@ -510,7 +510,7 @@ _sock_group(const char *ip, int port)
 	g_bytes_read = 0;
 	rc = spdk_sock_group_poll(group);
 
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == 1);
 	CU_ASSERT(g_read_data_called == true);
 	CU_ASSERT(g_bytes_read == 7);
 
@@ -621,7 +621,7 @@ posix_sock_group_fairness(void)
 	 */
 	g_server_sock_read = NULL;
 	rc = spdk_sock_group_poll_count(group, 1);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == 1);
 	CU_ASSERT(g_server_sock_read == server_sock[0]);
 
 	/*
@@ -636,17 +636,17 @@ posix_sock_group_fairness(void)
 
 	g_server_sock_read = NULL;
 	rc = spdk_sock_group_poll_count(group, 1);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == 1);
 	CU_ASSERT(g_server_sock_read == server_sock[1]);
 
 	g_server_sock_read = NULL;
 	rc = spdk_sock_group_poll_count(group, 1);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == 1);
 	CU_ASSERT(g_server_sock_read == server_sock[2]);
 
 	g_server_sock_read = NULL;
 	rc = spdk_sock_group_poll_count(group, 1);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == 1);
 	CU_ASSERT(g_server_sock_read == server_sock[0]);
 
 	for (i = 0; i < 3; i++) {

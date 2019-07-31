@@ -1177,7 +1177,7 @@ iscsi_poll_group_poll(void *ctx)
 		}
 	}
 
-	return -1;
+	return rc;
 }
 
 static int
