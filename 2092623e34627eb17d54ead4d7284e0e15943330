@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70c9b21a_bca834e7",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T16:26:11Z",
+      "side": 1,
+      "message": "just a question, there\u0027s a lot more info, for example, in the identify structure for a ZNS.  Do we expect anyone will want to see this (or like zone specific log pages) and if so how will they gain access to that information?",
+      "revId": "2092623e34627eb17d54ead4d7284e0e15943330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
