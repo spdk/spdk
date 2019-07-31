@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e57e63cd_26f354ef",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T14:38:38Z",
+      "side": 1,
+      "message": "I don\u0027t think line 234 is needed.",
+      "revId": "279ef9d59c14b4b33c06e49ce389defb69cc0da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5b7644e_d19ca243",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T14:38:38Z",
+      "side": 1,
+      "message": "does it make sense to add github issues for these? Seems like this would set s precedent to just add an exclusion if you see an issue.  Maybe add a note saying that reduction of this list is WIP or something - anything to indicate that it\u0027s not OK to grow it without scrutiny.",
+      "revId": "279ef9d59c14b4b33c06e49ce389defb69cc0da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
