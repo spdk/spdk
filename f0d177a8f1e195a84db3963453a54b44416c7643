@@ -22,6 +22,30 @@
       "revId": "f0d177a8f1e195a84db3963453a54b44416c7643",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0412aa7e_b4680bf1",
+        "filename": "test/vhost/fuzz/fuzz.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-07-31T14:03:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0a1a07f1_b73eca9d",
+      "range": {
+        "startLine": 42,
+        "startChar": 47,
+        "endLine": 42,
+        "endChar": 54
+      },
+      "revId": "f0d177a8f1e195a84db3963453a54b44416c7643",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
