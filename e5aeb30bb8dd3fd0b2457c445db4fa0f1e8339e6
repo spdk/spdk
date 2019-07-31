@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "804c7741_38d5fc42",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-07-31T17:34:51Z",
+      "side": 1,
+      "message": "same question as before wrt zone state checking",
+      "revId": "e5aeb30bb8dd3fd0b2457c445db4fa0f1e8339e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
