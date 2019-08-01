@@ -314,6 +314,27 @@ spdk_ut_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 	return 0;
 }
 
+static ssize_t
+spdk_ut_sock_recv_async(struct spdk_sock *sock, void *buf, size_t len, spdk_sock_op_cb cb_fn,
+			void *cb_arg)
+{
+	return -1;
+}
+
+static ssize_t
+spdk_ut_sock_readv_async(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
+			 spdk_sock_op_cb cb_fn, void *cb_arg)
+{
+	return -1;
+}
+
+static ssize_t
+spdk_ut_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
+			  spdk_sock_op_cb cb_fn, void *cb_arg)
+{
+	return -1;
+}
+
 static struct spdk_net_impl g_ut_net_impl = {
 	.name		= "ut",
 	.getaddr	= spdk_ut_sock_getaddr,
@@ -324,6 +345,9 @@ static struct spdk_net_impl g_ut_net_impl = {
 	.recv		= spdk_ut_sock_recv,
 	.readv		= spdk_ut_sock_readv,
 	.writev		= spdk_ut_sock_writev,
+	.recv_async     = spdk_ut_sock_recv_async,
+	.readv_async    = spdk_ut_sock_readv_async,
+	.writev_async   = spdk_ut_sock_writev_async,
 	.set_recvlowat	= spdk_ut_sock_set_recvlowat,
 	.set_recvbuf	= spdk_ut_sock_set_recvbuf,
 	.set_sendbuf	= spdk_ut_sock_set_sendbuf,

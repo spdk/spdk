@@ -1402,6 +1402,28 @@ err:
 	spdk_net_framework_init_next(0);
 }
 
+static ssize_t
+spdk_vpp_sock_recv_async(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
+			 spdk_sock_op_cb cb_fn,
+			 void *cb_arg)
+{
+	return -1;
+}
+
+static ssize_t
+spdk_vpp_sock_readv_async(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
+			  spdk_sock_op_cb cb_fn, void *cb_arg)
+{
+	return -1;
+}
+
+static ssize_t
+spdk_vpp_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
+			   spdk_sock_op_cb cb_fn, void *cb_arg)
+{
+	return -1;
+}
+
 /******************************************************************************
  * Register components
  */
@@ -1415,6 +1437,9 @@ static struct spdk_net_impl g_vpp_net_impl = {
 	.recv		= spdk_vpp_sock_recv,
 	.readv		= spdk_vpp_sock_readv,
 	.writev		= spdk_vpp_sock_writev,
+	.recv_async	= spdk_vpp_sock_recv_async,
+	.readv_async	= spdk_vpp_sock_readv_async,
+	.writev_async	= spdk_vpp_sock_writev_async,
 	.set_recvlowat	= spdk_vpp_sock_set_recvlowat,
 	.set_recvbuf	= spdk_vpp_sock_set_recvbuf,
 	.set_sendbuf	= spdk_vpp_sock_set_sendbuf,
