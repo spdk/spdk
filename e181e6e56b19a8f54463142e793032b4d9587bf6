@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2b1235d8_c0a67164",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-01T01:44:34Z",
+      "side": 1,
+      "message": "that\u0027s not the case actually.  The compress+pmd only affects a global for that instance, nothing is saved in metadata so it needs to be set each time an app is started either before creating the comp vol or creating the nvme device that has metadata on it.\n\nPlease see the follow-on patch to this which changes a few things about this anyways since we have QAT working now.  If you\u0027re OK with that and can +1 this one you can beat that one up once I have it working :)",
+      "parentUuid": "8d96af2f_4638b6db",
+      "revId": "e181e6e56b19a8f54463142e793032b4d9587bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "510149e5_2aa6efe4",
         "filename": "test/compress/compress.sh",
         "patchSetId": 11
@@ -30,6 +48,30 @@
       "writtenOn": "2019-08-01T01:41:14Z",
       "side": 1,
       "message": "The section can be reused by Nightly tests.",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 2
+      },
+      "revId": "e181e6e56b19a8f54463142e793032b4d9587bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3d55e43_fff05feb",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-01T01:44:34Z",
+      "side": 1,
+      "message": "I think this changes too in the next patch but yeah this could be a short function for sure",
+      "parentUuid": "510149e5_2aa6efe4",
       "range": {
         "startLine": 66,
         "startChar": 0,
