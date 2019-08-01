@@ -387,7 +387,7 @@ bdev_null_initialize(void)
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Null");
 	uint64_t size_in_mb, num_blocks;
 	int block_size, i, rc = 0;
-	int md_size;
+	int md_size, dif_type;
 	struct spdk_bdev *bdev;
 	const char *name, *val;
 	struct spdk_null_bdev_opts opts = {};
@@ -460,6 +460,17 @@ bdev_null_initialize(void)
 				continue;
 			}
 		}
+
+		val = spdk_conf_section_get_nmval(sp, "Dev", i, 4);
+		if (val == NULL) {
+			dif_type = SPDK_DIF_DISABLE;
+		} else {
+			dif_type = (int)spdk_strtol(val, 10);
+			if (dif_type < SPDK_DIF_DISABLE || dif_type > SPDK_DIF_TYPE3) {
+				SPDK_ERRLOG("Null entry %d: Invalid data protection type %s\n", i, val);
+				continue;
+			}
+		}
 		num_blocks = size_in_mb * (1024 * 1024) / block_size;
 
 		opts.name = name;
@@ -467,6 +478,8 @@ bdev_null_initialize(void)
 		opts.block_size = block_size;
 		opts.md_size = md_size;
 		opts.md_interleave = true;
+		opts.dif_type = dif_type;
+		opts.dif_is_head_of_md = true;
 		rc = create_null_bdev(&bdev, &opts);
 		if (rc) {
 			SPDK_ERRLOG("Could not create null bdev\n");
@@ -504,8 +517,9 @@ bdev_null_get_spdk_running_config(FILE *fp)
 	TAILQ_FOREACH(bdev, &g_null_bdev_head, tailq) {
 		null_bdev_size = bdev->bdev.blocklen * bdev->bdev.blockcnt;
 		null_bdev_size /= (1024 * 1024);
-		fprintf(fp, "  Dev %s %" PRIu64 " %d %d\n",
-			bdev->bdev.name, null_bdev_size, bdev->bdev.blocklen, bdev->bdev.md_len);
+		fprintf(fp, "  Dev %s %" PRIu64 " %d %d %d\n",
+			bdev->bdev.name, null_bdev_size, bdev->bdev.blocklen, bdev->bdev.md_len,
+			bdev->bdev.dif_type);
 	}
 }
 
