@@ -16,6 +16,24 @@
       "revId": "a0d73e0a1696a7603f3275ebc35199153f2d2627",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b983b8e9_9bd1c965",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-08-01T02:29:07Z",
+      "side": 1,
+      "message": "hi Changpeng,\n  sorry for response this late.\n  Could you please help to make it more clear, now these two lines are both running in callbacks.\none is raid_bdev_destroy_cb, another is spdk_bdev_destroy_cb.\nas I known, there are two methods to in queue messages:\none is cb_fn(cb_arg,rc), using raid_bdev_destruct_cb cb_fn; how to launch this cb_fn?\nIt brings up other issues. \nanother is spdk_thread_send_msg. raid_bdev_ut.c redefines spdk_thread_send_msg. that in raid_bdev.c using this leads conflicts. \n\nThanks.",
+      "parentUuid": "dd7b08e3_238bc184",
+      "revId": "a0d73e0a1696a7603f3275ebc35199153f2d2627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
