@@ -16,6 +16,24 @@
       "revId": "2092623e34627eb17d54ead4d7284e0e15943330",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56aacfc1_d9be518b",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-08-01T10:43:28Z",
+      "side": 1,
+      "message": "My intention here is not to implement ZNS NVMe interface but only expose minimal set of required info to extend bdev interface to have zoned device semantics. If we decide that we need more info here we need to extend this structure.",
+      "parentUuid": "70c9b21a_bca834e7",
+      "revId": "2092623e34627eb17d54ead4d7284e0e15943330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
