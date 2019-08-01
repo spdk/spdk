@@ -1558,10 +1558,10 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 
 		if (!g_nvmf_hooks.get_rkey) {
 			wr->sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-					       (uint64_t)rdma_req->buffers[iovcnt], &translation_len))->lkey;
+					       (uint64_t)rdma_req->req.iov[iovcnt].iov_base, &translation_len))->lkey;
 		} else {
 			wr->sg_list[i].lkey = spdk_mem_map_translate(device->map,
-					      (uint64_t)rdma_req->buffers[iovcnt], &translation_len);
+					      (uint64_t)rdma_req->req.iov[iovcnt].iov_base, &translation_len);
 		}
 
 		remaining_length -= rdma_req->req.iov[iovcnt].iov_len;
