@@ -140,6 +140,8 @@ a thinly provisioned logical volume.  See documentation for complete details.
 
 Metadata support has been added to Null bdev module.
 
+Protection information support has been added to Null bdev module.
+
 ### nvme
 
 Added an optional parameter `--io-queue-requests` to RPC `set_bdev_nvme_options`, which

@@ -89,6 +89,29 @@ static void
 bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct null_io_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_error err_blk;
+	int rc;
+
+	if (SPDK_DIF_DISABLE != bdev->dif_type &&
+	    (SPDK_BDEV_IO_TYPE_READ == bdev_io->type ||
+	     SPDK_BDEV_IO_TYPE_WRITE == bdev_io->type)) {
+		rc = spdk_dif_ctx_init(&dif_ctx,
+				       bdev->blocklen,
+				       bdev->md_len,
+				       bdev->md_interleave,
+				       bdev->dif_is_head_of_md,
+				       bdev->dif_type,
+				       bdev->dif_check_flags,
+				       bdev_io->u.bdev.offset_blocks & 0xFFFFFFFF,
+				       0xFFFF, 0, 0, 0);
+		if (0 != rc) {
+			SPDK_ERRLOG("Failed to initialize DIF context, error %d\n", rc);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			return;
+		}
+	}
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -106,9 +129,38 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 				return;
 			}
 		}
+		if (SPDK_DIF_DISABLE != bdev->dif_type) {
+			rc = spdk_dif_generate(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					       bdev_io->u.bdev.num_blocks, &dif_ctx);
+			if (0 != rc) {
+				SPDK_ERRLOG("IO DIF generation failed: lba %lu, num_block %lu\n",
+					    bdev_io->u.bdev.offset_blocks,
+					    bdev_io->u.bdev.num_blocks);
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+				return;
+			}
+		}
 		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
+		if (SPDK_DIF_DISABLE != bdev->dif_type) {
+			rc = spdk_dif_verify(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					     bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk);
+			if (0 != rc) {
+				SPDK_ERRLOG("IO DIF verification failed: lba %lu, num_blocks %lu, "
+					    "err_type %u, expected %u, actual %u, err_offset %u\n",
+					    bdev_io->u.bdev.offset_blocks,
+					    bdev_io->u.bdev.num_blocks,
+					    err_blk.err_type,
+					    err_blk.expected,
+					    err_blk.actual,
+					    err_blk.err_offset);
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+				return;
+			}
+		}
+		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
+		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_RESET:
 		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
@@ -211,6 +263,24 @@ create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 	null_disk->bdev.blockcnt = opts->num_blocks;
 	null_disk->bdev.md_len = opts->md_size;
 	null_disk->bdev.md_interleave = opts->md_interleave;
+	null_disk->bdev.dif_type = opts->dif_type;
+	null_disk->bdev.dif_is_head_of_md = opts->dif_is_head_of_md;
+	/* Current block device layer API does not propagate
+	 * any DIF related information from user. So, we can
+	 * not generate or verify Application Tag.
+	 */
+	switch (opts->dif_type) {
+	case SPDK_DIF_TYPE1:
+	case SPDK_DIF_TYPE2:
+		null_disk->bdev.dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK |
+						  SPDK_DIF_FLAGS_REFTAG_CHECK;
+		break;
+	case SPDK_DIF_TYPE3:
+		null_disk->bdev.dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK;
+		break;
+	case SPDK_DIF_DISABLE:
+		break;
+	}
 	if (opts->uuid) {
 		null_disk->bdev.uuid = *opts->uuid;
 	} else {
