@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f851cc04_bb49fb9e",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-01T16:48:24Z",
+      "side": 1,
+      "message": "Just some English stuff :)\n\n\"is extension\" --\u003e \"is an extension\"\n\"of bdev interface\" --\u003e \"of the bdev interface\"",
+      "revId": "8380b4682d5614736a36639fdc75dec665c7ce7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
