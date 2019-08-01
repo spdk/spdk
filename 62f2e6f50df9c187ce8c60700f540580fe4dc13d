@@ -16,6 +16,24 @@
       "revId": "62f2e6f50df9c187ce8c60700f540580fe4dc13d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "564e05cf_01830fb3",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-08-01T09:48:27Z",
+      "side": 1,
+      "message": "I\u0027m not sure about it - I don\u0027t see use case for such interface for now. If we add it should we enforce usage of it in each bdev?",
+      "parentUuid": "4d961dc5_a7c4ae2e",
+      "revId": "62f2e6f50df9c187ce8c60700f540580fe4dc13d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
