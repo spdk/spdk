@@ -152,6 +152,24 @@
       "revId": "e181e6e56b19a8f54463142e793032b4d9587bf6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "896afe9f_61fcc765",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-01T02:17:12Z",
+      "side": 1,
+      "message": "Since he\u0027s not doing it the default is \"use QAT if available and ISAL if not\".  The question I have on the followup patch to this has to do with testing both QAT and ISAL here, whether we can add a 2nd namespace or not.  If so, then line 82 here will change to \"create_vols\" but in the next patch.\n\nThis patch won\u0027t break anything and the next one has the improvements, I also made the API calls to destroy a function too at your suggestion.",
+      "parentUuid": "86b194ae_cf414f05",
+      "revId": "e181e6e56b19a8f54463142e793032b4d9587bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
