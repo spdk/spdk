@@ -34,6 +34,24 @@
       "revId": "0e121321ae8a1666a320d2d0cf07d199bf9da96a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43cfb62d_50e67b3d",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-01T16:55:31Z",
+      "side": 1,
+      "message": "I was referring to the ACTION enum, not the state:\n\nZone Action (ZA): Describes the action to be performed.\n\nValue\tDescription\n0h\tReserved\n1h\tClose Zone: Close the zone specified by the first logical block of the zone.\n2h\tFinish Zone: Finish the zone specified by the first logical block of the zone. \n3h\tOpen Zone: Open the zone specified by the first logical block of the zone.\n4h\tReset Zone: Reset the zone specified by the first logical block of the zone.\n5h-FFh\tReserved\n\nI\u0027ll leave it up to you and the maintainers, I always think its best to line up with the spec on these types things where possible but obviously it won\u0027t cause huge confusion (I hope) for anyone :)",
+      "parentUuid": "0912beac_c913a663",
+      "revId": "0e121321ae8a1666a320d2d0cf07d199bf9da96a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
