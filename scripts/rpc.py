@@ -261,7 +261,9 @@ if __name__ == "__main__":
                                                 block_size=args.block_size,
                                                 name=args.name,
                                                 uuid=args.uuid,
-                                                md_size=args.md_size))
+                                                md_size=args.md_size,
+                                                dif_type=args.dif_type,
+                                                dif_is_head_of_md=args.dif_is_head_of_md))
 
     p = subparsers.add_parser('construct_null_bdev',
                               help='Add a bdev with null backend')
@@ -272,6 +274,10 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this bdev', type=int)
     p.add_argument('-m', '--md-size', type=int,
                    help='Metadata size for this bdev. Default 0')
+    p.add_argument('-t', '--dif-type', type=int, choices=[0, 1, 2, 3],
+                   help='Protection information type. Default: 0 - no protection')
+    p.add_argument('-d', '--dif-is-head-of-md', action='store_true',
+                   help='Protection information is in the first 8 bytes of metadata. Default: in the last 8 bytes')
     p.set_defaults(func=construct_null_bdev)
 
     def delete_null_bdev(args):
