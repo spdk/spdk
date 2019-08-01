@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "95a6f545_548b095a",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-01T08:14:26Z",
+      "side": 1,
+      "message": "add assert(ch !\u003d NULL) is enough?",
+      "parentUuid": "cce163de_b5f1e8a7",
+      "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2d0571ea_c0d9f8a1",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2019-07-30T21:18:00Z",
       "side": 1,
       "message": "what will happen in this case? (since there\u0027s not return value)",
+      "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78ed2e24_0b1da994",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1438,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-01T08:14:26Z",
+      "side": 1,
+      "message": "Unlikely and nvmf-tgt asserts in this case. So the following may be enough.\n\nif (g_next_pg \u003d\u003d NULL) {\n  g_next_pg \u003d TAILQ_FIRST(\u0026g_spdk_iscsi.poll_group_head);\n}\nassert(g_next_pg !\u003d NULL);",
+      "parentUuid": "2d0571ea_c0d9f8a1",
       "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c21a3374_8d97798b",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-01T08:14:26Z",
+      "side": 1,
+      "message": "I think we will be able to add thread name in https://review.gerrithub.io/c/spdk/spdk/+/463568.\nThe subsequent patches will change this JSON RPC to use spdk_for_each_channel.\nThen we will be able to access thread safely.",
+      "parentUuid": "36a088f4_c595172f",
+      "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3eb43056_84357213",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 7
@@ -64,6 +118,24 @@
       "writtenOn": "2019-07-30T21:18:00Z",
       "side": 1,
       "message": "I didn\u0027t see anywhere that a return value is used and it\u0027s always 0.  Just curious why this change?",
+      "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "407986ef_a64d1e01",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1196,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-01T08:14:26Z",
+      "side": 1,
+      "message": "spdk_io_device_register() requires that.",
+      "parentUuid": "3eb43056_84357213",
       "revId": "5b8813884e6095b26d239f5871e2d95278d35979",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
