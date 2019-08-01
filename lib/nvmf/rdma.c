@@ -1337,6 +1337,8 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
 		if (!g_nvmf_hooks.get_rkey) {
+			SPDK_NOTICELOG("memory region start: %lx, memory region length: %lx\n", (uint64_t)vaddr,
+				       (uint64_t)size);
 			mr = ibv_reg_mr(pd, vaddr, size,
 					IBV_ACCESS_LOCAL_WRITE |
 					IBV_ACCESS_REMOTE_READ |
@@ -1565,8 +1567,9 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		remaining_length -= rdma_req->req.iov[iovcnt].iov_len;
-
 		if (translation_len < rdma_req->req.iov[iovcnt].iov_len) {
+			SPDK_NOTICELOG("Buffer address: %lx iov_base address %lx\n", (uint64_t)rdma_req->buffers[iovcnt],
+				       (uint64_t)rdma_req->req.iov[iovcnt].iov_base);
 			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
 			return -EINVAL;
 		}
