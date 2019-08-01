@@ -40,6 +40,12 @@ DPDK_FRAMEWORK = n
 DPDK_OPTS =
 DPDK_CFLAGS =
 
+ifeq (y, $(filter y,$(CONFIG_SHARED) $(CONFIG_VHOST)))
+DPDK_OPTS += CONFIG_RTE_LIBRTE_ETHER=y
+else
+DPDK_OPTS += CONFIG_RTE_LIBRTE_ETHER=n
+endif
+
 # We commented out this build option in our DPDK fork, but DPDK makefiles check
 # its value specifically against 'n' to set linking flags properly. Set it here
 # to 'n' for now.
@@ -67,13 +73,11 @@ DPDK_OPTS += CONFIG_RTE_LIBRTE_PMD_ISAL=n
 endif
 
 ifeq ($(CONFIG_VHOST),y)
-DPDK_OPTS += CONFIG_RTE_LIBRTE_ETHER=y
 DPDK_OPTS += CONFIG_RTE_LIBRTE_CMDLINE=y
 DPDK_OPTS += CONFIG_RTE_LIBRTE_METER=y
 DPDK_OPTS += CONFIG_RTE_LIBRTE_HASH=y
 DPDK_OPTS += CONFIG_RTE_LIBRTE_VHOST=y
 else
-DPDK_OPTS += CONFIG_RTE_LIBRTE_ETHER=n
 DPDK_OPTS += CONFIG_RTE_LIBRTE_CMDLINE=n
 DPDK_OPTS += CONFIG_RTE_LIBRTE_METER=n
 DPDK_OPTS += CONFIG_RTE_LIBRTE_HASH=n
