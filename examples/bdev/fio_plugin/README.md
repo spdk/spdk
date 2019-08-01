@@ -3,20 +3,19 @@
 Clone the fio source repository from https://github.com/axboe/fio
 
     git clone https://github.com/axboe/fio
+    cd fio
 
-Then check out the fio 3.3:
-
-    cd fio && git checkout fio-3.3
-
-Finally, compile the code:
+Compile the fio code and install:
 
     make
+    make install
 
 # Compiling SPDK
 
 Clone the SPDK source repository from https://github.com/spdk/spdk
 
     git clone https://github.com/spdk/spdk
+    cd spdk
     git submodule update --init
 
 Then, run the SPDK configure script to enable fio (point it to the root of the fio repository):
