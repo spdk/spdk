@@ -34,6 +34,24 @@
       "revId": "e9d11494454ad725a4a2558258542e765cf7981b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19005bfd_1ef3da31",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-01T17:04:46Z",
+      "side": 1,
+      "message": "OK, when you cover the high level API steps for working with a zdev maybe you could include what other modules that haven\u0027t been done yet are involved? Sorry, just trying to catch up and I\u0027m definitely missing the big picture now :)",
+      "parentUuid": "a099218b_eca2ddbd",
+      "revId": "e9d11494454ad725a4a2558258542e765cf7981b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
