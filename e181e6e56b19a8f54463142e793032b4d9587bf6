@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "566c1479_87ddcc86",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-01T01:51:03Z",
+      "side": 1,
+      "message": "I just saw the following patch, and I still don\u0027t understand why need to call $rpc_py construct_nvme_bdev -b \"Nvme0\" -t \"pcie\" -a $bdf several times for each test application.",
+      "parentUuid": "2b1235d8_c0a67164",
+      "revId": "e181e6e56b19a8f54463142e793032b4d9587bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "510149e5_2aa6efe4",
         "filename": "test/compress/compress.sh",
         "patchSetId": 11
