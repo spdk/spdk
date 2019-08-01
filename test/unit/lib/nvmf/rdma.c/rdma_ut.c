@@ -154,6 +154,7 @@ static void reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 	rdma_req->data.wr.wr.rdma.rkey = 0;
 	rdma_req->elba_length = 0;
 	rdma_req->orig_length = 0;
+	rdma_req->num_extra_wrs_from_pool = 0;
 	rdma_req->dif_insert_or_strip = false;
 
 	for (i = 0; i < SPDK_NVMF_MAX_SGL_ENTRIES; i++) {
@@ -551,8 +552,10 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
+
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.num_extra_wrs_from_pool == 0);
 	CU_ASSERT(rdma_req.req.length == data_bs * 4);
 	CU_ASSERT(rdma_req.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.elba_length == (data_bs + md_size) * 4);
@@ -580,6 +583,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.num_extra_wrs_from_pool == 0);
 	CU_ASSERT(rdma_req.req.length == data_bs * 4);
 	CU_ASSERT(rdma_req.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.elba_length == (data_bs + md_size) * 4);
@@ -614,6 +618,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.num_extra_wrs_from_pool == 0);
 	CU_ASSERT(rdma_req.req.length == data_bs);
 	CU_ASSERT(rdma_req.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.elba_length == data_bs + md_size);
@@ -646,6 +651,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.num_extra_wrs_from_pool == 0);
 	CU_ASSERT(rdma_req.req.length == data_bs * 4);
 	CU_ASSERT(rdma_req.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.elba_length == (data_bs + md_size) * 4);
@@ -673,6 +679,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.num_extra_wrs_from_pool == 0);
 	CU_ASSERT(rdma_req.req.length == data_bs * 4);
 	CU_ASSERT(rdma_req.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.elba_length == (data_bs + md_size) * 4);
@@ -703,6 +710,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.num_extra_wrs_from_pool == 0);
 	CU_ASSERT(rdma_req.req.length == data_bs * 6);
 	CU_ASSERT(rdma_req.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.elba_length == (data_bs + md_size) * 6);
@@ -734,9 +742,11 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(rdma_req.data.wr.sg_list[6].length == 512);
 	CU_ASSERT(rdma_req.data.wr.sg_list[6].lkey == g_rdma_mr.lkey);
 
-	/* Part 7: simple I/O, number of SGL exceeds the limitation */
-	/* workaround to prevent free in spdk_mempool_put */
-	ut_spdk_mempool_get_mocked = false;
+	/* Part 7: simple I/O, number of SGL entries exceeds the number of entries
+	   one WR can keep. Additional WR is chained */
+	MOCK_SET(spdk_mempool_get, &data);
+	aligned_buffer = (void *)((uintptr_t)((char *)&data + NVMF_DATA_BUFFER_MASK) &
+				  ~NVMF_DATA_BUFFER_MASK);
 	reset_nvmf_rdma_request(&rdma_req);
 	rdma_req.dif_insert_or_strip = true;
 	rtransport.transport.opts.io_unit_size = data_bs * 4;
@@ -744,7 +754,21 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
-	CU_ASSERT(rc == -1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.num_extra_wrs_from_pool == 1);
+	CU_ASSERT(rdma_req.req.length == data_bs * 17);
+	CU_ASSERT(rdma_req.req.iovcnt == 5);
+	CU_ASSERT(rdma_req.orig_length == rdma_req.req.length);
+	CU_ASSERT(rdma_req.elba_length == (data_bs + md_size) * 17);
+	CU_ASSERT(rdma_req.req.data == aligned_buffer);
+	CU_ASSERT(rdma_req.data.wr.num_sge == 16);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
+	/* additional wr from pool */
+	CU_ASSERT(rdma_req.data.wr.next == (void *)&data.wr);
+	CU_ASSERT(rdma_req.data.wr.next->num_sge == 5);
+	CU_ASSERT(rdma_req.data.wr.next->next == &rdma_req.rsp.wr);
 
 	/* Part 8: simple I/O, data with metadata do not fit to 1 io_buffer */
 	MOCK_SET(spdk_mempool_get, (void *)0x2000);
@@ -794,6 +818,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data == (void *)0xDDDD);
+	CU_ASSERT(rdma_req.num_extra_wrs_from_pool == 0);
 	CU_ASSERT(rdma_req.req.length == data_bs * 3);
 	CU_ASSERT(rdma_req.elba_length == (data_bs + md_size) * 3);
 	CU_ASSERT(rdma_req.orig_length == rdma_req.req.length);
@@ -849,6 +874,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.num_extra_wrs_from_pool == 0);
 	CU_ASSERT(rdma_req.req.length == data_bs * 4 * 2);
 	CU_ASSERT(rdma_req.orig_length == rdma_req.req.length);
 	CU_ASSERT(rdma_req.elba_length == (data_bs + md_size) * 4 * 2);
