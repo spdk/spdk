@@ -1434,6 +1434,12 @@ nvmf_request_alloc_wrs(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_rdma_request_data	*current_data_wr;
 	uint32_t				i;
 
+	if (num_sgl_descriptors > SPDK_NVMF_MAX_SGL_ENTRIES) {
+		SPDK_ERRLOG("Requested to much entries (%u), the limit is %u\n",
+			    num_sgl_descriptors, SPDK_NVMF_MAX_SGL_ENTRIES);
+		return -EINVAL;
+	}
+
 	if (spdk_mempool_get_bulk(rtransport->data_wr_pool, (void **)work_requests, num_sgl_descriptors)) {
 		return -ENOMEM;
 	}
@@ -1477,13 +1483,15 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 		struct spdk_nvmf_rdma_device *device,
 		struct spdk_nvmf_rdma_request *rdma_req,
 		struct ibv_send_wr *wr,
-		uint32_t length)
+		uint32_t length,
+		uint32_t num_extra_wrs)
 {
 	const uint32_t data_block_size = rdma_req->dif_ctx.block_size - rdma_req->dif_ctx.md_size;
 	const uint32_t md_size = rdma_req->dif_ctx.md_size;
 	uint32_t remaining_length = length;
 	uint32_t remaining_io_buffer_length;
 	uint32_t remaining_data_block = data_block_size;
+	uint32_t num_used_wrs = 0;
 	uint32_t offset = 0;
 	uint32_t sge_len;
 	uint32_t sge_count;
@@ -1491,12 +1499,13 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 	uint64_t translation_len;
 	void *buf_cached = NULL;
 	uint32_t lkey_cached = 0;
+	bool has_sge = true;
 
 	wr->num_sge = 0;
 
 	assert(rdma_req->dif_insert_or_strip);
 
-	while (remaining_length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
+	while (remaining_length && has_sge) {
 		iov_count = rdma_req->req.iovcnt;
 		rdma_req->req.iov[iov_count].iov_base = (void *)((uintptr_t)(
 				rdma_req->req.buffers[iov_count] +
@@ -1507,8 +1516,19 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 		++rdma_req->req.iovcnt;
 		remaining_io_buffer_length = rdma_req->req.iov[iov_count].iov_len - offset;
 
-		while (remaining_io_buffer_length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
+		while (remaining_io_buffer_length) {
 			sge_count = wr->num_sge;
+			if (sge_count >= SPDK_NVMF_MAX_SGL_ENTRIES) {
+				if (num_extra_wrs && num_used_wrs < num_extra_wrs && wr->next) {
+					wr = wr->next;
+					wr->num_sge = 0;
+					sge_count = wr->num_sge;
+					++num_used_wrs;
+				} else {
+					has_sge = false;
+					break;
+				}
+			}
 			wr->sg_list[sge_count].addr = (uintptr_t)((char *)
 						      rdma_req->req.iov[iov_count].iov_base + offset);
 			sge_len = spdk_min(remaining_io_buffer_length, remaining_data_block);
@@ -1551,7 +1571,9 @@ nvmf_rdma_fill_buffers_with_md_interleave(struct spdk_nvmf_rdma_transport *rtran
 				offset -= rdma_req->req.iov[iov_count].iov_len;
 			}
 		}
-		remaining_length -= rdma_req->req.iov[iov_count].iov_len;
+		if (remaining_io_buffer_length == 0) {
+			remaining_length -= rdma_req->req.iov[iov_count].iov_len;
+		}
 	}
 
 	if (remaining_length) {
@@ -1612,7 +1634,8 @@ static int
 spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
 				 struct spdk_nvmf_rdma_request *rdma_req,
-				 uint32_t length)
+				 uint32_t length,
+				 uint32_t num_extra_wrs)
 {
 	struct spdk_nvmf_rdma_qpair		*rqpair;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
@@ -1635,8 +1658,14 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	req->iovcnt = 0;
 
 	if (spdk_unlikely(rdma_req->dif_insert_or_strip)) {
+		if (num_extra_wrs) {
+			rc = nvmf_request_alloc_wrs(rtransport, rdma_req, num_extra_wrs);
+			if (rc != 0) {
+				goto err_exit;
+			}
+		}
 		rc = nvmf_rdma_fill_buffers_with_md_interleave(rtransport, device, rdma_req, &rdma_req->data.wr,
-				length);
+				length, num_extra_wrs);
 	} else {
 		rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, &rdma_req->data.wr, length);
 	}
@@ -1645,6 +1674,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	}
 
 	assert(req->iovcnt <= rqpair->max_send_sge);
+	assert(rdma_req->data.wr.num_sge <= (int)rqpair->max_send_sge);
 
 	req->data_from_pool = true;
 
@@ -1734,7 +1764,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 			rdma_req->orig_length += length;
 			length = spdk_dif_get_length_with_md(length, &rdma_req->dif_ctx);
 			rdma_req->elba_length += length;
-			rc = nvmf_rdma_fill_buffers_with_md_interleave(rtransport, device, rdma_req, current_wr, length);
+			rc = nvmf_rdma_fill_buffers_with_md_interleave(rtransport, device, rdma_req, current_wr, length, 0);
 		} else {
 			rc = nvmf_rdma_fill_buffers(rtransport, rgroup, device, req, current_wr,
 						    length);
@@ -1772,6 +1802,28 @@ err_exit:
 	return rc;
 }
 
+static inline uint32_t
+spdk_nvmf_rdma_calc_num_wrs(uint32_t length, uint32_t io_unit_size, uint32_t block_size)
+{
+	/* estimate the number of SG entries and WRs needed to process the request */
+	uint32_t num_sge = 0;
+	uint32_t remaining_len = length;
+	uint32_t i;
+	uint32_t num_buffers = SPDK_CEIL_DIV(length, io_unit_size);
+
+	for (i = 0; i < num_buffers && remaining_len > 0; i++) {
+		uint32_t buffer_len = spdk_min(remaining_len, io_unit_size);
+		uint32_t num_sge_in_block = SPDK_CEIL_DIV(buffer_len,  block_size);
+
+		if (num_sge_in_block * block_size > buffer_len) {
+			++num_sge_in_block;
+		}
+		num_sge += num_sge_in_block;
+		remaining_len -= buffer_len;
+	}
+	return SPDK_CEIL_DIV(num_sge, SPDK_NVMF_MAX_SGL_ENTRIES);
+}
+
 static int
 spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
@@ -1790,6 +1842,8 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 	    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 	     sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
+
+		uint32_t num_wrs = 1;
 
 		length = sgl->keyed.length;
 		if (length > rtransport->transport.opts.max_io_size) {
@@ -1814,9 +1868,12 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_req->orig_length = length;
 			length = spdk_dif_get_length_with_md(length, &rdma_req->dif_ctx);
 			rdma_req->elba_length = length;
+			num_wrs = spdk_nvmf_rdma_calc_num_wrs(length, rtransport->transport.opts.io_unit_size,
+							      rdma_req->dif_ctx.block_size);
+			assert(num_wrs > 0);
 		}
 
-		rc = spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length);
+		rc = spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req, length, num_wrs - 1);
 		if (rc == -ENOMEM) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
@@ -1838,18 +1895,37 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		/* rdma wr specifics */
 		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
 		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
-		if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-			rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
-			rdma_req->data.wr.next = &rdma_req->rsp.wr;
-			rdma_req->data.wr.send_flags &= ~IBV_SEND_SIGNALED;
-		} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
-			rdma_req->data.wr.next = NULL;
-			rdma_req->data.wr.send_flags |= IBV_SEND_SIGNALED;
-		}
 
-		/* set the number of outstanding data WRs for this request. */
-		rdma_req->num_outstanding_data_wr = 1;
+		if (spdk_unlikely(rdma_req->dif_insert_or_strip && num_wrs > 1)) {
+			/* additional WRs have been allocated, flags, opcodes & links to next WR already filled */
+			uint32_t i;
+			int j;
+			uint64_t remote_addr_offset = 0;
+			struct ibv_send_wr *current_data_wr = &rdma_req->data.wr;
+
+			for (i = 0; i < num_wrs + 1; ++i) {
+				current_data_wr->wr.rdma.rkey = sgl->keyed.key;
+				current_data_wr->wr.rdma.remote_addr = sgl->address + remote_addr_offset;
+				for (j = 0; j < current_data_wr->num_sge; ++j) {
+					remote_addr_offset += current_data_wr->sg_list[j].length;
+				}
+				current_data_wr = current_data_wr->next;
+			}
+			rdma_req->num_outstanding_data_wr = num_wrs;
+		} else {
+			if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+				rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
+				rdma_req->data.wr.next = &rdma_req->rsp.wr;
+				rdma_req->data.wr.send_flags &= ~IBV_SEND_SIGNALED;
+			} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+				rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
+				rdma_req->data.wr.next = NULL;
+				rdma_req->data.wr.send_flags |= IBV_SEND_SIGNALED;
+			}
+
+			/* set the number of outstanding data WRs for this request. */
+			rdma_req->num_outstanding_data_wr = 1;
+		}
 
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
 			      rdma_req->req.iovcnt);
