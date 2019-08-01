@@ -1697,7 +1697,6 @@ iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 	const char *val;
 	int rc = 0;
 	struct spdk_iscsi_tgt_node *target = conn->target;
-	struct spdk_iscsi_portal *portal = conn->portal;
 
 	/* declarative parameters */
 	if (target != NULL) {
@@ -1714,7 +1713,7 @@ iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 			return SPDK_ISCSI_LOGIN_ERROR_PARAMETER;
 		}
 	}
-	snprintf(buf, sizeof buf, "%s:%s,%d", portal->host, portal->port,
+	snprintf(buf, sizeof buf, "%s:%s,%d", conn->portal_host, conn->portal_port,
 		 conn->pg_tag);
 	rc = spdk_iscsi_param_set(conn->sess->params, "TargetAddress", buf);
 	if (rc < 0) {
@@ -2079,7 +2078,7 @@ iscsi_op_login_notify_session_info(struct spdk_iscsi_conn *conn,
 			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			      conn->initiator_name, conn->initiator_addr,
 			      conn->target->name, conn->target->num,
-			      conn->portal->host, conn->portal->port, conn->pg_tag,
+			      conn->portal_host, conn->portal_port, conn->pg_tag,
 			      conn->sess->isid, conn->sess->tsih, conn->cid,
 			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
 			       ? "on" : "off"),
@@ -2091,7 +2090,7 @@ iscsi_op_login_notify_session_info(struct spdk_iscsi_conn *conn,
 			      " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			      " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			      conn->initiator_name, conn->initiator_addr,
-			      conn->portal->host, conn->portal->port, conn->pg_tag,
+			      conn->portal_host, conn->portal_port, conn->pg_tag,
 			      conn->sess->isid, conn->sess->tsih, conn->cid,
 			      (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
 			       ? "on" : "off"),
