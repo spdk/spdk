@@ -1709,7 +1709,6 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_rdma_qpair		*rqpair;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	uint32_t				num_buffers;
-	uint32_t				i = 0;
 	int					rc = 0;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
@@ -1765,12 +1764,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 err_exit:
 	spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport, num_buffers);
-	while (i) {
-		i--;
-		rdma_req->data.wr.sg_list[i].addr = 0;
-		rdma_req->data.wr.sg_list[i].length = 0;
-		rdma_req->data.wr.sg_list[i].lkey = 0;
-	}
+	nvmf_rdma_request_free_data(rdma_req, rtransport);
 	rdma_req->req.iovcnt = 0;
 	return rc;
 }
