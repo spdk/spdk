@@ -34,6 +34,24 @@
       "revId": "a0d73e0a1696a7603f3275ebc35199153f2d2627",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4873807e_069cfc88",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-01T02:41:04Z",
+      "side": 1,
+      "message": "static unregister_cb(void *io_device) {\n    raid_bdev_cleanup(raid_bdev);\n}\n\nif (raid_bdev-\u003enum_base_bdevs_discovered \u003d\u003d 0) {\n    spdk_io_device_unregister(raid_bdev, unregister_cb);\n}\n\nCan you have a try to see the result, and what\u0027s the error from UT?",
+      "parentUuid": "b983b8e9_9bd1c965",
+      "revId": "a0d73e0a1696a7603f3275ebc35199153f2d2627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
