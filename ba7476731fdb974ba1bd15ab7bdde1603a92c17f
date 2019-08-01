@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97ee8b41_33e8715f",
+        "filename": "doc/bdev.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-08-01T18:27:58Z",
+      "side": 1,
+      "message": "\"This\" instead of \"THis\"",
+      "range": {
+        "startLine": 223,
+        "startChar": 60,
+        "endLine": 223,
+        "endChar": 61
+      },
+      "revId": "ba7476731fdb974ba1bd15ab7bdde1603a92c17f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
