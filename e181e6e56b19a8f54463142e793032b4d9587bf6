@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d96af2f_4638b6db",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-01T01:41:14Z",
+      "side": 1,
+      "message": "Redundant call for the whole script, you only need to call it once.\n\n$rpc_py set_compress_pmd -p 2\n$rpc_py construct_nvme_bdev -b \"Nvme0\" -t \"pcie\" -a $bdf\nwaitforbdev $compress_bdev",
+      "revId": "e181e6e56b19a8f54463142e793032b4d9587bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "510149e5_2aa6efe4",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-01T01:41:14Z",
+      "side": 1,
+      "message": "The section can be reused by Nightly tests.",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 2
+      },
+      "revId": "e181e6e56b19a8f54463142e793032b4d9587bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
