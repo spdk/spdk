@@ -4,9 +4,10 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vhost/common.sh
+source $rootdir/scripts/common.sh
 
 vm_count=1
-vm_memory=2048
+vm_memory=4096
 vm_sar_enable=false
 vm_sar_delay="0"
 vm_sar_interval="1"
@@ -43,7 +44,7 @@ function usage()
 	echo "                            to run FIO test."
 	echo "                            Default: 1"
 	echo "    --vm-memory=INT         Amount of RAM memory (in MB) to pass to a single VM."
-	echo "                            Default: 2048 MB"
+	echo "                            Default: 4096 MB"
 	echo "    --vm-image=PATH         OS image to use for running the VMs."
 	echo "                            Default: \$HOME/vhost_vm_image.qcow2"
 	echo "    --vm-sar-enable         Measure CPU utilization on VM using sar."
