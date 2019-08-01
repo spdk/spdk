@@ -45,6 +45,7 @@ struct rpc_construct_null {
 	uint64_t num_blocks;
 	uint32_t block_size;
 	uint32_t md_size;
+	int32_t dif_type;
 };
 
 static void
@@ -60,6 +61,7 @@ static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 	{"num_blocks", offsetof(struct rpc_construct_null, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct rpc_construct_null, block_size), spdk_json_decode_uint32},
 	{"md_size", offsetof(struct rpc_construct_null, md_size), spdk_json_decode_uint32, true},
+	{"dif_type", offsetof(struct rpc_construct_null, dif_type), spdk_json_decode_int32, true},
 };
 
 static void
@@ -104,12 +106,19 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 		uuid = &decoded_uuid;
 	}
 
+	if (req.dif_type < SPDK_DIF_DISABLE || req.dif_type > SPDK_DIF_TYPE3) {
+		spdk_jsonrpc_send_error_response(request, -EINVAL, "Invalid DIF type");
+		goto cleanup;
+	}
+
 	opts.name = req.name;
 	opts.uuid = uuid;
 	opts.num_blocks = req.num_blocks;
 	opts.block_size = req.block_size;
 	opts.md_size = req.md_size;
 	opts.md_interleave = true;
+	opts.dif_type = req.dif_type;
+	opts.dif_is_head_of_md = true;
 	rc = create_null_bdev(&bdev, &opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));

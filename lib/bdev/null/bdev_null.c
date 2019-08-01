@@ -209,6 +209,7 @@ bdev_null_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_uint64(w, "num_blocks", bdev->blockcnt);
 	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen - bdev->md_len);
 	spdk_json_write_named_uint32(w, "md_size", bdev->md_len);
+	spdk_json_write_named_uint32(w, "dif_type", bdev->dif_type);
 	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
 	spdk_json_write_named_string(w, "uuid", uuid_str);
 	spdk_json_write_object_end(w);
