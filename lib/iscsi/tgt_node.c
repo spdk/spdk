@@ -268,7 +268,7 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 denied:
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "access denied from %s (%s) to %s (%s:%s,%d)\n",
 		      iqn, addr, target->name, conn->portal->host,
-		      conn->portal->port, conn->portal->group->tag);
+		      conn->portal->port, conn->pg_tag);
 	return false;
 }
 
