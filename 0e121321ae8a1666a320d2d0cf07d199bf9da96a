@@ -16,6 +16,24 @@
       "revId": "0e121321ae8a1666a320d2d0cf07d199bf9da96a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0912beac_c913a663",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-08-01T11:30:38Z",
+      "side": 1,
+      "message": "ZNS NVMe spec defines more states and there is whole between Closed/Read Only.\n0h\tReserved\n1h\tEmpty\n2h\tImplicitly Opened\n3h\tExplicitly Opened\n4h\tClosed\n5h – Ch\tReserved\nDh\tRead Only\nEh\tFull\nFh\tOffline",
+      "parentUuid": "7b4397fa_1ed2cc4a",
+      "revId": "0e121321ae8a1666a320d2d0cf07d199bf9da96a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
