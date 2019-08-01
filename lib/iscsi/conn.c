@@ -229,6 +229,10 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->pg_tag = portal->group->tag;
 	conn->portal_host = strdup(portal->host);
 	conn->portal_port = strdup(portal->port);
+	if (conn->portal_host == NULL || conn->portal_port == NULL) {
+		SPDK_ERRLOG("Failed to duplicate host or port of portal\n");
+		goto error_return;
+	}
 	conn->portal_cpumask = &portal->cpumask;
 	conn->sock = sock;
 
