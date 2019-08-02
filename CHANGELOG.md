@@ -7,6 +7,11 @@
 Portals may no longer be associated with a cpumask. The scheduling of
 connections is moving to a more dynamic model.
 
+### event
+
+Function spdk_app_json_config_load() is now exposed to internal SPDK API,
+for use in other libraries.
+
 ## v19.07:
 
 ### ftl
