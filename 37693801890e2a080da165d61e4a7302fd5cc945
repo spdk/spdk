@@ -1,0 +1,24 @@
+{
+  "comments": [
+    {
+      "robotId": "manual-curl",
+      "robotRunId": "0",
+      "fixSuggestions": [],
+      "key": {
+        "uuid": "a8d5f372_118c1782",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-02T09:00:22Z",
+      "side": 1,
+      "message": "Failure on this line",
+      "revId": "37693801890e2a080da165d61e4a7302fd5cc945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
