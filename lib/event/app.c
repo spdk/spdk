@@ -1061,14 +1061,7 @@ spdk_rpc_start_subsystem_init_cpl(void *arg1)
 	assert(spdk_get_thread() == g_app_thread);
 
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
-	/* If we're loading JSON config file, we're still operating on a fake,
-	 * temporary RPC server. We'll have to defer calling the app start callback
-	 * until this temporary server is shut down and a real one - listening on
-	 * the proper socket - is started.
-	 */
-	if (g_spdk_app.json_config_file == NULL) {
-		spdk_app_start_application();
-	}
+	spdk_app_start_application();
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_bool(w, true);
