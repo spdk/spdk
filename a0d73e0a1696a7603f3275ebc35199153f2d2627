@@ -70,6 +70,24 @@
       "revId": "a0d73e0a1696a7603f3275ebc35199153f2d2627",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "917508dd_122c8097",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-08-02T01:47:37Z",
+      "side": 1,
+      "message": "hi changpeng ,\n  for unit test issue, \nunitest rewrte some fuctions ,such as:\nvoid\nspdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)\n{\n\tbdev-\u003efn_table-\u003edestruct(bdev-\u003ectxt);\n\n\tif (cb_fn) {\n\t\tcb_fn(cb_arg, 0);\n\t}\n}\n\nbut destruct still use code in raid_bdev.c\nnow we use callback function to do spdk_io_device_unregister(raid_bdev, unregister_cb);\n\nit will iterative effect following testing items.",
+      "parentUuid": "5edcbfb1_c55f1958",
+      "revId": "a0d73e0a1696a7603f3275ebc35199153f2d2627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
