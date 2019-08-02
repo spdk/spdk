@@ -77,6 +77,11 @@ struct spdk_nvme_ctrlr_opts {
 	bool use_cmb_sqs;
 
 	/**
+	 * Don't initiate shutdown processing
+	 */
+	bool no_shn_notification;
+
+	/**
 	 * Type of arbitration mechanism
 	 */
 	enum spdk_nvme_cc_ams arb_mechanism;
