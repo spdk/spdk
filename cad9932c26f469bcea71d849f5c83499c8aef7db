@@ -16,6 +16,24 @@
       "revId": "cad9932c26f469bcea71d849f5c83499c8aef7db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b31cbe73_66f990d9",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-02T18:11:13Z",
+      "side": 1,
+      "message": "Great question! I\u0027m gonna throw Jim under the bus on this one :) Our initial experimental release did not account for which PMD the vol was created with in metadata and Jim didn\u0027t want to change the metadata format at that point in time.  So, on load I have no clue which PMD was used so best we could do was add this RPC which is global but can be changed in between creating comp vols at least. Not perfect but at least it does fit the most common usage model of \"I only want to use XYZ\" and we only support RPC config anyways....",
+      "parentUuid": "b865cb6b_c54925cc",
+      "revId": "cad9932c26f469bcea71d849f5c83499c8aef7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
