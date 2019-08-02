@@ -46,7 +46,7 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
-#define SPDK_DEBUG_APP_CFG(...) SPDK_DEBUGLOG(SPDK_LOG_APP_CONFIG, __VA_ARGS__)
+#define SPDK_DEBUG_APP_CFG(...) SPDK_ERRLOG(__VA_ARGS__)
 
 /* JSON configuration format is as follows
  *
