@@ -111,6 +111,10 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 		opts->use_cmb_sqs = true;
 	}
 
+	if (FIELD_OK(no_shn_notification)) {
+		opts->no_shn_notification = false;
+	}
+
 	if (FIELD_OK(arb_mechanism)) {
 		opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 	}
@@ -677,6 +681,30 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	cc.bits.ams = ctrlr->opts.arb_mechanism;
+
+	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
+		SPDK_ERRLOG("set_cc() failed\n");
+		return -EIO;
+	}
+
+	return 0;
+}
+
+static int
+nvme_ctrlr_disable(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_cc_register	cc;
+
+	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
+		SPDK_ERRLOG("get_cc() failed\n");
+		return -EIO;
+	}
+
+	if (cc.bits.en == 0) {
+		return 0;
+	}
+
+	cc.bits.en = 0;
 
 	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 		SPDK_ERRLOG("set_cc() failed\n");
@@ -2366,7 +2394,13 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
 
-	nvme_ctrlr_shutdown(ctrlr);
+	if (ctrlr->opts.no_shn_notification) {
+		SPDK_INFOLOG(SPDK_LOG_NVME, "Disable SSD: %s without shutdown notification\n",
+			     ctrlr->trid.traddr);
+		nvme_ctrlr_disable(ctrlr);
+	} else {
+		nvme_ctrlr_shutdown(ctrlr);
+	}
 
 	nvme_ctrlr_destruct_namespaces(ctrlr);
 

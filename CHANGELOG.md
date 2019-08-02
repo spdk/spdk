@@ -2,6 +2,13 @@
 
 ## v19.10: (Upcoming Release)
 
+### nvme
+
+Added `no_shn_notification` to NVMe controller initialization options, users can enable
+it for NVMe controllers.  When the option is enabled, the controller will not do the
+shutdown process and just disable the controller, users can start their application
+later again to initialize the controller to the ready state.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
