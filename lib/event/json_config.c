@@ -31,8 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "json_config.h"
-
 #include "spdk/stdinc.h"
 
 #include "spdk/util.h"

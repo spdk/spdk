@@ -44,8 +44,6 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
-#include "json_config.h"
-
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
 #define SPDK_APP_DEFAULT_BACKTRACE_LOG_LEVEL	SPDK_LOG_ERROR
