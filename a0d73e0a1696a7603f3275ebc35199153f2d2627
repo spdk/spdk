@@ -88,6 +88,24 @@
       "revId": "a0d73e0a1696a7603f3275ebc35199153f2d2627",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba28d188_10fc9a16",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-08-02T08:24:00Z",
+      "side": 1,
+      "message": "I mean in this function:\n    bdev-\u003efn_table-\u003edestruct(bdev-\u003ectxt); --\u003ecallback raid_bdev_cleanup()\nif (cb_fn) {\n\tcb_fn(cb_arg, 0);---\u003ecallback destroy_raid_bdev_done(raid_bdev_config_cleanup) sometimes hits \"assert(raid_cfg-\u003eraid_bdev \u003d\u003d NULL);\"\n\t}\nthere\u0027re two callbacks and code does need the right steps.\nso it\u0027s better not to use callback in raid_bdev_config_cleanup calls spdk_io_unregister().\nDo you have any suggestions?",
+      "parentUuid": "917508dd_122c8097",
+      "revId": "a0d73e0a1696a7603f3275ebc35199153f2d2627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
