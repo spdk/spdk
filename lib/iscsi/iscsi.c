@@ -1381,26 +1381,26 @@ iscsi_op_login_negotiate_digest_param(struct spdk_iscsi_conn *conn,
  */
 static int
 iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
-			     struct spdk_iscsi_pdu *rsp_pdu,
-			     char *initiator_port_name, int cid)
+			     struct iscsi_login_context *ctx,
+			     char *initiator_port_name)
 
 {
 	int rc = 0;
 	struct iscsi_bhs_login_rsp *rsph;
 
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	rsph = (struct iscsi_bhs_login_rsp *)&ctx->rsp_pdu->bhs;
 	/* check existing session */
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "isid=%"PRIx64", tsih=%u, cid=%u\n",
-		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), cid);
+		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), ctx->cid);
 	if (rsph->tsih != 0) {
 		/* multiple connections */
 		rc = append_iscsi_sess(conn, initiator_port_name,
-				       from_be16(&rsph->tsih), cid);
+				       from_be16(&rsph->tsih), ctx->cid);
 		if (rc != 0) {
 			SPDK_ERRLOG("isid=%"PRIx64", tsih=%u, cid=%u:"
 				    "spdk_append_iscsi_sess() failed\n",
 				    iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih),
-				    cid);
+				    ctx->cid);
 			/* Can't include in session */
 			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
 			rsph->status_detail = rc;
@@ -1514,8 +1514,7 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	conn->target_port = spdk_scsi_dev_find_port_by_id(target->dev,
 			    conn->pg_tag);
 
-	rc = iscsi_op_login_check_session(conn, ctx->rsp_pdu,
-					  initiator_port_name, ctx->cid);
+	rc = iscsi_op_login_check_session(conn, ctx, initiator_port_name);
 	if (rc < 0) {
 		return rc;
 	}
