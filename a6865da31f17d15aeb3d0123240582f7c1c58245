@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "006f3967_62fcce80",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-02T05:10:30Z",
+      "side": 1,
+      "message": "Hi Seth,\n\nCould you please comment on the above? Maybe you already looked at the next change which may cause more questions? In the next change I moved poll_group management logic from nvmf_tgt.c to nvmf.c since it seemed for me that it was redundant to be used in nvmf target. Also since all poll_groups are kept in target, we can\u0027t access them easy from RDMA transport to select one.",
+      "parentUuid": "27aa7553_0af7f8c5",
+      "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e248e12b_d8170e5f",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 2
