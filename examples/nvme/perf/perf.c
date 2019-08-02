@@ -185,6 +185,7 @@ static bool g_no_pci;
 static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
+static bool g_no_shn_notification = false;
 static uint32_t g_keep_alive_timeout_in_ms = 0;
 
 static const char *g_core_mask;
@@ -869,6 +870,7 @@ static void usage(char *program_name)
 	printf("\t[-D disable submission queue in controller memory buffer, default: enabled]\n");
 	printf("\t[-H enable header digest for TCP transport, default: disabled]\n");
 	printf("\t[-I enable data digest for TCP transport, default: disabled]\n");
+	printf("\t[-N no shutdown notification process for controllers, default: disabled]\n");
 	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
@@ -1308,7 +1310,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:U:V")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:NU:V")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
@@ -1402,6 +1404,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'L':
 			g_latency_sw_tracking_level++;
+			break;
+		case 'N':
+			g_no_shn_notification = true;
 			break;
 		case 'V':
 			g_vmd = true;
@@ -1563,6 +1568,9 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	} else {
 		if (g_disable_sq_cmb) {
 			opts->use_cmb_sqs = false;
+		}
+		if (g_no_shn_notification) {
+			opts->no_shn_notification = true;
 		}
 
 		printf("Attaching to NVMe Controller at %s\n",
