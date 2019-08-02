@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b760949_ce28ed6e",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-02T17:39:41Z",
+      "side": 1,
+      "message": "Do we only want to test this with TCP? It\u0027s fine if we do, but I am just curious about the motivation.",
+      "revId": "dc38d66be42a57f0b0ffdcbc4a0c3aadc9a3b38e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
