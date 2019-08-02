@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -69,6 +69,7 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 	struct spdk_uuid *uuid = NULL;
 	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
+	struct spdk_null_bdev_opts opts = {};
 	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_construct_null_decoders,
@@ -101,7 +102,11 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 		uuid = &decoded_uuid;
 	}
 
-	rc = create_null_bdev(&bdev, req.name, uuid, req.num_blocks, req.block_size);
+	opts.name = req.name;
+	opts.uuid = uuid;
+	opts.num_blocks = req.num_blocks;
+	opts.block_size = req.block_size;
+	rc = create_null_bdev(&bdev, &opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

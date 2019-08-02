@@ -172,18 +172,22 @@ static const struct spdk_bdev_fn_table null_fn_table = {
 };
 
 int
-create_null_bdev(struct spdk_bdev **bdev, const char *name, const struct spdk_uuid *uuid,
-		 uint64_t num_blocks, uint32_t block_size)
+create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts)
 {
 	struct null_bdev *null_disk;
 	int rc;
 
-	if (block_size % 512 != 0) {
-		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", block_size);
+	if (!opts) {
+		SPDK_ERRLOG("No options provided for Null bdev.\n");
 		return -EINVAL;
 	}
 
-	if (num_blocks == 0) {
+	if (opts->block_size % 512 != 0) {
+		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", opts->block_size);
+		return -EINVAL;
+	}
+
+	if (opts->num_blocks == 0) {
 		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
 		return -EINVAL;
 	}
@@ -194,7 +198,7 @@ create_null_bdev(struct spdk_bdev **bdev, const char *name, const struct spdk_uu
 		return -ENOMEM;
 	}
 
-	null_disk->bdev.name = strdup(name);
+	null_disk->bdev.name = strdup(opts->name);
 	if (!null_disk->bdev.name) {
 		free(null_disk);
 		return -ENOMEM;
@@ -202,10 +206,10 @@ create_null_bdev(struct spdk_bdev **bdev, const char *name, const struct spdk_uu
 	null_disk->bdev.product_name = "Null disk";
 
 	null_disk->bdev.write_cache = 0;
-	null_disk->bdev.blocklen = block_size;
-	null_disk->bdev.blockcnt = num_blocks;
-	if (uuid) {
-		null_disk->bdev.uuid = *uuid;
+	null_disk->bdev.blocklen = opts->block_size;
+	null_disk->bdev.blockcnt = opts->num_blocks;
+	if (opts->uuid) {
+		null_disk->bdev.uuid = *opts->uuid;
 	} else {
 		spdk_uuid_generate(&null_disk->bdev.uuid);
 	}
@@ -295,6 +299,7 @@ bdev_null_initialize(void)
 	int block_size, i, rc = 0;
 	struct spdk_bdev *bdev;
 	const char *name, *val;
+	struct spdk_null_bdev_opts opts = {};
 
 	TAILQ_INIT(&g_null_bdev_head);
 
@@ -356,7 +361,10 @@ bdev_null_initialize(void)
 
 		num_blocks = size_in_mb * (1024 * 1024) / block_size;
 
-		rc = create_null_bdev(&bdev, name, NULL, num_blocks, block_size);
+		opts.name = name;
+		opts.num_blocks = num_blocks;
+		opts.block_size = block_size;
+		rc = create_null_bdev(&bdev, &opts);
 		if (rc) {
 			SPDK_ERRLOG("Could not create null bdev\n");
 			goto end;
