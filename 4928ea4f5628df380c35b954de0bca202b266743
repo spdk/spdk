@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c25b88e5_45c2b2f8",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-02T08:44:16Z",
+      "side": 1,
+      "message": "Maybe return ENODEV ?",
+      "range": {
+        "startLine": 339,
+        "startChar": 10,
+        "endLine": 339,
+        "endChar": 11
+      },
+      "revId": "4928ea4f5628df380c35b954de0bca202b266743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "93148556_c802dfda",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-02T08:44:16Z",
+      "side": 1,
+      "message": "Since socket() is posix call, we can return errno here instead.",
+      "range": {
+        "startLine": 345,
+        "startChar": 10,
+        "endLine": 345,
+        "endChar": 16
+      },
+      "revId": "4928ea4f5628df380c35b954de0bca202b266743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5d5413d_e5b99ccc",
+        "filename": "lib/net/net_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-02T08:44:16Z",
+      "side": 1,
+      "message": "ENODEV",
+      "range": {
+        "startLine": 79,
+        "startChar": 17,
+        "endLine": 79,
+        "endChar": 19
+      },
+      "revId": "4928ea4f5628df380c35b954de0bca202b266743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b76e6d5d_1506e641",
+        "filename": "lib/net/net_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-02T08:44:16Z",
+      "side": 1,
+      "message": "Post returned rc along with msg.",
+      "range": {
+        "startLine": 84,
+        "startChar": 32,
+        "endLine": 84,
+        "endChar": 33
+      },
+      "revId": "4928ea4f5628df380c35b954de0bca202b266743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91107a75_4f5120c8",
+        "filename": "lib/net/net_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-02T08:44:16Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 120,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 3
+      },
+      "revId": "4928ea4f5628df380c35b954de0bca202b266743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
