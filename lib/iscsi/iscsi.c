@@ -769,9 +769,10 @@ iscsi_append_text(struct spdk_iscsi_conn *conn __attribute__((__unused__)),
 
 static int
 iscsi_append_param(struct spdk_iscsi_conn *conn, const char *key,
-		   uint8_t *data, int alloc_len, int data_len)
+		   struct iscsi_login_context *ctx)
 {
 	struct iscsi_param *param;
+	struct spdk_iscsi_pdu *rsp_pdu = ctx->rsp_pdu;
 	int rc;
 
 	param = spdk_iscsi_param_find(conn->params, key);
@@ -779,11 +780,11 @@ iscsi_append_param(struct spdk_iscsi_conn *conn, const char *key,
 		param = spdk_iscsi_param_find(conn->sess->params, key);
 		if (param == NULL) {
 			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "no key %.64s\n", key);
-			return data_len;
+			return rsp_pdu->data_segment_len;
 		}
 	}
-	rc = iscsi_append_text(conn, param->key, param->val, data,
-			       alloc_len, data_len);
+	rc = iscsi_append_text(conn, param->key, param->val, rsp_pdu->data,
+			       ctx->alloc_len, rsp_pdu->data_segment_len);
 	return rc;
 }
 
@@ -813,9 +814,10 @@ iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 
 static int
 iscsi_auth_params(struct spdk_iscsi_conn *conn,
-		  struct iscsi_param *params, const char *method, uint8_t *data,
-		  int alloc_len, int data_len)
+		  struct iscsi_login_context *ctx,
+		  const char *method)
 {
+	struct spdk_iscsi_pdu *rsp_pdu = ctx->rsp_pdu;
 	char *in_val;
 	char *in_next;
 	char *new_val;
@@ -827,7 +829,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 	int total;
 	int rc;
 
-	if (conn == NULL || params == NULL || method == NULL) {
+	if (conn == NULL || ctx->params == NULL || method == NULL) {
 		return -1;
 	}
 	if (strcasecmp(method, "CHAP") == 0) {
@@ -837,13 +839,13 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		return -1;
 	}
 
-	total = data_len;
-	if (alloc_len < 1) {
+	total = rsp_pdu->data_segment_len;
+	if (ctx->alloc_len < 1) {
 		return 0;
 	}
-	if (total > alloc_len) {
-		total = alloc_len;
-		data[total - 1] = '\0';
+	if (total > ctx->alloc_len) {
+		total = ctx->alloc_len;
+		rsp_pdu->data[total - 1] = '\0';
 		return total;
 	}
 
@@ -855,7 +857,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 	}
 
 	/* CHAP method (RFC1994) */
-	if ((algorithm = spdk_iscsi_param_get_val(params, "CHAP_A")) != NULL) {
+	if ((algorithm = spdk_iscsi_param_get_val(ctx->params, "CHAP_A")) != NULL) {
 		if (conn->auth.chap_phase != ISCSI_CHAP_PHASE_WAIT_A) {
 			SPDK_ERRLOG("CHAP sequence error\n");
 			goto error_return;
@@ -874,20 +876,20 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN + 1, "%s", "Reject");
 			new_val = in_val;
 			iscsi_append_text(conn, "CHAP_A", new_val,
-					  data, alloc_len, total);
+					  rsp_pdu->data, ctx->alloc_len, total);
 			goto error_return;
 		}
 		/* selected algorithm is 5 (MD5) */
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "got CHAP_A=%s\n", new_val);
 		total = iscsi_append_text(conn, "CHAP_A", new_val,
-					  data, alloc_len, total);
+					  rsp_pdu->data, ctx->alloc_len, total);
 
 		/* Identifier is one octet */
 		gen_random(conn->auth.chap_id, 1);
 		snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN, "%d",
 			 (int) conn->auth.chap_id[0]);
 		total = iscsi_append_text(conn, "CHAP_I", in_val,
-					  data, alloc_len, total);
+					  rsp_pdu->data, ctx->alloc_len, total);
 
 		/* Challenge Value is a variable stream of octets */
 		/* (binary length MUST not exceed 1024 bytes) */
@@ -896,10 +898,10 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN,
 			conn->auth.chap_challenge, conn->auth.chap_challenge_len);
 		total = iscsi_append_text(conn, "CHAP_C", in_val,
-					  data, alloc_len, total);
+					  rsp_pdu->data, ctx->alloc_len, total);
 
 		conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_NR;
-	} else if ((name = spdk_iscsi_param_get_val(params, "CHAP_N")) != NULL) {
+	} else if ((name = spdk_iscsi_param_get_val(ctx->params, "CHAP_N")) != NULL) {
 		uint8_t resmd5[SPDK_MD5DIGEST_LEN];
 		uint8_t tgtmd5[SPDK_MD5DIGEST_LEN];
 		struct spdk_md5ctx md5ctx;
@@ -910,7 +912,7 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			goto error_return;
 		}
 
-		response = spdk_iscsi_param_get_val(params, "CHAP_R");
+		response = spdk_iscsi_param_get_val(ctx->params, "CHAP_R");
 		if (response == NULL) {
 			SPDK_ERRLOG("no response\n");
 			goto error_return;
@@ -979,10 +981,10 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		conn->authenticated = true;
 
 		/* mutual CHAP? */
-		identifier = spdk_iscsi_param_get_val(params, "CHAP_I");
+		identifier = spdk_iscsi_param_get_val(ctx->params, "CHAP_I");
 		if (identifier != NULL) {
 			conn->auth.chap_mid[0] = (uint8_t) strtol(identifier, NULL, 10);
-			challenge = spdk_iscsi_param_get_val(params, "CHAP_C");
+			challenge = spdk_iscsi_param_get_val(ctx->params, "CHAP_C");
 			if (challenge == NULL) {
 				SPDK_ERRLOG("CHAP sequence error\n");
 				goto error_return;
@@ -1037,9 +1039,9 @@ iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			bin2hex(in_val, ISCSI_TEXT_MAX_VAL_LEN, tgtmd5, SPDK_MD5DIGEST_LEN);
 
 			total = iscsi_append_text(conn, "CHAP_N",
-						  conn->auth.muser, data, alloc_len, total);
+						  conn->auth.muser, rsp_pdu->data, ctx->alloc_len, total);
 			total = iscsi_append_text(conn, "CHAP_R",
-						  in_val, data, alloc_len, total);
+						  in_val, rsp_pdu->data, ctx->alloc_len, total);
 		} else {
 			/* not mutual */
 			if (conn->mutual_chap) {
@@ -1381,26 +1383,26 @@ iscsi_op_login_negotiate_digest_param(struct spdk_iscsi_conn *conn,
  */
 static int
 iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
-			     struct spdk_iscsi_pdu *rsp_pdu,
-			     char *initiator_port_name, int cid)
+			     struct iscsi_login_context *ctx,
+			     char *initiator_port_name)
 
 {
 	int rc = 0;
 	struct iscsi_bhs_login_rsp *rsph;
 
-	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	rsph = (struct iscsi_bhs_login_rsp *)&ctx->rsp_pdu->bhs;
 	/* check existing session */
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "isid=%"PRIx64", tsih=%u, cid=%u\n",
-		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), cid);
+		      iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), ctx->cid);
 	if (rsph->tsih != 0) {
 		/* multiple connections */
 		rc = append_iscsi_sess(conn, initiator_port_name,
-				       from_be16(&rsph->tsih), cid);
+				       from_be16(&rsph->tsih), ctx->cid);
 		if (rc != 0) {
 			SPDK_ERRLOG("isid=%"PRIx64", tsih=%u, cid=%u:"
 				    "spdk_append_iscsi_sess() failed\n",
 				    iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih),
-				    cid);
+				    ctx->cid);
 			/* Can't include in session */
 			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
 			rsph->status_detail = rc;
@@ -1514,8 +1516,7 @@ iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	conn->target_port = spdk_scsi_dev_find_port_by_id(target->dev,
 			    conn->pg_tag);
 
-	rc = iscsi_op_login_check_session(conn, ctx->rsp_pdu,
-					  initiator_port_name, ctx->cid);
+	rc = iscsi_op_login_check_session(conn, ctx, initiator_port_name);
 	if (rc < 0) {
 		return rc;
 	}
@@ -1742,23 +1743,14 @@ iscsi_op_login_set_target_info(struct spdk_iscsi_conn *conn,
 		val = spdk_iscsi_param_get_val(conn->sess->params, "TargetAlias");
 		if (val != NULL && strlen(val) != 0) {
 			ctx->rsp_pdu->data_segment_len = iscsi_append_param(conn,
-							 "TargetAlias",
-							 ctx->rsp_pdu->data,
-							 ctx->alloc_len,
-							 ctx->rsp_pdu->data_segment_len);
+							 "TargetAlias", ctx);
 		}
 		if (session_type == SESSION_TYPE_DISCOVERY) {
 			ctx->rsp_pdu->data_segment_len = iscsi_append_param(conn,
-							 "TargetAddress",
-							 ctx->rsp_pdu->data,
-							 ctx->alloc_len,
-							 ctx->rsp_pdu->data_segment_len);
+							 "TargetAddress", ctx);
 		}
 		ctx->rsp_pdu->data_segment_len = iscsi_append_param(conn,
-						 "TargetPortalGroupTag",
-						 ctx->rsp_pdu->data,
-						 ctx->alloc_len,
-						 ctx->rsp_pdu->data_segment_len);
+						 "TargetPortalGroupTag", ctx);
 	}
 
 	return rc;
@@ -1996,9 +1988,7 @@ iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 		if (strcasecmp(auth_method, "None") == 0) {
 			conn->authenticated = true;
 		} else {
-			rc = iscsi_auth_params(conn, ctx->params, auth_method,
-					       ctx->rsp_pdu->data, ctx->alloc_len,
-					       ctx->rsp_pdu->data_segment_len);
+			rc = iscsi_auth_params(conn, ctx, auth_method);
 			if (rc < 0) {
 				SPDK_ERRLOG("iscsi_auth_params() failed\n");
 				/* Authentication failure */
