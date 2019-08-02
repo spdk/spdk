@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b865cb6b_c54925cc",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-02T17:40:07Z",
+      "side": 1,
+      "message": "This is an interesting API. Just out of curiosity, is there a reason you set the pmd globally instead of allowing it as an argument to the construct_compress_bdev rpc?",
+      "revId": "cad9932c26f469bcea71d849f5c83499c8aef7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
