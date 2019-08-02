@@ -59,6 +59,7 @@
 struct spdk_fio_options {
 	void *pad;
 	char *conf;
+	char *json_conf;
 	unsigned mem_mb;
 	bool mem_single_seg;
 };
@@ -89,6 +90,7 @@ struct spdk_fio_thread {
 };
 
 static bool g_spdk_env_initialized = false;
+static const char *g_json_config_file = NULL;
 
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
@@ -200,7 +202,12 @@ spdk_fio_bdev_init_start(void *arg)
 {
 	bool *done = arg;
 
-	spdk_subsystem_init(spdk_fio_bdev_init_done, done);
+	if (g_json_config_file != NULL) {
+		spdk_app_json_config_load(g_json_config_file, SPDK_DEFAULT_RPC_ADDR,
+					  spdk_fio_bdev_init_done, done);
+	} else {
+		spdk_subsystem_init(spdk_fio_bdev_init_done, done);
+	}
 }
 
 static void
@@ -222,7 +229,7 @@ spdk_init_thread_poll(void *arg)
 {
 	struct spdk_fio_options		*eo = arg;
 	struct spdk_fio_thread		*fio_thread;
-	struct spdk_conf		*config;
+	struct spdk_conf		*config = NULL;
 	struct spdk_env_opts		opts;
 	bool				done;
 	int				rc;
@@ -235,32 +242,39 @@ spdk_init_thread_poll(void *arg)
 
 	/* Parse the SPDK configuration file */
 	eo = arg;
-	if (!eo->conf || !strlen(eo->conf)) {
+
+	if (eo->conf && eo->json_conf) {
+		SPDK_ERRLOG("Cannot provide two types of configuration files\n");
+		rc = EINVAL;
+		goto err_exit;
+	} else if (eo->conf && strlen(eo->conf)) {
+		config = spdk_conf_allocate();
+		if (!config) {
+			SPDK_ERRLOG("Unable to allocate configuration file\n");
+			rc = ENOMEM;
+			goto err_exit;
+		}
+
+		rc = spdk_conf_read(config, eo->conf);
+		if (rc != 0) {
+			SPDK_ERRLOG("Invalid configuration file format\n");
+			spdk_conf_free(config);
+			goto err_exit;
+		}
+		if (spdk_conf_first_section(config) == NULL) {
+			SPDK_ERRLOG("Invalid configuration file format\n");
+			spdk_conf_free(config);
+			rc = EINVAL;
+			goto err_exit;
+		}
+		spdk_conf_set_as_default(config);
+	} else if (eo->json_conf && strlen(eo->json_conf)) {
+		g_json_config_file = eo->json_conf;
+	} else {
 		SPDK_ERRLOG("No configuration file provided\n");
 		rc = EINVAL;
 		goto err_exit;
 	}
-
-	config = spdk_conf_allocate();
-	if (!config) {
-		SPDK_ERRLOG("Unable to allocate configuration file\n");
-		rc = ENOMEM;
-		goto err_exit;
-	}
-
-	rc = spdk_conf_read(config, eo->conf);
-	if (rc != 0) {
-		SPDK_ERRLOG("Invalid configuration file format\n");
-		spdk_conf_free(config);
-		goto err_exit;
-	}
-	if (spdk_conf_first_section(config) == NULL) {
-		SPDK_ERRLOG("Invalid configuration file format\n");
-		spdk_conf_free(config);
-		rc = EINVAL;
-		goto err_exit;
-	}
-	spdk_conf_set_as_default(config);
 
 	/* Initialize the environment library */
 	spdk_env_opts_init(&opts);
@@ -701,6 +715,15 @@ static struct fio_option options[] = {
 		.help		= "A SPDK configuration file",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name           = "spdk_json_conf",
+		.lname          = "SPDK JSON configuration file",
+		.type           = FIO_OPT_STR_STORE,
+		.off1           = offsetof(struct spdk_fio_options, json_conf),
+		.help           = "A SPDK JSON configuration file",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
 	},
 	{
 		.name		= "spdk_mem",
