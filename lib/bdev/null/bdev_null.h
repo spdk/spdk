@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -41,8 +41,14 @@ typedef void (*spdk_delete_null_complete)(void *cb_arg, int bdeverrno);
 struct spdk_bdev;
 struct spdk_uuid;
 
-int create_null_bdev(struct spdk_bdev **bdev, const char *name, const struct spdk_uuid *uuid,
-		     uint64_t num_blocks, uint32_t block_size);
+struct spdk_null_bdev_opts {
+	const char *name;
+	const struct spdk_uuid *uuid;
+	uint64_t num_blocks;
+	uint32_t block_size;
+};
+
+int create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts);
 
 /**
  * Delete null bdev.
