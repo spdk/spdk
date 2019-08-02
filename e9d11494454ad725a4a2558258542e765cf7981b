@@ -52,6 +52,24 @@
       "revId": "e9d11494454ad725a4a2558258542e765cf7981b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a49b013_69550fe7",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-08-02T11:46:42Z",
+      "side": 1,
+      "message": "At first place we want to change FTL library to work on top of zdev interface (currently it is using Open Channel NVMe driver directly). At this point I am thinking about three modules that will be implementing zdev interface. First is Open Channel to ZNS adapter - it will be consuming OC NVMe dirver and expose OC geometry as zdev to FTL. Second is module that consume ZNS NVMe driver and expose zdev interface. And the last one is \"Write anywhere RAID\" module that will be exposing zdev interface by emulating zones on regular SSDs.",
+      "parentUuid": "19005bfd_1ef3da31",
+      "revId": "e9d11494454ad725a4a2558258542e765cf7981b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
