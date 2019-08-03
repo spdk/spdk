@@ -365,7 +365,8 @@ spdk_posix_sock_close(struct spdk_sock *_sock)
 }
 
 static ssize_t
-spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
+spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len, spdk_sock_op_cb cb_fn,
+		     void *cb_arg)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 
@@ -373,7 +374,8 @@ spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 }
 
 static ssize_t
-spdk_posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+spdk_posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+		      void *cb_arg)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 
@@ -381,7 +383,8 @@ spdk_posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 }
 
 static ssize_t
-spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
+		       spdk_sock_op_cb cb_fn, void *cb_arg)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 
