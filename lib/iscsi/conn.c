@@ -847,7 +847,7 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 		return 0;
 	}
 
-	ret = spdk_sock_recv(conn->sock, buf, bytes);
+	ret = spdk_sock_recv(conn->sock, buf, bytes, NULL, NULL);
 
 	if (ret > 0) {
 		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->id, ret, 0, 0);
@@ -888,7 +888,7 @@ spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 						 iov[0].iov_base);
 	}
 
-	ret = spdk_sock_readv(conn->sock, iov, iovcnt);
+	ret = spdk_sock_readv(conn->sock, iov, iovcnt, NULL, NULL);
 
 	if (ret > 0) {
 		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->id, ret, 0, 0);
@@ -1183,7 +1183,7 @@ iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 
 	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, total_length, 0, iovcnt);
 
-	bytes = spdk_sock_writev(conn->sock, iov, iovcnt);
+	bytes = spdk_sock_writev(conn->sock, iov, iovcnt, NULL, NULL);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 1;
