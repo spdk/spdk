@@ -68,13 +68,13 @@ spdk_sock_close(struct spdk_sock **sock)
 }
 
 DEFINE_STUB(spdk_sock_recv, ssize_t,
-	    (struct spdk_sock *sock, void *buf, size_t len), 0);
+	    (struct spdk_sock *sock, void *buf, size_t len, spdk_sock_op_cb cb_fn, void *cb_arg), 0);
 
 DEFINE_STUB(spdk_sock_readv, ssize_t,
-	    (struct spdk_sock *sock, struct iovec *iov, int iovcnt), 0);
+	    (struct spdk_sock *sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn, void *cb_arg), 0);
 
 DEFINE_STUB(spdk_sock_writev, ssize_t,
-	    (struct spdk_sock *sock, struct iovec *iov, int iovcnt), 0);
+	    (struct spdk_sock *sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn, void *cb_arg), 0);
 
 DEFINE_STUB(spdk_sock_set_recvlowat, int, (struct spdk_sock *s, int nbytes), 0);
 

@@ -240,36 +240,38 @@ spdk_sock_close(struct spdk_sock **sock)
 }
 
 ssize_t
-spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
+spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len, spdk_sock_op_cb cb_fn, void *cb_arg)
 {
 	if (sock == NULL) {
 		errno = EBADF;
 		return -1;
 	}
 
-	return sock->net_impl->recv(sock, buf, len);
+	return sock->net_impl->recv(sock, buf, len, cb_fn, cb_arg);
 }
 
 ssize_t
-spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+		void *cb_arg)
 {
 	if (sock == NULL) {
 		errno = EBADF;
 		return -1;
 	}
 
-	return sock->net_impl->readv(sock, iov, iovcnt);
+	return sock->net_impl->readv(sock, iov, iovcnt, cb_fn, cb_arg);
 }
 
 ssize_t
-spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+		 void *cb_arg)
 {
 	if (sock == NULL) {
 		errno = EBADF;
 		return -1;
 	}
 
-	return sock->net_impl->writev(sock, iov, iovcnt);
+	return sock->net_impl->writev(sock, iov, iovcnt, cb_fn, cb_arg);
 }
 
 int
