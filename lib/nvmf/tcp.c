@@ -813,7 +813,7 @@ spdk_nvmf_tcp_qpair_flush_pdus_internal(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	spdk_trace_record(TRACE_TCP_FLUSH_WRITEBUF_START, 0, total_length, 0, iovcnt);
 
-	bytes = spdk_sock_writev(tqpair->sock, iovs, iovcnt);
+	bytes = spdk_sock_writev(tqpair->sock, iovs, iovcnt, NULL, NULL);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 1;
