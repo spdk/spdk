@@ -160,7 +160,7 @@ hello_sock_recv_poll(void *arg)
 	/*
 	 * Get response
 	 */
-	rc = spdk_sock_recv(ctx->sock, buf_in, sizeof(buf_in) - 1);
+	rc = spdk_sock_recv(ctx->sock, buf_in, sizeof(buf_in) - 1, NULL, NULL);
 
 	if (rc <= 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -203,7 +203,7 @@ hello_sock_writev_poll(void *arg)
 		 */
 		iov.iov_base = buf_out;
 		iov.iov_len = n;
-		rc = spdk_sock_writev(ctx->sock, &iov, 1);
+		rc = spdk_sock_writev(ctx->sock, &iov, 1, NULL, NULL);
 		if (rc > 0) {
 			ctx->bytes_out += rc;
 		}
@@ -252,7 +252,7 @@ hello_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 	struct iovec iov;
 	struct hello_context_t *ctx = arg;
 
-	n = spdk_sock_recv(sock, buf, sizeof(buf));
+	n = spdk_sock_recv(sock, buf, sizeof(buf), NULL, NULL);
 	if (n < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
@@ -268,7 +268,7 @@ hello_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 		ctx->bytes_in += n;
 		iov.iov_base = buf;
 		iov.iov_len = n;
-		n = spdk_sock_writev(sock, &iov, 1);
+		n = spdk_sock_writev(sock, &iov, 1, NULL, NULL);
 		if (n > 0) {
 			ctx->bytes_out += n;
 		}

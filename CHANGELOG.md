@@ -19,6 +19,11 @@ connections is moving to a more dynamic model.
 The `bdev_delay_update_latency` has been added to allow users to update
 a latency value for a given delay bdev.
 
+### sock
+
+Add two parameters in spdk_sock_recv/readv/writev functions, and
+prepare to make the three functions asynchronous.
+
 ## v19.07:
 
 ### ftl
