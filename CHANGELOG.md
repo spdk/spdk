@@ -2,6 +2,11 @@
 
 ## v19.10: (Upcoming Release)
 
+### sock
+
+Add two parameters in spdk_sock_recv/readv/writev functions, and
+prepare to make the three functions asynchronous.
+
 ## v19.07:
 
 ### ftl

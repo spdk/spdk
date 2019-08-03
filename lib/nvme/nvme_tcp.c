@@ -408,7 +408,7 @@ nvme_tcp_qpair_process_send_queue(struct nvme_tcp_qpair *tqpair)
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
 
-	bytes = spdk_sock_writev(tqpair->sock, iovs, iovcnt);
+	bytes = spdk_sock_writev(tqpair->sock, iovs, iovcnt, NULL, NULL);
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "bytes=%d are out\n", bytes);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {

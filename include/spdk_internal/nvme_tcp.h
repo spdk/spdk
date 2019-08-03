@@ -443,7 +443,7 @@ nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
 {
 	int ret;
 
-	ret = spdk_sock_recv(sock, buf, bytes);
+	ret = spdk_sock_recv(sock, buf, bytes, NULL, NULL);
 
 	if (ret > 0) {
 		return ret;
@@ -482,7 +482,7 @@ nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 		return nvme_tcp_read_data(sock, iov->iov_len, iov->iov_base);
 	}
 
-	ret = spdk_sock_readv(sock, iov, iovcnt);
+	ret = spdk_sock_readv(sock, iov, iovcnt, NULL, NULL);
 
 	if (ret > 0) {
 		return ret;
