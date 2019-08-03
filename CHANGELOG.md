@@ -60,6 +60,11 @@ Added optional parameter '--md-size'to 'construct_null_bdev' RPC method.
 Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
 RPC method.
 
+### sock
+
+Add two parameters in spdk_sock_recv/readv/writev functions, and
+prepare to make the three functions asynchronous.
+
 ## v19.07:
 
 ### ftl

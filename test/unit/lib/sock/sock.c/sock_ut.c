@@ -151,7 +151,8 @@ spdk_ut_sock_close(struct spdk_sock *_sock)
 }
 
 static ssize_t
-spdk_ut_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
+spdk_ut_sock_recv(struct spdk_sock *_sock, void *buf, size_t len, spdk_sock_op_cb cb_fn,
+		  void *cb_arg)
 {
 	struct spdk_ut_sock *sock = __ut_sock(_sock);
 	char tmp[256];
@@ -172,7 +173,8 @@ spdk_ut_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 }
 
 static ssize_t
-spdk_ut_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+spdk_ut_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+		   void *cb_arg)
 {
 	struct spdk_ut_sock *sock = __ut_sock(_sock);
 	size_t len;
@@ -197,7 +199,8 @@ spdk_ut_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 }
 
 static ssize_t
-spdk_ut_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+spdk_ut_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+		    void *cb_arg)
 {
 	struct spdk_ut_sock *sock = __ut_sock(_sock);
 	struct spdk_ut_sock *peer;
@@ -374,17 +377,17 @@ _sock(const char *ip, int port)
 	/* Test spdk_sock_recv */
 	iov.iov_base = test_string;
 	iov.iov_len = 7;
-	bytes_written = spdk_sock_writev(client_sock, &iov, 1);
+	bytes_written = spdk_sock_writev(client_sock, &iov, 1, NULL, NULL);
 	CU_ASSERT(bytes_written == 7);
 
 	usleep(1000);
 
-	bytes_read = spdk_sock_recv(server_sock, buffer, 2);
+	bytes_read = spdk_sock_recv(server_sock, buffer, 2, NULL, NULL);
 	CU_ASSERT(bytes_read == 2);
 
 	usleep(1000);
 
-	bytes_read += spdk_sock_recv(server_sock, buffer + 2, 5);
+	bytes_read += spdk_sock_recv(server_sock, buffer + 2, 5, NULL, NULL);
 	CU_ASSERT(bytes_read == 7);
 
 	CU_ASSERT(strncmp(test_string, buffer, 7) == 0);
@@ -392,21 +395,21 @@ _sock(const char *ip, int port)
 	/* Test spdk_sock_readv */
 	iov.iov_base = test_string;
 	iov.iov_len = 7;
-	bytes_written = spdk_sock_writev(client_sock, &iov, 1);
+	bytes_written = spdk_sock_writev(client_sock, &iov, 1, NULL, NULL);
 	CU_ASSERT(bytes_written == 7);
 
 	usleep(1000);
 
 	iov.iov_base = buffer;
 	iov.iov_len = 2;
-	bytes_read = spdk_sock_readv(server_sock, &iov, 1);
+	bytes_read = spdk_sock_readv(server_sock, &iov, 1, NULL, NULL);
 	CU_ASSERT(bytes_read == 2);
 
 	usleep(1000);
 
 	iov.iov_base = buffer + 2;
 	iov.iov_len = 5;
-	bytes_read += spdk_sock_readv(server_sock, &iov, 1);
+	bytes_read += spdk_sock_readv(server_sock, &iov, 1, NULL, NULL);
 	CU_ASSERT(bytes_read == 7);
 
 	usleep(1000);
@@ -446,7 +449,8 @@ read_data(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 	CU_ASSERT(server_sock == sock);
 
 	g_read_data_called = true;
-	g_bytes_read += spdk_sock_recv(server_sock, g_buf + g_bytes_read, sizeof(g_buf) - g_bytes_read);
+	g_bytes_read += spdk_sock_recv(server_sock, g_buf + g_bytes_read, sizeof(g_buf) - g_bytes_read,
+				       NULL, NULL);
 }
 
 static void
@@ -501,7 +505,7 @@ _sock_group(const char *ip, int port)
 
 	iov.iov_base = test_string;
 	iov.iov_len = 7;
-	bytes_written = spdk_sock_writev(client_sock, &iov, 1);
+	bytes_written = spdk_sock_writev(client_sock, &iov, 1, NULL, NULL);
 	CU_ASSERT(bytes_written == 7);
 
 	usleep(1000);
@@ -569,7 +573,7 @@ read_data_fairness(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock
 	CU_ASSERT(server_sock == sock);
 
 	g_server_sock_read = server_sock;
-	bytes_read = spdk_sock_recv(server_sock, buf, 1);
+	bytes_read = spdk_sock_recv(server_sock, buf, 1, NULL, NULL);
 	CU_ASSERT(bytes_read == 1);
 }
 
@@ -609,7 +613,7 @@ posix_sock_group_fairness(void)
 	iov.iov_len = 1;
 
 	for (i = 0; i < 3; i++) {
-		bytes_written = spdk_sock_writev(client_sock[i], &iov, 1);
+		bytes_written = spdk_sock_writev(client_sock[i], &iov, 1, NULL, NULL);
 		CU_ASSERT(bytes_written == 1);
 	}
 
@@ -629,7 +633,7 @@ posix_sock_group_fairness(void)
 	 *  the sock group does not unfairly process the event for this sock
 	 *  before the socks that were written to earlier.
 	 */
-	bytes_written = spdk_sock_writev(client_sock[0], &iov, 1);
+	bytes_written = spdk_sock_writev(client_sock[0], &iov, 1, NULL, NULL);
 	CU_ASSERT(bytes_written == 1);
 
 	usleep(1000);

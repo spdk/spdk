@@ -849,7 +849,8 @@ spdk_vpp_sock_close(struct spdk_sock *_sock)
 }
 
 static ssize_t
-spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
+spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len, spdk_sock_op_cb cb_fn,
+		   void *cb_arg)
 {
 	struct spdk_vpp_session *session = __vpp_session(_sock);
 	int rc;
@@ -888,7 +889,8 @@ spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 }
 
 static ssize_t
-spdk_vpp_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+spdk_vpp_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+		    void *cb_arg)
 {
 	ssize_t total = 0;
 	int i, rc;
@@ -897,7 +899,7 @@ spdk_vpp_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	assert(g_svm.vpp_initialized);
 
 	for (i = 0; i < iovcnt; ++i) {
-		rc = spdk_vpp_sock_recv(_sock, iov[i].iov_base, iov[i].iov_len);
+		rc = spdk_vpp_sock_recv(_sock, iov[i].iov_base, iov[i].iov_len, NULL, NULL);
 		if (rc < 0) {
 			if (total > 0) {
 				break;
@@ -917,7 +919,8 @@ spdk_vpp_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 }
 
 static ssize_t
-spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+		     void *cb_arg)
 {
 	struct spdk_vpp_session *session = __vpp_session(_sock);
 	ssize_t total = 0;
