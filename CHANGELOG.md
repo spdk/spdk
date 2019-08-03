@@ -7,6 +7,11 @@
 Portals may no longer be associated with a cpumask. The scheduling of
 connections is moving to a more dynamic model.
 
+### sock
+
+Add two parameters in spdk_sock_recv/readv/writev functions, and
+prepare to make the three functions asynchronous.
+
 ## v19.07:
 
 ### ftl
