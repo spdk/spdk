@@ -35,25 +35,65 @@
 
 #if defined(__linux__)
 #include <sys/epoll.h>
+#include <libaio.h>
 #elif defined(__FreeBSD__)
 #include <sys/event.h>
 #endif
 
+#include "spdk/barrier.h"
+#include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/sock.h"
+#include "spdk/string.h"
+#include "spdk/util.h"
 #include "spdk_internal/sock.h"
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
+#define SPDK_SOCK_GROUP_AIO_QUEUE_DEPTH 4096
+#define SPDK_SOCK_AIO_QUEUE_DEPTH 128
+
+enum spdk_sock_io_type {
+	SPDK_SOCK_IO_UNUSED = 0,
+	SPDK_SOCK_IO_READ,
+	SPDK_SOCK_IO_WRITE,
+};
+
+#if defined(__linux__)
+struct spdk_posix_sock_iocb {
+	struct iocb iocb;
+	spdk_sock_op_cb cb_fn;
+	void *cb_arg;
+	enum spdk_sock_io_type type;
+	struct spdk_posix_sock *sock;
+	struct iovec iov[32];
+	int iov_cnt;
+	size_t len;
+	size_t completed_len;
+	size_t orig_len;
+	STAILQ_ENTRY(spdk_posix_sock_iocb) link;
+
+};
+#endif
 
 struct spdk_posix_sock {
-	struct spdk_sock	base;
-	int			fd;
+	struct spdk_sock			base;
+	int					fd;
+#if defined(__linux__)
+	struct spdk_posix_sock_group_impl	*group;
+	STAILQ_HEAD(, spdk_posix_sock_iocb)     iocb_list;
+	struct spdk_posix_sock_iocb		iocbs[SPDK_SOCK_AIO_QUEUE_DEPTH];
+#endif
 };
 
 struct spdk_posix_sock_group_impl {
-	struct spdk_sock_group_impl	base;
-	int				fd;
+	struct spdk_sock_group_impl		base;
+	int					fd;
+#if defined(__linux__)
+	io_context_t				io_ctx;
+	STAILQ_HEAD(, spdk_posix_sock_iocb)	iocb_list;
+	int32_t					avail_event_num;
+#endif
 };
 
 static int
@@ -388,6 +428,183 @@ spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	return writev(sock->fd, iov, iovcnt);
 }
 
+# if defined(__linux__)
+static void
+spdk_posix_init_iov(struct spdk_posix_sock_iocb *iocb, struct iovec *iov, int iovcnt,
+		    size_t len)
+{
+	int i, j;
+
+	j = 0;
+	iocb->len = 0;
+	for (i = 0; i < iovcnt; i++) {
+		if (len < iov[i].iov_len) {
+			iocb->iov[j].iov_base = iov[i].iov_base + len;
+			iocb->iov[j].iov_len = iov[i].iov_len - len;
+			if (!len) {
+				len = 0;
+			}
+			iocb->len += iocb->iov[j].iov_len;
+			j++;
+		} else {
+			len -= iov[i].iov_len;
+		}
+	}
+
+	iocb->iov_cnt = j;
+
+	assert(iocb->in_use != SPDK_SOCK_IO_UNUSED);
+	if (iocb->type == SPDK_SOCK_IO_READ) {
+		io_prep_preadv(&iocb->iocb, iocb->sock->fd, iocb->iov, iocb->iov_cnt, 0);
+	} else {
+		io_prep_pwritev(&iocb->iocb, iocb->sock->fd, iocb->iov, iocb->iov_cnt, 0);
+	}
+}
+static struct spdk_posix_sock_iocb *
+spdk_posix_sock_allocate_and_queue_iocb(struct spdk_posix_sock *sock,  spdk_sock_op_cb cb_fn,
+					void *cb_arg, enum spdk_sock_io_type type)
+{
+
+	struct spdk_posix_sock_iocb *iocb;
+	if (spdk_unlikely(STAILQ_EMPTY(&sock->iocb_list))) {
+		SPDK_ERRLOG("No resource to allocate iocb from sock=%p\n", sock);
+		return NULL;
+	}
+
+	iocb = STAILQ_FIRST(&sock->iocb_list);
+	STAILQ_REMOVE(&sock->iocb_list, iocb, spdk_posix_sock_iocb, link);
+	assert(sock->group != NULL);
+	assert(sock->group->io_ctx != NULL);
+	assert(iocb->in_use == false);
+	iocb->cb_fn = cb_fn;
+	iocb->cb_arg = cb_arg;
+	iocb->len = 0;
+	iocb->completed_len = 0;
+	iocb->type = type;
+	STAILQ_INSERT_TAIL(&sock->group->iocb_list, iocb, link);
+
+	return iocb;
+}
+#endif
+
+static ssize_t
+spdk_posix_sock_recv_async(struct spdk_sock *_sock, void *buf, size_t len, spdk_sock_op_cb cb_fn,
+			   void *cb_arg)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	if (spdk_unlikely(cb_fn == NULL)) {
+		SPDK_ERRLOG("call back function need to be provided\n");
+		return -1;
+	}
+
+# if defined(__linux__)
+	if (sock->group) {
+		struct spdk_posix_sock_iocb *iocb;
+
+		iocb = spdk_posix_sock_allocate_and_queue_iocb(sock, cb_fn, cb_arg, SPDK_SOCK_IO_READ);
+		if (spdk_unlikely(!iocb)) {
+			SPDK_ERRLOG("No resource to allocate iocb from sock=%p\n", sock);
+			return -ENOMEM;
+		}
+
+		iocb->iov[0].iov_base = buf;
+		iocb->iov[0].iov_len = len;
+		spdk_posix_init_iov(iocb, iocb->iov, 1, 0);
+		io_prep_preadv(&iocb->iocb, sock->fd, iocb->iov, iocb->iov_cnt, 0);
+		iocb->iocb.data = iocb;
+		iocb->orig_len = iocb->len;
+	} else {
+		rc = recv(sock->fd, buf, len, MSG_DONTWAIT);
+		cb_fn(cb_arg, rc);
+	}
+#else
+	rc = recv(sock->fd, buf, len, MSG_DONTWAIT);
+	cb_fn(cb_arg, rc);
+#endif
+	return 0;
+}
+
+static ssize_t
+spdk_posix_sock_readv_async(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
+			    spdk_sock_op_cb cb_fn,
+			    void *cb_arg)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	if (spdk_unlikely(cb_fn == NULL)) {
+		SPDK_ERRLOG("call back function need to be provided\n");
+		return -1;
+	}
+
+# if defined(__linux__)
+	if (sock->group) {
+		struct spdk_posix_sock_iocb *iocb;
+
+		iocb = spdk_posix_sock_allocate_and_queue_iocb(sock, cb_fn, cb_arg, SPDK_SOCK_IO_READ);
+		if (spdk_unlikely(!iocb)) {
+			SPDK_ERRLOG("No resource to allocate iocb from sock=%p\n", sock);
+			return -ENOMEM;
+		}
+
+		spdk_posix_init_iov(iocb, iov, iovcnt, 0);
+		iocb->iocb.data = iocb;
+		iocb->orig_len = iocb->len;
+	} else {
+		rc = readv(sock->fd, iov, iovcnt);
+		cb_fn(cb_arg, rc);
+	}
+#else
+	rc = readv(sock->fd, iov, iovcnt);
+	cb_fn(cb_arg, rc);
+#endif
+	return 0;
+}
+
+static ssize_t
+spdk_posix_sock_writev_async(struct spdk_sock *_sock, struct iovec *iov, int iovcnt,
+			     spdk_sock_op_cb cb_fn, void *cb_arg)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	if (spdk_unlikely(cb_fn == NULL)) {
+		SPDK_ERRLOG("call back function need to be provided\n");
+		return -1;
+	}
+
+# if defined(__linux__)
+	if (sock->group) {
+		struct spdk_posix_sock_iocb *iocb;
+
+		if (spdk_unlikely(STAILQ_EMPTY(&sock->iocb_list))) {
+			SPDK_ERRLOG("No resource to allocate iocb from sock=%p\n", sock);
+			return -ENOMEM;
+		}
+
+		iocb = spdk_posix_sock_allocate_and_queue_iocb(sock, cb_fn, cb_arg, SPDK_SOCK_IO_WRITE);
+		if (spdk_unlikely(!iocb)) {
+			SPDK_ERRLOG("No resource to allocate iocb from sock=%p\n", sock);
+			return -ENOMEM;
+		}
+
+		spdk_posix_init_iov(iocb, iov, iovcnt, 0);
+		io_prep_pwritev(&iocb->iocb, sock->fd, iocb->iov, iocb->iov_cnt, 0);
+		iocb->iocb.data = iocb;
+		iocb->orig_len = iocb->len;
+	} else {
+		rc = writev(sock->fd, iov, iovcnt);
+		cb_fn(cb_arg, rc);
+	}
+#else
+	rc = writev(sock->fd, iov, iovcnt);
+	cb_fn(cb_arg, rc);
+#endif
+	return 0;
+}
+
 static int
 spdk_posix_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
@@ -525,6 +742,16 @@ spdk_posix_sock_group_impl_create(void)
 		return NULL;
 	}
 
+#if defined(__linux__)
+	STAILQ_INIT(&group_impl->iocb_list);
+	group_impl->avail_event_num = SPDK_SOCK_GROUP_AIO_QUEUE_DEPTH;
+	if (io_setup(SPDK_SOCK_GROUP_AIO_QUEUE_DEPTH, &group_impl->io_ctx) < 0) {
+		SPDK_ERRLOG("async I/O context setup failure\n");
+		close(fd);
+		return NULL;
+	}
+#endif
+
 	group_impl->fd = fd;
 
 	return &group_impl->base;
@@ -539,12 +766,21 @@ spdk_posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct 
 
 #if defined(__linux__)
 	struct epoll_event event;
+	int i;
 
 	memset(&event, 0, sizeof(event));
 	event.events = EPOLLIN;
 	event.data.ptr = sock;
 
 	rc = epoll_ctl(group->fd, EPOLL_CTL_ADD, sock->fd, &event);
+
+	sock->group = group;
+	STAILQ_INIT(&sock->iocb_list);
+	for (i = 0; i < SPDK_SOCK_AIO_QUEUE_DEPTH; i++) {
+		sock->iocbs[i].sock = sock;
+		STAILQ_INSERT_TAIL(&sock->iocb_list, &sock->iocbs[i], link);
+	}
+
 #elif defined(__FreeBSD__)
 	struct kevent event;
 	struct timespec ts = {0};
@@ -565,6 +801,7 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 #if defined(__linux__)
 	struct epoll_event event;
 
+	sock->group = NULL;
 	/* Event parameter is ignored but some old kernel version still require it. */
 	rc = epoll_ctl(group->fd, EPOLL_CTL_DEL, sock->fd, &event);
 #elif defined(__FreeBSD__)
@@ -582,6 +819,153 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 	return rc;
 }
 
+#if defined(__linux__)
+/* For user space reaping of completions */
+struct spdk_aio_ring {
+	uint32_t id;
+	uint32_t size;
+	uint32_t head;
+	uint32_t tail;
+
+	uint32_t version;
+	uint32_t compat_features;
+	uint32_t incompat_features;
+	uint32_t header_length;
+};
+
+#define SPDK_AIO_RING_VERSION	0xa10a10a1
+
+static int
+spdk_sock_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *uevents)
+{
+	uint32_t head, tail, count;
+	struct spdk_aio_ring *ring;
+	struct timespec timeout;
+	struct io_event *kevents;
+
+	ring = (struct spdk_aio_ring *)io_ctx;
+
+	if (spdk_unlikely(ring->version != SPDK_AIO_RING_VERSION || ring->incompat_features != 0)) {
+		timeout.tv_sec = 0;
+		timeout.tv_nsec = 0;
+
+		return io_getevents(io_ctx, 0, max, uevents, &timeout);
+	}
+
+	/* Read the current state out of the ring */
+	head = ring->head;
+	tail = ring->tail;
+
+	/* This memory barrier is required to prevent the loads above
+	 * from being re-ordered with stores to the events array
+	 * potentially occurring on other threads. */
+	spdk_smp_rmb();
+
+	/* Calculate how many items are in the circular ring */
+	count = tail - head;
+	if (tail < head) {
+		count += ring->size;
+	}
+
+	/* Reduce the count to the limit provided by the user */
+	count = spdk_min(max, count);
+
+	/* Grab the memory location of the event array */
+	kevents = (struct io_event *)((uintptr_t)ring + ring->header_length);
+
+	/* Copy the events out of the ring. */
+	if ((head + count) <= ring->size) {
+		/* Only one copy is required */
+		memcpy(uevents, &kevents[head], count * sizeof(struct io_event));
+	} else {
+		uint32_t first_part = ring->size - head;
+		/* Two copies are required */
+		memcpy(uevents, &kevents[head], first_part * sizeof(struct io_event));
+		memcpy(&uevents[first_part], &kevents[0], (count - first_part) * sizeof(struct io_event));
+	}
+
+	/* Update the head pointer. On x86, stores will not be reordered with older loads,
+	 * so the copies out of the event array will always be complete prior to this
+	 * update becoming visible. On other architectures this is not guaranteed, so
+	 * add a barrier. */
+#if defined(__i386__) || defined(__x86_64__)
+	spdk_compiler_barrier();
+#else
+	spdk_smp_mb();
+#endif
+	ring->head = (head + count) % ring->size;
+
+	return count;
+}
+
+static int
+spdk_posix_group_impl_io_poll(struct spdk_posix_sock_group_impl *group)
+{
+	struct spdk_posix_sock_iocb *sock_cb;
+	int32_t nr = 0, nr_completed, i;
+	struct spdk_posix_sock_iocb *iocb;
+	int status, rc;
+	struct iocb *iocbs[SPDK_SOCK_GROUP_AIO_QUEUE_DEPTH];
+	struct io_event events[SPDK_SOCK_GROUP_AIO_QUEUE_DEPTH];
+
+	STAILQ_FOREACH(sock_cb, &group->iocb_list, link) {
+		if (nr > group->avail_event_num) {
+			break;
+		}
+		iocbs[nr] = &sock_cb->iocb;
+		nr++;
+		STAILQ_REMOVE(&group->iocb_list, sock_cb, spdk_posix_sock_iocb, link);
+	}
+
+	if (nr) {
+		rc = io_submit(group->io_ctx, nr, iocbs);
+		if (rc != nr) {
+			/* To do Need add back those iocbs */
+			SPDK_ERRLOG("io_submit failed! %d (%s)\n", rc, spdk_strerror(-rc));
+			return -1;
+		}
+		group->avail_event_num -= nr;
+	}
+
+	nr = SPDK_SOCK_GROUP_AIO_QUEUE_DEPTH - group->avail_event_num;
+	nr_completed = spdk_sock_user_io_getevents(group->io_ctx, nr, events);
+	if (nr_completed < 0) {
+		/* To do Need add back those iocbs */
+		SPDK_ERRLOG("io_getevents failed! %d (%s)\n", nr_completed, spdk_strerror(-nr_completed));
+		return -1;
+	}
+
+	group->avail_event_num += nr_completed;
+	for (i = 0; i < nr_completed; i++) {
+		iocb = events[i].data;
+		status = events[i].res;
+		assert(iocb != NULL);
+		assert(iocb->sock != NULL);
+		if (spdk_unlikely(status <= 0)) {
+			if ((iocb->type == SPDK_SOCK_IO_WRITE) && (status == -EAGAIN || status == -EWOULDBLOCK)) {
+				continue;
+			}
+		} else {
+			iocb->completed_len += status;
+			if ((status != (int)iocb->len) && iocb->type == SPDK_SOCK_IO_WRITE) {
+				spdk_posix_init_iov(iocb, iocb->iov, iocb->iov_cnt, status);
+				SPDK_ERRLOG("real length completed=%d, expected =%d\n", status, (int)iocb->len);
+				continue;
+			}
+			status = iocb->completed_len;
+			if (iocb->type == SPDK_SOCK_IO_WRITE) {
+				assert(iocb->completed_len = iocb->org_len);
+			}
+		}
+		iocb->type = SPDK_SOCK_IO_UNUSED;
+		STAILQ_INSERT_TAIL(&iocb->sock->iocb_list, iocb, link);
+		iocb->cb_fn(iocb->cb_arg, status);
+	}
+
+	return nr_completed;
+}
+#endif
+
 static int
 spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 				struct spdk_sock **socks)
@@ -592,6 +976,7 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 #if defined(__linux__)
 	struct epoll_event events[MAX_EVENTS_PER_POLL];
 
+	spdk_posix_group_impl_io_poll(group);
 	num_events = epoll_wait(group->fd, events, max_events, 0);
 #elif defined(__FreeBSD__)
 	struct kevent events[MAX_EVENTS_PER_POLL];
@@ -620,6 +1005,10 @@ spdk_posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 
+#if defined(__linux__)
+	io_destroy(group->io_ctx);
+#endif
+
 	return close(group->fd);
 }
 
@@ -633,6 +1022,9 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.recv		= spdk_posix_sock_recv,
 	.readv		= spdk_posix_sock_readv,
 	.writev		= spdk_posix_sock_writev,
+	.recv_async     = spdk_posix_sock_recv_async,
+	.readv_async	= spdk_posix_sock_readv_async,
+	.writev_async	= spdk_posix_sock_writev_async,
 	.set_recvlowat	= spdk_posix_sock_set_recvlowat,
 	.set_recvbuf	= spdk_posix_sock_set_recvbuf,
 	.set_sendbuf	= spdk_posix_sock_set_sendbuf,
