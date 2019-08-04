@@ -36,3 +36,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 TEST_FILE = sock_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
+
+ifeq ($(OS),Linux)
+LIBS += -laio
+endif
