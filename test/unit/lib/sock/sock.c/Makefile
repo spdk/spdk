@@ -35,4 +35,8 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
 TEST_FILE = sock_ut.c
 
+ifneq ($(OS),FreeBSD)
+LIBS += -laio
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
