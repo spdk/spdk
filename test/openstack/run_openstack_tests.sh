@@ -71,5 +71,5 @@ timing_enter test_cleanup
 finish_test
 
 trap - SIGINT SIGTERM EXIT
-nvmftestfini
+nvmfcleanup
 timing_exit test_cleanup
