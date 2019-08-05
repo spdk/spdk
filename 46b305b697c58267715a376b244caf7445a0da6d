@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5e5c1a9_bcf48526",
+        "filename": "examples/bdev/fio_plugin/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-05T00:22:37Z",
+      "side": 1,
+      "message": "Do you see any issues with the newer fio version?",
+      "revId": "46b305b697c58267715a376b244caf7445a0da6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
