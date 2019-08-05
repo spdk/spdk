@@ -34,6 +34,29 @@
       "revId": "cad9932c26f469bcea71d849f5c83499c8aef7db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4dea290f_afe909a4",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-05T08:57:09Z",
+      "side": 1,
+      "message": "Not a big deal, but it looks like we don\u0027t remove this dir at the end of the test",
+      "range": {
+        "startLine": 56,
+        "startChar": 9,
+        "endLine": 56,
+        "endChar": 18
+      },
+      "revId": "cad9932c26f469bcea71d849f5c83499c8aef7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
