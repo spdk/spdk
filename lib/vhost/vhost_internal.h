@@ -53,6 +53,8 @@
 
 #define SPDK_VHOST_IOVS_MAX 129
 
+#define SPDK_VHOST_VQ_MAX_SUBMISSIONS	32
+
 /*
  * Rate at which stats are checked for interrupt coalescing.
  */
@@ -366,7 +368,6 @@ int vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct i
 
 uint16_t vhost_vring_packed_desc_get_buffer_id(struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
 		uint16_t *last_idx);
-
 
 static inline bool __attribute__((always_inline))
 vhost_dev_has_feature(struct spdk_vhost_session *vsession, unsigned feature_id)
