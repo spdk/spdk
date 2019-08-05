@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90d675e3_f44369f1",
+        "filename": "include/spdk/util.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-05T09:19:14Z",
+      "side": 1,
+      "message": "2.23 is fairly recent. We\u0027ll need some #ifdefs not to break older systems.",
+      "range": {
+        "startLine": 62,
+        "startChar": 40,
+        "endLine": 62,
+        "endChar": 44
+      },
+      "revId": "c9629bf80c8f82e0fb673a80497fa9c3edcb5850",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
