@@ -94,6 +94,35 @@
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
 
+/* Declare packed ring related bits for older kernels */
+#ifndef VIRTIO_F_RING_PACKED
+
+#define VIRTIO_F_RING_PACKED 34
+
+struct vring_packed_desc {
+	uint64_t addr;
+	uint32_t len;
+	uint16_t id;
+	uint16_t flags;
+};
+
+struct vring_packed_desc_event {
+	uint16_t off_wrap;
+	uint16_t flags;
+};
+#endif
+
+/*
+ * Declare below packed ring defines unconditionally
+ * as Kernel header might use different names.
+ */
+#define VRING_DESC_F_AVAIL	(1ULL << 7)
+#define VRING_DESC_F_USED	(1ULL << 15)
+
+#define VRING_EVENT_F_ENABLE 0x0
+#define VRING_EVENT_F_DISABLE 0x1
+#define VRING_EVENT_F_DESC 0x2
+
 struct vhost_poll_group {
 	struct spdk_thread *thread;
 	unsigned ref;
@@ -104,6 +133,8 @@ struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
 	uint16_t last_avail_idx;
 	uint16_t last_used_idx;
+	bool avail_wrap_counter;
+	bool used_wrap_counter;
 
 	void *tasks;
 
@@ -140,6 +171,8 @@ struct spdk_vhost_session {
 	bool started;
 	bool needs_restart;
 	bool forced_polling;
+	/* packed ring or split ring. */
+	bool packed_ring;
 
 	struct rte_vhost_memory *mem;
 
@@ -261,6 +294,11 @@ int vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_vir
 		      uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 		      uint32_t *desc_table_size);
 
+int vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
+			     struct spdk_vhost_virtqueue *virtqueue,
+			     uint16_t req_idx, uint16_t *next_idx, struct vring_packed_desc **desc,
+			     struct vring_packed_desc **desc_table, uint32_t *desc_table_size);
+
 /**
  * Send IRQ/call client (if pending) for \c vq.
  * \param vsession vhost session
@@ -279,9 +317,19 @@ int vhost_vq_used_signal(struct spdk_vhost_session *vsession, struct spdk_vhost_
  */
 void vhost_session_used_signal(struct spdk_vhost_session *vsession);
 
+void vhost_session_used_signal_packed(struct spdk_vhost_session *vsession);
+
 void vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 				struct spdk_vhost_virtqueue *vq,
 				uint16_t id, uint32_t len);
+
+void vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
+				  struct spdk_vhost_virtqueue *virtqueue,
+				  uint16_t req_idx, uint16_t last_idx, uint16_t buffer_id);
+
+bool vhost_vq_packed_desc_is_avail(struct spdk_vhost_virtqueue *virtqueue,
+				   uint16_t req_idx,
+				   bool avail_wrap_counter);
 
 /**
  * Get subsequent descriptor from given table.
@@ -298,8 +346,19 @@ int vhost_vring_desc_get_next(struct vring_desc **desc,
 			      struct vring_desc *desc_table, uint32_t desc_table_size);
 bool vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
+int vhost_vring_packed_desc_get_next(struct vring_packed_desc **desc, uint16_t *idx,
+				     struct spdk_vhost_virtqueue *vq,
+				     struct vring_packed_desc *desc_table,
+				     uint32_t desc_table_size);
+
+bool vhost_vring_packed_desc_is_wr(struct vring_packed_desc *cur_desc);
+
+
 int vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 			    uint16_t *iov_index, const struct vring_desc *desc);
+
+int vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+				   uint16_t *iov_index, const struct vring_packed_desc *desc);
 
 static inline bool __attribute__((always_inline))
 vhost_dev_has_feature(struct spdk_vhost_session *vsession, unsigned feature_id)
