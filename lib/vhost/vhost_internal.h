@@ -53,6 +53,8 @@
 
 #define SPDK_VHOST_IOVS_MAX 129
 
+#define MAX_REQUESTS_PER_POLLING	32
+
 /*
  * Rate at which stats are checked for interrupt coalescing.
  */
