@@ -16,6 +16,24 @@
       "revId": "46b305b697c58267715a376b244caf7445a0da6d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30aabf74_9893e5ea",
+        "filename": "examples/bdev/fio_plugin/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-08-05T20:52:13Z",
+      "side": 1,
+      "message": "No, we have been using 3.14 for a while and haven\u0027t run into any issues.\nWe also used version FIO 3.12-57-g10c4 in Q1 when we performed the benchmarking for Cascade Lake and did not observe any issues. \nWe have also done some work with 3.13.",
+      "parentUuid": "a5e5c1a9_bcf48526",
+      "revId": "46b305b697c58267715a376b244caf7445a0da6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
