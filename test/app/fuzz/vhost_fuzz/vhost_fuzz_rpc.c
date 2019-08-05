@@ -98,12 +98,6 @@ spdk_rpc_fuzz_vhost_create_dev(struct spdk_jsonrpc_request *request,
 		}
 	} else {
 		w = spdk_jsonrpc_begin_result(request);
-		if (w == NULL) {
-			fprintf(stderr, "Unable to allocate an rpc response.\n");
-			free(req.socket);
-			return;
-		}
-
 		spdk_json_write_bool(w, true);
 		spdk_jsonrpc_end_result(request, w);
 	}

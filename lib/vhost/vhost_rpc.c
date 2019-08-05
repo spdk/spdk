@@ -428,10 +428,6 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 	free_rpc_get_vhost_ctrlrs(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		spdk_vhost_unlock();
-		return;
-	}
 	spdk_json_write_array_begin(w);
 
 	vdev = spdk_vhost_dev_next(NULL);

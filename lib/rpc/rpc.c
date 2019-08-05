@@ -391,26 +391,17 @@ spdk_rpc_get_spdk_version(struct spdk_jsonrpc_request *request, const struct spd
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_string_fmt(w, "version", "%s", SPDK_VERSION_STRING);
-
 	spdk_json_write_named_object_begin(w, "fields");
 	spdk_json_write_named_uint32(w, "major", SPDK_VERSION_MAJOR);
 	spdk_json_write_named_uint32(w, "minor", SPDK_VERSION_MINOR);
-
 	spdk_json_write_named_uint32(w, "patch", SPDK_VERSION_PATCH);
-
 	spdk_json_write_named_string_fmt(w, "suffix", "%s", SPDK_VERSION_SUFFIX);
-
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
-
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_spdk_version", spdk_rpc_get_spdk_version,

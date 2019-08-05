@@ -47,10 +47,6 @@ spdk_rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json
 	rc = spdk_vmd_init();
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, rc == 0);
 	spdk_jsonrpc_end_result(request, w);
 }

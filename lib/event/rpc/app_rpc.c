@@ -202,10 +202,6 @@ spdk_rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 
 	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
-	if (NULL == ctx->w) {
-		free(ctx);
-		return;
-	}
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_array_begin(ctx->w, "threads");

@@ -635,13 +635,9 @@ rpc_delete_target_node_done(void *cb_arg, int rc)
 	free_rpc_delete_target_node(&ctx->req);
 
 	w = spdk_jsonrpc_begin_result(ctx->request);
-	if (w == NULL) {
-		goto exit;
-	}
-
 	spdk_json_write_bool(w, rc == 0);
 	spdk_jsonrpc_end_result(ctx->request, w);
-exit:
+
 	free(ctx);
 }
 
