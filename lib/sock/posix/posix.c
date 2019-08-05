@@ -866,7 +866,6 @@ spdk_posix_group_impl_io_poll(struct spdk_posix_sock_group_impl *group)
 		assert(iocb->sock != NULL);
 		STAILQ_INSERT_TAIL(&iocb->sock->iocb_list, iocb, link);
 		iocb->cb_fn(iocb->cb_arg, status);
-
 	}
 
 	return nr_completed;
