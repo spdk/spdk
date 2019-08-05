@@ -1425,7 +1425,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
 				rc = nvme_tcp_read_data(tqpair->sock,
 							sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
-							(uint8_t *)&pdu->hdr.common + pdu->ch_valid_bytes);
+							(uint8_t *)&pdu->hdr.common + pdu->ch_valid_bytes, NULL, NULL);
 				if (rc < 0) {
 					nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 					break;
@@ -1444,7 +1444,8 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			pdu = &tqpair->recv_pdu;
 			rc = nvme_tcp_read_data(tqpair->sock,
 						pdu->psh_len - pdu->psh_valid_bytes,
-						(uint8_t *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
+						(uint8_t *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes, NULL,
+						NULL);
 			if (rc < 0) {
 				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 				break;
@@ -1474,7 +1475,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 
 			}
 
-			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
+			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu, NULL, NULL);
 			if (rc < 0) {
 				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 				break;
