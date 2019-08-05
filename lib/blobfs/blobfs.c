@@ -2375,22 +2375,7 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	pthread_spin_lock(&file->lock);
 	file->open_for_writing = true;
 
-	if ((file->last == NULL) && (file->append_pos % CACHE_BUFFER_SIZE == 0)) {
-		cache_append_buffer(file);
-	}
-
-	if (file->last == NULL) {
-		int rc;
-
-		file->append_pos += length;
-		pthread_spin_unlock(&file->lock);
-		rc = __send_rw_from_file(file, payload, offset, length, false, channel);
-		sem_wait(&channel->sem);
-		return rc;
-	}
-
 	blob_size = __file_get_blob_size(file);
-
 	if ((offset + length) > blob_size) {
 		struct spdk_fs_cb_args extend_args = {};
 
@@ -2405,6 +2390,20 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		if (extend_args.rc) {
 			return extend_args.rc;
 		}
+	}
+
+	if ((file->last == NULL) && (file->append_pos % CACHE_BUFFER_SIZE == 0)) {
+		cache_append_buffer(file);
+	}
+
+	if (file->last == NULL) {
+		int rc;
+
+		file->append_pos += length;
+		pthread_spin_unlock(&file->lock);
+		rc = __send_rw_from_file(file, payload, offset, length, false, channel);
+		sem_wait(&channel->sem);
+		return rc;
 	}
 
 	flush_req = alloc_fs_request(channel);
