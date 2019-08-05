@@ -198,6 +198,37 @@ spdk_vhost_log_used_vring_idx(struct spdk_vhost_session *vsession,
 	rte_vhost_log_used_vring(vsession->vid, vq_idx, offset, len);
 }
 
+bool
+spdk_vhost_vq_packed_desc_is_avail(struct spdk_vhost_virtqueue *virtqueue,
+				   uint16_t req_idx,
+				   bool avail_wrap_counter)
+{
+	uint16_t flags = virtqueue->vring.desc_packed[req_idx].flags;
+
+	return (!!(flags & VRING_DESC_F_AVAIL) == avail_wrap_counter) &&
+	       (!!(flags & VRING_DESC_F_USED) != avail_wrap_counter);
+}
+
+static void
+spdk_vhost_vq_packed_desc_set_used(struct spdk_vhost_virtqueue *virtqueue)
+{
+	bool  used_wrap_counter = virtqueue->used_wrap_counter;
+	uint16_t used_idx = virtqueue->last_used_idx;
+	uint16_t *flags = &virtqueue->vring.desc_packed[used_idx].flags;
+
+	if (((*flags & VRING_DESC_F_AVAIL) == used_wrap_counter) &&
+	    ((*flags & VRING_DESC_F_USED) == used_wrap_counter)) {
+		SPDK_ERRLOG("descriptor has been set to used before\n");
+		return;
+	}
+
+	if (used_wrap_counter) {
+		*flags |= VRING_DESC_F_AVAIL | VRING_DESC_F_USED;
+	} else {
+		*flags &= ~(VRING_DESC_F_AVAIL | VRING_DESC_F_USED);
+	}
+}
+
 /*
  * Get available requests from avail ring.
  */
@@ -242,6 +273,12 @@ spdk_vhost_vring_desc_is_indirect(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_INDIRECT);
 }
 
+static bool
+spdk_vhost_vring_packed_desc_is_indirect(struct vring_packed_desc *cur_desc)
+{
+	return !!(cur_desc->flags & VRING_DESC_F_INDIRECT);
+}
+
 int
 spdk_vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *virtqueue,
 		       uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
@@ -267,6 +304,39 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_vi
 
 	*desc_table = virtqueue->vring.desc;
 	*desc_table_size = virtqueue->vring.size;
+
+	return 0;
+}
+
+int
+spdk_vhost_vq_get_desc_packed(struct spdk_vhost_session *vsession,
+			      struct spdk_vhost_virtqueue *virtqueue,
+			      uint16_t req_idx, uint16_t *next_idx, struct vring_packed_desc **desc,
+			      struct vring_packed_desc **desc_table, uint32_t *desc_table_size)
+{
+	if (spdk_unlikely(req_idx >= virtqueue->vring.size)) {
+		return -1;
+	}
+
+	*desc =  &virtqueue->vring.desc_packed[req_idx];
+
+	if (spdk_vhost_vring_packed_desc_is_indirect(*desc)) {
+		*desc_table_size = (*desc)->len / sizeof(**desc);
+		*desc_table = spdk_vhost_gpa_to_vva(vsession, (*desc)->addr,
+						    (*desc)->len);
+		*next_idx = 1;
+		*desc = *desc_table;
+		if (*desc == NULL) {
+			return -1;
+		}
+
+		return 0;
+	}
+
+	/* without indirect flag just set desc table NULL and size 0 */
+	*desc_table = NULL;
+	*desc_table_size  = 0;
+	*next_idx = (req_idx + 1) % virtqueue->vring.size;
 
 	return 0;
 }
@@ -355,6 +425,48 @@ spdk_vhost_session_used_signal(struct spdk_vhost_session *vsession)
 			/* No need for event right now */
 			if (now < virtqueue->next_event_time ||
 			    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+				continue;
+			}
+
+			if (!spdk_vhost_vq_used_signal(vsession, virtqueue)) {
+				continue;
+			}
+
+			/* Syscall is quite long so update time */
+			now = spdk_get_ticks();
+			virtqueue->next_event_time = now + virtqueue->irq_delay_time;
+		}
+	}
+}
+
+void
+spdk_vhost_session_used_signal_packed(struct spdk_vhost_session *vsession)
+{
+	struct spdk_vhost_virtqueue *virtqueue;
+	uint64_t now;
+	uint16_t q_idx;
+
+	if (vsession->coalescing_delay_time_base == 0) {
+		for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
+			virtqueue = &vsession->virtqueue[q_idx];
+
+			if (virtqueue->vring.desc_packed == NULL ||
+			    (virtqueue->vring.driver_event->flags & VRING_EVENT_F_DISABLE)) {
+				continue;
+			}
+
+			spdk_vhost_vq_used_signal(vsession, virtqueue);
+		}
+	} else {
+		now = spdk_get_ticks();
+		check_session_io_stats(vsession, now);
+
+		for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
+			virtqueue = &vsession->virtqueue[q_idx];
+
+			/* No need for event right now */
+			if (now < virtqueue->next_event_time ||
+			    (virtqueue->vring.driver_event->flags & VRING_EVENT_F_DISABLE)) {
 				continue;
 			}
 
@@ -473,6 +585,36 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 	virtqueue->used_req_cnt++;
 }
 
+void
+spdk_vhost_vq_packed_ring_enqueue(struct spdk_vhost_session *vsession,
+				  struct spdk_vhost_virtqueue *virtqueue,
+				  uint16_t req_idx, uint16_t last_idx, uint16_t buffer_id)
+{
+	struct rte_vhost_vring *vring = &virtqueue->vring;
+
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
+		      "Queue %td - RING: req_idx=%"PRIu16" last_id=%"PRIu16" "
+		      "buffer_id=%"PRIu16"\n",
+		      virtqueue - vsession->virtqueue, req_idx, last_idx,
+		      buffer_id);
+
+	/* TODO set the log */
+	vring->desc_packed[virtqueue->last_used_idx].id = buffer_id;
+	spdk_smp_wmb();
+	spdk_vhost_vq_packed_desc_set_used(virtqueue);
+
+	virtqueue->last_used_idx += (last_idx - req_idx + 1 + vring->size) % vring->size;
+	if (virtqueue->last_used_idx >= vring->size) {
+		virtqueue->last_used_idx = virtqueue->last_used_idx - vring->size;
+		virtqueue->used_wrap_counter = !virtqueue->used_wrap_counter;
+	}
+
+	/* TODO set the log */
+	spdk_wmb();
+
+	virtqueue->used_req_cnt++;
+}
+
 int
 spdk_vhost_vring_desc_get_next(struct vring_desc **desc,
 			       struct vring_desc *desc_table, uint32_t desc_table_size)
@@ -495,8 +637,41 @@ spdk_vhost_vring_desc_get_next(struct vring_desc **desc,
 	return 0;
 }
 
+int
+spdk_vhost_vring_packed_desc_get_next(struct vring_packed_desc **desc, uint16_t *idx,
+				      struct spdk_vhost_virtqueue *vq,
+				      struct vring_packed_desc *desc_table,
+				      uint32_t desc_table_size)
+{
+	struct vring_packed_desc *old_desc = *desc;
+
+	if (desc_table != NULL) {
+		if (*idx < desc_table_size) {
+			*desc = &desc_table[(*idx)++];
+		} else {
+			*desc = NULL;
+		}
+	} else {
+		if ((old_desc->flags & VRING_DESC_F_NEXT) == 0) {
+			*desc = NULL;
+			return 0;
+		}
+
+		*desc  = &vq->vring.desc_packed[*idx];
+		*idx = (*idx + 1) % vq->vring.size;
+	}
+
+	return 0;
+}
+
 bool
 spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
+{
+	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
+}
+
+bool
+spdk_vhost_vring_packed_desc_is_wr(struct vring_packed_desc *cur_desc)
 {
 	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
@@ -504,6 +679,35 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 int
 spdk_vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 			     uint16_t *iov_index, const struct vring_desc *desc)
+{
+	uint64_t len;
+	uint64_t remaining = desc->len;
+	uintptr_t payload = desc->addr;
+	uintptr_t vva;
+
+	do {
+		if (*iov_index >= SPDK_VHOST_IOVS_MAX) {
+			SPDK_ERRLOG("SPDK_VHOST_IOVS_MAX(%d) reached\n", SPDK_VHOST_IOVS_MAX);
+			return -1;
+		}
+		len = remaining;
+		vva = (uintptr_t)rte_vhost_va_from_guest_pa(vsession->mem, payload, &len);
+		if (vva == 0 || len == 0) {
+			SPDK_ERRLOG("gpa_to_vva(%p) == NULL\n", (void *)payload);
+			return -1;
+		}
+		iov[*iov_index].iov_base = (void *)vva;
+		iov[*iov_index].iov_len = len;
+		remaining -= len;
+		payload += len;
+		(*iov_index)++;
+	} while (remaining);
+
+	return 0;
+}
+
+int spdk_vhost_vring_packed_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
+					uint16_t *iov_index, const struct vring_packed_desc *desc)
 {
 	uint64_t len;
 	uint64_t remaining = desc->len;
@@ -1125,6 +1329,10 @@ _stop_session(struct spdk_vhost_session *vsession)
 			continue;
 		}
 		rte_vhost_set_vring_base(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
+		if (vsession->packed)
+			rte_vhost_set_vring_base_counter(vsession->vid, i,
+							 q->avail_wrap_counter,
+							 q->used_wrap_counter);
 	}
 
 	spdk_vhost_session_mem_unregister(vsession);
@@ -1177,24 +1385,51 @@ start_device(int vid)
 		goto out;
 	}
 
+	vsession->packed = rte_vhost_vq_is_packed(vid);
+
 	vsession->max_queues = 0;
 	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
 		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
 
-		q->vring_idx = -1;
-		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
-			continue;
-		}
-		q->vring_idx = i;
+		if (vsession->packed) {
+			q->vring_idx = -1;
+			if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
+				continue;
+			}
+			q->vring_idx = i;
 
-		if (q->vring.desc == NULL || q->vring.size == 0) {
-			continue;
-		}
+			if (q->vring.desc_packed == NULL || q->vring.size == 0) {
+				continue;
+			}
 
-		if (rte_vhost_get_vring_base(vsession->vid, i, &q->last_avail_idx, &q->last_used_idx)) {
-			q->vring.desc = NULL;
-			continue;
+			if (rte_vhost_get_vring_base(vid, i, &q->last_avail_idx,
+						     &q->last_used_idx)) {
+				q->vring.desc_packed = NULL;
+				continue;
+			}
+
+			if (rte_vhost_get_vring_base_counter(vid, i,
+							     &q->avail_wrap_counter,
+							     &q->used_wrap_counter)) {
+				q->vring.desc_packed = NULL;
+				continue;
+			}
+		} else {
+			q->vring_idx = -1;
+			if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
+				continue;
+			}
+			q->vring_idx = i;
+
+			if (q->vring.desc == NULL || q->vring.size == 0) {
+				continue;
+			}
+
+			if (rte_vhost_get_vring_base(vsession->vid, i, &q->last_avail_idx, &q->last_used_idx)) {
+				q->vring.desc = NULL;
+				continue;
+			}
 		}
 
 		/* Disable notifications. */
