@@ -74,6 +74,8 @@ struct spdk_vhost_blk_task {
 	volatile uint8_t *status;
 
 	uint16_t req_idx;
+	uint16_t num_descs;
+	uint16_t buffer_id;
 
 	/* for io wait */
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
@@ -129,14 +131,26 @@ blk_task_init(struct spdk_vhost_blk_task *task)
 }
 
 static void
+blk_task_enqueue(struct spdk_vhost_blk_task *task)
+{
+	if (task->vq->packed.packed_ring) {
+		vhost_vq_packed_ring_enqueue(&task->bvsession->vsession, task->vq,
+					     task->num_descs,
+					     task->buffer_id, task->used_len);
+	} else {
+		vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq,
+					   task->req_idx, task->used_len);
+	}
+}
+
+static void
 invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 {
 	if (task->status) {
 		*task->status = status;
 	}
 
-	vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq, task->req_idx,
-				   task->used_len);
+	blk_task_enqueue(task);
 	blk_task_finish(task);
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
 }
@@ -149,8 +163,9 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
  *   FIXME: Make this function return to rd_cnt and wr_cnt
  */
 static int
-blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq,
-	       uint16_t req_idx, struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
+blk_iovs_split_queue_setup(struct spdk_vhost_blk_session *bvsession,
+			   struct spdk_vhost_virtqueue *vq,
+			   uint16_t req_idx, struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
 {
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	struct spdk_vhost_dev *vdev = vsession->vdev;
@@ -220,12 +235,78 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 	return 0;
 }
 
+static int
+blk_iovs_packed_queue_setup(struct spdk_vhost_blk_session *bvsession,
+			    struct spdk_vhost_virtqueue *vq,
+			    uint16_t req_idx, struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
+{
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
+	struct vring_packed_desc *desc = NULL, *desc_table;
+	uint16_t out_cnt = 0, cnt = 0;
+	uint32_t desc_table_size, len = 0;
+	int rc = 0;
+
+	rc = vhost_vq_get_desc_packed(vsession, vq, req_idx, &desc,
+				      &desc_table, &desc_table_size);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("%s: Invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
+		return rc;
+	}
+
+	if (desc_table != NULL) {
+		req_idx = 0;
+	}
+
+	while (1) {
+		/*
+		 * Maximum cnt reached?
+		 * Should not happen if request is well formatted, otherwise this is a BUG.
+		 */
+		if (spdk_unlikely(cnt == *iovs_cnt)) {
+			SPDK_ERRLOG("%s: max IOVs in request reached (req_idx = %"PRIu16").\n",
+				    vsession->name, req_idx);
+			return -EINVAL;
+		}
+
+		if (spdk_unlikely(vhost_vring_packed_desc_to_iov(vsession, iovs, &cnt, desc))) {
+			SPDK_ERRLOG("%s: invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
+				    vsession->name, req_idx, cnt);
+			return -EINVAL;
+		}
+
+		len += desc->len;
+		out_cnt += vhost_vring_packed_desc_is_wr(desc);
+
+		/* desc is NULL means we reach the last desc of this request */
+		vhost_vring_packed_desc_get_next(&desc, &req_idx, vq, desc_table, desc_table_size);
+		if (desc == NULL) {
+			break;
+		}
+	}
+
+	/*
+	 * There must be least two descriptors.
+	 * First contain request so it must be readable.
+	 * Last descriptor contain buffer for response so it must be writable.
+	 */
+	if (spdk_unlikely(out_cnt == 0 || cnt < 2)) {
+		return -EINVAL;
+	}
+
+	*length = len;
+	*iovs_cnt = cnt;
+
+	return 0;
+}
+
 static void
 blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 {
 	*task->status = success ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR;
-	vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq, task->req_idx,
-				   task->used_len);
+
+	blk_task_enqueue(task);
+
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
 		      task->req_idx, success ? "OK" : "FAIL");
 	blk_task_finish(task);
@@ -288,7 +369,15 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 	uint64_t flush_bytes;
 	int rc;
 
-	if (blk_iovs_setup(bvsession, vq, task->req_idx, task->iovs, &task->iovcnt, &payload_len)) {
+	if (vq->packed.packed_ring) {
+		rc = blk_iovs_packed_queue_setup(bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
+						 &payload_len);
+	} else {
+		rc = blk_iovs_split_queue_setup(bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
+						&payload_len);
+	}
+
+	if (rc) {
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
@@ -452,14 +541,38 @@ static void
 process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 {
 	struct spdk_vhost_blk_task *task;
+	uint16_t task_idx = req_idx, num_descs;
 
-	task = &((struct spdk_vhost_blk_task *)vq->tasks)[req_idx];
+	if (vq->packed.packed_ring) {
+		/* Packed ring used the buffer_id as the task_idx to get task struct.
+		 * In kernel driver, it uses the vq->free_head to set the buffer_id so the value
+		 * must be in the range of 0 ~ vring.size. The free_head value must be unique
+		 * in the outstanding requests.
+		 * We can't use the req_idx as the task_idx because the desc can be reused in
+		 * the next phase even when it's not completed in the previous phase. For example,
+		 * At phase 0, last_used_idx was 2 and desc0 was not completed.Then after moving
+		 * phase 1, last_avail_idx is updated to 1. In this case, req_idx can not be used
+		 * as task_idx because we will know task[0]->used is true at phase 1.
+		 * The split queue is quite different, the desc would insert into the free list when
+		 * device completes the request, the driver gets the desc from the free list which
+		 * ensures the req_idx is unique in the outstanding requests.
+		 */
+		task_idx = vhost_vring_packed_desc_get_buffer_id(vq, req_idx, &num_descs);
+	}
+
+	task = &((struct spdk_vhost_blk_task *)vq->tasks)[task_idx];
 	if (spdk_unlikely(task->used)) {
 		SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
-			    task->bvsession->vsession.name, req_idx);
+			    task->bvsession->vsession.name, task_idx);
 		task->used_len = 0;
-		vhost_vq_used_ring_enqueue(&task->bvsession->vsession, vq, req_idx, 0);
+		blk_task_enqueue(task);
 		return;
+	}
+
+	if (vq->packed.packed_ring) {
+		task->req_idx = req_idx;
+		task->num_descs = num_descs;
+		task->buffer_id = task_idx;
 	}
 
 	task->bvsession->vsession.task_cnt++;
@@ -468,9 +581,9 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 
 	if (process_blk_request(task, task->bvsession, vq) == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", task,
-			      req_idx);
+			      task_idx);
 	} else {
-		SPDK_ERRLOG("====== Task %p req_idx %d failed ======\n", task, req_idx);
+		SPDK_ERRLOG("====== Task %p req_idx %d failed ======\n", task, task_idx);
 	}
 }
 
@@ -511,9 +624,8 @@ static void
 process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
-	uint16_t reqs[32];
+	uint16_t reqs[SPDK_VHOST_VQ_MAX_SUBMISSIONS];
 	uint16_t reqs_cnt, i;
-	uint16_t vq_idx = vq->vring_idx;
 
 	submit_inflight_desc(bvsession, vq);
 
@@ -533,9 +645,23 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 			continue;
 		}
 
-		rte_vhost_set_inflight_desc_split(vsession->vid, vq_idx, reqs[i]);
+		rte_vhost_set_inflight_desc_split(vsession->vid, vq->vring_idx, reqs[i]);
 
 		process_blk_task(vq, reqs[i]);
+	}
+}
+
+static void
+process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
+{
+	uint16_t i = 0;
+
+	while (i++ < SPDK_VHOST_VQ_MAX_SUBMISSIONS &&
+	       vhost_vq_packed_ring_is_avail(vq)) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
+			      vq->last_avail_idx);
+
+		process_blk_task(vq, vq->last_avail_idx);
 	}
 }
 
@@ -546,9 +672,16 @@ vdev_worker(void *arg)
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
 
 	uint16_t q_idx;
+	bool packed_ring;
 
+	/* In a session, every vq supports the same format */
+	packed_ring = vsession->virtqueue[0].packed.packed_ring;
 	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-		process_vq(bvsession, &vsession->virtqueue[q_idx]);
+		if (packed_ring) {
+			process_packed_vq(bvsession, &vsession->virtqueue[q_idx]);
+		} else {
+			process_vq(bvsession, &vsession->virtqueue[q_idx]);
+		}
 	}
 
 	vhost_session_used_signal(vsession);
@@ -569,12 +702,51 @@ no_bdev_process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_v
 	}
 
 	iovcnt = SPDK_COUNTOF(iovs);
-	if (blk_iovs_setup(bvsession, vq, req_idx, iovs, &iovcnt, &length) == 0) {
+	if (blk_iovs_split_queue_setup(bvsession, vq, req_idx, iovs, &iovcnt, &length) == 0) {
 		*(volatile uint8_t *)iovs[iovcnt - 1].iov_base = VIRTIO_BLK_S_IOERR;
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK_DATA, "Aborting request %" PRIu16"\n", req_idx);
 	}
 
 	vhost_vq_used_ring_enqueue(vsession, vq, req_idx, 0);
+}
+
+static void
+no_bdev_process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
+{
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_blk_task *task;
+	uint32_t length;
+	uint16_t req_idx = vq->last_avail_idx;
+	uint16_t task_idx, num_descs;
+
+	if (!vhost_vq_packed_ring_is_avail(vq)) {
+		return;
+	}
+
+	task_idx = vhost_vring_packed_desc_get_buffer_id(vq, req_idx, &num_descs);
+	task = &((struct spdk_vhost_blk_task *)vq->tasks)[task_idx];
+	if (spdk_unlikely(task->used)) {
+		SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
+			    vsession->name, req_idx);
+		vhost_vq_packed_ring_enqueue(vsession, vq, num_descs,
+					     task->buffer_id, task->used_len);
+		return;
+	}
+
+	task->req_idx = req_idx;
+	task->num_descs = num_descs;
+	task->buffer_id = task_idx;
+	blk_task_init(task);
+
+	if (blk_iovs_packed_queue_setup(bvsession, vq, task->req_idx, task->iovs, &task->iovcnt,
+					&length)) {
+		*(volatile uint8_t *)(task->iovs[task->iovcnt - 1].iov_base) = VIRTIO_BLK_S_IOERR;
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK_DATA, "Aborting request %" PRIu16"\n", req_idx);
+	}
+
+	task->used = false;
+	vhost_vq_packed_ring_enqueue(vsession, vq, num_descs,
+				     task->buffer_id, task->used_len);
 }
 
 static int
@@ -583,9 +755,16 @@ no_bdev_vdev_worker(void *arg)
 	struct spdk_vhost_blk_session *bvsession = arg;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	uint16_t q_idx;
+	bool packed_ring;
 
+	/* In a session, every vq supports the same format */
+	packed_ring = vsession->virtqueue[0].packed.packed_ring;
 	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-		no_bdev_process_vq(bvsession, &vsession->virtqueue[q_idx]);
+		if (packed_ring) {
+			no_bdev_process_packed_vq(bvsession, &vsession->virtqueue[q_idx]);
+		} else {
+			no_bdev_process_vq(bvsession, &vsession->virtqueue[q_idx]);
+		}
 	}
 
 	vhost_session_used_signal(vsession);
@@ -749,6 +928,9 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = 0; i < vsession->max_queues; i++) {
+		/* vring.desc and vring.desc_packed are in a union struct
+		 * so q->vring.desc can replace q->vring.desc_packed.
+		 */
 		if (vsession->virtqueue[i].vring.desc == NULL) {
 			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vsession->name, i);
 			rc = -1;

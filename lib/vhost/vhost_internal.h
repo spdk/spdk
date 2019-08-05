@@ -53,6 +53,8 @@
 
 #define SPDK_VHOST_IOVS_MAX 129
 
+#define SPDK_VHOST_VQ_MAX_SUBMISSIONS	32
+
 /*
  * Rate at which stats are checked for interrupt coalescing.
  */
