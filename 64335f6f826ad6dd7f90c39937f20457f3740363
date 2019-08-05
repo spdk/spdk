@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff992423_2c763c50",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-05T09:17:04Z",
+      "side": 1,
+      "message": "please wrap with double quotes\n\nIf we add even a single rm -rf without quotes, all of the existing quotes in this file immediately stop having any value.",
+      "range": {
+        "startLine": 487,
+        "startChar": 10,
+        "endLine": 487,
+        "endChar": 17
+      },
+      "revId": "64335f6f826ad6dd7f90c39937f20457f3740363",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
