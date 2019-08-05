@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac30dae2_2e2f7cc8",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-05T23:04:47Z",
+      "side": 1,
+      "message": "This needs to be moved to a new v19.10 section.",
+      "revId": "04c4920b977843c1ff20d8932790343e0a9c4967",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
