@@ -651,7 +651,7 @@ function waitforblk()
 	local i=0
 	while ! lsblk -l -o NAME | grep -q -w $1; do
 		[ $i -lt 15 ] || break
-		i=$[$i+1]
+		i=$((i+1))
 		sleep 1
 	done
 
@@ -667,7 +667,7 @@ function waitforblk_disconnect()
 	local i=0
 	while lsblk -l -o NAME | grep -q -w $1; do
 		[ $i -lt 15 ] || break
-		i=$[$i+1]
+		i=$((i+1))
 		sleep 1
 	done
 
@@ -683,7 +683,7 @@ function waitforfile()
 	local i=0
 	while [ ! -e $1 ]; do
 		[ $i -lt 200 ] || break
-		i=$[$i+1]
+		i=$((i+1))
 		sleep 0.1
 	done
 

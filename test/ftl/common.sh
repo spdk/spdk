@@ -21,13 +21,13 @@ function create_nv_cache_bdev() {
 	local cache_bdf=$3
 	local num_punits=$4
 
-	local bytes_to_mb=$[1024 * 1024]
+	local bytes_to_mb=$((1024 * 1024))
 	local chunk_size=$(get_chunk_size $ocssd_bdf)
 
 	# We need at least 2 bands worth of data + 1 block
-	local size=$[2 * 4096 * $chunk_size * $num_punits + 1]
+	local size=$((2 * 4096 * $chunk_size * $num_punits + 1))
 	# Round the size up to the nearest megabyte
-	local size=$[($size + $bytes_to_mb) / $bytes_to_mb]
+	local size=$((($size + $bytes_to_mb) / $bytes_to_mb))
 
 	# Create NVMe bdev on specified device and split it so that it has the desired size
 	local nvc_bdev=$($rootdir/scripts/rpc.py construct_nvme_bdev -b $name -t PCIe -a $cache_bdf)
