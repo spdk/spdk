@@ -1189,9 +1189,6 @@ rpc_perform_tests_cb(unsigned num_failures, struct spdk_jsonrpc_request *request
 
 	if (num_failures == 0) {
 		w = spdk_jsonrpc_begin_result(request);
-		if (w == NULL) {
-			return;
-		}
 		spdk_json_write_uint32(w, num_failures);
 		spdk_jsonrpc_end_result(request, w);
 	} else {

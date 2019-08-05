@@ -1321,9 +1321,6 @@ rpc_perform_tests_cb(int rc)
 
 	if (rc == 0) {
 		w = spdk_jsonrpc_begin_result(request);
-		if (w == NULL) {
-			return;
-		}
 		spdk_json_write_uint32(w, rc);
 		spdk_jsonrpc_end_result(request, w);
 	} else {

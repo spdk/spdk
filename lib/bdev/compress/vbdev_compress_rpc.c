@@ -131,11 +131,6 @@ spdk_rpc_construct_compress_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_construct_compress(&req);
-		return;
-	}
-
 	name = spdk_sprintf_alloc("COMP_%s", req.base_bdev_name);
 	spdk_json_write_string(w, name);
 	spdk_jsonrpc_end_result(request, w);
@@ -167,10 +162,6 @@ _spdk_rpc_delete_compress_bdev_cb(void *cb_arg, int bdeverrno)
 	struct spdk_json_write_ctx *w;
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, bdeverrno == 0);
 	spdk_jsonrpc_end_result(request, w);
 }
