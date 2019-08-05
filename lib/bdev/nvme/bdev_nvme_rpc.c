@@ -217,16 +217,12 @@ spdk_rpc_construct_nvme_bdev_done(void *cb_ctx, int rc)
 	struct spdk_json_write_ctx *w;
 	size_t i;
 
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto exit;
-	}
-
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		goto exit;
 	}
 
+	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
 	for (i = 0; i < ctx->count; i++) {
 		spdk_json_write_string(w, ctx->names[i]);
