@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bb673a0_1c3c17dc",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-05T06:49:31Z",
+      "side": 1,
+      "message": "Not a big deal, although this should be /tmp - that\u0027s what it\u0027s for. If the archive format changes, the mv below may fail and leave the leftover files in HOME.",
+      "range": {
+        "startLine": 20,
+        "startChar": 105,
+        "endLine": 20,
+        "endChar": 107
+      },
+      "revId": "da18e0468df6d27963b7389a99a951fda71dda98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
