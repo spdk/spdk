@@ -748,12 +748,7 @@ spdk_posix_group_impl_io_poll(struct spdk_posix_sock_group_impl *group)
 		STAILQ_REMOVE(&group->iocb_list, sock_cb, spdk_posix_sock_iocb, link);
 	}
 
-	if (!nr) {
-		return 0;
-	}
-
-	if (group->io_ctx == NULL) {
-		assert(0);
+	if (spdk_unlikely(!nr)) {
 		return 0;
 	}
 
