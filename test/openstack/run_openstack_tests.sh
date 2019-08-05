@@ -12,7 +12,7 @@ nvmftestinit
 function finish_test {
 	$rpc_py destroy_lvol_store -l lvs0
 	kill -9 $rpc_proxy_pid
-	killprocess $spdk_tgt_pid
+	killprocess $nvmfpid
 	rm $testdir/conf.json
 }
 
@@ -21,8 +21,8 @@ trap "finish_test" SIGINT SIGTERM EXIT
 timing_enter run_spdk_tgt
 $rootdir/scripts/gen_nvme.sh >> $testdir/conf.json
 $rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 1024 -c $testdir/conf.json &
-spdk_tgt_pid=$!
-waitforlisten $spdk_tgt_pid
+nvmfpid=$!
+waitforlisten $nvmfpid
 $rpc_py set_bdev_nvme_hotplug -e
 timing_exit run_spdk_tgt
 
