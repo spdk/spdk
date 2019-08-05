@@ -442,13 +442,12 @@ end:
 
 static int
 nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
-		   void *buf)
+		   void *buf, spdk_sock_op_cb cb_fn, void *cb_arg)
 {
 	int ret;
 
-	ret = spdk_sock_recv(sock, buf, bytes, NULL, NULL);
-
-	if (ret > 0) {
+	ret = spdk_sock_recv(sock, buf, bytes, cb_fn, cb_arg);
+	if (ret >= 0) {
 		return ret;
 	}
 
@@ -472,7 +471,8 @@ nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
 }
 
 static int
-nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
+		    spdk_sock_op_cb cb_fn, void *cb_arg)
 {
 	int ret;
 
@@ -482,12 +482,12 @@ nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	}
 
 	if (iovcnt == 1) {
-		return nvme_tcp_read_data(sock, iov->iov_len, iov->iov_base);
+		return nvme_tcp_read_data(sock, iov->iov_len, iov->iov_base, cb_fn, cb_arg);
 	}
 
-	ret = spdk_sock_readv(sock, iov, iovcnt, NULL, NULL);
+	ret = spdk_sock_readv(sock, iov, iovcnt, cb_fn, cb_arg);
 
-	if (ret > 0) {
+	if (ret >= 0) {
 		return ret;
 	}
 
@@ -512,16 +512,17 @@ nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 
 
 static int
-nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
+nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu,
+			   struct iovec *iov, int _iovcnt,
+			   spdk_sock_op_cb cb_fn, void *cb_arg)
 {
-	struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
 	int iovcnt;
 
-	iovcnt = nvme_tcp_build_payload_iovs(iov, NVME_TCP_MAX_SGL_DESCRIPTORS + 1, pdu,
+	iovcnt = nvme_tcp_build_payload_iovs(iov, _iovcnt, pdu,
 					     pdu->ddgst_enable, NULL);
 	assert(iovcnt >= 0);
 
-	return nvme_tcp_readv_data(sock, iov, iovcnt);
+	return nvme_tcp_readv_data(sock, iov, iovcnt, cb_fn, cb_arg);
 }
 
 static void
