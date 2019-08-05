@@ -16,6 +16,24 @@
       "revId": "dc38d66be42a57f0b0ffdcbc4a0c3aadc9a3b38e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e0df176_2d79b3a0",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-08-05T01:29:34Z",
+      "side": 1,
+      "message": "Only TCP without any specific hardware needed.",
+      "parentUuid": "1b760949_ce28ed6e",
+      "revId": "dc38d66be42a57f0b0ffdcbc4a0c3aadc9a3b38e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
