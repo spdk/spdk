@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c91bda8_429bfd5a",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-05T09:12:22Z",
+      "side": 1,
+      "message": "use double quotes! It\u0027s rm -rf, no time for mistakes there",
+      "range": {
+        "startLine": 221,
+        "startChar": 8,
+        "endLine": 221,
+        "endChar": 18
+      },
+      "revId": "6d040b19fe404e291f90ef85c34488e38abb2e9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
