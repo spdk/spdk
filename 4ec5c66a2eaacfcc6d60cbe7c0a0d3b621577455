@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ab3366c_69c718b8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4311,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-05T09:01:43Z",
+      "side": 1,
+      "message": "This looks like a good candidate for unit tests :) Can you add some?\n\nIt should be fairly easy to test:\n\n * create bdev\n * open a desc\n * start bdev hotremoval\n * open a desc -\u003e must fail\n * close the previous desc",
+      "revId": "4ec5c66a2eaacfcc6d60cbe7c0a0d3b621577455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
