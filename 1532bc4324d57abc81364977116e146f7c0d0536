@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "72adbc46_4910caae",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-05T09:05:17Z",
+      "side": 1,
+      "message": "That\u0027s a comment for trello card, so hardly a reason to -1 the patch.\nI\u0027ll update the card anyways.",
+      "parentUuid": "325585d9_a605a4d7",
+      "range": {
+        "startLine": 236,
+        "startChar": 39,
+        "endLine": 236,
+        "endChar": 68
+      },
+      "revId": "1532bc4324d57abc81364977116e146f7c0d0536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c50dc996_3200167f",
         "filename": "scripts/check_format.sh",
         "patchSetId": 2
