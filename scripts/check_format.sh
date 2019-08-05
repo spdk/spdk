@@ -258,9 +258,18 @@ SC2199,SC2206,SC2207,SC2209,SC2214,SC2219,SC2220,SC2223,SC2230,SC2231,SC2235"
 	SHCH_ARGS=" -e $SHCK_EXCLUDE -f $SHCK_FORMAT"
 
 	error=0
-	git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS > shellcheck.log || error=1
+	git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log || error=1
 	if [ $error -ne 0 ]; then
 		echo " Bash formatting errors detected!"
+
+		# Some errors are not auto-fixable. Fall back to tty output.
+		if grep -q "Use another format to see them." shellcheck.log; then
+			SHCK_FORMAT="tty"
+			SHCK_APPLY=false
+			SHCH_ARGS=" -e $SHCK_EXCLUDE -f $SHCK_FORMAT"
+			git ls-files '*.sh' | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS > shellcheck.log || error=1
+		fi
+
 		cat shellcheck.log
 		if $SHCK_APPLY; then
 			git apply shellcheck.log
