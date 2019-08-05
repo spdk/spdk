@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93911f8a_3c2b41eb",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-08-05T21:01:59Z",
+      "side": 1,
+      "message": "should be \"disk\"",
+      "range": {
+        "startLine": 79,
+        "startChar": 20,
+        "endLine": 79,
+        "endChar": 23
+      },
+      "revId": "eb7e297ccc8fe00392f7391cc62a1c6146cf746e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "588497cf_9c80c531",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-08-05T21:01:59Z",
+      "side": 1,
+      "message": "Delete duplicate echo. Also, $disk is not defined here.",
+      "range": {
+        "startLine": 200,
+        "startChar": 1,
+        "endLine": 200,
+        "endChar": 51
+      },
+      "revId": "eb7e297ccc8fe00392f7391cc62a1c6146cf746e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
