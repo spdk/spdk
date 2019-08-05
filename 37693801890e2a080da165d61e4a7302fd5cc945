@@ -39,6 +39,26 @@
       "revId": "37693801890e2a080da165d61e4a7302fd5cc945",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "robotId": "manual-curl",
+      "robotRunId": "2",
+      "fixSuggestions": [],
+      "key": {
+        "uuid": "53db0309_39314027",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-05T05:49:21Z",
+      "side": 1,
+      "message": "Failure on this line",
+      "revId": "37693801890e2a080da165d61e4a7302fd5cc945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
