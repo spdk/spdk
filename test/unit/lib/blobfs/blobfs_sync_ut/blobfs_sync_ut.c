@@ -310,6 +310,58 @@ file_length(void)
 }
 
 static void
+append_write_to_extend_blob(void)
+{
+	uint64_t blob_size, buf_length;
+	char *buf, append_buf[64];
+	int rc;
+	struct spdk_fs_thread_ctx *channel;
+
+	ut_send_request(_fs_init, NULL);
+
+	channel = spdk_fs_alloc_thread_ctx(g_fs);
+
+	/* create a file and write the file with blob_size - 1 data length */
+	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	blob_size = __file_get_blob_size(g_file);
+
+	buf_length = blob_size - 1;
+	buf = calloc(1, buf_length);
+	rc = spdk_file_write(g_file, channel, buf, 0, buf_length);
+	CU_ASSERT(rc == 0);
+	free(buf);
+
+	spdk_file_close(g_file, channel);
+	spdk_fs_free_thread_ctx(channel);
+	ut_send_request(_fs_unload, NULL);
+
+	/* load existing file and write extra 2 bytes to cross blob boundary */
+	ut_send_request(_fs_load, NULL);
+
+	channel = spdk_fs_alloc_thread_ctx(g_fs);
+	g_file = NULL;
+	rc = spdk_fs_open_file(g_fs, channel, "testfile", 0, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	CU_ASSERT(g_file->length == buf_length);
+	CU_ASSERT(g_file->last == NULL);
+	CU_ASSERT(g_file->append_pos == buf_length);
+
+	rc = spdk_file_write(g_file, channel, append_buf, buf_length, 2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(2 * blob_size == __file_get_blob_size(g_file));
+	spdk_file_close(g_file, channel);
+	CU_ASSERT(g_file->length == buf_length + 2);
+
+	spdk_fs_free_thread_ctx(channel);
+	ut_send_request(_fs_unload, NULL);
+}
+
+static void
 partial_buffer(void)
 {
 	int rc;
@@ -587,6 +639,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "cache read after write", cache_read_after_write) == NULL ||
 		CU_add_test(suite, "file length", file_length) == NULL ||
+		CU_add_test(suite, "append write to extend blob", append_write_to_extend_blob) == NULL ||
 		CU_add_test(suite, "partial buffer", partial_buffer) == NULL ||
 		CU_add_test(suite, "write_null_buffer", cache_write_null_buffer) == NULL ||
 		CU_add_test(suite, "create_sync", fs_create_sync) == NULL ||
