@@ -129,7 +129,19 @@ if [ -d /usr/src/fio ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	run_fio --spdk_conf=./test/bdev/bdev.conf --spdk_mem=$PRE_RESERVED_MEM
+	./app/spdk_tgt/spdk_tgt -c ./test/bdev/bdev.conf &
+	spdk_tgt=$!
+	waitforlisten $spdk_tgt
+	# For some reason QoS hangs fio at the end of run, if it was enabled by json_rpc
+	# Disable it for now and will try to create minimal repro steps
+	$rpc_py set_bdev_qos_limit --rw_ios_per_sec 0 Malloc0
+	$rpc_py set_bdev_qos_limit --rw_mbytes_per_sec 0 Malloc3
+	$rpc_py save_subsystem_config -n bdev | jq -r '{subsystems: [.] }' > ./test/bdev/bdev.conf.json
+	sleep 3
+	killprocess $spdk_tgt
+	sleep 3
+	run_fio --spdk_json_conf=./test/bdev/bdev.conf.json --spdk_mem=$PRE_RESERVED_MEM
+	rm -f ./test/bdev/bdev.conf.json
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
