@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "325585d9_a605a4d7",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-05T07:01:13Z",
+      "side": 1,
+      "message": "In the card you\u0027ve got a whole lot of SC2034 warnings listed like so:\nSC2034: all_booted appears unused. Verify use (or export if used externally).\nSC2034: blk_hot_remove_test appears unused. Verify use (or export if used externally).\nSC2034: BLK_SIZE appears unused. Verify use (or export if used externally).\nSC2034: CENTOS_FIO_BIN appears unused. Verify use (or export if used externally).\nSC2034: CENTOS_VM_IMAGE appears unused. Verify use (or export if used externally).\n\nI meant to create a single sentence description for each check instead, e.g:\nSC2034: unused variable",
+      "parentUuid": "82f97a47_7b0f341d",
+      "range": {
+        "startLine": 236,
+        "startChar": 39,
+        "endLine": 236,
+        "endChar": 68
+      },
+      "revId": "1532bc4324d57abc81364977116e146f7c0d0536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c50dc996_3200167f",
         "filename": "scripts/check_format.sh",
         "patchSetId": 2
