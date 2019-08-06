@@ -1043,6 +1043,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 		if (!rqpair->resources) {
 			SPDK_ERRLOG("Unable to allocate resources for receive queue.\n");
+			rdma_destroy_qp(rqpair->cm_id);
 			goto error;
 		}
 	} else {
