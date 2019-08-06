@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b93a34e7_ad9a467e",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 8
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011829
+      },
+      "writtenOn": "2019-08-06T15:08:40Z",
+      "side": 1,
+      "message": "I have one more fix in this file and that is avoid using MAKEFLAGS when invoking make for dpdk. I don\u0027t know why, but I wasn\u0027t able to build dpdk share libs without this change. In fact I don\u0027t even know why MAKEFLAGS is used. It does not seem to be useful. Any ideas about that? Here is the diff for the reference:\n\n```\n@@ -141,10 +145,10 @@ DPDK_CFLAGS +\u003d $(EXTRA_DPDK_CFLAGS)\n\n $(SPDK_ROOT_DIR)/dpdk/build: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h\n        $(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build\n-       $(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T\u003d$(DPDK_CONFIG) $(DPDK_OPTS)\n+       $(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T\u003d$(DPDK_CONFIG) $(DPDK_OPTS)\n\n all: $(SPDK_ROOT_DIR)/dpdk/build\n-       $(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS\u003d\"$(DPDK_CFLAGS)\" EXTRA_LDFLAGS\u003d\"$(DPDK_LDFLAGS)\" MAKEFLAGS\u003d\"T\u003d$(DPDK_CONFIG) -j$(NPROC)\" $(DPDK_OPTS)\n+       $(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS\u003d\"$(DPDK_CFLAGS)\" EXTRA_LDFLAGS\u003d\"$(DPDK_LDFLAGS)\" T\u003d\"$(DPDK_CONFIG)\" -j$(NPROC) $(DPDK_OPTS)\n\n clean:\n        $(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build\n```",
+      "revId": "b26f47586b2b1bb07a4179bccbd89862e94bf0fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
