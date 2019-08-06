@@ -44,7 +44,7 @@ $(ISAL_DIR)/isa-l:
 	@ln -s $(ISAL_DIR)/include $(ISAL_DIR)/isa-l
 
 all: $(ISAL_DIR)/isa-l
-	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l -j$(NPROC) all CC=cc $(REDIRECT)
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l all $(REDIRECT)
 
 install: all
 

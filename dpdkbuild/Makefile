@@ -144,7 +144,7 @@ $(SPDK_ROOT_DIR)/dpdk/build: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG) $(DPDK_OPTS)
 
 all: $(SPDK_ROOT_DIR)/dpdk/build
-	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" EXTRA_LDFLAGS="$(DPDK_LDFLAGS)" MAKEFLAGS="T=$(DPDK_CONFIG) -j$(NPROC)" $(DPDK_OPTS)
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" EXTRA_LDFLAGS="$(DPDK_LDFLAGS)" T=$(DPDK_CONFIG) $(DPDK_OPTS)
 
 clean:
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
