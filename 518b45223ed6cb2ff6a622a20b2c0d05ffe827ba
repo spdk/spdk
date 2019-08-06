@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cb22221c_d577781b",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-06T06:04:20Z",
+      "side": 1,
+      "message": "We already checked PDU type here too.\nSo we may be able to create a helper function to compute PSH length and share it by initiator and target?",
+      "parentUuid": "8deea06a_8958fa97",
+      "revId": "518b45223ed6cb2ff6a622a20b2c0d05ffe827ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5427f966_edaee972",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-06T05:57:39Z",
       "side": 1,
       "message": "Updating pdu-\u003epsh_len can remove if condition and may be better.",
+      "revId": "518b45223ed6cb2ff6a622a20b2c0d05ffe827ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4e49ac2_7bab7bcc",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1879,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-06T06:04:20Z",
+      "side": 1,
+      "message": "And we already checked PDU type at the line from 1806 to 1862.\nSo we may be able to create a helper function to compute PSH length, and share it by initiator and target?",
+      "parentUuid": "5427f966_edaee972",
       "revId": "518b45223ed6cb2ff6a622a20b2c0d05ffe827ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
