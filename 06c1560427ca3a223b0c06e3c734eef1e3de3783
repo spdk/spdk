@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9cdc0dd_256912cc",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1742,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-06T07:14:35Z",
+      "side": 1,
+      "message": "Please remove this.",
+      "revId": "06c1560427ca3a223b0c06e3c734eef1e3de3783",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
