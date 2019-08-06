@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc9856ec_e1b9ea44",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-06T05:20:28Z",
+      "side": 1,
+      "message": "Hi Pawel, please describe why.\n\nWhat was wrong with nvmftestfini?",
+      "revId": "eb8d6bb0f2e9d152ba98b836f494c559f573953c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
