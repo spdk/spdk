@@ -2454,6 +2454,85 @@ spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	return 0;
 }
 
+static uint64_t
+__next_cache_buffer_offset(uint64_t offset)
+{
+	return (offset + CACHE_BUFFER_SIZE) & ~(CACHE_TREE_LEVEL_MASK(0));
+}
+
+static uint64_t
+__current_cache_buffer_offset(uint64_t offset)
+{
+	return (offset & ~(CACHE_TREE_LEVEL_MASK(0)));
+}
+
+int
+spdk_file_randomwrite(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
+		      void *payload, uint64_t offset, uint64_t length)
+{
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
+	uint64_t current_offset, cache_offset, to_next_boundary, data_len, rem_length;
+	struct cache_buffer *buf;
+	int rc;
+
+	BLOBFS_TRACE_RW(file, "random write offset=%jx length=%jx\n", offset, length);
+
+	if (length == 0) {
+		return 0;
+	}
+
+	pthread_spin_lock(&file->lock);
+	file->open_for_writing = true;
+
+	if (offset > file->append_pos) {
+		pthread_spin_unlock(&file->lock);
+		SPDK_ERRLOG("Random write can't support offset=%jx ahead of append_pos=%jx\n", offset,
+			    file->append_pos);
+		return -EINVAL;
+	}
+
+	/* flush all dirty data before any random writes */
+	if (offset + length > file->length_flushed) {
+		pthread_spin_unlock(&file->lock);
+		rc = spdk_file_sync(file, ctx);
+		if (rc != 0) {
+			SPDK_ERRLOG("Flush with errno %d\n", rc);
+			return rc;
+		}
+		pthread_spin_lock(&file->lock);
+	}
+
+	rem_length = length;
+	current_offset = offset;
+
+	/* remove read only cache buffer which overlap with offset + length */
+	while (rem_length > 0) {
+		to_next_boundary = __next_cache_buffer_offset(current_offset) - current_offset;
+		data_len = spdk_min(rem_length, to_next_boundary);
+
+		cache_offset = __current_cache_buffer_offset(current_offset);
+		buf = spdk_tree_find_filled_buffer(file->tree, cache_offset);
+		if (buf) {
+			assert(buf->bytes_filled == buf->bytes_flushed);
+			spdk_tree_remove_buffer(file->tree, buf);
+		}
+
+		current_offset += data_len;
+		rem_length -= data_len;
+	}
+
+	/* calculate the new append_pos if needed */
+	if (offset + length > file->append_pos) {
+		file->append_pos = offset + length;
+	}
+
+	pthread_spin_unlock(&file->lock);
+	rc = __send_rw_from_file(file, payload, offset, length, false, channel);
+	sem_wait(&channel->sem);
+
+	return rc;
+}
+
 static void
 __readahead_done(void *ctx, int bserrno)
 {
@@ -2493,12 +2572,6 @@ __readahead(void *ctx)
 	spdk_blob_io_read(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
 			  args->op.readahead.cache_buffer->buf,
 			  start_lba, num_lba, __readahead_done, req);
-}
-
-static uint64_t
-__next_cache_buffer_offset(uint64_t offset)
-{
-	return (offset + CACHE_BUFFER_SIZE) & ~(CACHE_TREE_LEVEL_MASK(0));
 }
 
 static void
