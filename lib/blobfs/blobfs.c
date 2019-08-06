@@ -2464,11 +2464,9 @@ __readahead_done(void *ctx, int bserrno)
 
 	BLOBFS_TRACE(file, "offset=%jx\n", cache_buffer->offset);
 
-	pthread_spin_lock(&file->lock);
 	cache_buffer->bytes_filled = args->op.readahead.length;
 	cache_buffer->bytes_flushed = args->op.readahead.length;
 	cache_buffer->in_progress = false;
-	pthread_spin_unlock(&file->lock);
 
 	free_fs_request(req);
 }
