@@ -16,6 +16,7 @@ x=""
 scsi_hot_remove_test=0
 blk_hot_remove_test=0
 readonly=""
+test_cases="all"
 
 
 function usage() {
@@ -38,6 +39,9 @@ function usage() {
     echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
     echo "    --scsi-hotremove-test Run scsi hotremove tests"
     echo "    --readonly            Use readonly for fio"
+    echo "    --blk-hotremove-test  Run blk hotremove tests."
+    echo "    --test-cases=[num]    Run comma separated test cases. Assign all if all test cases should be run"
+    echo "                          Default value is all"
     exit 0
 }
 
@@ -53,6 +57,7 @@ while getopts 'xh-:' optchar; do
             scsi-hotremove-test) scsi_hot_remove_test=1 ;;
             blk-hotremove-test) blk_hot_remove_test=1 ;;
             readonly) readonly="--readonly" ;;
+            test-cases=*) test_cases="${OPTARG#*=}" ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -63,6 +68,36 @@ while getopts 'xh-:' optchar; do
     esac
 done
 shift $(( OPTIND - 1 ))
+
+if [ ${test_cases} == "all" ]; then
+    test_cases="1,2,3,4,5"
+fi
+tc1=false
+tc2=false
+tc3=false
+tc4=false
+tc5=false
+IFS=',' read -ra tc <<< "${test_cases}"
+for i in "${tc[@]}"; do
+    if [ $i == "1" ]; then
+        tc1=true
+    elif [ $i == "2" ]; then
+        tc2=true
+    elif [ $i == "3" ]; then
+        tc3=true
+    elif [ $i == "4" ]; then
+        tc4=true
+    elif [ $i == "5" ]; then
+        tc5=true
+    fi
+done
+
+hotnvmenumber=0
+hotnvmename="Nvme0"
+function set_hotnvmename() {
+    hotnvmename="HotInNvme${hotnvmenumber}"
+    hotnvmenumber=$((hotnvmenumber + 1))
+}
 
 fio_job=$testdir/fio_jobs/default_integrity.job
 tmp_attach_job=$testdir/fio_jobs/fio_attach.job.tmp

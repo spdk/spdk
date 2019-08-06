@@ -94,6 +94,12 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	echo 'Running migration suite...'
 	run_test "vhost_migration" $WORKDIR/migration/migration.sh -x \
 	--fio-bin=$FIO_BIN --os=$VM_IMAGE
+
+	echo "Running scsi hotremove test"
+	run_test "scsi_hotremove" $WORKDIR/vhost/manual.sh -shr --test-cases=1,2,3,4
+
+	echo "Running blk hotremove test"
+	run_test "blk_hotremove" $WORKDIR/vhost/manual.sh -bhr --test-cases=1,2,3,4,5
 fi
 
 echo 'Running lvol integrity suite...'
