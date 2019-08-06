@@ -902,6 +902,21 @@ _get_current_poll_group(void)
 	return NULL;
 }
 
+static void
+wait_for_semaphore(int timeout_sec, const char *errmsg)
+{
+	struct timespec timeout;
+	int rc;
+
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += timeout_sec;
+	rc = sem_timedwait(&g_dpdk_sem, &timeout);
+	if (rc != 0) {
+		SPDK_ERRLOG("Timeout waiting for event: %s.\n", errmsg);
+		sem_wait(&g_dpdk_sem);
+	}
+}
+
 void
 vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 {
@@ -961,26 +976,17 @@ vhost_session_send_event(struct vhost_poll_group *pg,
 			 const char *errmsg)
 {
 	struct vhost_session_fn_ctx ev_ctx = {0};
-	struct timespec timeout;
-	int rc;
 
 	ev_ctx.vdev = vsession->vdev;
 	ev_ctx.vsession_id = vsession->id;
 	ev_ctx.cb_fn = cb_fn;
 
 	spdk_thread_send_msg(pg->thread, vhost_event_cb, &ev_ctx);
+
 	pthread_mutex_unlock(&g_vhost_mutex);
-
-	clock_gettime(CLOCK_REALTIME, &timeout);
-	timeout.tv_sec += timeout_sec;
-
-	rc = sem_timedwait(&g_dpdk_sem, &timeout);
-	if (rc != 0) {
-		SPDK_ERRLOG("Timeout waiting for event: %s.\n", errmsg);
-		sem_wait(&g_dpdk_sem);
-	}
-
+	wait_for_semaphore(timeout_sec, errmsg);
 	pthread_mutex_lock(&g_vhost_mutex);
+
 	return g_dpdk_response;
 }
 
