@@ -477,7 +477,7 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move)
 		return 0;
 	}
 
-	move->data = spdk_dma_malloc(PAGE_SIZE * move->lbk_cnt, PAGE_SIZE, NULL);
+	move->data = spdk_dma_malloc(FTL_BLOCK_SIZE * move->lbk_cnt, 4096, NULL);
 	if (!move->data) {
 		return -1;
 	}
