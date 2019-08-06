@@ -96,13 +96,15 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 	assert(raid_bdev != NULL);
 	assert(raid_bdev->state == RAID_BDEV_STATE_ONLINE);
 
-	raid_ch->base_channel = calloc(raid_bdev->num_base_bdevs,
+	raid_ch->num_channels = raid_bdev->num_base_bdevs;
+
+	raid_ch->base_channel = calloc(raid_ch->num_channels,
 				       sizeof(struct spdk_io_channel *));
 	if (!raid_ch->base_channel) {
 		SPDK_ERRLOG("Unable to allocate base bdevs io channel\n");
 		return -ENOMEM;
 	}
-	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+	for (uint8_t i = 0; i < raid_ch->num_channels; i++) {
 		/*
 		 * Get the spdk_io_channel for all the base bdevs. This is used during
 		 * split logic to send the respective child bdev ios to respective base
@@ -111,7 +113,7 @@ raid_bdev_create_cb(void *io_device, void *ctx_buf)
 		raid_ch->base_channel[i] = spdk_bdev_get_io_channel(
 						   raid_bdev->base_bdev_info[i].desc);
 		if (!raid_ch->base_channel[i]) {
-			for (uint32_t j = 0; j < i; j++) {
+			for (uint8_t j = 0; j < i; j++) {
 				spdk_put_io_channel(raid_ch->base_channel[j]);
 			}
 			free(raid_ch->base_channel);
@@ -138,14 +140,12 @@ static void
 raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct raid_bdev_io_channel *raid_ch = ctx_buf;
-	struct raid_bdev            *raid_bdev = io_device;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destroy_cb\n");
 
-	assert(raid_bdev != NULL);
 	assert(raid_ch != NULL);
 	assert(raid_ch->base_channel);
-	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+	for (uint8_t i = 0; i < raid_ch->num_channels; i++) {
 		/* Free base bdev channels */
 		assert(raid_ch->base_channel[i] != NULL);
 		spdk_put_io_channel(raid_ch->base_channel[i]);
