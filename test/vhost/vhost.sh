@@ -122,6 +122,14 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test case $WORKDIR/migration/migration.sh -x \
 	--fio-bin=$FIO_BIN --os=$VM_IMAGE --test-cases=1,2
 	timing_exit vhost_migration
+
+	timing_enter scsi_hotremove
+	run_test case $WORKDIR/vhost/manual.sh -shr --test-cases=1,2,3,4
+	timing_exit scsi_hotremove
+
+	timing_enter blk_hotremove
+	run_test case $WORKDIR/vhost/manual.sh -bhr --test-cases=1,2,3,4,5
+	timing_exit blk_hotremove
 fi
 
 timing_enter integrity_lvol_scsi
