@@ -70,7 +70,7 @@ if [[ $RUN_NIGHTLY -eq 1 ]]; then
 	notice "running SPDK"
 	notice ""
 	vhost_run 0
-	vhost_json_config 0 $testdir/conf.json
+	vhost_load_config 0 $testdir/conf.json
 	notice ""
 
 	rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
