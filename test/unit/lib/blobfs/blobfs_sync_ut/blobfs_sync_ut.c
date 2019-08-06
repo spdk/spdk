@@ -232,6 +232,110 @@ cache_read_after_write(void)
 }
 
 static void
+randomwrite_with_filled_cache(void)
+{
+	int rc;
+	char w_buf[100], r_buf[100];
+	struct spdk_fs_thread_ctx *channel;
+	struct cache_buffer *buf;
+
+	ut_send_request(_fs_init, NULL);
+
+	channel = spdk_fs_alloc_thread_ctx(g_fs);
+
+	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(spdk_file_get_length(g_file) == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	/* write 100 bytes and cache buffer is not empty */
+	memset(w_buf, 0x5a, sizeof(w_buf));
+	rc = spdk_file_write(g_file, channel, w_buf, 0, sizeof(w_buf));
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(spdk_file_get_length(g_file) == sizeof(w_buf));
+	CU_ASSERT(g_file->length_flushed == 0);
+	buf = spdk_tree_find_filled_buffer(g_file->tree, 0);
+	CU_ASSERT(buf != NULL);
+
+	/* random write will flush and remove cache buffer */
+	memset(w_buf, 0xa5, sizeof(w_buf));
+	rc = spdk_file_randomwrite(g_file, channel, w_buf, 0, sizeof(w_buf));
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_file->length_flushed == sizeof(w_buf));
+	buf = spdk_tree_find_filled_buffer(g_file->tree, 0);
+	CU_ASSERT(buf == NULL);
+
+	memset(r_buf, 0, sizeof(r_buf));
+	spdk_file_read(g_file, channel, r_buf, 0, sizeof(r_buf));
+	CU_ASSERT(memcmp(w_buf, r_buf, sizeof(r_buf)) == 0);
+
+	spdk_file_close(g_file, channel);
+	spdk_fs_free_thread_ctx(channel);
+
+	ut_send_request(_fs_unload, NULL);
+}
+
+static void
+randomwrite_overlap_append_pos(void)
+{
+	int rc;
+	uint64_t length, offset;
+	char w_buf[100], r_buf[100];
+	struct spdk_fs_thread_ctx *channel;
+	struct cache_buffer *buf;
+
+	ut_send_request(_fs_init, NULL);
+
+	channel = spdk_fs_alloc_thread_ctx(g_fs);
+
+	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	/* truncate the file with 4MiB */
+	length = (4 * 1024 * 1024);
+	rc = spdk_file_truncate(g_file, channel, length);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(spdk_file_get_length(g_file) == length);
+
+	memset(w_buf, 0x5a, sizeof(w_buf));
+	rc = spdk_file_write(g_file, channel, w_buf, 0, sizeof(w_buf));
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_file->length_flushed == 0);
+	CU_ASSERT(g_file->append_pos == sizeof(w_buf));
+	buf = spdk_tree_find_filled_buffer(g_file->tree, 0);
+	CU_ASSERT(buf != NULL);
+
+	memset(w_buf, 0xa5, sizeof(w_buf));
+	/* offset is ahead of append_pos */
+	offset = g_file->append_pos + 1;
+	rc = spdk_file_randomwrite(g_file, channel, w_buf, offset, sizeof(w_buf));
+	CU_ASSERT(rc < 0);
+
+	/* offset is behind append_pos */
+	offset = g_file->append_pos - 1;
+	rc = spdk_file_randomwrite(g_file, channel, w_buf, offset, sizeof(w_buf));
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_file->length_flushed == sizeof(w_buf));
+	CU_ASSERT(g_file->append_pos == offset + sizeof(w_buf));
+	buf = spdk_tree_find_filled_buffer(g_file->tree, 0);
+	CU_ASSERT(buf == NULL);
+
+	/* verify the data */
+	memset(r_buf, 0, sizeof(r_buf));
+	spdk_file_read(g_file, channel, r_buf, offset, sizeof(r_buf));
+	CU_ASSERT(memcmp(w_buf, r_buf, sizeof(r_buf)) == 0);
+
+	/* file length is not changed */
+	CU_ASSERT(spdk_file_get_length(g_file) == length);
+
+	spdk_file_close(g_file, channel);
+	spdk_fs_free_thread_ctx(channel);
+
+	ut_send_request(_fs_unload, NULL);
+}
+
+static void
 file_length(void)
 {
 	int rc;
@@ -586,6 +690,8 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "cache read after write", cache_read_after_write) == NULL ||
+		CU_add_test(suite, "random write with filled cache", randomwrite_with_filled_cache) == NULL ||
+		CU_add_test(suite, "random write overlap append pos", randomwrite_overlap_append_pos) == NULL ||
 		CU_add_test(suite, "file length", file_length) == NULL ||
 		CU_add_test(suite, "partial buffer", partial_buffer) == NULL ||
 		CU_add_test(suite, "write_null_buffer", cache_write_null_buffer) == NULL ||

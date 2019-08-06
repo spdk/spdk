@@ -7,6 +7,12 @@
 Portals may no longer be associated with a cpumask. The scheduling of
 connections is moving to a more dynamic model.
 
+### blobfs
+
+A new API `spdk_file_randomwrite` was added to enable random writes to a file.  The API
+can't support write ahead of last append position which means there must be old valid
+data within the random write offset.
+
 ## v19.07:
 
 ### ftl
