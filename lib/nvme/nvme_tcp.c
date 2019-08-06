@@ -1443,41 +1443,42 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
 			pdu = &tqpair->recv_pdu;
-			psh_len = pdu->hdr.common.hlen;
+			if (!pdu->psh_len) {
+				psh_len = pdu->hdr.common.hlen;
 
-			/* The following pdus can have digest  */
-			if (((pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP) ||
-			     (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_DATA) ||
-			     (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_R2T)) &&
-			    tqpair->host_hdgst_enable) {
-				pdu->has_hdgst = true;
-				psh_len += SPDK_NVME_TCP_DIGEST_LEN;
-				if (pdu->hdr.common.plen > psh_len) {
-					pdo = pdu->hdr.common.pdo;
-					padding_len = pdo - psh_len;
-					SPDK_DEBUGLOG(SPDK_LOG_NVME, "padding length is =%d for pdu=%p on tqpair=%p\n", padding_len,
-						      pdu, tqpair);
-					if (padding_len > 0) {
-						psh_len = pdo;
+				/* The following pdus can have digest  */
+				if (((pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP) ||
+				     (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_DATA) ||
+				     (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_R2T)) &&
+				    tqpair->host_hdgst_enable) {
+					pdu->has_hdgst = true;
+					psh_len += SPDK_NVME_TCP_DIGEST_LEN;
+					if (pdu->hdr.common.plen > psh_len) {
+						pdo = pdu->hdr.common.pdo;
+						padding_len = pdo - psh_len;
+						SPDK_DEBUGLOG(SPDK_LOG_NVME, "padding length is =%d for pdu=%p on tqpair=%p\n", padding_len,
+							      pdu, tqpair);
+						if (padding_len > 0) {
+							psh_len = pdo;
+						}
 					}
 				}
+
+				psh_len -= sizeof(struct spdk_nvme_tcp_common_pdu_hdr);
+				pdu->psh_len = psh_len;
 			}
 
-			psh_len -= sizeof(struct spdk_nvme_tcp_common_pdu_hdr);
-			/* The following will read psh + hdgest (if possbile) + padding (if posssible) */
-			if (pdu->psh_valid_bytes < psh_len) {
-				rc = nvme_tcp_read_data(tqpair->sock,
-							psh_len - pdu->psh_valid_bytes,
-							(uint8_t *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
-				if (rc < 0) {
-					nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-					break;
-				}
+			rc = nvme_tcp_read_data(tqpair->sock,
+						pdu->psh_len - pdu->psh_valid_bytes,
+						(uint8_t *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
+			if (rc < 0) {
+				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+				break;
+			}
 
-				pdu->psh_valid_bytes += rc;
-				if (pdu->psh_valid_bytes < psh_len) {
-					return NVME_TCP_PDU_IN_PROGRESS;
-				}
+			pdu->psh_valid_bytes += rc;
+			if (pdu->psh_valid_bytes < pdu->psh_len) {
+				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
 			/* All header(ch, psh, head digist) of this PDU has now been read from the socket. */

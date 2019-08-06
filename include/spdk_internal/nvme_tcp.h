@@ -102,8 +102,9 @@ struct nvme_tcp_pdu {
 	uint8_t						data_digest[SPDK_NVME_TCP_DIGEST_LEN];
 	int32_t						padding_valid_bytes;
 
-	uint32_t					ch_valid_bytes;
-	uint32_t					psh_valid_bytes;
+	uint8_t						ch_valid_bytes;
+	uint8_t						psh_valid_bytes;
+	uint8_t						psh_len;
 	int						ref;
 
 	nvme_tcp_qpair_xfer_complete_cb			cb_fn;
