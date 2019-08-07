@@ -551,8 +551,8 @@ spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
 
 	assert(cb_fn);
 	if (!ctx) {
-		spdk_app_stop(-ENOMEM);
-		return;
+		rc = -ENOMEM;
+		goto fail;
 	}
 
 	ctx->cb_fn = cb_fn;
@@ -586,6 +586,7 @@ spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
 		      rpc_addr, getpid());
 	if (rc >= (int)sizeof(ctx->rpc_socket_path_temp)) {
 		SPDK_ERRLOG("Socket name create failed\n");
+		rc = -EINVAL;
 		goto fail;
 	}
 
@@ -594,6 +595,7 @@ spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
 	ctx->client_conn = spdk_jsonrpc_client_connect(ctx->rpc_socket_path_temp, AF_UNIX);
 	if (ctx->client_conn == NULL) {
 		SPDK_ERRLOG("Failed to connect to '%s'\n", ctx->rpc_socket_path_temp);
+		rc = -EINVAL;
 		goto fail;
 	}
 
@@ -602,7 +604,7 @@ spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
 	return;
 
 fail:
-	spdk_app_json_config_load_done(ctx, -EINVAL);
+	spdk_app_json_config_load_done(ctx, rc);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("app_config", SPDK_LOG_APP_CONFIG)
