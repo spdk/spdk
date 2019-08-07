@@ -15,7 +15,7 @@ disk_split=""
 x=""
 scsi_hot_remove_test=0
 blk_hot_remove_test=0
-
+virtio_hot_remove_test=0
 
 function usage() {
     [[ -n $2 ]] && ( echo "$2"; echo ""; )
