@@ -1114,8 +1114,8 @@ raid_bdev_config_find_by_name(const char *raid_name)
  * _raid_cfg - Pointer to newly added configuration
  */
 int
-raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
-		     int raid_level, struct raid_bdev_config **_raid_cfg)
+raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_base_bdevs,
+		     uint8_t raid_level, struct raid_bdev_config **_raid_cfg)
 {
 	struct raid_bdev_config *raid_cfg;
 
@@ -1127,17 +1127,17 @@ raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
 	}
 
 	if (spdk_u32_is_pow2(strip_size) == false) {
-		SPDK_ERRLOG("Invalid strip size %d\n", strip_size);
+		SPDK_ERRLOG("Invalid strip size %" PRIu32 "\n", strip_size);
 		return -EINVAL;
 	}
 
-	if (num_base_bdevs <= 0) {
-		SPDK_ERRLOG("Invalid base device count %d\n", num_base_bdevs);
+	if (num_base_bdevs == 0) {
+		SPDK_ERRLOG("Invalid base device count %u\n", num_base_bdevs);
 		return -EINVAL;
 	}
 
 	if (raid_level != 0) {
-		SPDK_ERRLOG("invalid raid level %d, only raid level 0 is supported\n",
+		SPDK_ERRLOG("invalid raid level %u, only raid level 0 is supported\n",
 			    raid_level);
 		return -EINVAL;
 	}
@@ -1242,12 +1242,11 @@ static int
 raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 {
 	const char *raid_name;
-	int strip_size;
-	int i, num_base_bdevs;
-	int raid_level;
+	uint32_t strip_size;
+	uint8_t num_base_bdevs, raid_level;
 	const char *base_bdev_name;
 	struct raid_bdev_config *raid_cfg;
-	int rc;
+	int rc, i, val;
 
 	raid_name = spdk_conf_section_get_val(conf_section, "Name");
 	if (raid_name == NULL) {
@@ -1255,12 +1254,26 @@ raid_bdev_parse_raid(struct spdk_conf_section *conf_section)
 		return -EINVAL;
 	}
 
-	strip_size = spdk_conf_section_get_intval(conf_section, "StripSize");
-	num_base_bdevs = spdk_conf_section_get_intval(conf_section, "NumDevices");
-	raid_level = spdk_conf_section_get_intval(conf_section, "RaidLevel");
+	val = spdk_conf_section_get_intval(conf_section, "StripSize");
+	if (val < 0) {
+		return -EINVAL;
+	}
+	strip_size = val;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "%s %d %d %d\n", raid_name, strip_size, num_base_bdevs,
-		      raid_level);
+	val = spdk_conf_section_get_intval(conf_section, "NumDevices");
+	if (val < 0) {
+		return -EINVAL;
+	}
+	num_base_bdevs = val;
+
+	val = spdk_conf_section_get_intval(conf_section, "RaidLevel");
+	if (val < 0) {
+		return -EINVAL;
+	}
+	raid_level = val;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "%s %" PRIu32 " %u %u\n",
+		      raid_name, strip_size, num_base_bdevs, raid_level);
 
 	rc = raid_bdev_config_add(raid_name, strip_size, num_base_bdevs, raid_level,
 				  &raid_cfg);
