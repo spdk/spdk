@@ -16,6 +16,24 @@
       "revId": "b26f47586b2b1bb07a4179bccbd89862e94bf0fd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98dbc52e_41f5fbfe",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 8
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-07T04:36:48Z",
+      "side": 1,
+      "message": "Yesterday I pushed a patch not to override MAKEFLAGS [1] and got a whole bunch of errors from dpdk from scan-build.\n\nI\u0027m guessing we override those MAKEFLAGS to explicitly disable scan-build... I\u0027ll be looking into this more.\n\n[1] https://review.gerrithub.io/c/spdk/spdk/+/464261",
+      "parentUuid": "b93a34e7_ad9a467e",
+      "revId": "b26f47586b2b1bb07a4179bccbd89862e94bf0fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
