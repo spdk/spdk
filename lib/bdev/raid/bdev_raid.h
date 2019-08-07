@@ -87,49 +87,49 @@ struct raid_base_bdev_info {
  */
 struct raid_bdev {
 	/* raid bdev device, this will get registered in bdev layer */
-	struct spdk_bdev            bdev;
+	struct spdk_bdev		bdev;
 
 	/* link of raid bdev to link it to configured, configuring or offline list */
-	TAILQ_ENTRY(raid_bdev)      state_link;
+	TAILQ_ENTRY(raid_bdev)		state_link;
 
 	/* link of raid bdev to link it to global raid bdev list */
-	TAILQ_ENTRY(raid_bdev)      global_link;
+	TAILQ_ENTRY(raid_bdev)		global_link;
 
 	/* pointer to config file entry */
-	struct raid_bdev_config     *config;
+	struct raid_bdev_config		*config;
 
 	/* array of base bdev info */
-	struct raid_base_bdev_info  *base_bdev_info;
+	struct raid_base_bdev_info	*base_bdev_info;
 
 	/* strip size of raid bdev in blocks */
-	uint32_t                    strip_size;
+	uint32_t			strip_size;
 
 	/* strip size of raid bdev in KB */
-	uint32_t                    strip_size_kb;
+	uint32_t			strip_size_kb;
 
 	/* strip size bit shift for optimized calculation */
-	uint32_t                    strip_size_shift;
+	uint32_t			strip_size_shift;
 
 	/* block length bit shift for optimized calculation */
-	uint32_t                    blocklen_shift;
+	uint32_t			blocklen_shift;
 
 	/* state of raid bdev */
-	enum raid_bdev_state        state;
+	enum raid_bdev_state		state;
 
 	/* number of base bdevs comprising raid bdev  */
-	uint16_t                    num_base_bdevs;
+	uint8_t				num_base_bdevs;
 
 	/* number of base bdevs discovered */
-	uint16_t                    num_base_bdevs_discovered;
+	uint8_t				num_base_bdevs_discovered;
 
 	/* Raid Level of this raid bdev */
-	uint8_t                     raid_level;
+	uint8_t				raid_level;
 
 	/* Set to true if destruct is called for this raid bdev */
-	bool                        destruct_called;
+	bool				destruct_called;
 
 	/* Set to true if destroy of this raid bdev is started. */
-	bool                        destroy_started;
+	bool				destroy_started;
 };
 
 /*
@@ -229,7 +229,7 @@ void raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
 int raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
 			 int raid_level, struct raid_bdev_config **_raid_cfg);
 int raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg,
-				   const char *base_bdev_name, uint32_t slot);
+				   const char *base_bdev_name, uint8_t slot);
 void raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg);
 struct raid_bdev_config *raid_bdev_config_find_by_name(const char *raid_name);
 
