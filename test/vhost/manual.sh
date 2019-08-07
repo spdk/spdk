@@ -18,6 +18,7 @@ case $1 in
 		echo "  -hp|--hotplug                        for running hotplug tests"
 		echo "  -shr|--scsi-hot-remove               for running scsi hot remove tests"
 		echo "  -bhr|--blk-hot-remove                for running blk hot remove tests"
+		echo "  -vhr|--virtio-hot-remove             for running virtio hot remove tests"
 		echo "  -h |--help                           prints this message"
 		echo ""
 		echo "Environment:"
@@ -95,6 +96,11 @@ case $1 in
 			--test-type=spdk_vhost_blk \
 			--blk-hotremove-test \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
+		;;
+	-vhr|--vhost-hot-remove)
+		echo 'Running virtio hotremove tests suite...'
+		run_test case $WORKDIR/hotplug/virtio_hotremove.sh --fio-bin=$FIO_BIN \
+			--fio-jobs=$WORKDIR/hotplug/fio_jobs/virtio_integrity.job
 	;;
 	*)
 		echo "unknown test type: $1"

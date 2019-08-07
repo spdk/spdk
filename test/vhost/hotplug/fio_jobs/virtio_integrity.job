@@ -1,0 +1,17 @@
+[global]
+blocksize=4k
+iodepth=512
+iodepth_batch=128
+iodepth_low=256
+group_reporting
+thread
+direct=1
+rw=randrw
+do_verify=1
+verify=md5
+verify_backlog=1024
+ramp_time=10
+runtime=100
+time_based=1
+
+[job_randwrite]
