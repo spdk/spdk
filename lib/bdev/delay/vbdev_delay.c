@@ -491,6 +491,54 @@ vbdev_delay_insert_association(const char *bdev_name, const char *vbdev_name,
 }
 
 static int
+get_delay_bdev_by_name(char *delay_name, struct vbdev_delay **delay_node)
+{
+	struct spdk_bdev *delay_bdev = spdk_bdev_get_by_name(delay_name);
+
+	if (delay_bdev == NULL) {
+		return -ENODEV;
+	} else if (delay_bdev->module != &delay_if) {
+		return -EINVAL;
+	}
+
+	*delay_node = SPDK_CONTAINEROF(delay_bdev, struct vbdev_delay, delay_bdev);
+
+	return 0;
+}
+
+int
+vbdev_delay_update_latency_value(char *delay_name, uint64_t latency_us, enum delay_io_type type)
+{
+	struct vbdev_delay *delay_node;
+	uint64_t ticks_mhz = spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	int rc;
+
+	rc = get_delay_bdev_by_name(delay_name, &delay_node);
+
+	if (rc) {
+		return rc;
+	}
+	switch (type) {
+	case DELAY_AVG_READ:
+		delay_node->average_read_latency_ticks = ticks_mhz * latency_us;
+		break;
+	case DELAY_AVG_WRITE:
+		delay_node->average_write_latency_ticks = ticks_mhz * latency_us;
+		break;
+	case DELAY_P99_READ:
+		delay_node->p99_read_latency_ticks = ticks_mhz * latency_us;
+		break;
+	case DELAY_P99_WRITE:
+		delay_node->p99_write_latency_ticks = ticks_mhz * latency_us;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int
 vbdev_delay_init(void)
 {
 	/* Not allowing for .ini style configuration. */

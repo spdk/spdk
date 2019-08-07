@@ -38,6 +38,87 @@
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
 
+struct rpc_update_latency {
+	char *delay_bdev_name;
+	char *latency_type;
+	uint64_t latency_us;
+};
+
+static const struct spdk_json_object_decoder rpc_update_latency_decoders[] = {
+	{"delay_bdev_name", offsetof(struct rpc_update_latency, delay_bdev_name), spdk_json_decode_string},
+	{"latency_type", offsetof(struct rpc_update_latency, latency_type), spdk_json_decode_string},
+	{"latency_us", offsetof(struct rpc_update_latency, latency_us), spdk_json_decode_uint64}
+};
+
+static void
+free_rpc_update_latency(struct rpc_update_latency *req)
+{
+	free(req->delay_bdev_name);
+	free(req->latency_type);
+}
+
+static void
+spdk_rpc_bdev_delay_update_latency(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
+{
+	struct rpc_update_latency req = {NULL};
+	struct spdk_json_write_ctx *w;
+	enum delay_io_type latency_type;
+	int rc = 0;
+
+	if (spdk_json_decode_object(params, rpc_update_latency_decoders,
+				    SPDK_COUNTOF(rpc_update_latency_decoders),
+				    &req)) {
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_DELAY, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	if (!strncmp(req.latency_type, "avg_read", 9)) {
+		latency_type = DELAY_AVG_READ;
+	} else if (!strncmp(req.latency_type, "p99_read", 9)) {
+		latency_type = DELAY_P99_READ;
+	} else if (!strncmp(req.latency_type, "avg_write", 10)) {
+		latency_type = DELAY_AVG_WRITE;
+	} else if (!strncmp(req.latency_type, "p99_write", 10)) {
+		latency_type = DELAY_P99_WRITE;
+	} else {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Please specify a valid latency type.");
+		goto cleanup;
+	}
+
+	rc = vbdev_delay_update_latency_value(req.delay_bdev_name, req.latency_us, latency_type);
+
+	if (rc == -ENODEV) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "The requested bdev does not exist.");
+		goto cleanup;
+	} else if (rc == -EINVAL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST,
+						 "The requested bdev is not a delay bdev.");
+		goto cleanup;
+	} else if (rc) {
+		/* currently, only the two error cases are defined. Any new error paths should be handled here. */
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "An unknown error occured.");
+		goto cleanup;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		goto cleanup;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+cleanup:
+	free_rpc_update_latency(&req);
+}
+SPDK_RPC_REGISTER("bdev_delay_update_latency", spdk_rpc_bdev_delay_update_latency, SPDK_RPC_RUNTIME)
+
 struct rpc_construct_delay {
 	char *base_bdev_name;
 	char *name;
