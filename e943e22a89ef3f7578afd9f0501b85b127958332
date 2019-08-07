@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9e60212_244f853e",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-08-07T00:44:21Z",
+      "side": 1,
+      "message": "but have a question? why use uint8_t here? \nI observed sometimes uint32_t,sometimes uint16_t.",
+      "revId": "e943e22a89ef3f7578afd9f0501b85b127958332",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
