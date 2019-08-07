@@ -1115,8 +1115,8 @@ test_construct_raid(void)
 	g_rpc_req_size = sizeof(req);
 	CU_ASSERT(raid_bdev_init() == 0);
 
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1148,8 +1148,8 @@ test_destroy_raid(void)
 	g_rpc_req = &construct_req;
 	g_rpc_req_size = sizeof(construct_req);
 	CU_ASSERT(raid_bdev_init() == 0);
-	verify_raid_config_present(construct_req.name, false);
-	verify_raid_bdev_present(construct_req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1186,8 +1186,8 @@ test_construct_raid_invalid_args(void)
 	CU_ASSERT(raid_bdev_init() == 0);
 
 	create_test_req(&req, "raid1", 0, true);
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	req.raid_level = 1;
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
@@ -1198,8 +1198,8 @@ test_construct_raid_invalid_args(void)
 	verify_raid_bdev_present("raid1", false);
 
 	create_test_req(&req, "raid1", 0, false);
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_err = 1;
 	g_json_decode_obj_construct = 1;
@@ -1310,8 +1310,8 @@ test_destroy_raid_invalid_args(void)
 	g_rpc_req = &construct_req;
 	g_rpc_req_size = sizeof(construct_req);
 	CU_ASSERT(raid_bdev_init() == 0);
-	verify_raid_config_present(construct_req.name, false);
-	verify_raid_bdev_present(construct_req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1370,8 +1370,8 @@ test_io_channel(void)
 	g_rpc_req_size = sizeof(req);
 	CU_ASSERT(raid_bdev_init() == 0);
 
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1380,7 +1380,7 @@ test_io_channel(void)
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
 
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(pbdev->bdev.name, req.name) == 0) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
 			break;
 		}
 	}
@@ -1430,8 +1430,8 @@ test_write_io(void)
 	g_rpc_req = &req;
 	g_rpc_req_size = sizeof(req);
 	CU_ASSERT(raid_bdev_init() == 0);
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1439,7 +1439,7 @@ test_write_io(void)
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(pbdev->bdev.name, req.name) == 0) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
 			break;
 		}
 	}
@@ -1506,8 +1506,8 @@ test_read_io(void)
 	g_rpc_req = &req;
 	g_rpc_req_size = sizeof(req);
 	CU_ASSERT(raid_bdev_init() == 0);
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1515,7 +1515,7 @@ test_read_io(void)
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(pbdev->bdev.name, req.name) == 0) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
 			break;
 		}
 	}
@@ -1658,8 +1658,8 @@ test_unmap_io(void)
 	g_rpc_req = &req;
 	g_rpc_req_size = sizeof(req);
 	CU_ASSERT(raid_bdev_init() == 0);
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1667,7 +1667,7 @@ test_unmap_io(void)
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(pbdev->bdev.name, req.name) == 0) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
 			break;
 		}
 	}
@@ -1739,8 +1739,8 @@ test_io_failure(void)
 	g_rpc_req = &req;
 	g_rpc_req_size = sizeof(req);
 	CU_ASSERT(raid_bdev_init() == 0);
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1831,8 +1831,8 @@ test_reset_io(void)
 	g_rpc_req = &req;
 	g_rpc_req_size = sizeof(req);
 	CU_ASSERT(raid_bdev_init() == 0);
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1840,7 +1840,7 @@ test_reset_io(void)
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(pbdev->bdev.name, req.name) == 0) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
 			break;
 		}
 	}
@@ -1910,8 +1910,8 @@ test_io_waitq(void)
 	g_rpc_req = &req;
 	g_rpc_req_size = sizeof(req);
 	CU_ASSERT(raid_bdev_init() == 0);
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -1919,7 +1919,7 @@ test_io_waitq(void)
 	verify_raid_config(&req, true);
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(pbdev->bdev.name, req.name) == 0) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
 			break;
 		}
 	}
@@ -2365,8 +2365,8 @@ test_raid_json_dump_info(void)
 	g_rpc_req_size = sizeof(req);
 	CU_ASSERT(raid_bdev_init() == 0);
 
-	verify_raid_config_present(req.name, false);
-	verify_raid_bdev_present(req.name, false);
+	verify_raid_config_present("raid1", false);
+	verify_raid_bdev_present("raid1", false);
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -2374,7 +2374,7 @@ test_raid_json_dump_info(void)
 	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
 
 	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(pbdev->bdev.name, req.name) == 0) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
 			break;
 		}
 	}
