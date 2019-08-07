@@ -72,7 +72,7 @@ $rpc_py construct_split_vbdev HotInNvme2n1 2
 $rpc_py construct_split_vbdev HotInNvme3n1 2
 $rpc_py get_bdevs
 
-if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
+if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]] && [[ $virtio_hot_remove_test == 0 ]]; then
     pre_hot_attach_detach_test_case
     $testdir/scsi_hotattach.sh --fio-bin=$fio_bin &
     first_script=$!
@@ -88,5 +88,8 @@ if [[ $scsi_hot_remove_test == 1 ]]; then
 fi
 if [[ $blk_hot_remove_test == 1 ]]; then
     source $testdir/blk_hotremove.sh
+fi
+if [[ $virtio_hot_remove_test == 1 ]]; then
+    source $testdir/virtio_hotremove.sh
 fi
 post_test_case
