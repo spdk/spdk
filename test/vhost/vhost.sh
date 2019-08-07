@@ -113,4 +113,10 @@ run_test case "vhost_blk_lvol_integrity" $WORKDIR/lvol/lvol_test.sh -x --fio-bin
 --ctrl-type=spdk_vhost_blk
 report_test_completion "vhost_integrity_lvol_blk"
 
+timing_enter hotremove_test
+echo 'Running vhost hotremove suite...'
+run_test case $WORKDIR/hotplug/virtio_hotremove.sh
+report_test_completion "vhost_hotremove_test"
+timing_exit hotremove_test
+
 run_test suite "spdkcli_vhost" ./test/spdkcli/vhost.sh
