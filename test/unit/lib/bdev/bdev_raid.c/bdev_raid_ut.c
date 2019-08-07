@@ -1052,11 +1052,9 @@ create_base_bdevs(uint32_t bbdev_start_idx)
 	uint8_t i;
 	struct spdk_bdev *base_bdev;
 	char name[16];
-	uint16_t num_chars;
 
 	for (i = 0; i < g_max_base_drives; i++, bbdev_start_idx++) {
-		num_chars = snprintf(name, 16, "%s%u%s", "Nvme", bbdev_start_idx, "n1");
-		name[num_chars] = '\0';
+		snprintf(name, 16, "%s%u%s", "Nvme", bbdev_start_idx, "n1");
 		base_bdev = calloc(1, sizeof(struct spdk_bdev));
 		SPDK_CU_ASSERT_FATAL(base_bdev != NULL);
 		base_bdev->name = strdup(name);
@@ -1073,7 +1071,6 @@ create_test_req(struct rpc_construct_raid_bdev *r, const char *raid_name, uint8_
 {
 	uint8_t i;
 	char name[16];
-	uint16_t num_chars;
 	uint8_t bbdev_idx = bbdev_start_idx;
 
 	r->name = strdup(raid_name);
@@ -1082,8 +1079,7 @@ create_test_req(struct rpc_construct_raid_bdev *r, const char *raid_name, uint8_
 	r->raid_level = 0;
 	r->base_bdevs.num_base_bdevs = g_max_base_drives;
 	for (i = 0; i < g_max_base_drives; i++, bbdev_idx++) {
-		num_chars = snprintf(name, 16, "%s%u%s", "Nvme", bbdev_idx, "n1");
-		name[num_chars] = '\0';
+		snprintf(name, 16, "%s%u%s", "Nvme", bbdev_idx, "n1");
 		r->base_bdevs.base_bdevs[i] = strdup(name);
 		SPDK_CU_ASSERT_FATAL(r->base_bdevs.base_bdevs[i] != NULL);
 	}
@@ -1988,7 +1984,6 @@ test_multi_raid_no_io(void)
 	struct rpc_get_raid_bdevs get_raids_req;
 	uint8_t i;
 	char name[16];
-	uint32_t count;
 	uint8_t bbdev_idx = 0;
 
 	set_globals();
@@ -1996,8 +1991,7 @@ test_multi_raid_no_io(void)
 	SPDK_CU_ASSERT_FATAL(construct_req != NULL);
 	CU_ASSERT(raid_bdev_init() == 0);
 	for (i = 0; i < g_max_raids; i++) {
-		count = snprintf(name, 16, "%s%u", "raid", i);
-		name[count] = '\0';
+		snprintf(name, 16, "%s%u", "raid", i);
 		create_test_req(&construct_req[i], name, bbdev_idx, true);
 		verify_raid_config_present(name, false);
 		verify_raid_bdev_present(name, false);
@@ -2094,8 +2088,7 @@ test_multi_raid_no_io(void)
 	for (i = 0; i < g_max_raids; i++) {
 		SPDK_CU_ASSERT_FATAL(construct_req[i].name != NULL);
 		destroy_req.name = strdup(construct_req[i].name);
-		count = snprintf(name, 16, "%s", destroy_req.name);
-		name[count] = '\0';
+		snprintf(name, 16, "%s", destroy_req.name);
 		g_rpc_req = &destroy_req;
 		g_rpc_req_size = sizeof(destroy_req);
 		g_rpc_err = 0;
@@ -2123,7 +2116,6 @@ test_multi_raid_with_io(void)
 	struct rpc_destroy_raid_bdev destroy_req;
 	uint8_t i, j;
 	char name[16];
-	uint32_t count;
 	uint8_t bbdev_idx = 0;
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
@@ -2140,8 +2132,7 @@ test_multi_raid_with_io(void)
 	ch = calloc(g_max_raids, sizeof(struct spdk_io_channel) + sizeof(struct raid_bdev_io_channel));
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 	for (i = 0; i < g_max_raids; i++) {
-		count = snprintf(name, 16, "%s%u", "raid", i);
-		name[count] = '\0';
+		snprintf(name, 16, "%s%u", "raid", i);
 		create_test_req(&construct_req[i], name, bbdev_idx, true);
 		verify_raid_config_present(name, false);
 		verify_raid_bdev_present(name, false);
@@ -2205,8 +2196,7 @@ test_multi_raid_with_io(void)
 		raid_bdev_destroy_cb(pbdev, ch_ctx);
 		CU_ASSERT(ch_ctx->base_channel == NULL);
 		destroy_req.name = strdup(construct_req[i].name);
-		count = snprintf(name, 16, "%s", destroy_req.name);
-		name[count] = '\0';
+		snprintf(name, 16, "%s", destroy_req.name);
 		g_rpc_req = &destroy_req;
 		g_rpc_req_size = sizeof(destroy_req);
 		g_rpc_err = 0;
@@ -2285,7 +2275,6 @@ static void
 test_create_raid_from_config_invalid_params(void)
 {
 	struct rpc_construct_raid_bdev req;
-	uint8_t count;
 
 	set_globals();
 	g_rpc_req = &req;
@@ -2339,8 +2328,7 @@ test_create_raid_from_config_invalid_params(void)
 
 	if (g_max_base_drives > 1) {
 		create_test_req(&req, "raid1", 0, false);
-		count = snprintf(req.base_bdevs.base_bdevs[g_max_base_drives - 1], 15, "%s", "Nvme0n1");
-		req.base_bdevs.base_bdevs[g_max_base_drives - 1][count] = '\0';
+		snprintf(req.base_bdevs.base_bdevs[g_max_base_drives - 1], 15, "%s", "Nvme0n1");
 		CU_ASSERT(raid_bdev_init() != 0);
 		free_test_req(&req);
 		verify_raid_config_present("raid1", false);
