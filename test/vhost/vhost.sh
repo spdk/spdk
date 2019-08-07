@@ -40,6 +40,11 @@ run_test suite $WORKDIR/vhost_boot/vhost_boot.sh --vm_image=$VM_IMAGE
 report_test_completion "vhost_boot"
 timing_exit vhost_boot
 
+timing_enter vhost_hotplug
+run_test suite $WORKDIR/vhost/manual.sh -vhr
+report_test_completion "vhost_hotplug"
+timing_exit vhost_hotplug
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter integrity_blk
 	echo 'Running blk integrity suite...'
