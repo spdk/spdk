@@ -31,6 +31,7 @@ run_test suite test/nvmf/target/create_transport.sh $TEST_ARGS
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test suite test/nvmf/target/fuzz.sh $TEST_ARGS
 	run_test suite test/nvmf/target/multiconnection.sh $TEST_ARGS
+	run_test suite test/nvmf/target/initiator_timeout.sh $TEST_ARGS
 fi
 
 run_test suite test/nvmf/target/nmic.sh $TEST_ARGS
