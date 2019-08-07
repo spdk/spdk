@@ -138,6 +138,13 @@ run_test case $WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
 report_test_completion "vhost_integrity_lvol_blk"
 timing_exit integrity_lvol_blk
 
+timing_enter hotremove_test
+echo 'Running vhost hotremove suite...'
+run_test case $WORKDIR/hotplug/virtio_hotremove.sh --fio-bin=$FIO_BIN \
+--fio-jobs=$WORKDIR/hotplug/fio_jobs/virtio_integrity.job
+report_test_completion "vhost_hotremove_test"
+timing_exit hotremove_test
+
 timing_enter spdk_cli
 run_test suite ./test/spdkcli/vhost.sh
 timing_exit spdk_cli

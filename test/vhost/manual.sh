@@ -18,6 +18,7 @@ case $1 in
 		echo "  -hp|--hotplug                        for running hotplug tests"
 		echo "  -shr|--scsi-hot-remove               for running scsi hot remove tests"
 		echo "  -bhr|--blk-hot-remove                for running blk hot remove tests"
+		echo "  -vhr|--virtio-hot-remove             for running virtio hot remove tests"
 		echo "  -h |--help                           prints this message"
 		echo ""
 		echo "Environment:"
