@@ -209,7 +209,7 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_cfg)
 		return;
 	}
 
-	for (uint32_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+	for (uint8_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		assert(raid_bdev->base_bdev_info != NULL);
 		if (raid_bdev->base_bdev_info[i].bdev) {
 			raid_bdev_free_base_bdev_resource(raid_bdev, i);
@@ -642,7 +642,7 @@ static void
 verify_reset_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 		struct raid_bdev_io_channel *ch_ctx, struct raid_bdev *raid_bdev, uint32_t io_status)
 {
-	uint32_t index = 0;
+	uint8_t index = 0;
 
 	SPDK_CU_ASSERT_FATAL(raid_bdev != NULL);
 	SPDK_CU_ASSERT_FATAL(num_base_drives != 0);
@@ -669,7 +669,7 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 	uint32_t splits_reqd = (end_strip - start_strip + 1);
 	uint32_t strip;
 	uint64_t pd_strip;
-	uint64_t pd_idx;
+	uint8_t pd_idx;
 	uint32_t offset_in_strip;
 	uint64_t pd_lba;
 	uint64_t pd_blocks;
@@ -724,12 +724,12 @@ verify_io_without_payload(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 	uint64_t start_strip = bdev_io->u.bdev.offset_blocks >> strip_shift;
 	uint64_t end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
 			     strip_shift;
-	uint32_t n_disks_involved;
+	uint8_t n_disks_involved;
 	uint64_t start_strip_disk_idx;
 	uint64_t end_strip_disk_idx;
 	uint64_t nblocks_in_start_disk;
 	uint64_t offset_in_start_disk;
-	uint32_t disk_idx;
+	uint8_t disk_idx;
 	uint64_t base_io_idx;
 	uint64_t sum_nblocks = 0;
 
@@ -866,7 +866,7 @@ static void
 verify_raid_config(struct rpc_construct_raid_bdev *r, bool presence)
 {
 	struct raid_bdev_config *raid_cfg = NULL;
-	uint32_t i;
+	uint8_t i;
 	int val;
 
 	TAILQ_FOREACH(raid_cfg, &g_raid_config.raid_bdev_config_head, link) {
@@ -899,7 +899,7 @@ static void
 verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid_state)
 {
 	struct raid_bdev *pbdev;
-	uint32_t i;
+	uint8_t i;
 	struct spdk_bdev *bdev = NULL;
 	bool   pbdev_found;
 	uint64_t min_blockcnt = 0xFFFFFFFFFFFFFFFF;
@@ -1029,7 +1029,7 @@ verify_get_raids(struct rpc_construct_raid_bdev *construct_req,
 		 uint8_t g_max_raids,
 		 char **g_get_raids_output, uint32_t g_get_raids_count)
 {
-	uint32_t i, j;
+	uint8_t i, j;
 	bool found;
 
 	CU_ASSERT(g_max_raids == g_get_raids_count);
@@ -1050,7 +1050,7 @@ verify_get_raids(struct rpc_construct_raid_bdev *construct_req,
 static void
 create_base_bdevs(uint32_t bbdev_start_idx)
 {
-	uint32_t i;
+	uint8_t i;
 	struct spdk_bdev *base_bdev;
 	char name[16];
 	uint16_t num_chars;
@@ -1069,13 +1069,13 @@ create_base_bdevs(uint32_t bbdev_start_idx)
 }
 
 static void
-create_test_req(struct rpc_construct_raid_bdev *r, const char *raid_name, uint32_t bbdev_start_idx,
+create_test_req(struct rpc_construct_raid_bdev *r, const char *raid_name, uint8_t bbdev_start_idx,
 		bool create_base_bdev)
 {
-	uint32_t i;
+	uint8_t i;
 	char name[16];
 	uint16_t num_chars;
-	uint32_t bbdev_idx = bbdev_start_idx;
+	uint8_t bbdev_idx = bbdev_start_idx;
 
 	r->name = strdup(raid_name);
 	SPDK_CU_ASSERT_FATAL(r->name != NULL);
@@ -1363,7 +1363,7 @@ test_io_channel(void)
 	struct rpc_destroy_raid_bdev destroy_req;
 	struct raid_bdev *pbdev;
 	struct raid_bdev_io_channel *ch_ctx;
-	uint32_t i;
+	uint8_t i;
 
 	set_globals();
 	create_test_req(&req, "raid1", 0, true);
@@ -1421,7 +1421,7 @@ test_write_io(void)
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
-	uint32_t i;
+	uint8_t i;
 	struct spdk_bdev_io *bdev_io;
 	uint64_t io_len;
 	uint64_t lba = 0;
@@ -1498,7 +1498,7 @@ test_read_io(void)
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
-	uint32_t i;
+	uint8_t i;
 	struct spdk_bdev_io *bdev_io;
 	uint64_t io_len;
 	uint64_t lba;
@@ -1650,7 +1650,7 @@ test_unmap_io(void)
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
-	uint32_t i;
+	uint8_t i;
 	struct spdk_bdev_io *bdev_io;
 	uint32_t count;
 	uint64_t io_len;
@@ -1732,7 +1732,7 @@ test_io_failure(void)
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
-	uint32_t i;
+	uint8_t i;
 	struct spdk_bdev_io *bdev_io;
 	uint32_t count;
 	uint64_t io_len;
@@ -1829,7 +1829,7 @@ test_reset_io(void)
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
-	uint32_t i;
+	uint8_t i;
 	struct spdk_bdev_io *bdev_io;
 
 	set_globals();
@@ -1905,7 +1905,7 @@ test_io_waitq(void)
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
-	uint32_t i;
+	uint8_t i;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_io *bdev_io_next;
 	uint32_t count;
@@ -1994,10 +1994,10 @@ test_multi_raid_no_io(void)
 	struct rpc_construct_raid_bdev *construct_req;
 	struct rpc_destroy_raid_bdev destroy_req;
 	struct rpc_get_raid_bdevs get_raids_req;
-	uint32_t i;
+	uint8_t i;
 	char name[16];
 	uint32_t count;
-	uint32_t bbdev_idx = 0;
+	uint8_t bbdev_idx = 0;
 
 	set_globals();
 	construct_req = calloc(MAX_RAIDS, sizeof(struct rpc_construct_raid_bdev));
@@ -2129,10 +2129,10 @@ test_multi_raid_with_io(void)
 {
 	struct rpc_construct_raid_bdev *construct_req;
 	struct rpc_destroy_raid_bdev destroy_req;
-	uint32_t i, j;
+	uint8_t i, j;
 	char name[16];
 	uint32_t count;
-	uint32_t bbdev_idx = 0;
+	uint8_t bbdev_idx = 0;
 	struct raid_bdev *pbdev;
 	struct spdk_io_channel *ch;
 	struct raid_bdev_io_channel *ch_ctx;
@@ -2251,7 +2251,7 @@ test_create_raid_from_config(void)
 	struct rpc_destroy_raid_bdev destroy_req;
 	bool can_claim;
 	struct raid_bdev_config *raid_cfg;
-	uint32_t base_bdev_slot;
+	uint8_t base_bdev_slot;
 
 	set_globals();
 	create_test_req(&req, "raid1", 0, true);
