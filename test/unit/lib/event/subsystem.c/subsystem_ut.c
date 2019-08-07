@@ -43,15 +43,10 @@ static struct spdk_subsystem g_ut_subsystems[8];
 static struct spdk_subsystem_depend g_ut_subsystem_deps[8];
 static int global_rc;
 
-void
-spdk_app_stop(int rc)
+static void
+ut_event_fn(int rc, void *arg1)
 {
 	global_rc = rc;
-}
-
-static void
-ut_event_fn(void *arg1)
-{
 }
 
 struct spdk_event *
@@ -119,6 +114,7 @@ subsystem_sort_test_depends_on_single(void)
 
 	global_rc = -1;
 	spdk_subsystem_init(ut_event_fn, NULL);
+	CU_ASSERT(global_rc == 0);
 
 	i = 4;
 	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
@@ -164,6 +160,7 @@ subsystem_sort_test_depends_on_multiple(void)
 
 	global_rc = -1;
 	spdk_subsystem_init(ut_event_fn, NULL);
+	CU_ASSERT(global_rc == 0);
 
 	subsystem = TAILQ_FIRST(&g_subsystems);
 	CU_ASSERT(strcmp(subsystem->name, "interface") == 0);
