@@ -50,7 +50,7 @@ spdk_app_stop(int rc)
 }
 
 static void
-ut_event_fn(void *arg1)
+ut_event_fn(int rc, void *arg1)
 {
 }
 
