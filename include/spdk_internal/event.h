@@ -86,13 +86,15 @@ extern struct spdk_subsystem_depend_list g_subsystems_deps;
 void spdk_add_subsystem(struct spdk_subsystem *subsystem);
 void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 
-void spdk_subsystem_init(spdk_msg_fn cb_fn, void *cb_arg);
-void spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg);
+typedef void (*spdk_subsystem_init_fn)(int rc, void *ctx);
+typedef void (*spdk_subsystem_fini_fn)(void *ctx);
+void spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg);
+void spdk_subsystem_fini(spdk_subsystem_fini_fn cb_fn, void *cb_arg);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
 void spdk_subsystem_config(FILE *fp);
 void spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
-			       spdk_msg_fn cb_fn, void *cb_arg);
+			       spdk_subsystem_init_fn cb_fn, void *cb_arg);
 
 /**
  * Save pointed \c subsystem configuration to the JSON write context \c w. In case of
