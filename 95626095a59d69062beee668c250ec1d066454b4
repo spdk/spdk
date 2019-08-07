@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3e31641_ab6300ab",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-07T12:32:20Z",
+      "side": 1,
+      "message": "It isn\u0027t enough to just set the options - there\u0027s a global variable that gets set based on these options in the nvme driver. We need to sort that part out.",
+      "revId": "95626095a59d69062beee668c250ec1d066454b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
