@@ -163,7 +163,13 @@ _process_io_stailq(void *arg, uint64_t ticks)
 			STAILQ_REMOVE(head, io_ctx, delay_bdev_io, link);
 			spdk_bdev_io_complete(SPDK_CONTAINEROF(io_ctx, struct spdk_bdev_io, driver_ctx), io_ctx->status);
 		} else {
-			/* We can assume that I/O are strictly ordered. If one is not expired, we can assume that all after it aren't either. */
+			/* In the general case, I/O will become ready in an fifo order. When timeouts are dynamically
+			 * changed, this is not necessarily the case. However, the normal behavior will be restored
+			 * after the outstanding I/O at the time of the change have been completed.
+			 * This essentially means that moving from a high to low latency creates a dam for the new I/O
+			 * submitted after the latency change. This is considered desirable behavior for the use case where
+			 * we are trying to trigger a pre-defined timeout on an initiator.
+			 */
 			break;
 		}
 	}
@@ -486,6 +492,43 @@ vbdev_delay_insert_association(const char *bdev_name, const char *vbdev_name,
 	assoc->p99_write_latency = p99_write_latency;
 
 	TAILQ_INSERT_TAIL(&g_bdev_associations, assoc, link);
+
+	return 0;
+}
+
+int
+vbdev_delay_update_latency_value(char *delay_name, uint64_t latency_us, enum delay_io_type type)
+{
+	struct spdk_bdev *delay_bdev;
+	struct vbdev_delay *delay_node;
+	uint64_t ticks_mhz = spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	int rc;
+
+	delay_bdev = spdk_bdev_get_by_name(delay_name);
+	if (delay_bdev == NULL) {
+		return -ENODEV;
+	} else if (delay_bdev->module != &delay_if) {
+		return -EINVAL;
+	}
+
+	delay_node = SPDK_CONTAINEROF(delay_bdev, struct vbdev_delay, delay_bdev);
+
+	switch (type) {
+	case DELAY_AVG_READ:
+		delay_node->average_read_latency_ticks = ticks_mhz * latency_us;
+		break;
+	case DELAY_AVG_WRITE:
+		delay_node->average_write_latency_ticks = ticks_mhz * latency_us;
+		break;
+	case DELAY_P99_READ:
+		delay_node->p99_read_latency_ticks = ticks_mhz * latency_us;
+		break;
+	case DELAY_P99_WRITE:
+		delay_node->p99_write_latency_ticks = ticks_mhz * latency_us;
+		break;
+	default:
+		return -EINVAL;
+	}
 
 	return 0;
 }

@@ -473,6 +473,25 @@ def bdev_delay_delete(client, name):
     return client.call('bdev_delay_delete', params)
 
 
+def bdev_delay_update_latency(client, delay_bdev_name, latency_type, latency_us):
+    """Update the latency value for a delay block device
+
+    Args:
+        delay_bdev_name: name of the delay bdev
+        latency_type: 'one of: avg_read, avg_write, p99_read, p99_write. No other values accepted.'
+        latency_us: 'new latency value.'
+
+    Returns:
+        True if successful, or a specific error otherwise.
+    """
+    params = {
+        'delay_bdev_name': delay_bdev_name,
+        'latency_type': latency_type,
+        'latency_us': latency_us,
+    }
+    return client.call('bdev_delay_update_latency', params)
+
+
 def delete_error_bdev(client, name):
     """Remove error bdev from the system.
 
