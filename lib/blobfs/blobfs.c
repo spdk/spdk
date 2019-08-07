@@ -2664,6 +2664,7 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 	flush_req = alloc_fs_request(channel);
 	if (!flush_req) {
 		SPDK_ERRLOG("Cannot allocate flush req for file=%s\n", file->name);
+		free_fs_request(sync_req);
 		pthread_spin_unlock(&file->lock);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
