@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "496721fe_2cce0517",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-07T08:32:52Z",
+      "side": 1,
+      "message": "Looking at your description in commit message, wouldn\u0027t it be better to just rename $spdk_tgt_pid to $nvmfpid ?\nAlong with replacing this line with nvmftestfini ?\n\nIn addition this makes it consistent for running with --iso. nvmftestinit already calls \u0027setup.sh\u0027 if needed, so doing \u0027setup.sh reset\u0027 with nvmftestfini makes sense too.",
+      "range": {
+        "startLine": 15,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 26
+      },
+      "revId": "f97818ebf7ff7ded46e54b47f731f35d93586960",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96001c75_af250cc2",
+        "filename": "test/openstack/run_openstack_tests.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-07T08:32:52Z",
+      "side": 0,
+      "message": "Keep nvmftestfini (see comment above).",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 12
+      },
+      "revId": "23b51246176d46a2bcdfe8371094e6adf0d613e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
