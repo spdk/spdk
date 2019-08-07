@@ -71,4 +71,15 @@ int create_delay_disk(const char *bdev_name, const char *vbdev_name, uint64_t av
 void delete_delay_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
 		       void *cb_arg);
 
+/**
+ * Update one of the latency values for a given delay bdev.
+ *
+ * \param delay_name The name of the desired delay bdev
+ * \param latency_us The new latency value, in microseconds
+ * \param type a valid value from the delay_io_type enum
+ * \return 0 on success, -ENODEV if the bdev cannot be found, and -EINVAL if the bdev is not a delay device.
+ */
+int vbdev_delay_update_latency_value(char *delay_name, uint64_t latency_us,
+				     enum delay_io_type type);
+
 #endif /* SPDK_VBDEV_DELAY_H */

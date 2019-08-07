@@ -1801,6 +1801,48 @@ Example response:
 }
 ~~~
 
+## bdev_delay_update_latency {#rpc_bdev_delay_update_latency}
+
+Update a latency value associated with a given delay bdev. Any currently
+outstanding I/O will be completed with the old latency.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+delay_bdev_name         | Required | string      | Name of the delay bdev
+latency_type            | Required | string      | One of: avg_read, avg_write, p99_read, p99_write
+latency_us              | Required | number      | The new latency value in microseconds
+
+### Result
+
+Name of newly created bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "delay_bdev_name": "Delay0",
+    "latency_type": "avg_read",
+    "latency_us": "100",
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_delay_update_latency",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "result": "true"
+}
+~~~
+
 ## construct_error_bdev {#rpc_construct_error_bdev}
 
 Construct error bdev.
