@@ -52,14 +52,6 @@ static void vbdev_delay_examine(struct spdk_bdev *bdev);
 static void vbdev_delay_finish(void);
 static int vbdev_delay_config_json(struct spdk_json_write_ctx *w);
 
-enum delay_io_type {
-	DELAY_AVG_READ,
-	DELAY_P99_READ,
-	DELAY_AVG_WRITE,
-	DELAY_P99_WRITE,
-	DELAY_NONE
-};
-
 static struct spdk_bdev_module delay_if = {
 	.name = "delay",
 	.module_init = vbdev_delay_init,
