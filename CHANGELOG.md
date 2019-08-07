@@ -39,6 +39,11 @@ A new RPC `bdev_compress_get_orphans` has been added to list compress bdevs
 that were not loaded due to a missing pm metadata file. In this state they
 can only be deleted.
 
+### event
+
+start_subsystem_init RPC no longer stops the application on error during
+initialization.
+
 ## v19.07:
 
 ### ftl
