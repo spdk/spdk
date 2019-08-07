@@ -610,11 +610,10 @@ bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
 	if (bdev_io->u.bdev.iovs) {
 		if (bdev_io->u.bdev.iovs->iov_base) {
 			free(bdev_io->u.bdev.iovs->iov_base);
-			bdev_io->u.bdev.iovs->iov_base = NULL;
 		}
 		free(bdev_io->u.bdev.iovs);
-		bdev_io->u.bdev.iovs = NULL;
 	}
+	free(bdev_io);
 }
 
 static void
@@ -1468,7 +1467,6 @@ test_write_io(void)
 		verify_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, pbdev,
 			  g_child_io_status_flag);
 		bdev_io_cleanup(bdev_io);
-		free(bdev_io);
 	}
 
 	free_test_req(&req);
@@ -1547,7 +1545,6 @@ test_read_io(void)
 		verify_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, pbdev,
 			  g_child_io_status_flag);
 		bdev_io_cleanup(bdev_io);
-		free(bdev_io);
 	}
 
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
@@ -1701,7 +1698,6 @@ test_unmap_io(void)
 		verify_io_without_payload(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, pbdev,
 					  g_child_io_status_flag);
 		bdev_io_cleanup(bdev_io);
-		free(bdev_io);
 	}
 	free_test_req(&req);
 
@@ -1781,7 +1777,6 @@ test_io_failure(void)
 		verify_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, pbdev,
 			  INVALID_IO_SUBMIT);
 		bdev_io_cleanup(bdev_io);
-		free(bdev_io);
 	}
 
 
@@ -1799,7 +1794,6 @@ test_io_failure(void)
 		verify_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, pbdev,
 			  g_child_io_status_flag);
 		bdev_io_cleanup(bdev_io);
-		free(bdev_io);
 	}
 
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
@@ -1876,7 +1870,6 @@ test_reset_io(void)
 	verify_reset_io(bdev_io, req.base_bdevs.num_base_bdevs, ch_ctx, pbdev,
 			true);
 	bdev_io_cleanup(bdev_io);
-	free(bdev_io);
 
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
 	CU_ASSERT(ch_ctx->base_channel == NULL);
@@ -1965,7 +1958,6 @@ test_io_waitq(void)
 
 	TAILQ_FOREACH_SAFE(bdev_io, &head_io, module_link, bdev_io_next) {
 		bdev_io_cleanup(bdev_io);
-		free(bdev_io);
 	}
 
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
@@ -2199,7 +2191,6 @@ test_multi_raid_with_io(void)
 		verify_io(bdev_io, g_max_base_drives, ch_ctx, pbdev,
 			  g_child_io_status_flag);
 		bdev_io_cleanup(bdev_io);
-		free(bdev_io);
 	}
 
 	for (i = 0; i < g_max_raids; i++) {
