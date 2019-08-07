@@ -44,10 +44,10 @@ struct spdk_subsystem_depend_list g_subsystems_deps = TAILQ_HEAD_INITIALIZER(g_s
 static struct spdk_subsystem *g_next_subsystem;
 static bool g_subsystems_initialized = false;
 static bool g_subsystems_init_interrupted = false;
-static spdk_msg_fn g_app_start_fn = NULL;
-static void *g_app_start_arg = NULL;
-static spdk_msg_fn g_app_stop_fn = NULL;
-static void *g_app_stop_arg = NULL;
+static spdk_subsystem_init_fn g_subsystem_start_fn = NULL;
+static void *g_subsystem_start_arg = NULL;
+static spdk_msg_fn g_subsystem_stop_fn = NULL;
+static void *g_subsystem_stop_arg = NULL;
 static struct spdk_thread *g_fini_thread = NULL;
 
 void
@@ -127,7 +127,7 @@ spdk_subsystem_init_next(int rc)
 
 	if (rc) {
 		SPDK_ERRLOG("Init subsystem %s failed\n", g_next_subsystem->name);
-		spdk_app_stop(rc);
+		g_subsystem_start_fn(rc, g_subsystem_start_arg);
 		return;
 	}
 
@@ -139,7 +139,7 @@ spdk_subsystem_init_next(int rc)
 
 	if (!g_next_subsystem) {
 		g_subsystems_initialized = true;
-		g_app_start_fn(g_app_start_arg);
+		g_subsystem_start_fn(0, g_subsystem_start_arg);
 		return;
 	}
 
@@ -151,24 +151,24 @@ spdk_subsystem_init_next(int rc)
 }
 
 void
-spdk_subsystem_init(spdk_msg_fn cb_fn, void *cb_arg)
+spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg)
 {
 	struct spdk_subsystem_depend *dep;
 
-	g_app_start_fn = cb_fn;
-	g_app_start_arg = cb_arg;
+	g_subsystem_start_fn = cb_fn;
+	g_subsystem_start_arg = cb_arg;
 
 	/* Verify that all dependency name and depends_on subsystems are registered */
 	TAILQ_FOREACH(dep, &g_subsystems_deps, tailq) {
 		if (!spdk_subsystem_find(&g_subsystems, dep->name)) {
 			SPDK_ERRLOG("subsystem %s is missing\n", dep->name);
-			spdk_app_stop(-1);
+			g_subsystem_start_fn(-1, g_subsystem_start_arg);
 			return;
 		}
 		if (!spdk_subsystem_find(&g_subsystems, dep->depends_on)) {
 			SPDK_ERRLOG("subsystem %s dependency %s is missing\n",
 				    dep->name, dep->depends_on);
-			spdk_app_stop(-1);
+			g_subsystem_start_fn(-1, g_subsystem_start_arg);
 			return;
 		}
 	}
@@ -206,7 +206,7 @@ _spdk_subsystem_fini_next(void *arg1)
 		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
 
-	g_app_stop_fn(g_app_stop_arg);
+	g_subsystem_stop_fn(g_subsystem_stop_arg);
 	return;
 }
 
@@ -223,8 +223,8 @@ spdk_subsystem_fini_next(void)
 void
 spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg)
 {
-	g_app_stop_fn = cb_fn;
-	g_app_stop_arg = cb_arg;
+	g_subsystem_stop_fn = cb_fn;
+	g_subsystem_stop_arg = cb_arg;
 
 	g_fini_thread = spdk_get_thread();
 

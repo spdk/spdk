@@ -12,6 +12,13 @@ connections is moving to a more dynamic model.
 Function spdk_app_json_config_load() is now exposed to internal SPDK API,
 for use in other libraries.
 
+Added return code to spdk_subsystem_init() callback. This function no longer
+issues spdk_app_stop() on failure, and it is responsibility of caller to
+handle application state.
+
+start_subsystem_init RPC no longer stops the application on error during
+initialization.
+
 ## v19.07:
 
 ### ftl
