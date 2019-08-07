@@ -19,6 +19,9 @@ connections is moving to a more dynamic model.
 The `bdev_delay_update_latency` has been added to allow users to update
 a latency value for a given delay bdev.
 
+start_subsystem_init RPC no longer stops the application on error during
+initialization.
+
 ## v19.07:
 
 ### ftl
