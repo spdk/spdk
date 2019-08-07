@@ -1092,8 +1092,7 @@ __fs_create_file_done(void *arg, int fserrno)
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	args->rc = fserrno;
-	sem_post(args->sem);
+	__wake_caller(args, fserrno);
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", args->op.create.name);
 }
 
@@ -1104,7 +1103,7 @@ __fs_create_file(void *arg)
 	struct spdk_fs_cb_args *args = &req->args;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", args->op.create.name);
-	spdk_fs_create_file_async(args->fs, args->op.create.name, __fs_create_file_done, req);
+	spdk_fs_create_file_async(args->fs, args->op.create.name, args->fn.file_op, req);
 }
 
 int
@@ -1126,6 +1125,7 @@ spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx, 
 	args = &req->args;
 	args->fs = fs;
 	args->op.create.name = name;
+	args->fn.file_op = __fs_create_file_done;
 	args->sem = &channel->sem;
 	fs->send_request(__fs_create_file, req);
 	sem_wait(&channel->sem);
@@ -1252,7 +1252,7 @@ __fs_open_file(void *arg)
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", args->op.open.name);
 	spdk_fs_open_file_async(args->fs, args->op.open.name, args->op.open.flags,
-				__fs_open_file_done, req);
+				args->fn.file_op_with_handle, req);
 }
 
 int
@@ -1276,6 +1276,7 @@ spdk_fs_open_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 	args->fs = fs;
 	args->op.open.name = name;
 	args->op.open.flags = flags;
+	args->fn.file_op_with_handle = __fs_open_file_done;
 	args->sem = &channel->sem;
 	fs->send_request(__fs_open_file, req);
 	sem_wait(&channel->sem);
@@ -1396,7 +1397,7 @@ __fs_rename_file(void *arg)
 	struct spdk_fs_cb_args *args = &req->args;
 
 	spdk_fs_rename_file_async(args->fs, args->op.rename.old_name, args->op.rename.new_name,
-				  __fs_rename_file_done, req);
+				  args->fn.file_op, req);
 }
 
 int
@@ -1419,6 +1420,7 @@ spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 	args->fs = fs;
 	args->op.rename.old_name = old_name;
 	args->op.rename.new_name = new_name;
+	args->fn.file_op = __fs_rename_file_done;
 	args->sem = &channel->sem;
 	fs->send_request(__fs_rename_file, req);
 	sem_wait(&channel->sem);
@@ -1517,7 +1519,7 @@ __fs_delete_file(void *arg)
 	struct spdk_fs_cb_args *args = &req->args;
 
 	spdk_trace_record(TRACE_BLOBFS_DELETE_START, 0, 0, 0, fs_name_to_uint64(args->op.delete.name));
-	spdk_fs_delete_file_async(args->fs, args->op.delete.name, __fs_delete_file_done, req);
+	spdk_fs_delete_file_async(args->fs, args->op.delete.name, args->fn.file_op, req);
 }
 
 int
@@ -1538,6 +1540,7 @@ spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 	args = &req->args;
 	args->fs = fs;
 	args->op.delete.name = name;
+	args->fn.file_op = __fs_delete_file_done;
 	args->sem = &channel->sem;
 	fs->send_request(__fs_delete_file, req);
 	sem_wait(&channel->sem);
