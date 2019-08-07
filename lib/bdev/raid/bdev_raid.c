@@ -196,7 +196,7 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
  * non zero - failure
  */
 static void
-raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev, uint32_t base_bdev_slot)
+raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev, uint8_t base_bdev_slot)
 {
 	struct raid_base_bdev_info *info;
 
@@ -228,7 +228,7 @@ raid_bdev_destruct(void *ctxt)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_destruct\n");
 
 	raid_bdev->destruct_called = true;
-	for (uint16_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+	for (uint8_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		/*
 		 * Close all base bdev descriptors for which call has come from below
 		 * layers.  Also close the descriptors if we have started shutdown.
@@ -303,7 +303,7 @@ raid_bdev_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 	uint32_t			offset_in_strip;
 	uint64_t			pd_lba;
 	uint64_t			pd_blocks;
-	uint32_t			pd_idx;
+	uint8_t				pd_idx;
 	int				ret = 0;
 
 	pd_strip = start_strip / raid_bdev->num_base_bdevs;
@@ -606,14 +606,14 @@ struct raid_bdev_io_range {
 	uint64_t	end_strip_in_disk;
 	uint64_t	start_offset_in_strip;
 	uint64_t	end_offset_in_strip;
-	uint64_t	start_disk;
-	uint64_t	end_disk;
-	uint64_t	n_disks_involved;
+	uint8_t		start_disk;
+	uint8_t		end_disk;
+	uint8_t		n_disks_involved;
 };
 
 static inline void
 _raid_bdev_get_io_range(struct raid_bdev_io_range *io_range,
-			uint64_t num_base_bdevs, uint64_t strip_size, uint64_t strip_size_shift,
+			uint8_t num_base_bdevs, uint64_t strip_size, uint64_t strip_size_shift,
 			uint64_t offset_blocks, uint64_t num_blocks)
 {
 	uint64_t	start_strip;
@@ -642,12 +642,11 @@ _raid_bdev_get_io_range(struct raid_bdev_io_range *io_range,
 	 * Number of base bdevs involved is between 1 and num_base_bdevs.
 	 * It will be 1 if the first strip and last strip are the same one.
 	 */
-	io_range->n_disks_involved = (end_strip - start_strip + 1);
-	io_range->n_disks_involved = spdk_min(io_range->n_disks_involved, num_base_bdevs);
+	io_range->n_disks_involved = spdk_min((end_strip - start_strip + 1), num_base_bdevs);
 }
 
 static inline void
-_raid_bdev_split_io_range(struct raid_bdev_io_range *io_range, uint64_t disk_idx,
+_raid_bdev_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
 			  uint64_t *_offset_in_disk, uint64_t *_nblocks_in_disk)
 {
 	uint64_t n_strips_in_disk;
@@ -688,7 +687,7 @@ _raid_bdev_split_io_range(struct raid_bdev_io_range *io_range, uint64_t disk_idx
 			  + end_offset_in_disk - start_offset_in_disk + 1;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID,
-		      "raid_bdev (strip_size 0x%lx) splits IO to base_bdev (%lu) at (0x%lx, 0x%lx).\n",
+		      "raid_bdev (strip_size 0x%lx) splits IO to base_bdev (%u) at (0x%lx, 0x%lx).\n",
 		      io_range->strip_size, disk_idx, offset_in_disk, nblocks_in_disk);
 
 	*_offset_in_disk = offset_in_disk;
@@ -727,7 +726,7 @@ _raid_bdev_submit_null_payload_request_next(void *_bdev_io)
 	raid_io->base_bdev_io_expected = io_range.n_disks_involved;
 
 	while (raid_io->base_bdev_io_submitted < raid_io->base_bdev_io_expected) {
-		uint64_t disk_idx;
+		uint8_t disk_idx;
 		uint64_t offset_in_disk;
 		uint64_t nblocks_in_disk;
 
@@ -879,7 +878,7 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 inline static bool
 _raid_bdev_io_type_supported(struct raid_bdev *raid_bdev, enum spdk_bdev_io_type io_type)
 {
-	uint16_t i;
+	uint8_t i;
 
 	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		if (raid_bdev->base_bdev_info[i].bdev == NULL) {
@@ -974,7 +973,7 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "num_base_bdevs_discovered", raid_bdev->num_base_bdevs_discovered);
 	spdk_json_write_name(w, "base_bdevs_list");
 	spdk_json_write_array_begin(w);
-	for (uint16_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
+	for (uint8_t i = 0; i < raid_bdev->num_base_bdevs; i++) {
 		if (raid_bdev->base_bdev_info[i].bdev) {
 			spdk_json_write_string(w, raid_bdev->base_bdev_info[i].bdev->name);
 		} else {
@@ -1001,7 +1000,7 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 {
 	struct raid_bdev *raid_bdev = bdev->ctxt;
 	struct spdk_bdev *base;
-	uint16_t i;
+	uint8_t i;
 
 	spdk_json_write_object_begin(w);
 
@@ -1046,7 +1045,7 @@ static const struct spdk_bdev_fn_table g_raid_bdev_fn_table = {
 void
 raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
 {
-	uint32_t i;
+	uint8_t i;
 
 	TAILQ_REMOVE(&g_raid_config.raid_bdev_config_head, raid_cfg, link);
 	g_raid_config.total_raid_bdev--;
@@ -1184,9 +1183,9 @@ raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
  */
 int
 raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg, const char *base_bdev_name,
-			       uint32_t slot)
+			       uint8_t slot)
 {
-	uint32_t i;
+	uint8_t i;
 	struct raid_bdev_config *tmp;
 
 	if (slot >= raid_cfg->num_base_bdevs) {
@@ -1403,7 +1402,7 @@ raid_bdev_get_running_config(FILE *fp)
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev *base;
 	int index = 1;
-	uint16_t i;
+	uint8_t i;
 
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_configured_list, state_link) {
 		fprintf(fp,
@@ -1411,7 +1410,7 @@ raid_bdev_get_running_config(FILE *fp)
 			"[RAID%d]\n"
 			"  Name %s\n"
 			"  StripSize %" PRIu32 "\n"
-			"  NumDevices %hu\n"
+			"  NumDevices %u\n"
 			"  RaidLevel %hhu\n",
 			index, raid_bdev->bdev.name, raid_bdev->strip_size_kb,
 			raid_bdev->num_base_bdevs, raid_bdev->raid_level);
@@ -1446,10 +1445,10 @@ raid_bdev_get_running_config(FILE *fp)
  */
 static bool
 raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **_raid_cfg,
-			 uint32_t *base_bdev_slot)
+			 uint8_t *base_bdev_slot)
 {
 	struct raid_bdev_config *raid_cfg;
-	uint32_t i;
+	uint8_t i;
 
 	TAILQ_FOREACH(raid_cfg, &g_raid_config.raid_bdev_config_head, link) {
 		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
@@ -1586,7 +1585,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
  */
 static int
 raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, struct spdk_bdev *bdev,
-				   uint32_t base_bdev_slot)
+				   uint8_t base_bdev_slot)
 {
 	struct spdk_bdev_desc *desc;
 	int rc;
@@ -1638,7 +1637,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 
 	blocklen = raid_bdev->base_bdev_info[0].bdev->blocklen;
 	min_blockcnt = raid_bdev->base_bdev_info[0].bdev->blockcnt;
-	for (uint32_t i = 1; i < raid_bdev->num_base_bdevs; i++) {
+	for (uint8_t i = 1; i < raid_bdev->num_base_bdevs; i++) {
 		/* Calculate minimum block count from all base bdevs */
 		if (raid_bdev->base_bdev_info[i].bdev->blockcnt < min_blockcnt) {
 			min_blockcnt = raid_bdev->base_bdev_info[i].bdev->blockcnt;
@@ -1755,10 +1754,10 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn,
  */
 static bool
 raid_bdev_find_by_base_bdev(struct spdk_bdev *base_bdev, struct raid_bdev **_raid_bdev,
-			    uint16_t *_base_bdev_slot)
+			    uint8_t *_base_bdev_slot)
 {
 	struct raid_bdev	*raid_bdev;
-	uint16_t		i;
+	uint8_t			i;
 
 	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
 		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
@@ -1788,7 +1787,7 @@ raid_bdev_remove_base_bdev(void *ctx)
 {
 	struct spdk_bdev	*base_bdev = ctx;
 	struct raid_bdev	*raid_bdev = NULL;
-	uint16_t		base_bdev_slot = 0;
+	uint8_t			base_bdev_slot = 0;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_remove_base_bdev\n");
 
@@ -1903,7 +1902,7 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
  */
 static int
 raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, struct spdk_bdev *bdev,
-			  uint32_t base_bdev_slot)
+			  uint8_t base_bdev_slot)
 {
 	struct raid_bdev	*raid_bdev;
 	int			rc;
@@ -1990,7 +1989,7 @@ static void
 raid_bdev_examine(struct spdk_bdev *bdev)
 {
 	struct raid_bdev_config	*raid_cfg;
-	uint32_t		base_bdev_slot;
+	uint8_t			base_bdev_slot;
 
 	if (raid_bdev_can_claim_bdev(bdev->name, &raid_cfg, &base_bdev_slot)) {
 		raid_bdev_add_base_device(raid_cfg, bdev, base_bdev_slot);
