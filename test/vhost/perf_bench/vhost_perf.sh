@@ -8,9 +8,10 @@ source $rootdir/test/vhost/common.sh
 vm_count=1
 vm_memory=2048
 vm_sar_enable=false
-vm_sar_delay="0"
-vm_sar_interval="1"
-vm_sar_count="10"
+host_sar_enable=false
+sar_delay="0"
+sar_interval="1"
+sar_count="10"
 vm_throttle=""
 max_disks=""
 ctrl_type="spdk_vhost_scsi"
@@ -46,10 +47,11 @@ function usage()
 	echo "                            Default: 2048 MB"
 	echo "    --vm-image=PATH         OS image to use for running the VMs."
 	echo "                            Default: \$HOME/vhost_vm_image.qcow2"
-	echo "    --vm-sar-enable         Measure CPU utilization on VM using sar."
-	echo "    --vm-sar-delay=INT      Wait for X seconds before sarting SAR measurement on VMs. Default: 0."
-	echo "    --vm-sar-interval=INT   Interval (seconds) argument for SAR. Default: 1s."
-	echo "    --vm-sar-count=INT      Count argument for SAR. Default: 10."
+	echo "    --vm-sar-enable         Measure CPU utilization in guest VMs using sar."
+	echo "    --host-sar-enable       Measure CPU utilization on host using sar."
+	echo "    --sar-delay=INT         Wait for X seconds before starting SAR measurement. Default: 0."
+	echo "    --sar-interval=INT      Interval (seconds) argument for SAR. Default: 1s."
+	echo "    --sar-count=INT         Count argument for SAR. Default: 10."
 	echo "    --vm-throttle-iops=INT  I/Os throttle rate in IOPS for each device on the VMs."
 	echo "    --max-disks=INT         Maximum number of NVMe drives to use in test."
 	echo "                            Default: will use all available NVMes."
@@ -118,9 +120,10 @@ while getopts 'xh-:' optchar; do
 			vm-memory=*) vm_memory="${OPTARG#*=}" ;;
 			vm-image=*) VM_IMAGE="${OPTARG#*=}" ;;
 			vm-sar-enable) vm_sar_enable=true ;;
-			vm-sar-delay=*) vm_sar_delay="${OPTARG#*=}" ;;
-			vm-sar-interval=*) vm_sar_interval="${OPTARG#*=}" ;;
-			vm-sar-count=*) vm_sar_count="${OPTARG#*=}" ;;
+			host-sar-enable) host_sar_enable=true ;;
+			sar-delay=*) sar_delay="${OPTARG#*=}" ;;
+			sar-interval=*) sar_interval="${OPTARG#*=}" ;;
+			sar-count=*) sar_count="${OPTARG#*=}" ;;
 			vm-throttle-iops=*) vm_throttle="${OPTARG#*=}" ;;
 			max-disks=*) max_disks="${OPTARG#*=}" ;;
 			ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
@@ -351,21 +354,34 @@ for i in $(seq 1 $fio_iterations); do
 	run_fio $fio_bin --job-file="$fio_job" --out="$VHOST_DIR/fio_results" --json $fio_disks &
 	fio_pid=$!
 
-	if $vm_sar_enable; then
-		sleep $vm_sar_delay
-		mkdir -p $VHOST_DIR/fio_results/sar_stats
+	if $host_sar_enable || $vm_sar_enable; then
 		pids=""
+		mkdir -p $VHOST_DIR/fio_results/sar_stats
+		sleep $sar_delay
+	fi
+
+	if $host_sar_enable; then
+		sar -P ALL $sar_interval $sar_count > "$VHOST_DIR/fio_results/sar_stats/sar_stats_host.txt" &
+		pids+=" $!"
+	fi
+
+	if $vm_sar_enable; then
 		for vm_num in $used_vms; do
-			vm_exec "$vm_num" "mkdir -p /root/sar; sar -P ALL $vm_sar_interval $vm_sar_count >> /root/sar/sar_stats_VM${vm_num}_run${i}.txt" &
+			vm_exec "$vm_num" "mkdir -p /root/sar; sar -P ALL $sar_interval $sar_count >> /root/sar/sar_stats_VM${vm_num}_run${i}.txt" &
 			pids+=" $!"
 		done
-		for j in $pids; do
+	fi
+
+	for j in $pids; do
 			wait $j
-		done
+	done
+
+	if $vm_sar_enable; then
 		for vm_num in $used_vms; do
 			vm_scp "$vm_num" "root@127.0.0.1:/root/sar/sar_stats_VM${vm_num}_run${i}.txt" "$VHOST_DIR/fio_results/sar_stats"
 		done
 	fi
+
 
 	wait $fio_pid
 	mv $VHOST_DIR/fio_results/$fio_log_fname $VHOST_DIR/fio_results/$fio_log_fname.$i
