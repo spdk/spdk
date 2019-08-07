@@ -86,7 +86,7 @@ typedef void (*client_resp_handler)(struct load_json_config_ctx *,
 struct load_json_config_ctx {
 	/* Thread used during configuration. */
 	struct spdk_thread *thread;
-	spdk_msg_fn cb_fn;
+	spdk_subsystem_init_fn cb_fn;
 	void *cb_arg;
 
 	/* Current subsystem */
@@ -134,10 +134,8 @@ spdk_app_json_config_load_done(struct load_json_config_ctx *ctx, int rc)
 
 	if (rc) {
 		SPDK_ERRLOG("Config load failed. Stopping SPDK application.\n");
-		spdk_app_stop(rc);
-	} else {
-		ctx->cb_fn(ctx->cb_arg);
 	}
+	ctx->cb_fn(rc, ctx->cb_arg);
 
 	SPDK_DEBUG_APP_CFG("Config load finished\n");
 	free(ctx->json_data);
@@ -544,14 +542,14 @@ err:
 
 void
 spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
-			  spdk_msg_fn cb_fn, void *cb_arg)
+			  spdk_subsystem_init_fn cb_fn, void *cb_arg)
 {
 	struct load_json_config_ctx *ctx = calloc(1, sizeof(*ctx));
 	int rc;
 
 	assert(cb_fn);
 	if (!ctx) {
-		spdk_app_stop(-ENOMEM);
+		cb_fn(-ENOMEM, cb_arg);
 		return;
 	}
 

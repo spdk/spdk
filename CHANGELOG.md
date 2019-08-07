@@ -43,6 +43,11 @@ can only be deleted.
 
 Metadata support has been added to Null bdev module.
 
+### event
+
+start_subsystem_init RPC no longer stops the application on error during
+initialization.
+
 ### rpc
 
 Added optional parameter '--md-size'to 'construct_null_bdev' RPC method.
