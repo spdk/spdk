@@ -104,4 +104,8 @@ echo 'Running lvol integrity suite...'
 run_test "vhost_blk_lvol_integrity" $WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
 --ctrl-type=spdk_vhost_blk
 
+echo 'Running vhost hotremove suite...'
+run_test "vhost_hotremove" $WORKDIR/hotplug/virtio_hotremove.sh
+report_test_completion "vhost_hotremove"
+
 run_test "spdkcli_vhost" ./test/spdkcli/vhost.sh
