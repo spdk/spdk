@@ -438,6 +438,25 @@ def construct_error_bdev(client, base_name):
     return client.call('construct_error_bdev', params)
 
 
+def bdev_delay_update_latency(client, delay_bdev_name, latency_type, latency_us):
+    """Update the latency value for a delay block device
+
+    Args:
+        delay_bdev_name: name of the delay bdev
+        latency_type: 'one of: avg_read, avg_write, p99_read, p99_write. No other values accepted.'
+        latency_us: 'new latency value.'
+
+    Returns:
+        True if successful, or a specific error otherwise.
+    """
+    params = {
+        'delay_bdev_name': delay_bdev_name,
+        'latency_type': latency_type,
+        'latency_us': latency_us,
+    }
+    return client.call('bdev_delay_update_latency', params)
+
+
 def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_latency, avg_write_latency, p99_write_latency):
     """Construct a delay block device.
 

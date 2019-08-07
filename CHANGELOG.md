@@ -2,6 +2,10 @@
 
 ## v19.10: (Upcoming Release)
 
+### bdev
+A new rpc, `bdev_delay_update_latency`, has been added for the delay bdev which
+allows users to update the latency values for a given delay bdev.
+
 ## v19.07:
 
 ### ftl

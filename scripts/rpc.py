@@ -419,6 +419,18 @@ if __name__ == "__main__":
     p.add_argument('name', help='rbd bdev name')
     p.set_defaults(func=delete_rbd_bdev)
 
+    def bdev_delay_update_latency(args):
+        print_json(rpc.bdev.bdev_delay_update_latency(args.client,
+                                                      delay_bdev_name=args.delay_bdev_name,
+                                                      latency_type=args.latency_type,
+                                                      latency_us=args.latency_us))
+    p = subparsers.add_parser('bdev_delay_update_latency',
+                              help='Update one of the latency values for a given delay bdev')
+    p.add_argument('delay_bdev_name', help='The name of the given delay bdev')
+    p.add_argument('latency_type', help='one of: avg_read, avg_write, p99_read, p99_write. No other values accepted.')
+    p.add_argument('latency_us', help='new latency value.', type=int)
+    p.set_defaults(func=bdev_delay_update_latency)
+
     def bdev_delay_create(args):
         print_json(rpc.bdev.bdev_delay_create(args.client,
                                               base_bdev_name=args.base_bdev_name,
