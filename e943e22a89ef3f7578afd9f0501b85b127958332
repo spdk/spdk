@@ -16,6 +16,24 @@
       "revId": "e943e22a89ef3f7578afd9f0501b85b127958332",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a120dd4_79251d0e",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-07T06:13:18Z",
+      "side": 0,
+      "message": "Thank you, Dong.\n\nInteger type was necessary for .INI config file.\n\nI changed raid_bdev_config_add not to use integer type by inserting another patch.\nAnother patch checks if required parameters are specified before calling raid_bdev_config_add.\n\nDoes this match your thought?",
+      "parentUuid": "b839df15_9a4a2315",
+      "revId": "e943e22a89ef3f7578afd9f0501b85b127958332",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
