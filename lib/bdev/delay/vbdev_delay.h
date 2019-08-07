@@ -39,6 +39,14 @@
 #include "spdk/bdev.h"
 #include "spdk/bdev_module.h"
 
+enum delay_io_type {
+	DELAY_AVG_READ,
+	DELAY_P99_READ,
+	DELAY_AVG_WRITE,
+	DELAY_P99_WRITE,
+	DELAY_NONE
+};
+
 /**
  * Create new delay bdev.
  *
