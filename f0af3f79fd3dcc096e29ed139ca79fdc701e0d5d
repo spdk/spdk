@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d90d7c79_fc40028f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-07T12:45:10Z",
+      "side": 1,
+      "message": "This should be:\n\nactual_old_state \u003d subsystem-\u003estate;",
+      "revId": "f0af3f79fd3dcc096e29ed139ca79fdc701e0d5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
