@@ -94,7 +94,7 @@ struct spdk_nvme_ctrlr_opts {
 	/**
 	 * Specify the retry number when there is issue with the transport
 	 */
-	int transport_retry_count;
+	uint8_t transport_retry_count;
 
 	/**
 	 * The queue depth of each NVMe I/O queue.

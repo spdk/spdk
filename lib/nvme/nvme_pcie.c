@@ -156,6 +156,8 @@ struct nvme_pcie_qpair {
 
 	uint16_t num_entries;
 
+	uint8_t retry_count;
+
 	uint16_t max_completions_cap;
 
 	uint16_t last_sq_tail;
@@ -1013,6 +1015,8 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 		cq_paddr = opts->cq.paddr;
 	}
 
+	pqpair->retry_count = ctrlr->opts.transport_retry_count;
+
 	/*
 	 * Limit the maximum number of completions to return per call to prevent wraparound,
 	 * and calculate how many trackers can be submitted at once without overflowing the
@@ -1316,7 +1320,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 
 	error = spdk_nvme_cpl_is_error(cpl);
 	retry = error && nvme_completion_is_retry(cpl) &&
-		req->retries < spdk_nvme_retry_count;
+		req->retries < pqpair->retry_count;
 
 	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
 		spdk_nvme_qpair_print_command(qpair, &req->cmd);
