@@ -549,6 +549,9 @@ static size_t
 opal_response_get_string(const struct spdk_opal_resp_parsed *resp, int n,
 			 const char **store)
 {
+	uint8_t header_len;
+	struct spdk_opal_resp_token token = resp->resp_tokens[n];
+
 	*store = NULL;
 	if (!resp) {
 		SPDK_ERRLOG("Response is NULL\n");
@@ -561,13 +564,28 @@ opal_response_get_string(const struct spdk_opal_resp_parsed *resp, int n,
 		return 0;
 	}
 
-	if (resp->resp_tokens[n].type != OPAL_DTA_TOKENID_BYTESTRING) {
+	if (token.type != OPAL_DTA_TOKENID_BYTESTRING) {
 		SPDK_ERRLOG("Token is not a byte string!\n");
 		return 0;
 	}
 
-	*store = resp->resp_tokens[n].pos + 1;
-	return resp->resp_tokens[n].len - 1;
+	switch (token.width) {
+	case OPAL_WIDTH_SHORT:
+		header_len = 1;
+		break;
+	case OPAL_WIDTH_MEDIUM:
+		header_len = 2;
+		break;
+	case OPAL_WIDTH_LONG:
+		header_len = 4;
+		break;
+	default:
+		SPDK_ERRLOG("Can't get string from this Token\n");
+		return 0;
+	}
+
+	*store = token.pos + header_len;
+	return token.len - header_len;
 }
 
 static int
