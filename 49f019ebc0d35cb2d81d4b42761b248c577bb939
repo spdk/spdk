@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aa03f9d_26629da2",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-08T22:57:19Z",
+      "side": 1,
+      "message": "instead of bdev, let\u0027s say \"delay bdev\", since this doesn\u0027t apply to the generic bdev layer",
+      "revId": "49f019ebc0d35cb2d81d4b42761b248c577bb939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff5841a9_1c5b2071",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-08T22:57:19Z",
+      "side": 1,
+      "message": "I think this can be a bit more concise:\n\nThe \"bdev_delay_update_latency\" RPC has been added to allow users to update a latency value for a given delay bdev.",
+      "revId": "49f019ebc0d35cb2d81d4b42761b248c577bb939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16b08b14_a89f44e2",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-08T22:57:19Z",
+      "side": 1,
+      "message": "this assumption is no longer valid",
+      "revId": "49f019ebc0d35cb2d81d4b42761b248c577bb939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f3d0193_0a5e083d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-08T22:57:19Z",
+      "side": 1,
+      "message": "I think this should go after bdev_delay_create (maybe even after bdev_delay_delete)\n\nin general, I think it\u0027s better to have the \u0027create\u0027 function listed first, followed by RPCs that do other things (update, delete, etc.)",
+      "revId": "49f019ebc0d35cb2d81d4b42761b248c577bb939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd9b31d9_d2c3b510",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-08T22:57:19Z",
+      "side": 1,
+      "message": "same here (move after bdev_delay_create)",
+      "revId": "49f019ebc0d35cb2d81d4b42761b248c577bb939",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
