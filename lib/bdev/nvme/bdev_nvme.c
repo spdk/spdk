@@ -104,7 +104,7 @@ static TAILQ_HEAD(, nvme_probe_skip_entry) g_skipped_nvme_ctrlrs = TAILQ_HEAD_IN
 static struct spdk_bdev_nvme_opts g_opts = {
 	.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE,
 	.timeout_us = 0,
-	.retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT,
+	.retry_count = 4,
 	.nvme_adminq_poll_period_us = 1000000ULL,
 	.nvme_ioq_poll_period_us = 0,
 	.io_queue_requests = 0,
@@ -1379,16 +1379,10 @@ bdev_nvme_library_init(void)
 		goto end;
 	}
 
-	if ((retry_count = spdk_conf_section_get_intval(sp, "RetryCount")) < 0) {
-		if ((retry_count = spdk_conf_section_get_intval(sp, "NvmeRetryCount")) < 0) {
-			retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT;
-		} else {
-			SPDK_WARNLOG("NvmeRetryCount was renamed to RetryCount\n");
-			SPDK_WARNLOG("Please update your configuration file\n");
-		}
+	retry_count = spdk_conf_section_get_intval(sp, "RetryCount");
+	if (retry_count >= 0) {
+		g_opts.retry_count = retry_count;
 	}
-
-	g_opts.retry_count = retry_count;
 
 	val = spdk_conf_section_get_val(sp, "TimeoutUsec");
 	if (val != NULL) {

@@ -141,6 +141,8 @@ extern pid_t g_spdk_nvme_pid;
 #define DEFAULT_ADMIN_QUEUE_REQUESTS	(32)
 #define DEFAULT_IO_QUEUE_REQUESTS	(512)
 
+#define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
+
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
 
 /* We want to fit submission and completion rings each in a single 2MB
