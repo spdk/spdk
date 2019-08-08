@@ -1104,6 +1104,15 @@ create_construct_req(struct rpc_construct_raid_bdev *r, const char *raid_name,
 }
 
 static void
+create_construct_config(struct rpc_construct_raid_bdev *r, const char *raid_name,
+			uint8_t bbdev_start_idx, bool create_base_bdev)
+{
+	create_test_req(r, raid_name, bbdev_start_idx, create_base_bdev);
+
+	g_config_level_create = 1;
+}
+
+static void
 free_test_req(struct rpc_construct_raid_bdev *r)
 {
 	uint8_t i;
@@ -2180,12 +2189,8 @@ test_create_raid_from_config(void)
 	uint8_t base_bdev_slot;
 
 	set_globals();
-	create_test_req(&req, "raid1", 0, true);
-	g_rpc_req = &req;
-	g_rpc_req_size = sizeof(req);
-	g_config_level_create = 1;
+	create_construct_config(&req, "raid1", 0, true);
 	CU_ASSERT(raid_bdev_init() == 0);
-	g_config_level_create = 0;
 
 	verify_raid_config_present("raid1", true);
 	verify_raid_bdev_present("raid1", true);
@@ -2222,11 +2227,8 @@ test_create_raid_from_config_invalid_params(void)
 	struct rpc_construct_raid_bdev req;
 
 	set_globals();
-	g_rpc_req = &req;
-	g_rpc_req_size = sizeof(req);
-	g_config_level_create = 1;
 
-	create_test_req(&req, "raid1", 0, true);
+	create_construct_config(&req, "raid1", 0, true);
 	free(req.name);
 	req.name = NULL;
 	CU_ASSERT(raid_bdev_init() != 0);
@@ -2234,28 +2236,28 @@ test_create_raid_from_config_invalid_params(void)
 	verify_raid_config_present("raid1", false);
 	verify_raid_bdev_present("raid1", false);
 
-	create_test_req(&req, "raid1", 0, false);
+	create_construct_config(&req, "raid1", 0, false);
 	req.strip_size_kb = 1234;
 	CU_ASSERT(raid_bdev_init() != 0);
 	free_test_req(&req);
 	verify_raid_config_present("raid1", false);
 	verify_raid_bdev_present("raid1", false);
 
-	create_test_req(&req, "raid1", 0, false);
+	create_construct_config(&req, "raid1", 0, false);
 	req.raid_level = 1;
 	CU_ASSERT(raid_bdev_init() != 0);
 	free_test_req(&req);
 	verify_raid_config_present("raid1", false);
 	verify_raid_bdev_present("raid1", false);
 
-	create_test_req(&req, "raid1", 0, false);
+	create_construct_config(&req, "raid1", 0, false);
 	req.raid_level = 1;
 	CU_ASSERT(raid_bdev_init() != 0);
 	free_test_req(&req);
 	verify_raid_config_present("raid1", false);
 	verify_raid_bdev_present("raid1", false);
 
-	create_test_req(&req, "raid1", 0, false);
+	create_construct_config(&req, "raid1", 0, false);
 	req.base_bdevs.num_base_bdevs++;
 	CU_ASSERT(raid_bdev_init() != 0);
 	req.base_bdevs.num_base_bdevs--;
@@ -2263,7 +2265,7 @@ test_create_raid_from_config_invalid_params(void)
 	verify_raid_config_present("raid1", false);
 	verify_raid_bdev_present("raid1", false);
 
-	create_test_req(&req, "raid1", 0, false);
+	create_construct_config(&req, "raid1", 0, false);
 	req.base_bdevs.num_base_bdevs--;
 	CU_ASSERT(raid_bdev_init() != 0);
 	req.base_bdevs.num_base_bdevs++;
@@ -2272,7 +2274,7 @@ test_create_raid_from_config_invalid_params(void)
 	verify_raid_bdev_present("raid1", false);
 
 	if (g_max_base_drives > 1) {
-		create_test_req(&req, "raid1", 0, false);
+		create_construct_config(&req, "raid1", 0, false);
 		snprintf(req.base_bdevs.base_bdevs[g_max_base_drives - 1], 15, "%s", "Nvme0n1");
 		CU_ASSERT(raid_bdev_init() != 0);
 		free_test_req(&req);
