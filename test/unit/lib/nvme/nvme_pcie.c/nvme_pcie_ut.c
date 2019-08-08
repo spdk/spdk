@@ -51,8 +51,6 @@ static struct nvme_driver _g_nvme_driver = {
 };
 struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
 
-int32_t spdk_nvme_retry_count = 1;
-
 struct nvme_request *g_request = NULL;
 
 extern bool ut_fail_vtophys;
@@ -469,7 +467,6 @@ test_sgl_req(void)
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
 	req->cmd.cdw10 = 10000;
 	req->cmd.cdw12 = 7 | 0;
-	spdk_nvme_retry_count = 1;
 	fail_next_sge = true;
 
 	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) != 0);

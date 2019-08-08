@@ -610,12 +610,10 @@ associate_workers_with_ns(void)
 }
 
 static int
-run_nvme_reset_cycle(int retry_count)
+run_nvme_reset_cycle(void)
 {
 	struct worker_thread *worker;
 	struct ns_worker_ctx *ns_ctx;
-
-	spdk_nvme_retry_count = retry_count;
 
 	if (work_fn(g_workers) != 0) {
 		return -1;
@@ -700,7 +698,7 @@ int main(int argc, char **argv)
 	printf("Initialization complete. Launching workers.\n");
 
 	for (i = 2; i >= 0; i--) {
-		rc = run_nvme_reset_cycle(i);
+		rc = run_nvme_reset_cycle();
 		if (rc != 0) {
 			goto cleanup;
 		}

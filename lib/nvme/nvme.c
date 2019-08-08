@@ -39,8 +39,6 @@
 struct nvme_driver	*g_spdk_nvme_driver;
 pid_t			g_spdk_nvme_pid;
 
-int32_t			spdk_nvme_retry_count;
-
 /* gross timeout of 180 seconds in milliseconds */
 static int g_nvme_driver_timeout_ms = 3 * 60 * 1000;
 

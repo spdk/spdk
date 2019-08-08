@@ -1297,6 +1297,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->trid = *trid;
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
+	ctx->opts.transport_retry_count = g_opts.retry_count;
 
 	if (hostnqn) {
 		snprintf(ctx->opts.hostnqn, sizeof(ctx->opts.hostnqn), "%s", hostnqn);
@@ -1504,6 +1505,7 @@ bdev_nvme_library_init(void)
 			}
 
 			spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
+			opts.transport_retry_count = g_opts.retry_count;
 
 			if (probe_ctx->hostnqn != NULL) {
 				snprintf(opts.hostnqn, sizeof(opts.hostnqn), "%s", probe_ctx->hostnqn);
@@ -1559,8 +1561,6 @@ bdev_nvme_library_init(void)
 		rc = -1;
 	}
 end:
-	spdk_nvme_retry_count = g_opts.retry_count;
-
 	free(probe_ctx);
 	return rc;
 }
@@ -2054,7 +2054,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n"
 		"# The number of attempts per I/O when an I/O fails. Do not include\n"
 		"# this key to get the default behavior.\n");
-	fprintf(fp, "RetryCount %d\n", spdk_nvme_retry_count);
+	fprintf(fp, "RetryCount %d\n", g_opts.retry_count);
 	fprintf(fp, "\n"
 		"# Timeout for each command, in microseconds. If 0, don't track timeouts.\n");
 	fprintf(fp, "TimeoutUsec %"PRIu64"\n", g_opts.timeout_us);
