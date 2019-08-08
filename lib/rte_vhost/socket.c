@@ -809,8 +809,23 @@ rte_vhost_driver_start(const char *path)
 		return -1;
 
 	if (fdset_tid == 0) {
-		int ret = pthread_create(&fdset_tid, NULL, fdset_event_dispatch,
+		rte_cpuset_t orig_cpuset;
+		rte_cpuset_t tmp_cpuset;
+		long num_cores, i;
+		int ret;
+
+		CPU_ZERO(&tmp_cpuset);
+		num_cores = sysconf(_SC_NPROCESSORS_CONF);
+		/* Create a mask containing all CPUs */
+		for (i = 0; i < num_cores; i++) {
+			CPU_SET(i, &tmp_cpuset);
+		}
+
+		rte_thread_get_affinity(&orig_cpuset);
+		rte_thread_set_affinity(&tmp_cpuset);
+		ret = pthread_create(&fdset_tid, NULL, fdset_event_dispatch,
 				     &vhost_user.fdset);
+		rte_thread_set_affinity(&orig_cpuset);
 		if (ret < 0)
 			RTE_LOG(ERR, VHOST_CONFIG,
 				"failed to create fdset handling thread");
