@@ -89,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "962ad2e1_a346f18f",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-08T22:55:24Z",
+      "side": 1,
+      "message": "Thank you Ben. get_iscsi_connections is not critical compared with other RPCs and so it will be OK to remove.",
+      "parentUuid": "51ac1bb5_461027bb",
+      "revId": "cca3630d56ec76f6b327469e6535092deb7c806c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2ed94f5c_e2d2d999",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 2

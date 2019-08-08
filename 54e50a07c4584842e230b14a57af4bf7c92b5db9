@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "70503a10_8f244054",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-08T22:55:24Z",
+      "side": 1,
+      "message": "Thank you for nice idea Ben. I will work on that.",
+      "parentUuid": "b46820a3_2032fa03",
+      "revId": "54e50a07c4584842e230b14a57af4bf7c92b5db9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b104c005_ca1ce8c9",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-08T18:19:16Z",
       "side": 1,
       "message": "As an extra sanity check, should we assert that spdk_get_thread() returns the same thread as getting the thread from the previous poll group? Like line 1466 did in the previous version with lcores.",
+      "revId": "54e50a07c4584842e230b14a57af4bf7c92b5db9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ccfc820_e6c6d573",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1454,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-08T22:55:24Z",
+      "side": 1,
+      "message": "Got it.",
+      "parentUuid": "b104c005_ca1ce8c9",
       "revId": "54e50a07c4584842e230b14a57af4bf7c92b5db9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
