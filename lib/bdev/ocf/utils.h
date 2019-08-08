@@ -58,6 +58,6 @@ void vbdev_ocf_mngt_poll(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn fn);
 void vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status);
 
 /* Stop the execution and invoke callback with last status returned */
-void vbdev_ocf_mngt_stop(struct vbdev_ocf *vbdev);
+void vbdev_ocf_mngt_stop(struct vbdev_ocf *vbdev, int status);
 
 #endif
