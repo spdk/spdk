@@ -36,9 +36,8 @@
 #define SPDK_PORTAL_GRP_H
 
 #include "spdk/conf.h"
-
-#define MAX_PORTAL_ADDR	256
-#define MAX_PORTAL_PORT	32
+#include "spdk/cpuset.h"
+#include "iscsi/iscsi.h"
 
 struct spdk_json_write_ctx;
 
