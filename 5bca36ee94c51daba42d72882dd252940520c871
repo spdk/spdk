@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95266770_76eb5003",
+        "filename": "test/nvme/nvme.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-08T23:57:11Z",
+      "side": 1,
+      "message": "so I think this test is OK, but I don\u0027t think it should go in this script\n\nthis script is really intended for testing just the nvme driver; this namespace test is really testing the bdev nvme module\n\nI think maybe this becomes a new subtest under the bdev tests somewhere",
+      "revId": "5bca36ee94c51daba42d72882dd252940520c871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
