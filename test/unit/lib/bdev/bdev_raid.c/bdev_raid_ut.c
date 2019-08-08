@@ -245,6 +245,22 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	g_io_comp_status = ((status == SPDK_BDEV_IO_STATUS_SUCCESS) ? true : false);
 }
 
+static void
+set_io_output(struct io_output *output,
+	      struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	      uint64_t offset_blocks, uint64_t num_blocks,
+	      spdk_bdev_io_completion_cb cb, void *cb_arg,
+	      enum spdk_bdev_io_type iotype)
+{
+	output->desc = desc;
+	output->ch = ch;
+	output->offset_blocks = offset_blocks;
+	output->num_blocks = num_blocks;
+	output->cb = cb;
+	output->cb_arg = cb_arg;
+	output->iotype = iotype;
+}
+
 /* It will cache the split IOs for verification */
 int
 spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
@@ -252,7 +268,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			uint64_t offset_blocks, uint64_t num_blocks,
 			spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	struct io_output *p = &g_io_output[g_io_output_index];
+	struct io_output *output = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
 
 	if (g_ignore_io_output) {
@@ -265,14 +281,10 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		SPDK_CU_ASSERT_FATAL(g_io_output_index < (g_max_io_size / g_strip_size) + 1);
 	}
 	if (g_bdev_io_submit_status == 0) {
-		p->desc = desc;
-		p->ch = ch;
-		p->offset_blocks = offset_blocks;
-		p->num_blocks = num_blocks;
-		p->cb = cb;
-		p->cb_arg = cb_arg;
-		p->iotype = SPDK_BDEV_IO_TYPE_WRITE;
+		set_io_output(output, desc, ch, offset_blocks, num_blocks, cb, cb_arg,
+			      SPDK_BDEV_IO_TYPE_WRITE);
 		g_io_output_index++;
+
 		child_io = calloc(1, sizeof(struct spdk_bdev_io));
 		SPDK_CU_ASSERT_FATAL(child_io != NULL);
 		cb(child_io, g_child_io_status_flag, cb_arg);
@@ -285,7 +297,7 @@ int
 spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	struct io_output *p = &g_io_output[g_io_output_index];
+	struct io_output *output = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
 
 	if (g_ignore_io_output) {
@@ -293,12 +305,9 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	if (g_bdev_io_submit_status == 0) {
-		p->desc = desc;
-		p->ch = ch;
-		p->cb = cb;
-		p->cb_arg = cb_arg;
-		p->iotype = SPDK_BDEV_IO_TYPE_RESET;
+		set_io_output(output, desc, ch, 0, 0, cb, cb_arg, SPDK_BDEV_IO_TYPE_RESET);
 		g_io_output_index++;
+
 		child_io = calloc(1, sizeof(struct spdk_bdev_io));
 		SPDK_CU_ASSERT_FATAL(child_io != NULL);
 		cb(child_io, g_child_io_status_flag, cb_arg);
@@ -312,7 +321,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	struct io_output *p = &g_io_output[g_io_output_index];
+	struct io_output *output = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
 
 	if (g_ignore_io_output) {
@@ -320,14 +329,10 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	if (g_bdev_io_submit_status == 0) {
-		p->desc = desc;
-		p->ch = ch;
-		p->offset_blocks = offset_blocks;
-		p->num_blocks = num_blocks;
-		p->cb = cb;
-		p->cb_arg = cb_arg;
-		p->iotype = SPDK_BDEV_IO_TYPE_UNMAP;
+		set_io_output(output, desc, ch, offset_blocks, num_blocks, cb, cb_arg,
+			      SPDK_BDEV_IO_TYPE_UNMAP);
 		g_io_output_index++;
+
 		child_io = calloc(1, sizeof(struct spdk_bdev_io));
 		SPDK_CU_ASSERT_FATAL(child_io != NULL);
 		cb(child_io, g_child_io_status_flag, cb_arg);
@@ -415,7 +420,7 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	struct io_output *p = &g_io_output[g_io_output_index];
+	struct io_output *output = &g_io_output[g_io_output_index];
 	struct spdk_bdev_io *child_io;
 
 	if (g_ignore_io_output) {
@@ -424,14 +429,10 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	SPDK_CU_ASSERT_FATAL(g_io_output_index <= (g_max_io_size / g_strip_size) + 1);
 	if (g_bdev_io_submit_status == 0) {
-		p->desc = desc;
-		p->ch = ch;
-		p->offset_blocks = offset_blocks;
-		p->num_blocks = num_blocks;
-		p->cb = cb;
-		p->cb_arg = cb_arg;
-		p->iotype = SPDK_BDEV_IO_TYPE_READ;
+		set_io_output(output, desc, ch, offset_blocks, num_blocks, cb, cb_arg,
+			      SPDK_BDEV_IO_TYPE_READ);
 		g_io_output_index++;
+
 		child_io = calloc(1, sizeof(struct spdk_bdev_io));
 		SPDK_CU_ASSERT_FATAL(child_io != NULL);
 		cb(child_io, g_child_io_status_flag, cb_arg);
