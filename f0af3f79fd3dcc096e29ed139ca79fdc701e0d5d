@@ -16,6 +16,24 @@
       "revId": "f0af3f79fd3dcc096e29ed139ca79fdc701e0d5d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db7dfa52_be46d2da",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1015600
+      },
+      "writtenOn": "2019-08-08T01:48:45Z",
+      "side": 1,
+      "message": "That will make thinks non-atomic. I think it should be actual_old_state \u003d expected_old_state. And __atomic_compare_exchange_n(\u0026subsystem-\u003estate, \u0026actual_old_state, ...) will set actual_old_state to subsystem-\u003estate if subsystem-\u003estate !\u003d actual_old_state .",
+      "parentUuid": "d90d7c79_fc40028f",
+      "revId": "f0af3f79fd3dcc096e29ed139ca79fdc701e0d5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
