@@ -359,7 +359,8 @@ unregister_cb(void *opaque)
 	struct vbdev_ocf *vbdev = opaque;
 	int rc;
 
-	rc = vbdev_ocf_mngt_start(vbdev, unregister_path, NULL, NULL);
+	rc = vbdev_ocf_mngt_start(vbdev, unregister_path, NULL, NULL, NULL,
+				  mngt_ctx_mode_unregister);
 	if (rc) {
 		SPDK_ERRLOG("Unable to unregister OCF bdev: %d\n", rc);
 		spdk_bdev_destruct_done(&vbdev->exp_bdev, rc);
@@ -1014,7 +1015,8 @@ register_vbdev(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_callback cb, void *cb_arg
 		return;
 	}
 
-	rc = vbdev_ocf_mngt_start(vbdev, register_path, cb, cb_arg);
+	rc = vbdev_ocf_mngt_start(vbdev, register_path, NULL, cb, cb_arg,
+				  mngt_ctx_mode_normal);
 	if (rc) {
 		cb(rc, vbdev, cb_arg);
 	}

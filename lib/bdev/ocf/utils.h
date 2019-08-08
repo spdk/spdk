@@ -42,11 +42,15 @@ const char *ocf_get_cache_modename(ocf_cache_mode_t mode);
 
 /* Initiate management operation
  * Receives NULL terminated array of functions (path)
+ * and rollback function (rollback_fn)
  * and callback (cb)
  * and callback argument (cb_arg)
+ * and mode to use in operations (mode)
  * This function may fail with ENOMEM or EBUSY */
-int vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
-			 vbdev_ocf_mngt_callback cb, void *cb_arg);
+vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
+		     vbdev_ocf_mngt_rollback_fn rollback_fn,
+		     vbdev_ocf_mngt_callback cb, void *cb_arg,
+		     enum mngt_ctx_mode mode);
 
 /* Continue execution with polling operation (fn)
  * fn must invoke vbdev_ocf_mngt_continue() to stop polling

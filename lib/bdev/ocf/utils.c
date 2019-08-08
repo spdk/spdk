@@ -87,7 +87,9 @@ mngt_poll_fn(void *opaque)
 
 int
 vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
-		     vbdev_ocf_mngt_callback cb, void *cb_arg)
+		     vbdev_ocf_mngt_rollback_fn rollback_fn,
+		     vbdev_ocf_mngt_callback cb, void *cb_arg,
+		     enum mngt_ctx_mode mode)
 {
 	if (vbdev->mngt_ctx.current_step) {
 		return -EBUSY;
@@ -101,8 +103,10 @@ vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
 	}
 
 	vbdev->mngt_ctx.current_step = path;
+	vbdev->mngt_ctx.rollback_fn = rollback_fn;
 	vbdev->mngt_ctx.cb = cb;
 	vbdev->mngt_ctx.cb_arg = cb_arg;
+	vbdev->mngt_ctx.mode = mode;
 
 	(*vbdev->mngt_ctx.current_step)(vbdev);
 
@@ -132,7 +136,14 @@ vbdev_ocf_mngt_stop(struct vbdev_ocf *vbdev, int status)
 {
 	spdk_poller_unregister(&vbdev->mngt_ctx.poller);
 
-	vbdev->mngt_ctx.status |= status;
+	if (status) {
+		vbdev->mngt_ctx.status |= status;
+	}
+
+	if (vbdev->mngt_ctx.status && vbdev->mngt_ctx.rollback_fn) {
+		vbdev->mngt_ctx.rollback_fn(vbdev);
+		return;
+	}
 
 	if (vbdev->mngt_ctx.cb) {
 		vbdev->mngt_ctx.cb(vbdev->mngt_ctx.status, vbdev, vbdev->mngt_ctx.cb_arg);
@@ -148,7 +159,7 @@ vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
 		return;
 	}
 
-	if (status) {
+	if (status && vbdev->mngt_ctx.mode == mngt_ctx_mode_normal) {
 		vbdev->mngt_ctx.status = status;
 		vbdev_ocf_mngt_stop(vbdev, 0);
 		return;
