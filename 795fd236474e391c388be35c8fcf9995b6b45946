@@ -16,6 +16,24 @@
       "revId": "795fd236474e391c388be35c8fcf9995b6b45946",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce6ca71e_e01966ff",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2188,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-08T23:08:23Z",
+      "side": 0,
+      "message": "Thank you for critical review, Jim. Yes, g_config_level_create is cleared to 0 in set_globals(). So this line is duplicated. And it was difficult to know how large granularity of each global parameter is. So I added clearing g_config_level_create to set_construct_req() to use g_config_level_create with more finer granularity. We will be able to refactor more but I hope this change will be better than nothing.",
+      "parentUuid": "2956ffb3_4f738e95",
+      "revId": "795fd236474e391c388be35c8fcf9995b6b45946",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
