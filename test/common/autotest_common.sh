@@ -723,6 +723,7 @@ EOL
 
 	if [ "$workload" == "verify" ]; then
 		echo "verify=sha1" >> $config_file
+		echo "verify_backlog=1024" >> $config_file
 		echo "rw=randwrite" >> $config_file
 	elif [ "$workload" == "trim" ]; then
 		echo "rw=trimwrite" >> $config_file
