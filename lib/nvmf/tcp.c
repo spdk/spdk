@@ -1912,15 +1912,13 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
 		prev_state = tqpair->recv_state;
-
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tqpair(%p) recv pdu entering state %d\n", tqpair, prev_state);
 
+		pdu = &tqpair->pdu_in_progress;
 		switch (tqpair->recv_state) {
 		/* Wait for the common header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
-			pdu = &tqpair->pdu_in_progress;
-
 			rc = nvme_tcp_read_data(tqpair->sock,
 						sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
 						(void *)&pdu->hdr.common + pdu->ch_valid_bytes);
@@ -1944,7 +1942,6 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			break;
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
-			pdu = &tqpair->pdu_in_progress;
 			rc = nvme_tcp_read_data(tqpair->sock,
 						pdu->psh_len - pdu->psh_valid_bytes,
 						(void *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
@@ -1966,8 +1963,6 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			}
 			break;
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
-			pdu = &tqpair->pdu_in_progress;
-
 			/* check whether the data is valid, if not we just return */
 			if (!pdu->data_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
@@ -2003,7 +1998,6 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			current_pdu_num++;
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
-			pdu = &tqpair->pdu_in_progress;
 			/* Check whether the connection is closed. Each time, we only read 1 byte every time */
 			rc = nvme_tcp_read_data(tqpair->sock, 1, (void *)&pdu->hdr.common);
 			if (rc < 0) {
@@ -2612,6 +2606,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 	return progress;
 }
+
 static void
 spdk_nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 {
