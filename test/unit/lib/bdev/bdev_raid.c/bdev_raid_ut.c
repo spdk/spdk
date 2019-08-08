@@ -644,6 +644,7 @@ verify_reset_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 		struct raid_bdev_io_channel *ch_ctx, struct raid_bdev *raid_bdev, uint32_t io_status)
 {
 	uint8_t index = 0;
+	struct io_output *p;
 
 	SPDK_CU_ASSERT_FATAL(raid_bdev != NULL);
 	SPDK_CU_ASSERT_FATAL(num_base_drives != 0);
@@ -652,9 +653,10 @@ verify_reset_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 
 	CU_ASSERT(g_io_output_index == num_base_drives);
 	for (index = 0; index < g_io_output_index; index++) {
-		CU_ASSERT(ch_ctx->base_channel[index] == g_io_output[index].ch);
-		CU_ASSERT(raid_bdev->base_bdev_info[index].desc == g_io_output[index].desc);
-		CU_ASSERT(bdev_io->type == g_io_output[index].iotype);
+		p = &g_io_output[index];
+		CU_ASSERT(ch_ctx->base_channel[index] == p->ch);
+		CU_ASSERT(raid_bdev->base_bdev_info[index].desc == p->desc);
+		CU_ASSERT(bdev_io->type == p->iotype);
 	}
 	CU_ASSERT(g_io_comp_status == io_status);
 }
@@ -676,6 +678,7 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 	uint64_t pd_blocks;
 	uint32_t index = 0;
 	uint8_t *buf = bdev_io->u.bdev.iovs->iov_base;
+	struct io_output *p;
 
 	if (io_status == INVALID_IO_SUBMIT) {
 		CU_ASSERT(g_io_comp_status == false);
@@ -704,11 +707,12 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 			pd_lba = pd_strip << raid_bdev->strip_size_shift;
 			pd_blocks = raid_bdev->strip_size;
 		}
-		CU_ASSERT(pd_lba == g_io_output[index].offset_blocks);
-		CU_ASSERT(pd_blocks == g_io_output[index].num_blocks);
-		CU_ASSERT(ch_ctx->base_channel[pd_idx] == g_io_output[index].ch);
-		CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].desc == g_io_output[index].desc);
-		CU_ASSERT(bdev_io->type == g_io_output[index].iotype);
+		p = &g_io_output[index];
+		CU_ASSERT(pd_lba == p->offset_blocks);
+		CU_ASSERT(pd_blocks == p->num_blocks);
+		CU_ASSERT(ch_ctx->base_channel[pd_idx] == p->ch);
+		CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].desc == p->desc);
+		CU_ASSERT(bdev_io->type == p->iotype);
 		buf += (pd_blocks << spdk_u32log2(g_block_len));
 	}
 	CU_ASSERT(g_io_comp_status == io_status);
@@ -733,6 +737,7 @@ verify_io_without_payload(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 	uint8_t disk_idx;
 	uint64_t base_io_idx;
 	uint64_t sum_nblocks = 0;
+	struct io_output *p;
 
 	if (io_status == INVALID_IO_SUBMIT) {
 		CU_ASSERT(g_io_comp_status == false);
@@ -748,6 +753,7 @@ verify_io_without_payload(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 
 	start_strip_disk_idx = start_strip % num_base_drives;
 	end_strip_disk_idx = end_strip % num_base_drives;
+
 	offset_in_start_disk = g_io_output[0].offset_blocks;
 	nblocks_in_start_disk = g_io_output[0].num_blocks;
 
@@ -755,6 +761,8 @@ verify_io_without_payload(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 	     base_io_idx++, disk_idx++) {
 		uint64_t start_offset_in_disk;
 		uint64_t end_offset_in_disk;
+
+		p = &g_io_output[base_io_idx];
 
 		/* round disk_idx */
 		if (disk_idx >= num_base_drives) {
@@ -765,7 +773,7 @@ verify_io_without_payload(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 		 * The first base io has a same start_offset_in_strip with the whole raid io.
 		 * Other base io should have aligned start_offset_in_strip which is 0.
 		 */
-		start_offset_in_disk = g_io_output[base_io_idx].offset_blocks;
+		start_offset_in_disk = p->offset_blocks;
 		if (base_io_idx == 0) {
 			CU_ASSERT(start_offset_in_disk % g_strip_size == start_offset_in_strip);
 		} else {
@@ -776,8 +784,7 @@ verify_io_without_payload(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 		 * Base io on disk at which end_strip is located, has a same end_offset_in_strip with the whole raid io.
 		 * Other base io should have aligned end_offset_in_strip.
 		 */
-		end_offset_in_disk = g_io_output[base_io_idx].offset_blocks +
-				     g_io_output[base_io_idx].num_blocks - 1;
+		end_offset_in_disk = p->offset_blocks + p->num_blocks - 1;
 		if (disk_idx == end_strip_disk_idx) {
 			CU_ASSERT(end_offset_in_disk % g_strip_size == end_offset_in_strip);
 		} else {
@@ -795,23 +802,23 @@ verify_io_without_payload(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 			CU_ASSERT(offset_in_start_disk - start_offset_in_disk < g_strip_size);
 		} else if (disk_idx < start_strip_disk_idx) {
 			CU_ASSERT(start_offset_in_disk > offset_in_start_disk);
-			CU_ASSERT(g_io_output[base_io_idx].offset_blocks - offset_in_start_disk <= g_strip_size);
+			CU_ASSERT(p->offset_blocks - offset_in_start_disk <= g_strip_size);
 		}
 
 		/* nblocks compared with start_disk:
 		 * The gap between them must be within a strip size.
 		 */
-		if (g_io_output[base_io_idx].num_blocks <= nblocks_in_start_disk) {
-			CU_ASSERT(nblocks_in_start_disk - g_io_output[base_io_idx].num_blocks <= g_strip_size);
+		if (p->num_blocks <= nblocks_in_start_disk) {
+			CU_ASSERT(nblocks_in_start_disk - p->num_blocks <= g_strip_size);
 		} else {
-			CU_ASSERT(g_io_output[base_io_idx].num_blocks - nblocks_in_start_disk < g_strip_size);
+			CU_ASSERT(p->num_blocks - nblocks_in_start_disk < g_strip_size);
 		}
 
-		sum_nblocks += g_io_output[base_io_idx].num_blocks;
+		sum_nblocks += p->num_blocks;
 
-		CU_ASSERT(ch_ctx->base_channel[disk_idx] == g_io_output[base_io_idx].ch);
-		CU_ASSERT(raid_bdev->base_bdev_info[disk_idx].desc == g_io_output[base_io_idx].desc);
-		CU_ASSERT(bdev_io->type == g_io_output[base_io_idx].iotype);
+		CU_ASSERT(ch_ctx->base_channel[disk_idx] == p->ch);
+		CU_ASSERT(raid_bdev->base_bdev_info[disk_idx].desc == p->desc);
+		CU_ASSERT(bdev_io->type == p->iotype);
 	}
 
 	/* Sum of each nblocks should be same with raid bdev_io */
