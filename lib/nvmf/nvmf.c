@@ -872,6 +872,8 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	struct spdk_nvmf_registrant *reg, *tmp;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+	struct spdk_nvmf_ctrlr *ctrlr;
+	bool ns_changed;
 
 	/* Make sure our poll group has memory for this subsystem allocated */
 	if (subsystem->id >= group->num_sgroups) {
@@ -883,6 +885,8 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	/* Make sure the array of namespace information is the correct size */
 	new_num_ns = subsystem->max_nsid;
 	old_num_ns = sgroup->num_ns;
+
+	ns_changed = false;
 
 	if (old_num_ns == 0) {
 		if (new_num_ns > 0) {
@@ -945,10 +949,12 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			/* Both NULL. Leave empty */
 		} else if (ns == NULL && ch != NULL) {
 			/* There was a channel here, but the namespace is gone. */
+			ns_changed = true;
 			spdk_put_io_channel(ch);
 			ns_info->channel = NULL;
 		} else if (ns != NULL && ch == NULL) {
 			/* A namespace appeared but there is no channel yet */
+			ns_changed = true;
 			ch = spdk_bdev_get_io_channel(ns->desc);
 			if (ch == NULL) {
 				SPDK_ERRLOG("Could not allocate I/O channel.\n");
@@ -957,6 +963,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			ns_info->channel = ch;
 		} else if (spdk_uuid_compare(&ns_info->uuid, spdk_bdev_get_uuid(ns->bdev)) != 0) {
 			/* A namespace was here before, but was replaced by a new one. */
+			ns_changed = true;
 			spdk_put_io_channel(ns_info->channel);
 			memset(ns_info, 0, sizeof(*ns_info));
 
@@ -986,6 +993,14 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 					return -EINVAL;
 				}
 				ns_info->reg_hostid[j++] = reg->hostid;
+			}
+		}
+	}
+
+	if (ns_changed) {
+		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+			if (ctrlr->admin_qpair->group == group) {
+				spdk_nvmf_ctrlr_async_event_ns_notice(ctrlr);
 			}
 		}
 	}
