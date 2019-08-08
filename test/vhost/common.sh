@@ -123,6 +123,7 @@ function vhost_run()
 	local param
 	local vhost_num=0
 	local memory=1024
+	local do_gen_nvme=true
 
 	for param in "$@"; do
 		case $param in
@@ -133,6 +134,7 @@ function vhost_run()
 			--json-path=*) local vhost_json_path="${param#*=}" ;;
 			--memory=*) local memory=${param#*=} ;;
 			--no-pci*) local no_pci="-u" ;;
+			--no-gen-nvme*) local do_gen_nvme=false ;;
 			*)
 				error "Invalid parameter '$param'"
 				return 1
@@ -180,7 +182,7 @@ function vhost_run()
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
 	#do not generate nvmes if pci access is disabled
-	if [[ -z "$no_pci" ]]; then
+	if [[ -z "$no_pci" ]] && $do_gen_nvme; then
 		$rootdir/scripts/gen_nvme.sh "--json" | $rootdir/scripts/rpc.py\
 		 -s $vhost_dir/rpc.sock load_subsystem_config
 	fi
