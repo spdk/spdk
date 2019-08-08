@@ -99,8 +99,8 @@ allocate_conn(void)
 static void
 free_conn(struct spdk_iscsi_conn *conn)
 {
-	free(conn->portal_host);
-	free(conn->portal_port);
+	memset(conn->portal_host, 0, sizeof(conn->portal_host));
+	memset(conn->portal_port, 0, sizeof(conn->portal_port));
 	conn->is_valid = 0;
 }
 
@@ -227,8 +227,8 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 
 	conn->portal = portal;
 	conn->pg_tag = portal->group->tag;
-	conn->portal_host = strdup(portal->host);
-	conn->portal_port = strdup(portal->port);
+	memcpy(conn->portal_host, portal->host, strlen(portal->host));
+	memcpy(conn->portal_port, portal->port, strlen(portal->port));
 	conn->sock = sock;
 
 	conn->state = ISCSI_CONN_STATE_INVALID;
