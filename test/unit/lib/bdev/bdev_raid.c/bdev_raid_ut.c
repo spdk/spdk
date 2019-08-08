@@ -1101,6 +1101,7 @@ create_construct_req(struct rpc_construct_raid_bdev *r, const char *raid_name,
 	g_json_decode_obj_construct = 1;
 	g_json_decode_obj_err = json_decode_obj_err;
 	g_config_level_create = 0;
+	g_test_multi_raids = 0;
 }
 
 static void
@@ -1110,6 +1111,7 @@ create_construct_config(struct rpc_construct_raid_bdev *r, const char *raid_name
 	create_test_req(r, raid_name, bbdev_start_idx, create_base_bdev);
 
 	g_config_level_create = 1;
+	g_test_multi_raids = 0;
 }
 
 static void
@@ -1136,6 +1138,24 @@ create_destroy_req(struct rpc_destroy_raid_bdev *r, const char *raid_name,
 	g_json_decode_obj_construct = 0;
 	g_json_decode_obj_err = json_decode_obj_err;
 	g_config_level_create = 0;
+	g_test_multi_raids = 0;
+}
+
+static void
+create_get_raids_req(struct rpc_get_raid_bdevs *r, const char *category,
+		     uint8_t json_decode_obj_err)
+{
+	r->category = strdup(category);
+	SPDK_CU_ASSERT_FATAL(r->category != NULL);
+
+	g_rpc_req = r;
+	g_rpc_req_size = sizeof(*r);
+	g_rpc_err = 0;
+	g_json_decode_obj_construct = 0;
+	g_json_decode_obj_err = json_decode_obj_err;
+	g_config_level_create = 0;
+	g_test_multi_raids = 1;
+	g_get_raids_count = 0;
 }
 
 static void
@@ -1924,84 +1944,50 @@ test_multi_raid_no_io(void)
 		verify_raid_bdev(&construct_req[i], true, RAID_BDEV_STATE_ONLINE);
 	}
 
-	get_raids_req.category = strdup("all");
-	g_rpc_req = &get_raids_req;
-	g_rpc_req_size = sizeof(get_raids_req);
-	g_rpc_err = 0;
-	g_test_multi_raids = 1;
-	g_json_decode_obj_construct = 0;
+	create_get_raids_req(&get_raids_req, "all", 0);
 	spdk_rpc_get_raid_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	verify_get_raids(construct_req, g_max_raids, g_get_raids_output, g_get_raids_count);
 	for (i = 0; i < g_get_raids_count; i++) {
 		free(g_get_raids_output[i]);
 	}
-	g_get_raids_count = 0;
 
-	get_raids_req.category = strdup("online");
-	g_rpc_req = &get_raids_req;
-	g_rpc_req_size = sizeof(get_raids_req);
-	g_rpc_err = 0;
-	g_json_decode_obj_construct = 0;
+	create_get_raids_req(&get_raids_req, "online", 0);
 	spdk_rpc_get_raid_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	verify_get_raids(construct_req, g_max_raids, g_get_raids_output, g_get_raids_count);
 	for (i = 0; i < g_get_raids_count; i++) {
 		free(g_get_raids_output[i]);
 	}
-	g_get_raids_count = 0;
 
-	get_raids_req.category = strdup("configuring");
-	g_rpc_req = &get_raids_req;
-	g_rpc_req_size = sizeof(get_raids_req);
-	g_rpc_err = 0;
-	g_json_decode_obj_construct = 0;
+	create_get_raids_req(&get_raids_req, "configuring", 0);
 	spdk_rpc_get_raid_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	get_raids_req.category = strdup("offline");
-	g_rpc_req = &get_raids_req;
-	g_rpc_req_size = sizeof(get_raids_req);
-	g_rpc_err = 0;
-	g_json_decode_obj_construct = 0;
+	create_get_raids_req(&get_raids_req, "offline", 0);
 	spdk_rpc_get_raid_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	get_raids_req.category = strdup("invalid_category");
-	g_rpc_req = &get_raids_req;
-	g_rpc_req_size = sizeof(get_raids_req);
-	g_rpc_err = 0;
-	g_json_decode_obj_construct = 0;
+	create_get_raids_req(&get_raids_req, "invalid_category", 0);
 	spdk_rpc_get_raid_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 1);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	get_raids_req.category = strdup("all");
-	g_rpc_req = &get_raids_req;
-	g_rpc_req_size = sizeof(get_raids_req);
-	g_rpc_err = 0;
-	g_json_decode_obj_err = 1;
-	g_json_decode_obj_construct = 0;
+	create_get_raids_req(&get_raids_req, "all", 1);
 	spdk_rpc_get_raid_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 1);
-	g_json_decode_obj_err = 0;
 	free(get_raids_req.category);
 	CU_ASSERT(g_get_raids_count == 0);
 
-	get_raids_req.category = strdup("all");
-	g_rpc_req = &get_raids_req;
-	g_rpc_req_size = sizeof(get_raids_req);
-	g_rpc_err = 0;
-	g_json_decode_obj_construct = 0;
+	create_get_raids_req(&get_raids_req, "all", 0);
 	spdk_rpc_get_raid_bdevs(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	CU_ASSERT(g_get_raids_count == g_max_raids);
 	for (i = 0; i < g_get_raids_count; i++) {
 		free(g_get_raids_output[i]);
 	}
-	g_get_raids_count = 0;
 
 	for (i = 0; i < g_max_raids; i++) {
 		SPDK_CU_ASSERT_FATAL(construct_req[i].name != NULL);
@@ -2012,7 +1998,6 @@ test_multi_raid_no_io(void)
 		verify_raid_config_present(name, false);
 		verify_raid_bdev_present(name, false);
 	}
-	g_test_multi_raids = 0;
 	raid_bdev_exit();
 	for (i = 0; i < g_max_raids; i++) {
 		free_test_req(&construct_req[i]);
