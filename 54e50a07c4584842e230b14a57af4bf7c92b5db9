@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b46820a3_2032fa03",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-08T18:19:16Z",
+      "side": 1,
+      "message": "I\u0027m concerned that due to a programming mistake somewhere else, we could end up running this on the wrong thread and have no way to detect it. I\u0027m also concerned that if no poll group is created on this thread elsewhere, this will create and then immediately destroy the poll group (due to channel reference counting).\n\nInstead, can we get the io_channel/poll group in iscsi_acceptor_start, then stuff it into the spdk_iscsi_portal object and use it here? We can put the io_channel in iscsi_acceptor_stop.\n\nAs a sanity check here, you can grab the io_channel from the portal, then use that to get the thread and assert that that thread is the same as spdk_get_thread()?",
+      "revId": "54e50a07c4584842e230b14a57af4bf7c92b5db9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b104c005_ca1ce8c9",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1454,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-08T18:19:16Z",
+      "side": 1,
+      "message": "As an extra sanity check, should we assert that spdk_get_thread() returns the same thread as getting the thread from the previous poll group? Like line 1466 did in the previous version with lcores.",
+      "revId": "54e50a07c4584842e230b14a57af4bf7c92b5db9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -71,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "51ac1bb5_461027bb",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-08T18:19:16Z",
+      "side": 1,
+      "message": "I was worried about backward compatibility",
+      "parentUuid": "7862784f_6aa8bf26",
+      "revId": "cca3630d56ec76f6b327469e6535092deb7c806c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2ed94f5c_e2d2d999",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 2
