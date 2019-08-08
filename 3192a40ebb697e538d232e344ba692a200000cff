@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c513443_a1e8db86",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-08T21:39:54Z",
+      "side": 1,
+      "message": "I\u0027d suggest removing formatting changes from this patch.  I agree that tabs are preferred instead of spaces.  But better that this patch only touches the num_base_bdev-related fields.",
+      "revId": "3192a40ebb697e538d232e344ba692a200000cff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
