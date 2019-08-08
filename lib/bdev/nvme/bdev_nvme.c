@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
-#include "common.h"
 
 #include "spdk/config.h"
 #include "spdk/conf.h"
@@ -225,7 +224,7 @@ bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-	spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
+	spdk_io_device_unregister(nvme_bdev_ctrlr, bdev_nvme_unregister_cb);
 	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
 	free(nvme_bdev_ctrlr->name);
 	free(nvme_bdev_ctrlr->bdevs);
@@ -526,7 +525,8 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 static int
 bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 {
-	struct spdk_nvme_ctrlr *ctrlr = io_device;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
+	struct spdk_nvme_ctrlr *ctrlr = nvme_bdev_ctrlr->ctrlr;
 	struct nvme_io_channel *ch = ctx_buf;
 	struct spdk_nvme_io_qpair_opts opts;
 
@@ -538,8 +538,8 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	opts.delay_pcie_doorbell = true;
-	opts.io_queue_requests = spdk_max(g_opts.io_queue_requests, opts.io_queue_requests);
-	g_opts.io_queue_requests = opts.io_queue_requests;
+	opts.io_queue_requests = spdk_max(nvme_bdev_ctrlr->opts.io_queue_requests, opts.io_queue_requests);
+	nvme_bdev_ctrlr->opts.io_queue_requests = opts.io_queue_requests;
 
 	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
 
@@ -547,7 +547,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	ch->poller = spdk_poller_register(bdev_nvme_poll, ch, g_opts.nvme_ioq_poll_period_us);
+	ch->poller = spdk_poller_register(bdev_nvme_poll, ch, nvme_bdev_ctrlr->opts.nvme_ioq_poll_period_us);
 	return 0;
 }
 
@@ -565,7 +565,7 @@ bdev_nvme_get_io_channel(void *ctx)
 {
 	struct nvme_bdev *nvme_bdev = ctx;
 
-	return spdk_get_io_channel(nvme_bdev->nvme_bdev_ctrlr->ctrlr);
+	return spdk_get_io_channel(nvme_bdev->nvme_bdev_ctrlr);
 }
 
 static int
@@ -840,6 +840,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	   struct spdk_nvme_qpair *qpair, uint16_t cid)
 {
 	int rc;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = (struct nvme_bdev_ctrlr *)cb_arg;
 	union spdk_nvme_csts_register csts;
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
@@ -854,7 +855,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 		return;
 	}
 
-	switch (g_opts.action_on_timeout) {
+	switch (nvme_bdev_ctrlr->opts.action_on_timeout) {
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
 		if (qpair) {
 			rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid,
@@ -963,21 +964,22 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 	nvme_bdev_ctrlr->prchk_flags = prchk_flags;
+	nvme_bdev_ctrlr->opts = g_opts;
 
-	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
+	spdk_io_device_register(nvme_bdev_ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel),
 				name);
 
 	nvme_ctrlr_create_bdevs(nvme_bdev_ctrlr);
 
 	nvme_bdev_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
-					       g_opts.nvme_adminq_poll_period_us);
+					       nvme_bdev_ctrlr->opts.nvme_adminq_poll_period_us);
 
 	TAILQ_INSERT_TAIL(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 
-	if (g_opts.timeout_us > 0) {
-		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_us,
-				timeout_cb, NULL);
+	if (nvme_bdev_ctrlr->opts.timeout_us > 0) {
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, nvme_bdev_ctrlr->opts.timeout_us,
+				timeout_cb, nvme_bdev_ctrlr);
 	}
 
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_bdev_ctrlr);
