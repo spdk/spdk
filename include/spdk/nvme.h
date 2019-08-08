@@ -49,9 +49,6 @@ extern "C" {
 #include "spdk/nvmf_spec.h"
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
-extern int32_t		spdk_nvme_retry_count;
-
-
 
 /**
  * Opaque handle to a controller. Returned by spdk_nvme_probe()'s attach_cb.
