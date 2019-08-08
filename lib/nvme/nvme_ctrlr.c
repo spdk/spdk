@@ -119,6 +119,10 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 		opts->keep_alive_timeout_ms = MIN_KEEP_ALIVE_TIMEOUT_IN_MS;
 	}
 
+	if (FIELD_OK(transport_retry_count)) {
+		opts->transport_retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT;
+	}
+
 	if (FIELD_OK(io_queue_size)) {
 		opts->io_queue_size = DEFAULT_IO_QUEUE_SIZE;
 	}
