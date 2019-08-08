@@ -1331,8 +1331,6 @@ spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 			ctrlr->changed_ns_list.ns_list[ctrlr->changed_ns_list_count++] = nsid;
 		}
 	}
-
-	spdk_nvmf_ctrlr_async_event_ns_notice(ctrlr);
 }
 
 static void
