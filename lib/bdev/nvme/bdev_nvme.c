@@ -1404,17 +1404,6 @@ bdev_nvme_library_init(void)
 			} else if (!strcasecmp(val, "Abort")) {
 				g_opts.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT;
 			}
-		} else {
-			/* Handle old name for backward compatibility */
-			val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
-			if (val) {
-				SPDK_WARNLOG("ResetControllerOnTimeout was renamed to ActionOnTimeout\n");
-				SPDK_WARNLOG("Please update your configuration file\n");
-
-				if (spdk_conf_section_get_boolval(sp, "ResetControllerOnTimeout", false)) {
-					g_opts.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET;
-				}
-			}
 		}
 	}
 
