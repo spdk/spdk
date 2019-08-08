@@ -110,13 +110,19 @@ function get_vhost_dir()
 function vhost_run()
 {
 	local vhost_name="$1"
+	local run_gen_nvme=true
 
 	if [[ -z "$vhost_name" ]]; then
 		error "vhost name must be provided to vhost_run"
 		return 1
 	fi
-
 	shift
+
+	if [[ "$1" == "--no-gen-nvme" ]]; then
+		notice "Skipping gen_nvmf.sh NVMe bdev configuration"
+		run_gen_nvme=false
+		shift
+	fi
 
 	local vhost_dir="$(get_vhost_dir $vhost_name)"
 	local vhost_app="$rootdir/app/vhost/vhost"
@@ -147,7 +153,7 @@ function vhost_run()
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
 	#do not generate nvmes if pci access is disabled
-	if [[ "$cmd" != *"--no-pci"* ]] && [[ "$cmd" != *"-u"* ]]; then
+	if [[ "$cmd" != *"--no-pci"* ]] && [[ "$cmd" != *"-u"* ]] && $run_gen_nvme; then
 		$rootdir/scripts/gen_nvme.sh "--json" | $rootdir/scripts/rpc.py\
 		 -s $vhost_dir/rpc.sock load_subsystem_config
 	fi
