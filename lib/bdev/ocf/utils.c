@@ -146,9 +146,14 @@ vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
 		return;
 	}
 
+	if (status) {
+		vbdev->mngt_ctx.status = status;
+		vbdev_ocf_mngt_stop(vbdev);
+		return;
+	}
+
 	assert((*vbdev->mngt_ctx.current_step) != NULL);
 
-	vbdev->mngt_ctx.status = status;
 	vbdev->mngt_ctx.poller_fn = NULL;
 
 	vbdev->mngt_ctx.current_step++;
