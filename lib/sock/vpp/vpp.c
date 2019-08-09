@@ -131,6 +131,7 @@ static struct spdk_vpp_main {
 
 	struct spdk_poller *vpp_queue_poller;
 	struct spdk_poller *app_queue_poller;
+	struct spdk_poller *timeout_poller;
 } g_svm;
 
 struct spdk_vpp_sock_group_impl {
@@ -1263,17 +1264,30 @@ err:
 static void
 _spdk_vpp_application_detached(void *arg)
 {
-	spdk_poller_unregister(&g_svm.vpp_queue_poller);
-	spdk_poller_unregister(&g_svm.app_queue_poller);
+	if (g_svm.vpp_initialized) {
+		spdk_poller_unregister(&g_svm.vpp_queue_poller);
+		spdk_poller_unregister(&g_svm.app_queue_poller);
+		spdk_poller_unregister(&g_svm.timeout_poller);
 
-	g_svm.vpp_initialized = false;
-	g_svm.vpp_state = VPP_STATE_START;
-	pthread_mutex_destroy(&g_svm.session_get_lock);
-	vl_socket_client_disconnect();
+		g_svm.vpp_initialized = false;
+		g_svm.vpp_state = VPP_STATE_START;
+		pthread_mutex_destroy(&g_svm.session_get_lock);
+		vl_socket_client_disconnect();
 
-	SPDK_NOTICELOG("Application detached\n");
+		SPDK_NOTICELOG("Application detached\n");
 
-	spdk_net_framework_fini_next();
+		spdk_net_framework_fini_next();
+	}
+}
+
+static int
+_spdk_vpp_application_detached_timeout(void *arg)
+{
+	if (g_svm.vpp_initialized) {
+		/* We need to finish detach on initial thread */
+		spdk_thread_send_msg(g_svm.init_thread, _spdk_vpp_application_detached, NULL);
+	}
+	return 0;
 }
 
 static void
@@ -1282,7 +1296,6 @@ vl_api_application_detach_reply_t_handler(vl_api_application_detach_reply_t *mp)
 	if (mp->retval) {
 		SPDK_ERRLOG("Application detach from VPP failed (%d).\n", ntohl(mp->retval));
 		g_svm.vpp_state = VPP_STATE_FAILED;
-		return;
 	}
 
 	/* We need to finish detach on initial thread */
@@ -1304,6 +1317,9 @@ _spdk_vpp_app_detach(void)
 	bmp->client_index = g_svm.my_client_index;
 	bmp->context = ntohl(0xfeedface);
 	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&bmp);
+
+	g_svm.timeout_poller = spdk_poller_register(_spdk_vpp_application_detached_timeout,
+			       NULL, 10000000);
 
 	return 0;
 }
