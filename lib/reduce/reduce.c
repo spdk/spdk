@@ -931,8 +931,8 @@ _reduce_vol_complete_req(struct spdk_reduce_vol_request *req, int reduce_errno)
 	struct spdk_reduce_vol_request *next_req;
 	struct spdk_reduce_vol *vol = req->vol;
 
-	req->cb_fn(req->cb_arg, reduce_errno);
 	TAILQ_REMOVE(&vol->executing_requests, req, tailq);
+	req->cb_fn(req->cb_arg, reduce_errno);
 
 	TAILQ_FOREACH(next_req, &vol->queued_requests, tailq) {
 		if (next_req->logical_map_index == req->logical_map_index) {
