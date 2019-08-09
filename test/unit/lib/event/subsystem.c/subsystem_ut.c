@@ -49,30 +49,6 @@ ut_event_fn(int rc, void *arg1)
 	global_rc = rc;
 }
 
-struct spdk_event *
-spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
-{
-	struct spdk_event *event = calloc(1, sizeof(*event));
-
-	SPDK_CU_ASSERT_FATAL(event != NULL);
-
-	event->fn = fn;
-	event->arg1 = arg1;
-	event->arg2 = arg2;
-
-	return event;
-}
-
-void spdk_event_call(struct spdk_event *event)
-{
-	if (event != NULL) {
-		if (event->fn != NULL) {
-			event->fn(event->arg1, event->arg2);
-		}
-		free(event);
-	}
-}
-
 static void
 set_up_subsystem(struct spdk_subsystem *subsystem, const char *name)
 {
