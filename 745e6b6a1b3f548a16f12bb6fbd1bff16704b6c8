@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c27232ef_43748912",
+        "filename": "scripts/vagrant/VAGRANT_AUTO.md",
+        "patchSetId": 49
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-08-09T01:59:24Z",
+      "side": 1,
+      "message": "Please add some info about how to get the extension pack.",
+      "range": {
+        "startLine": 15,
+        "startChar": 34,
+        "endLine": 15,
+        "endChar": 69
+      },
+      "revId": "745e6b6a1b3f548a16f12bb6fbd1bff16704b6c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa0932aa_0f3e9b66",
+        "filename": "scripts/vagrant/VAGRANT_AUTO.md",
+        "patchSetId": 49
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-08-09T01:59:24Z",
+      "side": 1,
+      "message": "Please add some info about how to get the vagrant rpm packages.",
+      "range": {
+        "startLine": 16,
+        "startChar": 16,
+        "endLine": 16,
+        "endChar": 36
+      },
+      "revId": "745e6b6a1b3f548a16f12bb6fbd1bff16704b6c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
