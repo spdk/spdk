@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "416f2df3_a1c41aca",
+        "filename": "test/nvmf/target/initiator_timeout.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-09T23:40:21Z",
+      "side": 1,
+      "message": "take this comment out",
+      "revId": "afe01887032af442c250b7257cd9d402c0d05bc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
