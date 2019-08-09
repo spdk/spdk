@@ -20,14 +20,14 @@
             "block_size": 4096,
             "num_blocks": 32768
           },
-          "method": "construct_malloc_bdev"
+          "method": "bdev_malloc_create"
         },
         {
           "params": {
             "block_size": 4096,
             "num_blocks": 32768
           },
-          "method": "construct_malloc_bdev"
+          "method": "bdev_malloc_create"
         }
       ]
     },
