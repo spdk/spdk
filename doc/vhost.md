@@ -267,7 +267,7 @@ EAL:   using IOMMU type 1 (Type 1)
 ~~~
 
 ~~~{.sh}
-host:~# ./scripts/rpc.py construct_malloc_bdev 128 4096 Malloc0
+host:~# ./scripts/rpc.py construct_malloc_bdev 128 4096 -b Malloc0
 Malloc0
 ~~~
 
