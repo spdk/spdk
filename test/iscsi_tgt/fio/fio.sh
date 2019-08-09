@@ -24,14 +24,14 @@ function running_config() {
 	# keep the same iscsiadm configuration to confirm that the
 	#  config file matched the running configuration
 	killprocess $pid
-	trap "iscsicleanup; delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
+	trap 'iscsicleanup; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
 
 	timing_enter start_iscsi_tgt2
 
 	$ISCSI_APP --wait-for-rpc &
 	pid=$!
 	echo "Process pid: $pid"
-	trap "iscsicleanup; killprocess $pid; delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
+	trap 'iscsicleanup; killprocess $pid; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $pid
 
 	$rpc_py load_config < $testdir/iscsi2.json
@@ -68,7 +68,7 @@ $ISCSI_APP --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $pid; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 
@@ -96,7 +96,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 waitforiscsidevices 2
 
-trap "iscsicleanup; killprocess $pid; iscsitestfini $1 $2; delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $pid; iscsitestfini $1 $2; delete_tmp_files; exit 1' SIGINT SIGTERM EXIT
 
 $fio_py -p iscsi -i 4096 -d 1 -t randrw -r 1 -v
 $fio_py -p iscsi -i 131072 -d 32 -t randrw -r 1 -v

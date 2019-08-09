@@ -197,7 +197,7 @@ function nvmfappstart()
 	timing_enter start_nvmf_tgt
 	$NVMF_APP $1 &
 	nvmfpid=$!
-	trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
+	trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $nvmfpid
 	timing_exit start_nvmf_tgt
 }
