@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "186d7e53_c23904b6",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-09T14:17:13Z",
+      "side": 1,
+      "message": "This is hard to read, maybe use `scripts/gen_nvme.sh --json | jq \u0027.config[0].params.traddr`",
+      "range": {
+        "startLine": 35,
+        "startChar": 4,
+        "endLine": 35,
+        "endChar": 97
+      },
+      "revId": "462868aad06c711184965d4d7bd7be637d24c0e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55b683cd_30a4fb3e",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-09T14:17:13Z",
+      "side": 1,
+      "message": "We use BDF here and then translate it to name again, but wouldn\u0027t it be more clear to use the name directly?\nTo get the name, you can use `scripts/gen_nvme.sh --json | jq \u0027.config[0].params.name`",
+      "range": {
+        "startLine": 37,
+        "startChar": 12,
+        "endLine": 37,
+        "endChar": 15
+      },
+      "revId": "462868aad06c711184965d4d7bd7be637d24c0e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73b146b5_47da2a8b",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-09T14:17:13Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 78,
+        "startChar": 11,
+        "endLine": 78,
+        "endChar": 15
+      },
+      "revId": "462868aad06c711184965d4d7bd7be637d24c0e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
