@@ -1,3 +1,6 @@
+from .helpers import deprecated_alias
+
+
 def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
     """Set parameters for the bdev subsystem.
 
@@ -136,7 +139,8 @@ def get_ocf_bdevs(client, name=None):
     return client.call('get_ocf_bdevs', params)
 
 
-def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
+@deprecated_alias('construct_malloc_bdev')
+def bdev_malloc_create(client, num_blocks, block_size, name=None, uuid=None):
     """Construct a malloc block device.
 
     Args:
@@ -153,7 +157,7 @@ def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
         params['name'] = name
     if uuid:
         params['uuid'] = uuid
-    return client.call('construct_malloc_bdev', params)
+    return client.call('bdev_malloc_create', params)
 
 
 def delete_malloc_bdev(client, name):

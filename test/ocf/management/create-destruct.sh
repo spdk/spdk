@@ -22,8 +22,8 @@ trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $spdk_pid
 
-$rpc_py construct_malloc_bdev 101 512 -b Malloc0
-$rpc_py construct_malloc_bdev 101 512 -b Malloc1
+$rpc_py bdev_malloc_create 101 512 -b Malloc0
+$rpc_py bdev_malloc_create 101 512 -b Malloc1
 
 $rpc_py construct_ocf_bdev PartCache wt Malloc0 NonExisting
 

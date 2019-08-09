@@ -168,13 +168,13 @@ function create_bdev_subsystem_config() {
 
 		tgt_rpc construct_split_vbdev $lvol_store_base_bdev 2
 		tgt_rpc construct_split_vbdev Malloc0 3
-		tgt_rpc construct_malloc_bdev 8 4096 --name Malloc3
+		tgt_rpc bdev_malloc_create 8 4096 --name Malloc3
 		tgt_rpc construct_passthru_bdev -b Malloc3 -p PTBdevFromMalloc3
 
 		tgt_rpc construct_null_bdev Null0 32 512
 
-		tgt_rpc construct_malloc_bdev 32 512 --name Malloc0
-		tgt_rpc construct_malloc_bdev 16 4096 --name Malloc1
+		tgt_rpc bdev_malloc_create 32 512 --name Malloc0
+		tgt_rpc bdev_malloc_create 16 4096 --name Malloc1
 
 		expected_notifications+=(
 			bdev_register:${lvol_store_base_bdev}
@@ -215,7 +215,7 @@ function create_bdev_subsystem_config() {
 	fi
 
 	if [[ $SPDK_TEST_CRYPTO -eq 1 ]]; then
-		tgt_rpc construct_malloc_bdev 8 1024 --name MallocForCryptoBdev
+		tgt_rpc bdev_malloc_create 8 1024 --name MallocForCryptoBdev
 		if [[ $(lspci -d:37c8 | wc -l) -eq 0 ]]; then
 			local crypto_dirver=crypto_aesni_mb
 		else
@@ -278,7 +278,7 @@ function cleanup_bdev_subsystem_config() {
 function create_vhost_subsystem_config() {
 	timing_enter $FUNCNAME
 
-	tgt_rpc construct_malloc_bdev 64 1024 --name MallocForVhost0
+	tgt_rpc bdev_malloc_create 64 1024 --name MallocForVhost0
 	tgt_rpc construct_split_vbdev MallocForVhost0 8
 
 	tgt_rpc construct_vhost_scsi_controller   VhostScsiCtrlr0
@@ -297,7 +297,7 @@ function create_vhost_subsystem_config() {
 
 function create_iscsi_subsystem_config() {
 	timing_enter $FUNCNAME
-	tgt_rpc construct_malloc_bdev 64 1024 --name MallocForIscsi0
+	tgt_rpc bdev_malloc_create 64 1024 --name MallocForIscsi0
 	tgt_rpc add_portal_group $PORTAL_TAG 127.0.0.1:$ISCSI_PORT
 	tgt_rpc add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 	tgt_rpc construct_target_node Target3 Target3_alias 'MallocForIscsi0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
@@ -314,8 +314,8 @@ function create_nvmf_subsystem_config() {
 		return 1
 	fi
 
-	tgt_rpc construct_malloc_bdev 8 512 --name MallocForNvmf0
-	tgt_rpc construct_malloc_bdev 4 1024 --name MallocForNvmf1
+	tgt_rpc bdev_malloc_create 8 512 --name MallocForNvmf0
+	tgt_rpc bdev_malloc_create 4 1024 --name MallocForNvmf1
 
 	tgt_rpc nvmf_create_transport -t RDMA -u 8192 -c 0
 	tgt_rpc nvmf_subsystem_create       nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
@@ -375,7 +375,7 @@ function json_config_test_init()
 		create_virtio_initiator_config
 	fi
 
-	tgt_rpc construct_malloc_bdev 8 512 --name MallocBdevForConfigChangeCheck
+	tgt_rpc bdev_malloc_create 8 512 --name MallocBdevForConfigChangeCheck
 
 	timing_exit $FUNCNAME
 }

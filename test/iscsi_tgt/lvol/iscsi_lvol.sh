@@ -48,13 +48,13 @@ for i in $(seq 1 $NUM_LVS); do
 	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 	if [ $i -eq 1 ]; then
 		# construct RAID bdev and put its name in $bdev
-		malloc_bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
-		malloc_bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+		malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
+		malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 		$rpc_py construct_raid_bdev -n raid0 -z 64 -r 0 -b "$malloc_bdevs"
 		bdev="raid0"
 	else
 		# construct malloc bdev and put its name in $bdev
-		bdev=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
+		bdev=$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
 	fi
 	ls_guid=$($rpc_py construct_lvol_store $bdev lvs_$i -c 1048576)
 	LUNs=""

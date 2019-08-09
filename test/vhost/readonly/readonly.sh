@@ -69,7 +69,7 @@ function blk_ro_tc1()
 	local vm_dir="$VHOST_DIR/vms/$vm_no"
 
 	if [[ $disk =~ .*malloc.* ]]; then
-		disk_name=$($rpc_py construct_malloc_bdev 512 4096)
+		disk_name=$($rpc_py bdev_malloc_create 512 4096)
 		if [ $? != 0 ]; then
 			fail "Failed to create malloc bdev"
 		fi

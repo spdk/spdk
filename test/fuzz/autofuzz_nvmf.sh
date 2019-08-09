@@ -32,7 +32,7 @@ trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/nvmf_fuzz.conf; killproc
 waitforlisten $nvmfpid
 $rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
 
-$rpc_py construct_malloc_bdev -b Malloc0 64 512
+$rpc_py bdev_malloc_create -b Malloc0 64 512
 
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0

@@ -26,7 +26,7 @@ waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 4 -b $node_base
 $rpc_py start_subsystem_init
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
-$rpc_py construct_malloc_bdev 512 4096 --name Malloc0
+$rpc_py bdev_malloc_create 512 4096 --name Malloc0
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt

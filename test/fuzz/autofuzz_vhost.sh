@@ -42,7 +42,7 @@ waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 trap 'killprocess $vhostpid; killprocess $fuzzpid; exit 1' SIGINT SIGTERM exit
 
 if [ "$TEST_TRANSPORT" == "bdev" ] || [ "$TEST_TRANSPORT" == "all" ]; then
-    $vhost_rpc_py construct_malloc_bdev -b Malloc0 64 512
+    $vhost_rpc_py bdev_malloc_create -b Malloc0 64 512
     $vhost_rpc_py construct_vhost_blk_controller Vhost.1 Malloc0
 
     # test the vhost blk controller with valid data buffers.
@@ -50,11 +50,11 @@ if [ "$TEST_TRANSPORT" == "bdev" ] || [ "$TEST_TRANSPORT" == "all" ]; then
 fi
 
 if [ "$TEST_TRANSPORT" == "scsi" ] || [ "$TEST_TRANSPORT" == "all" ]; then
-    $vhost_rpc_py construct_malloc_bdev -b Malloc1 64 512
+    $vhost_rpc_py bdev_malloc_create -b Malloc1 64 512
     $vhost_rpc_py construct_vhost_scsi_controller naa.VhostScsi0.1
     $vhost_rpc_py add_vhost_scsi_lun naa.VhostScsi0.1 0 Malloc1
 
-    $vhost_rpc_py construct_malloc_bdev -b Malloc2 64 512
+    $vhost_rpc_py bdev_malloc_create -b Malloc2 64 512
     $vhost_rpc_py construct_vhost_scsi_controller naa.VhostScsi0.2
     $vhost_rpc_py add_vhost_scsi_lun naa.VhostScsi0.2 0 Malloc2
 
