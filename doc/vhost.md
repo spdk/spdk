@@ -118,7 +118,7 @@ This guide will use a malloc bdev (ramdisk) named Malloc0. The following RPC
 will create a 64MB malloc bdev with 512-byte block size.
 
 ~~~{.sh}
-scripts/rpc.py construct_malloc_bdev 64 512 -b Malloc0
+scripts/rpc.py bdev_malloc_create 64 512 -b Malloc0
 ~~~
 
 ## Create a vhost device {#vhost_vdev_create}
@@ -267,7 +267,7 @@ EAL:   using IOMMU type 1 (Type 1)
 ~~~
 
 ~~~{.sh}
-host:~# ./scripts/rpc.py construct_malloc_bdev 128 4096 Malloc0
+host:~# ./scripts/rpc.py bdev_malloc_create 128 4096 Malloc0
 Malloc0
 ~~~
 
@@ -290,7 +290,7 @@ vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_tgt: *NOTICE*: Controller vhost.0: def
 ~~~
 
 ~~~{.sh}
-host:~# ./scripts/rpc.py construct_malloc_bdev 64 512 -b Malloc1
+host:~# ./scripts/rpc.py bdev_malloc_create 64 512 -b Malloc1
 Malloc1
 ~~~
 

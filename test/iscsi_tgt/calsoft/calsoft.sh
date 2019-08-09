@@ -47,7 +47,7 @@ $rpc_py add_iscsi_auth_group 1 -c 'user:root secret:tester'
 $rpc_py set_iscsi_discovery_auth -g 1
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-$rpc_py construct_malloc_bdev -b MyBdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
+$rpc_py bdev_malloc_create -b MyBdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "MyBdev:0" ==> use MyBdev blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64

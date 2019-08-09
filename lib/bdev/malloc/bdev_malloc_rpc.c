@@ -60,7 +60,7 @@ static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
 };
 
 static void
-spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct rpc_construct_malloc req = {NULL};
@@ -110,7 +110,7 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_construct_malloc(&req);
 }
-SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_malloc_create", spdk_rpc_bdev_malloc_create, SPDK_RPC_RUNTIME)
 
 struct rpc_delete_malloc {
 	char *name;

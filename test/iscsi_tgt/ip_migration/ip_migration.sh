@@ -29,7 +29,7 @@ function rpc_config() {
 	# $1 = RPC server address
 	# $2 = Netmask
 	$rpc_py -s $1 add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $2
-	$rpc_py -s $1 construct_malloc_bdev 64 512
+	$rpc_py -s $1 bdev_malloc_create 64 512
 }
 
 function rpc_add_target_node() {
