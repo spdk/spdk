@@ -222,21 +222,21 @@ if __name__ == "__main__":
     p.add_argument('name', nargs='?', default=None, help='name of OCF vbdev or name of cache device or name of core device (optional)')
     p.set_defaults(func=get_ocf_bdevs)
 
-    def construct_malloc_bdev(args):
+    def bdev_malloc_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
-        print_json(rpc.bdev.construct_malloc_bdev(args.client,
+        print_json(rpc.bdev.bdev_malloc_create(args.client,
                                                   num_blocks=int(num_blocks),
                                                   block_size=args.block_size,
                                                   name=args.name,
                                                   uuid=args.uuid))
-    p = subparsers.add_parser('construct_malloc_bdev',
+    p = subparsers.add_parser('bdev_malloc_create',
                               help='Add a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
     p.add_argument(
         'total_size', help='Size of malloc bdev in MB (float > 0)', type=float)
     p.add_argument('block_size', help='Block size for this bdev', type=int)
-    p.set_defaults(func=construct_malloc_bdev)
+    p.set_defaults(func=bdev_malloc_create)
 
     def delete_malloc_bdev(args):
         rpc.bdev.delete_malloc_bdev(args.client,

@@ -324,7 +324,7 @@ class TestCases(object):
         Call construct_lvol_store with correct base bdev name.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct_lvol_store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -353,7 +353,7 @@ class TestCases(object):
         Call construct_lvol_bdev with correct lvol store UUID and size in MiB for this bdev
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Create lvol store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -391,7 +391,7 @@ class TestCases(object):
         size is equal one quarter of the this bdev size.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -435,7 +435,7 @@ class TestCases(object):
         instead of uuid when referencing to lvol store.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -472,9 +472,9 @@ class TestCases(object):
         if they are created on separate logical volume stores.
         """
         # Construct two malloc bdevs
-        base_name_1 = self.c.construct_malloc_bdev(self.total_size,
+        base_name_1 = self.c.bdev_malloc_create(self.total_size,
                                                    self.block_size)
-        base_name_2 = self.c.construct_malloc_bdev(self.total_size,
+        base_name_2 = self.c.bdev_malloc_create(self.total_size,
                                                    self.block_size)
         # Create logical volume stores on created malloc bdevs
         uuid_store_1 = self.c.construct_lvol_store(base_name_1,
@@ -543,7 +543,7 @@ class TestCases(object):
         Call construct_lvol_bdev on a full lvol store.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Create logical volume store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -587,7 +587,7 @@ class TestCases(object):
         friendly name twice on the same logical volume store.
         """
         # Construct malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Create logical volume store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -630,7 +630,7 @@ class TestCases(object):
         Call resize_lvol_bdev with correct logical_volumes name and new size.
         """
         # Construct malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Create lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -703,7 +703,7 @@ class TestCases(object):
         Call resize_lvol_store with size argument bigger than size of base bdev.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on created malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -744,7 +744,7 @@ class TestCases(object):
         Call destroy_lvol_store with correct logical_volumes name
         """
         # Construct malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Create lvol store on created malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -775,7 +775,7 @@ class TestCases(object):
         Call destroy_lvol_store with correct logical volume name
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on created malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -806,7 +806,7 @@ class TestCases(object):
         Call destroy_lvol_store with correct logical_volumes name
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on created malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -848,7 +848,7 @@ class TestCases(object):
         size is equal to one quarter of the this bdev size.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -888,7 +888,7 @@ class TestCases(object):
         Call destroy_lvol_store with correct logical_volumes name.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on create malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1015,7 +1015,7 @@ class TestCases(object):
         Lvol store should be automatically removed on deleting underlying bdev.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on created malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1067,7 +1067,7 @@ class TestCases(object):
         Call construct_lvol_store with base bdev name twice.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on created malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1094,10 +1094,10 @@ class TestCases(object):
         """
         fail_count = 0
         # Create malloc bdev
-        base_name_1 = self.c.construct_malloc_bdev(self.total_size,
+        base_name_1 = self.c.bdev_malloc_create(self.total_size,
                                                    self.block_size)
         # Construct second malloc bdev
-        base_name_2 = self.c.construct_malloc_bdev(self.total_size,
+        base_name_2 = self.c.bdev_malloc_create(self.total_size,
                                                    self.block_size)
         # Construct lvol store on first malloc
         uuid_store_1 = self.c.construct_lvol_store(base_name_1,
@@ -1129,7 +1129,7 @@ class TestCases(object):
         Call construct_lvol_bdev on a full lvol store.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct_lvol_store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1179,7 +1179,7 @@ class TestCases(object):
         Call construct_lvol_store with correct base bdev name.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct_lvol_store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1212,7 +1212,7 @@ class TestCases(object):
         clone_name = "clone"
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct_lvol_store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1277,7 +1277,7 @@ class TestCases(object):
         clone_name = "clone"
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct_lvol_store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1338,7 +1338,7 @@ class TestCases(object):
         clone_name = "clone"
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct_lvol_store on correct, exisitng malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1385,7 +1385,7 @@ class TestCases(object):
         """
         fail_count = 0
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct_lvol_store on correct, exisitng malloc bdev and cluster size equal
         # malloc bdev size in bytes + 1B
@@ -1411,7 +1411,7 @@ class TestCases(object):
         """
         fail_count = 0
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Try construct lvol store on malloc bdev with cluster size 8191
         lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, 8191)
@@ -1434,7 +1434,7 @@ class TestCases(object):
         """
         fail_count = 0
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store with clear method 'none'
         lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, clear_method="none")
@@ -1442,7 +1442,7 @@ class TestCases(object):
         fail_count += self.c.delete_malloc_bdev(base_name)
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store with clear method 'unmap'
         lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, clear_method="unmap")
@@ -1450,7 +1450,7 @@ class TestCases(object):
         fail_count += self.c.delete_malloc_bdev(base_name)
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store with clear method 'write_zeroes'
         lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, clear_method="write_zeroes")
@@ -1471,7 +1471,7 @@ class TestCases(object):
         if we write to created thin provisioned lvol bdev
         """
         # create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # create lvol store on mamloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1551,7 +1551,7 @@ class TestCases(object):
         and check if we can read from this device and it returns zeroes.
         """
         # create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1609,7 +1609,7 @@ class TestCases(object):
         were properly written (fio test with verification).
         """
         # create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -1651,7 +1651,7 @@ class TestCases(object):
         Check thin provisioned bdev resize.
         """
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name, self.lvs_name)
@@ -1725,7 +1725,7 @@ class TestCases(object):
         will cause failures.
         """
         # create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name, self.lvs_name)
@@ -1796,7 +1796,7 @@ class TestCases(object):
         less than total size of lvol store will end with success
         """
         # create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name, self.lvs_name)
@@ -2132,7 +2132,7 @@ class TestCases(object):
         nbd_name0 = "/dev/nbd0"
         snapshot_name = "snapshot0"
         # Construct malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -2186,7 +2186,7 @@ class TestCases(object):
         snapshot_name0 = "snapshot0"
         snapshot_name1 = "snapshot1"
         # Construct mallov bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -2261,7 +2261,7 @@ class TestCases(object):
         nbd_name = "/dev/nbd0"
         snapshot_name = "snapshot"
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -2316,7 +2316,7 @@ class TestCases(object):
         snapshot_name0 = "snapshot0"
         snapshot_name1 = "snapshot1"
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -2363,7 +2363,7 @@ class TestCases(object):
         clone_name = "clone"
         snapshot_name = "snapshot"
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -2426,7 +2426,7 @@ class TestCases(object):
         clone_name0 = "clone0"
         clone_name1 = "clone1"
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Create lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -2499,7 +2499,7 @@ class TestCases(object):
         lbd_name = clone_name1
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Create lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -2588,7 +2588,7 @@ class TestCases(object):
         nbd_name = "/dev/nbd0"
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
 
         # Create lvol store
@@ -2679,7 +2679,7 @@ class TestCases(object):
         nbd_name = "/dev/nbd0"
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
 
         # Create lvol store
@@ -2750,7 +2750,7 @@ class TestCases(object):
         nbd_name = "/dev/nbd0"
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
 
         # Create lvol store
@@ -2850,7 +2850,7 @@ class TestCases(object):
         nbd_name1 = "/dev/nbd1"
         clone_name = "clone0"
         # Construct malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -2914,7 +2914,7 @@ class TestCases(object):
         nbd_name1 = "/dev/nbd1"
         snapshot_name = "snapshot"
         # Construct malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -2994,7 +2994,7 @@ class TestCases(object):
         snapshot_name = "snapshot"
         snapshot_name2 = "snapshot2"
         # Construct malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -3115,7 +3115,7 @@ class TestCases(object):
         bdev_aliases = ["/".join([self.lvs_name, name]) for name in bdev_names]
 
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on created malloc bdev
         lvs_uuid = self.c.construct_lvol_store(base_name,
@@ -3227,9 +3227,9 @@ class TestCases(object):
         bdev_uuids_2 = []
 
         # Construct two malloc bdevs
-        base_bdev_1 = self.c.construct_malloc_bdev(self.total_size,
+        base_bdev_1 = self.c.bdev_malloc_create(self.total_size,
                                                    self.block_size)
-        base_bdev_2 = self.c.construct_malloc_bdev(self.total_size,
+        base_bdev_2 = self.c.bdev_malloc_create(self.total_size,
                                                    self.block_size)
 
         # Create lvol store on each malloc bdev
@@ -3336,7 +3336,7 @@ class TestCases(object):
         fail_count = 0
 
         # Construt malloc bdev
-        base_bdev = self.c.construct_malloc_bdev(self.total_size,
+        base_bdev = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Create lvol store on created malloc bdev
         lvs_uuid = self.c.construct_lvol_store(base_bdev,
@@ -3387,7 +3387,7 @@ class TestCases(object):
         """
         pid_path = path.join(self.path, 'vhost.pid')
         # Create malloc bdev
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        base_name = self.c.bdev_malloc_create(self.total_size,
                                                  self.block_size)
         # Construct lvol store on created malloc bddev
         uuid_store = self.c.construct_lvol_store(base_name,
