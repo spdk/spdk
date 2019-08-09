@@ -107,9 +107,9 @@ class Commands_Rpc(object):
             return 2
         return 0
 
-    def construct_malloc_bdev(self, total_size, block_size):
-        print("INFO: RPC COMMAND construct_malloc_bdev")
-        output = self.rpc.construct_malloc_bdev(total_size, block_size)[0]
+    def bdev_malloc_create(self, total_size, block_size):
+        print("INFO: RPC COMMAND bdev_malloc_create")
+        output = self.rpc.bdev_malloc_create(total_size, block_size)[0]
         return output.rstrip('\n')
 
     def construct_lvol_store(self, base_name, lvs_name, cluster_size=None, clear_method=None):

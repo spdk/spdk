@@ -26,7 +26,7 @@ function migration_tc1_configure_vhost()
 	trap 'migration_tc1_error_handler; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 
 	# Construct shared Malloc Bdev
-	$rpc construct_malloc_bdev -b Malloc0 128 4096
+	$rpc bdev_malloc_create -b Malloc0 128 4096
 
 	# And two controllers - one for each VM. Both are using the same Malloc Bdev as LUN 0
 	$rpc construct_vhost_scsi_controller $incoming_vm_ctrlr
