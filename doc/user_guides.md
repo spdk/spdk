@@ -9,3 +9,4 @@
 - @subpage blobfs
 - @subpage jsonrpc
 - @subpage jsonrpc_proxy
+- @subpage rpc_method_example
