@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66ab9972_77e92c58",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-09T17:19:42Z",
+      "side": 1,
+      "message": "do we need to call this?\n\nfor PCIe, this sets asq, ace and aqa - I don\u0027t think we need to do that before clearing EN bit",
+      "revId": "3c0687b40e405199e48e8a82e6f40a462b257871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e74bd2cd_21174602",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2400,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-09T17:19:42Z",
+      "side": 1,
+      "message": "do we need to limit this to PCIe?  I\u0027m thinking it would be ok to do this for fabrics controllers also\n\nplease update the changelog if you remove the PCIe restriction",
+      "revId": "3c0687b40e405199e48e8a82e6f40a462b257871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
