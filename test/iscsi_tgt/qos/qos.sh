@@ -59,7 +59,7 @@ timing_enter start_iscsi_tgt
 $ISCSI_APP &
 pid=$!
 echo "Process pid: $pid"
-trap "killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $pid
 echo "iscsi_tgt is listening. Running tests..."
 
@@ -78,7 +78,7 @@ sleep 1
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
-trap "iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 # Run FIO without any QOS limits to determine the raw performance
 run_fio Malloc0

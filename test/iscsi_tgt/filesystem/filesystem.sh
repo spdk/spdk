@@ -33,7 +33,7 @@ $ISCSI_APP -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 16
@@ -66,7 +66,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 waitforiscsidevices 1
 
-trap "remove_backends; umount /mnt/device; rm -rf /mnt/device; iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'remove_backends; umount /mnt/device; rm -rf /mnt/device; iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 mkdir -p /mnt/device
 

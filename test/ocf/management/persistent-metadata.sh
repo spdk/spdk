@@ -50,7 +50,7 @@ killprocess $spdk_pid
 $rootdir/app/iscsi_tgt/iscsi_tgt -c $curdir/config &
 spdk_pid=$!
 
-trap "killprocess $spdk_pid; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $spdk_pid
 

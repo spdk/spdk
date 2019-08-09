@@ -33,13 +33,13 @@ $VHOST_APP &>$output_dir/vhost_fuzz_tgt_output.txt &
 vhostpid=$!
 waitforlisten $vhostpid
 
-trap "killprocess $vhostpid; exit 1" SIGINT SIGTERM exit
+trap 'killprocess $vhostpid; exit 1' SIGINT SIGTERM exit
 
 $FUZZ_APP -t $TEST_TIMEOUT 2>$output_dir/vhost_autofuzz_output1.txt &
 fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 
-trap "killprocess $vhostpid; killprocess $fuzzpid; exit 1" SIGINT SIGTERM exit
+trap 'killprocess $vhostpid; killprocess $fuzzpid; exit 1' SIGINT SIGTERM exit
 
 if [ "$TEST_TRANSPORT" == "bdev" ] || [ "$TEST_TRANSPORT" == "all" ]; then
     $vhost_rpc_py construct_malloc_bdev -b Malloc0 64 512

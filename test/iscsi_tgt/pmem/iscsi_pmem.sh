@@ -22,7 +22,7 @@ $ISCSI_APP -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "iscsicleanup; killprocess $pid; rm -f /tmp/pool_file*; exit 1" SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $pid; rm -f /tmp/pool_file*; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 16

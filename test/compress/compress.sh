@@ -20,7 +20,7 @@ function compress_err_cleanup() {
 mkdir -p /tmp/pmem
 $rootdir/test/app/bdev_svc/bdev_svc &
 bdev_svc_pid=$!
-trap "killprocess $bdev_svc_pid; compress_err_cleanup; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $bdev_svc_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdev_svc_pid
 bdf=$(iter_pci_class_code 01 08 02 | head -1)
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
@@ -36,7 +36,7 @@ killprocess $bdev_svc_pid
 timing_enter compress_test
 $rootdir/test/bdev/bdevio/bdevio -w &
 bdevio_pid=$!
-trap "killprocess $bdevio_pid; compress_err_cleanup; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $bdevio_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevio_pid
 $rpc_py set_compress_pmd -p 2
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
@@ -56,7 +56,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 fi
 $rootdir/test/bdev/bdevperf/bdevperf -z -q $qd  -o $iosize -w verify -t $runtime &
 bdevperf_pid=$!
-trap "killprocess $bdevperf_pid; compress_err_cleanup; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $bdevperf_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid
 $rpc_py set_compress_pmd -p 2
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
