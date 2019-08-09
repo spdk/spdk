@@ -116,7 +116,7 @@ waitforlisten $perfpid /var/tmp/bdevperf.sock
 $rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
 
 # Expand the trap to clean up bdevperf if something goes wrong
-trap "process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid || true; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
+trap 'process_shm --id $NVMF_APP_SHM_ID; kill -9 $perfpid || true; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 
 waitforio /var/tmp/bdevperf.sock Nvme1n1
 

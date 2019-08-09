@@ -24,7 +24,7 @@ fi
 
 ocssd_original_dirver="$(basename $(readlink /sys/bus/pci/devices/$device/driver))"
 
-trap "at_ftl_exit" SIGINT SIGTERM EXIT
+trap 'at_ftl_exit' SIGINT SIGTERM EXIT
 
 # OCSSD is blacklisted so bind it to vfio/uio driver before testing
 PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="" ./scripts/setup.sh
@@ -77,7 +77,7 @@ if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	$rootdir/app/spdk_tgt/spdk_tgt &
 	svc_pid=$!
 
-	trap "killprocess $svc_pid; exit 1" SIGINT SIGTERM EXIT
+	trap 'killprocess $svc_pid; exit 1' SIGINT SIGTERM EXIT
 
 	waitforlisten $svc_pid
 	uuid=$($rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3 | jq -r '.uuid')

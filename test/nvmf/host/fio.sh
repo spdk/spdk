@@ -21,7 +21,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -m 0xF &
 nvmfpid=$!
 
-trap "process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1" SIGINT SIGTERM EXIT
+trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192

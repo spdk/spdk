@@ -14,7 +14,7 @@ timing_enter fuzz_test
 $NVMF_APP -m 0xF >$output_dir/nvmf_fuzz_tgt_output.txt 2>&1 &
 nvmfpid=$!
 
-trap "process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/nvmf_fuzz.conf; killprocess $nvmfpid; nvmftestfini $1; exit 1" SIGINT SIGTERM EXIT
+trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/nvmf_fuzz.conf; killprocess $nvmfpid; nvmftestfini $1; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192

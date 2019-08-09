@@ -51,7 +51,7 @@ for ((i = 0; i < 2; i++)); do
 	pid=$!
 	echo "Process pid: $pid"
 
-	trap "kill_all_iscsi_target; exit 1" SIGINT SIGTERM EXIT
+	trap 'kill_all_iscsi_target; exit 1' SIGINT SIGTERM EXIT
 
 	waitforlisten $pid $rpc_addr
 	$rpc_py -s $rpc_addr set_iscsi_options -o 30 -a 64
@@ -61,7 +61,7 @@ for ((i = 0; i < 2; i++)); do
 	timing_exit start_iscsi_tgt_$i
 
 	rpc_config $rpc_addr $NETMASK
-	trap "kill_all_iscsi_target;  iscsitestfini $1 $2; exit 1" \
+	trap 'kill_all_iscsi_target;  iscsitestfini $1 $2; exit 1' \
 		SIGINT SIGTERM EXIT
 done
 

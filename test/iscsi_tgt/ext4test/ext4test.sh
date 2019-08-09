@@ -20,7 +20,7 @@ $ISCSI_APP --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap '$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 4 -b $node_base

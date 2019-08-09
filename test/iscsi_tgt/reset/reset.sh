@@ -27,7 +27,7 @@ $ISCSI_APP --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $pid; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 16
@@ -56,7 +56,7 @@ $fio_py -p iscsi -i 512 -d 1 -t read -r 60 &
 fiopid=$!
 echo "FIO pid: $fiopid"
 
-trap "iscsicleanup; killprocess $pid; killprocess $fiopid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $pid; killprocess $fiopid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 # Do 3 resets while making sure iscsi_tgt and fio are still running
 for i in 1 2 3; do
