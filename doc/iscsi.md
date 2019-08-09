@@ -233,8 +233,8 @@ $ ./app/iscsi_tgt/iscsi_tgt
 Construct two 64MB Malloc block devices with 512B sector size "Malloc0" and "Malloc1":
 
 ```
-$ ./scripts/rpc.py construct_malloc_bdev -b Malloc0 64 512
-$ ./scripts/rpc.py construct_malloc_bdev -b Malloc1 64 512
+$ ./scripts/rpc.py bdev_malloc_create -b Malloc0 64 512
+$ ./scripts/rpc.py bdev_malloc_create -b Malloc1 64 512
 ```
 
 Create new portal group with id 1, and address 10.0.0.1:3260:

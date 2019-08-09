@@ -24,8 +24,8 @@ start_spdk
 
 # Hotplug case
 
-$rpc_py construct_malloc_bdev   1 512 -b Core0
-$rpc_py construct_malloc_bdev   1 512 -b Core1
+$rpc_py bdev_malloc_create   1 512 -b Core0
+$rpc_py bdev_malloc_create   1 512 -b Core1
 
 $rpc_py construct_ocf_bdev C1 wt Cache Core0
 $rpc_py construct_ocf_bdev C2 wt Cache Core1
@@ -33,7 +33,7 @@ $rpc_py construct_ocf_bdev C2 wt Cache Core1
 $rpc_py get_ocf_bdevs | jq -e \
 	'any(select(.started)) == false'
 
-$rpc_py construct_malloc_bdev 101 512 -b Cache
+$rpc_py bdev_malloc_create 101 512 -b Cache
 
 $rpc_py get_ocf_bdevs | jq -e \
 	'all(select(.started)) == true'
@@ -57,9 +57,9 @@ stop_spdk
 # Hotremove case
 start_spdk
 
-$rpc_py construct_malloc_bdev 101 512 -b Cache
-$rpc_py construct_malloc_bdev 101 512 -b Malloc
-$rpc_py construct_malloc_bdev   1 512 -b Core
+$rpc_py bdev_malloc_create 101 512 -b Cache
+$rpc_py bdev_malloc_create 101 512 -b Malloc
+$rpc_py bdev_malloc_create   1 512 -b Core
 
 $rpc_py construct_ocf_bdev C1 wt Cache Malloc
 $rpc_py construct_ocf_bdev C2 wt Cache Core
