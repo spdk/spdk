@@ -96,7 +96,7 @@ notice "..."
 aio_file="$testdir/aio_disk"
 dd if=/dev/zero of=$aio_file bs=1M count=512
 $rpc_py construct_aio_bdev $aio_file Aio0 512
-$rpc_py construct_malloc_bdev -b Malloc0 256 512
+$rpc_py bdev_malloc_create -b Malloc0 256 512
 $rpc_py get_bdevs
 
 # Construct vhost controllers

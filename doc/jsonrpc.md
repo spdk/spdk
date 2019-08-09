@@ -296,7 +296,7 @@ Example response:
     "construct_nvme_bdev",
     "construct_null_bdev",
     "delete_malloc_bdev",
-    "construct_malloc_bdev",
+    "bdev_malloc_create",
     "delete_ftl_bdev",
     "construct_ftl_bdev",
     "get_lvol_stores",
@@ -469,7 +469,7 @@ Example response:
         "name": "Malloc0",
         "uuid": "913fc008-79a7-447f-b2c4-c73543638c31"
       },
-      "method": "construct_malloc_bdev"
+      "method": "bdev_malloc_create"
     },
     {
       "params": {
@@ -478,7 +478,7 @@ Example response:
         "name": "Malloc1",
         "uuid": "dd5b8f6e-b67a-4506-b606-7fff5a859920"
       },
-      "method": "construct_malloc_bdev"
+      "method": "bdev_malloc_create"
     }
   ]
 }
@@ -1151,7 +1151,7 @@ Example response:
 }
 ~~~
 
-## construct_malloc_bdev {#rpc_construct_malloc_bdev}
+## bdev_malloc_create {#rpc_bdev_malloc_create}
 
 Construct @ref bdev_config_malloc
 
@@ -1181,7 +1181,7 @@ Example request:
     "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90"
   },
   "jsonrpc": "2.0",
-  "method": "construct_malloc_bdev",
+  "method": "bdev_malloc_create",
   "id": 1
 }
 ~~~

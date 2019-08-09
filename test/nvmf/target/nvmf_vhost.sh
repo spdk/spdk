@@ -40,7 +40,7 @@ waitforlisten $vhostpid $NVMF_SOCK
 trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $vhostpid nvmftestfini; exit 1" SIGINT SIGTERM EXIT
 
 # Configure NVMF tgt on host machine
-malloc_bdev="$($NVMF_RPC construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+malloc_bdev="$($NVMF_RPC bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
 $NVMF_RPC nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -p 4
 $NVMF_RPC nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001

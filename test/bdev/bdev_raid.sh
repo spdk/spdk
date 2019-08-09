@@ -61,8 +61,8 @@ function on_error_exit() {
 function configure_raid_bdev() {
 	rm -rf $testdir/rpcs.txt
 
-	echo construct_malloc_bdev 32 512 -b Base_1 >> $testdir/rpcs.txt
-	echo construct_malloc_bdev 32 512 -b Base_2 >> $testdir/rpcs.txt
+	echo bdev_malloc_create 32 512 -b Base_1 >> $testdir/rpcs.txt
+	echo bdev_malloc_create 32 512 -b Base_2 >> $testdir/rpcs.txt
 	echo construct_raid_bdev -z 64 -r 0 -b \"Base_1 Base_2\" -n raid0 >> $testdir/rpcs.txt
 	$rpc_py < $testdir/rpcs.txt
 

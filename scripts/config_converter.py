@@ -12,7 +12,7 @@ bdev_dict["construct_split_vbdev"] = []
 bdev_dict["set_bdev_nvme_options"] = []
 bdev_dict["construct_nvme_bdev"] = []
 bdev_dict["set_bdev_nvme_hotplug"] = []
-bdev_dict["construct_malloc_bdev"] = []
+bdev_dict["bdev_malloc_create"] = []
 bdev_dict["construct_aio_bdev"] = []
 bdev_dict["construct_pmem_bdev"] = []
 bdev_dict["construct_virtio_dev"] = []
@@ -196,7 +196,7 @@ def get_malloc_bdev_json(config, section):
                 "num_blocks": params[1][3] * 1024 * 1024 / params[2][3],
                 "name": "Malloc%s" % lun
             },
-            "method": "construct_malloc_bdev"
+            "method": "bdev_malloc_create"
         })
 
     return malloc_json
