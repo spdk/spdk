@@ -54,7 +54,10 @@
 #define NUM_MAX_XFORMS 2
 #define NUM_MAX_INFLIGHT_OPS 128
 #define DEFAULT_WINDOW_SIZE 15
-#define MAX_MBUFS_PER_OP REDUCE_MAX_IOVECS
+/* We need extra mbufs per operation to accomodate host buffers that
+ *  span a 2MB boundary.
+ */
+#define MAX_MBUFS_PER_OP (REDUCE_MAX_IOVECS + 16)
 #define CHUNK_SIZE (1024 * 16)
 #define COMP_BDEV_NAME "compress"
 #define BACKING_IO_SZ (4 * 1024)
@@ -437,7 +440,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	struct rte_mbuf *src_mbufs[MAX_MBUFS_PER_OP];
 	struct rte_mbuf *dst_mbufs[MAX_MBUFS_PER_OP];
 	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
-	uint64_t total_length = 0;
+	uint64_t temp_length, phys_addr, total_length = 0;
 	uint8_t *current_src_base = NULL;
 	uint8_t *current_dst_base = NULL;
 	int iov_index;
@@ -477,21 +480,47 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	 */
 
 	/* Setup src mbufs */
-	for (iov_index = 0; iov_index < src_iovcnt; iov_index++) {
+	iov_index = 0;
+	while (iov_index < src_iovcnt) {
 
 		current_src_base = src_iovs[iov_index].iov_base;
 		total_length += src_iovs[iov_index].iov_len;
 		assert(src_mbufs[iov_index] != NULL);
 		src_mbufs[iov_index]->userdata = reduce_cb_arg;
+		temp_length = src_iovs[iov_index].iov_len;
+		phys_addr = spdk_vtophys((void *)current_src_base, &temp_length);
 
 		rte_pktmbuf_attach_extbuf(src_mbufs[iov_index],
 					  current_src_base,
-					  spdk_vtophys((void *)current_src_base, NULL),
-					  src_iovs[iov_index].iov_len,
+					  phys_addr,
+					  temp_length,
 					  &g_shinfo);
-		rte_pktmbuf_append(src_mbufs[iov_index], src_iovs[iov_index].iov_len);
+		rte_pktmbuf_append(src_mbufs[iov_index], temp_length);
 
 		if (iov_index > 0) {
+			rte_pktmbuf_chain(src_mbufs[0], src_mbufs[iov_index]);
+		}
+		iov_index++;
+
+		/* If we crossed 2 2MB boundary we need another mbuf for the remainder */
+		if (temp_length < src_iovs[iov_index - 1].iov_len) {
+			rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&src_mbufs[iov_index], 1);
+			if (rc) {
+				SPDK_ERRLOG("ERROR trying to get src_mbufs!\n");
+				goto error_get_dst;
+			}
+			current_src_base += temp_length;
+			src_iovs[iov_index].iov_len = src_iovs[iov_index - 1].iov_len - temp_length;
+			temp_length = src_iovs[iov_index].iov_len;
+			phys_addr = spdk_vtophys((void *)current_src_base, &temp_length);
+			assert(temp_length == src_iovs[iov_index].iov_len);
+
+			rte_pktmbuf_attach_extbuf(src_mbufs[iov_index],
+						  current_src_base,
+						  phys_addr,
+						  temp_length,
+						  &g_shinfo);
+			rte_pktmbuf_append(src_mbufs[iov_index], temp_length);
 			rte_pktmbuf_chain(src_mbufs[0], src_mbufs[iov_index]);
 		}
 	}
@@ -501,21 +530,48 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	comp_op->src.length = total_length;
 
 	/* setup dst mbufs, for the current test being used with this code there's only one vector */
-	for (iov_index = 0; iov_index < dst_iovcnt; iov_index++) {
+	iov_index = 0;
+	while (iov_index < dst_iovcnt) {
 
 		current_dst_base = dst_iovs[iov_index].iov_base;
+		temp_length = dst_iovs[iov_index].iov_len;
+		phys_addr = spdk_vtophys((void *)current_dst_base, &temp_length);
 
 		rte_pktmbuf_attach_extbuf(dst_mbufs[iov_index],
 					  current_dst_base,
-					  spdk_vtophys((void *)current_dst_base, NULL),
-					  dst_iovs[iov_index].iov_len,
+					  phys_addr,
+					  temp_length,
 					  &g_shinfo);
-		rte_pktmbuf_append(dst_mbufs[iov_index], dst_iovs[iov_index].iov_len);
+		rte_pktmbuf_append(dst_mbufs[iov_index], temp_length);
 
 		if (iov_index > 0) {
 			rte_pktmbuf_chain(dst_mbufs[0], dst_mbufs[iov_index]);
 		}
+		iov_index++;
+
+		/* If we crossed 2 2MB boundary we need another mbuf for the remainder */
+		if (temp_length < dst_iovs[iov_index - 1].iov_len) {
+			rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&dst_mbufs[iov_index], 1);
+			if (rc) {
+				SPDK_ERRLOG("ERROR trying to get dst_mbufs!\n");
+				goto error_get_dst;
+			}
+			current_dst_base += temp_length;
+			dst_iovs[iov_index].iov_len = dst_iovs[iov_index - 1].iov_len - temp_length;
+			temp_length = dst_iovs[iov_index].iov_len;
+			phys_addr = spdk_vtophys((void *)current_dst_base, &temp_length);
+			assert(temp_length == dst_iovs[iov_index].iov_len);
+
+			rte_pktmbuf_attach_extbuf(dst_mbufs[iov_index],
+						  current_dst_base,
+						  phys_addr,
+						  temp_length,
+						  &g_shinfo);
+			rte_pktmbuf_append(dst_mbufs[iov_index], temp_length);
+			rte_pktmbuf_chain(dst_mbufs[0], dst_mbufs[iov_index]);
+		}
 	}
+
 	comp_op->m_dst = dst_mbufs[0];
 	comp_op->dst.offset = 0;
 
