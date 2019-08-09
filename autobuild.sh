@@ -77,8 +77,15 @@ timing_enter "$make_timing_label"
 
 $MAKE $MAKEFLAGS clean
 if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
-	./configure $config_params --with-shared
+	# Don't build with any external libraries for now.
+	./configure $config_params --with-shared --without-vpp --without-isal
 	$MAKE $MAKEFLAGS
+
+	# run a quick example application to make sure that the linking worked.
+	sudo ./scripts/setup.sh
+	sudo LD_LIBRARY_PATH=./build/lib/:./dpdk/build/lib/ ./examples/bdev/hello_world/hello_bdev -c ./examples/bdev/hello_world/bdev.conf
+	sudo ./scripts/setup.sh reset
+
 	$MAKE $MAKEFLAGS clean
 	report_test_completion "shared_object_build"
 fi
