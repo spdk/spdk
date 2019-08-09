@@ -93,6 +93,8 @@ struct spdk_scsi_dev_vhost_state {
 };
 
 struct spdk_vhost_scsi_dev {
+	int ref;
+	bool registered;
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 
@@ -195,6 +197,10 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 	}
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: removed target 'Target %u'\n",
 		     svdev->vdev.name, scsi_tgt_num);
+
+	if (--svdev->ref == 0 && svdev->registered == false) {
+		free(svdev);
+	}
 }
 
 static void
@@ -835,7 +841,11 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 
 	if (rc) {
 		free(svdev);
+		spdk_vhost_unlock();
+		return rc;
 	}
+
+	svdev->registered = true;
 
 	spdk_vhost_unlock();
 	return rc;
@@ -867,8 +877,12 @@ vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 	if (rc != 0) {
 		return rc;
 	}
+	svdev->registered = false;
 
-	free(svdev);
+	if (svdev->ref == 0) {
+		free(svdev);
+	}
+
 	return 0;
 }
 
@@ -926,6 +940,7 @@ vhost_scsi_dev_add_tgt_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
 	/* All sessions have added the target */
 	assert(vhost_sdev->status == VHOST_SCSI_DEV_ADDING);
 	vhost_sdev->status = VHOST_SCSI_DEV_PRESENT;
+	svdev->ref++;
 }
 
 static int
