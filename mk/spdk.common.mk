@@ -42,6 +42,7 @@ endif
 include $(SPDK_ROOT_DIR)/mk/config.mk
 -include $(SPDK_ROOT_DIR)/mk/cc.flags.mk
 -include $(SPDK_ROOT_DIR)/mk/cc.mk
+include $(CONFIG_ENV)/env.mk
 
 ifneq ($(V),1)
 Q ?= @
@@ -196,8 +197,6 @@ ifeq ($(OS),FreeBSD)
 LDFLAGS += --coverage
 endif
 endif
-
-include $(CONFIG_ENV)/env.mk
 
 ifeq ($(CONFIG_ASAN),y)
 COMMON_CFLAGS += -fsanitize=address
