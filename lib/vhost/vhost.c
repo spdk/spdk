@@ -675,7 +675,6 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		   const struct spdk_vhost_dev_backend *backend)
 {
 	char path[PATH_MAX];
-	struct stat file_stat;
 	struct spdk_cpuset *cpumask;
 	int rc;
 
@@ -711,51 +710,11 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		goto out;
 	}
 
-	/* Register vhost driver to handle vhost messages. */
-	if (stat(path, &file_stat) != -1) {
-		if (!S_ISSOCK(file_stat.st_mode)) {
-			SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
-				    "The file already exists and is not a socket.\n",
-				    path);
-			rc = -EIO;
-			goto out;
-		} else if (unlink(path) != 0) {
-			SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
-				    "The socket already exists and failed to unlink.\n",
-				    path);
-			rc = -EIO;
-			goto out;
-		}
-	}
-
-	if (rte_vhost_driver_register(path, 0) != 0) {
-		SPDK_ERRLOG("Could not register controller %s with vhost library\n", name);
-		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
-		rc = -EIO;
-		goto out;
-	}
-	if (rte_vhost_driver_set_features(path, backend->virtio_features) ||
-	    rte_vhost_driver_disable_features(path, backend->disabled_features)) {
-		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", name);
-
-		rte_vhost_driver_unregister(path);
-		rc = -EIO;
-		goto out;
-	}
-
-	if (rte_vhost_driver_callback_register(path, &g_spdk_vhost_ops) != 0) {
-		rte_vhost_driver_unregister(path);
-		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", name);
-		rc = -EIO;
-		goto out;
-	}
-
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	if (vdev->name == NULL || vdev->path == NULL) {
 		free(vdev->name);
 		free(vdev->path);
-		rte_vhost_driver_unregister(path);
 		rc = -EIO;
 		goto out;
 	}
@@ -769,12 +728,7 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 	vhost_dev_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
 				 SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
 
-	vhost_dev_install_rte_compat_hooks(vdev);
-
-	if (rte_vhost_driver_start(path) != 0) {
-		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n",
-			    name, errno, spdk_strerror(errno));
-		rte_vhost_driver_unregister(path);
+	if (vhost_register_unix_socket(path, name, backend->virtio_features, backend->disabled_features)) {
 		TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
 		free(vdev->name);
 		free(vdev->path);
