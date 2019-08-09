@@ -1092,8 +1092,7 @@ __fs_create_file_done(void *arg, int fserrno)
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	args->rc = fserrno;
-	sem_post(args->sem);
+	__wake_caller(args, fserrno);
 	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s\n", args->op.create.name);
 }
 
