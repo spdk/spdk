@@ -85,9 +85,9 @@ mngt_poll_fn(void *opaque)
 	return 0;
 }
 
-int
-vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
-		     vbdev_ocf_mngt_callback cb, void *cb_arg)
+int vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
+			 vbdev_ocf_mngt_callback cb, void *cb_arg,
+			 enum mngt_ctx_mode mode)
 {
 	if (vbdev->mngt_ctx.current_step) {
 		return -EBUSY;
@@ -103,6 +103,7 @@ vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
 	vbdev->mngt_ctx.current_step = path;
 	vbdev->mngt_ctx.cb = cb;
 	vbdev->mngt_ctx.cb_arg = cb_arg;
+	vbdev->mngt_ctx.mode = mode;
 
 	(*vbdev->mngt_ctx.current_step)(vbdev);
 
@@ -146,9 +147,14 @@ vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
 		return;
 	}
 
+	if (status && vbdev->mngt_ctx.mode == mngt_ctx_mode_normal) {
+		vbdev->mngt_ctx.status = status;
+		vbdev_ocf_mngt_stop(vbdev);
+		return;
+	}
+
 	assert((*vbdev->mngt_ctx.current_step) != NULL);
 
-	vbdev->mngt_ctx.status = status;
 	vbdev->mngt_ctx.poller_fn = NULL;
 
 	vbdev->mngt_ctx.current_step++;

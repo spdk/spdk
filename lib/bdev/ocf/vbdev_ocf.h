@@ -93,6 +93,12 @@ struct vbdev_ocf_config {
 typedef void (*vbdev_ocf_mngt_fn)(struct vbdev_ocf *);
 typedef void (*vbdev_ocf_mngt_callback)(int, struct vbdev_ocf *, void *);
 
+/* Types of asynchronous management operations */
+enum mngt_ctx_mode {
+	mngt_ctx_mode_normal = 0,
+	mngt_ctx_mode_unregister = 1
+};
+
 /* Context for asynchronous management operations
  * Single management operation usually contains a list of sub procedures,
  * this structure handles sharing between those sub procedures */
@@ -107,6 +113,8 @@ struct vbdev_ocf_mngt_ctx {
 	vbdev_ocf_mngt_fn                   poller_fn;
 	/* Poller timeout time stamp - when the poller should stop with error */
 	uint64_t                            timeout_ts;
+	/* Current mode of asynchronous management operations */
+	enum mngt_ctx_mode		    mode;
 
 	/* Status of management operation */
 	int                                 status;
