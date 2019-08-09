@@ -19,13 +19,13 @@ $VHOST_APP >$output_dir/vhost_fuzz_tgt_output.txt 2>&1 &
 vhostpid=$!
 waitforlisten $vhostpid
 
-trap "killprocess $vhostpid; exit 1" SIGINT SIGTERM exit
+trap 'killprocess $vhostpid; exit 1' SIGINT SIGTERM exit
 
 $FUZZ_APP -t 10 2>$output_dir/vhost_fuzz_output1.txt &
 fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 
-trap "killprocess $vhostpid; killprocess $fuzzpid; exit 1" SIGINT SIGTERM exit
+trap 'killprocess $vhostpid; killprocess $fuzzpid; exit 1' SIGINT SIGTERM exit
 
 $vhost_rpc_py construct_malloc_bdev -b Malloc0 64 512
 $vhost_rpc_py construct_vhost_blk_controller Vhost.1 Malloc0
@@ -54,7 +54,7 @@ fuzzpid=$!
 waitforlisten $fuzzpid $FUZZ_RPC_SOCK
 
 # re-evaluate fuzzpid
-trap "killprocess $vhostpid; killprocess $fuzzpid; exit 1" SIGINT SIGTERM exit
+trap 'killprocess $vhostpid; killprocess $fuzzpid; exit 1' SIGINT SIGTERM exit
 
 $fuzz_specific_rpc_py fuzz_vhost_create_dev -s $(pwd)/Vhost.1 -b -v
 $fuzz_specific_rpc_py fuzz_vhost_create_dev -s $(pwd)/naa.VhostScsi0.1 -l -v

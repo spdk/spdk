@@ -16,7 +16,7 @@ fi
 
 timing_enter rbd_setup
 rbd_setup $TARGET_IP $TARGET_NAMESPACE
-trap "rbd_cleanup; exit 1" SIGINT SIGTERM EXIT
+trap 'rbd_cleanup; exit 1' SIGINT SIGTERM EXIT
 timing_exit rbd_setup
 
 timing_enter rbd
@@ -29,7 +29,7 @@ timing_enter start_iscsi_tgt
 $ISCSI_APP -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &
 pid=$!
 
-trap "killprocess $pid; rbd_cleanup; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $pid; rbd_cleanup; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 16
@@ -52,7 +52,7 @@ sleep 1
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
-trap "iscsicleanup; killprocess $pid; rbd_cleanup; exit 1" SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $pid; rbd_cleanup; exit 1' SIGINT SIGTERM EXIT
 
 $fio_py -p iscsi -i 4096 -d 1 -t randrw -r 1 -v
 $fio_py -p iscsi -i 131072 -d 32 -t randrw -r 1 -v

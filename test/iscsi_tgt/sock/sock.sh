@@ -80,7 +80,7 @@ echo "Testing client path"
 
 # start echo server using socat
 $SOCAT_APP tcp-l:$ISCSI_PORT,fork,bind=$INITIATOR_IP exec:'/bin/cat' & server_pid=$!
-trap "killprocess $server_pid;iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $server_pid;iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitfortcp $server_pid $INITIATOR_IP:$ISCSI_PORT
 
@@ -107,7 +107,7 @@ timing_enter sock_server
 
 # start echo server using hello_sock echo server
 $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S & server_pid=$!
-trap "killprocess $server_pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $server_pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $server_pid
 
 # send message to server using socat

@@ -44,7 +44,7 @@ $ISCSI_APP -m 0xf --num-trace-entries $NUM_TRACE_ENTRIES --tpoint-group-mask 0xf
 iscsi_pid=$!
 echo "Process pid: $iscsi_pid"
 
-trap "killprocess $iscsi_pid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $iscsi_pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $iscsi_pid
 
@@ -75,7 +75,7 @@ mkdir -p ${TRACE_TMP_FOLDER}
 record_pid=$!
 echo "Trace record pid: $record_pid"
 
-trap "iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 echo "Running FIO"
 $fio_py -p iscsi -i 131072 -d 32 -t randrw -r 1
@@ -90,7 +90,7 @@ for i in $(seq 0 $CONNECTION_NUMBER); do
 done
 echo -e $RPCS | $rpc_py
 
-trap "delete_tmp_files; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'delete_tmp_files; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 killprocess $iscsi_pid
 killprocess $record_pid

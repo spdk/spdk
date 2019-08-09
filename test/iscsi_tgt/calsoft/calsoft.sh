@@ -34,7 +34,7 @@ $ISCSI_APP -m 0x1 --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "killprocess $pid; delete_tmp_conf_files; exit 1 " SIGINT SIGTERM EXIT
+trap 'killprocess $pid; delete_tmp_conf_files; exit 1 ' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py load_subsystem_config < $testdir/iscsi.json

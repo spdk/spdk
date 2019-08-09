@@ -19,7 +19,7 @@ truncate -s 64M $testdir/aio.bdev
 $rootdir/test/app/bdev_svc/bdev_svc &
 bdev_svc_pid=$!
 
-trap "killprocess $bdev_svc_pid; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $bdev_svc_pid; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $bdev_svc_pid
 $rpc_py construct_aio_bdev $testdir/aio.bdev aio0 4096

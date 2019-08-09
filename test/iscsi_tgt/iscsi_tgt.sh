@@ -22,7 +22,7 @@ fi
 # Network configuration
 create_veth_interfaces $TEST_TYPE
 
-trap "cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
+trap 'cleanup_veth_interfaces $TEST_TYPE; exit 1' SIGINT SIGTERM EXIT
 
 run_test suite ./test/iscsi_tgt/sock/sock.sh $TEST_TYPE
 if [ "$TEST_TYPE" == "posix" ]; then
@@ -60,7 +60,7 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	fi
 fi
 
-trap "cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
+trap 'cleanup_veth_interfaces $TEST_TYPE; exit 1' SIGINT SIGTERM EXIT
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	# NVMe-oF tests do not support network namespaces,

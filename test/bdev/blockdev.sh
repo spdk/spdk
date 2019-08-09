@@ -35,7 +35,7 @@ function nbd_function_test() {
 		modprobe nbd
 		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} &
 		nbd_pid=$!
-		trap "killprocess $nbd_pid; exit 1" SIGINT SIGTERM EXIT
+		trap 'killprocess $nbd_pid; exit 1' SIGINT SIGTERM EXIT
 		echo "Process nbd pid: $nbd_pid"
 		waitforlisten $nbd_pid $rpc_server
 
@@ -96,7 +96,7 @@ else
 fi
 $testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM -c $testdir/bdev.conf &
 bdevio_pid=$!
-trap "killprocess $bdevio_pid; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
 echo "Process bdevio pid: $bdevio_pid"
 waitforlisten $bdevio_pid
 $testdir/bdevio/tests.py perform_tests

@@ -21,7 +21,7 @@ timing_enter start_iscsi_tgt
 $ISCSI_APP -m 0x2 -p 1 -s 512 --wait-for-rpc &
 pid=$!
 echo "iSCSI target launched. pid: $pid"
-trap "killprocess $pid;exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $pid;exit 1' SIGINT SIGTERM EXIT
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 4
 $rpc_py start_subsystem_init
@@ -38,7 +38,7 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "-d" ==> disable CHAP authentication
 $rpc_py construct_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 256 -d
 sleep 1
-trap "killprocess $pid; rm -f $testdir/bdev.conf; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $pid; rm -f $testdir/bdev.conf; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 # Prepare config file for iSCSI initiator
 echo "[iSCSI_Initiator]" > $testdir/bdev.conf

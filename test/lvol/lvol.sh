@@ -127,7 +127,7 @@ function vhost_kill()
     rm $testdir/vhost.pid || true
 }
 
-trap "vhost_kill; rm -f $testdir/aio_bdev_0 $testdir/aio_bdev_1; exit 1" SIGINT SIGTERM EXIT
+trap 'vhost_kill; rm -f $testdir/aio_bdev_0 $testdir/aio_bdev_1; exit 1' SIGINT SIGTERM EXIT
 
 truncate -s 400M $testdir/aio_bdev_0 $testdir/aio_bdev_1
 vhost_start

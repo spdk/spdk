@@ -40,7 +40,7 @@ timing_enter start_iscsi_tgt
 $ISCSI_APP --wait-for-rpc &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
-trap "remove_backends; iscsicleanup; killprocess $iscsipid; iscsitestfini $1 $2; exit 1" SIGINT SIGTERM EXIT
+trap 'remove_backends; iscsicleanup; killprocess $iscsipid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $iscsipid
 $rpc_py set_iscsi_options -o 30 -a 128

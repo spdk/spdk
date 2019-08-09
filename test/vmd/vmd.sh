@@ -43,7 +43,7 @@ if [ -d /usr/src/fio ]; then
 fi
 
 $rootdir/test/app/bdev_svc/bdev_svc --wait-for-rpc & svcpid=$!
-trap "killprocess $svcpid; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $svcpid; exit 1' SIGINT SIGTERM EXIT
 # Wait until bdev_svc starts
 waitforlisten $svcpid
 
