@@ -827,6 +827,27 @@ function freebsd_update_contigmem_mod()
 	fi
 }
 
+function get_nvme_name_from_bdf {
+	blkname=()
+
+	nvme_devs=$(lsblk -d --output NAME | grep "^nvme") || true
+	if [ -z "$nvme_devs" ]; then
+		return
+	fi
+	for dev in $nvme_devs; do
+		link_name=$(readlink /sys/block/$dev/device/device) || true
+		if [ -z "$link_name" ]; then
+			link_name=$(readlink /sys/block/$dev/device)
+		fi
+		bdf=$(basename "$link_name")
+		if [ "$bdf" = "$1" ]; then
+			blkname+=($dev)
+		fi
+	done
+
+	printf '%s\n' "${blkname[@]}"
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
 
