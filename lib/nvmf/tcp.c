@@ -50,6 +50,7 @@
 #include "spdk_internal/nvme_tcp.h"
 
 #define NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME 16
+#define NVMF_TCP_SCRATCH_BUFFER_SIZE 4096
 
 #define NVMF_TCP_PDU_MAX_H2C_DATA_SIZE	131072
 #define NVMF_TCP_PDU_MAX_C2H_DATA_SIZE	131072
@@ -208,6 +209,7 @@ struct spdk_nvmf_tcp_qpair {
 	enum nvme_tcp_pdu_recv_state		recv_state;
 	enum nvme_tcp_qpair_state		state;
 
+	uint8_t					*scratch;
 	struct nvme_tcp_pdu			pdu_in_progress;
 
 	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
@@ -493,6 +495,8 @@ spdk_nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 	if (err > 0) {
 		nvmf_tcp_dump_qpair_req_contents(tqpair);
 	}
+
+	free(tqpair->scratch);
 	free(tqpair->pdu);
 	free(tqpair->pdu_pool);
 	free(tqpair->req);
@@ -1122,6 +1126,14 @@ _spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 	tqpair->state_cntr[TCP_REQUEST_STATE_FREE] = tqpair->max_queue_depth;
 	tqpair->port = port;
 	tqpair->qpair.transport = transport;
+
+	tqpair->scratch = calloc(NVMF_TCP_SCRATCH_BUFFER_SIZE, sizeof(uint8_t));
+	if (tqpair->scratch == NULL) {
+		SPDK_ERRLOG("Could not allocate sufficient memory for new connection.\n");
+		spdk_sock_close(&sock);
+		free(tqpair);
+		return;
+	}
 
 	rc = spdk_sock_getaddr(tqpair->sock, tqpair->target_addr,
 			       sizeof(tqpair->target_addr), &tqpair->target_port,
@@ -1905,9 +1917,24 @@ static int
 spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	int rc = 0;
+	uint32_t scratch_size = 0;
+	uint8_t *scratch;
+	uint32_t copy_size;
 	struct nvme_tcp_pdu *pdu;
 	enum nvme_tcp_pdu_recv_state prev_state;
 	uint32_t data_len, current_pdu_num = 0;
+
+	if (tqpair->recv_state != NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD) {
+		/* Read data into the scratch buffer */
+		rc = nvme_tcp_read_data(tqpair->sock, NVMF_TCP_SCRATCH_BUFFER_SIZE, tqpair->scratch);
+		if (rc < 0) {
+			return NVME_TCP_PDU_FATAL;
+		}
+
+		scratch_size = rc;
+	}
+
+	scratch = tqpair->scratch;
 
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
@@ -1915,19 +1942,28 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tqpair(%p) recv pdu entering state %d\n", tqpair, prev_state);
 
 		pdu = &tqpair->pdu_in_progress;
+
 		switch (tqpair->recv_state) {
 		/* Wait for the common header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
-			rc = nvme_tcp_read_data(tqpair->sock,
-						sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
-						(void *)&pdu->hdr.common + pdu->ch_valid_bytes);
-			if (rc < 0) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconnect tqpair=%p\n", tqpair);
-				return NVME_TCP_PDU_FATAL;
-			} else if (rc > 0) {
-				pdu->ch_valid_bytes += rc;
-				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE, 0, rc, 0, 0);
+			copy_size = 0;
+
+			if (scratch_size > 0) {
+				copy_size = spdk_min(scratch_size,
+						     sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes);
+
+				memcpy((void *)&pdu->hdr.common + pdu->ch_valid_bytes,
+				       scratch,
+				       copy_size);
+
+				scratch += copy_size;
+				scratch_size -= copy_size;
+			}
+
+			if (copy_size > 0) {
+				pdu->ch_valid_bytes += copy_size;
+				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE, 0, copy_size, 0, 0);
 				if (spdk_likely(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY)) {
 					spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
 				}
@@ -1942,15 +1978,23 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			break;
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
-			rc = nvme_tcp_read_data(tqpair->sock,
-						pdu->psh_len - pdu->psh_valid_bytes,
-						(void *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
-			if (rc < 0) {
-				return NVME_TCP_PDU_FATAL;
-			} else if (rc > 0) {
+			copy_size = 0;
+
+			if (scratch_size > 0) {
+				copy_size = spdk_min(scratch_size, (uint8_t)(pdu->psh_len - pdu->psh_valid_bytes));
+
+				memcpy((void *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes,
+				       scratch,
+				       copy_size);
+
+				scratch += copy_size;
+				scratch_size -= copy_size;
+			}
+
+			if (copy_size > 0) {
 				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE,
-						  0, rc, 0, 0);
-				pdu->psh_valid_bytes += rc;
+						  0, copy_size, 0, 0);
+				pdu->psh_valid_bytes += copy_size;
 			}
 			if (pdu->psh_valid_bytes < pdu->psh_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
@@ -1976,11 +2020,30 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 				pdu->ddgst_enable = true;
 			}
 
-			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
-			if (rc < 0) {
-				return NVME_TCP_PDU_IN_PROGRESS;
+			if (scratch_size > 0) {
+				struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
+				int iovcnt;
+
+				iovcnt = nvme_tcp_build_payload_iovs(iov, NVME_TCP_MAX_SGL_DESCRIPTORS + 1, pdu,
+								     pdu->ddgst_enable, NULL);
+				assert(iovcnt >= 0);
+
+				for (int i = 0; i < iovcnt; i++) {
+					copy_size = spdk_min(scratch_size, iov[i].iov_len);
+
+					memcpy(iov[i].iov_base, scratch, copy_size);
+
+					pdu->readv_offset += copy_size;
+					scratch += copy_size;
+					scratch_size -= copy_size;
+				}
+			} else {
+				rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
+				if (rc < 0) {
+					return NVME_TCP_PDU_IN_PROGRESS;
+				}
+				pdu->readv_offset += rc;
 			}
-			pdu->readv_offset += rc;
 
 			if (spdk_unlikely(pdu->dif_ctx != NULL)) {
 				rc = nvmf_tcp_pdu_payload_insert_dif(pdu, pdu->readv_offset - rc, rc);
@@ -1998,11 +2061,6 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			current_pdu_num++;
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
-			/* Check whether the connection is closed. Each time, we only read 1 byte every time */
-			rc = nvme_tcp_read_data(tqpair->sock, 1, (void *)&pdu->hdr.common);
-			if (rc < 0) {
-				return NVME_TCP_PDU_FATAL;
-			}
 			break;
 		default:
 			assert(0);
