@@ -114,7 +114,11 @@ DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
 # SPDK memory registration requires experimental (deprecated) rte_memory API for DPDK 18.05
 ENV_CFLAGS = $(DPDK_INC) -Wno-deprecated-declarations
 ENV_CXXFLAGS = $(ENV_CFLAGS)
+ifeq ($(CONFIG_SHARED),y)
+ENV_DPDK_FILE = $(call spdk_lib_list_to_shared_libs,env_dpdk)
+else
 ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
+endif
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) -Wl,--whole-archive,--no-as-needed $(DPDK_LIB) -Wl,--no-whole-archive
 
