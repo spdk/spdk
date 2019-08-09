@@ -438,8 +438,8 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	struct rte_mbuf *dst_mbufs[MAX_MBUFS_PER_OP];
 	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
 	uint64_t total_length = 0;
-	struct iovec *current_src_iov = NULL;
-	struct iovec *current_dst_iov = NULL;
+	uint8_t *current_src_base = NULL;
+	uint8_t *current_dst_base = NULL;
 	int iov_index;
 	int rc = 0;
 	struct vbdev_comp_op *op_to_queue;
@@ -479,14 +479,14 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	/* Setup src mbufs */
 	for (iov_index = 0; iov_index < src_iovcnt; iov_index++) {
 
-		current_src_iov = src_iovs[iov_index].iov_base;
+		current_src_base = src_iovs[iov_index].iov_base;
 		total_length += src_iovs[iov_index].iov_len;
 		assert(src_mbufs[iov_index] != NULL);
 		src_mbufs[iov_index]->userdata = reduce_cb_arg;
 
 		rte_pktmbuf_attach_extbuf(src_mbufs[iov_index],
-					  current_src_iov,
-					  spdk_vtophys((void *)current_src_iov, NULL),
+					  current_src_base,
+					  spdk_vtophys((void *)current_src_base, NULL),
 					  src_iovs[iov_index].iov_len,
 					  &g_shinfo);
 		rte_pktmbuf_append(src_mbufs[iov_index], src_iovs[iov_index].iov_len);
@@ -503,11 +503,11 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	/* setup dst mbufs, for the current test being used with this code there's only one vector */
 	for (iov_index = 0; iov_index < dst_iovcnt; iov_index++) {
 
-		current_dst_iov = dst_iovs[iov_index].iov_base;
+		current_dst_base = dst_iovs[iov_index].iov_base;
 
 		rte_pktmbuf_attach_extbuf(dst_mbufs[iov_index],
-					  current_dst_iov,
-					  spdk_vtophys((void *)current_dst_iov, NULL),
+					  current_dst_base,
+					  spdk_vtophys((void *)current_dst_base, NULL),
 					  dst_iovs[iov_index].iov_len,
 					  &g_shinfo);
 		rte_pktmbuf_append(dst_mbufs[iov_index], dst_iovs[iov_index].iov_len);
