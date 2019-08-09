@@ -35,6 +35,7 @@ SPDK_LIB_FILES = $(call spdk_lib_list_to_static_libs,$(SPDK_LIB_LIST))
 SPDK_LIB_LINKER_ARGS = \
 	-L$(SPDK_ROOT_DIR)/build/lib \
 	-Wl,--whole-archive \
+	-Wl,--no-as-needed \
 	$(SPDK_LIB_LIST:%=-lspdk_%) \
 	-Wl,--no-whole-archive
 
