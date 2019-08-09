@@ -48,8 +48,8 @@ DEFINE_STUB(rte_vhost_get_vring_base, int, (int vid, uint16_t queue_id,
 		uint16_t *last_avail_idx, uint16_t *last_used_idx), 0);
 DEFINE_STUB_V(vhost_session_install_rte_compat_hooks,
 	      (struct spdk_vhost_session *vsession));
-DEFINE_STUB_V(vhost_dev_install_rte_compat_hooks,
-	      (struct spdk_vhost_dev *vdev));
+DEFINE_STUB(vhost_register_unix_socket, int, (const char *path, const char *name,
+		uint64_t virtio_features, uint64_t disabled_features), 0);
 DEFINE_STUB(rte_vhost_driver_unregister, int, (const char *path), 0);
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
