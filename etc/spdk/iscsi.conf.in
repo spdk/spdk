@@ -77,7 +77,7 @@
 #    Portal <Name> <IP address>[:<port>]
 [PortalGroup1]
   Portal DA1 192.168.2.21:3260
-  Portal DA2 192.168.2.22:3260@0xF
+  Portal DA2 192.168.2.22:3260
 
 # Users must change the InitiatorGroup section(s) to match the IP
 #  addresses and initiator configuration in their environment.
