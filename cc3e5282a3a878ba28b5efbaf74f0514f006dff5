@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ce30169_3f827566",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-09T23:49:06Z",
+      "side": 1,
+      "message": "Similar to previous patch - I think since this is in spdk_internal header file, we don\u0027t need to add it to CHANGELOG.\n\nBut I\u0027m open to discussion on this.  We could discuss it at next community meeting.",
+      "revId": "cc3e5282a3a878ba28b5efbaf74f0514f006dff5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c9bda13_d44d6548",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-09T23:49:06Z",
+      "side": 1,
+      "message": "This entry should definitely stay.",
+      "revId": "cc3e5282a3a878ba28b5efbaf74f0514f006dff5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
