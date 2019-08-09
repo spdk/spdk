@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42b59205_04cd4ab5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-09T23:44:24Z",
+      "side": 1,
+      "message": "I think you can probably remove this from the CHANGELOG.  Normally CHANGELOG is focused on external APIs, new features, etc.  Since this is an internal API, I think we can skip it (i.e. 99.99% of SPDK users won\u0027t care about this.)",
+      "revId": "22ff8af512965e819abcabce476f077378ac0d91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
