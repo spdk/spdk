@@ -36,7 +36,7 @@
 
 #include "spdk_cunit.h"
 
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 #include "common/lib/test_sock.c"
 
 #include "../common.c"
@@ -322,16 +322,15 @@ static void
 portal_grp_add_delete_case(void)
 {
 	struct spdk_sock sock = {};
-	struct spdk_thread *thread;
 	struct spdk_iscsi_portal_grp *pg1, *pg2;
 	struct spdk_iscsi_portal *p;
 	int rc;
 
-	thread = spdk_thread_create(NULL, NULL);
-	spdk_set_thread(thread);
-
 	const char *host = "192.168.2.0";
 	const char *port = "3260";
+
+	allocate_threads(1);
+	set_thread(0);
 
 	/* internal of add_portal_group */
 	pg1 = spdk_iscsi_portal_grp_create(1);
@@ -360,15 +359,13 @@ portal_grp_add_delete_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
 
-	spdk_thread_exit(thread);
-	spdk_thread_destroy(thread);
+	free_threads();
 }
 
 static void
 portal_grp_add_delete_twice_case(void)
 {
 	struct spdk_sock sock = {};
-	struct spdk_thread *thread;
 	struct spdk_iscsi_portal_grp *pg1, *pg2;
 	struct spdk_iscsi_portal *p;
 	int rc;
@@ -376,8 +373,8 @@ portal_grp_add_delete_twice_case(void)
 	const char *host = "192.168.2.0";
 	const char *port1 = "3260", *port2 = "3261";
 
-	thread = spdk_thread_create(NULL, NULL);
-	spdk_set_thread(thread);
+	allocate_threads(1);
+	set_thread(0);
 
 	/* internal of add_portal_group related */
 	pg1 = spdk_iscsi_portal_grp_create(1);
@@ -420,8 +417,8 @@ portal_grp_add_delete_twice_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
 
 	MOCK_CLEAR_P(spdk_sock_listen);
-	spdk_thread_exit(thread);
-	spdk_thread_destroy(thread);
+
+	free_threads();
 }
 
 int
