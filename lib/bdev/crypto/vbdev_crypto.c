@@ -596,9 +596,9 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	uint32_t enqueued = 0;
 	uint32_t iov_index = 0;
 	uint32_t allocated = 0;
-	uint8_t *current_iov = NULL;
+	uint8_t *current_base = NULL;
 	uint64_t total_remaining = 0;
-	uint64_t current_iov_remaining = 0;
+	uint64_t current_base_remaining = 0;
 	int completed = 0;
 	int crypto_index = 0;
 	uint32_t en_offset = 0;
@@ -606,6 +606,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	struct rte_mbuf *src_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
 	struct rte_mbuf *dst_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
 	int burst;
+	uint64_t mapped, phys_addr;
 
 	assert((bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen) <= CRYPTO_MAX_IO);
 
@@ -656,8 +657,8 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		 * or better yet the current ZCOPY work lands, this is the best we can do.
 		 */
 		io_ctx->cry_iov.iov_base = spdk_malloc(total_length,
-						       spdk_bdev_get_buf_align(bdev_io->bdev), NULL,
-						       SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+						       spdk_max(2 ^ 21, spdk_bdev_get_buf_align(bdev_io->bdev)),
+						       NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!io_ctx->cry_iov.iov_base) {
 			SPDK_ERRLOG("ERROR trying to allocate write buffer for encryption!\n");
 			rc = -ENOMEM;
@@ -680,16 +681,22 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	 * mbuf per crypto operation.
 	 */
 	total_remaining = total_length;
-	current_iov = bdev_io->u.bdev.iovs[iov_index].iov_base;
-	current_iov_remaining = bdev_io->u.bdev.iovs[iov_index].iov_len;
+	current_base = bdev_io->u.bdev.iovs[iov_index].iov_base;
+	current_base_remaining = bdev_io->u.bdev.iovs[iov_index].iov_len;
 	do {
 		uint8_t *iv_ptr;
 		uint64_t op_block_offset;
 
 		/* Set the mbuf elements address and length. Null out the next pointer. */
-		src_mbufs[crypto_index]->buf_addr = current_iov;
-		src_mbufs[crypto_index]->buf_iova = spdk_vtophys((void *)current_iov, NULL);
-		src_mbufs[crypto_index]->data_len = crypto_len;
+		src_mbufs[crypto_index]->buf_addr = current_base;
+		mapped = crypto_len;
+		phys_addr = spdk_vtophys((void *)current_base, &mapped);
+		if (mapped > crypto_len) {
+			mapped = crypto_len;
+		}
+
+		src_mbufs[crypto_index]->buf_iova = phys_addr;
+		src_mbufs[crypto_index]->data_len = mapped;
 		src_mbufs[crypto_index]->next = NULL;
 		/* Store context in every mbuf as we don't know anything about completion order */
 		src_mbufs[crypto_index]->userdata = bdev_io;
@@ -702,7 +709,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		rte_memcpy(iv_ptr, &op_block_offset, sizeof(uint64_t));
 
 		/* Set the data to encrypt/decrypt length */
-		crypto_ops[crypto_index]->sym->cipher.data.length = crypto_len;
+		crypto_ops[crypto_index]->sym->cipher.data.length = mapped;
 		crypto_ops[crypto_index]->sym->cipher.data.offset = 0;
 
 		/* link the mbuf to the crypto op. */
@@ -719,13 +726,14 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		 */
 		if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
 
-			/* Set the relevant destination en_mbuf elements. */
+			/* Set the relevant destination en_mbuf elements. This buff is aollcated on a 2MB
+			 *  boundary*/
 			dst_mbufs[crypto_index]->buf_addr = io_ctx->cry_iov.iov_base + en_offset;
 			dst_mbufs[crypto_index]->buf_iova = spdk_vtophys(dst_mbufs[crypto_index]->buf_addr,
 							    NULL);
-			dst_mbufs[crypto_index]->data_len = crypto_len;
+			dst_mbufs[crypto_index]->data_len = mapped;
 			crypto_ops[crypto_index]->sym->m_dst = dst_mbufs[crypto_index];
-			en_offset += crypto_len;
+			en_offset += mapped;
 			dst_mbufs[crypto_index]->next = NULL;
 
 			/* Attach the crypto session to the operation */
@@ -748,21 +756,29 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 
 		}
 
-		/* Subtract our running totals for the op in progress and the overall bdev io */
-		total_remaining -= crypto_len;
-		current_iov_remaining -= crypto_len;
-
-		/* move our current IOV pointer accordingly. */
-		current_iov += crypto_len;
-
 		/* move on to the next crypto operation */
 		crypto_index++;
+		/* move our current IOV pointer accordingly. */
+		current_base += mapped;
+
+		if (crypto_len == mapped) {
+			/* Subtract our running totals for the op in progress and the overall bdev io */
+			total_remaining -= crypto_len;
+			current_base_remaining -= crypto_len;
+
+		} else {
+			/* if we crossed a 2MB boundary building the last one, we need to build one more
+			 *  now to accomdate it.
+			 */
+			total_remaining -= (crypto_len - mapped);
+			current_base_remaining -= crypto_len - (mapped);
+		}
 
 		/* If we're done with this IOV, move to the next one. */
-		if (current_iov_remaining == 0 && total_remaining > 0) {
+		if (current_base_remaining == 0 && total_remaining > 0) {
 			iov_index++;
-			current_iov = bdev_io->u.bdev.iovs[iov_index].iov_base;
-			current_iov_remaining = bdev_io->u.bdev.iovs[iov_index].iov_len;
+			current_base = bdev_io->u.bdev.iovs[iov_index].iov_base;
+			current_base_remaining = bdev_io->u.bdev.iovs[iov_index].iov_len;
 		}
 	} while (total_remaining > 0);
 
