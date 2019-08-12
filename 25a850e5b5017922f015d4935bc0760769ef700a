@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9566934_105cd639",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-12T19:16:38Z",
+      "side": 1,
+      "message": "isn\u0027t dnf update -y and yum update -y redundant?",
+      "revId": "25a850e5b5017922f015d4935bc0760769ef700a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
