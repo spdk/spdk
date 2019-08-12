@@ -38,4 +38,6 @@ C_SRCS = base64.c bit_array.c cpuset.c crc16.c crc32.c crc32c.c crc32_ieee.c dif
 LIBNAME = util
 LOCAL_SYS_LIBS = -luuid
 
+SPDK_DEP_LIBNAMES = log
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

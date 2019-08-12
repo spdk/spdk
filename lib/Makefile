@@ -52,6 +52,16 @@ ifeq ($(abspath $(CONFIG_ENV)),$(SPDK_ROOT_DIR)/lib/$(ENV_NAME))
 DIRS-y += $(ENV_NAME)
 endif
 
+# Phase 1 dependencies.
+# Most other modules depend on some combination of these 7 base modules.
+DEPDIRS-log :=
+DEPDIRS-util := log
+DEPDIRS-conf := log util
+DEPDIRS-thread := log util
+DEPDIRS-json := log util
+DEPDIRS-jsonrpc := log util json
+DEPDIRS-rpc := log util json jsonrpc
+
 DEPDIRS-iscsi := scsi
 DEPDIRS-bdev := notify
 
