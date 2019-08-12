@@ -62,9 +62,13 @@ else
 	if [ -f /etc/lsb-release ];then
 		. /etc/lsb-release
 	elif [ -f /etc/redhat-release ];then
-		yum update -y
 		yum install -y redhat-lsb
 		DISTRIB_ID=$(lsb_release -si)
+		if [ "$DISTRIB_ID" == "fedora" ];then
+			dnf clean all
+			dnf update -y
+		fi
+		yum update -y
 		DISTRIB_RELEASE=$(lsb_release -sr)
 		DISTRIB_CODENAME=$(lsb_release -sc)
 		DISTRIB_DESCRIPTION=$(lsb_release -sd)
@@ -79,21 +83,6 @@ else
 		# Standard update + upgrade dance
 		apt-get update --assume-yes --no-install-suggests --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 		apt-get upgrade --assume-yes --no-install-suggests --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-		${SPDK_DIR}/scripts/pkgdep.sh
-	elif [ "$DISTRIB_ID" == "CentOS" ]; then
-		# Standard update + upgrade dance
-		yum check-update
-		yum update -y
-		${SPDK_DIR}/scripts/pkgdep.sh
-	elif [ "$DISTRIB_ID" == "Fedora" ]; then
-		if [ "$DISTRIB_RELEASE" = "26" ]; then
-			echo
-			echo "  Run \"${SPDK_DIR}/test/common/config/vm_setup.sh\" to complete setup of Fedora 26"
-			echo
-		else
-			yum check-update
-			yum update -y
-			${SPDK_DIR}/scripts/pkgdep.sh
-		fi
 	fi
+	${SPDK_DIR}/scripts/pkgdep.sh
 fi
