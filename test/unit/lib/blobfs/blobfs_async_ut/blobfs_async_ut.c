@@ -38,8 +38,10 @@
 #include "common/lib/ut_multithread.c"
 
 #include "spdk_cunit.h"
+#include "blobfs/trie.c"
 #include "blobfs/blobfs.c"
 #include "blobfs/tree.c"
+
 #include "blob/blobstore.h"
 
 #include "spdk_internal/thread.h"
@@ -129,7 +131,7 @@ static void
 fs_open(void)
 {
 	struct spdk_filesystem *fs;
-	spdk_fs_iter iter;
+	spdk_file_iter iter;
 	struct spdk_bs_dev *dev;
 	struct spdk_file *file;
 	char name[257] = {'\0'};
@@ -164,12 +166,12 @@ fs_open(void)
 	CU_ASSERT(!strcmp("file1", g_file->name));
 	CU_ASSERT(g_file->ref_count == 1);
 
-	iter = spdk_fs_iter_first(fs);
+	iter = spdk_file_iter_first(fs);
 	CU_ASSERT(iter != NULL);
-	file = spdk_fs_iter_get_file(iter);
+	file = spdk_file_iter_get_file(iter);
 	SPDK_CU_ASSERT_FATAL(file != NULL);
 	CU_ASSERT(!strcmp("file1", file->name));
-	iter = spdk_fs_iter_next(iter);
+	iter = spdk_file_iter_next(iter);
 	CU_ASSERT(iter == NULL);
 
 	g_fserrno = 0;
