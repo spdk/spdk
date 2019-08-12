@@ -943,8 +943,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	int rc;
 
 	if (vbdev->ocf_cache) {
-		vbdev->mngt_ctx.status = -EALREADY;
-		vbdev_ocf_mngt_stop(vbdev);
+		vbdev_ocf_mngt_stop(vbdev, -EALREADY);
 		return;
 	}
 
@@ -962,8 +961,7 @@ start_cache(struct vbdev_ocf *vbdev)
 
 	vbdev->cache_ctx = calloc(1, sizeof(struct vbdev_ocf_cache_ctx));
 	if (vbdev->cache_ctx == NULL) {
-		vbdev->mngt_ctx.status = -ENOMEM;
-		vbdev_ocf_mngt_stop(vbdev);
+		vbdev_ocf_mngt_stop(vbdev, -ENOMEM);
 		return;
 	}
 
@@ -973,8 +971,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
 	if (rc) {
 		vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
-		vbdev->mngt_ctx.status = rc;
-		vbdev_ocf_mngt_stop(vbdev);
+		vbdev_ocf_mngt_stop(vbdev, rc);
 		return;
 	}
 
@@ -985,8 +982,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	if (rc) {
 		SPDK_ERRLOG("Unable to create mngt_queue: %d\n", rc);
 		vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
-		vbdev->mngt_ctx.status = rc;
-		vbdev_ocf_mngt_stop(vbdev);
+		vbdev_ocf_mngt_stop(vbdev, rc);
 		return;
 	}
 

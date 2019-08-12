@@ -129,9 +129,15 @@ vbdev_ocf_mngt_poll(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn fn)
 }
 
 void
-vbdev_ocf_mngt_stop(struct vbdev_ocf *vbdev)
+vbdev_ocf_mngt_stop(struct vbdev_ocf *vbdev, int status)
 {
 	spdk_poller_unregister(&vbdev->mngt_ctx.poller);
+
+	if (status) {
+		/* If somebody call this function with non-zero status
+		 * it means that was main root cause of error */
+		vbdev->mngt_ctx.status = status;
+	}
 
 	if (vbdev->mngt_ctx.cb) {
 		vbdev->mngt_ctx.cb(vbdev->mngt_ctx.status, vbdev, vbdev->mngt_ctx.cb_arg);
@@ -149,7 +155,7 @@ vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
 
 	if (status && vbdev->mngt_ctx.mode == mngt_ctx_mode_normal) {
 		vbdev->mngt_ctx.status = status;
-		vbdev_ocf_mngt_stop(vbdev);
+		vbdev_ocf_mngt_stop(vbdev, 0);
 		return;
 	}
 
@@ -163,5 +169,5 @@ vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
 		return;
 	}
 
-	vbdev_ocf_mngt_stop(vbdev);
+	vbdev_ocf_mngt_stop(vbdev, 0);
 }
