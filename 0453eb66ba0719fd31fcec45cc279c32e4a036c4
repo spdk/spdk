@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47e6de69_5cb313eb",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 1243,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-12T09:14:41Z",
+      "side": 1,
+      "message": "In bdev layer, block size is sum of data block and metadata. So if we want to create 512+8 block, block_size\u003d520 and md_size\u003d8 may be compatible with current SPDK. Otherwise, we may have to add data_block_size and md_size, and make block_size or data_block_size+md_size mutual exclusive.\n\nI just posted an alternative idea and I would like to hear any idea.",
+      "range": {
+        "startLine": 1243,
+        "startChar": 51,
+        "endLine": 1243,
+        "endChar": 61
+      },
+      "revId": "0453eb66ba0719fd31fcec45cc279c32e4a036c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
