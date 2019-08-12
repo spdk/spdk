@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "13dd5d94_a0f6b26c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-12T02:26:37Z",
+      "side": 1,
+      "message": "You are right, this can be removed.",
+      "parentUuid": "66ab9972_77e92c58",
+      "revId": "3c0687b40e405199e48e8a82e6f40a462b257871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e74bd2cd_21174602",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-09T17:19:42Z",
       "side": 1,
       "message": "do we need to limit this to PCIe?  I\u0027m thinking it would be ok to do this for fabrics controllers also\n\nplease update the changelog if you remove the PCIe restriction",
+      "revId": "3c0687b40e405199e48e8a82e6f40a462b257871",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2be623fd_6d73987d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2400,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-12T02:26:37Z",
+      "side": 1,
+      "message": "OK, I will do some test over RDMA/TCP transport first, for PCIe this is OK for sure.",
+      "parentUuid": "e74bd2cd_21174602",
       "revId": "3c0687b40e405199e48e8a82e6f40a462b257871",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
