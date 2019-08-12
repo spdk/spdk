@@ -45,6 +45,7 @@
 #include "common/lib/test_env.c"
 #include "blobfs/blobfs.c"
 #include "blobfs/tree.c"
+#include "blobfs/trie.c"
 
 struct spdk_filesystem *g_fs;
 struct spdk_file *g_file;
@@ -505,7 +506,7 @@ fs_rename_sync(void)
 
 	CU_ASSERT(strcmp(spdk_file_get_name(g_file), "testfile") == 0);
 
-	rc = spdk_fs_rename_file(g_fs, channel, "testfile", "newtestfile");
+	rc = spdk_fs_rename(g_fs, channel, "testfile", "newtestfile");
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(spdk_file_get_name(g_file), "newtestfile") == 0);
 

@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = blobfs.c tree.c
+C_SRCS = blobfs.c tree.c trie.c
 LIBNAME = blobfs
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
