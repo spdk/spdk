@@ -31,10 +31,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-C_SRCS = blobfs.c tree.c trie.c
-LIBNAME = blobfs
+TEST_FILE = trie_ut.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

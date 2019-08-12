@@ -49,17 +49,25 @@ extern "C" {
 #define SPDK_FILE_NAME_MAX	255
 
 struct spdk_file;
+struct spdk_directory;
 struct spdk_filesystem;
 
 typedef struct spdk_file *spdk_fs_iter;
+typedef struct spdk_directory *spdk_dir_iter;
 
 struct spdk_blobfs_opts {
 	uint32_t	cluster_sz;
 };
 
+enum spdk_blobfs_types {
+	SPDK_BLOBFS_FILE	= 0x1,
+	SPDK_BLOBFS_DIRECTORY	= 0x2,
+};
+
 struct spdk_file_stat {
-	spdk_blob_id	blobid;
-	uint64_t	size;
+	enum spdk_blobfs_types	type;
+	spdk_blob_id		blobid;
+	uint64_t		size;
 };
 
 /**
@@ -590,6 +598,16 @@ void spdk_file_read_async(struct spdk_file *file, struct spdk_io_channel *channe
 void spdk_file_sync_async(struct spdk_file *file, struct spdk_io_channel *channel,
 			  spdk_file_op_complete cb_fn, void *cb_arg);
 
+int spdk_fs_dir_file_num(struct spdk_filesystem *fs, const char *name);
+char **spdk_fs_readdir(struct spdk_filesystem *fs, const char *name, int file_nums);
+
+
+int spdk_fs_mkdir(struct spdk_filesystem *fs, const char *name, uint64_t mode);
+int spdk_fs_rmdir(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx, const char *path);
+
+spdk_dir_iter spdk_dir_iter_first(struct spdk_filesystem *fs);
+spdk_dir_iter spdk_dir_iter_next(spdk_dir_iter iter);
+const char *spdk_dir_get_name(struct spdk_directory *dir);
 #ifdef __cplusplus
 }
 #endif
