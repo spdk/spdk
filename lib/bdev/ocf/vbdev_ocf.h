@@ -92,6 +92,7 @@ struct vbdev_ocf_config {
 /* Types for management operations */
 typedef void (*vbdev_ocf_mngt_fn)(struct vbdev_ocf *);
 typedef void (*vbdev_ocf_mngt_callback)(int, struct vbdev_ocf *, void *);
+typedef void (*vbdev_ocf_mngt_rollback_fn)(struct vbdev_ocf *);
 
 /* Types of asynchronous management operations */
 enum mngt_ctx_mode {
@@ -111,13 +112,17 @@ struct vbdev_ocf_mngt_ctx {
 	struct spdk_poller                 *poller;
 	/* Function that gets invoked by poller on each iteration */
 	vbdev_ocf_mngt_fn                   poller_fn;
+	/* Function that gets invoked in case of error */
+	vbdev_ocf_mngt_rollback_fn	    rollback_fn;
 	/* Poller timeout time stamp - when the poller should stop with error */
 	uint64_t                            timeout_ts;
-	/* Current mode of asynchronous management operations */
+	/* Current type of asynchronous management operations */
 	enum mngt_ctx_mode		    mode;
 
 	/* Status of management operation */
 	int                                 status;
+	/* Status to return after rollback */
+	int                                 rb_status;
 
 	/* External callback and its argument */
 	vbdev_ocf_mngt_callback             cb;
