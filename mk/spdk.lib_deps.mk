@@ -31,5 +31,39 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-DEPDIRS-iscsi := scsi
-DEPDIRS-bdev := notify
+# Phase 1 dependencies.
+# Most other modules depend on some combination of these 7 base modules.
+DEPDIRS-log :=
+DEPDIRS-util := log
+DEPDIRS-conf := log util
+DEPDIRS-thread := log util
+DEPDIRS-json := log util
+DEPDIRS-jsonrpc := log util json
+DEPDIRS-rpc := log util json jsonrpc
+
+# Phase 2 dependencies.
+# Functional level libraries.
+DEPDIRS-bdev := conf json jsonrpc log notify rpc thread trace util
+DEPDIRS-blob := log thread util
+DEPDIRS-copy := thread
+DEPDIRS-event := conf json jsonrpc log rpc thread trace util
+DEPDIRS-ioat := log
+DEPDIRS-log_rpc := log json jsonrpc rpc
+DEPDIRS-net := log json jsonrpc rpc util
+DEPDIRS-notify := log json jsonrpc rpc util
+DEPDIRS-reduce := log util
+DEPDIRS-sock := log
+DEPDIRS-trace := log json jsonrpc rpc util
+DEPDIRS-virtio := log json thread util
+DEPDIRS-vmd := log
+
+# Phase 3 dependencies.
+DEPDIRS-blobfs := blob conf log thread trace
+DEPDIRS-ftl := bdev log nvme thread trace util
+DEPDIRS-iscsi := conf event json jsonrpc log rpc scsi sock thread trace util
+DEPDIRS-lvol := blob log util
+DEPDIRS-nbd := bdev json jsonrpc log rpc thread util
+DEPDIRS-nvme := log sock util
+DEPDIRS-nvmf := bdev json jsonrpc log nvme rpc sock thread trace util
+DEPDIRS-scsi := bdev json jsonrpc log rpc thread trace util
+DEPDIRS-vhost := bdev conf event jsonrpc json log rpc scsi thread util
