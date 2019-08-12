@@ -2,6 +2,10 @@
 
 ## v20.01: (Upcoming Release)
 
+### blobfs
+
+Blobfs dir test.
+
 ## v19.10:
 
 ### bdev
@@ -251,6 +255,7 @@ Current implementation does not support hotplug.
 ### blobfs
 
 Blobfs file asynchronous operations were added to public APIs.
+Blobfs add directory support
 
 ### util
 
