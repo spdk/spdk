@@ -37,6 +37,7 @@
 #include "spdk/env.h"
 
 static struct spdk_nvme_ctrlr *g_controller;
+static bool g_process_completions = true;
 
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
@@ -59,9 +60,43 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
+get_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_health_information_page *health_page = cb_arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		printf("get log page failed\n");
+	} else {
+		printf("Current Temperature: %u Kelvin (%d Celsius)\n",
+		       health_page->temperature,
+		       (int)health_page->temperature - 273);
+	}
+
+	g_process_completions = false;
+}
+
+static void
 exercise_2(void)
 {
-	/* TODO: Put your code here :) */
+	struct spdk_nvme_health_information_page health_page;
+	int rc;
+
+	/* Get SMART log page from the NVMe controller */
+	if (spdk_nvme_ctrlr_cmd_get_log_page(g_controller, SPDK_NVME_LOG_HEALTH_INFORMATION,
+					     SPDK_NVME_GLOBAL_NS_TAG, &health_page, sizeof(health_page), 0,
+					     get_log_page_completion, &health_page)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
+		return;
+	}
+
+	/* Process completions on admin queue */
+	while (g_process_completions) {
+		rc = spdk_nvme_ctrlr_process_admin_completions(g_controller);
+		if (rc < 0) {
+			printf("Processing admin completions failed\n");
+			return;
+		}
+	}
 }
 
 int main(int argc, char **argv)
