@@ -54,6 +54,8 @@
 #define BLOBFS_DEFAULT_CACHE_SIZE (4ULL * 1024 * 1024 * 1024)
 #define SPDK_BLOBFS_DEFAULT_OPTS_CLUSTER_SZ (1024 * 1024)
 
+#define SPDK_BLOBFS_SIGNATURE	"BLOBFS"
+
 static uint64_t g_fs_cache_size = BLOBFS_DEFAULT_CACHE_SIZE;
 static struct spdk_mempool *g_cache_pool;
 static TAILQ_HEAD(, spdk_file) g_caches;
@@ -593,7 +595,7 @@ spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
 	args->fs = fs;
 
 	spdk_bs_opts_init(&opts);
-	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "BLOBFS");
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), SPDK_BLOBFS_SIGNATURE);
 	if (opt) {
 		opts.cluster_sz = opt->cluster_sz;
 	}
@@ -753,7 +755,7 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_filesystem *fs = args->fs;
 	struct spdk_bs_type bstype;
-	static const struct spdk_bs_type blobfs_type = {"BLOBFS"};
+	static const struct spdk_bs_type blobfs_type = {SPDK_BLOBFS_SIGNATURE};
 	static const struct spdk_bs_type zeros;
 
 	if (bserrno != 0) {
