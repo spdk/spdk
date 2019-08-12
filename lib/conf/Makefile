@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = conf.c
 LIBNAME = conf
 
+SPDK_DEP_LIBNAMES = log util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
