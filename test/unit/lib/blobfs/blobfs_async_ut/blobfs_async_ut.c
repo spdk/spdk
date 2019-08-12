@@ -38,8 +38,10 @@
 #include "common/lib/ut_multithread.c"
 
 #include "spdk_cunit.h"
+#include "blobfs/trie.c"
 #include "blobfs/blobfs.c"
 #include "blobfs/tree.c"
+
 #include "blob/blobstore.h"
 
 #include "spdk_internal/thread.h"
