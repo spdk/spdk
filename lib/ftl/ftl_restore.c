@@ -322,9 +322,10 @@ ftl_restore_head_cb(struct ftl_io *io, void *ctx, int status)
 	}
 }
 
-static int
-ftl_restore_head_md(struct ftl_restore *restore)
+static void
+ftl_restore_head_md(void *ctx)
 {
+	struct ftl_restore *restore = ctx;
 	struct spdk_ftl_dev *dev = restore->dev;
 	struct ftl_restore_band *rband;
 	struct ftl_lba_map *lba_map;
@@ -347,8 +348,7 @@ ftl_restore_head_md(struct ftl_restore *restore)
 
 				/* If the first IO fails, don't bother sending anything else */
 				if (i == 0) {
-					ftl_restore_free(restore);
-					return -EIO;
+					ftl_restore_complete(restore, -EIO);
 				}
 			}
 
@@ -359,12 +359,9 @@ ftl_restore_head_md(struct ftl_restore *restore)
 	if (spdk_unlikely(num_failed > 0)) {
 		num_ios = __atomic_fetch_sub(&restore->num_ios, num_failed, __ATOMIC_SEQ_CST);
 		if (num_ios == num_failed) {
-			ftl_restore_free(restore);
-			return -EIO;
+			ftl_restore_complete(restore, -EIO);
 		}
 	}
-
-	return 0;
 }
 
 int
@@ -377,7 +374,9 @@ ftl_restore_md(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 		return -ENOMEM;
 	}
 
-	return ftl_restore_head_md(restore);
+	spdk_thread_send_msg(ftl_get_core_thread(dev), ftl_restore_head_md, restore);
+
+	return 0;
 }
 
 static int
@@ -1003,7 +1002,7 @@ ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb)
 	size_t alignment;
 	int rc, i;
 
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	ioch = spdk_io_channel_get_ctx(ftl_get_io_channel(dev));
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 	alignment = spdk_max(spdk_bdev_get_buf_align(bdev), sizeof(uint64_t));
 

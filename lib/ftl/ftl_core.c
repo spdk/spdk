@@ -393,6 +393,21 @@ ftl_check_read_thread(const struct spdk_ftl_dev *dev)
 	return dev->read_thread.thread == spdk_get_thread();
 }
 
+struct spdk_io_channel *
+ftl_get_io_channel(const struct spdk_ftl_dev *dev)
+{
+	if (ftl_check_core_thread(dev)) {
+		return dev->core_thread.ioch;
+	}
+	if (ftl_check_read_thread(dev)) {
+		return dev->read_thread.ioch;
+	}
+
+	assert(0);
+	return NULL;
+}
+
+
 int
 ftl_io_erase(struct ftl_io *io)
 {
@@ -1265,7 +1280,7 @@ ftl_nv_cache_write_header(struct ftl_nv_cache *nv_cache, bool shutdown,
 	struct ftl_io_channel *ioch;
 
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	ioch = spdk_io_channel_get_ctx(ftl_get_io_channel(dev));
 
 	memset(hdr, 0, spdk_bdev_get_block_size(bdev));
 
@@ -1287,7 +1302,7 @@ ftl_nv_cache_scrub(struct ftl_nv_cache *nv_cache, spdk_bdev_io_completion_cb cb_
 	struct ftl_io_channel *ioch;
 	struct spdk_bdev *bdev;
 
-	ioch = spdk_io_channel_get_ctx(dev->ioch);
+	ioch = spdk_io_channel_get_ctx(ftl_get_io_channel(dev));
 	bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
 
 	return spdk_bdev_write_zeroes_blocks(nv_cache->bdev_desc, ioch->cache_ioch, 1,

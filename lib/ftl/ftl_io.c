@@ -284,7 +284,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 		if (parent) {
 			io = ftl_io_alloc_child(parent);
 		} else {
-			io = ftl_io_alloc(dev->ioch);
+			io = ftl_io_alloc(ftl_get_io_channel(dev));
 		}
 
 		if (!io) {
