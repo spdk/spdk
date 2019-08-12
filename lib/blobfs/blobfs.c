@@ -36,6 +36,7 @@
 #include "spdk/blobfs.h"
 #include "spdk/conf.h"
 #include "tree.h"
+#include "trie.h"
 
 #include "spdk/queue.h"
 #include "spdk/thread.h"
@@ -112,8 +113,24 @@ spdk_cache_buffer_free(struct cache_buffer *cache_buffer)
 
 #define CACHE_READAHEAD_THRESHOLD	(128 * 1024)
 
+enum spdk_dir_node_type {
+	SPDK_NODE_INVALID = 0,
+	SPDK_NODE_DIR = 1,
+	SPDK_NODE_FILE = 2
+};
+
+struct spdk_directory {
+	struct spdk_filesystem		*fs;
+	enum spdk_dir_node_type type;
+	struct trie_node *node;
+
+	uint64_t			mode;
+	uint32_t			ref;
+};
+
 struct spdk_file {
 	struct spdk_filesystem	*fs;
+	struct trie_node *node;
 	struct spdk_blob	*blob;
 	char			*name;
 	uint64_t		trace_arg_name;
@@ -144,7 +161,9 @@ struct spdk_deleted_file {
 
 struct spdk_filesystem {
 	struct spdk_blob_store	*bs;
+	struct trie_node *root;
 	TAILQ_HEAD(, spdk_file)	files;
+	/* sub-directories under root */
 	struct spdk_bs_opts	bs_opts;
 	struct spdk_bs_dev	*bdev;
 	fs_send_request_fn	send_request;
@@ -248,6 +267,15 @@ struct spdk_fs_cb_args {
 static void cache_free_buffers(struct spdk_file *file);
 static void spdk_fs_io_device_unregister(struct spdk_filesystem *fs);
 static void spdk_fs_free_io_channels(struct spdk_filesystem *fs);
+
+void trie_free_value(void *value);
+void update_init_with_child_node_cb(struct trie_node *node);
+
+void _spdk_rm_dir_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
+		       struct trie_node  *root);
+void print_trie(struct trie_node *root);
+
+
 
 void
 spdk_fs_opts_init(struct spdk_blobfs_opts *opts)
@@ -523,11 +551,27 @@ static struct spdk_filesystem *
 fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 {
 	struct spdk_filesystem *fs;
+	struct trie_node *root;
+	struct spdk_directory *root_dir;
 
 	fs = calloc(1, sizeof(*fs));
 	if (fs == NULL) {
 		return NULL;
 	}
+
+	/* root directory */
+	root = spdk_trie_node_create("", sizeof(struct spdk_directory));
+	if (root == NULL) {
+		free(fs);
+		return NULL;
+	}
+
+	root_dir = spdk_trie_node_get_val(root);
+	root_dir->type = SPDK_NODE_DIR;
+	root_dir->fs = fs;
+	root_dir->node = root;
+
+	fs->root = root;
 
 	fs->bdev = dev;
 	fs->send_request = send_request_fn;
@@ -684,6 +728,8 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_filesystem *fs = args->fs;
+	struct spdk_directory *dir;
+	struct trie_node *node;
 	uint64_t *length;
 	const char *name;
 	uint32_t *is_deleted;
@@ -732,6 +778,15 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		f->length_xattr = *length;
 		f->append_pos = *length;
 		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "added file %s length=%ju\n", f->name, f->length);
+
+
+		node = spdk_trie_update(fs->root, name, sizeof(struct spdk_directory),
+					update_init_with_child_node_cb);
+		dir = (struct spdk_directory *)spdk_trie_node_get_val(node);
+		dir->node = node;
+		dir->fs = fs;
+		dir->type = SPDK_NODE_FILE;
+
 	} else {
 		struct spdk_deleted_file *deleted_file;
 
@@ -788,6 +843,7 @@ spdk_fs_io_device_unregister(struct spdk_filesystem *fs)
 	spdk_io_device_unregister(&fs->md_target, NULL);
 	spdk_io_device_unregister(&fs->sync_target, NULL);
 	spdk_io_device_unregister(&fs->io_target, NULL);
+	spdk_trie_free(fs->root, NULL);
 	free(fs);
 }
 
@@ -833,6 +889,124 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	bs_opts.iter_cb_fn = iter_cb;
 	bs_opts.iter_cb_arg = req;
 	spdk_bs_load(dev, &bs_opts, load_cb, req);
+}
+
+void update_init_with_child_node_cb(struct trie_node *node)
+{
+	struct spdk_directory *dir, *value;
+
+	value = spdk_trie_node_get_val(node);
+
+	if (value != NULL) {
+		return;
+	}
+
+	dir = (struct spdk_directory *)calloc(1, sizeof(*dir));
+	dir->type = SPDK_NODE_DIR;
+	dir->node = node;
+
+	value = dir;
+}
+
+
+int spdk_fs_dir_file_num(struct spdk_filesystem *fs, const char *name)
+{
+	struct trie_node *node;
+
+	node = spdk_trie_search(fs->root, name);
+	return node == NULL ? -1 : node->child_num;
+}
+
+char **
+spdk_fs_readdir(struct spdk_filesystem *fs, const char *name, int file_nums)
+{
+	char **dir_files;
+	struct trie_node *node, *temp_node;
+	int i;
+
+	dir_files = (char **)calloc(1, file_nums * sizeof(char *));
+	for (i = 0; i < file_nums; i++) {
+		dir_files[i] = calloc(1, sizeof(char) * SPDK_TRIE_MAX_KEY_LEN);
+	}
+
+	node = spdk_trie_search(fs->root, name);
+	i = 0;
+	TAILQ_FOREACH(temp_node, &node->childs, tailq) {
+		memcpy(dir_files[i++], temp_node->key,
+		       strlen(temp_node->key) > SPDK_TRIE_MAX_KEY_LEN  ?  SPDK_TRIE_MAX_KEY_LEN : strlen(temp_node->key));
+	}
+
+	return dir_files;
+}
+
+int
+spdk_fs_mkdir(struct spdk_filesystem *fs, const char *name, uint64_t mode)
+{
+	struct spdk_directory *dir;
+	struct trie_node *node;
+
+	if (strcmp(name, "/") == 0) {
+		/* root directory already exist */
+		return 0;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "mkdir path=%s\n", name);
+
+	node = spdk_trie_update(fs->root, name, sizeof(struct spdk_directory),
+				update_init_with_child_node_cb);
+
+	dir = (struct spdk_directory *)spdk_trie_node_get_val(node);
+	dir->node = node;
+	dir->fs = fs;
+	dir->type = SPDK_NODE_DIR;
+
+	return 0;
+}
+
+void
+_spdk_rm_dir_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
+		  struct trie_node *root)
+{
+	struct trie_node *node;
+	struct spdk_directory *dir;
+
+	char path[SPDK_TRIE_MAX_KEY_LEN];
+
+	dir = spdk_trie_node_get_val(root);
+	if (dir->type == SPDK_NODE_FILE) {
+		spdk_trie_node_full_key(root, path);
+		/* remove the last char in path */
+		path[strlen(path) - 1] = '\0';
+		spdk_fs_delete_file(fs, ctx, path);
+	}
+
+	if (root->child_num == 0) {
+		return;
+	}
+
+	TAILQ_FOREACH(node, &root->childs, tailq) {
+		_spdk_rm_dir_file(fs, ctx, node);
+	}
+}
+
+int
+spdk_fs_rmdir(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx, const char *path)
+{
+	struct trie_node *node;
+
+	if (strcmp(path, "/") == 0) {
+		/* todo return error */
+		return 0;
+	}
+
+	node = spdk_trie_search(fs->root, path);
+	if (node == NULL) {
+		return 0;
+	}
+
+	_spdk_rm_dir_file(fs, ctx, node);
+	spdk_trie_free(node, NULL);
+	return 0;
 }
 
 static void
@@ -903,22 +1077,65 @@ fs_find_file(struct spdk_filesystem *fs, const char *name)
 	return NULL;
 }
 
+
+void print_trie(struct trie_node *root)
+{
+	struct trie_node *node;
+
+	char path[100];
+	spdk_trie_node_full_key(root, path);
+	printf("node name : %s , full name : %s\n", root->key, path);
+
+	if (root->child_num == 0) {
+		return;
+	}
+
+	TAILQ_FOREACH(node, &root->childs, tailq) {
+		print_trie(node);
+	}
+}
+
 void
 spdk_fs_file_stat_async(struct spdk_filesystem *fs, const char *name,
 			spdk_file_stat_op_complete cb_fn, void *cb_arg)
 {
-	struct spdk_file_stat stat;
+	struct spdk_file_stat stat = {};
 	struct spdk_file *f = NULL;
+	struct trie_node *node;
+	struct spdk_directory *dir;
+	struct spdk_file *file;
+
+	print_trie(fs->root);
+
+	TAILQ_FOREACH(file, &fs->files, tailq) {
+		printf("file->name : %s\n", file->name);
+	}
 
 	if (strnlen(name, SPDK_FILE_NAME_MAX + 1) == SPDK_FILE_NAME_MAX + 1) {
 		cb_fn(cb_arg, NULL, -ENAMETOOLONG);
 		return;
 	}
 
+	/* it can be removed and use trie to check */
 	f = fs_find_file(fs, name);
 	if (f != NULL) {
 		stat.blobid = f->blobid;
 		stat.size = f->append_pos >= f->length ? f->append_pos : f->length;
+		stat.type = SPDK_BLOBFS_FILE;
+		cb_fn(cb_arg, &stat, 0);
+		return;
+	}
+
+	node = spdk_trie_search(fs->root, name);
+	if (node != NULL) {
+		dir = spdk_trie_node_get_val(node);
+		/* file need return by fs_find_file */
+		if (dir->type == SPDK_NODE_FILE) {
+			cb_fn(cb_arg, NULL, -ENOENT);
+			return ;
+		}
+
+		stat.type = SPDK_BLOBFS_DIRECTORY;
 		cb_fn(cb_arg, &stat, 0);
 		return;
 	}
@@ -1048,11 +1265,19 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 			  spdk_file_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_file *file;
+	struct trie_node *node, *new_node;
+	struct spdk_directory *dir;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 
 	if (strnlen(name, SPDK_FILE_NAME_MAX + 1) == SPDK_FILE_NAME_MAX + 1) {
 		cb_fn(cb_arg, -ENAMETOOLONG);
+		return;
+	}
+
+	node = spdk_trie_search_parent_path(fs->root, name);
+	if (node == NULL) {
+		cb_fn(cb_arg, -ENOENT);
 		return;
 	}
 
@@ -1080,6 +1305,14 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 	args->file = file;
 	args->fn.file_op = cb_fn;
 	args->arg = cb_arg;
+
+	new_node = spdk_trie_update(fs->root, name, sizeof(struct spdk_directory),
+				    update_init_with_child_node_cb);
+
+	dir = (struct spdk_directory *)spdk_trie_node_get_val(new_node);
+	dir->fs = fs;
+	dir->type = SPDK_NODE_FILE;
+	dir->node = new_node;
 
 	file->name = strdup(name);
 	_file_build_trace_arg_name(file);
@@ -1442,6 +1675,7 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 			  spdk_file_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_file *f;
+	int rc = 0;
 	spdk_blob_id blobid;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
@@ -1456,6 +1690,13 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	f = fs_find_file(fs, name);
 	if (f == NULL) {
 		SPDK_ERRLOG("Cannot find the file=%s to deleted\n", name);
+		cb_fn(cb_arg, -ENOENT);
+		return;
+	}
+
+	rc = spdk_trie_remove(fs->root, name, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("Cannot find the directory file %s belongs to\n", name);
 		cb_fn(cb_arg, -ENOENT);
 		return;
 	}
@@ -1547,8 +1788,8 @@ spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 	return rc;
 }
 
-spdk_fs_iter
-spdk_fs_iter_first(struct spdk_filesystem *fs)
+spdk_file_iter
+spdk_file_iter_first(struct spdk_filesystem *fs)
 {
 	struct spdk_file *f;
 
@@ -1556,8 +1797,8 @@ spdk_fs_iter_first(struct spdk_filesystem *fs)
 	return f;
 }
 
-spdk_fs_iter
-spdk_fs_iter_next(spdk_fs_iter iter)
+spdk_file_iter
+spdk_file_iter_next(spdk_file_iter iter)
 {
 	struct spdk_file *f = iter;
 
