@@ -81,6 +81,8 @@ spdk_fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *f
 	struct spdk_file_stat stat;
 	int rc;
 
+	fprintf(stdout, "getattr path=%s\n", path);
+
 	if (!strcmp(path, "/")) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
@@ -89,11 +91,21 @@ spdk_fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *f
 
 	rc = spdk_fs_file_stat(g_fs, g_channel, path, &stat);
 	if (rc == 0) {
-		stbuf->st_mode = S_IFREG | 0644;
-		stbuf->st_nlink = 1;
-		stbuf->st_size = stat.size;
+		if (stat.type == SPDK_BLOBFS_FILE) {
+			stbuf->st_mode = S_IFREG | 0644;
+			stbuf->st_nlink = 1;
+			stbuf->st_size = stat.size;
+			return 0;
+		} else if (stat.type == SPDK_BLOBFS_DIRECTORY) {
+			stbuf->st_mode = S_IFDIR | 0755;
+			stbuf->st_nlink = 2;
+			return 0;	
+		} else {
+			assert(false);
+		}
 	}
 
+	fprintf(stdout, "getattr rc=%d\n", rc);
 	return rc;
 }
 
@@ -103,18 +115,60 @@ spdk_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		  enum fuse_readdir_flags flags)
 {
 	struct spdk_file *file;
-	const char *filename;
-	spdk_fs_iter iter;
+	const char *p;
+	const char *filename, *dirname;
+	uint32_t path_len, len;
+	spdk_file_iter iter;
+	spdk_dir_iter dir_iter;
+
+	fprintf(stdout, "readdir, current path=%s\n", path);
 
 	filler(buf, ".", NULL, 0, 0);
 	filler(buf, "..", NULL, 0, 0);
 
-	iter = spdk_fs_iter_first(g_fs);
+	path_len = strlen(path);
+
+	/* filter the file based on parent directory */
+	iter = spdk_file_iter_first(g_fs);
 	while (iter != NULL) {
-		file = spdk_fs_iter_get_file(iter);
-		iter = spdk_fs_iter_next(iter);
+		file = spdk_file_iter_get_file(iter);
 		filename = spdk_file_get_name(file);
-		filler(buf, &filename[1], NULL, 0, 0);
+		len = strlen(filename);
+		if ((len > path_len) && !strncmp(filename, path, strlen(path))) {
+			p = filename + strlen(path);
+			/* strip current path prefix */
+			if (*p == '/') {
+				if (!strchr(p + 1, '/')) {
+					filler(buf, &p[1], NULL, 0, 0);
+				}
+			} else {
+				if (!strchr(p, '/')) {
+					filler(buf, p, NULL, 0, 0);
+				}
+			}
+		}
+		iter = spdk_file_iter_next(iter);
+	}
+
+	/* filter the directory based on parent directory */
+	dir_iter = spdk_dir_iter_first(g_fs);
+	while (dir_iter != NULL) {
+		dirname = spdk_dir_get_name(dir_iter);
+		len = strlen(dirname);
+		if ((len > path_len) && !strncmp(dirname, path, strlen(path))) {
+			p = dirname + strlen(path);
+			/* strip current path prefix */
+			if (*p == '/') {
+				if (!strchr(p + 1, '/')) {
+					filler(buf, &p[1], NULL, 0, 0);
+				}
+			} else {
+				if (!strchr(p, '/')) {
+					filler(buf, p, NULL, 0, 0);
+				}
+			}
+		}
+		dir_iter = spdk_dir_iter_next(dir_iter);
 	}
 
 	return 0;
@@ -123,6 +177,7 @@ spdk_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 static int
 spdk_fuse_mknod(const char *path, mode_t mode, dev_t rdev)
 {
+	fprintf(stdout, "mknod path=%s\n", path);
 	return spdk_fs_create_file(g_fs, g_channel, path);
 }
 
@@ -223,9 +278,24 @@ spdk_fuse_rename(const char *old_path, const char *new_path, unsigned int flags)
 	return spdk_fs_rename_file(g_fs, g_channel, old_path, new_path);
 }
 
+static int
+spdk_fuse_mkdir(const char *name, mode_t mode)
+{
+	fprintf(stdout, "mkdir path=%s\n", name);
+	return spdk_fs_mkdir(g_fs, name, mode);
+}
+
+static int
+spdk_fuse_rmdir(const char *name)
+{
+	return spdk_fs_rmdir(g_fs, name);
+}
+
 static struct fuse_operations spdk_fuse_oper = {
 	.getattr	= spdk_fuse_getattr,
 	.readdir	= spdk_fuse_readdir,
+	.mkdir		= spdk_fuse_mkdir,
+	.rmdir		= spdk_fuse_rmdir,
 	.mknod		= spdk_fuse_mknod,
 	.unlink		= spdk_fuse_unlink,
 	.truncate	= spdk_fuse_truncate,
