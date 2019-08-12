@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "5c4bf23a_5837f2ac",
+        "filename": "test/ocf/management/persistent-metadata.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-12T11:27:26Z",
+      "side": 1,
+      "message": "ok, I missed that",
+      "parentUuid": "f1416fe4_77188de1",
+      "range": {
+        "startLine": 37,
+        "startChar": 12,
+        "endLine": 37,
+        "endChar": 15
+      },
+      "revId": "462868aad06c711184965d4d7bd7be637d24c0e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "73b146b5_47da2a8b",
         "filename": "test/ocf/management/persistent-metadata.sh",
         "patchSetId": 3
