@@ -45,6 +45,7 @@
 #include "common/lib/test_env.c"
 #include "blobfs/blobfs.c"
 #include "blobfs/tree.c"
+#include "blobfs/trie.c"
 
 struct spdk_filesystem *g_fs;
 struct spdk_file *g_file;
