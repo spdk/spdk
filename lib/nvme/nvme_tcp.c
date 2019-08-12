@@ -115,6 +115,58 @@ struct nvme_tcp_req {
 	TAILQ_ENTRY(nvme_tcp_req)		link;
 };
 
+static int
+nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+{
+	int ret;
+
+	assert(sock != NULL);
+	if (iov == NULL || iovcnt == 0) {
+		return 0;
+	}
+
+	if (iovcnt == 1) {
+		return nvme_tcp_read_data(sock, iov->iov_len, iov->iov_base);
+	}
+
+	ret = spdk_sock_readv(sock, iov, iovcnt);
+
+	if (ret > 0) {
+		return ret;
+	}
+
+	if (ret < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			return 0;
+		}
+
+		/* For connect reset issue, do not output error log */
+		if (errno == ECONNRESET) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "spdk_sock_readv() failed, errno %d: %s\n",
+				      errno, spdk_strerror(errno));
+		} else {
+			SPDK_ERRLOG("spdk_sock_readv() failed, errno %d: %s\n",
+				    errno, spdk_strerror(errno));
+		}
+	}
+
+	/* connection closed */
+	return NVME_TCP_CONNECTION_FATAL;
+}
+
+static int
+nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
+{
+	struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
+	int iovcnt;
+
+	iovcnt = nvme_tcp_build_payload_iovs(iov, NVME_TCP_MAX_SGL_DESCRIPTORS + 1, pdu,
+					     pdu->ddgst_enable, NULL);
+	assert(iovcnt >= 0);
+
+	return nvme_tcp_readv_data(sock, iov, iovcnt);
+}
+
 static void spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req);
 
 static inline struct nvme_tcp_qpair *
