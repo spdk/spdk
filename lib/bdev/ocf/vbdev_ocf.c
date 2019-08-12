@@ -1004,6 +1004,39 @@ vbdev_ocf_mngt_fn register_path[] = {
 	NULL
 };
 
+/* Rollback not successful registering of vbdev device */
+static void
+register_vbdev_rollback(struct vbdev_ocf *vbdev)
+{
+	int rc;
+	struct vbdev_ocf_mngt_ctx    mngt_ctx_tmp = {0};
+
+	SPDK_ERRLOG("Registering of OCF bdev: %s failed, starting rollback\n",
+		    vbdev->name);
+
+	/* Create copy of current management context */
+	memcpy(&mngt_ctx_tmp, &vbdev->mngt_ctx, sizeof(mngt_ctx_tmp));
+
+	/* Erase management context in vbdev */
+	memset(&vbdev->mngt_ctx, 0, sizeof(vbdev->mngt_ctx));
+
+	/* Set up status to return after rollback */
+	vbdev->mngt_ctx.rb_status = mngt_ctx_tmp.status;
+
+	/* Register new management chain with rollback procedures and
+	 * with original callback */
+	rc = vbdev_ocf_mngt_start(vbdev, unregister_path,
+				  NULL, mngt_ctx_tmp.cb, mngt_ctx_tmp.cb_arg,
+				  mngt_ctx_mode_unregister);
+	if (rc) {
+		SPDK_ERRLOG("Can not initialize rollback of OCF bdev: %s\n",
+			    vbdev->name);
+		/* Here we can only call original callback with original error */
+		mngt_ctx_tmp.cb(mngt_ctx_tmp.status, vbdev,
+				mngt_ctx_tmp.cb_arg);
+	}
+}
+
 /* Start cache instance and register OCF bdev */
 static void
 register_vbdev(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_callback cb, void *cb_arg)
@@ -1015,9 +1048,8 @@ register_vbdev(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_callback cb, void *cb_arg
 		return;
 	}
 
-
-	rc = vbdev_ocf_mngt_start(vbdev, register_path, NULL, cb, cb_arg,
-				  mngt_ctx_mode_normal);
+	rc = vbdev_ocf_mngt_start(vbdev, register_path, register_vbdev_rollback,
+				  cb, cb_arg, mngt_ctx_mode_normal);
 	if (rc) {
 		cb(rc, vbdev, cb_arg);
 	}
