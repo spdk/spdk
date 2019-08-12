@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61af80d0_ed801e53",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-12T23:49:53Z",
+      "side": 1,
+      "message": "It\u0027s nice if we move this to next to bdev_delay_update_latency later.",
+      "range": {
+        "startLine": 431,
+        "startChar": 4,
+        "endLine": 431,
+        "endChar": 24
+      },
+      "revId": "aebcfdaa09fc23a394e5f629198f20b2e61391b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
