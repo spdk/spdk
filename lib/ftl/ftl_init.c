@@ -732,6 +732,8 @@ _ftl_dev_init_thread(void *ctx)
 	if (spdk_get_thread() == ftl_get_core_thread(dev)) {
 		ftl_anm_register_device(dev, ftl_process_anm_event);
 	}
+
+	thread->ioch = spdk_get_io_channel(dev);
 }
 
 static int
@@ -778,8 +780,10 @@ ftl_dev_free_thread(struct spdk_ftl_dev *dev, struct ftl_thread *thread)
 {
 	assert(thread->poller == NULL);
 
+	spdk_put_io_channel(thread->ioch);
 	spdk_nvme_ctrlr_free_io_qpair(thread->qpair);
 	thread->thread = NULL;
+	thread->ioch = NULL;
 	thread->qpair = NULL;
 }
 
@@ -1069,12 +1073,6 @@ ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 				sizeof(struct ftl_io_channel),
 				NULL);
 
-	dev->ioch = spdk_get_io_channel(dev);
-	if (!dev->ioch) {
-		spdk_io_device_unregister(dev, NULL);
-		return -1;
-	}
-
 	return 0;
 }
 
@@ -1227,10 +1225,7 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	ftl_dev_dump_bands(dev);
 	ftl_dev_dump_stats(dev);
 
-	if (dev->ioch) {
-		spdk_put_io_channel(dev->ioch);
-		spdk_io_device_unregister(dev, NULL);
-	}
+	spdk_io_device_unregister(dev, NULL);
 
 	if (dev->bands) {
 		for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
