@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6470fd5a_ea7216dd",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 1805,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-12T19:09:31Z",
+      "side": 1,
+      "message": "I\u0027m finding \"latency value\" to be a little confusing. Maybe \"latency target value\"?",
+      "revId": "38505ddd30bf462c3f7e960f03a52d7b0d17af57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcfbe7a4_ae4162ce",
+        "filename": "lib/bdev/delay/vbdev_delay.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-12T19:09:31Z",
+      "side": 1,
+      "message": "I\u0027d just inline this into the function below. You\u0027ll only end up using it there.",
+      "revId": "38505ddd30bf462c3f7e960f03a52d7b0d17af57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "107efce0_d02bef04",
+        "filename": "lib/bdev/delay/vbdev_delay.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-12T19:09:31Z",
+      "side": 1,
+      "message": "The name of the delay bdev - drop the \"desired\" word.",
+      "revId": "38505ddd30bf462c3f7e960f03a52d7b0d17af57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
