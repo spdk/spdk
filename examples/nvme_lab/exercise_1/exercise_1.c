@@ -66,7 +66,32 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static void
 exercise_1(void)
 {
-	/* TODO: Put your code here :) */
+	const struct spdk_nvme_ctrlr_data *cdata;
+	char serial[128];
+	union spdk_nvme_csts_register csts;
+
+	/* Get the identify controller data as defined by the NVMe specification. */
+	cdata = spdk_nvme_ctrlr_get_data(g_controller);
+	snprintf(serial, sizeof(cdata->sn) + 1, "%s", cdata->sn);
+	printf("Serial number: %s\n", serial);
+
+	/* Perform a full hardware reset of the NVMe controller. */
+	if (spdk_nvme_ctrlr_reset(g_controller)) {
+		printf("Resetting the controller did not succeed\n");
+		return;
+	}
+
+	/* Get the NVMe controller CSTS (Status) register. */
+	csts = spdk_nvme_ctrlr_get_regs_csts(g_controller);
+	if (csts.bits.rdy != 1) {
+		printf("Controller not ready after reset\n");
+		return;
+	}
+
+	/* Detach NVMe controller, g_controller is no longer valid */
+	spdk_nvme_detach(g_controller);
+
+	printf("Great success !\n");
 }
 
 int main(int argc, char **argv)
