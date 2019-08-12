@@ -55,6 +55,7 @@
 #define NVMF_TCP_PDU_MAX_C2H_DATA_SIZE	131072
 #define NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM  64  /* Maximal c2h_data pdu number for ecah tqpair */
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 6
+#define SPDK_NVMF_TCP_DEFUALT_PDU_RECV_BUF_SIZE 8192
 
 /* spdk nvmf related structure */
 enum spdk_nvmf_tcp_req_state {
@@ -198,6 +199,12 @@ struct spdk_nvmf_tcp_req  {
 	TAILQ_ENTRY(spdk_nvmf_tcp_req)		state_link;
 };
 
+struct nvme_tcp_pdu_recv_buf {
+	char                                    buf[SPDK_NVMF_TCP_DEFUALT_PDU_RECV_BUF_SIZE];
+	uint32_t                                off;
+	uint32_t                                remain_size;
+};
+
 struct spdk_nvmf_tcp_qpair {
 	struct spdk_nvmf_qpair			qpair;
 	struct spdk_nvmf_tcp_poll_group		*group;
@@ -209,6 +216,7 @@ struct spdk_nvmf_tcp_qpair {
 	enum nvme_tcp_qpair_state		state;
 
 	struct nvme_tcp_pdu			pdu_in_progress;
+	struct nvme_tcp_pdu_recv_buf		pdu_recv_buf;
 
 	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
 	TAILQ_HEAD(, nvme_tcp_pdu)		free_queue;
@@ -1902,6 +1910,66 @@ nvmf_tcp_pdu_payload_insert_dif(struct nvme_tcp_pdu *pdu, uint32_t read_offset,
 #define MAX_NVME_TCP_PDU_LOOP_COUNT 32
 
 static int
+nvme_tcp_recv_buf_read(struct spdk_sock *sock, struct nvme_tcp_pdu_recv_buf *pdu_recv_buf)
+{
+	int rc;
+
+	assert(pdu_recv_buf->off == 0);
+	assert(pdu_recv_buf->remain_size == 0);
+	rc = nvme_tcp_read_data(sock, SPDK_NVMF_TCP_DEFUALT_PDU_RECV_BUF_SIZE,
+				pdu_recv_buf->buf);
+	if (rc < 0) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconnect sock=%p\n", sock);
+		return NVME_TCP_PDU_FATAL;
+	} else if (rc > 0) {
+		pdu_recv_buf->remain_size += rc;
+		spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE, 0, rc, 0, 0);
+	}
+
+	return rc;
+}
+
+static inline uint32_t
+nvme_tcp_read_data_from_pdu_recv_buf(struct nvme_tcp_pdu_recv_buf *pdu_recv_buf,
+				     uint32_t expected_size,
+				     char *dst)
+{
+	uint32_t size;
+
+	size = spdk_min(expected_size, pdu_recv_buf->remain_size);
+	memcpy(dst, (void *)pdu_recv_buf->buf + pdu_recv_buf->off, size);
+	pdu_recv_buf->off += size;
+	pdu_recv_buf->remain_size -= size;
+	if (!pdu_recv_buf->remain_size) {
+		pdu_recv_buf->off = 0;
+	}
+
+	return size;
+}
+
+static int
+nvme_tcp_read_payload_data_from_pdu_recv_buf(struct nvme_tcp_pdu_recv_buf *pdu_recv_buf,
+		struct nvme_tcp_pdu *pdu)
+{
+	struct iovec iov[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
+	int iovcnt, i;
+	uint32_t size = 0;
+
+	assert(pdu_recv_buf->remain_size > 0);
+	iovcnt = nvme_tcp_build_payload_iovs(iov, NVME_TCP_MAX_SGL_DESCRIPTORS + 1, pdu,
+					     pdu->ddgst_enable, NULL);
+	assert(iovcnt >= 0);
+	for (i = 0; i < iovcnt; i++) {
+		if (!pdu_recv_buf->remain_size) {
+			break;
+		}
+		size += nvme_tcp_read_data_from_pdu_recv_buf(pdu_recv_buf, iov[i].iov_len, iov[i].iov_base);
+	}
+
+	return size;
+}
+
+static int
 spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	int rc = 0;
@@ -1919,18 +1987,18 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 		/* Wait for the common header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
-			rc = nvme_tcp_read_data(tqpair->sock,
-						sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
-						(void *)&pdu->hdr.common + pdu->ch_valid_bytes);
-			if (rc < 0) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconnect tqpair=%p\n", tqpair);
-				return NVME_TCP_PDU_FATAL;
-			} else if (rc > 0) {
-				pdu->ch_valid_bytes += rc;
-				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE, 0, rc, 0, 0);
-				if (spdk_likely(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY)) {
-					spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
+			if (!tqpair->pdu_recv_buf.off) {
+				rc = nvme_tcp_recv_buf_read(tqpair->sock, &tqpair->pdu_recv_buf);
+				if (rc <= 0) {
+					return rc;
 				}
+			}
+			rc = nvme_tcp_read_data_from_pdu_recv_buf(&tqpair->pdu_recv_buf,
+					sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
+					(void *)&pdu->hdr.common + pdu->ch_valid_bytes);
+			pdu->ch_valid_bytes += rc;
+			if (spdk_likely(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY)) {
+				spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
 			}
 
 			if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
@@ -1942,16 +2010,17 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			break;
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
-			rc = nvme_tcp_read_data(tqpair->sock,
-						pdu->psh_len - pdu->psh_valid_bytes,
-						(void *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
-			if (rc < 0) {
-				return NVME_TCP_PDU_FATAL;
-			} else if (rc > 0) {
-				spdk_trace_record(TRACE_TCP_READ_FROM_SOCKET_DONE,
-						  0, rc, 0, 0);
-				pdu->psh_valid_bytes += rc;
+			if (!tqpair->pdu_recv_buf.off) {
+				rc = nvme_tcp_recv_buf_read(tqpair->sock, &tqpair->pdu_recv_buf);
+				if (rc <= 0) {
+					return rc;
+				}
 			}
+
+			rc = nvme_tcp_read_data_from_pdu_recv_buf(&tqpair->pdu_recv_buf,
+					pdu->psh_len - pdu->psh_valid_bytes,
+					(void *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
+			pdu->psh_valid_bytes += rc;
 			if (pdu->psh_valid_bytes < pdu->psh_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
@@ -1961,6 +2030,7 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
 				current_pdu_num++;
 			}
+
 			break;
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
 			/* check whether the data is valid, if not we just return */
@@ -1974,6 +2044,11 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 					  tqpair->host_ddgst_enable)) {
 				data_len += SPDK_NVME_TCP_DIGEST_LEN;
 				pdu->ddgst_enable = true;
+			}
+
+			if (tqpair->pdu_recv_buf.remain_size) {
+				rc = nvme_tcp_read_payload_data_from_pdu_recv_buf(&tqpair->pdu_recv_buf, pdu);
+				pdu->readv_offset += rc;
 			}
 
 			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
