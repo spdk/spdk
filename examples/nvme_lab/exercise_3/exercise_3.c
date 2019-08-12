@@ -37,6 +37,13 @@
 #include "spdk/env.h"
 
 static struct spdk_nvme_ctrlr *g_controller;
+static int g_outstanding_commands;
+
+struct io_context {
+	struct spdk_nvme_ns	*ns;
+	struct spdk_nvme_qpair	*qpair;
+	char *buf;
+};
 
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
@@ -59,19 +66,127 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
+read_complete(void *arg, const struct spdk_nvme_cpl *completion)
+{
+	struct io_context *ctx = arg;
+
+	g_outstanding_commands--;
+
+	if (spdk_nvme_cpl_is_error(completion)) {
+		spdk_nvme_qpair_print_completion(ctx->qpair, (struct spdk_nvme_cpl *)completion);
+		printf("I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		printf("Read I/O failed, aborting run\n");
+		spdk_free(ctx->buf);
+		return;
+	}
+
+	/* Read buffer is not filled with data from device. Display it, then free. */
+	printf("%s", ctx->buf);
+	spdk_free(ctx->buf);
+}
+
+static void
+write_complete(void *arg, const struct spdk_nvme_cpl *completion)
+{
+	struct io_context *ctx = arg;
+	int rc;
+
+	g_outstanding_commands--;
+
+	/* Free buffer used for write */
+	spdk_free(ctx->buf);
+
+	if (spdk_nvme_cpl_is_error(completion)) {
+		spdk_nvme_qpair_print_completion(ctx->qpair, (struct spdk_nvme_cpl *)completion);
+		printf("I/O error status: %s\n", spdk_nvme_cpl_get_status_string(&completion->status));
+		printf("Write I/O failed, aborting run\n");
+		return;
+	}
+
+	/* Allocate new buffer for read and send it to the device */
+	ctx->buf = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	if (ctx->buf == NULL) {
+		printf("ERROR: read buffer allocation failed\n");
+		return;
+	}
+
+	rc = spdk_nvme_ns_cmd_read(ctx->ns, ctx->qpair, ctx->buf,
+				   0, /* LBA start */
+				   1, /* number of LBAs */
+				   read_complete, (void *)ctx, 0);
+	if (rc != 0) {
+		printf("starting read I/O failed\n");
+		spdk_free(ctx->buf);
+		return;
+	}
+
+	g_outstanding_commands++;
+}
+
+static void
 exercise_3(void)
 {
-	/* TODO: Put your code here :)
-	 *
-	 * 1. Check number of available namespaces, get first one and see if it is active
-	 * 2. Allocate 4K buffer and copy „NVMe Lab” string into it
-	 * 3. Allocate I/O qpair for the controller
-	 * 4. Send that buffer to the provided namespace on allocated qpair
-	 * 5. Process completions
-	 * 6. On succesfull write, read the same LBA from disk and print it
-	 * 7. Free allocated resources
-	 *
-	 */
+	int num_ns, nsid, rc;
+	struct io_context ctx;
+	struct spdk_nvme_ns *ns;
+	struct spdk_nvme_qpair *qpair;
+	char *buf;
+
+	/* Check number of namespaces on the controller */
+	num_ns = spdk_nvme_ctrlr_get_num_ns(g_controller);
+	printf("Using controller with %d namespaces.\n", num_ns);
+
+	/* Using only first namespace */
+	nsid = 1;
+	ns = spdk_nvme_ctrlr_get_ns(g_controller, nsid);
+	if (ns == NULL) {
+		printf("Namespace %d is not present on the controller.\n", nsid);
+		return;
+	}
+	if (!spdk_nvme_ns_is_active(ns)) {
+		printf("Namespace %d is not active on the controller.\n", nsid);
+		return;
+	}
+	ctx.ns = ns;
+
+	/* Allocate buffer for write cmd */
+	buf = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	if (buf == NULL) {
+		printf("ERROR: write buffer allocation failed\n");
+		return;
+	}
+	snprintf(buf, 0x1000, "%s", "NVMe Lab\n");
+	ctx.buf = buf;
+
+	/* Allocate I/O qpair */
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_controller, NULL, 0);
+	if (qpair == NULL) {
+		printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+		free(ctx.buf);
+		return;
+	}
+	ctx.qpair = qpair;
+
+	/* Send allocated buffer to first namespace on allocated qpair */
+	rc = spdk_nvme_ns_cmd_write(ctx.ns, ctx.qpair, ctx.buf,
+				    0, /* LBA start */
+				    1, /* number of LBAs */
+				    write_complete, &ctx, 0);
+	if (rc != 0) {
+		printf("starting write I/O failed\n");
+		free(ctx.buf);
+		return;
+	}
+	g_outstanding_commands++;
+
+	/* Process qpair completions */
+	while (g_outstanding_commands) {
+		spdk_nvme_qpair_process_completions(qpair, 0);
+	}
+
+	/* Clean up resources */
+	spdk_nvme_ctrlr_free_io_qpair(ctx.qpair);
+	spdk_nvme_detach(g_controller);
 }
 
 int main(int argc, char **argv)
