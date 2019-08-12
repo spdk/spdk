@@ -43,7 +43,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	printf("Attaching to %s...\n", trid->traddr);
-	if (strcmp(trid->traddr, "192.168.100.1")) {
+	if (strcmp(trid->traddr, "0000:82:00.0")) {
 		printf("Failed attaching to %s, this is not the expected traddr\n", trid->traddr);
 		return false;
 	}
