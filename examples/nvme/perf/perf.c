@@ -197,8 +197,6 @@ struct trid_entry {
 
 static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
 
-static int g_aio_optind; /* Index of first AIO filename in argv */
-
 static inline void
 task_complete(struct perf_task *task);
 
@@ -1500,8 +1498,6 @@ parse_args(int argc, char **argv)
 		}
 	}
 
-	g_aio_optind = optind;
-
 	return 0;
 }
 
@@ -1789,7 +1785,7 @@ int main(int argc, char **argv)
 	}
 
 	if (g_num_namespaces == 0) {
-		fprintf(stderr, "No valid NVMe controllers or AIO devices found\n");
+		fprintf(stderr, "No valid NVMe controllers\n");
 		goto cleanup;
 	}
 
