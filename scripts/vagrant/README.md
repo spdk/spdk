@@ -42,7 +42,7 @@ Quick start instructions for OSX:
 
 Following the generic instructions should be sufficient for most Linux distributions. For more thorough instructions on installing VirtualBox on your distribution of choice, please see the following [guide](https://www.virtualbox.org/wiki/Linux_Downloads).
 
- Examples on Fedora26/Fedora27/Fedora28
+ Examples on Fedora28
 
 1. yum check-update
 2. yum update -y
@@ -77,16 +77,16 @@ Use the `spdk/scripts/vagrant/create_vbox.sh` script to create a VM of your choi
 - centos7
 - ubuntu16
 - ubuntu18
-- fedora26
-- fedora27
 - fedora28
+- fedora29
+- fedora30
 - freebsd11
 
 ```
 $ spdk/scripts/vagrant/create_vbox.sh -h
  Usage: create_vbox.sh [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrld] <distro>
 
-  distro = <centos7 | ubuntu16 | ubuntu18 | fedora26 | fedora27 | fedora28 | freebsd11>
+  distro = <centos7 | ubuntu16 | ubuntu18 | fedora28 | fedora29 | fedora30 | freebsd11>
 
   -s <ram-size> in kb       default: 4096
   -n <num-cpus> 1 to 4      default: 4
@@ -103,16 +103,16 @@ $ spdk/scripts/vagrant/create_vbox.sh -h
 
  Examples:
 
-  ./scripts/vagrant/create_vbox.sh -x http://user:password@host:port fedora27
+  ./scripts/vagrant/create_vbox.sh -x http://user:password@host:port fedora28
   ./scripts/vagrant/create_vbox.sh -s 2048 -n 2 ubuntu16
   ./scripts/vagrant/create_vbox.sh -rv freebsd
-  ./scripts/vagrant/create_vbox.sh fedora26
+  ./scripts/vagrant/create_vbox.sh fedora28
 ```
 
 It is recommended that you call the `create_vbox.sh` script from outside of the spdk repository. Call this script from a parent directory. This will allow the creation of multiple VMs in separate <distro> directories, all using the same spdk repository.  For example:
 
 ```
-   $ spdk/scripts/vagrant/create_vbox.sh -s 2048 -n 2 fedora26
+   $ spdk/scripts/vagrant/create_vbox.sh -s 2048 -n 2 fedora28
 ```
 
 This script will:
