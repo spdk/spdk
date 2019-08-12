@@ -16,6 +16,29 @@
       "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db15082d_e9efee0a",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-12T22:46:44Z",
+      "side": 1,
+      "message": "I added a comment to two patches later.\n\nWe often say 520 byte sector when we use 512+8, and bdev.blocklen includes data block and metadata. \n\nSo I think it sounds reasonable that opts-\u003eblock_size includes data block and metadata.\n\nBut if we use opts-\u003eblock_size as data_block_size, we should any comment about this.",
+      "range": {
+        "startLine": 209,
+        "startChar": 34,
+        "endLine": 209,
+        "endChar": 45
+      },
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
