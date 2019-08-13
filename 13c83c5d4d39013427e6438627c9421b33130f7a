@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe274609_2cc45eb6",
+        "filename": "examples/nvme_lab/exercise_2/exercise_2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-13T07:57:34Z",
+      "side": 1,
+      "message": "how about putting the current goal description in here?\nSame for other exercises",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 34
+      },
+      "revId": "13c83c5d4d39013427e6438627c9421b33130f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
