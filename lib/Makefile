@@ -62,8 +62,23 @@ DEPDIRS-json := log util
 DEPDIRS-jsonrpc := log util json
 DEPDIRS-rpc := log util json jsonrpc
 
+# Phase 2 dependencies.
+# Functional level libraries.
+DEPDIRS-bdev := conf json log notify thread trace util
+DEPDIRS-blob := log util
+DEPDIRS-copy := thread
+DEPDIRS-event := conf json jsonrpc log rpc thread trace util
+DEPDIRS-ioat := log
+DEPDIRS-log_rpc := log json jsonrpc rpc
+DEPDIRS-net := log json jsonrpc rpc util
+DEPDIRS-notify := log util
+DEPDIRS-reduce := log util
+DEPDIRS-sock := log
+DEPDIRS-trace := log json jsonrpc rpc util
+DEPDIRS-virtio := log json thread util
+DEPDIRS-vmd := log
+
 DEPDIRS-iscsi := scsi
-DEPDIRS-bdev := notify
 
 .PHONY: all clean $(DIRS-y)
 

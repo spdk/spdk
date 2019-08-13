@@ -42,4 +42,6 @@ C_SRCS = bdev.c bdev_rpc.c part.c scsi_nvme.c
 C_SRCS-$(CONFIG_VTUNE) += vtune.c
 LIBNAME = bdev
 
+SPDK_DEP_LIBNAMES = conf json log notify thread trace util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

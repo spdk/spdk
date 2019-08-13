@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = notify.c notify_rpc.c
 LIBNAME = notify
 
+SPDK_DEP_LIBNAMES = log util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
