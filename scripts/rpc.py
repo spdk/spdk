@@ -161,19 +161,19 @@ if __name__ == "__main__":
     p.add_argument('-p', '--pmd', type=int, help='0 = auto-select, 1= QAT only, 2 = ISAL only')
     p.set_defaults(func=set_compress_pmd)
 
-    def construct_crypto_bdev(args):
-        print_json(rpc.bdev.construct_crypto_bdev(args.client,
-                                                  base_bdev_name=args.base_bdev_name,
-                                                  name=args.name,
-                                                  crypto_pmd=args.crypto_pmd,
-                                                  key=args.key))
-    p = subparsers.add_parser('construct_crypto_bdev',
+    def bdev_crypto_create(args):
+        print_json(rpc.bdev.bdev_crypto_create(args.client,
+                                               base_bdev_name=args.base_bdev_name,
+                                               name=args.name,
+                                               crypto_pmd=args.crypto_pmd,
+                                               key=args.key))
+    p = subparsers.add_parser('bdev_crypto_create',
                               help='Add a crypto vbdev')
     p.add_argument('base_bdev_name', help="Name of the base bdev")
     p.add_argument('name', help="Name of the crypto vbdev")
     p.add_argument('crypto_pmd', help="Name of the crypto device driver")
     p.add_argument('key', help="Key")
-    p.set_defaults(func=construct_crypto_bdev)
+    p.set_defaults(func=bdev_crypto_create)
 
     def delete_crypto_bdev(args):
         rpc.bdev.delete_crypto_bdev(args.client,

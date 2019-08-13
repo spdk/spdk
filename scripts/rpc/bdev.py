@@ -51,7 +51,7 @@ def set_compress_pmd(client, pmd):
     return client.call('set_compress_pmd', params)
 
 
-def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
+def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd, key):
     """Construct a crypto virtual block device.
 
     Args:
@@ -65,7 +65,7 @@ def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
     """
     params = {'base_bdev_name': base_bdev_name, 'name': name, 'crypto_pmd': crypto_pmd, 'key': key}
 
-    return client.call('construct_crypto_bdev', params)
+    return client.call('bdev_crypto_create', params)
 
 
 def delete_crypto_bdev(client, name):
