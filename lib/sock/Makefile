@@ -38,6 +38,8 @@ C_SRCS = sock.c net_framework.c
 
 LIBNAME = sock
 
+SPDK_DEP_LIBNAMES = log
+
 DIRS-y += posix
 DIRS-$(CONFIG_VPP) += vpp
 

@@ -61,6 +61,22 @@ DEPDIRS-json := log util
 DEPDIRS-jsonrpc := json
 DEPDIRS-rpc := jsonrpc
 
+# Phase 2 dependencies.
+# These libraries only depend on the above 7.
+DEPDIRS-blob := log util
+DEPDIRS-ioat := log
+DEPDIRS-log_rpc := log json jsonrpc rpc
+DEPDIRS-net := log json jsonrpc rpc util
+DEPDIRS-notify := log util
+DEPDIRS-reduce := log util
+DEPDIRS-sock := log thread util
+DEPDIRS-trace := log json jsonrpc rpc util
+DEPDIRS-virtio := log json thread util
+DEPDIRS-vmd := log
+
+
+
+
 DEPDIRS-iscsi := scsi
 DEPDIRS-bdev := notify
 
