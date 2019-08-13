@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8ede124_0e48b0e0",
+        "filename": "lib/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-13T20:25:47Z",
+      "side": 1,
+      "message": "Change this line, please.",
+      "range": {
+        "startLine": 154,
+        "startChar": 40,
+        "endLine": 154,
+        "endChar": 67
+      },
+      "revId": "7b601f4053db06dd2b2082e442b4e0b9e33735b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
