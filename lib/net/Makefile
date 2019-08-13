@@ -38,4 +38,6 @@ C_SRCS = interface.c net_rpc.c
 
 LIBNAME = net
 
+SPDK_DEP_LIBNAMES = log json jsonrpc rpc util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = ioat.c
 LIBNAME = ioat
 
+SPDK_DEP_LIBNAMES = log
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
