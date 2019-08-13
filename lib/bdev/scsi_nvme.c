@@ -158,7 +158,7 @@ spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io, int *sc, int *sk,
 			*asc  = SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB;
 			*ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
 			break;
-		case SPDK_NVME_SC_ATTEMPTED_WRITE_TO_RO_PAGE:
+		case SPDK_NVME_SC_ATTEMPTED_WRITE_TO_RO_RANGE:
 			*sc   = SPDK_SCSI_STATUS_CHECK_CONDITION;
 			*sk   = SPDK_SCSI_SENSE_DATA_PROTECT;
 			*asc  = SPDK_SCSI_ASC_WRITE_PROTECTED;
