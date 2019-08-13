@@ -42,7 +42,7 @@ def get_bdev_destroy_method(bdev):
                           'construct_crypto_bdev': "delete_crypto_bdev",
                           'bdev_delay_create': "bdev_delay_delete",
                           'construct_passthru_bdev': "delete_passthru_bdev",
-                          'construct_compress_bdev': 'delete_compress_bdev',
+                          'bdev_compress_create': 'bdev_compress_delete',
                           }
     destroy_method = None
     if 'method' in bdev:

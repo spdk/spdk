@@ -65,7 +65,7 @@ int create_compress_bdev(const char *bdev_name, const char *pm_path);
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn,
+void bdev_compress_delete(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn,
 			  void *cb_arg);
 
 #endif /* SPDK_VBDEV_COMPRESS_H */
