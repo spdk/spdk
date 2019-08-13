@@ -175,13 +175,13 @@ if __name__ == "__main__":
     p.add_argument('key', help="Key")
     p.set_defaults(func=construct_crypto_bdev)
 
-    def delete_crypto_bdev(args):
-        rpc.bdev.delete_crypto_bdev(args.client,
+    def bdev_crypto_delete(args):
+        rpc.bdev.bdev_crypto_delete(args.client,
                                     name=args.name)
 
-    p = subparsers.add_parser('delete_crypto_bdev', help='Delete a crypto disk')
+    p = subparsers.add_parser('bdev_crypto_delete', help='Delete a crypto disk')
     p.add_argument('name', help='crypto bdev name')
-    p.set_defaults(func=delete_crypto_bdev)
+    p.set_defaults(func=bdev_crypto_delete)
 
     def construct_ocf_bdev(args):
         print_json(rpc.bdev.construct_ocf_bdev(args.client,
