@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = trace_rpc.c
 LIBNAME = trace_rpc
 
+SPDK_DEP_LIBNAMES = json jsonrpc rpc trace
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

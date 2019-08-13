@@ -39,4 +39,6 @@ C_SRCS = copy_engine.c
 
 DIRS-y = ioat
 
+SPDK_DEP_LIBNAMES = conf ioat json jsonrpc log rpc thread
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
