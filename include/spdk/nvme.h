@@ -319,6 +319,19 @@ enum spdk_nvme_ctrlr_flags {
 	SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED	= 0x2, /**< security send/receive is supported */
 };
 
+/*
+ * Controller debugging flags
+ *
+ * Used to set debugging output.
+ */
+
+enum spdk_nvme_ctrlr_debug_flags {
+	SPDK_NVME_DEBUG_CMD	= 0x1, /**< Show each NVMe submission */
+	SPDK_NVME_DEBUG_LIST	= 0x2, /**< Show PRP/SGL for each NVMe submission */
+	SPDK_NVME_DEBUG_CPL	= 0x4, /**< Show each NVMe completion */
+	SPDK_NVME_DEBUG_REQS	= 0x8, /**< Show each I/O request */
+};
+
 /**
  * Parse the string representation of a transport ID.
  *
@@ -1015,6 +1028,24 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
  * \return 0 on success, -1 on failure.
  */
 int spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair);
+
+/**
+ * Set NVMe debugging flags
+ *
+ * This sets flags that deterime how much information is displayed
+ * for a given I/O operation.
+ *
+ * Flags:
+ *	SPDK_NVME_DEBUG_CMD	Show each NVMe submission
+ *	SPDK_NVME_DEBUG_LIST    Show PRP/SGL for each NVMe submission
+ *	SPDK_NVME_DEBUG_CPL	Show each NVMe completion
+ *	SPDK_NVME_DEBUG_REQS	Show each I/O request
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param flags Sets debugging flags.
+ */
+void spdk_nvme_ctrlr_set_debug_flags(struct spdk_nvme_ctrlr *ctrlr,
+				     enum spdk_nvme_ctrlr_debug_flags flags);
 
 /**
  * Send the given NVM I/O command, I/O buffers, lists and all to the NVMe controller.

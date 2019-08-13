@@ -2051,6 +2051,88 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 	return 0;
 }
 
+
+static
+void show_cmd(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd)
+{
+	uint32_t *abuff = (uint32_t *) cmd;
+
+	if (!qpair->id) {
+		printf("Admin command block:\n");
+	} else {
+		printf("I/O command block:\n");
+	}
+	printf("   DW0 %08x  DW1 %08x  DW2 %08x  DW3 %08x\n",
+	       abuff[0], abuff[1], abuff[2], abuff[3]);
+	printf("   DW4 %08x  DW5 %08x  DW6 %08x  DW7 %08x\n",
+	       abuff[4], abuff[5], abuff[6], abuff[7]);
+	printf("   DW8 %08x  DW9 %08x DW10 %08x DW11 %08x\n",
+	       abuff[8], abuff[9], abuff[10], abuff[11]);
+	printf("  DW12 %08x DW13 %08x DW14 %08x DW15 %08x\n",
+	       abuff[12], abuff[13], abuff[14], abuff[15]);
+	return;
+}
+
+static
+void show_sge(struct spdk_nvme_sgl_descriptor *sgl, uint32_t nseg)
+{
+	uint32_t i;
+
+	for (i = 0; i < nseg; i++, sgl++) {
+		printf("  Segment %02d: addr 0x%lx length 0x%x, type %d, subtype %d\n",
+		       i, (uint64_t) sgl->address, sgl->unkeyed.length, sgl->unkeyed.type, sgl->unkeyed.subtype);
+	}
+	return;
+}
+
+static
+void show_prp_sg_list(struct spdk_nvme_cmd *cmd, struct nvme_tracker *tr)
+{
+	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
+	struct spdk_nvme_sgl_descriptor *msgl = (struct spdk_nvme_sgl_descriptor *) &cmd->mptr;
+	int i = 0;
+
+	if (cmd->psdt & (SPDK_NVME_PSDT_SGL_MPTR_CONTIG | SPDK_NVME_PSDT_SGL_MPTR_SGL)) {
+		/* Single SGL */
+		if (sgl->unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
+			printf("SGL:\n");
+			show_sge(sgl, 1);
+		} else {
+			/* Multiple SGL - present SPDK code only appears to support one segment */
+			printf("SGL list:\n");
+			show_sge(sgl, 1);
+			sgl = (struct spdk_nvme_sgl_descriptor *) tr->u.sgl;
+			/* SPDK doesn't record the number of SG entries used so we run until
+			 * we hit a null address or the maximum element count.  Sigh.  */
+			do {
+				show_sge(sgl, 1);
+				sgl += sizeof(struct spdk_nvme_sgl_descriptor);
+				i++;
+				if (i == NVME_MAX_SGL_DESCRIPTORS) { break; }
+			} while (sgl->address);
+		}
+		if (cmd->psdt & SPDK_NVME_PSDT_SGL_MPTR_SGL) {
+			printf("Metadata SGL:\n");
+			show_sge(msgl, 1);
+		}
+	} else if (cmd->psdt == SPDK_NVME_PSDT_PRP) {
+		uint64_t *entry = (uint64_t *) tr->u.prp;
+
+		if (!(*entry)) { return; }
+		printf("PRP list:\n");
+		/* SPDK doesn't record the number of PRP entries used so we run until
+		 * we hit a null address or the maximum element count.  Sigh.  */
+		do {
+			printf("  %02x %lx\n", i, *entry);
+			entry++;
+			i++;
+			if (i == NVME_MAX_PRP_LIST_ENTRIES) { break; }
+		} while (*entry);
+	}
+	return;
+}
+
+
 int
 nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
@@ -2112,6 +2194,15 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 
 	if (rc < 0) {
 		goto exit;
+	}
+
+	if (spdk_unlikely(ctrlr->nvme_debug)) {
+		if (ctrlr->nvme_debug & SPDK_NVME_DEBUG_CMD) {
+			show_cmd(qpair, &req->cmd);
+		}
+		if (ctrlr->nvme_debug & SPDK_NVME_DEBUG_LIST) {
+			show_prp_sg_list(&req->cmd, tr);
+		}
 	}
 
 	nvme_pcie_qpair_submit_tracker(qpair, tr);

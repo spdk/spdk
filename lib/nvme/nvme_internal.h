@@ -695,6 +695,8 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
+
+	enum spdk_nvme_ctrlr_debug_flags	nvme_debug;
 };
 
 struct spdk_nvme_probe_ctx {
@@ -917,11 +919,23 @@ struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpa
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
 
 static inline void
+show_cmpl(struct spdk_nvme_cpl *cpl)
+{
+	uint32_t *abuff = (uint32_t *) cpl;
+
+	printf("Completion block:\n");
+	printf("   DW0 %08x  DW1 %08x  DW2 %08x  DW3 %08x\n",
+	       abuff[0], abuff[1], abuff[2], abuff[3]);
+	return;
+}
+
+static inline void
 nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpair *qpair,
 		      struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_cpl            err_cpl;
 	struct nvme_error_cmd           *cmd;
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 
 	/* error injection at completion path,
 	 * only inject for successful completed commands
@@ -945,6 +959,10 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 				break;
 			}
 		}
+	}
+
+	if (spdk_unlikely(ctrlr->nvme_debug & SPDK_NVME_DEBUG_CPL)) {
+		show_cmpl(cpl);
 	}
 
 	if (cb_fn) {
