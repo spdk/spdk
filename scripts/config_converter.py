@@ -13,7 +13,7 @@ bdev_dict["set_bdev_nvme_options"] = []
 bdev_dict["construct_nvme_bdev"] = []
 bdev_dict["set_bdev_nvme_hotplug"] = []
 bdev_dict["construct_malloc_bdev"] = []
-bdev_dict["construct_aio_bdev"] = []
+bdev_dict["bdev_aio_create"] = []
 bdev_dict["construct_pmem_bdev"] = []
 bdev_dict["construct_virtio_dev"] = []
 
@@ -174,7 +174,7 @@ def get_aio_bdev_json(config, section):
             params['block_size'] = int(items[2])
         aio_json.append({
             "params": params,
-            "method": "construct_aio_bdev"
+            "method": "bdev_aio_create"
         })
 
     return aio_json

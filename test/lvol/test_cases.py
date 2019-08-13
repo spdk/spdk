@@ -958,7 +958,7 @@ class TestCases(object):
         base_name = "aio_bdev0"
         aio_bdev0 = path.join(base_path, "aio_bdev_0")
         # Construct aio bdev
-        self.c.construct_aio_bdev(aio_bdev0, base_name, 4096)
+        self.c.bdev_aio_create(aio_bdev0, base_name, 4096)
         # Create lvol store on created aio bdev
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name)
@@ -971,7 +971,7 @@ class TestCases(object):
         # Delete aio bdev
         self.c.delete_aio_bdev(base_name)
         # Create aio bdev on the same file
-        self.c.construct_aio_bdev(aio_bdev0, base_name, 4096)
+        self.c.bdev_aio_create(aio_bdev0, base_name, 4096)
         # Wait 1 second to allow time for lvolstore tasting
         sleep(1)
 
@@ -1865,7 +1865,7 @@ class TestCases(object):
         pid_path = path.join(base_path, 'vhost.pid')
         aio_bdev0 = path.join(base_path, 'aio_bdev_0')
 
-        self.c.construct_aio_bdev(aio_bdev0, base_name, 4096)
+        self.c.bdev_aio_create(aio_bdev0, base_name, 4096)
         # Create initial configuration on running vhost instance
         # create lvol store, create 5 bdevs
         # save info of all lvs and lvol bdevs
@@ -1895,7 +1895,7 @@ class TestCases(object):
             fail_count += 1
             return fail_count
 
-        self.c.construct_aio_bdev(aio_bdev0, base_name, 4096)
+        self.c.bdev_aio_create(aio_bdev0, base_name, 4096)
         # Check if configuration was properly loaded after tasting
         # get all info all lvs and lvol bdevs, compare with previous info
         new_bdevs = sorted(self.c.get_lvol_bdevs(), key=lambda x: x["name"])
@@ -1975,7 +1975,7 @@ class TestCases(object):
         aio_bdev0 = path.join(base_path, 'aio_bdev_0')
         base_name = "aio_bdev0"
 
-        self.c.construct_aio_bdev(aio_bdev0, base_name, 4096)
+        self.c.bdev_aio_create(aio_bdev0, base_name, 4096)
         # construct lvol store on aio bdev
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name)
@@ -1983,7 +1983,7 @@ class TestCases(object):
                                                   self.cluster_size)
 
         self.c.delete_aio_bdev(base_name)
-        self.c.construct_aio_bdev(aio_bdev0, base_name, 4096)
+        self.c.bdev_aio_create(aio_bdev0, base_name, 4096)
         # wait 1 second to allow time for lvolstore tasting
         sleep(1)
         # check if lvol store still exists in vhost configuration
@@ -2021,8 +2021,8 @@ class TestCases(object):
         aio_bdev0 = path.join(base_path, 'aio_bdev_0')
         aio_bdev1 = path.join(base_path, 'aio_bdev_1')
 
-        self.c.construct_aio_bdev(aio_bdev0, base_name_1M, 4096)
-        self.c.construct_aio_bdev(aio_bdev1, base_name_32M, 4096)
+        self.c.bdev_aio_create(aio_bdev0, base_name_1M, 4096)
+        self.c.bdev_aio_create(aio_bdev1, base_name_32M, 4096)
 
         # Create initial configuration on running vhost instance
         # create lvol store, create 5 bdevs
@@ -2073,8 +2073,8 @@ class TestCases(object):
             fail_count += 1
             return fail_count
 
-        self.c.construct_aio_bdev(aio_bdev0, base_name_1M, 4096)
-        self.c.construct_aio_bdev(aio_bdev1, base_name_32M, 4096)
+        self.c.bdev_aio_create(aio_bdev0, base_name_1M, 4096)
+        self.c.bdev_aio_create(aio_bdev1, base_name_32M, 4096)
 
         # wait 1 second to allow time for lvolstore tasting
         sleep(1)

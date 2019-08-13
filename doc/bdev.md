@@ -315,16 +315,16 @@ The SPDK AIO bdev driver provides SPDK block layer access to Linux kernel block
 devices or a file on a Linux filesystem via Linux AIO. Note that O_DIRECT is
 used and thus bypasses the Linux page cache. This mode is probably as close to
 a typical kernel based target as a user space target can get without using a
-user-space driver. To create AIO bdev RPC command `construct_aio_bdev` should be
+user-space driver. To create AIO bdev RPC command `bdev_aio_create` should be
 used.
 
 Example commands
 
-`rpc.py construct_aio_bdev /dev/sda aio0`
+`rpc.py bdev_aio_create /dev/sda aio0`
 
 This command will create `aio0` device from /dev/sda.
 
-`rpc.py construct_aio_bdev /tmp/file file 8192`
+`rpc.py bdev_aio_create /tmp/file file 8192`
 
 This command will create `file` device with block size 8192 from /tmp/file.
 
