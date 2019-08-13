@@ -74,11 +74,14 @@ DEPDIRS-trace := log json jsonrpc rpc util
 DEPDIRS-virtio := log json thread util
 DEPDIRS-vmd := log
 
-
-
+# Phase 3 dependencies.
+# These libraries have dependencies in the first two phases.
+DEPDIRS-blobfs := blob conf log thread trace
+DEPDIRS-copy := conf ioat json jsonrpc log rpc thread
+DEPDIRS-lvol := blob log util
+DEPDIRS-nvme := log sock util
 
 DEPDIRS-iscsi := scsi
-DEPDIRS-bdev := notify
 
 .PHONY: all clean $(DIRS-y)
 

@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = lvol.c
 LIBNAME = lvol
 
+SPDK_DEP_LIBNAMES = blob log util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
