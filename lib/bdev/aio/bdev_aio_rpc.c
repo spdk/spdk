@@ -87,7 +87,8 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_construct_aio(&req);
 }
-SPDK_RPC_REGISTER("construct_aio_bdev", spdk_rpc_construct_aio_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_aio_create", spdk_rpc_construct_aio_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_aio_create, construct_aio_bdev)
 
 struct rpc_delete_aio {
 	char *name;
