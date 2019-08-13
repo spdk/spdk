@@ -33,6 +33,14 @@
 
 #include "nvme_internal.h"
 
+void
+spdk_nvme_ctrlr_set_debug_flags(struct spdk_nvme_ctrlr *ctrlr,
+				enum spdk_nvme_ctrlr_debug_flags flags)
+{
+
+	ctrlr->nvme_debug = flags;
+}
+
 int
 spdk_nvme_ctrlr_io_cmd_raw_no_payload_build(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
