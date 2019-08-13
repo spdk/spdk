@@ -145,7 +145,7 @@ class UIRoot(UINode):
 
     @verbose
     def create_aio_bdev(self, **kwargs):
-        response = rpc.bdev.construct_aio_bdev(self.client, **kwargs)
+        response = rpc.bdev.bdev_aio_create(self.client, **kwargs)
         return response
 
     @verbose
