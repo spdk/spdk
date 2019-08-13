@@ -149,8 +149,8 @@ class UIRoot(UINode):
         return response
 
     @verbose
-    def delete_aio_bdev(self, **kwargs):
-        rpc.bdev.delete_aio_bdev(self.client, **kwargs)
+    def bdev_aio_delete(self, **kwargs):
+        rpc.bdev.bdev_aio_delete(self.client, **kwargs)
 
     @verbose
     def create_lvol_bdev(self, **kwargs):

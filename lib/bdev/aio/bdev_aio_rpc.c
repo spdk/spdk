@@ -104,7 +104,7 @@ static const struct spdk_json_object_decoder rpc_delete_aio_decoders[] = {
 };
 
 static void
-_spdk_rpc_delete_aio_bdev_cb(void *cb_arg, int bdeverrno)
+_spdk_rpc_bdev_aio_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
@@ -114,7 +114,7 @@ _spdk_rpc_delete_aio_bdev_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_delete_aio_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_aio_delete(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
 	struct rpc_delete_aio req = {NULL};
@@ -134,7 +134,7 @@ spdk_rpc_delete_aio_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	delete_aio_bdev(bdev, _spdk_rpc_delete_aio_bdev_cb, request);
+	bdev_aio_delete(bdev, _spdk_rpc_bdev_aio_delete_cb, request);
 
 	free_rpc_delete_aio(&req);
 
@@ -143,4 +143,5 @@ spdk_rpc_delete_aio_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_delete_aio(&req);
 }
-SPDK_RPC_REGISTER("delete_aio_bdev", spdk_rpc_delete_aio_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_aio_delete", spdk_rpc_bdev_aio_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_aio_delete, delete_aio_bdev)

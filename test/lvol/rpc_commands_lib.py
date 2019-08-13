@@ -239,7 +239,7 @@ class Commands_Rpc(object):
         output, rc = self.rpc.construct_aio_bdev(aio_path, aio_name, aio_bs)
         return rc
 
-    def delete_aio_bdev(self, aio_name):
-        print("INFO: RPC COMMAND delete_aio_bdev")
-        output, rc = self.rpc.delete_aio_bdev(aio_name)
+    def bdev_aio_delete(self, aio_name):
+        print("INFO: RPC COMMAND bdev_aio_delete")
+        output, rc = self.rpc.bdev_aio_delete(aio_name)
         return rc
