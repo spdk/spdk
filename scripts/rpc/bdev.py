@@ -15,7 +15,7 @@ def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
     return client.call('set_bdev_options', params)
 
 
-def construct_compress_bdev(client, base_bdev_name, pm_path):
+def bdev_compress_create(client, base_bdev_name, pm_path):
     """Construct a compress virtual block device.
 
     Args:
@@ -27,7 +27,7 @@ def construct_compress_bdev(client, base_bdev_name, pm_path):
     """
     params = {'base_bdev_name': base_bdev_name, 'pm_path': pm_path}
 
-    return client.call('construct_compress_bdev', params)
+    return client.call('bdev_compress_create', params)
 
 
 def delete_compress_bdev(client, name):

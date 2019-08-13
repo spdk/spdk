@@ -139,7 +139,8 @@ spdk_rpc_construct_compress_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_construct_compress(&req);
 }
-SPDK_RPC_REGISTER("construct_compress_bdev", spdk_rpc_construct_compress_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_compress_create", spdk_rpc_construct_compress_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_create, construct_compress_bdev)
 
 struct rpc_delete_compress {
 	char *name;
