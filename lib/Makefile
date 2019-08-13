@@ -78,7 +78,16 @@ DEPDIRS-trace := log json jsonrpc rpc util
 DEPDIRS-virtio := log json thread util
 DEPDIRS-vmd := log
 
-DEPDIRS-iscsi := scsi
+# Phase 3 dependencies.
+DEPDIRS-blobfs := blob conf log thread trace
+DEPDIRS-ftl := bdev log nvme thread trace util
+DEPDIRS-iscsi := conf event json jsonrpc log rpc scsi sock thread trace util
+DEPDIRS-lvol := blob log util
+DEPDIRS-nbd := bdev json jsonrpc log rpc thread util
+DEPDIRS-nvme := log sock util
+DEPDIRS-nvmf := bdev json jsonrpc log nvme rpc sock thread trace util
+DEPDIRS-scsi := bdev json jsonrpc log rpc thread trace util
+DEPDIRS-vhost := bdev conf event jsonrpc json log rpc scsi thread util
 
 .PHONY: all clean $(DIRS-y)
 
