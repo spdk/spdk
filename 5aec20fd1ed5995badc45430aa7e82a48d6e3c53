@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2db24f7e_8441846a",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-13T21:38:57Z",
+      "side": 1,
+      "message": "DEFAULT\n\nAlso, did you experiment with different sizes here?",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c0ac14a_b73d3de0",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1937,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-13T21:38:57Z",
+      "side": 1,
+      "message": "Let\u0027s make it ok to call this when remain_size is 0 - just return 0 in that case. This will be useful later.",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35265b15_7ea4e9d7",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1943,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-13T21:38:57Z",
+      "side": 1,
+      "message": "Reset off to 0 in nvme_tcp_recv_buf_read when new data arrives (i.e. on line 1924)",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b71231a_768e87c7",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1978,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-13T21:38:57Z",
+      "side": 1,
+      "message": "At the top, before entering this loop, I think we should call nvme_tcp_recv_buf_read just once. I think you should also eliminate current_pdu_num, and instead the exit condition on this function is simply when all of the data read in the initial socket call has been consumed.\n\nThat would mean that pdu_recv_buf.remain_size is always 0 when this function exits. You should add asserts to check that.",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64c4f104_b1c57851",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2052,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-13T21:38:57Z",
+      "side": 1,
+      "message": "I would delete this part where it reads directly from the socket. If we use the strategy where it just does a single read from the socket each time it goes to poll, then this logic can simply resume the next time it polls.",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b720111b_7c34a72a",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-13T21:38:57Z",
+      "side": 1,
+      "message": "If you use the strategy indicated above where the full recv buffer is processed each time poll is called, you can remove this.",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
