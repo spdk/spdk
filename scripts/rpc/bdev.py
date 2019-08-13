@@ -54,7 +54,8 @@ def set_compress_pmd(client, pmd):
     return client.call('set_compress_pmd', params)
 
 
-def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
+@deprecated_alias('construct_crypto_bdev')
+def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd, key):
     """Construct a crypto virtual block device.
 
     Args:
@@ -68,17 +69,18 @@ def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
     """
     params = {'base_bdev_name': base_bdev_name, 'name': name, 'crypto_pmd': crypto_pmd, 'key': key}
 
-    return client.call('construct_crypto_bdev', params)
+    return client.call('bdev_crypto_create', params)
 
 
-def delete_crypto_bdev(client, name):
+@deprecated_alias('delete_crypto_bdev')
+def bdev_crypto_delete(client, name):
     """Delete crypto virtual block device.
 
     Args:
         name: name of crypto vbdev to delete
     """
     params = {'name': name}
-    return client.call('delete_crypto_bdev', params)
+    return client.call('bdev_crypto_delete', params)
 
 
 def construct_ocf_bdev(client, name, mode, cache_bdev_name, core_bdev_name):
