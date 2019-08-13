@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 LIBNAME = nbd
 C_SRCS = nbd.c nbd_rpc.c
 
+SPDK_DEP_LIBNAMES = bdev json jsonrpc log rpc thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

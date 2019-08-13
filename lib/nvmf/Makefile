@@ -67,4 +67,6 @@ CFLAGS += -I$(CONFIG_FC_PATH)
 endif
 endif
 
+SPDK_DEP_LIBNAMES = bdev json log nvme sock thread trace util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
