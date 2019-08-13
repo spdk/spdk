@@ -328,9 +328,9 @@ This command will create `aio0` device from /dev/sda.
 
 This command will create `file` device with block size 8192 from /tmp/file.
 
-To delete an aio bdev use the delete_aio_bdev command.
+To delete an aio bdev use the bdev_aio_delete command.
 
-`rpc.py delete_aio_bdev aio0`
+`rpc.py bdev_aio_delete aio0`
 
 # OCF Virtual bdev {#bdev_config_cas}
 

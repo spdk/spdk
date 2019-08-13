@@ -703,7 +703,7 @@ aio_bdev_unregister_cb(void *arg, int bdeverrno)
 }
 
 void
-delete_aio_bdev(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb_arg)
+bdev_aio_delete(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb_arg)
 {
 	struct delete_aio_bdev_ctx *ctx;
 
