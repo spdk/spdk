@@ -39,4 +39,6 @@ C_SRCS = ftl_band.c ftl_core.c ftl_debug.c ftl_io.c ftl_rwb.c ftl_reloc.c \
 
 LIBNAME = ftl
 
+SPDK_DEP_LIBNAMES = bdev log nvme thread trace util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
