@@ -524,7 +524,7 @@ bdev_aio_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "construct_aio_bdev");
+	spdk_json_write_named_string(w, "method", "bdev_aio_create");
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);
@@ -703,7 +703,7 @@ aio_bdev_unregister_cb(void *arg, int bdeverrno)
 }
 
 void
-delete_aio_bdev(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb_arg)
+bdev_aio_delete(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb_arg)
 {
 	struct delete_aio_bdev_ctx *ctx;
 

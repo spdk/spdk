@@ -203,7 +203,7 @@ class UIAIOBdev(UIBdev):
         UIBdev.__init__(self, "aio", parent)
 
     def delete(self, name):
-        self.get_root().delete_aio_bdev(name=name)
+        self.get_root().bdev_aio_delete(name=name)
 
     def ui_command_create(self, name, filename, block_size):
         """
@@ -218,7 +218,7 @@ class UIAIOBdev(UIBdev):
         """
 
         block_size = self.ui_eval_param(block_size, "number", None)
-        ret_name = self.get_root().create_aio_bdev(name=name,
+        ret_name = self.get_root().bdev_aio_create(name=name,
                                                    block_size=int(block_size),
                                                    filename=filename)
         self.shell.log.info(ret_name)
