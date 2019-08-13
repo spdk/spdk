@@ -205,9 +205,9 @@ This command will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bde
 'NVMe1n1' and will use the DPDK software driver 'crypto_aesni_mb' and the key
 '0123456789123456'.
 
-To remove the vbdev use the delete_crypto_bdev command.
+To remove the vbdev use the bdev_crypto_delete command.
 
-`rpc.py delete_crypto_bdev CryNvmeA`
+`rpc.py bdev_crypto_delete CryNvmeA`
 
 # Delay Bdev Module {#bdev_config_delay}
 

@@ -112,7 +112,7 @@ static const struct spdk_json_object_decoder rpc_delete_crypto_decoders[] = {
 };
 
 static void
-_spdk_rpc_delete_crypto_bdev_cb(void *cb_arg, int bdeverrno)
+_spdk_rpc_bdev_crypto_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
@@ -122,7 +122,7 @@ _spdk_rpc_delete_crypto_bdev_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_delete_crypto_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_crypto_delete(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct rpc_delete_crypto req = {NULL};
@@ -142,7 +142,7 @@ spdk_rpc_delete_crypto_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	delete_crypto_disk(bdev, _spdk_rpc_delete_crypto_bdev_cb, request);
+	delete_crypto_disk(bdev, _spdk_rpc_bdev_crypto_delete_cb, request);
 
 	free_rpc_delete_crypto(&req);
 
@@ -151,4 +151,5 @@ spdk_rpc_delete_crypto_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_delete_crypto(&req);
 }
-SPDK_RPC_REGISTER("delete_crypto_bdev", spdk_rpc_delete_crypto_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_crypto_delete", spdk_rpc_bdev_crypto_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_crypto_delete, delete_crypto_bdev)
