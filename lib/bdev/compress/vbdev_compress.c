@@ -1461,7 +1461,7 @@ error_bdev_name:
 }
 
 void
-delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
+bdev_compress_delete(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
 {
 	struct vbdev_compress *comp_bdev = NULL;
 

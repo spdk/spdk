@@ -146,13 +146,13 @@ if __name__ == "__main__":
     p.add_argument('-p', '--pm_path', help="Path to persistent memory")
     p.set_defaults(func=construct_compress_bdev)
 
-    def delete_compress_bdev(args):
-        rpc.bdev.delete_compress_bdev(args.client,
+    def bdev_compress_delete(args):
+        rpc.bdev.bdev_compress_delete(args.client,
                                       name=args.name)
 
-    p = subparsers.add_parser('delete_compress_bdev', help='Delete a compress disk')
+    p = subparsers.add_parser('bdev_compress_delete', help='Delete a compress disk')
     p.add_argument('name', help='compress bdev name')
-    p.set_defaults(func=delete_compress_bdev)
+    p.set_defaults(func=bdev_compress_delete)
 
     def set_compress_pmd(args):
         rpc.bdev.set_compress_pmd(args.client,
