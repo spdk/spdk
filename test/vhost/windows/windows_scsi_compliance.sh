@@ -52,7 +52,7 @@ timing_enter vhost_run
 vhost_run 0
 $rpc_py set_bdev_nvme_hotplug -e
 $rpc_py construct_malloc_bdev 256 4096 -b Malloc0
-$rpc_py construct_aio_bdev $aio_file Aio0 512
+$rpc_py bdev_aio_create $aio_file Aio0 512
 $rpc_py get_bdevs
 $rpc_py construct_vhost_scsi_controller naa.vhost.1
 $rpc_py add_vhost_scsi_lun naa.vhost.1 0 Nvme0n1

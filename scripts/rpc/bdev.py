@@ -245,7 +245,7 @@ def destroy_raid_bdev(client, name):
     return client.call('destroy_raid_bdev', params)
 
 
-def construct_aio_bdev(client, filename, name, block_size=None):
+def bdev_aio_create(client, filename, name, block_size=None):
     """Construct a Linux AIO block device.
 
     Args:
@@ -262,17 +262,17 @@ def construct_aio_bdev(client, filename, name, block_size=None):
     if block_size:
         params['block_size'] = block_size
 
-    return client.call('construct_aio_bdev', params)
+    return client.call('bdev_aio_create', params)
 
 
-def delete_aio_bdev(client, name):
+def bdev_aio_delete(client, name):
     """Remove aio bdev from the system.
 
     Args:
         bdev_name: name of aio bdev to delete
     """
     params = {'name': name}
-    return client.call('delete_aio_bdev', params)
+    return client.call('bdev_aio_delete', params)
 
 
 def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,

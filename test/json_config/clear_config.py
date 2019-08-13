@@ -35,7 +35,7 @@ def get_bdev_destroy_method(bdev):
                           'construct_null_bdev': "delete_null_bdev",
                           'construct_rbd_bdev': "delete_rbd_bdev",
                           'construct_pmem_bdev': "delete_pmem_bdev",
-                          'construct_aio_bdev': "delete_aio_bdev",
+                          'bdev_aio_create': "bdev_aio_delete",
                           'construct_error_bdev': "delete_error_bdev",
                           'construct_split_vbdev': "destruct_split_vbdev",
                           'construct_virtio_dev': "remove_virtio_bdev",
