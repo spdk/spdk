@@ -931,7 +931,7 @@ vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 
 	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "construct_compress_bdev");
+		spdk_json_write_named_string(w, "method", "bdev_compress_create");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(comp_bdev->base_bdev));
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&comp_bdev->comp_bdev));
@@ -1461,7 +1461,7 @@ error_bdev_name:
 }
 
 void
-delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
+bdev_compress_delete(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
 {
 	struct vbdev_compress *comp_bdev = NULL;
 
