@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = blobstore.c request.c zeroes.c blob_bs_dev.c
 LIBNAME = blob
 
+SPDK_DEP_LIBNAMES = log util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
