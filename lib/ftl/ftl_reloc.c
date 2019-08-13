@@ -54,6 +54,13 @@ enum ftl_reloc_move_state {
 	FTL_RELOC_STATE_WRITE,
 };
 
+enum ftl_band_reloc_state {
+	FTL_BAND_RELOC_STATE_INACTIVE,
+	FTL_BAND_RELOC_STATE_PENDING,
+	FTL_BAND_RELOC_STATE_ACTIVE,
+	FTL_BAND_RELOC_STATE_HIGH_PRIO
+};
+
 struct ftl_reloc_move {
 	struct ftl_band_reloc			*breloc;
 
@@ -85,8 +92,9 @@ struct ftl_band_reloc {
 	/* Bitmap of logical blocks to be relocated */
 	struct spdk_bit_array			*reloc_map;
 
-	/* Indicates band being acitvely processed */
-	int					active;
+	/*  State of the band reloc */
+	enum ftl_band_reloc_state		state;
+
 	/* The band is being defragged */
 	bool					defrag;
 
@@ -209,7 +217,6 @@ ftl_reloc_prep(struct ftl_band_reloc *breloc)
 	struct ftl_reloc_move *move;
 	size_t i;
 
-	breloc->active = 1;
 	reloc->num_active++;
 
 	if (!band->high_prio) {
@@ -551,26 +558,32 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 	struct ftl_reloc *reloc = breloc->parent;
 	struct ftl_band *band = breloc->band;
 
-	if (band->high_prio && breloc->num_lbks == 0) {
+	ftl_reloc_iter_reset(breloc);
+
+	if (breloc->state == FTL_BAND_RELOC_STATE_HIGH_PRIO) {
+		if (breloc->num_lbks != 0) {
+			return;
+		}
+
 		band->high_prio = 0;
+		breloc->state = FTL_BAND_RELOC_STATE_INACTIVE;
 		TAILQ_REMOVE(&reloc->prio_queue, breloc, entry);
-	} else if (!band->high_prio) {
+	} else {
+		assert(breloc->state == FTL_BAND_RELOC_STATE_ACTIVE);
+		breloc->state = FTL_BAND_RELOC_STATE_INACTIVE;
 		TAILQ_REMOVE(&reloc->active_queue, breloc, entry);
+		if (breloc->num_lbks != 0) {
+			breloc->state = FTL_BAND_RELOC_STATE_PENDING;
+			TAILQ_INSERT_TAIL(&reloc->pending_queue, breloc, entry);
+		}
 	}
 
-	ftl_reloc_iter_reset(breloc);
 
 	ftl_band_release_lba_map(band);
 
-	breloc->active = 0;
 	reloc->num_active--;
 
-	if (!band->high_prio && breloc->num_lbks) {
-		TAILQ_INSERT_TAIL(&reloc->pending_queue, breloc, entry);
-		return;
-	}
-
-	if (ftl_band_empty(band) && band->state == FTL_BAND_STATE_CLOSED) {
+	if (breloc->num_lbks == 0 && ftl_band_empty(band) && band->state == FTL_BAND_STATE_CLOSED) {
 		ftl_band_set_state(breloc->band, FTL_BAND_STATE_FREE);
 
 		if (breloc->defrag) {
@@ -642,7 +655,8 @@ ftl_band_reloc_free(struct ftl_band_reloc *breloc)
 	reloc = breloc->parent;
 
 	/* Drain write queue if there is active band relocation during shutdown */
-	if (breloc->active) {
+	if (breloc->state == FTL_BAND_RELOC_STATE_ACTIVE ||
+	    breloc->state == FTL_BAND_RELOC_STATE_HIGH_PRIO) {
 		assert(reloc->halt);
 		num_moves = spdk_ring_dequeue(breloc->move_queue, (void **)&moves, reloc->max_qdepth);
 		for (i = 0; i < num_moves; ++i) {
@@ -654,16 +668,6 @@ ftl_band_reloc_free(struct ftl_band_reloc *breloc)
 	spdk_bit_array_free(&breloc->reloc_map);
 	free(breloc->iter.chk_offset);
 	free(breloc->moves);
-}
-
-static void
-ftl_reloc_add_active_queue(struct ftl_band_reloc *breloc)
-{
-	struct ftl_reloc *reloc = breloc->parent;
-
-	TAILQ_REMOVE(&reloc->pending_queue, breloc, entry);
-	TAILQ_INSERT_HEAD(&reloc->active_queue, breloc, entry);
-	ftl_reloc_prep(breloc);
 }
 
 struct ftl_reloc *
@@ -764,9 +768,6 @@ ftl_reloc(struct ftl_reloc *reloc)
 	/* Process first band from priority queue and return */
 	breloc = TAILQ_FIRST(&reloc->prio_queue);
 	if (breloc) {
-		if (!breloc->active) {
-			ftl_reloc_prep(breloc);
-		}
 		ftl_process_reloc(breloc);
 		return;
 	}
@@ -781,10 +782,15 @@ ftl_reloc(struct ftl_reloc *reloc)
 			continue;
 		}
 
-		ftl_reloc_add_active_queue(breloc);
+		ftl_reloc_prep(breloc);
+		TAILQ_REMOVE(&reloc->pending_queue, breloc, entry);
+		assert(breloc->state == FTL_BAND_RELOC_STATE_PENDING);
+		breloc->state = FTL_BAND_RELOC_STATE_ACTIVE;
+		TAILQ_INSERT_HEAD(&reloc->active_queue, breloc, entry);
 	}
 
 	TAILQ_FOREACH_SAFE(breloc, &reloc->active_queue, entry, tbreloc) {
+		assert(breloc->state == FTL_BAND_RELOC_STATE_ACTIVE);
 		ftl_process_reloc(breloc);
 	}
 }
@@ -794,7 +800,7 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 	      size_t num_lbks, int prio, bool is_defrag)
 {
 	struct ftl_band_reloc *breloc = &reloc->brelocs[band->id];
-	size_t i, prev_lbks = breloc->num_lbks;
+	size_t i;
 
 	/* No need to add anything if already at high prio - whole band should be relocated */
 	if (!prio && band->high_prio) {
@@ -822,10 +828,6 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 		breloc->num_lbks++;
 	}
 
-	if (!prio && prev_lbks == breloc->num_lbks) {
-		return;
-	}
-
 	/* If the band is coming from the defrag process, mark it appropriately */
 	if (is_defrag) {
 		assert(offset == 0 && num_lbks == ftl_num_band_lbks(band->dev));
@@ -833,29 +835,31 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 		breloc->defrag = true;
 	}
 
-	if (!prev_lbks && !prio && !breloc->active) {
+	if (!prio && breloc->state == FTL_BAND_RELOC_STATE_INACTIVE) {
+		breloc->state = FTL_BAND_RELOC_STATE_PENDING;
 		TAILQ_INSERT_HEAD(&reloc->pending_queue, breloc, entry);
 	}
 
 	if (prio) {
-		struct ftl_band_reloc *iter_breloc;
-
+		bool active = false;
 		/* If priority band is already on pending or active queue, remove it from it */
-		TAILQ_FOREACH(iter_breloc, &reloc->pending_queue, entry) {
-			if (breloc == iter_breloc) {
-				TAILQ_REMOVE(&reloc->pending_queue, breloc, entry);
-				break;
-			}
+		if (breloc->state == FTL_BAND_RELOC_STATE_PENDING) {
+			TAILQ_REMOVE(&reloc->pending_queue, breloc, entry);
 		}
 
-		TAILQ_FOREACH(iter_breloc, &reloc->active_queue, entry) {
-			if (breloc == iter_breloc) {
-				TAILQ_REMOVE(&reloc->active_queue, breloc, entry);
-				break;
-			}
+		if (breloc->state == FTL_BAND_RELOC_STATE_ACTIVE) {
+			active = true;
+			TAILQ_REMOVE(&reloc->active_queue, breloc, entry);
 		}
 
+		breloc->state = FTL_BAND_RELOC_STATE_HIGH_PRIO;
 		TAILQ_INSERT_TAIL(&reloc->prio_queue, breloc, entry);
-		ftl_band_acquire_lba_map(breloc->band);
+
+		/* If band has been already on active queue it doesn't need any additional */
+		/* resources */
+		if (!active) {
+			ftl_band_acquire_lba_map(breloc->band);
+			ftl_reloc_prep(breloc);
+		}
 	}
 }
