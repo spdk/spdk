@@ -30,14 +30,14 @@ def construct_compress_bdev(client, base_bdev_name, pm_path):
     return client.call('construct_compress_bdev', params)
 
 
-def delete_compress_bdev(client, name):
+def bdev_compress_delete(client, name):
     """Delete compress virtual block device.
 
     Args:
         name: name of compress vbdev to delete
     """
     params = {'name': name}
-    return client.call('delete_compress_bdev', params)
+    return client.call('bdev_compress_delete', params)
 
 
 def set_compress_pmd(client, pmd):

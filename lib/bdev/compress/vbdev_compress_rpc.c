@@ -187,9 +187,10 @@ spdk_rpc_delete_compress_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	delete_compress_bdev(bdev, _spdk_rpc_delete_compress_bdev_cb, request);
+	bdev_compress_delete(bdev, _spdk_rpc_delete_compress_bdev_cb, request);
 
 cleanup:
 	free_rpc_delete_compress(&req);
 }
-SPDK_RPC_REGISTER("delete_compress_bdev", spdk_rpc_delete_compress_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_compress_delete", spdk_rpc_delete_compress_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_delete, delete_compress_bdev)
