@@ -95,7 +95,8 @@ spdk_rpc_construct_crypto_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_construct_crypto(&req);
 }
-SPDK_RPC_REGISTER("construct_crypto_bdev", spdk_rpc_construct_crypto_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_crypto_create", spdk_rpc_construct_crypto_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_crypto_create, construct_crypto_bdev)
 
 struct rpc_delete_crypto {
 	char *name;
