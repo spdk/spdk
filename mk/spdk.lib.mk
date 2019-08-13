@@ -50,14 +50,27 @@ else
 LOCAL_SYS_LIBS += -lrt
 endif
 
+define subdirs_rule
+$(1): $(2)
+	@+$(Q)$(MAKE) -C $(1) S=$S$(S:%=/)$@ $(MAKECMDGOALS)
+endef
+
+$(foreach dir,$(DIRS-y),$(eval $(call subdirs_rule,$(dir),$(DEP))))
+
+ifneq ($(DIRS-y),)
+BUILD_DEP := $(DIRS-y)
+else
+BUILD_DEP := $(DEP)
+endif
+
 SPDK_DEP_LIBS = $(call spdk_lib_list_to_shared_libs,$(SPDK_DEP_LIBNAMES))
 
 .PHONY: all clean $(DIRS-y)
 
-all: $(DEP) $(DIRS-y)
+all: $(BUILD_DEP)
 	@:
 
-clean: $(DIRS-y)
+clean:
 	$(CLEAN_C) $(LIB) $(SHARED_LINKED_LIB) $(SHARED_REALNAME_LIB)
 
 $(SHARED_LINKED_LIB): $(SHARED_REALNAME_LIB)
@@ -83,5 +96,3 @@ ifeq ($(CONFIG_SHARED),y)
 endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
