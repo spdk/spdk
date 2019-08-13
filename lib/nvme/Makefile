@@ -58,4 +58,6 @@ endif
 endif
 endif
 
+SPDK_DEP_LIBNAMES = log sock util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

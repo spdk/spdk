@@ -43,4 +43,6 @@ LIBNAME = iscsi
 LOCAL_SYS_LIBS = -lcrypto
 SPDK_DEP_LIBNAMES = scsi
 
+SPDK_DEP_LIBNAMES = conf event json jsonrpc log rpc scsi sock thread trace util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
