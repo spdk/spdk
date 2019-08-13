@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "de192aaa_f56e2302",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-13T23:12:55Z",
+      "side": 1,
+      "message": "Yes, I used different sizes.",
+      "parentUuid": "2db24f7e_8441846a",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5c0ac14a_b73d3de0",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 6
@@ -70,6 +88,24 @@
     },
     {
       "key": {
+        "uuid": "79163543_7bbe5529",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1978,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-13T23:12:55Z",
+      "side": 1,
+      "message": "The loop to count the pdu_num, is designed to balance the execution among the multiple connections in a single group. If you remove it, it will degrade the performance.",
+      "parentUuid": "2b71231a_768e87c7",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "64c4f104_b1c57851",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 6
@@ -87,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "844f4eb0_ac4de866",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2052,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-13T23:12:55Z",
+      "side": 1,
+      "message": "Delete it, will cause performance drop, I already tried it. Since for the incapsule data supported can be 4K or 8K. Removing this, will cause data copy with lots of operations. So for this part, we just read into the allocated data buffer, it will be much better.",
+      "parentUuid": "64c4f104_b1c57851",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b720111b_7c34a72a",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 6
@@ -98,6 +152,24 @@
       "writtenOn": "2019-08-13T21:38:57Z",
       "side": 1,
       "message": "If you use the strategy indicated above where the full recv buffer is processed each time poll is called, you can remove this.",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9224a3dc_89db2f51",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-13T23:12:55Z",
+      "side": 1,
+      "message": "I did not agree with you since I already tried.Full recv_buffer cannot be achieved. \nReason: \nFor some NVMe commands, we will wait for the data buffer which is allocated from the data buffer. And you need to wait for the buffer to come, then you can handle the data copy from the receive buffer to the shared data buffer. \n\nSo eliminating this code, will cause hang, which I already found. Since next time, there will no data to be polled out by epoll_wait since data is already in the copied shared buffer.",
+      "parentUuid": "b720111b_7c34a72a",
       "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
