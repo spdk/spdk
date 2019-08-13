@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e4bbe626_4ebe0678",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-13T14:48:25Z",
+      "side": 1,
+      "message": "yeah, I guess that\u0027s the safest.  When we\u0027re on the compress/decompress sie we can have max SGL 4 no matter wat (data fills whole thing, data in front of buffer, data in middle of buffer, data at the dof buffer). I haven\u0027t seen host buffers coming in with more than 1 SGL but I like doubling to be safe, its cheap",
+      "parentUuid": "3616c443_34ffb7a5",
+      "revId": "a7982e728cd86df3506f0438a457e0040fa04614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "16303a0f_30123c8a",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 2
