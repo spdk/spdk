@@ -77,6 +77,7 @@ struct spdk_fio_options {
 	int	apptag_mask;
 	char	*digest_enable;
 	int	enable_vmd;
+	enum spdk_nvme_ctrlr_debug_flags	nvme_debug;
 };
 
 struct spdk_fio_request {
@@ -249,6 +250,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_fio_qpair	*fio_qpair;
 	struct spdk_nvme_ns	*ns;
 	struct fio_file		*f = fio_thread->current_f;
+	struct spdk_fio_options *fio_options = td->eo;
 	uint32_t		ns_id;
 	char			*p;
 	long int		tmp;
@@ -278,6 +280,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		fio_ctrlr->tr_id = *trid;
 		fio_ctrlr->next = g_ctrlr;
 		g_ctrlr = fio_ctrlr;
+	}
+
+	if (fio_options->nvme_debug) {
+		spdk_nvme_ctrlr_set_debug_flags(ctrlr, fio_options->nvme_debug);
 	}
 
 	ns = spdk_nvme_ctrlr_get_ns(fio_ctrlr->ctrlr, ns_id);
@@ -1068,6 +1074,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, enable_vmd),
 		.def		= "0",
 		.help		= "Enable VMD enumeration (enable_vmd=1 or enable_vmd=0)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "nvme_debug",
+		.lname		= "NVMe debugging flags",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, nvme_debug),
+		.def		= "0",
+		.help		= "Enable SPDK NVMe debugging messages",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},

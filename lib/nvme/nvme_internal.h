@@ -695,6 +695,8 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
+
+	enum spdk_nvme_ctrlr_debug_flags	debug_flags;
 };
 
 struct spdk_nvme_probe_ctx {
@@ -922,6 +924,7 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 {
 	struct spdk_nvme_cpl            err_cpl;
 	struct nvme_error_cmd           *cmd;
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 
 	/* error injection at completion path,
 	 * only inject for successful completed commands
@@ -945,6 +948,14 @@ nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg, struct spdk_nvme_qpa
 				break;
 			}
 		}
+	}
+
+	if (spdk_unlikely(ctrlr->debug_flags & SPDK_NVME_DEBUG_CPL)) {
+		uint32_t *abuff = (uint32_t *) cpl;
+
+		printf("Completion block:\n");
+		printf("   DW0 %08x  DW1 %08x  DW2 %08x  DW3 %08x\n",
+		       abuff[0], abuff[1], abuff[2], abuff[3]);
 	}
 
 	if (cb_fn) {

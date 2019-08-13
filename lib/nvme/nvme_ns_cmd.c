@@ -371,6 +371,7 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag, bool check_sgl)
 {
 	struct nvme_request	*req;
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	uint32_t		sector_size;
 	uint32_t		sectors_per_max_io;
 	uint32_t		sectors_per_stripe;
@@ -391,6 +392,22 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	    (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) &&
 	    (ns->md_size == 8)) {
 		sector_size -= 8;
+	}
+
+	if (spdk_unlikely(ctrlr->debug_flags & SPDK_NVME_DEBUG_REQS)) {
+		printf("Cmd 0x%x SLBA 0x%lx LBAC 0x%x Ssize 0x%x Flags 0x%x\n",
+		       opc, lba, lba_count, sector_size, io_flags);
+		printf(" Payload offset 0x%x metadata offset 0x%x Length 0x%x\n",
+		       payload_offset, md_offset, (lba_count * sector_size));
+		printf(" Apptag 0x%x mask 0x%x\n", apptag, apptag_mask);
+		if (payload->reset_sgl_fn == NULL) {
+			printf("Data buffer 0x%p\n", payload->contig_or_cb_arg);
+		} else {
+			printf("SG payload pointer 0x%p\n", payload->contig_or_cb_arg);
+		}
+		if (payload->md != NULL) {
+			printf("Metadata 0x%p\n", payload->md);
+		}
 	}
 
 	req = nvme_allocate_request(qpair, payload, lba_count * sector_size, cb_fn, cb_arg);
