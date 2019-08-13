@@ -170,7 +170,7 @@ To remove a compression vbdev, use the following command which will also delete 
 file.  If the logical volume is deleted the PMEM file will not be removed and the
 compression vbdev will not be available.
 
-`rpc.py delete_compress_bdev COMP_LVS/myLvol`
+`rpc.py bdev_compress_delete COMP_LVS/myLvol`
 
 # Crypto Virtual Bdev Module {#bdev_config_crypto}
 
