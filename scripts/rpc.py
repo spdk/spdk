@@ -271,18 +271,17 @@ if __name__ == "__main__":
     p.add_argument('name', help='null bdev name')
     p.set_defaults(func=delete_null_bdev)
 
-    def construct_aio_bdev(args):
-        print_json(rpc.bdev.construct_aio_bdev(args.client,
-                                               filename=args.filename,
-                                               name=args.name,
-                                               block_size=args.block_size))
+    def bdev_aio_create(args):
+        print_json(rpc.bdev.bdev_aio_create(args.client,
+                       filename=args.filename, name=args.name,
+                       block_size=args.block_size))
 
-    p = subparsers.add_parser('construct_aio_bdev',
+    p = subparsers.add_parser('bdev_aio_create',
                               help='Add a bdev with aio backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
     p.add_argument('name', help='Block device name')
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?', default=0)
-    p.set_defaults(func=construct_aio_bdev)
+    p.set_defaults(func=bdev_aio_create)
 
     def delete_aio_bdev(args):
         rpc.bdev.delete_aio_bdev(args.client,
