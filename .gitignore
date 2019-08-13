@@ -29,3 +29,6 @@ mk/cc.mk
 mk/config.mk
 mk/cc.flags.mk
 PYTHON_COMMAND
+ZhangRuiTest/testspeed_blobfs/bigfile*
+ZhangRuiTest/testspeed_blobfs/blobfs_*
+ZhangRuiTest/testspeed_blobfs/ruiblobfs.conf
