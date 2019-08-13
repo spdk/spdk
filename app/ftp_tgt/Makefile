@@ -31,24 +31,21 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += trace
-DIRS-y += trace_record
-DIRS-y += ftp_tgt
-DIRS-y += nvmf_tgt
-DIRS-y += iscsi_top
-DIRS-y += iscsi_tgt
-DIRS-y += spdk_tgt
-DIRS-y += spdk_lspci
+APP = ftp_tgt
+
+C_SRCS := ftp_main.c
+
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SPDK_LIB_LIST += event_bdev event_ftp event_copy event_net event_vmd
+SPDK_LIB_LIST += ftp event log trace conf thread util bdev copy rpc jsonrpc json net sock
+SPDK_LIB_LIST += app_rpc log_rpc trace_rpc bdev_rpc notify
+
 ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost
+SPDK_LIB_LIST += event_nbd nbd
 endif
 
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
