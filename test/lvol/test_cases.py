@@ -969,7 +969,7 @@ class TestCases(object):
             fail_count += 1
 
         # Delete aio bdev
-        self.c.delete_aio_bdev(base_name)
+        self.c.bdev_aio_delete(base_name)
         # Create aio bdev on the same file
         self.c.construct_aio_bdev(aio_bdev0, base_name, 4096)
         # Wait 1 second to allow time for lvolstore tasting
@@ -980,7 +980,7 @@ class TestCases(object):
                                                  self.cluster_size)
         if ret_value == 0:
             fail_count += 1
-        self.c.delete_aio_bdev(base_name)
+        self.c.bdev_aio_delete(base_name)
 
         # Expected result:
         # - get_lvol_stores should not report any existsing lvol stores in configuration
@@ -1920,7 +1920,7 @@ class TestCases(object):
                 pprint.pprint([o, n])
 
         if fail_count != 0:
-            self.c.delete_aio_bdev(aio_bdev0)
+            self.c.bdev_aio_delete(aio_bdev0)
             return fail_count
 
         # Try modifying loaded configuration
@@ -1960,7 +1960,7 @@ class TestCases(object):
         if self.c.destroy_lvol_store(uuid_store) != 0:
             fail_count += 1
 
-        self.c.delete_aio_bdev(base_name)
+        self.c.bdev_aio_delete(base_name)
 
         return fail_count
 
@@ -1982,7 +1982,7 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
 
-        self.c.delete_aio_bdev(base_name)
+        self.c.bdev_aio_delete(base_name)
         self.c.construct_aio_bdev(aio_bdev0, base_name, 4096)
         # wait 1 second to allow time for lvolstore tasting
         sleep(1)
@@ -1994,7 +1994,7 @@ class TestCases(object):
         if self.c.destroy_lvol_store(uuid_store) != 0:
             fail_count += 1
 
-        self.c.delete_aio_bdev(base_name)
+        self.c.bdev_aio_delete(base_name)
         return fail_count
 
     @case_message
@@ -2103,8 +2103,8 @@ class TestCases(object):
                 pprint.pprint([o, n])
 
         if fail_count != 0:
-            self.c.delete_aio_bdev(base_name_1M)
-            self.c.delete_aio_bdev(base_name_32M)
+            self.c.bdev_aio_delete(base_name_1M)
+            self.c.bdev_aio_delete(base_name_32M)
             return fail_count
 
         for uuid_bdev in uuid_bdevs:
@@ -2116,8 +2116,8 @@ class TestCases(object):
         if self.c.destroy_lvol_store(uuid_store_32M) != 0:
             fail_count += 1
 
-        self.c.delete_aio_bdev(base_name_1M)
-        self.c.delete_aio_bdev(base_name_32M)
+        self.c.bdev_aio_delete(base_name_1M)
+        self.c.bdev_aio_delete(base_name_32M)
 
         return fail_count
 

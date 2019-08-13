@@ -134,7 +134,7 @@ spdk_rpc_delete_aio_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	delete_aio_bdev(bdev, _spdk_rpc_delete_aio_bdev_cb, request);
+	bdev_aio_delete(bdev, _spdk_rpc_delete_aio_bdev_cb, request);
 
 	free_rpc_delete_aio(&req);
 
@@ -143,4 +143,5 @@ spdk_rpc_delete_aio_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_delete_aio(&req);
 }
-SPDK_RPC_REGISTER("delete_aio_bdev", spdk_rpc_delete_aio_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_aio_delete", spdk_rpc_delete_aio_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_aio_delete, delete_aio_bdev)

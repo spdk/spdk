@@ -284,13 +284,13 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?', default=0)
     p.set_defaults(func=construct_aio_bdev)
 
-    def delete_aio_bdev(args):
-        rpc.bdev.delete_aio_bdev(args.client,
+    def bdev_aio_delete(args):
+        rpc.bdev.bdev_aio_delete(args.client,
                                  name=args.name)
 
-    p = subparsers.add_parser('delete_aio_bdev', help='Delete an aio disk')
+    p = subparsers.add_parser('bdev_aio_delete', help='Delete an aio disk')
     p.add_argument('name', help='aio bdev name')
-    p.set_defaults(func=delete_aio_bdev)
+    p.set_defaults(func=bdev_aio_delete)
 
     def set_bdev_nvme_options(args):
         rpc.bdev.set_bdev_nvme_options(args.client,
