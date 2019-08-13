@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8712916_d437ffec",
+        "filename": "lib/bdev/aio/bdev_aio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-13T20:12:47Z",
+      "side": 1,
+      "message": "Change this too, please.",
+      "range": {
+        "startLine": 90,
+        "startChar": 37,
+        "endLine": 90,
+        "endChar": 64
+      },
+      "revId": "f121af9d3ce95f3bb0a93eaeb14846be04167d99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
