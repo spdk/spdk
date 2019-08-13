@@ -283,8 +283,8 @@ Example response:
     "construct_virtio_dev",
     "get_virtio_scsi_devs",
     "remove_virtio_bdev",
-    "delete_aio_bdev",
-    "construct_aio_bdev",
+    "bdev_aio_delete",
+    "bdev_aio_create",
     "destruct_split_vbdev",
     "construct_split_vbdev",
     "bdev_inject_error",
@@ -1311,7 +1311,7 @@ Example response:
 }
 ~~~
 
-## construct_aio_bdev {#rpc_construct_aio_bdev}
+## bdev_aio_create {#rpc_bdev_aio_create}
 
 Construct @ref bdev_config_aio.
 
@@ -1339,7 +1339,7 @@ Example request:
     "filename": "/tmp/aio_bdev_file"
   },
   "jsonrpc": "2.0",
-  "method": "construct_aio_bdev",
+  "method": "bdev_aio_create",
   "id": 1
 }
 ~~~
@@ -1354,7 +1354,7 @@ Example response:
 }
 ~~~
 
-## delete_aio_bdev {#rpc_delete_aio_bdev}
+## bdev_aio_delete {#rpc_bdev_aio_delete}
 
 Delete @ref bdev_config_aio.
 
@@ -1374,7 +1374,7 @@ Example request:
     "name": "Aio0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_aio_bdev",
+  "method": "bdev_aio_delete",
   "id": 1
 }
 ~~~
