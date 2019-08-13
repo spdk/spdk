@@ -1143,7 +1143,7 @@ vbdev_crypto_config_json(struct spdk_json_write_ctx *w)
 
 	TAILQ_FOREACH(crypto_bdev, &g_vbdev_crypto, link) {
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "construct_crypto_bdev");
+		spdk_json_write_named_string(w, "method", "bdev_crypto_create");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(crypto_bdev->base_bdev));
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&crypto_bdev->crypto_bdev));
