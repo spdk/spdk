@@ -47,4 +47,6 @@ endif
 
 LIBNAME = vhost
 
+SPDK_DEP_LIBNAMES = bdev conf event jsonrpc json log rpc scsi thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
