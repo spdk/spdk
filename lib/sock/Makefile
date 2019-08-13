@@ -38,4 +38,6 @@ C_SRCS = sock.c net_framework.c
 
 LIBNAME = sock
 
+SPDK_DEP_LIBNAMES = log
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

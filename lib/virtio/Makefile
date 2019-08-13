@@ -39,4 +39,6 @@ C_SRCS = virtio.c virtio_user.c virtio_pci.c
 C_SRCS += virtio_user/vhost_user.c
 LIBNAME = virtio
 
+SPDK_DEP_LIBNAMES = log json thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
