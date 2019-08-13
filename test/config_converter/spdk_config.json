@@ -125,7 +125,7 @@
             "name": "AIO0",
             "filename": "/tmp/sample_aio0"
           },
-          "method": "construct_aio_bdev"
+          "method": "bdev_aio_create"
         },
         {
           "params": {
@@ -133,7 +133,7 @@
             "name": "AIO1",
             "filename": "/tmp/sample_aio1"
           },
-          "method": "construct_aio_bdev"
+          "method": "bdev_aio_create"
         },
         {
           "params": {
@@ -141,7 +141,7 @@
             "name": "AIO2",
             "filename": "/tmp/sample_aio2"
           },
-          "method": "construct_aio_bdev"
+          "method": "bdev_aio_create"
         },
         {
           "params": {
@@ -149,7 +149,7 @@
             "name": "AIO3",
             "filename": "/tmp/sample_aio1"
           },
-          "method": "construct_aio_bdev"
+          "method": "bdev_aio_create"
         },
         {
           "params": {
@@ -157,7 +157,7 @@
             "name": "AIO4",
             "filename": "/tmp/sample_aio2"
           },
-          "method": "construct_aio_bdev"
+          "method": "bdev_aio_create"
         },
         {
           "params": {
