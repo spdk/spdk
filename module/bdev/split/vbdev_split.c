@@ -94,7 +94,7 @@ static struct spdk_bdev_module split_if = {
 	.config_json = vbdev_split_config_json,
 };
 
-SPDK_BDEV_MODULE_REGISTER(split, &split_if)
+SPDK_BDEV_MODULE_REGISTER(split, &split_if);
 
 static void
 vbdev_split_base_free(void *ctx)
