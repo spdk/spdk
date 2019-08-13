@@ -28,7 +28,7 @@ lvs_u=$($rpc_py construct_lvol_store Nvme0n1 lvs0)
 $rpc_py construct_lvol_bdev -t -u $lvs_u lv0 100
 # this will force isal_pmd as some of the CI systems need a qat driver update
 $rpc_py set_compress_pmd -p 2
-compress_bdev=$($rpc_py construct_compress_bdev -b lvs0/lv0 -p /tmp)
+compress_bdev=$($rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp)
 trap - SIGINT SIGTERM EXIT
 killprocess $bdev_svc_pid
 
@@ -64,7 +64,7 @@ waitforbdev $compress_bdev
 $rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
 
 # now cleanup the vols, deleting the compression vol also deletes the pmem file
-$rpc_py delete_compress_bdev COMP_lvs0/lv0
+$rpc_py bdev_compress_delete COMP_lvs0/lv0
 $rpc_py destroy_lvol_store -l lvs0
 
 trap - SIGINT SIGTERM EXIT

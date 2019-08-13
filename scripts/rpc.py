@@ -136,23 +136,23 @@ if __name__ == "__main__":
     p.add_argument('-c', '--bdev-io-cache-size', help='Maximum number of bdev_io structures cached per thread', type=int)
     p.set_defaults(func=set_bdev_options)
 
-    def construct_compress_bdev(args):
-        print_json(rpc.bdev.construct_compress_bdev(args.client,
-                                                    base_bdev_name=args.base_bdev_name,
-                                                    pm_path=args.pm_path))
-    p = subparsers.add_parser('construct_compress_bdev',
+    def bdev_compress_create(args):
+        print_json(rpc.bdev.bdev_compress_create(args.client,
+                                                 base_bdev_name=args.base_bdev_name,
+                                                 pm_path=args.pm_path))
+    p = subparsers.add_parser('bdev_compress_create',
                               help='Add a compress vbdev')
     p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
     p.add_argument('-p', '--pm_path', help="Path to persistent memory")
-    p.set_defaults(func=construct_compress_bdev)
+    p.set_defaults(func=bdev_compress_create)
 
-    def delete_compress_bdev(args):
-        rpc.bdev.delete_compress_bdev(args.client,
+    def bdev_compress_delete(args):
+        rpc.bdev.bdev_compress_delete(args.client,
                                       name=args.name)
 
-    p = subparsers.add_parser('delete_compress_bdev', help='Delete a compress disk')
+    p = subparsers.add_parser('bdev_compress_delete', help='Delete a compress disk')
     p.add_argument('name', help='compress bdev name')
-    p.set_defaults(func=delete_compress_bdev)
+    p.set_defaults(func=bdev_compress_delete)
 
     def set_compress_pmd(args):
         rpc.bdev.set_compress_pmd(args.client,
