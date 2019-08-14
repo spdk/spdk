@@ -70,6 +70,30 @@
       "revId": "1144d9a87bdaf98e54128d648cb13c9a2ac6f495",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b43b8f8a_046d82ec",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 763,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-08-14T09:06:13Z",
+      "side": 1,
+      "message": "Ok, it should never reach this point during shutdown but for flush it could be a case.",
+      "parentUuid": "eb3f99b2_7623645e",
+      "range": {
+        "startLine": 763,
+        "startChar": 8,
+        "endLine": 763,
+        "endChar": 26
+      },
+      "revId": "1144d9a87bdaf98e54128d648cb13c9a2ac6f495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
