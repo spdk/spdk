@@ -148,10 +148,12 @@ if __name__ == "__main__":
 
     def delete_compress_bdev(args):
         rpc.bdev.delete_compress_bdev(args.client,
-                                      name=args.name)
+                                      name=args.name,
+                                      force=args.force)
 
     p = subparsers.add_parser('delete_compress_bdev', help='Delete a compress disk')
     p.add_argument('name', help='compress bdev name')
+    p.add_argument('-f', '--force', dest='force', default=False, action='store_true', help='force deletion even if pmem file not found')
     p.set_defaults(func=delete_compress_bdev)
 
     def set_compress_pmd(args):

@@ -122,6 +122,7 @@ struct vbdev_compress {
 	struct spdk_reduce_vol		*vol;		/* the reduce volume */
 	spdk_delete_compress_complete	delete_cb_fn;
 	void				*delete_cb_arg;
+	bool				force;		/* delete bdev even if pmem file can't be found. */
 	TAILQ_HEAD(, vbdev_comp_op)	queued_comp_ops;
 	TAILQ_ENTRY(vbdev_compress)	link;
 };
@@ -750,6 +751,14 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 					   comp_bdev);
 	struct comp_io_channel *comp_ch = spdk_io_channel_get_ctx(ch);
 
+	/* if the blockcnt is 0, the comp_bdev is opened but has no pmem file so no
+	 * operations other than an RPC to delete it are available.
+	 */
+	if (comp_bdev->comp_bdev.blockcnt == 0) {
+		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
 	memset(io_ctx, 0, sizeof(struct comp_bdev_io));
 	io_ctx->comp_bdev = comp_bdev;
 	io_ctx->comp_ch = comp_ch;
@@ -829,7 +838,9 @@ _reduce_destroy_cb(void *ctx, int reduce_errno)
 {
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
 
-	if (reduce_errno) {
+	if (reduce_errno == -ENOENT) {
+		SPDK_ERRLOG("Unable to destroy compressed volume, use the force flag to delete.\n");
+	} else if (reduce_errno) {
 		SPDK_ERRLOG("number %d\n", reduce_errno);
 	}
 
@@ -845,14 +856,14 @@ delete_vol_unload_cb(void *cb_arg, int reduce_errno)
 {
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
 
-	if (reduce_errno) {
-		SPDK_ERRLOG("number %d\n", reduce_errno);
-	} else {
+	if (reduce_errno == 0 || reduce_errno == -ENOENT) {
 		/* reducelib needs a channel to comm with the backing device */
 		comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
 
 		/* Clean the device before we free our resources. */
-		spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _reduce_destroy_cb, comp_bdev);
+		spdk_reduce_vol_destroy(&comp_bdev->backing_dev, comp_bdev->force, _reduce_destroy_cb, comp_bdev);
+	} else {
+		SPDK_ERRLOG("number %d\n", reduce_errno);
 	}
 }
 
@@ -1405,7 +1416,6 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 
 	comp_bdev->comp_bdev.blocklen = comp_bdev->base_bdev->blocklen;
 	comp_bdev->comp_bdev.blockcnt = comp_bdev->params.vol_size / comp_bdev->comp_bdev.blocklen;
-	assert(comp_bdev->comp_bdev.blockcnt > 0);
 
 	/* This is the context that is passed to us when the bdev
 	 * layer calls in so we'll save our comp_bdev node here.
@@ -1443,6 +1453,10 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 	}
 
 	SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", comp_bdev->comp_bdev.name);
+	if (comp_bdev->comp_bdev.blockcnt == 0) {
+		SPDK_NOTICELOG("however due to a missing pmem file, the volume is not available for I/O "
+			       "and must be forcibly deleted via RPC\n");
+	}
 
 	return;
 	/* Error cleanup paths. */
@@ -1461,7 +1475,8 @@ error_bdev_name:
 }
 
 void
-delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
+delete_compress_bdev(struct spdk_bdev *bdev, bool force, spdk_delete_compress_complete cb_fn,
+		     void *cb_arg)
 {
 	struct vbdev_compress *comp_bdev = NULL;
 
@@ -1471,6 +1486,7 @@ delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn
 	}
 
 	comp_bdev = SPDK_CONTAINEROF(bdev, struct vbdev_compress, comp_bdev);
+	comp_bdev->force = force;
 
 	/* Save these for after the vol is destroyed. */
 	comp_bdev->delete_cb_fn = cb_fn;
@@ -1494,7 +1510,7 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	spdk_bdev_close(meta_ctx->base_desc);
 	meta_ctx->base_desc = NULL;
 
-	if (reduce_errno != 0) {
+	if (reduce_errno != 0 && reduce_errno != -ENOENT) {
 		/* This error means it is not a compress disk. */
 		if (reduce_errno != -EILSEQ) {
 			SPDK_ERRLOG("for vol %s, error %u\n",
@@ -1513,9 +1529,11 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	}
 
 	/* Update information following volume load. */
-	meta_ctx->vol = vol;
-	memcpy(&meta_ctx->params, spdk_reduce_vol_get_params(vol),
-	       sizeof(struct spdk_reduce_vol_params));
+	if (reduce_errno != -ENOENT) {
+		meta_ctx->vol = vol;
+		memcpy(&meta_ctx->params, spdk_reduce_vol_get_params(vol),
+		       sizeof(struct spdk_reduce_vol_params));
+	}
 	vbdev_compress_claim(meta_ctx);
 	spdk_bdev_module_examine_done(&compress_if);
 }

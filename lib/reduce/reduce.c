@@ -691,6 +691,13 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 	if (vol->pm_file.pm_buf == NULL) {
 		SPDK_ERRLOG("could not pmem_map_file(%s): %s\n", vol->pm_file.path, strerror(errno));
 		rc = -errno;
+		if (rc == -ENOENT) {
+			/* If the pmem file can't be found, call the cb but do not cleanup the
+			 *  vol so that it can be forcibly deleted.
+			 */
+			load_ctx->cb_fn(load_ctx->cb_arg, vol, rc);
+			return;
+		}
 		goto error;
 	}
 
@@ -810,9 +817,10 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	if (vol == NULL) {
-		/* This indicates a programming error. */
-		assert(false);
-		cb_fn(cb_arg, -EINVAL);
+		/* This indicates an attempt to unload a vol that was
+		 *  not properly loaded due to a missing pmem file.
+		 */
+		cb_fn(cb_arg, -ENOENT);
 		return;
 	}
 
@@ -832,6 +840,7 @@ struct reduce_destroy_ctx {
 	struct spdk_reduce_vol_cb_args		backing_cb_args;
 	int					reduce_errno;
 	char					pm_path[REDUCE_PATH_MAX];
+	bool					force;
 };
 
 static void
@@ -870,26 +879,28 @@ destroy_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
 	struct reduce_destroy_ctx *destroy_ctx = cb_arg;
 
-	if (reduce_errno != 0) {
+	/* Zero the backing device superblock if there was no error or specifically if the
+	 *  pm metafile could not be found and the user wants to force cleaning the superblock.
+	 */
+	if ((reduce_errno == 0) || (reduce_errno == -ENOENT && destroy_ctx->force == true)) {
+		destroy_ctx->vol = vol;
+		memcpy(destroy_ctx->pm_path, vol->pm_file.path, sizeof(destroy_ctx->pm_path));
+		destroy_ctx->iov.iov_base = destroy_ctx->super;
+		destroy_ctx->iov.iov_len = sizeof(*destroy_ctx->super);
+		destroy_ctx->backing_cb_args.cb_fn = _destroy_zero_super_cpl;
+		destroy_ctx->backing_cb_args.cb_arg = destroy_ctx;
+		vol->backing_dev->writev(vol->backing_dev, &destroy_ctx->iov, 1, 0,
+					 sizeof(*destroy_ctx->super) / vol->backing_dev->blocklen,
+					 &destroy_ctx->backing_cb_args);
+	} else {
 		destroy_ctx->cb_fn(destroy_ctx->cb_arg, reduce_errno);
 		spdk_free(destroy_ctx->super);
 		free(destroy_ctx);
-		return;
 	}
-
-	destroy_ctx->vol = vol;
-	memcpy(destroy_ctx->pm_path, vol->pm_file.path, sizeof(destroy_ctx->pm_path));
-	destroy_ctx->iov.iov_base = destroy_ctx->super;
-	destroy_ctx->iov.iov_len = sizeof(*destroy_ctx->super);
-	destroy_ctx->backing_cb_args.cb_fn = _destroy_zero_super_cpl;
-	destroy_ctx->backing_cb_args.cb_arg = destroy_ctx;
-	vol->backing_dev->writev(vol->backing_dev, &destroy_ctx->iov, 1, 0,
-				 sizeof(*destroy_ctx->super) / vol->backing_dev->blocklen,
-				 &destroy_ctx->backing_cb_args);
 }
 
 void
-spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev,
+spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev, bool force,
 			spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	struct reduce_destroy_ctx *destroy_ctx;
@@ -907,6 +918,7 @@ spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev,
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
+	destroy_ctx->force = force;
 	destroy_ctx->cb_fn = cb_fn;
 	destroy_ctx->cb_arg = cb_arg;
 	spdk_reduce_vol_load(backing_dev, destroy_load_cb, destroy_ctx);

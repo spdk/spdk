@@ -62,10 +62,11 @@ int create_compress_bdev(const char *bdev_name, const char *pm_path);
  * Delete compress bdev.
  *
  * \param bdev Pointer to compression bdev.
+ * \param force Force deletion even if pmem file cannot be found.
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn,
+void delete_compress_bdev(struct spdk_bdev *bdev, bool force, spdk_delete_compress_complete cb_fn,
 			  void *cb_arg);
 
 #endif /* SPDK_VBDEV_COMPRESS_H */

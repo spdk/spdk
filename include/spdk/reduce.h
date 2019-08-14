@@ -186,13 +186,15 @@ void spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
  * This will zero the metadata region on the backing device and delete the associated
  * pm metadata file.  If the backing device does not contain a compressed volume, the
  * cb_fn will be called with error status without modifying the backing device nor
- * deleting a pm file.
+ * deleting a pm file.  The force paramater will zero the metadata region of the backing
+ * device even if the pm metadata file cannot be found.
  *
  * \param backing_dev Structure describing the backing device containing the compressed volume.
+ * \param force Will force deletion of the volume in the event that the pm file cannot be found.
  * \param cb_fn Callback function to signal completion of the destruction process.
  * \param cb_arg Argument to pass to the callback function.
  */
-void spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev,
+void spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev, bool force,
 			     spdk_reduce_vol_op_complete cb_fn,
 			     void *cb_arg);
 
