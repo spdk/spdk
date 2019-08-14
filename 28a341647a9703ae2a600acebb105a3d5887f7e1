@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4904ff5a_6deaf0f4",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-14T22:08:03Z",
+      "side": 1,
+      "message": "Please check if opts-\u003edif_is_head_of_md up front. And it will be nice if we explain in commit message and/or source code that DIF is supported only to be at the first 8 bytes of metadata.",
+      "range": {
+        "startLine": 267,
+        "startChar": 37,
+        "endLine": 267,
+        "endChar": 61
+      },
+      "revId": "28a341647a9703ae2a600acebb105a3d5887f7e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef471134_e0898282",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-14T22:08:03Z",
+      "side": 1,
+      "message": "I think the block 268 to 283 is nice.",
+      "revId": "28a341647a9703ae2a600acebb105a3d5887f7e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
