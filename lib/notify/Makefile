@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = notify.c
+C_SRCS = notify.c notify_rpc.c
 LIBNAME = notify
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
