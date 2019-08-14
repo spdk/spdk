@@ -7,6 +7,10 @@
 Portals may no longer be associated with a cpumask. The scheduling of
 connections is moving to a more dynamic model.
 
+### compress bdev
+
+TBD
+
 ### delay bdev
 
 The `bdev_delay_update_latency` has been added to allow users to update
