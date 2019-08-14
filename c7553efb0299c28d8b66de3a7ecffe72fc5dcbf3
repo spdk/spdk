@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ee05f32_7f9f7d64",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-14T20:15:11Z",
+      "side": 0,
+      "message": "This is no longer used on the target side, so it\u0027s just moved into the initiator compilation unit to avoid the -Wunused-function error. No code change.",
+      "revId": "c7553efb0299c28d8b66de3a7ecffe72fc5dcbf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
