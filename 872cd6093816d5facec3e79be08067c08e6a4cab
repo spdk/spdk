@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5baf1741_d22fec9a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 1247,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-14T22:08:55Z",
+      "side": 1,
+      "message": "please explain that 0 is disabled and DIF is at the first 8 bytes of metadata.",
+      "range": {
+        "startLine": 1247,
+        "startChar": 73,
+        "endLine": 1247,
+        "endChar": 74
+      },
+      "revId": "872cd6093816d5facec3e79be08067c08e6a4cab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
