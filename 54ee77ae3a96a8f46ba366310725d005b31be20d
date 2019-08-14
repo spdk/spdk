@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71a93774_cbc126f8",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-14T14:20:07Z",
+      "side": 1,
+      "message": "By moving this conditional here, you have pretty much disabled the VPP tests. See the vpp_autotest logs from PS10.",
+      "revId": "54ee77ae3a96a8f46ba366310725d005b31be20d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
