@@ -122,6 +122,7 @@ struct vbdev_compress {
 	struct spdk_reduce_vol		*vol;		/* the reduce volume */
 	spdk_delete_compress_complete	delete_cb_fn;
 	void				*delete_cb_arg;
+	bool				orphaned;	/* base bdev claimed but comp_bdev not registered */
 	TAILQ_HEAD(, vbdev_comp_op)	queued_comp_ops;
 	TAILQ_ENTRY(vbdev_compress)	link;
 };
@@ -824,6 +825,7 @@ _device_unregister_cb(void *io_device)
 	free(comp_bdev);
 }
 
+/* Callback after a call into reduce to destroy a vol */
 static void
 _reduce_destroy_cb(void *ctx, int reduce_errno)
 {
@@ -833,10 +835,19 @@ _reduce_destroy_cb(void *ctx, int reduce_errno)
 		SPDK_ERRLOG("number %d\n", reduce_errno);
 	}
 
-	comp_bdev->vol = NULL;
 	spdk_put_io_channel(comp_bdev->base_ch);
-	spdk_bdev_unregister(&comp_bdev->comp_bdev, comp_bdev->delete_cb_fn,
-			     comp_bdev->delete_cb_arg);
+	comp_bdev->vol = NULL;
+
+	if (comp_bdev->orphaned == false) {
+		spdk_bdev_unregister(&comp_bdev->comp_bdev, comp_bdev->delete_cb_fn,
+				     comp_bdev->delete_cb_arg);
+	} else {
+		TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
+		spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
+		spdk_bdev_close(comp_bdev->base_desc);
+		comp_bdev->delete_cb_fn(comp_bdev->delete_cb_arg, 0);
+	}
+
 }
 
 /* Called by reduceLib after performing unload vol actions */
@@ -845,7 +856,7 @@ delete_vol_unload_cb(void *cb_arg, int reduce_errno)
 {
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
 
-	if (reduce_errno) {
+	if (reduce_errno && reduce_errno != -ENOENT) {
 		SPDK_ERRLOG("number %d\n", reduce_errno);
 	} else {
 		/* reducelib needs a channel to comm with the backing device */
@@ -856,6 +867,7 @@ delete_vol_unload_cb(void *cb_arg, int reduce_errno)
 	}
 }
 
+/* Called after our destruct entry point which follows a hot remove callback */
 static void
 vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
 {
@@ -868,8 +880,52 @@ vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
 		spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 		spdk_bdev_close(comp_bdev->base_desc);
 		comp_bdev->vol = NULL;
-		spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
+		if (comp_bdev->orphaned == false) {
+			spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
+		} else {
+			free(comp_bdev->comp_bdev.name);
+			free(comp_bdev);
+		}
 	}
+}
+
+const char *
+compress_get_name(const struct vbdev_compress *comp_bdev)
+{
+	return comp_bdev->comp_bdev.name;
+}
+
+struct vbdev_compress *
+compress_bdev_first(void)
+{
+	struct vbdev_compress *comp_bdev;
+
+	comp_bdev = TAILQ_FIRST(&g_vbdev_comp);
+
+	return comp_bdev;
+}
+
+struct vbdev_compress *
+compress_bdev_next(struct vbdev_compress *prev)
+{
+	struct vbdev_compress *comp_bdev;
+
+	comp_bdev = TAILQ_NEXT(prev, link);
+
+	return comp_bdev;
+}
+
+bool
+compress_get_orphan_by_name(const char *name)
+{
+	struct vbdev_compress *comp_bdev;
+
+	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
+		if (strcmp(name, comp_bdev->comp_bdev.name) == 0 && comp_bdev->orphaned) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /* Called after we've unregistered following a hot remove callback.
@@ -1361,10 +1417,8 @@ static struct spdk_bdev_module compress_if = {
 
 SPDK_BDEV_MODULE_REGISTER(compress, &compress_if)
 
-static void
-vbdev_compress_claim(struct vbdev_compress *comp_bdev)
+static int _set_compbdev_name(struct vbdev_compress *comp_bdev)
 {
-	int rc;
 	struct spdk_bdev_alias *aliases;
 
 	if (!TAILQ_EMPTY(spdk_bdev_get_aliases(comp_bdev->base_bdev))) {
@@ -1372,14 +1426,25 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 		comp_bdev->comp_bdev.name = spdk_sprintf_alloc("COMP_%s", aliases->alias);
 		if (!comp_bdev->comp_bdev.name) {
 			SPDK_ERRLOG("could not allocate comp_bdev name for alias\n");
-			goto error_bdev_name;
+			return -ENOMEM;
 		}
 	} else {
 		comp_bdev->comp_bdev.name = spdk_sprintf_alloc("COMP_%s", comp_bdev->base_bdev->name);
 		if (!comp_bdev->comp_bdev.name) {
 			SPDK_ERRLOG("could not allocate comp_bdev name for unique name\n");
-			goto error_bdev_name;
+			return -ENOMEM;
 		}
+	}
+	return 0;
+}
+
+static void
+vbdev_compress_claim(struct vbdev_compress *comp_bdev)
+{
+	int rc;
+
+	if (_set_compbdev_name(comp_bdev)) {
+		goto error_bdev_name;
 	}
 
 	/* Note: some of the fields below will change in the future - for example,
@@ -1461,16 +1526,20 @@ error_bdev_name:
 }
 
 void
-delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
+delete_compress_bdev(const char *name, spdk_delete_compress_complete cb_fn, void *cb_arg)
 {
 	struct vbdev_compress *comp_bdev = NULL;
 
-	if (!bdev || bdev->module != &compress_if) {
+	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
+		if (strcmp(name, comp_bdev->comp_bdev.name) == 0) {
+			break;
+		}
+	}
+
+	if (comp_bdev == NULL) {
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
-
-	comp_bdev = SPDK_CONTAINEROF(bdev, struct vbdev_compress, comp_bdev);
 
 	/* Save these for after the vol is destroyed. */
 	comp_bdev->delete_cb_fn = cb_fn;
@@ -1488,13 +1557,14 @@ static void
 vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
 	struct vbdev_compress *meta_ctx = cb_arg;
+	int rc;
 
 	/* Done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
 	spdk_bdev_close(meta_ctx->base_desc);
 	meta_ctx->base_desc = NULL;
 
-	if (reduce_errno != 0) {
+	if (reduce_errno != 0 && reduce_errno != -ENOENT) {
 		/* This error means it is not a compress disk. */
 		if (reduce_errno != -EILSEQ) {
 			SPDK_ERRLOG("for vol %s, error %u\n",
@@ -1508,6 +1578,37 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	if (_set_pmd(meta_ctx) == false) {
 		SPDK_ERRLOG("could not find required pmd\n");
 		free(meta_ctx);
+		spdk_bdev_module_examine_done(&compress_if);
+		return;
+	}
+
+	/* this status means that the vol could not be loaded because
+	 * the pmem file can't be found. Go ahead and claim the base bdev
+	 * and the app can use the orphan RPCs to delete the comp volume.
+	 */
+	if (reduce_errno == -ENOENT) {
+		if (_set_compbdev_name(meta_ctx)) {
+			goto err;
+		}
+
+		rc = spdk_bdev_open(meta_ctx->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
+				    meta_ctx->base_bdev, &meta_ctx->base_desc);
+		if (rc) {
+			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
+			goto err;
+		}
+
+		meta_ctx->comp_bdev.module = &compress_if;
+		rc = spdk_bdev_module_claim_bdev(meta_ctx->base_bdev, meta_ctx->base_desc,
+						 meta_ctx->comp_bdev.module);
+		if (rc) {
+			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
+			goto err;
+		}
+
+		meta_ctx->orphaned = true;
+		TAILQ_INSERT_TAIL(&g_vbdev_comp, meta_ctx, link);
+err:
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
 	}

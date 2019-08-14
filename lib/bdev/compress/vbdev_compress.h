@@ -38,6 +38,37 @@
 
 #include "spdk/bdev.h"
 
+/**
+ * Get the first compression bdev.
+ *
+ * \return the first compression bdev.
+ */
+struct vbdev_compress *compress_bdev_first(void);
+
+/**
+ * Get the next compression bdev.
+ *
+ * \param prev previous compression bdev.
+ * \return the next compression bdev.
+ */
+struct vbdev_compress *compress_bdev_next(struct vbdev_compress *prev);
+
+/**
+ * Test to see if a compression bdev orphan exists.
+ *
+ * \param name The name of the compression bdev.
+ * \return true if found, false if not.
+ */
+bool compress_get_orphan_by_name(const char *name);
+
+/**
+ * Get the name of a compression bdev.
+ *
+ * \param comp_bdev The compression bdev.
+ * \return the name of the compression bdev.
+ */
+const char *compress_get_name(const struct vbdev_compress *comp_bdev);
+
 enum compress_pmd {
 	COMPRESS_PMD_AUTO = 0,
 	COMPRESS_PMD_QAT_ONLY,
@@ -61,11 +92,11 @@ int create_compress_bdev(const char *bdev_name, const char *pm_path);
 /**
  * Delete compress bdev.
  *
- * \param bdev Pointer to compression bdev.
+ * \param bdev_name Bdev on which compression bdev will be deleted.
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn,
+void delete_compress_bdev(const char *bdev_name, spdk_delete_compress_complete cb_fn,
 			  void *cb_arg);
 
 #endif /* SPDK_VBDEV_COMPRESS_H */

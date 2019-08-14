@@ -646,6 +646,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 				 &init_ctx->backing_cb_args);
 }
 
+static void destroy_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno);
+
 static void
 _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 {
@@ -666,6 +668,13 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 		goto error;
 	}
 
+	memcpy(vol->pm_file.path, load_ctx->path, sizeof(vol->pm_file.path));
+	if (load_ctx->cb_fn == (*destroy_load_cb)) {
+		load_ctx->cb_fn(load_ctx->cb_arg, vol, 0);
+		_init_load_cleanup(NULL, load_ctx);
+		return;
+	}
+
 	memcpy(&vol->params, &vol->backing_super->params, sizeof(vol->params));
 	vol->backing_io_units_per_chunk = vol->params.chunk_size / vol->params.backing_io_unit_size;
 	vol->logical_blocks_per_chunk = vol->params.chunk_size / vol->params.logical_block_size;
@@ -684,13 +693,18 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 		goto error;
 	}
 
-	memcpy(vol->pm_file.path, load_ctx->path, sizeof(vol->pm_file.path));
 	vol->pm_file.size = _get_pm_file_size(&vol->params);
 	vol->pm_file.pm_buf = pmem_map_file(vol->pm_file.path, 0, 0, 0, &mapped_len,
 					    &vol->pm_file.pm_is_pmem);
 	if (vol->pm_file.pm_buf == NULL) {
 		SPDK_ERRLOG("could not pmem_map_file(%s): %s\n", vol->pm_file.path, strerror(errno));
 		rc = -errno;
+		if (rc == -ENOENT) {
+			SPDK_ERRLOG("the pmem file is missing, to list orphaned compressed volumes use "
+				    "the compress orphan RPC.\n");
+			load_ctx->cb_fn(load_ctx->cb_arg, vol, rc);
+			return;
+		}
 		goto error;
 	}
 
@@ -810,9 +824,10 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	if (vol == NULL) {
-		/* This indicates a programming error. */
-		assert(false);
-		cb_fn(cb_arg, -EINVAL);
+		/* This indicates an attempt to unload a vol that was
+		 *  not properly loaded due to a missing pmem file.
+		 */
+		cb_fn(cb_arg, -ENOENT);
 		return;
 	}
 
