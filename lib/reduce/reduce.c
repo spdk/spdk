@@ -646,6 +646,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 				 &init_ctx->backing_cb_args);
 }
 
+static void destroy_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno);
+
 static void
 _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 {
@@ -664,6 +666,13 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 		/* This backing device isn't a libreduce backing device. */
 		rc = -EILSEQ;
 		goto error;
+	}
+
+	if (load_ctx->cb_fn == (*destroy_load_cb)) {
+		raise(SIGINT);
+		load_ctx->cb_fn(load_ctx->cb_arg, vol, 0);
+		_init_load_cleanup(NULL, load_ctx);
+		return;
 	}
 
 	memcpy(&vol->params, &vol->backing_super->params, sizeof(vol->params));
@@ -691,6 +700,15 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 	if (vol->pm_file.pm_buf == NULL) {
 		SPDK_ERRLOG("could not pmem_map_file(%s): %s\n", vol->pm_file.path, strerror(errno));
 		rc = -errno;
+		if (rc == -ENOENT) {
+			/* If the pmem file can't be found, call the cb but do not cleanup the
+			 *  vol so that it can be forcibly deleted.
+			 */
+			SPDK_ERRLOG("the pmem file is missing, to delete the compressed volume use "
+				    "the compress orphan RPCs.\n");
+			load_ctx->cb_fn(load_ctx->cb_arg, vol, rc);
+			return;
+		}
 		goto error;
 	}
 
@@ -810,9 +828,10 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	if (vol == NULL) {
-		/* This indicates a programming error. */
-		assert(false);
-		cb_fn(cb_arg, -EINVAL);
+		/* This indicates an attempt to unload a vol that was
+		 *  not properly loaded due to a missing pmem file.
+		 */
+		cb_fn(cb_arg, -ENOENT);
 		return;
 	}
 
