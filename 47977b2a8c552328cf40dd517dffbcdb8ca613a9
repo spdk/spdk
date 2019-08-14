@@ -144,6 +144,30 @@
     },
     {
       "key": {
+        "uuid": "f840f3ca_98c6e2a1",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-08-14T12:52:48Z",
+      "side": 1,
+      "message": "Ok, this separation make sense.",
+      "parentUuid": "34df2e56_bd0c79e5",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 29
+      },
+      "revId": "47977b2a8c552328cf40dd517dffbcdb8ca613a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "078cc409_fa99cebf",
         "filename": "include/spdk/zdev.h",
         "patchSetId": 10
