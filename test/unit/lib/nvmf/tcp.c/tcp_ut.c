@@ -406,6 +406,8 @@ test_nvmf_tcp_send_c2h_data(void)
 	struct nvme_tcp_pdu pdu = {};
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data;
 
+	pdu.hdr = (union nvme_tcp_pdu_hdr *)pdu.raw;
+
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
@@ -447,7 +449,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	TAILQ_INSERT_TAIL(&tqpair.free_queue, &pdu, tailq);
 	tqpair.free_pdu_num++;
 
-	c2h_data = &pdu.hdr.c2h_data;
+	c2h_data = &pdu.hdr->c2h_data;
 	CU_ASSERT(c2h_data->datao == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
 	CU_ASSERT(c2h_data->datal = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE);
 	CU_ASSERT(c2h_data->common.plen == sizeof(*c2h_data) + NVMF_TCP_PDU_MAX_C2H_DATA_SIZE);
@@ -470,7 +472,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	TAILQ_INSERT_TAIL(&tqpair.free_queue, &pdu, tailq);
 	tqpair.free_pdu_num++;
 
-	c2h_data = &pdu.hdr.c2h_data;
+	c2h_data = &pdu.hdr->c2h_data;
 	CU_ASSERT(c2h_data->datao == (NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2) * 3);
 	CU_ASSERT(c2h_data->datal = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE);
 	CU_ASSERT(c2h_data->common.plen == sizeof(*c2h_data) + NVMF_TCP_PDU_MAX_C2H_DATA_SIZE);
@@ -492,7 +494,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	TAILQ_REMOVE(&tqpair.send_queue, &pdu, tailq);
 	CU_ASSERT(TAILQ_EMPTY(&tqpair.send_queue));
 
-	c2h_data = &pdu.hdr.c2h_data;
+	c2h_data = &pdu.hdr->c2h_data;
 	CU_ASSERT(c2h_data->datao == (NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2) * 5);
 	CU_ASSERT(c2h_data->datal = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
 	CU_ASSERT(c2h_data->common.plen == sizeof(*c2h_data) + NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
@@ -521,6 +523,8 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	struct spdk_nvmf_tcp_req tcp_req = {};
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 
+	pdu.hdr = (union nvme_tcp_pdu_hdr *)pdu.raw;
+
 	TAILQ_INIT(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER]);
 	tqpair.maxh2cdata = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE;
 
@@ -544,7 +548,7 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	TAILQ_INSERT_TAIL(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER],
 			  &tcp_req, state_link);
 
-	h2c_data = &pdu.hdr.h2c_data;
+	h2c_data = &pdu.hdr->h2c_data;
 	h2c_data->cccid = 1;
 	h2c_data->ttag = 2;
 	h2c_data->datao = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE * 2;
