@@ -40,6 +40,4 @@ ifeq ($(CONFIG_LOG_BACKTRACE),y)
 LOCAL_SYS_LIBS += -lunwind
 endif
 
-DIRS-y = rpc
-
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
