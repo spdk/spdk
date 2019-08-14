@@ -1718,7 +1718,7 @@ Example response:
 ## bdev_delay_create {#rpc_bdev_delay_create}
 
 Create delay bdev. This bdev type redirects all IO to it's base bdev and inserts a delay on the completion
-path to create an artificial drive latency.
+path to create an artificial drive latency. All latency valuessupplied to this bdev should be in microseconds.
 
 ### Parameters
 

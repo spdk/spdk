@@ -432,10 +432,14 @@ if __name__ == "__main__":
                               help='Add a delay bdev on existing bdev')
     p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
     p.add_argument('-d', '--name', help="Name of the delay bdev", required=True)
-    p.add_argument('-r', '--avg-read-latency', help="Average latency to apply before completing read ops", required=True, type=int)
-    p.add_argument('-t', '--nine-nine-read-latency', help="latency to apply to 1 in 100 read ops", required=True, type=int)
-    p.add_argument('-w', '--avg-write-latency', help="Average latency to apply before completing write ops", required=True, type=int)
-    p.add_argument('-n', '--nine-nine-write-latency', help="latency to apply to 1 in 100 write ops", required=True, type=int)
+    p.add_argument('-r', '--avg-read-latency',
+                   help="Average latency to apply before completing read ops (in microseconds)", required=True, type=int)
+    p.add_argument('-t', '--nine-nine-read-latency',
+                   help="latency to apply to 1 in 100 read ops (in microseconds)", required=True, type=int)
+    p.add_argument('-w', '--avg-write-latency',
+                   help="Average latency to apply before completing write ops (in microseconds)", required=True, type=int)
+    p.add_argument('-n', '--nine-nine-write-latency',
+                   help="latency to apply to 1 in 100 write ops (in microseconds)", required=True, type=int)
     p.set_defaults(func=bdev_delay_create)
 
     def bdev_delay_delete(args):
@@ -455,7 +459,7 @@ if __name__ == "__main__":
                               help='Update one of the latency values for a given delay bdev')
     p.add_argument('delay_bdev_name', help='The name of the given delay bdev')
     p.add_argument('latency_type', help='one of: avg_read, avg_write, p99_read, p99_write. No other values accepted.')
-    p.add_argument('latency_us', help='new latency value.', type=int)
+    p.add_argument('latency_us', help='new latency value in microseconds.', type=int)
     p.set_defaults(func=bdev_delay_update_latency)
 
     def construct_error_bdev(args):
