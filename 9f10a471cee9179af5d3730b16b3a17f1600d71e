@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c2751a9_045fd70c",
+        "filename": "lib/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-14T22:36:34Z",
+      "side": 1,
+      "message": "could you add:\n\nDEPDIRS-log :\u003d\n\nI got thrown off when reading the next patch, and realized that there were only 6 DEPDIRS-xxx lines here.",
+      "revId": "9f10a471cee9179af5d3730b16b3a17f1600d71e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
