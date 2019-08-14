@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aec22df_74f379cf",
+        "filename": "lib/bdev/ocf/utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-14T06:49:48Z",
+      "side": 0,
+      "message": "This caused CI to fail",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 4
+      },
+      "revId": "6d960d943e520e733642e8a414ebd1dab97bd929",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
