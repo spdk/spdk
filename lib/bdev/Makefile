@@ -42,7 +42,7 @@ C_SRCS = bdev.c part.c scsi_nvme.c
 C_SRCS-$(CONFIG_VTUNE) += vtune.c
 LIBNAME = bdev
 
-DIRS-y += delay error gpt lvol malloc null nvme passthru raid rpc split
+DIRS-y += blob delay error gpt lvol malloc null nvme passthru raid rpc split
 
 ifeq ($(CONFIG_CRYPTO),y)
 DIRS-y += crypto
