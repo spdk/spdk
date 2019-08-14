@@ -374,13 +374,13 @@ _delay_write_conf_values(struct vbdev_delay *delay_node, struct spdk_json_write_
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&delay_node->delay_bdev));
 	spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(delay_node->base_bdev));
 	spdk_json_write_named_int64(w, "avg_read_latency",
-				    delay_node->average_read_latency_ticks / spdk_get_ticks_hz() * SPDK_SEC_TO_USEC);
+				    delay_node->average_read_latency_ticks * SPDK_SEC_TO_USEC / spdk_get_ticks_hz());
 	spdk_json_write_named_int64(w, "p99_read_latency",
-				    delay_node->p99_read_latency_ticks / spdk_get_ticks_hz() * SPDK_SEC_TO_USEC);
+				    delay_node->p99_read_latency_ticks * SPDK_SEC_TO_USEC / spdk_get_ticks_hz());
 	spdk_json_write_named_int64(w, "avg_write_latency",
-				    delay_node->average_write_latency_ticks / spdk_get_ticks_hz() * SPDK_SEC_TO_USEC);
+				    delay_node->average_write_latency_ticks * SPDK_SEC_TO_USEC / spdk_get_ticks_hz());
 	spdk_json_write_named_int64(w, "p99_write_latency",
-				    delay_node->p99_write_latency_ticks / spdk_get_ticks_hz() * SPDK_SEC_TO_USEC);
+				    delay_node->p99_write_latency_ticks * SPDK_SEC_TO_USEC / spdk_get_ticks_hz());
 }
 
 static int
