@@ -406,6 +406,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	struct nvme_tcp_pdu pdu = {};
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data;
 
+	pdu.hdr_p = &pdu.hdr;
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
@@ -521,6 +522,7 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	struct spdk_nvmf_tcp_req tcp_req = {};
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 
+	pdu.hdr_p = &pdu.hdr;
 	TAILQ_INIT(&tqpair.state_queue[TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER]);
 	tqpair.maxh2cdata = NVMF_TCP_PDU_MAX_H2C_DATA_SIZE;
 

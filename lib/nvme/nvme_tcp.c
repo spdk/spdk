@@ -629,6 +629,7 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
 	pdu = &tcp_req->send_pdu;
+	pdu->hdr_p = &pdu->hdr;
 
 	capsule_cmd = &pdu->hdr.capsule_cmd;
 	capsule_cmd->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
@@ -762,6 +763,7 @@ nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
 	case NVME_TCP_PDU_RECV_STATE_ERROR:
 		memset(&tqpair->recv_pdu, 0, sizeof(struct nvme_tcp_pdu));
+		tqpair->recv_pdu.hdr_p = &tqpair->recv_pdu.hdr;
 		break;
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
@@ -790,6 +792,7 @@ nvme_tcp_qpair_send_h2c_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 
 	rsp_pdu = &tqpair->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
+	rsp_pdu->hdr_p = &rsp_pdu->hdr;
 	h2c_term_req = &rsp_pdu->hdr.term_req;
 	h2c_term_req->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ;
 	h2c_term_req->common.hlen = h2c_term_req_hdr_len;
@@ -1241,6 +1244,7 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 
 	rsp_pdu = &tcp_req->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
+	rsp_pdu->hdr_p = &rsp_pdu->hdr;
 	h2c_data = &rsp_pdu->hdr.h2c_data;
 
 	h2c_data->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_DATA;
@@ -1587,6 +1591,7 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 
 	pdu = &tqpair->send_pdu;
 	memset(&tqpair->send_pdu, 0, sizeof(tqpair->send_pdu));
+	pdu->hdr_p = &pdu->hdr;
 	ic_req = &pdu->hdr.ic_req;
 
 	ic_req->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_REQ;
@@ -1674,6 +1679,7 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 	tqpair->maxr2t = NVME_TCP_MAX_R2T_DEFAULT;
 	/* Explicitly set the state and recv_state of tqpair */
 	tqpair->state = NVME_TCP_QPAIR_STATE_INVALID;
+	tqpair->recv_pdu.hdr_p = &tqpair->recv_pdu.hdr;
 	if (tqpair->recv_state != NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
 		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	}
