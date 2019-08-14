@@ -22,6 +22,30 @@
       "revId": "6d960d943e520e733642e8a414ebd1dab97bd929",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fd0ff99_e70db837",
+        "filename": "lib/bdev/ocf/utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-14T14:36:13Z",
+      "side": 0,
+      "message": "Yup, my fault.",
+      "parentUuid": "1aec22df_74f379cf",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 4
+      },
+      "revId": "6d960d943e520e733642e8a414ebd1dab97bd929",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
