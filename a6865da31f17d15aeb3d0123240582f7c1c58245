@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "077f160b_f067ab0c",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-14T13:46:13Z",
+      "side": 1,
+      "message": "Hi Alexey,\n\nYou are right, sorry about the bad suggestion. The API change was the only real hangup I had. I will +1 once you add a changelog entry for the change.\nIn regards to the next couple of changes. I think they are the right thing to do within the context of the interface we have for this feature.\n\nThanks,\n\nSeth",
+      "parentUuid": "006f3967_62fcce80",
+      "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e248e12b_d8170e5f",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 2
