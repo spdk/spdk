@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2b905b80_fce665d3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-08-14T07:20:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b627981e_4ad3f9c2",
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "db15082d_e9efee0a",
         "filename": "lib/bdev/null/bdev_null.c",
         "patchSetId": 1
@@ -30,6 +48,30 @@
       "writtenOn": "2019-08-12T22:46:44Z",
       "side": 1,
       "message": "I added a comment to two patches later.\n\nWe often say 520 byte sector when we use 512+8, and bdev.blocklen includes data block and metadata. \n\nSo I think it sounds reasonable that opts-\u003eblock_size includes data block and metadata.\n\nBut if we use opts-\u003eblock_size as data_block_size, we should any comment about this.",
+      "range": {
+        "startLine": 209,
+        "startChar": 34,
+        "endLine": 209,
+        "endChar": 45
+      },
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc3530e8_c3d8d88f",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-08-14T07:20:06Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nThat was one of the questions I asked myself during implementation. My intention was to simplify configuration update by just adding one parameter without touching others.\nNow, I think you\u0027re right. It is better to follow conventions about block size. It is not a big deal to update one more parameter in config.\n\nIf no objections, I will update with your suggestion and make opts-\u003eblock_size \u003d\u003d data_block_size + opts-\u003emd_size.",
+      "parentUuid": "db15082d_e9efee0a",
       "range": {
         "startLine": 209,
         "startChar": 34,
