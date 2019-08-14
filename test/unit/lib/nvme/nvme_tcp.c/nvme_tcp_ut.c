@@ -126,6 +126,7 @@ test_nvme_tcp_build_iovs(void)
 	uint32_t mapped_length = 0;
 	int rc;
 
+	pdu.hdr_p = &pdu.hdr;
 	pdu.hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
 	pdu.hdr.common.hlen = sizeof(struct spdk_nvme_tcp_cmd);
 	pdu.hdr.common.plen = pdu.hdr.common.hlen + SPDK_NVME_TCP_DIGEST_LEN + 4096 * 2 +
@@ -401,6 +402,7 @@ test_nvme_tcp_build_iovs_with_md(void)
 
 	pdu.dif_ctx = &dif_ctx;
 
+	pdu.hdr_p = &pdu.hdr;
 	pdu.hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
 	pdu.hdr.common.hlen = sizeof(struct spdk_nvme_tcp_cmd);
 	pdu.hdr.common.plen = pdu.hdr.common.hlen + SPDK_NVME_TCP_DIGEST_LEN + 512 * 8 +
