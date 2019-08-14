@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60d6758a_12b75dbc",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 1314,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-14T21:58:33Z",
+      "side": 1,
+      "message": "let\u0027s change the tag to #rpc_bdev_aio_create",
+      "revId": "9b030426a73e837ea656b0e9fb5e927dfa4092b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
