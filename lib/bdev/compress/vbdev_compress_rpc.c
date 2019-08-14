@@ -143,6 +143,7 @@ SPDK_RPC_REGISTER("construct_compress_bdev", spdk_rpc_construct_compress_bdev, S
 
 struct rpc_delete_compress {
 	char *name;
+	bool force;
 };
 
 static void
@@ -153,6 +154,7 @@ free_rpc_delete_compress(struct rpc_delete_compress *req)
 
 static const struct spdk_json_object_decoder rpc_delete_compress_decoders[] = {
 	{"name", offsetof(struct rpc_delete_compress, name), spdk_json_decode_string},
+	{"force", offsetof(struct rpc_delete_compress, force), spdk_json_decode_bool, false},
 };
 
 static void
@@ -187,7 +189,7 @@ spdk_rpc_delete_compress_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	delete_compress_bdev(bdev, _spdk_rpc_delete_compress_bdev_cb, request);
+	delete_compress_bdev(bdev, req.force, _spdk_rpc_delete_compress_bdev_cb, request);
 
 cleanup:
 	free_rpc_delete_compress(&req);

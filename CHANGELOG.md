@@ -7,6 +7,12 @@
 Portals may no longer be associated with a cpumask. The scheduling of
 connections is moving to a more dynamic model.
 
+### compress bdev
+
+A new parameter was added to the RPC for deleting a compress bdev,
+delete_compress_bdev(). The new parameter `force` will force deletion
+of the compressed volume even if the pm metadata file cannot be found.
+
 ### delay bdev
 
 The `bdev_delay_update_latency` has been added to allow users to update
