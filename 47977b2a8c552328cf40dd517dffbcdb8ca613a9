@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "fc10b745_fc24f78c",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-08-14T11:59:05Z",
+      "side": 1,
+      "message": "Yeah, zoned device is fine too, just not zone bdev.",
+      "parentUuid": "a3605bb3_7bbff635",
+      "range": {
+        "startLine": 35,
+        "startChar": 3,
+        "endLine": 35,
+        "endChar": 12
+      },
+      "revId": "47977b2a8c552328cf40dd517dffbcdb8ca613a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f42443ee_cfd3ec15",
         "filename": "include/spdk/zdev.h",
         "patchSetId": 10
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "I need spdk_bdev definition from this header.",
       "parentUuid": "f42443ee_cfd3ec15",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 29
+      },
+      "revId": "47977b2a8c552328cf40dd517dffbcdb8ca613a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34df2e56_bd0c79e5",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-08-14T11:59:05Z",
+      "side": 1,
+      "message": "Yeah this is exactly my point. You wouldn\u0027t need this definition if you\u0027ve split this into zdev.h (for users of zoned devices) and zdev_module.h (for zone device implementations, this would actually need to pull bdev_module.h).",
+      "parentUuid": "9936cd12_182d1808",
       "range": {
         "startLine": 43,
         "startChar": 0,
