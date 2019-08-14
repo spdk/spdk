@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "232f0ffc_61e2f7aa",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-08-14T09:17:14Z",
+      "side": 1,
+      "message": "Aren\u0027t we calling it just a zone device (not zone bdev)?",
+      "range": {
+        "startLine": 35,
+        "startChar": 3,
+        "endLine": 35,
+        "endChar": 12
+      },
+      "revId": "47977b2a8c552328cf40dd517dffbcdb8ca613a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f42443ee_cfd3ec15",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-08-14T09:17:14Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it make more sense to have two header files, similarly to how the bdev interface is currently split: zdev.h with external API and zdev_module.h with module stuff.",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 29
+      },
+      "revId": "47977b2a8c552328cf40dd517dffbcdb8ca613a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "078cc409_fa99cebf",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-08-14T09:17:14Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 46,
+        "startChar": 24,
+        "endLine": 46,
+        "endChar": 34
+      },
+      "revId": "47977b2a8c552328cf40dd517dffbcdb8ca613a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74ef0ebc_763df1cb",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-08-14T09:17:14Z",
+      "side": 1,
+      "message": "I think it\u0027d make more sense for this to be defined as\nvoid spdk_zdev_get_info(const struct spdk_zdev *zdev, const struct spdk_zdev_info *info).",
+      "range": {
+        "startLine": 71,
+        "startChar": 29,
+        "endLine": 71,
+        "endChar": 47
+      },
+      "revId": "47977b2a8c552328cf40dd517dffbcdb8ca613a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
