@@ -207,7 +207,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		}
 	}
 
-	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(g_spdk_nvmf_tgt_max_subsystems);
+	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(g_spdk_nvmf_tgt_max_subsystems, "nvmf_tgt");
 
 	g_spdk_nvmf_tgt_max_subsystems = 0;
 

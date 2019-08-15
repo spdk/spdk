@@ -125,10 +125,11 @@ struct spdk_nvmf_transport_poll_group_stat {
  * Construct an NVMe-oF target.
  *
  * \param max_subsystems the maximum number of subsystems allowed by the target.
+ * \param name, a uniquely identifiable name for the target to be created.
  *
  * \return a pointer to a NVMe-oF target on success, or NULL on failure.
  */
-struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(uint32_t max_subsystems);
+struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(uint32_t max_subsystems, const char *name);
 
 typedef void (spdk_nvmf_tgt_destroy_done_fn)(void *ctx, int status);
 
