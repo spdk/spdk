@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8d1d433_e72487b4",
+        "filename": "mk/nvme.libtest.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T22:57:39Z",
+      "side": 1,
+      "message": "this might be fine - but I\u0027m starting to question whether we need any VMD RPCs at all - I hate having to include json and rpc stuff for nvme-only applications\n\nI\u0027m wondering if adding a long option like --enable-vmd would be better - then users could specify that on an spdk_tgt/iscsi_tgt/etc command line",
+      "revId": "eae47c13968a3c2df81d11fb9502ea4dd49384e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
