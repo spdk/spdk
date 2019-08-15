@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a670e5a9_2a5c05d5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T21:56:57Z",
+      "side": 1,
+      "message": "A new parameter \u0027force\u0027 was added to the delete_compress_bdev RPC.\nSetting this parameter to \u0027true\u0027 will delete the compressed volume\nmetadata on a bdev even if the pm metadata file cannot be found.",
+      "revId": "dfe52d17c81156736d0c3a6f7c754b47f52ea864",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7065e118_cd2eb02b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1456,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T21:56:57Z",
+      "side": 1,
+      "message": "I think having 0-sized bdevs registered might be confusing.  I think if load returns -ENOENT, you still want to claim the base bdev, but don\u0027t create a 0-sized compressed bdev on top of it.  You could still print an error message here.  We may need to add some kind of compress bdev specific RPC to get \"orphaned\" base block devices, but I think that\u0027s something we can do in the future.\n\nLet\u0027s sync up on this in the lab tomorrow.  I have an idea on how we could fix up spdk_reduce_vol_destroy to handle this case without adding the extra parameter.",
+      "revId": "dfe52d17c81156736d0c3a6f7c754b47f52ea864",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
