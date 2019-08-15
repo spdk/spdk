@@ -264,8 +264,11 @@ static void
 create_transport_test(void)
 {
 	const struct spdk_nvmf_transport_ops *ops = NULL;
-	struct spdk_nvmf_target_opts tgt_opts = { 0 };
 	struct spdk_nvmf_transport_opts opts = { 0 };
+	struct spdk_nvmf_target_opts tgt_opts = {
+		.name = "nvmf_test_tgt",
+		.max_subsystems = 0
+	};
 
 	allocate_threads(8);
 	set_thread(0);

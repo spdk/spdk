@@ -50,6 +50,8 @@
 extern "C" {
 #endif
 
+#define NVMF_TGT_NAME_MAX_LENGTH	256
+
 struct spdk_nvmf_tgt;
 struct spdk_nvmf_subsystem;
 struct spdk_nvmf_ctrlr;
@@ -64,6 +66,7 @@ struct spdk_json_write_ctx;
 struct spdk_nvmf_transport;
 
 struct spdk_nvmf_target_opts {
+	char		name[NVMF_TGT_NAME_MAX_LENGTH];
 	uint32_t	max_subsystems;
 };
 
