@@ -63,6 +63,10 @@ struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 struct spdk_nvmf_transport;
 
+struct spdk_nvmf_target_opts {
+	uint32_t	max_subsystems;
+};
+
 struct spdk_nvmf_transport_opts {
 	uint16_t	max_queue_depth;
 	uint16_t	max_qpairs_per_ctrlr;
