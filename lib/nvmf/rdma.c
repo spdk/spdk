@@ -3463,6 +3463,23 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
 			if (rpoller->srq != NULL) {
 				rdma_recv->qpair = get_rdma_qpair_from_wc(rpoller, &wc[i]);
+				/* It is possible that there are still some completions for destroyed QP
+				 * associated with SRQ. We just ignore these late completions and re-post
+				 * receive WRs back to SRQ.
+				 */
+				if (spdk_unlikely(NULL == rdma_recv->qpair)) {
+					struct ibv_recv_wr *bad_wr;
+					int rc;
+
+					rdma_recv->wr.next = NULL;
+					rc = ibv_post_srq_recv(rpoller->srq,
+							       &rdma_recv->wr,
+							       &bad_wr);
+					if (rc) {
+						SPDK_ERRLOG("Failed to re-post recv WR to SRQ, err %d\n", rc);
+					}
+					continue;
+				}
 			}
 			rqpair = rdma_recv->qpair;
 
