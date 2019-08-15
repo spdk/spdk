@@ -186,6 +186,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 {
 	int rc;
 	int using_deprecated_options;
+	struct spdk_nvmf_target_opts opts = { 0 };
 
 	if (!g_spdk_nvmf_tgt_max_subsystems) {
 		using_deprecated_options = spdk_nvmf_parse_tgt_max_subsystems();
@@ -207,7 +208,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		}
 	}
 
-	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(g_spdk_nvmf_tgt_max_subsystems);
+	opts.max_subsystems = g_spdk_nvmf_tgt_max_subsystems;
+	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
 
 	g_spdk_nvmf_tgt_max_subsystems = 0;
 

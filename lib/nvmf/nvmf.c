@@ -219,7 +219,7 @@ spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 }
 
 struct spdk_nvmf_tgt *
-spdk_nvmf_tgt_create(uint32_t max_subsystems)
+spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 {
 	struct spdk_nvmf_tgt *tgt;
 
@@ -228,10 +228,10 @@ spdk_nvmf_tgt_create(uint32_t max_subsystems)
 		return NULL;
 	}
 
-	if (!max_subsystems) {
+	if (!opts || !opts->max_subsystems) {
 		tgt->max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS;
 	} else {
-		tgt->max_subsystems = max_subsystems;
+		tgt->max_subsystems = opts->max_subsystems;
 	}
 
 	tgt->discovery_genctr = 0;

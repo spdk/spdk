@@ -2,6 +2,12 @@
 
 ## v19.10: (Upcoming Release)
 
+### nvmf
+
+The `spdk_nvmf_tgt_create` function now accepts an object of type `spdk_nvmf_target_opts`
+as its only parameter. This new structure contains the max_subsystems parameter previously
+passed into that function.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable
