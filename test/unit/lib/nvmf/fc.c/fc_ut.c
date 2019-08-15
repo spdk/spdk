@@ -263,12 +263,13 @@ static void
 create_transport_test(void)
 {
 	const struct spdk_nvmf_transport_ops *ops = NULL;
+	struct spdk_nvmf_target_opts tgt_opts = { 0 };
 	struct spdk_nvmf_transport_opts opts = { 0 };
 
 	allocate_threads(8);
 	set_thread(0);
 
-	g_nvmf_tgt = spdk_nvmf_tgt_create(2);
+	g_nvmf_tgt = spdk_nvmf_tgt_create(&tgt_opts);
 	SPDK_CU_ASSERT_FATAL(g_nvmf_tgt != NULL);
 
 	ops = spdk_nvmf_get_transport_ops((enum spdk_nvme_transport_type) SPDK_NVMF_TRTYPE_FC);
