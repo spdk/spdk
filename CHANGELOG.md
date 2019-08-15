@@ -8,6 +8,9 @@ The `spdk_nvmf_tgt_create` function has been updated to take a new name paramete
 parameter is intended to provide a unique identifier when an application contains multiple
 targets.
 
+A new public API function `spdk_nvmf_get_tgt_by_name` has been added which allows users to
+retrieve a pointer to an `spdk_nvmf_tgt` object by supplying its name.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable

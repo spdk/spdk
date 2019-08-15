@@ -321,6 +321,20 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 	spdk_io_device_unregister(tgt, spdk_nvmf_tgt_destroy_cb);
 }
 
+struct spdk_nvmf_tgt *
+spdk_nvmf_get_tgt_by_name(const char *name)
+{
+	struct spdk_nvmf_tgt *tgt;
+
+	TAILQ_FOREACH(tgt, &g_nvmf_tgts, link) {
+		if (!strncmp(tgt->name, name, strlen(tgt->name))) {
+			return tgt;
+		}
+	}
+
+	return NULL;
+}
+
 static void
 spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 				      struct spdk_nvmf_subsystem *subsystem)
