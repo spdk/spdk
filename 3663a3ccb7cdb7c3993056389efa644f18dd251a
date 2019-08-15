@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "206e103f_237049be",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T23:02:18Z",
+      "side": 1,
+      "message": "deprecated\n\nlet\u0027s move this to the 19.10 section now too",
+      "revId": "3663a3ccb7cdb7c3993056389efa644f18dd251a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
