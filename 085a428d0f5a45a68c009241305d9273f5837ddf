@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "182fcb0e_3aa7a900",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T22:06:00Z",
+      "side": 1,
+      "message": "instead of -u $lvs_u, just do -l lvs0.  Then you don\u0027t need to save the lvs_u in the previous statement",
+      "revId": "085a428d0f5a45a68c009241305d9273f5837ddf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d8278ba_0aceaab7",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T22:06:00Z",
+      "side": 1,
+      "message": "maybe move this into a run_bdevio function?  then it would look similar to run_bdevperf",
+      "revId": "085a428d0f5a45a68c009241305d9273f5837ddf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
