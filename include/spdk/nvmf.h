@@ -64,6 +64,7 @@ struct spdk_json_write_ctx;
 struct spdk_nvmf_transport;
 
 struct spdk_nvmf_target_opts {
+	char		*name;
 	uint32_t	max_subsystems;
 };
 
