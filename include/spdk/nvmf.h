@@ -135,6 +135,18 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 			   void *cb_arg);
 
 /**
+ * retrieve an NVMe-oF target structure. In order to support some legacy applications
+ * and RPC methods that may rely on the concept that there is only one target, the name
+ * parameter can be passed as NULL. If there is only one available target, that target will
+ * be returned. Otherwise, name is a required parameter.
+ *
+ * \param name The name provided when the target was created.
+ *
+ * \return The target with the given name, or NULL if no match was found.
+ */
+struct spdk_nvmf_tgt *spdk_nvmf_get_tgt(const char *name);
+
+/**
  * Write NVMe-oF target configuration into provided JSON context.
  * \param w JSON write context
  * \param tgt The NVMe-oF target
