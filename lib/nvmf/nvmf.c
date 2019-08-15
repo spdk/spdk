@@ -321,6 +321,34 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 	spdk_io_device_unregister(tgt, spdk_nvmf_tgt_destroy_cb);
 }
 
+struct spdk_nvmf_tgt *
+spdk_nvmf_get_tgt(const char *name)
+{
+	struct spdk_nvmf_tgt *tgt;
+	uint32_t num_targets = 0;
+
+	TAILQ_FOREACH(tgt, &g_nvmf_tgts, link) {
+		if (name) {
+			if (!strncmp(tgt->name, name, strlen(tgt->name))) {
+				return tgt;
+			}
+		}
+		num_targets++;
+	}
+
+	/*
+	 * special case. If there is only one target and
+	 * no name was specified, return the only available
+	 * target. If there is more than one target, name must
+	 * be specified.
+	 */
+	if (!name && num_targets == 1) {
+		return tgt;
+	}
+
+	return NULL;
+}
+
 static void
 spdk_nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 				      struct spdk_nvmf_subsystem *subsystem)
