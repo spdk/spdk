@@ -8,6 +8,11 @@ The `spdk_nvmf_tgt_create` function now accepts an object of type `spdk_nvmf_tar
 as its only parameter. This new structure contains the max_subsystems parameter previously
 passed into that function.
 
+A new public API function `spdk_nvmf_get_tgt` has been added which allows users to
+retrieve a pointer to an `spdk_nvmf_tgt` object by supplying its name. In the special
+case where an RPC or application only creates a single target, this function can accept
+a null name parameter and will return the only available target.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable
