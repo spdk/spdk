@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebd79f0b_75ee591c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T22:24:08Z",
+      "side": 1,
+      "message": "I think you need to src_iov_total instead of src_iovcnt here - otherwise this will only work if one iov spans a 2MB boundary (the second such iov would overwrite stuff from the first one)\n\nsame for dst_iovcnt/dst_iov_total below",
+      "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "264f5909_8cffaec8",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T22:24:08Z",
+      "side": 1,
+      "message": "goto error_get_dst? (to match error_get_src)",
+      "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0825147_34867b79",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T22:24:08Z",
+      "side": 1,
+      "message": "should this be dst_iov_total instead of dst_iovcnt?",
+      "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4b1254f_a8c941ea",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-15T22:24:08Z",
+      "side": 1,
+      "message": "src_iov_total?",
+      "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
