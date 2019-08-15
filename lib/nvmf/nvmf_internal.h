@@ -74,6 +74,8 @@ enum spdk_nvmf_qpair_state {
 typedef void (*spdk_nvmf_state_change_done)(void *cb_arg, int status);
 
 struct spdk_nvmf_tgt {
+	char					name[NVMF_TGT_NAME_MAX_LENGTH];
+
 	uint64_t				discovery_genctr;
 
 	uint32_t				max_subsystems;
