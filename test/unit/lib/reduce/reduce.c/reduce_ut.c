@@ -47,6 +47,7 @@ static char *g_persistent_pm_buf;
 static size_t g_persistent_pm_buf_len;
 static char *g_backing_dev_buf;
 static char g_path[REDUCE_PATH_MAX];
+static char *g_decomp_buf;
 
 #define TEST_MD_PATH "/tmp"
 
@@ -475,15 +476,22 @@ backing_dev_compress(struct spdk_reduce_backing_dev *backing_dev,
 		     struct spdk_reduce_vol_cb_args *args)
 {
 	uint32_t compressed_len;
-	int rc;
+	uint64_t total_length = 0;
+	char *buf = g_decomp_buf;
+	int rc, i;
 
-	CU_ASSERT(src_iovcnt == 1);
 	CU_ASSERT(dst_iovcnt == 1);
-	CU_ASSERT(src_iov[0].iov_len == dst_iov[0].iov_len);
+
+	for (i = 0; i < src_iovcnt; i++) {
+		memcpy(buf, src_iov[i].iov_base, src_iov[i].iov_len);
+		buf += src_iov[i].iov_len;
+		total_length += src_iov[i].iov_len;
+	}
 
 	compressed_len = dst_iov[0].iov_len;
 	rc = ut_compress(dst_iov[0].iov_base, &compressed_len,
-			 src_iov[0].iov_base, src_iov[0].iov_len);
+			 g_decomp_buf, total_length);
+
 	args->cb_fn(args->cb_arg, rc ? rc : (int)compressed_len);
 }
 
@@ -493,15 +501,24 @@ backing_dev_decompress(struct spdk_reduce_backing_dev *backing_dev,
 		       struct iovec *dst_iov, int dst_iovcnt,
 		       struct spdk_reduce_vol_cb_args *args)
 {
-	uint32_t decompressed_len;
-	int rc;
+	uint32_t decompressed_len = 0;
+	char *buf = g_decomp_buf;
+	int rc, i;
 
 	CU_ASSERT(src_iovcnt == 1);
-	CU_ASSERT(dst_iovcnt == 1);
 
-	decompressed_len = dst_iov[0].iov_len;
-	rc = ut_decompress(dst_iov[0].iov_base, &decompressed_len,
+	for (i = 0; i < dst_iovcnt; i++) {
+		decompressed_len += dst_iov[i].iov_len;
+	}
+
+	rc = ut_decompress(g_decomp_buf, &decompressed_len,
 			   src_iov[0].iov_base, src_iov[0].iov_len);
+
+	for (i = 0; i < dst_iovcnt; i++) {
+		memcpy(dst_iov[i].iov_base, buf, dst_iov[i].iov_len);
+		buf += dst_iov[i].iov_len;
+	}
+
 	args->cb_fn(args->cb_arg, rc ? rc : (int)decompressed_len);
 }
 
@@ -512,6 +529,7 @@ backing_dev_destroy(struct spdk_reduce_backing_dev *backing_dev)
 	 *  scenarios.
 	 */
 	free(g_backing_dev_buf);
+	free(g_decomp_buf);
 	g_backing_dev_buf = NULL;
 }
 
@@ -529,6 +547,9 @@ backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce
 	backing_dev->unmap = backing_dev_unmap;
 	backing_dev->compress = backing_dev_compress;
 	backing_dev->decompress = backing_dev_decompress;
+
+	g_decomp_buf = calloc(1, params->chunk_size);
+	SPDK_CU_ASSERT_FATAL(g_decomp_buf != NULL);
 
 	g_backing_dev_buf = calloc(1, size);
 	SPDK_CU_ASSERT_FATAL(g_backing_dev_buf != NULL);
