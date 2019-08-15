@@ -53,6 +53,7 @@
 #define SHIFT_4KB			12u
 #define NVMF_DATA_BUFFER_ALIGNMENT	(1u << SHIFT_4KB)
 #define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1LL)
+#define NVMF_TGT_NAME_MAX_LENGTH	256
 
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
@@ -74,6 +75,8 @@ enum spdk_nvmf_qpair_state {
 typedef void (*spdk_nvmf_state_change_done)(void *cb_arg, int status);
 
 struct spdk_nvmf_tgt {
+	char					*name;
+
 	uint64_t				discovery_genctr;
 
 	uint32_t				max_subsystems;

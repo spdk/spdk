@@ -2,6 +2,12 @@
 
 ## v19.10: (Upcoming Release)
 
+### nvmf
+
+The `spdk_nvmf_tgt_create` function has been updated to take a new name parameter. This
+parameter is intended to provide a unique identifier when an application contains multiple
+targets.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable

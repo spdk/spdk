@@ -219,14 +219,28 @@ spdk_nvmf_tgt_destroy_poll_group_qpairs(struct spdk_nvmf_poll_group *group)
 }
 
 struct spdk_nvmf_tgt *
-spdk_nvmf_tgt_create(uint32_t max_subsystems)
+spdk_nvmf_tgt_create(uint32_t max_subsystems, const char *name)
 {
-	struct spdk_nvmf_tgt *tgt;
+	struct spdk_nvmf_tgt *tgt, *tmp_tgt;
+
+	if (strlen(name) > NVMF_TGT_NAME_MAX_LENGTH) {
+		SPDK_ERRLOG("Provided target name exceeds the max length of %u.\n", NVMF_TGT_NAME_MAX_LENGTH);
+		return NULL;
+	}
+
+	TAILQ_FOREACH(tmp_tgt, &g_nvmf_tgts, link) {
+		if (strncmp(name, tmp_tgt->name, strlen(tmp_tgt->name))) {
+			SPDK_ERRLOG("Provided target name must be unique.\n");
+			return NULL;
+		}
+	}
 
 	tgt = calloc(1, sizeof(*tgt));
 	if (!tgt) {
 		return NULL;
 	}
+
+	tgt->name = spdk_sprintf_alloc("%s", name);
 
 	if (!max_subsystems) {
 		tgt->max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS;
@@ -251,7 +265,7 @@ spdk_nvmf_tgt_create(uint32_t max_subsystems)
 				spdk_nvmf_tgt_create_poll_group,
 				spdk_nvmf_tgt_destroy_poll_group,
 				sizeof(struct spdk_nvmf_poll_group),
-				"nvmf_tgt");
+				tgt->name);
 
 	return tgt;
 }
@@ -286,6 +300,7 @@ spdk_nvmf_tgt_destroy_cb(void *io_device)
 	destroy_cb_fn = tgt->destroy_cb_fn;
 	destroy_cb_arg = tgt->destroy_cb_arg;
 
+	free(tgt->name);
 	free(tgt);
 
 	if (destroy_cb_fn) {
