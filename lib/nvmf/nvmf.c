@@ -51,6 +51,8 @@ SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
 #define SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS 1024
 
+static TAILQ_HEAD(, spdk_nvmf_tgt) g_nvmf_tgts = TAILQ_HEAD_INITIALIZER(g_nvmf_tgts);
+
 typedef void (*nvmf_qpair_disconnect_cpl)(void *ctx, int status);
 static void spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf);
 
@@ -243,6 +245,8 @@ spdk_nvmf_tgt_create(uint32_t max_subsystems)
 		return NULL;
 	}
 
+	TAILQ_INSERT_HEAD(&g_nvmf_tgts, tgt, link);
+
 	spdk_io_device_register(tgt,
 				spdk_nvmf_tgt_create_poll_group,
 				spdk_nvmf_tgt_destroy_poll_group,
@@ -296,6 +300,8 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 {
 	tgt->destroy_cb_fn = cb_fn;
 	tgt->destroy_cb_arg = cb_arg;
+
+	TAILQ_REMOVE(&g_nvmf_tgts, tgt, link);
 
 	spdk_io_device_unregister(tgt, spdk_nvmf_tgt_destroy_cb);
 }
