@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "e1193529_bf856081",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-15T13:06:21Z",
+      "side": 1,
+      "message": "Thanks Seth, I\u0027ve updated the changelog",
+      "parentUuid": "077f160b_f067ab0c",
+      "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e248e12b_d8170e5f",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 2
@@ -90,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "731572f3_828b4061",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1345,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-15T13:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e248e12b_d8170e5f",
+      "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a24c295_5ec5d1f8",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 2
@@ -104,6 +140,24 @@
       "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ac2a9bf_44247250",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-15T13:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a24c295_5ec5d1f8",
+      "revId": "a6865da31f17d15aeb3d0123240582f7c1c58245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
