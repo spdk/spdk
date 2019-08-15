@@ -50,6 +50,9 @@
 extern "C" {
 #endif
 
+#define ACCEPT_TIMEOUT_US	10000 /* 10ms */
+#define DEFAULT_CONN_SCHED CONNECT_SCHED_ROUND_ROBIN
+
 struct spdk_nvmf_tgt;
 struct spdk_nvmf_subsystem;
 struct spdk_nvmf_ctrlr;
@@ -62,6 +65,17 @@ struct spdk_nvmf_listener;
 struct spdk_nvmf_poll_group;
 struct spdk_json_write_ctx;
 struct spdk_nvmf_transport;
+
+enum spdk_nvmf_connect_sched {
+	CONNECT_SCHED_ROUND_ROBIN = 0,
+	CONNECT_SCHED_HOST_IP,
+	CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP,
+};
+
+struct spdk_nvmf_tgt_conf {
+	uint32_t acceptor_poll_rate;
+	enum spdk_nvmf_connect_sched conn_sched;
+};
 
 struct spdk_nvmf_transport_opts {
 	uint16_t	max_queue_depth;
