@@ -16,6 +16,24 @@
       "revId": "5d4fff02fcba0e1962620e27b13a3c7ecf0eefc3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99065c84_bb2ce1f9",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-16T18:59:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b94668b0_32b7ca94",
+      "revId": "5d4fff02fcba0e1962620e27b13a3c7ecf0eefc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
