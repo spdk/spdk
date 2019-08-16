@@ -2,6 +2,13 @@
 
 ## v19.10: (Upcoming Release)
 
+### vmd
+
+As part of consolidating the RPC code into the top level libraries, the one VMD related
+RPC, `enable_vmd`, was removed. This decision was made to keep the nvme library from being
+dependent on all of the jsonrpc related libraries. Applications that which to enable vmd will
+have to either explicitly code for it, or configure a command line option to enable vmd features.
+
 ### nvmf
 
 The `spdk_nvmf_tgt_create` function now accepts an object of type `spdk_nvmf_target_opts`
