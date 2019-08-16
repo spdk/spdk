@@ -38,6 +38,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 C_SRCS = $(TEST_FILE)
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
+CFLAGS += -I$(SPDK_ROOT_DIR)/module
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -ffunction-sections
 LDFLAGS += -Wl,--gc-sections
