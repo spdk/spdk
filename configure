@@ -206,6 +206,9 @@ for i in "$@"; do
 		--disable-werror)
 			CONFIG[WERROR]=n
 			;;
+		--skip-cc-detect)
+			SKIP_CC_DETECT=y
+			;;
 		--with-dpdk=*)
 			check_dir "$i"
 			CONFIG[DPDK_DIR]=$(readlink -f ${i#*=})
@@ -381,11 +384,16 @@ for i in "$@"; do
 	esac
 done
 
-# Detect the compiler toolchain
-$rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}"  > $rootdir/mk/cc.mk
+# Detect the compiler toolchain. If --skip-cc-detect was passed to the script
+# then the make variables should already be exported to the environment.
+if [[ -z "${SKIP_CC_DETECT}" ]]; then
+	$rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}"  > $rootdir/mk/cc.mk
 
-CC=$(cat $rootdir/mk/cc.mk | grep "DEFAULT_CC=" | cut -d "=" -f 2)
-CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
+	CC=$(cat $rootdir/mk/cc.mk | grep "DEFAULT_CC=" | cut -d "=" -f 2)
+	CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
+else
+	touch mk/cc.mk
+fi
 
 arch=$($CC -dumpmachine)
 
