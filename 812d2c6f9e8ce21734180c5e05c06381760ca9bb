@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60fd0d35_a785aa32",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 3651,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-16T17:14:15Z",
+      "side": 1,
+      "message": "if you have another reason to push a new version, might as well delete the \".\" as none of the other entries use punctuation",
+      "revId": "812d2c6f9e8ce21734180c5e05c06381760ca9bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
