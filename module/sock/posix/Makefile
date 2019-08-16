@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 LIBNAME = sock_posix
 C_SRCS = posix.c
 
+SPDK_DEP_LIBNAMES = log sock
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
