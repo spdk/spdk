@@ -361,7 +361,7 @@ class UIErrorBdev(UIBdev):
         UIBdev.__init__(self, "error", parent)
 
     def delete(self, name):
-        self.get_root().delete_error_bdev(name=name)
+        self.get_root().bdev_error_delete(name=name)
 
     def ui_command_create(self, base_name):
         """
