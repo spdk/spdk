@@ -77,3 +77,66 @@ DEPDIRS-scsi := log util thread $(JSON_LIBS) trace bdev
 
 DEPDIRS-iscsi := log sock util conf thread $(JSON_LIBS) trace event scsi
 DEPDIRS-vhost := log util conf thread $(JSON_LIBS) bdev event scsi
+
+# ------------------------------------------------------------------------
+# Start module/ directory - This section extends the organizational pattern from
+# above. However, it introduces several more groupings which may not strictly follow
+# the ordering pattern above. These are used for convenience and to help quickly
+# determine the unique dependencies of a given module. It is also grouped by directory.
+
+BDEV_DEPS = log util $(JSON_LIBS) bdev
+BDEV_DEPS_CONF = $(BDEV_DEPS) conf
+BDEV_DEPS_THREAD = $(BDEV_DEPS) thread
+BDEV_DEPS_CONF_THREAD = $(BDEV_DEPS) conf thread
+
+# module/blob
+DEPDIRS-blob_bdev := log thread bdev
+
+# module/copy
+DEPDIRS-copy_ioat := log ioat conf thread $(JSON_LIBS) copy
+
+# module/sock
+DEPDIRS-sock_posix := log sock
+DEPDIRS-sock_vpp := log sock util thread
+
+# module/bdev
+DEPDIRS-bdev_gpt := bdev conf json log thread util
+
+DEPDIRS-bdev_lvol := $(BDEV_DEPS) lvol blob blob_bdev
+DEPDIRS-bdev_rpc := $(BDEV_DEPS)
+
+DEPDIRS-bdev_error := $(BDEV_DEPS_CONF)
+DEPDIRS-bdev_malloc := $(BDEV_DEPS_CONF) copy
+DEPDIRS-bdev_split := $(BDEV_DEPS_CONF)
+
+DEPDIRS-bdev_compress := $(BDEV_DEPS_THREAD) reduce
+DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
+
+DEPDIRS-bdev_aio := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_crypto := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_iscsi := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_null := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_nvme = $(BDEV_DEPS_CONF_THREAD) nvme
+ifeq ($(OS),Linux)
+DEPDIRS-bdev_nvme += ftl
+endif
+DEPDIRS-bdev_passthru := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_pmem := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_raid := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_rbd := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_virtio := $(BDEV_DEPS_CONF_THREAD) virtio
+
+# module/event
+# module/event/app
+DEPDIRS-app_rpc := event $(JSON_LIBS) thread util
+
+#module/event/subsystems
+DEPDIRS-event_bdev := bdev event
+DEPDIRS-event_copy := copy event
+DEPDIRS-event_iscsi := event iscsi
+DEPDIRS-event_nbd := event nbd
+DEPDIRS-event_net := sock net event
+DEPDIRS-event_nvmf := $(BDEV_DEPS_CONF_THREAD) event nvme nvmf
+DEPDIRS-event_scsi := event scsi
+DEPDIRS-event_vhost := event vhost
+DEPDIRS-event_vmd := conf vmd event
