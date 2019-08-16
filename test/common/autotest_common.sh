@@ -594,7 +594,7 @@ function part_dev_by_gpt () {
 			parted -s $nbd_path mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
 
 			# change the GUID to SPDK GUID value
-			SPDK_GPT_GUID=$(grep SPDK_GPT_PART_TYPE_GUID $rootdir/lib/bdev/gpt/gpt.h \
+			SPDK_GPT_GUID=$(grep SPDK_GPT_PART_TYPE_GUID $rootdir/module/bdev/gpt/gpt.h \
 				| awk -F "(" '{ print $2}' | sed 's/)//g' \
 				| awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g')
 			sgdisk -t 1:$SPDK_GPT_GUID $nbd_path

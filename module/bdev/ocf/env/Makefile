@@ -76,17 +76,17 @@ all: ocf_inc ocf_src
 	$(Q)$(MAKE) $(LIB)
 
 ocf_inc:
-	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" inc O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/" --quiet
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" inc O="$(SPDK_ROOT_DIR)/module/bdev/ocf/env/" --quiet
 
 ocf_src: ocf_inc
-	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" src O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/" CMD=cp --quiet
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" src O="$(SPDK_ROOT_DIR)/module/bdev/ocf/env/" CMD=cp --quiet
 
 ocf_distclean:
-	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" distclean O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/" --quiet
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" distclean O="$(SPDK_ROOT_DIR)/module/bdev/ocf/env/" --quiet
 
 clean: ocf_distclean
-	$(Q)rm -rf	"$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/include" \
-				"$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/src" \
+	$(Q)rm -rf	"$(SPDK_ROOT_DIR)/module/bdev/ocf/env/include" \
+				"$(SPDK_ROOT_DIR)/module/bdev/ocf/env/src" \
 				$(LIB) $(OBJS);
 
 $(LIB): $(OBJS)
