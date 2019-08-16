@@ -36,6 +36,12 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = bdev blob copy event sock
 
+DEPDIRS-blob :=
+DEPDIRS-copy :=
+DEPDIRS-sock :=
+DEPDIRS-bdev := blob
+DEPDIRS-event := bdev blob
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
