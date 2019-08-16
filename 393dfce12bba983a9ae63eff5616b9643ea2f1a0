@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4b3538e_f9f66813",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-16T17:17:53Z",
+      "side": 1,
+      "message": "Let\u0027s name this parameter \"zoned\"",
+      "revId": "393dfce12bba983a9ae63eff5616b9643ea2f1a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
