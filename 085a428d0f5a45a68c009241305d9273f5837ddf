@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d0970f8c_9dce659b",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-16T16:11:57Z",
+      "side": 1,
+      "message": "missed that one",
+      "parentUuid": "182fcb0e_3aa7a900",
+      "revId": "085a428d0f5a45a68c009241305d9273f5837ddf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7d8278ba_0aceaab7",
         "filename": "test/compress/compress.sh",
         "patchSetId": 20
@@ -30,6 +48,41 @@
       "writtenOn": "2019-08-15T22:06:00Z",
       "side": 1,
       "message": "maybe move this into a run_bdevio function?  then it would look similar to run_bdevperf",
+      "revId": "085a428d0f5a45a68c009241305d9273f5837ddf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf2ca613_7ecf790e",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-16T16:11:57Z",
+      "side": 1,
+      "message": "it\u0027s only done once but sure, for readability I guess",
+      "parentUuid": "7d8278ba_0aceaab7",
+      "revId": "085a428d0f5a45a68c009241305d9273f5837ddf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdd8848b_0dd9250b",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-16T16:11:57Z",
+      "side": 1,
+      "message": "this needs to be outside of the if too..",
       "revId": "085a428d0f5a45a68c009241305d9273f5837ddf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
