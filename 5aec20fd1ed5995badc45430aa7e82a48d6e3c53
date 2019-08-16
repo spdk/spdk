@@ -191,6 +191,24 @@
       "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c750606_43aae7ce",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-16T03:13:38Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nAs I mentioned. We need this else rc \u003d\u003d 0 case. Another reason is that: \n\nFor multiple connections, according to my test. Limited the handling of PDUs numbers, which can be used to balance performace among the different connections. And it shows the performance is better than exhausting all the recevied buffers.",
+      "parentUuid": "69f3f794_6e22de71",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
