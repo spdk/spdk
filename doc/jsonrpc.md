@@ -287,9 +287,9 @@ Example response:
     "construct_aio_bdev",
     "destruct_split_vbdev",
     "construct_split_vbdev",
-    "bdev_inject_error",
-    "delete_error_bdev",
-    "construct_error_bdev",
+    "bdev_error_inject_error",
+    "bdev_error_delete",
+    "bdev_error_create",
     "construct_passthru_bdev",
     "apply_nvme_firmware",
     "delete_nvme_controller",
@@ -1843,7 +1843,7 @@ Example response:
 }
 ~~~
 
-## construct_error_bdev {#rpc_construct_error_bdev}
+## bdev_error_create {#rpc_bdev_error_create}
 
 Construct error bdev.
 
@@ -1863,7 +1863,7 @@ Example request:
     "base_name": "Malloc0"
   },
   "jsonrpc": "2.0",
-  "method": "construct_error_bdev",
+  "method": "bdev_error_create",
   "id": 1
 }
 ~~~
@@ -1878,7 +1878,7 @@ Example response:
 }
 ~~~
 
-## delete_error_bdev {#rpc_delete_error_bdev}
+## bdev_error_delete {#rpc_bdev_error_delete}
 
 Delete error bdev
 
@@ -1902,7 +1902,7 @@ Example request:
     "name": "EE_Malloc0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_error_bdev",
+  "method": "bdev_error_delete",
   "id": 1
 }
 ~~~
