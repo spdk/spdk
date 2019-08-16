@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da29a10a_c187fae9",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-16T16:57:41Z",
+      "side": 1,
+      "message": "heh, that\u0027s the whole reason I added src_iov_total",
+      "parentUuid": "ebd79f0b_75ee591c",
+      "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "264f5909_8cffaec8",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-15T22:24:08Z",
       "side": 1,
       "message": "goto error_get_dst? (to match error_get_src)",
+      "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1780fd0_3271e33b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-16T16:57:41Z",
+      "side": 1,
+      "message": "there\u0027s already a label for that for the original allocation of src which won\u0027t work.  This was the clearest new label I could think of",
+      "parentUuid": "264f5909_8cffaec8",
       "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "f5fcf03a_0a6171fb",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-16T16:57:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b0825147_34867b79",
+      "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4b1254f_a8c941ea",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 5
@@ -67,6 +121,24 @@
       "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1c096f6_acbe07c3",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-16T16:57:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c4b1254f_a8c941ea",
+      "revId": "8cd240f608ce1d9599c02adfbff6953f9aea5b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
