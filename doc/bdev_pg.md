@@ -51,7 +51,7 @@ The bdev layer depends on the generic message passing infrastructure
 abstracted by the header file include/spdk/thread.h. See @ref concurrency for a
 full description. Most importantly, calls into the bdev library may only be
 made from threads that have been allocated with SPDK by calling
-spdk_allocate_thread().
+spdk_thread_create().
 
 From an allocated thread, the bdev library may be initialized by calling
 spdk_bdev_initialize(), which is an asynchronous operation. Until the completion
