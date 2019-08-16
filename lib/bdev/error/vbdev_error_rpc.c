@@ -72,30 +72,30 @@ spdk_rpc_error_bdev_error_type_parse(char *name)
 	return ERROR_BDEV_ERROR_TYPE_INVALID;
 }
 
-struct rpc_construct_error_bdev {
+struct rpc_bdev_error_create {
 	char *base_name;
 };
 
 static void
-free_rpc_construct_error_bdev(struct rpc_construct_error_bdev *req)
+free_rpc_bdev_error_create(struct rpc_bdev_error_create *req)
 {
 	free(req->base_name);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_error_bdev_decoders[] = {
-	{"base_name", offsetof(struct rpc_construct_error_bdev, base_name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_error_create_decoders[] = {
+	{"base_name", offsetof(struct rpc_bdev_error_create, base_name), spdk_json_decode_string},
 };
 
 static void
-spdk_rpc_construct_error_bdev(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+spdk_rpc_bdev_error_create(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
-	struct rpc_construct_error_bdev req = {};
+	struct rpc_bdev_error_create req = {};
 	struct spdk_json_write_ctx *w;
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_construct_error_bdev_decoders,
-				    SPDK_COUNTOF(rpc_construct_error_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_error_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_error_create_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -114,9 +114,10 @@ spdk_rpc_construct_error_bdev(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_construct_error_bdev(&req);
+	free_rpc_bdev_error_create(&req);
 }
-SPDK_RPC_REGISTER("construct_error_bdev", spdk_rpc_construct_error_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_error_create", spdk_rpc_bdev_error_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_error_create, construct_error_bdev)
 
 struct rpc_delete_error {
 	char *name;
@@ -133,7 +134,7 @@ static const struct spdk_json_object_decoder rpc_delete_error_decoders[] = {
 };
 
 static void
-_spdk_rpc_delete_error_bdev_cb(void *cb_arg, int bdeverrno)
+_spdk_rpc_bdev_error_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
@@ -144,7 +145,7 @@ _spdk_rpc_delete_error_bdev_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_delete_error_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_error_delete(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
 	struct rpc_delete_error req = {NULL};
@@ -164,12 +165,13 @@ spdk_rpc_delete_error_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_vbdev_error_delete(vbdev, _spdk_rpc_delete_error_bdev_cb, request);
+	spdk_vbdev_error_delete(vbdev, _spdk_rpc_bdev_error_delete_cb, request);
 
 cleanup:
 	free_rpc_delete_error(&req);
 }
-SPDK_RPC_REGISTER("delete_error_bdev", spdk_rpc_delete_error_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_error_delete", spdk_rpc_bdev_error_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_error_delete, delete_error_bdev)
 
 struct rpc_error_information {
 	char *name;
@@ -194,8 +196,8 @@ free_rpc_error_information(struct rpc_error_information *p)
 }
 
 static void
-spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+spdk_rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
 {
 	struct rpc_error_information req = {};
 	struct spdk_json_write_ctx *w;
@@ -226,7 +228,7 @@ spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_vbdev_inject_error(req.name, io_type, error_type, req.num);
+	rc = spdk_vbdev_error_inject_error(req.name, io_type, error_type, req.num);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -239,4 +241,5 @@ spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_error_information(&req);
 }
-SPDK_RPC_REGISTER("bdev_inject_error", spdk_rpc_bdev_inject_error, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_error_inject_error", spdk_rpc_bdev_error_inject_error, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_error_inject_error, bdev_inject_error)
