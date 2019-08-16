@@ -34,7 +34,11 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-LIBNAME = copy
-C_SRCS = copy_engine.c
+DIRS-y = ioat
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+.PHONY: all clean $(DIRS-y)
+
+all: $(DIRS-y)
+clean: $(DIRS-y)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
