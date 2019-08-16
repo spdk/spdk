@@ -38,7 +38,4 @@ C_SRCS = sock.c net_framework.c
 
 LIBNAME = sock
 
-DIRS-y += posix
-DIRS-$(CONFIG_VPP) += vpp
-
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
