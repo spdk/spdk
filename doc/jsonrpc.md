@@ -3648,6 +3648,7 @@ Initialize an NVMe-oF transport with the given options.
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 trtype                      | Required | string  | Transport type (ex. RDMA)
+tgt_name                    | Optional | string  | Parent NVMe-oF target name.
 max_queue_depth             | Optional | number  | Max number of outstanding I/O per queue
 max_qpairs_per_ctrlr        | Optional | number  | Max number of SQ and CQ per controller
 in_capsule_data_size        | Optional | number  | Max number of in-capsule data size
@@ -3692,7 +3693,9 @@ Example response:
 
 ### Parameters
 
-This method has no parameters.
+Name                        | Optional | Type        | Description
+--------------------------- | -------- | ------------| -----------
+tgt_name                    | Optional | string      | Parent NVMe-oF target name.
 
 ### Example
 
@@ -3755,6 +3758,7 @@ Construct an NVMe over Fabrics target subsystem.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
 serial_number           | Optional | string      | Serial number of virtual controller
 model_number            | Optional | string      | Model number of virtual controller
 max_namespaces          | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
@@ -3797,6 +3801,7 @@ Delete an existing NVMe-oF subsystem.
 Parameter              | Optional | Type        | Description
 ---------------------- | -------- | ----------- | -----------
 nqn                    | Required | string      | Subsystem NQN to delete.
+tgt_name               | Optional | string      | Parent NVMe-oF target name.
 
 ### Example
 
@@ -3832,6 +3837,7 @@ Add a new listen address to an NVMe-oF subsystem.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
 listen_address          | Required | object      | @ref rpc_nvmf_listen_address object
 
 ### listen_address {#rpc_nvmf_listen_address}
@@ -3884,6 +3890,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
 namespace               | Required | object      | @ref rpc_nvmf_namespace object
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 ### namespace {#rpc_nvmf_namespace}
 
@@ -3936,6 +3943,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
 nsid                    | Required | number      | Namespace ID
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 ### Example
 
@@ -3973,6 +3981,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
 host                    | Required | string      | Host NQN to add to the list of allowed host NQNs
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 ### Example
 
@@ -4010,6 +4019,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
 host                    | Required | string      | Host NQN to remove from the list of allowed host NQNs
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 ### Example
 
@@ -4047,6 +4057,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
 allow_any_host          | Required | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`).
+tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 ### Example
 
@@ -4150,7 +4161,9 @@ Example response:
 
 ### Parameters
 
-This method has no parameters.
+Name                        | Optional | Type        | Description
+--------------------------- | -------- | ------------| -----------
+tgt_name                    | Optional | string      | Parent NVMe-oF target name.
 
 ### Example
 
@@ -4189,7 +4202,9 @@ Retrieve current statistics of the NVMf subsystem.
 
 ### Parameters
 
-This method has no parameters.
+Name                        | Optional | Type        | Description
+--------------------------- | -------- | ------------| -----------
+tgt_name                    | Optional | string      | Parent NVMe-oF target name.
 
 ### Response
 
