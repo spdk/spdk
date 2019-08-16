@@ -37,6 +37,7 @@ SPDK_ROOT_DIR := $(CURDIR)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += lib
+DIRS-y += module
 DIRS-$(CONFIG_SHARED) += shared_lib
 DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
@@ -59,7 +60,7 @@ endif
 ifeq ($(CONFIG_SHARED),y)
 LIB = shared_lib
 else
-LIB = lib
+LIB = module
 endif
 
 ifeq ($(CONFIG_IPSEC_MB),y)
@@ -86,8 +87,9 @@ ifneq ($(SKIP_DPDK_BUILD),1)
 dpdkbuild: $(DPDK_DEPS)
 endif
 
-shared_lib: lib
 lib: $(DPDKBUILD)
+module: lib
+shared_lib: module
 app: $(LIB)
 test: $(LIB)
 examples: $(LIB)
