@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39c9b6e1_f9cb7cea",
+        "filename": "lib/bdev/crypto/vbdev_crypto_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-16T16:51:08Z",
+      "side": 1,
+      "message": "bdev_crypto_delete (remove the v)\n\nthis is the cause of the CI failure",
+      "revId": "0b5bb7fa927f403fe7dce9eadc894274109c3e93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
