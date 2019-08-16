@@ -37,6 +37,7 @@ def set_nvmf_target_config(client,
 
 def nvmf_create_transport(client,
                           trtype,
+                          tgt_name=None,
                           max_queue_depth=None,
                           max_qpairs_per_ctrlr=None,
                           in_capsule_data_size=None,
@@ -73,6 +74,8 @@ def nvmf_create_transport(client,
     params = {}
 
     params['trtype'] = trtype
+    if tgt_name:
+        params['tgt_name'] = tgt_name
     if max_queue_depth:
         params['max_queue_depth'] = max_queue_depth
     if max_qpairs_per_ctrlr:
@@ -102,27 +105,48 @@ def nvmf_create_transport(client,
     return client.call('nvmf_create_transport', params)
 
 
-def get_nvmf_transports(client):
+def get_nvmf_transports(client, tgt_name=None):
     """Get list of NVMe-oF transports.
+    Args:
+        tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
         List of NVMe-oF transport objects.
     """
-    return client.call('get_nvmf_transports')
+
+    params = {}
+
+    if tgt_name:
+        params = {
+            'tgt_name': tgt_name,
+        }
+
+    return client.call('get_nvmf_transports', params)
 
 
-def get_nvmf_subsystems(client):
+def get_nvmf_subsystems(client, tgt_name=None):
     """Get list of NVMe-oF subsystems.
+    Args:
+        tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
         List of NVMe-oF subsystem objects.
     """
-    return client.call('get_nvmf_subsystems')
+
+    params = {}
+
+    if tgt_name:
+        params = {
+            'tgt_name': tgt_name,
+        }
+
+    return client.call('get_nvmf_subsystems', params)
 
 
 def nvmf_subsystem_create(client,
                           nqn,
                           serial_number,
+                          tgt_name=None,
                           model_number='SPDK bdev Controller',
                           allow_any_host=False,
                           max_namespaces=0):
@@ -130,6 +154,7 @@ def nvmf_subsystem_create(client,
 
     Args:
         nqn: Subsystem NQN.
+        tgt_name: name of the parent NVMe-oF target (optional).
         serial_number: Serial number of virtual controller.
         model_number: Model number of virtual controller.
         allow_any_host: Allow any host (True) or enforce allowed host whitelist (False). Default: False.
@@ -154,10 +179,13 @@ def nvmf_subsystem_create(client,
     if max_namespaces:
         params['max_namespaces'] = max_namespaces
 
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
     return client.call('nvmf_subsystem_create', params)
 
 
-def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam):
+def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam, tgt_name=None):
     """Add a new listen address to an NVMe-oF subsystem.
 
     Args:
@@ -165,6 +193,7 @@ def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam):
         trtype: Transport type ("RDMA").
         traddr: Transport address.
         trsvcid: Transport service ID.
+        tgt_name: name of the parent NVMe-oF target (optional).
         adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
 
     Returns:
@@ -180,6 +209,9 @@ def nvmf_subsystem_add_listener(client, nqn, trtype, traddr, trsvcid, adrfam):
     params = {'nqn': nqn,
               'listen_address': listen_address}
 
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
     return client.call('nvmf_subsystem_add_listener', params)
 
 
@@ -189,7 +221,8 @@ def nvmf_subsystem_remove_listener(
         trtype,
         traddr,
         trsvcid,
-        adrfam):
+        adrfam,
+        tgt_name=None):
     """Remove existing listen address from an NVMe-oF subsystem.
 
     Args:
@@ -197,6 +230,7 @@ def nvmf_subsystem_remove_listener(
         trtype: Transport type ("RDMA").
         traddr: Transport address.
         trsvcid: Transport service ID.
+        tgt_name: name of the parent NVMe-oF target (optional).
         adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
 
     Returns:
@@ -212,15 +246,19 @@ def nvmf_subsystem_remove_listener(
     params = {'nqn': nqn,
               'listen_address': listen_address}
 
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
     return client.call('nvmf_subsystem_remove_listener', params)
 
 
-def nvmf_subsystem_add_ns(client, nqn, bdev_name, ptpl_file=None, nsid=None, nguid=None, eui64=None, uuid=None):
+def nvmf_subsystem_add_ns(client, nqn, bdev_name, tgt_name=None, ptpl_file=None, nsid=None, nguid=None, eui64=None, uuid=None):
     """Add a namespace to a subsystem.
 
     Args:
         nqn: Subsystem NQN.
         bdev_name: Name of bdev to expose as a namespace.
+        tgt_name: name of the parent NVMe-oF target (optional).
         nsid: Namespace ID (optional).
         nguid: 16-byte namespace globally unique identifier in hexadecimal (optional).
         eui64: 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789") (optional).
@@ -249,15 +287,19 @@ def nvmf_subsystem_add_ns(client, nqn, bdev_name, ptpl_file=None, nsid=None, ngu
     params = {'nqn': nqn,
               'namespace': ns}
 
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
     return client.call('nvmf_subsystem_add_ns', params)
 
 
-def nvmf_subsystem_remove_ns(client, nqn, nsid):
+def nvmf_subsystem_remove_ns(client, nqn, nsid, tgt_name=None):
     """Remove a existing namespace from a subsystem.
 
     Args:
         nqn: Subsystem NQN.
         nsid: Namespace ID.
+        tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
         True or False
@@ -265,15 +307,19 @@ def nvmf_subsystem_remove_ns(client, nqn, nsid):
     params = {'nqn': nqn,
               'nsid': nsid}
 
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
     return client.call('nvmf_subsystem_remove_ns', params)
 
 
-def nvmf_subsystem_add_host(client, nqn, host):
+def nvmf_subsystem_add_host(client, nqn, host, tgt_name=None):
     """Add a host NQN to the whitelist of allowed hosts.
 
     Args:
         nqn: Subsystem NQN.
         host: Host NQN to add to the list of allowed host NQNs
+        tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
         True or False
@@ -281,15 +327,19 @@ def nvmf_subsystem_add_host(client, nqn, host):
     params = {'nqn': nqn,
               'host': host}
 
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
     return client.call('nvmf_subsystem_add_host', params)
 
 
-def nvmf_subsystem_remove_host(client, nqn, host):
+def nvmf_subsystem_remove_host(client, nqn, host, tgt_name=None):
     """Remove a host NQN from the whitelist of allowed hosts.
 
     Args:
         nqn: Subsystem NQN.
         host: Host NQN to remove to the list of allowed host NQNs
+        tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
         True or False
@@ -297,41 +347,64 @@ def nvmf_subsystem_remove_host(client, nqn, host):
     params = {'nqn': nqn,
               'host': host}
 
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
     return client.call('nvmf_subsystem_remove_host', params)
 
 
-def nvmf_subsystem_allow_any_host(client, nqn, disable):
+def nvmf_subsystem_allow_any_host(client, nqn, disable, tgt_name=None):
     """Configure a subsystem to allow any host to connect or to enforce the host NQN whitelist.
 
     Args:
         nqn: Subsystem NQN.
         disable: Allow any host (true) or enforce allowed host whitelist (false).
+        tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
         True or False
     """
     params = {'nqn': nqn, 'allow_any_host': False if disable else True}
 
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
     return client.call('nvmf_subsystem_allow_any_host', params)
 
 
-def delete_nvmf_subsystem(client, nqn):
+def delete_nvmf_subsystem(client, nqn, tgt_name=None):
     """Delete an existing NVMe-oF subsystem.
 
     Args:
         nqn: Subsystem NQN.
+        tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
         True or False
     """
     params = {'nqn': nqn}
+
+    if tgt_name:
+        params['tgt_name'] = tgt_name
+
     return client.call('delete_nvmf_subsystem', params)
 
 
-def nvmf_get_stats(client):
+def nvmf_get_stats(client, tgt_name=None):
     """Query NVMf statistics.
+
+    Args:
+        tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
         Current NVMf statistics.
     """
-    return client.call('nvmf_get_stats')
+
+    params = {}
+
+    if tgt_name:
+        params = {
+            'tgt_name': tgt_name,
+        }
+
+    return client.call('nvmf_get_stats', params)
