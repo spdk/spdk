@@ -32,7 +32,12 @@
 #
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+ifeq ($(LIB_DOMAIN),lib)
 include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
+endif
+ifeq ($(LIB_DOMAIN),module)
+include $(SPDK_ROOT_DIR)/mk/spdk.module_deps.mk
+endif
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/shared_lib/spdk.map
 LIB := $(call spdk_lib_list_to_static_libs,$(LIBNAME))
