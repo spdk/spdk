@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c8134b7_74fd70de",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-16T16:53:59Z",
+      "side": 1,
+      "message": "one of these sets of Signed-off/Change-Id lines should be removed",
+      "revId": "aeca3f5857b8c94537ab1283be3f40eeb6963335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
