@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cf4b6af_3b65dd44",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-16T17:28:53Z",
+      "side": 1,
+      "message": "Is finish the term typically used here? I would have thought \"close\" would be better - it\u0027s the opposite of \"open\".",
+      "revId": "d587981bb027a1f2424a0afd6927dfe446bed0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
