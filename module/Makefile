@@ -36,6 +36,12 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = bdev blob copy event sock
 
+# It is assumed that module is built after lib.
+# Dependency directories here are only within the module directory.
+DEPDIRS-blob :=
+DEPDIRS-copy :=
+DEPDIRS-sock :=
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)

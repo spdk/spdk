@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 LIBNAME = copy_ioat
 C_SRCS = copy_engine_ioat.c copy_engine_ioat_rpc.c
 
+SPDK_DEP_LIBNAMES = conf copy ioat json jsonrpc log rpc thread
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
