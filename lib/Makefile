@@ -35,6 +35,8 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
 
+export LIB_DOMAIN = lib
+
 DIRS-y += bdev blob blobfs conf copy event json jsonrpc \
           log log_rpc lvol net rpc sock thread trace util nvme vmd nvmf scsi \
           ioat ut_mock iscsi notify

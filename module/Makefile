@@ -33,6 +33,9 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.module_deps.mk
+
+export LIB_DOMAIN = module
 
 DIRS-y = bdev blob copy event sock
 
