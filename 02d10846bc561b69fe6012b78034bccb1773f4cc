@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebd4aefe_bb7a23e4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-16T17:20:47Z",
+      "side": 1,
+      "message": "Since the entire header is new, you probably don\u0027t have to update the CHANGELOG each time you add a new function until we\u0027ve done at least one release with the header in it.",
+      "revId": "02d10846bc561b69fe6012b78034bccb1773f4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3613048f_0e4fd3bf",
+        "filename": "lib/bdev/bdev_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-16T17:20:47Z",
+      "side": 1,
+      "message": "weird indents",
+      "revId": "02d10846bc561b69fe6012b78034bccb1773f4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
