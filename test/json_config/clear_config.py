@@ -25,7 +25,7 @@ def get_bdev_name(bdev):
             bdev_name = bdev['params']['base_name']
         elif 'base_bdev' in bdev['params']:
             bdev_name = bdev['params']['base_bdev']
-    if 'method' in bdev and bdev['method'] == 'construct_error_bdev':
+    if 'method' in bdev and bdev['method'] == 'bdev_error_create':
         bdev_name = "EE_%s" % bdev_name
     return bdev_name
 
@@ -36,7 +36,7 @@ def get_bdev_destroy_method(bdev):
                           'construct_rbd_bdev': "delete_rbd_bdev",
                           'construct_pmem_bdev': "delete_pmem_bdev",
                           'bdev_aio_create': "bdev_aio_delete",
-                          'construct_error_bdev': "delete_error_bdev",
+                          'bdev_error_create': "bdev_error_delete",
                           'construct_split_vbdev': "destruct_split_vbdev",
                           'construct_virtio_dev': "remove_virtio_bdev",
                           'bdev_crypto_create': "bdev_crypto_delete",
