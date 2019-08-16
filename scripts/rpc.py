@@ -1375,13 +1375,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.set_defaults(func=delete_ftl_bdev)
 
-    # vmd
-    def enable_vmd(args):
-        print_dict(rpc.vmd.enable_vmd(args.client))
-
-    p = subparsers.add_parser('enable_vmd', help='Enable VMD enumeration')
-    p.set_defaults(func=enable_vmd)
-
     # nbd
     def start_nbd_disk(args):
         print(rpc.nbd.start_nbd_disk(args.client,

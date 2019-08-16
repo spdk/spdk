@@ -42,16 +42,4 @@ if [ -d /usr/src/fio ]; then
 	timing_exit fio_plugin
 fi
 
-$rootdir/test/app/bdev_svc/bdev_svc --wait-for-rpc & svcpid=$!
-trap 'killprocess $svcpid; exit 1' SIGINT SIGTERM EXIT
-# Wait until bdev_svc starts
-waitforlisten $svcpid
-
-$rpc_py enable_vmd
-$rpc_py start_subsystem_init
-
-for bdf in $pci_devs; do
-	$rpc_py construct_nvme_bdev -b NVMe_$bdf -t PCIe -a $bdf
-done
-
 timing_exit vmd
