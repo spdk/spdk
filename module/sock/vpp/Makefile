@@ -40,4 +40,6 @@ CFLAGS += -Wno-error=strict-prototypes -Wno-error=ignored-qualifiers
 
 LIBNAME = sock_vpp
 
+SPDK_DEP_LIBNAMES = log sock thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
