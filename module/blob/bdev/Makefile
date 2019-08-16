@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = blob_bdev.c
 LIBNAME = blob_bdev
 
+SPDK_DEP_LIBNAMES = bdev log thread
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
