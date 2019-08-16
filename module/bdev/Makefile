@@ -34,12 +34,38 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(CONFIG_VTUNE_DIR)/include -I$(CONFIG_VTUNE_DIR)/sdk/src/ittnotify
+DIRS-y += delay error gpt lvol malloc null nvme passthru raid rpc split
+
+ifeq ($(CONFIG_CRYPTO),y)
+DIRS-y += crypto
 endif
 
-C_SRCS = bdev.c bdev_rpc.c part.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
-LIBNAME = bdev
+ifeq ($(CONFIG_OCF), y)
+DIRS-y += ocf
+DIRS-y += ocf/env
+DEPDIRS-ocf := ocf/env
+endif
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+ifeq ($(CONFIG_REDUCE),y)
+DIRS-y += compress
+endif
+
+ifeq ($(CONFIG_URING),y)
+DIRS-y += uring
+endif
+
+ifeq ($(OS),Linux)
+DIRS-y += aio
+DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
+DIRS-$(CONFIG_VIRTIO) += virtio
+DIRS-$(CONFIG_PMDK) += pmem
+endif
+
+DIRS-$(CONFIG_RBD) += rbd
+
+.PHONY: all clean $(DIRS-y)
+
+all: $(DIRS-y)
+clean: $(DIRS-y)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

@@ -31,15 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(CONFIG_VTUNE_DIR)/include -I$(CONFIG_VTUNE_DIR)/sdk/src/ittnotify
-endif
+DIRS-y = bdev
 
-C_SRCS = bdev.c bdev_rpc.c part.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
-LIBNAME = bdev
+.PHONY: all clean $(DIRS-y)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+all: $(DIRS-y)
+clean: $(DIRS-y)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
