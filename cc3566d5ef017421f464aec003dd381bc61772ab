@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2e2355d_0b9759df",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-16T17:33:27Z",
+      "side": 1,
+      "message": "Is start_lba the beginning of the zone? Maybe it would be clearer if we called this \"zone_id\" everywhere? And wrote that the \"zone_id\" is the first LBA in a zone. Then people won\u0027t accidentally try to pass in the lba of what they think is where the write pointer is.",
+      "revId": "cc3566d5ef017421f464aec003dd381bc61772ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
