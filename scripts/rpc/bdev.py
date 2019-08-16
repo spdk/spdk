@@ -428,14 +428,15 @@ def delete_rbd_bdev(client, name):
     return client.call('delete_rbd_bdev', params)
 
 
-def construct_error_bdev(client, base_name):
+@deprecated_alias('construct_error_bdev')
+def bdev_error_create(client, base_name):
     """Construct an error injection block device.
 
     Args:
         base_name: base bdev name
     """
     params = {'base_name': base_name}
-    return client.call('construct_error_bdev', params)
+    return client.call('bdev_error_create', params)
 
 
 def bdev_delay_create(client, base_bdev_name, name, avg_read_latency, p99_read_latency, avg_write_latency, p99_write_latency):
@@ -492,14 +493,15 @@ def bdev_delay_update_latency(client, delay_bdev_name, latency_type, latency_us)
     return client.call('bdev_delay_update_latency', params)
 
 
-def delete_error_bdev(client, name):
+@deprecated_alias('delete_error_bdev')
+def bdev_error_delete(client, name):
     """Remove error bdev from the system.
 
     Args:
         bdev_name: name of error bdev to delete
     """
     params = {'name': name}
-    return client.call('delete_error_bdev', params)
+    return client.call('bdev_error_delete', params)
 
 
 def construct_iscsi_bdev(client, name, url, initiator_iqn):
@@ -701,7 +703,8 @@ def get_bdev_histogram(client, name):
     return client.call('get_bdev_histogram', params)
 
 
-def bdev_inject_error(client, name, io_type, error_type, num=1):
+@deprecated_alias('bdev_inject_error')
+def bdev_error_inject_error(client, name, io_type, error_type, num=1):
     """Inject an error via an error bdev.
 
     Args:
@@ -717,7 +720,7 @@ def bdev_inject_error(client, name, io_type, error_type, num=1):
         'num': num,
     }
 
-    return client.call('bdev_inject_error', params)
+    return client.call('bdev_error_inject_error', params)
 
 
 def set_bdev_qd_sampling_period(client, name, period):
