@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b94668b0_32b7ca94",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-16T17:58:17Z",
+      "side": 1,
+      "message": "I think you forgot to fix this up.",
+      "revId": "5d4fff02fcba0e1962620e27b13a3c7ecf0eefc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
