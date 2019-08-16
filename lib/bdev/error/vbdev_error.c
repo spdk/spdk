@@ -96,7 +96,7 @@ static struct spdk_bdev_module error_if = {
 SPDK_BDEV_MODULE_REGISTER(error, &error_if)
 
 int
-spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
+spdk_vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_part *part;
@@ -496,7 +496,7 @@ vbdev_error_config_json(struct spdk_json_write_ctx *w)
 	TAILQ_FOREACH(cfg, &g_error_config, tailq) {
 		spdk_json_write_object_begin(w);
 
-		spdk_json_write_named_string(w, "method", "construct_error_bdev");
+		spdk_json_write_named_string(w, "method", "bdev_error_create");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_name", cfg->base_bdev);
 		spdk_json_write_object_end(w);

@@ -182,11 +182,11 @@ class UIRoot(UINode):
 
     @verbose
     def create_error_bdev(self, **kwargs):
-        response = rpc.bdev.construct_error_bdev(self.client, **kwargs)
+        response = rpc.bdev.bdev_error_create(self.client, **kwargs)
 
     @verbose
-    def delete_error_bdev(self, **kwargs):
-        rpc.bdev.delete_error_bdev(self.client, **kwargs)
+    def bdev_error_delete(self, **kwargs):
+        rpc.bdev.bdev_error_delete(self.client, **kwargs)
 
     @verbose
     @is_method_available

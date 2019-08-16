@@ -458,22 +458,22 @@ if __name__ == "__main__":
     p.add_argument('latency_us', help='new latency value.', type=int)
     p.set_defaults(func=bdev_delay_update_latency)
 
-    def construct_error_bdev(args):
-        print_json(rpc.bdev.construct_error_bdev(args.client,
-                                                 base_name=args.base_name))
+    def bdev_error_create(args):
+        print_json(rpc.bdev.bdev_error_create(args.client,
+                                              base_name=args.base_name))
 
-    p = subparsers.add_parser('construct_error_bdev',
+    p = subparsers.add_parser('bdev_error_create',
                               help='Add bdev with error injection backend')
     p.add_argument('base_name', help='base bdev name')
-    p.set_defaults(func=construct_error_bdev)
+    p.set_defaults(func=bdev_error_create)
 
-    def delete_error_bdev(args):
-        rpc.bdev.delete_error_bdev(args.client,
+    def bdev_error_delete(args):
+        rpc.bdev.bdev_error_delete(args.client,
                                    name=args.name)
 
-    p = subparsers.add_parser('delete_error_bdev', help='Delete an error bdev')
+    p = subparsers.add_parser('bdev_error_delete', help='Delete an error bdev')
     p.add_argument('name', help='error bdev name')
-    p.set_defaults(func=delete_error_bdev)
+    p.set_defaults(func=bdev_error_delete)
 
     def construct_iscsi_bdev(args):
         print_json(rpc.bdev.construct_iscsi_bdev(args.client,
@@ -603,20 +603,20 @@ if __name__ == "__main__":
                    type=int, required=False)
     p.set_defaults(func=set_bdev_qos_limit)
 
-    def bdev_inject_error(args):
-        rpc.bdev.bdev_inject_error(args.client,
-                                   name=args.name,
-                                   io_type=args.io_type,
-                                   error_type=args.error_type,
-                                   num=args.num)
+    def bdev_error_inject_error(args):
+        rpc.bdev.bdev_error_inject_error(args.client,
+                                         name=args.name,
+                                         io_type=args.io_type,
+                                         error_type=args.error_type,
+                                         num=args.num)
 
-    p = subparsers.add_parser('bdev_inject_error', help='bdev inject error')
+    p = subparsers.add_parser('bdev_error_inject_error', help='bdev inject error')
     p.add_argument('name', help="""the name of the error injection bdev""")
     p.add_argument('io_type', help="""io_type: 'clear' 'read' 'write' 'unmap' 'flush' 'all'""")
     p.add_argument('error_type', help="""error_type: 'failure' 'pending'""")
     p.add_argument(
         '-n', '--num', help='the number of commands you want to fail', type=int, default=1)
-    p.set_defaults(func=bdev_inject_error)
+    p.set_defaults(func=bdev_error_inject_error)
 
     def apply_firmware(args):
         print_dict(rpc.bdev.apply_firmware(args.client,
