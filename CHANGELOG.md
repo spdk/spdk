@@ -13,6 +13,9 @@ retrieve a pointer to an `spdk_nvmf_tgt` object by supplying its name. In the sp
 case where an RPC or application only creates a single target, this function can accept
 a null name parameter and will return the only available target.
 
+The majority of the NVMe-oF RPCs now accept an optional tgt_name parameter. This will
+allow those RPCs to work with applications that create more than one target.
+
 ### nvme
 
 Added `no_shn_notification` to NVMe controller initialization options, users can enable
