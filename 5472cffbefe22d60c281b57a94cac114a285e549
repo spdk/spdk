@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90f584df_d9491a62",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-16T20:18:26Z",
+      "side": 1,
+      "message": "Could we do this slightly differently?  Something like this, after the list above:\n\n# SPDK fails some error checks which have been deprecated in later versions of shellcheck.\n# We will not try to fix these error checks, but instead just leave the error types here\n# so that we can still run with older versions of shellcheck.\nSHCK_EXCLUDE\u003d\"$SHCK_EXCLUDE SC1117\"",
+      "revId": "5472cffbefe22d60c281b57a94cac114a285e549",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
