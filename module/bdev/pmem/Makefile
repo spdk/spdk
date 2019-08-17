@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = bdev_pmem.c bdev_pmem_rpc.c
 LIBNAME = bdev_pmem
 
+SPDK_DEP_LIBNAMES = bdev conf json jsonrpc log rpc thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

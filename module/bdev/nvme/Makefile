@@ -40,4 +40,6 @@ C_SRCS += bdev_ftl.c bdev_ftl_rpc.c
 endif
 LIBNAME = bdev_nvme
 
+SPDK_DEP_LIBNAMES = bdev conf ftl json jsonrpc log nvme rpc thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -39,4 +39,6 @@ CFLAGS += $(ENV_CFLAGS)
 C_SRCS = vbdev_crypto.c vbdev_crypto_rpc.c
 LIBNAME = bdev_crypto
 
+SPDK_DEP_LIBNAMES = bdev conf json jsonrpc log rpc thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
