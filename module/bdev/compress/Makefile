@@ -40,4 +40,6 @@ C_SRCS = vbdev_compress.c vbdev_compress_rpc.c
 LIBNAME = bdev_compress
 CFLAGS += $(ENV_CFLAGS)
 
+SPDK_DEP_LIBNAMES = bdev json jsonrpc log reduce rpc thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
