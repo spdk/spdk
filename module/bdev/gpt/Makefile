@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = gpt.c vbdev_gpt.c
 LIBNAME = bdev_gpt
 
+SPDK_DEP_LIBNAMES = bdev conf json log rpc thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

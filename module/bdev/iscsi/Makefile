@@ -43,4 +43,6 @@ CFLAGS += -Wno-error
 C_SRCS = bdev_iscsi.c bdev_iscsi_rpc.c
 LIBNAME = bdev_iscsi
 
+SPDK_DEP_LIBNAMES = bdev conf json jsonrpc log rpc thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

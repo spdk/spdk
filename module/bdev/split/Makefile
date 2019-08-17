@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = vbdev_split.c vbdev_split_rpc.c
 LIBNAME = bdev_split
 
+SPDK_DEP_LIBNAMES = bdev conf json jsonrpc log rpc util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
