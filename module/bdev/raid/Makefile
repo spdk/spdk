@@ -38,4 +38,6 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 C_SRCS = bdev_raid.c bdev_raid_rpc.c
 LIBNAME = bdev_raid
 
+SPDK_DEP_LIBNAMES = bdev conf json jsonrpc log rpc thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = vbdev_error.c vbdev_error_rpc.c
 LIBNAME = bdev_error
 
+SPDK_DEP_LIBNAMES = bdev conf json jsonrpc log rpc util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = bdev_virtio_scsi.c bdev_virtio_blk.c bdev_virtio_rpc.c
 LIBNAME = bdev_virtio
 
+SPDK_DEP_LIBNAMES = bdev conf json jsonrpc log rpc thread util virtio
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
