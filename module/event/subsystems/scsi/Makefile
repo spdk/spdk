@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = scsi.c
 LIBNAME = event_scsi
 
+SPDK_DEP_LIBNAMES = event scsi
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

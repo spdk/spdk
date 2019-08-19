@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = app_rpc.c subsystem_rpc.c
 LIBNAME = app_rpc
 
+SPDK_DEP_LIBNAMES = event json jsonrpc rpc thread util
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

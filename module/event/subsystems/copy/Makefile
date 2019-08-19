@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = copy.c
 LIBNAME = event_copy
 
+SPDK_DEP_LIBNAMES = copy event
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

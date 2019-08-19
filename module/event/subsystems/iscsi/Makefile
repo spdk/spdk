@@ -38,4 +38,6 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 C_SRCS = iscsi.c
 LIBNAME = event_iscsi
 
+SPDK_DEP_LIBNAMES = event iscsi
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
