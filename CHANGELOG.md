@@ -246,6 +246,11 @@ New cache modes added to use via RPC, wi - write invalidate and wa - write aroun
 
 New version of OCF provides fully asynchronous management API.
 
+### util
+
+`spdk_pipe`, a new utility for buffering data from sockets or files for parsing
+has been added. The public API is available at `include/spdk/pipe.h`.
+
 ## v19.07:
 
 ### ftl
