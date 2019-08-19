@@ -209,6 +209,24 @@
       "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afb1057f_9a870b7e",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-19T16:53:36Z",
+      "side": 1,
+      "message": "Hi Ziye - can you read my comment again? I\u0027m no longer disputing that we need this code. I\u0027m pointing out that there may be a bug in the way this is currently working.",
+      "parentUuid": "1c750606_43aae7ce",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
