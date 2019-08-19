@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc4b0a2e_27fe2c3e",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-19T16:57:09Z",
+      "side": 1,
+      "message": "I think this would be clearer if you made hdr a pointer, and then named the non-pointer version \"hdr_mem\" or something. All the code should access the header via the pointer. That way the pointer could either be pointing at hdr_mem or at some other data buffer and all code throughout both transports would just work without any special cases.",
+      "revId": "83da35eab07a1b06ffa280af1ff3e8a8369b2e20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
