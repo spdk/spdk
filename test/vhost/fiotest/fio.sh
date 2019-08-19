@@ -82,7 +82,7 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice "running SPDK"
 	notice ""
 	vhost_run 0
-	vhost_load_config 0 $testdir/conf.json
+	vhost_load_config 0 $testdir/conf.json 1
 	notice ""
 fi
 

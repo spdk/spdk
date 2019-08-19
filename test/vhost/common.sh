@@ -160,8 +160,11 @@ function vhost_load_config()
 	local vhost_num="$1"
 	local vhost_json_conf="$2"
 	local vhost_dir="$(get_vhost_dir $vhost_num)"
-
-	$rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_config < "$vhost_json_conf"
+	local include_aliases=""
+	if [[ ! -z $3 ]]; then
+		include_aliases="-i"
+	fi
+	$rootdir/scripts/rpc.py -s $vhost_dir/rpc.sock load_config $include_aliases < "$vhost_json_conf"
 }
 
 function vhost_kill()
