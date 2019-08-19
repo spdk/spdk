@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e5e698b_ae8db31f",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-19T21:58:18Z",
+      "side": 1,
+      "message": "It would be good to put in some information detailing that the writer can only advance as far as the user has read, and any attempt to advance farther will fail.\n\nJust as a curiosity question, is there a reason you don\u0027t just do the overflow checks internally and return a smaller value than they provided for size like you do with the get_buffer function? I see how this implementation forces the upper layer to pay attention, but am wondering if you saw something specifically wrong with the other way.",
+      "revId": "7a12c12376ba43bb96119394b183f5dede10b49b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a11068f_7dbf9f98",
+        "filename": "lib/util/pipe.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-19T21:58:18Z",
+      "side": 1,
+      "message": "So I don\u0027t think anyone would try todo this, but you should probably do a check to make sure that nobody tries to create a pipe larger than UINT32_MAX (4 GiB I think) or change read and write to be size_t. Especially since this is going in the public header.",
+      "revId": "7a12c12376ba43bb96119394b183f5dede10b49b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc1391ac_3582e75b",
+        "filename": "lib/util/pipe.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-19T21:58:18Z",
+      "side": 1,
+      "message": "should be read \u003c\u003d write. That is the only way you get write - read \u003d\u003d 0 for the if (sz \u003d\u003d 0) check below.",
+      "revId": "7a12c12376ba43bb96119394b183f5dede10b49b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
