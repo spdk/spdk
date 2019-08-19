@@ -377,7 +377,7 @@ cd ~
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}; export GIT_REPO_LIBISCSI
 : ${GIT_REPO_SPDK_NVME_CLI=https://github.com/spdk/nvme-cli}; export GIT_REPO_SPDK_NVME_CLI
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}; export GIT_REPO_INTEL_IPSEC_MB
-: ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads/intelr-quickassist-technology/qat1.7.l.4.3.0-00033.tar.gz}; export DRIVER_LOCATION_QAT
+: ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads//qat1.7.l.4.6.0-00025.tar.gz}; export DRIVER_LOCATION_QAT
 : ${GIT_REPO_OCF=https://github.com/Open-CAS/ocf}; export GIT_REPO_OCF
 
 jobs=$(($(nproc)*2))
