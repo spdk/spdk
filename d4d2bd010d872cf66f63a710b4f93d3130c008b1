@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2273bfdd_f774ea4c",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-19T20:40:13Z",
+      "side": 1,
+      "message": "I\u0027d prefer to base this on m-\u003eis_alias_of instead of m-\u003eis_deprecated.\n\nCurrently we always set both for aliases.  But there could be a possibility in the future where we allow an alias which is *not* deprecated.\n\nI think we can also make this just a bit easier to understand by keeping a local state_mask variable:\n\nuint32_t state_mask;\n\nif (m-\u003eis_alias_of !\u003d NULL \u0026\u0026 !req.include_aliases) {\n  continue;\n}\n\nstate_mask \u003d m-\u003eis_alias_of !\u003d NULL ? m-\u003eis_alias_of-\u003estate_mask : m-\u003estate_mask;\n\nif (req.current \u0026\u0026 ((state_mask \u0026 g_rpc_state) !\u003d g_rpc_state)) {\n  continue;\n}",
+      "revId": "d4d2bd010d872cf66f63a710b4f93d3130c008b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
