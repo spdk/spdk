@@ -16,6 +16,24 @@
       "revId": "83da35eab07a1b06ffa280af1ff3e8a8369b2e20",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08d1a8c8_3c225f8a",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-19T23:25:35Z",
+      "side": 1,
+      "message": "If change to this, there are other codes need to be added for the nvme_tcp.c and nvme_tcp unit test.",
+      "parentUuid": "dc4b0a2e_27fe2c3e",
+      "revId": "83da35eab07a1b06ffa280af1ff3e8a8369b2e20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
