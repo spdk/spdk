@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e328dfa7_f3a603b0",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1275,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-19T13:20:48Z",
+      "side": 1,
+      "message": "Have you checked if there are issues with this function when the VPP either crashed (socket file present) or closed down (socket file not present) ?",
+      "range": {
+        "startLine": 1275,
+        "startChar": 2,
+        "endLine": 1275,
+        "endChar": 32
+      },
+      "revId": "d2d3fd393026e2dddbe5b53715b4644b7ee8e440",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
