@@ -46,6 +46,9 @@ Blobfs file asynchronous operations were added to public APIs.
 
 ### util
 
+`spdk_pipe`, a new utility for buffering data from sockets or files for parsing
+has been added. The public API is available at `include/spdk/pipe.h`.
+
 A new file API `spdk_posix_file_load` was added to load file content into a data buffer.
 
 New APIs `spdk_dif_ctx_set_data_offset`, `spdk_dif_verify_stream`,
