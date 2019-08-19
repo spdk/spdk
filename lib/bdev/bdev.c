@@ -4773,8 +4773,7 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 			if (!bdev->internal.qos) {
 				pthread_mutex_unlock(&bdev->internal.mutex);
 				SPDK_ERRLOG("Unable to allocate memory for QoS tracking\n");
-				free(ctx);
-				cb_fn(cb_arg, -ENOMEM);
+				_spdk_bdev_set_qos_limit_done(ctx, -ENOMEM);
 				return;
 			}
 		}
