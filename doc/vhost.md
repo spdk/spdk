@@ -393,7 +393,7 @@ scripts/rpc.py remove_vhost_scsi_target vhost.0 0
 Removing an entire bdev will hot-detach it from a controller as well.
 
 ~~~{.sh}
-scripts/rpc.py delete_malloc_bdev Malloc0
+scripts/rpc.py bdev_malloc_delete Malloc0
 ~~~
 
 # Known bugs and limitations {#vhost_bugs}

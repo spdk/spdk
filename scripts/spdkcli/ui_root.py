@@ -131,8 +131,8 @@ class UIRoot(UINode):
         return response
 
     @verbose
-    def delete_malloc_bdev(self, **kwargs):
-        rpc.bdev.delete_malloc_bdev(self.client, **kwargs)
+    def bdev_malloc_delete(self, **kwargs):
+        rpc.bdev.bdev_malloc_delete(self.client, **kwargs)
 
     @verbose
     def create_iscsi_bdev(self, **kwargs):

@@ -166,7 +166,7 @@ class UIMallocBdev(UIBdev):
         UIBdev.__init__(self, "malloc", parent)
 
     def delete(self, name):
-        self.get_root().delete_malloc_bdev(name=name)
+        self.get_root().bdev_malloc_delete(name=name)
 
     def ui_command_create(self, size, block_size, name=None, uuid=None):
         """

@@ -476,7 +476,7 @@ fi
 
 echo "INFO: changing configuration and checking if this can be detected..."
 # Self test to check if configuration diff can be detected.
-tgt_rpc delete_malloc_bdev MallocBdevForConfigChangeCheck
+tgt_rpc bdev_malloc_delete MallocBdevForConfigChangeCheck
 if $rootdir/test/json_config/json_diff.sh <(tgt_rpc save_config) "${configs_path[target]}" >/dev/null; then
 	echo "ERROR: intentional configuration difference not detected!"
 	false
