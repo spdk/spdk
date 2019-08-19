@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55c1305f_45e44ae0",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-19T01:10:57Z",
+      "side": 1,
+      "message": "Please update this comment. 100 chunks + 4 backing io units * 8 bytes per backing io unit ?",
+      "range": {
+        "startLine": 110,
+        "startChar": 4,
+        "endLine": 110,
+        "endChar": 75
+      },
+      "revId": "4dbc48458de0532a16a36a9f5823540135736e2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a50648a2_9f82e41d",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-19T01:10:57Z",
+      "side": 1,
+      "message": "and 8 bytes per backing io unit times 4 backing io units ?",
+      "range": {
+        "startLine": 112,
+        "startChar": 38,
+        "endLine": 112,
+        "endChar": 39
+      },
+      "revId": "4dbc48458de0532a16a36a9f5823540135736e2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
