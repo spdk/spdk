@@ -75,6 +75,7 @@ spdk_vbdev_zone_block_create(const char *bdev_name, const char *vbdev_name, uint
 void
 spdk_vbdev_zone_block_delete(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	cb_fn(cb_arg, 0);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_zone_block", SPDK_LOG_VBDEV_ZONE_BLOCK)
