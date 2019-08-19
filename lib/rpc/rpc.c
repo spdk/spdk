@@ -342,10 +342,12 @@ spdk_rpc_close(void)
 
 struct rpc_get_methods {
 	bool current;
+	bool include_aliases;
 };
 
 static const struct spdk_json_object_decoder rpc_get_methods_decoders[] = {
 	{"current", offsetof(struct rpc_get_methods, current), spdk_json_decode_bool, true},
+	{"include_aliases", offsetof(struct rpc_get_methods, include_aliases), spdk_json_decode_bool, true},
 };
 
 static void
