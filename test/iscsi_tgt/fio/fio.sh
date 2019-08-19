@@ -124,11 +124,11 @@ $rpc_py destroy_raid_bdev 'raid0'
 
 # Delete all allocated malloc blockdevs
 for malloc_bdev in $malloc_bdevs; do
-	$rpc_py delete_malloc_bdev $malloc_bdev
+	$rpc_py bdev_malloc_delete $malloc_bdev
 done
 
 # Delete malloc device
-$rpc_py delete_malloc_bdev ${bdev}
+$rpc_py bdev_malloc_delete ${bdev}
 
 fio_status=0
 wait $fio_pid || fio_status=$?
