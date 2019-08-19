@@ -67,7 +67,7 @@ $rpc_py construct_ocf_bdev C2 wt Cache Core
 $rpc_py get_ocf_bdevs Cache | jq \
 	'length == 2'
 
-$rpc_py delete_malloc_bdev Cache
+$rpc_py bdev_malloc_delete Cache
 
 $rpc_py get_ocf_bdevs | jq -e \
 	'. == []'
