@@ -5,7 +5,7 @@ function migration_tc1_clean_vhost_config()
 
 	notice "Removing vhost devices & controllers via RPC ..."
 	# Delete bdev first to remove all LUNs and SCSI targets
-	$rpc delete_malloc_bdev Malloc0
+	$rpc bdev_malloc_delete Malloc0
 
 	# Delete controllers
 	$rpc remove_vhost_controller $incoming_vm_ctrlr
