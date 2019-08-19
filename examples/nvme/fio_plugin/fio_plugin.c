@@ -797,6 +797,14 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		}
 	}
 
+	/* PRACT=1 means I/O doesn't transfer PI though it may be checked */
+	if (fio_qpair->io_flags & g_spdk_pract_flag) {
+		dif_ctx->dif_flags = fio_qpair->io_flags;
+		dif_ctx->apptag_mask = g_spdk_apptag_mask;
+		dif_ctx->app_tag = g_spdk_apptag;
+		block_size = spdk_nvme_ns_get_sector_size(ns);
+	}
+
 	switch (io_u->ddir) {
 	case DDIR_READ:
 		if (!g_spdk_enable_sgl) {
