@@ -86,7 +86,7 @@ RPCS=
 # Delete Malloc blockdevs and targets
 for i in $(seq 0 $CONNECTION_NUMBER); do
 	RPCS+="delete_target_node iqn.2016-06.io.spdk:Target$i\n"
-	RPCS+="delete_malloc_bdev Malloc$i\n"
+	RPCS+="bdev_malloc_delete Malloc$i\n"
 done
 echo -e $RPCS | $rpc_py
 
