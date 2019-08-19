@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afb2bcac_bb164658",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-19T12:29:13Z",
+      "side": 1,
+      "message": "Use wrapper deprectaed_alias",
+      "revId": "9aadea707a000fd95758e93cbcf6e3c7aaa8266a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e785e370_bdaf023f",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-19T12:29:13Z",
+      "side": 1,
+      "message": "^",
+      "revId": "9aadea707a000fd95758e93cbcf6e3c7aaa8266a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17262385_a6d1a155",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-19T12:29:13Z",
+      "side": 1,
+      "message": "^",
+      "revId": "9aadea707a000fd95758e93cbcf6e3c7aaa8266a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
