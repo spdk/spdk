@@ -455,6 +455,38 @@ def delete_nvme_controller(client, name):
     return client.call('delete_nvme_controller', params)
 
 
+def bdev_zone_block_create(client, name, bdev_name, zone_size, optimal_open_zones=None):
+    """Creates a virtual zone device on top of existing bdev.
+
+    Args:
+        name: Zone device name
+        bdev_name: Nvme bdev name
+        zone_size: Surfaced zone size in blocks
+        optimal_open_zones: Number of zones required to reach optimal write speed (optional, default: 1)
+
+    Returns:
+        Name of created block device.
+    """
+    params = {'name': name,
+              'bdev_name': bdev_name,
+              'zone_size': zone_size}
+
+    if optimal_open_zones is not None:
+        params['optimal_open_zones'] = optimal_open_zones
+
+    return client.call('bdev_zone_block_create', params)
+
+
+def bdev_zone_block_delete(client, name):
+    """Remove block zone bdev from the system.
+
+    Args:
+        name: name of block zone bdev to delete
+    """
+    params = {'name': name}
+    return client.call('bdev_zone_block_delete', params)
+
+
 @deprecated_alias('construct_rbd_bdev')
 def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None):
     """Create a Ceph RBD block device.
