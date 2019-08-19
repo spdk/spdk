@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dcc5c11f_fb14b3d7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-19T06:03:36Z",
+      "side": 1,
+      "message": "why the src_iovs[iov_index].iov_len have to be overwritten? src_iovs[iov_index].iov_base is not changed.",
+      "range": {
+        "startLine": 516,
+        "startChar": 3,
+        "endLine": 516,
+        "endChar": 29
+      },
+      "revId": "58b338e905e2b932e71196de96fa570688635e8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5df53b83_3526894c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-19T06:03:36Z",
+      "side": 1,
+      "message": "why you don\u0027t append to src_mbufs[src_iov_total] ? src_mbufs[src_iov_total] is allocated but doesn\u0027t look being used anywhere.",
+      "range": {
+        "startLine": 522,
+        "startChar": 39,
+        "endLine": 522,
+        "endChar": 48
+      },
+      "revId": "58b338e905e2b932e71196de96fa570688635e8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
