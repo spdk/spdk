@@ -253,13 +253,14 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this bdev', type=int)
     p.set_defaults(func=bdev_malloc_create)
 
-    def delete_malloc_bdev(args):
-        rpc.bdev.delete_malloc_bdev(args.client,
+    def bdev_malloc_delete(args):
+        rpc.bdev.bdev_malloc_delete(args.client,
                                     name=args.name)
 
-    p = subparsers.add_parser('delete_malloc_bdev', help='Delete a malloc disk')
+    p = subparsers.add_parser('bdev_malloc_delete', aliases=['delete_malloc_bdev'],
+                              help='Delete a malloc disk')
     p.add_argument('name', help='malloc bdev name')
-    p.set_defaults(func=delete_malloc_bdev)
+    p.set_defaults(func=bdev_malloc_delete)
 
     def bdev_null_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
