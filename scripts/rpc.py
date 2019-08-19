@@ -471,6 +471,29 @@ if __name__ == "__main__":
                    help='Name of the NVMe controller. Example: Nvme0', required=True)
     p.set_defaults(func=bdev_nvme_cuse_unregister)
 
+    def bdev_zone_block_create(args):
+        print_json(rpc.bdev.bdev_zone_block_create(args.client,
+                                                   name=args.name,
+                                                   base_bdev=args.base_bdev,
+                                                   zone_capacity=args.zone_capacity,
+                                                   optimal_open_zones=args.optimal_open_zones))
+
+    p = subparsers.add_parser('bdev_zone_block_create',
+                              help='Create virtual zone namespace device with block device backend')
+    p.add_argument('-b', '--name', help="Name of the zone device", required=True)
+    p.add_argument('-n', '--base-bdev', help='Name of underlying, non-zoned bdev', required=True)
+    p.add_argument('-z', '--zone-capacity', help='Surfaced zone capacity in blocks', type=int, required=True)
+    p.add_argument('-o', '--optimal-open-zones', help='Number of zones required to reach optimal write speed', type=int, required=True)
+    p.set_defaults(func=bdev_zone_block_create)
+
+    def bdev_zone_block_delete(args):
+        rpc.bdev.bdev_zone_block_delete(args.client,
+                                        name=args.name)
+
+    p = subparsers.add_parser('bdev_zone_block_delete', help='Delete a virtual zone namespace device')
+    p.add_argument('name', help='Virtual zone bdev name')
+    p.set_defaults(func=bdev_zone_block_delete)
+
     def bdev_rbd_create(args):
         config = None
         if args.config:
