@@ -342,10 +342,12 @@ spdk_rpc_close(void)
 
 struct rpc_get_methods {
 	bool current;
+	bool include_aliases;
 };
 
 static const struct spdk_json_object_decoder rpc_get_methods_decoders[] = {
 	{"current", offsetof(struct rpc_get_methods, current), spdk_json_decode_bool, true},
+	{"include_aliases", offsetof(struct rpc_get_methods, include_aliases), spdk_json_decode_bool, true},
 };
 
 static void
@@ -368,7 +370,12 @@ spdk_rpc_get_methods(struct spdk_jsonrpc_request *request, const struct spdk_jso
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
-		if (req.current && ((m->state_mask & g_rpc_state) != g_rpc_state)) {
+		uint32_t state_mask;
+		if (m->is_alias_of != NULL && !req.include_aliases) {
+			continue;
+		}
+		state_mask = m->is_alias_of != NULL ? m->is_alias_of->state_mask : m->state_mask;
+		if (req.current && ((state_mask & g_rpc_state) != g_rpc_state)) {
 			continue;
 		}
 		spdk_json_write_string(w, m->name);
