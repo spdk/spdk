@@ -159,7 +159,7 @@ spdk_rpc_delete_ocf_bdev(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
-	status = vbdev_ocf_delete(vbdev, delete_cb, request);
+	status = vbdev_ocf_delete_clean(vbdev, delete_cb, request);
 	if (status) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Could not delete OCF vbdev: %s",
