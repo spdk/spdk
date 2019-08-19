@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d155b8e_3ca9c414",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-19T06:22:58Z",
+      "side": 1,
+      "message": "if we know the max length, could we put a fixed size char array into the tgt struct? That would be just simpler. Otherwise you need a NULL check here.",
+      "range": {
+        "startLine": 243,
+        "startChar": 6,
+        "endLine": 243,
+        "endChar": 11
+      },
+      "revId": "c77aa5cdf23a90e69bf654831d54ccd2798e6a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
