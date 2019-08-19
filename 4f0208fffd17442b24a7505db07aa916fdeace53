@@ -108,6 +108,30 @@
     },
     {
       "key": {
+        "uuid": "09d50e26_9dd9a901",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-19T01:49:00Z",
+      "side": 1,
+      "message": "Will you add the following check?\nif (opts-\u003emd_interleave) {\n  if (opts-\u003eblock_size \u003c opts-\u003emd_size) {\n    return -EINVAL;\n  }\n  data_block_size \u003d opts-\u003eblock_size - opts-\u003emd_size;\n} else {\n  data_block_size \u003d opts-\u003eblock_size;\n}\n\nif (data_block_size % 512 !\u003d 0) {\n  return -EINVAL;\n}",
+      "parentUuid": "59265af3_c6a7ee7c",
+      "range": {
+        "startLine": 209,
+        "startChar": 34,
+        "endLine": 209,
+        "endChar": 45
+      },
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d7b7954b_310eecea",
         "filename": "lib/bdev/null/bdev_null.c",
         "patchSetId": 1
@@ -119,6 +143,30 @@
       "writtenOn": "2019-08-14T21:52:35Z",
       "side": 1,
       "message": "Will you return false if opts-\u003emd_interleave is false at the head of this function?",
+      "range": {
+        "startLine": 212,
+        "startChar": 33,
+        "endLine": 212,
+        "endChar": 52
+      },
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c654a4b_15569ea6",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-19T01:49:00Z",
+      "side": 1,
+      "message": "I want to correct this.\n\nPlease enable users to set opts-\u003emd_interleave to false. So this is OK.",
+      "parentUuid": "d7b7954b_310eecea",
       "range": {
         "startLine": 212,
         "startChar": 33,
