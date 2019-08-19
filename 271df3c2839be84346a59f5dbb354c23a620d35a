@@ -16,6 +16,24 @@
       "revId": "271df3c2839be84346a59f5dbb354c23a620d35a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d469868_50c3156f",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-19T22:16:23Z",
+      "side": 1,
+      "message": "I think it would be good to keep.\nIt\u0027s kind of an edge case, but someone could fill name right up to the last byte without including a NULL terminator. In that case, the snprintf call would catch it and replace the last character of their target with a NULL byte. Then subsequent attempts to find the target by name would fail because the stored value would not be the same as the (malformed) requested name.\nAlthough maybe I should use strnlen to avoid buffer overflow when checking the length?",
+      "parentUuid": "e304d199_5d90c779",
+      "revId": "271df3c2839be84346a59f5dbb354c23a620d35a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
