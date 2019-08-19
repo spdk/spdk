@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4dfa9b5f_ae17ddcb",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-19T20:41:53Z",
+      "side": 1,
+      "message": "help\u003d\u0027include RPC aliases\u0027\n\n\"get list of RPC aliases\" indicates it will only return aliases.  But it will actually return all RPC methods, including aliases (which is what we want).",
+      "revId": "031e6e02d0a75b18ad15d1b99c5eff29ed036d7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
