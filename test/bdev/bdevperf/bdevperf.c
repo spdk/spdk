@@ -83,6 +83,7 @@ static bool g_mix_specified;
 static const char *g_target_bdev_name;
 static bool g_wait_for_tests = false;
 static struct spdk_jsonrpc_request *g_request = NULL;
+static bool g_every_core_for_each_bdev = false;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -393,6 +394,13 @@ bdevperf_construct_targets(void)
 {
 	struct spdk_bdev *bdev;
 	int rc;
+	uint8_t core_idx, core_count_for_each_bdev;
+
+	if (g_every_core_for_each_bdev == false) {
+		core_count_for_each_bdev = 1;
+	} else {
+		core_count_for_each_bdev = spdk_env_get_core_count();
+	}
 
 	if (g_target_bdev_name != NULL) {
 		bdev = spdk_bdev_get_by_name(g_target_bdev_name);
@@ -401,13 +409,20 @@ bdevperf_construct_targets(void)
 			return;
 		}
 
-		bdevperf_construct_target(bdev);
-	} else {
-		bdev = spdk_bdev_first_leaf();
-		while (bdev != NULL) {
+		for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
 			rc = bdevperf_construct_target(bdev);
 			if (rc != 0) {
 				return;
+			}
+		}
+	} else {
+		bdev = spdk_bdev_first_leaf();
+		while (bdev != NULL) {
+			for (core_idx = 0; core_idx < core_count_for_each_bdev; core_idx++) {
+				rc = bdevperf_construct_target(bdev);
+				if (rc != 0) {
+					return;
+				}
 			}
 
 			bdev = spdk_bdev_next_leaf(bdev);
@@ -913,7 +928,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 			printf("Skip this device (%s) as IO channel not setup.\n",
 			       spdk_bdev_get_name(target->bdev));
 			g_target_count--;
-			g_run_failed = true;
+			g_run_failed = false;
 			spdk_bdev_close(target->bdev_desc);
 
 			target = target->next;
@@ -947,6 +962,7 @@ bdevperf_usage(void)
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 	printf(" -T <target>               target bdev\n");
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
+	printf(" -C                        enable every core to send I/Os to each bdev\n");
 }
 
 /*
@@ -1368,6 +1384,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_target_bdev_name = optarg;
 	} else if (ch == 'z') {
 		g_wait_for_tests = true;
+	} else if (ch == 'C') {
+		g_every_core_for_each_bdev = true;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -1485,7 +1503,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zq:o:t:w:M:P:S:T:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "zq:o:t:w:CM:P:S:T:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;

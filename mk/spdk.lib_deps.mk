@@ -119,6 +119,7 @@ DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
 ifeq ($(OS),Linux)
 DEPDIRS-bdev_ftl := $(BDEV_DEPS_THREAD) ftl
 endif
+DEPDIRS-bdev_zone_block := $(BDEV_DEPS_THREAD)
 
 DEPDIRS-bdev_aio := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_crypto := $(BDEV_DEPS_CONF_THREAD)
