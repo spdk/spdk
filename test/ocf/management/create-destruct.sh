@@ -67,7 +67,7 @@ if ! (bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1); then
 	exit 1
 fi
 
-$rpc_py delete_malloc_bdev Malloc0
+$rpc_py bdev_malloc_delete Malloc0
 
 if bdev_check_claimed Malloc1; then
 	>&2 echo "Base device is not expected to be claimed now"

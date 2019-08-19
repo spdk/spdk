@@ -295,7 +295,7 @@ Example response:
     "delete_nvme_controller",
     "construct_nvme_bdev",
     "bdev_null_create",
-    "delete_malloc_bdev",
+    "bdev_malloc_delete",
     "bdev_malloc_create",
     "delete_ftl_bdev",
     "construct_ftl_bdev",
@@ -1196,7 +1196,7 @@ Example response:
 }
 ~~~
 
-## delete_malloc_bdev {#rpc_delete_malloc_bdev}
+## bdev_malloc_delete {#rpc_bdev_malloc_delete}
 
 Delete @ref bdev_config_malloc
 
@@ -1216,7 +1216,7 @@ Example request:
     "name": "Malloc0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_malloc_bdev",
+  "method": "bdev_malloc_delete",
   "id": 1
 }
 ~~~
