@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = vmd.c
 LIBNAME = event_vmd
 
+SPDK_DEP_LIBNAMES = conf event vmd
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

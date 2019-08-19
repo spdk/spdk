@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = vhost.c
 LIBNAME = event_vhost
 
+SPDK_DEP_LIBNAMES = event vhost
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

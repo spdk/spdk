@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = bdev.c
 LIBNAME = event_bdev
 
+SPDK_DEP_LIBNAMES = bdev event
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
