@@ -20,6 +20,11 @@ Added boolean return value for function spdk_fs_set_cache_size to indicate its o
 
 Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesystem.
 
+### util
+
+`spdk_pipe`, a new utility for buffering data from sockets or files for parsing
+has been added. The public API is available at `include/spdk/pipe.h`.
+
 ## v19.10:
 
 ### rpc
