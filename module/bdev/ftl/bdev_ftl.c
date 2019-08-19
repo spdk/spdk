@@ -60,6 +60,8 @@ struct ftl_bdev {
 	ftl_bdev_init_fn		init_cb;
 
 	void				*init_arg;
+
+	struct spdk_thread		*thread;
 };
 
 struct ftl_io_channel {
@@ -321,6 +323,10 @@ static struct spdk_io_channel *
 bdev_ftl_get_io_channel(void *ctx)
 {
 	struct ftl_bdev *ftl_bdev = ctx;
+
+	if (ftl_bdev->thread == spdk_get_thread()) {
+		return NULL;
+	}
 
 	return spdk_get_io_channel(ftl_bdev);
 }
@@ -680,6 +686,7 @@ bdev_ftl_create(const struct ftl_bdev_init_opts *bdev_opts,
 
 	/* TODO: set threads based on config */
 	opts.core_thread = spdk_get_thread();
+	ftl_bdev->thread = spdk_get_thread();
 
 	rc = spdk_ftl_dev_init(&opts, bdev_ftl_create_cb, ftl_bdev);
 	if (rc) {
