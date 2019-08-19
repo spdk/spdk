@@ -39,6 +39,8 @@
 #include "spdk/string.h"
 #include "spdk/rpc.h"
 
+#define DEFAULT_OPTIMAL_ZONES 1
+
 struct rpc_construct_vbdev {
 	char *name;
 	char *bdev_name;
@@ -62,7 +64,7 @@ static const struct spdk_json_object_decoder rpc_construct_vbdev_decoders[] = {
 	{"name", offsetof(struct rpc_construct_vbdev, name), spdk_json_decode_string},
 	{"bdev_name", offsetof(struct rpc_construct_vbdev, bdev_name), spdk_json_decode_string},
 	{"zone_size", offsetof(struct rpc_construct_vbdev, zone_size), spdk_json_decode_uint64},
-	{"optimal_open_zones", offsetof(struct rpc_construct_vbdev, optimal_open_zones), spdk_json_decode_uint64},
+	{"optimal_open_zones", offsetof(struct rpc_construct_vbdev, optimal_open_zones), spdk_json_decode_uint64, true},
 };
 
 static void
@@ -72,6 +74,8 @@ rpc_vbdev_block_create(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_vbdev req = {NULL};
 	struct spdk_json_write_ctx *w;
 	int rc;
+
+	req.optimal_open_zones = DEFAULT_OPTIMAL_ZONES;
 
 	if (spdk_json_decode_object(params, rpc_construct_vbdev_decoders,
 				    SPDK_COUNTOF(rpc_construct_vbdev_decoders),
