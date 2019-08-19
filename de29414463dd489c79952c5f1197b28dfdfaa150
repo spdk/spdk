@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4585bafd_d71b30ad",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-19T08:41:48Z",
+      "side": 1,
+      "message": "Please insert extra tab here.",
+      "range": {
+        "startLine": 272,
+        "startChar": 22,
+        "endLine": 272,
+        "endChar": 29
+      },
+      "revId": "de29414463dd489c79952c5f1197b28dfdfaa150",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2db7a3e0_39c001dd",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-19T08:41:48Z",
+      "side": 1,
+      "message": "Will you align after \u003d by shifting others right to a tab?",
+      "revId": "de29414463dd489c79952c5f1197b28dfdfaa150",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
