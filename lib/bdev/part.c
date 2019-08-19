@@ -63,6 +63,12 @@ spdk_bdev_part_base_get_bdev(struct spdk_bdev_part_base *part_base)
 	return part_base->bdev;
 }
 
+char *
+spdk_bdev_part_base_get_bdev_name(struct spdk_bdev_part_base *part_base)
+{
+	return part_base->bdev->name;
+}
+
 struct spdk_bdev_desc *
 spdk_bdev_part_base_get_desc(struct spdk_bdev_part_base *part_base)
 {
