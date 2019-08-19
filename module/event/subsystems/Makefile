@@ -34,7 +34,12 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev copy iscsi nbd net nvmf scsi vmd
+DIRS-y += bdev copy iscsi net nvmf scsi vmd
+
+ifeq ($(OS),Linux)
+DIRS-y += nbd
+endif
+
 DIRS-$(CONFIG_VHOST) += vhost
 
 .PHONY: all clean $(DIRS-y)
