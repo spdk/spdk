@@ -876,6 +876,8 @@ struct spdk_bdev_part_base;
  */
 struct spdk_bdev *spdk_bdev_part_base_get_bdev(struct spdk_bdev_part_base *part_base);
 
+char *spdk_bdev_part_base_get_bdev_name(struct spdk_bdev_part_base *part_base);
+
 /**
  * Returns a pointer to the spdk_bdev_descriptor associated with an spdk_bdev_part_base
  *
