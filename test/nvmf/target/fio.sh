@@ -53,7 +53,7 @@ sleep 3
 
 $rpc_py destroy_raid_bdev "raid0"
 for malloc_bdev in $malloc_bdevs; do
-	$rpc_py delete_malloc_bdev "$malloc_bdev"
+	$rpc_py bdev_malloc_delete "$malloc_bdev"
 done
 
 fio_status=0

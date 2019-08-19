@@ -663,7 +663,7 @@ previous behavior that didn't differentiate between hotremove and
 planned shutdown.
 
 The `delete_bdev` RPC is now deprecated. Users should instead use the specific deletion RPC
-for the bdev type to be removed (i.e. delete_malloc_bdev).
+for the bdev type to be removed (i.e. bdev_malloc_delete).
 
 Added support for separate bandwidth rate limits for read and write to QoS in bdev layer.
 
