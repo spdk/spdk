@@ -109,6 +109,7 @@ DEPDIRS-bdev_gpt := bdev conf json log thread util
 
 DEPDIRS-bdev_lvol := $(BDEV_DEPS) lvol blob blob_bdev
 DEPDIRS-bdev_rpc := $(BDEV_DEPS)
+DEPDIRS-bdev_zone_block := bdev log
 
 DEPDIRS-bdev_error := $(BDEV_DEPS_CONF)
 DEPDIRS-bdev_malloc := $(BDEV_DEPS_CONF) copy
