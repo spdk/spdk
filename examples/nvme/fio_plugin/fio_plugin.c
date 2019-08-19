@@ -780,12 +780,22 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	fio_req->fio_qpair = fio_qpair;
 
 	block_size = spdk_nvme_ns_get_extended_sector_size(ns);
+	if (fio_qpair->io_flags & g_spdk_pract_flag) {
+		/* PRACT=1 means I/O doesn't transfer PI though it may be checked */
+		block_size = spdk_nvme_ns_get_sector_size(ns);
+	}
 
 	lba = io_u->offset / block_size;
 	lba_count = io_u->xfer_buflen / block_size;
 
+	/* These should be set regardless of PI as they are what the caller wants */
+	dif_ctx->dif_flags = fio_qpair->io_flags;
+	dif_ctx->apptag_mask = g_spdk_apptag_mask;
+	dif_ctx->app_tag = g_spdk_apptag;
+
 	/* TODO: considering situations that fio will randomize and verify io_u */
 	if (fio_qpair->do_nvme_pi && io_u->ddir == DDIR_WRITE) {
+		/* Writes with PI need to set command fields AND correct metadata contents */
 		if (fio_qpair->extended_lba) {
 			rc = fio_extended_lba_setup_pi(fio_qpair, io_u);
 		} else {
