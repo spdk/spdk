@@ -510,6 +510,36 @@ def bdev_nvme_cuse_unregister(client, name):
     return client.call('bdev_nvme_cuse_unregister', params)
 
 
+def bdev_zone_block_create(client, name, base_bdev, zone_capacity, optimal_open_zones):
+    """Creates a virtual zone device on top of existing non-zoned bdev.
+
+    Args:
+        name: Zone device name
+        base_bdev: Base Nvme bdev name
+        zone_capacity: Surfaced zone capacity in blocks
+        optimal_open_zones: Number of zones required to reach optimal write speed (optional, default: 1)
+
+    Returns:
+        Name of created block device.
+    """
+    params = {'name': name,
+              'base_bdev': base_bdev,
+              'zone_capacity': zone_capacity,
+              'optimal_open_zones': optimal_open_zones}
+
+    return client.call('bdev_zone_block_create', params)
+
+
+def bdev_zone_block_delete(client, name):
+    """Remove block zone bdev from the system.
+
+    Args:
+        name: name of block zone bdev to delete
+    """
+    params = {'name': name}
+    return client.call('bdev_zone_block_delete', params)
+
+
 @deprecated_alias('construct_rbd_bdev')
 def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None):
     """Create a Ceph RBD block device.
