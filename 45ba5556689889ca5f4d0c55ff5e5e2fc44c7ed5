@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ea325f2_d2482b3d",
+        "filename": "test/unit/lib/nvmf/fc.c/fc_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-08-19T20:25:26Z",
+      "side": 1,
+      "message": "\"name\" is a member of target opts. Following patch should fix the issue with FC UT.\n\ndiff --git a/test/unit/lib/nvmf/fc.c/fc_ut.c b/test/unit/lib/nvmf/fc.c/fc_ut.c\nindex a8bf725..985a127 100644\n--- a/test/unit/lib/nvmf/fc.c/fc_ut.c\n+++ b/test/unit/lib/nvmf/fc.c/fc_ut.c\n@@ -264,11 +264,11 @@ static void\n create_transport_test(void)\n {\n        const struct spdk_nvmf_transport_ops *ops \u003d NULL;\n-       struct spdk_nvmf_target_opts tgt_opts \u003d { 0 };\n        struct spdk_nvmf_transport_opts opts \u003d { 0 };\n-       char tgt_name[] \u003d \"nvmf_test_tgt\";\n-\n-       opts.name \u003d tgt_name;\n+       struct spdk_nvmf_target_opts tgt_opts \u003d {\n+               .name \u003d \"nvmf_test_tgt\",\n+               .max_subsystems \u003d 0\n+       };",
+      "revId": "45ba5556689889ca5f4d0c55ff5e5e2fc44c7ed5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
