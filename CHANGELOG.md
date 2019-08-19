@@ -39,6 +39,11 @@ A new RPC `bdev_compress_get_orphans` has been added to list compress bdevs
 that were not loaded due to a missing pm metadata file. In this state they
 can only be deleted.
 
+### util
+
+`spdk_pipe`, a new utility for buffering data from sockets or files for parsing
+has been added. The public API is available at `include/spdk/pipe.h`.
+
 ## v19.07:
 
 ### ftl
