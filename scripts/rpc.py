@@ -79,9 +79,11 @@ if __name__ == "__main__":
     p.set_defaults(func=save_config)
 
     def load_config(args):
-        rpc.load_config(args.client, sys.stdin)
+        rpc.load_config(args.client, sys.stdin,
+                        include_aliases=args.include_aliases)
 
     p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and targets using JSON RPC read from stdin.""")
+    p.add_argument('-i', '--include-aliases', help='get list of RPC aliases', action='store_true')
     p.set_defaults(func=load_config)
 
     def save_subsystem_config(args):
