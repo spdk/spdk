@@ -238,6 +238,7 @@ struct spdk_nvmf_tcp_qpair {
 
 	bool					host_hdgst_enable;
 	bool					host_ddgst_enable;
+	bool					pdu_write_no;
 
 
 	/* The maximum number of I/O outstanding on this connection at one time */
@@ -772,55 +773,47 @@ spdk_nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 }
 
 static int
-spdk_nvmf_tcp_qpair_flush_pdus_internal(struct spdk_nvmf_tcp_qpair *tqpair)
+spdk_nvmf_tcp_qpair_flush_pdus(void *_tqpair);
+
+static void
+spdk_nvmf_tcp_disconnect(struct spdk_nvmf_tcp_qpair *tqpair)
 {
-	const int array_size = 32;
-	struct iovec iovs[array_size];
-	int iovcnt = 0;
-	int bytes = 0;
-	int total_length = 0;
-	uint32_t mapped_length = 0;
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconect the tqpair=%p\n", tqpair);
+	spdk_poller_unregister(&tqpair->timeout_poller);
+	spdk_nvmf_tcp_qpair_flush_pdus(tqpair);
+	spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
+}
+
+static void
+spdk_nvmf_tcp_sock_write_cb(void *cb_arg, int len)
+{
+	struct spdk_nvmf_tcp_qpair *tqpair = cb_arg;
 	struct nvme_tcp_pdu *pdu;
-	int pdu_length;
 	TAILQ_HEAD(, nvme_tcp_pdu) completed_pdus_list;
+	int pdu_length;
+	int bytes;
+	int rc;
 
-	pdu = TAILQ_FIRST(&tqpair->send_queue);
-
-	if (pdu == NULL) {
-		return 0;
-	}
-
-	/*
-	 * Build up a list of iovecs for the first few PDUs in the
-	 *  tqpair 's send_queue.
-	 */
-	while (pdu != NULL && ((array_size - iovcnt) >= (2 + (int)pdu->data_iovcnt))) {
-		iovcnt += nvme_tcp_build_iovs(&iovs[iovcnt],
-					      array_size - iovcnt,
-					      pdu,
-					      tqpair->host_hdgst_enable,
-					      tqpair->host_ddgst_enable,
-					      &mapped_length);
-		total_length += mapped_length;
-		pdu = TAILQ_NEXT(pdu, tailq);
-	}
-
-	spdk_trace_record(TRACE_TCP_FLUSH_WRITEBUF_START, 0, total_length, 0, iovcnt);
-
-	bytes = spdk_sock_writev(tqpair->sock, iovs, iovcnt);
-	if (bytes == -1) {
-		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return 1;
+	tqpair->pdu_write_no = false;
+	if (spdk_unlikely(len <= 0)) {
+		/* For connect reset issue, do not output error log */
+		if (len == -ECONNRESET) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "spdk_sock_write() failed, errno %d: %s\n",
+				      len, spdk_strerror(len));
 		} else {
-			SPDK_ERRLOG("spdk_sock_writev() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
-			return -1;
+			SPDK_ERRLOG("spdk_sock_write() failed, errno %d: %s\n",
+				    len, spdk_strerror(len));
 		}
+		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
+		goto end;
 	}
 
+	bytes = len;
 	spdk_trace_record(TRACE_TCP_FLUSH_WRITEBUF_DONE, 0, bytes, 0, 0);
-
 	pdu = TAILQ_FIRST(&tqpair->send_queue);
+	if (spdk_unlikely(!pdu)) {
+		return;
+	}
 
 	/*
 	 * Free any PDUs that were fully written.  If a PDU was only
@@ -850,7 +843,76 @@ spdk_nvmf_tcp_qpair_flush_pdus_internal(struct spdk_nvmf_tcp_qpair *tqpair)
 		spdk_nvmf_tcp_pdu_put(tqpair, pdu);
 	}
 
-	return TAILQ_EMPTY(&tqpair->send_queue) ? 0 : 1;
+	rc = TAILQ_EMPTY(&tqpair->send_queue) ? 0 : 1;
+	if (rc == 0 && tqpair->flush_poller != NULL) {
+		spdk_poller_unregister(&tqpair->flush_poller);
+	} else if (rc == 1 && tqpair->flush_poller == NULL) {
+		tqpair->flush_poller = spdk_poller_register(spdk_nvmf_tcp_qpair_flush_pdus,
+				       tqpair, 50);
+	}
+
+	return;
+end:
+	spdk_nvmf_tcp_disconnect(tqpair);
+}
+
+static int
+spdk_nvmf_tcp_qpair_flush_pdus_internal(struct spdk_nvmf_tcp_qpair *tqpair, bool sync)
+{
+	const int array_size = 32;
+	int iovcnt = 0;
+	int bytes;
+	int total_length = 0;
+	uint32_t mapped_length = 0;
+	struct nvme_tcp_pdu *pdu;
+	struct iovec iovs[32];
+
+	if (tqpair->pdu_write_no) {
+		return 0;
+	}
+
+	pdu = TAILQ_FIRST(&tqpair->send_queue);
+	if (pdu == NULL) {
+		return 0;
+	}
+
+	/*
+	 * Build up a list of iovecs for the first few PDUs in the
+	 *  tqpair 's send_queue.
+	 */
+	while (pdu != NULL && ((array_size - iovcnt) >= (2 + (int)pdu->data_iovcnt))) {
+		iovcnt += nvme_tcp_build_iovs(&iovs[iovcnt],
+					      array_size - iovcnt,
+					      pdu,
+					      tqpair->host_hdgst_enable,
+					      tqpair->host_ddgst_enable,
+					      &mapped_length);
+		total_length += mapped_length;
+		pdu = TAILQ_NEXT(pdu, tailq);
+	}
+
+	spdk_trace_record(TRACE_TCP_FLUSH_WRITEBUF_START, 0, total_length, 0, iovcnt);
+
+	if (spdk_likely(!sync)) {
+		bytes = spdk_sock_writev_async(tqpair->sock, iovs, iovcnt,
+					       spdk_nvmf_tcp_sock_write_cb, tqpair);
+	} else {
+		bytes = spdk_sock_writev(tqpair->sock, iovs, iovcnt);
+	}
+
+	if (bytes == -1) {
+		SPDK_ERRLOG("spdk_sock_writev() failed, errno %d: %s\n",
+			    errno, spdk_strerror(errno));
+		return -1;
+	}
+
+	tqpair->pdu_write_no = true;
+	if (spdk_unlikely(sync)) {
+		spdk_nvmf_tcp_sock_write_cb(tqpair, bytes);
+		return TAILQ_EMPTY(&tqpair->send_queue) ? 0 : 1;
+	}
+
+	return 0;
 }
 
 static int
@@ -859,14 +921,8 @@ spdk_nvmf_tcp_qpair_flush_pdus(void *_tqpair)
 	struct spdk_nvmf_tcp_qpair *tqpair = _tqpair;
 	int rc;
 
-	if (tqpair->state == NVME_TCP_QPAIR_STATE_RUNNING) {
-		rc = spdk_nvmf_tcp_qpair_flush_pdus_internal(tqpair);
-		if (rc == 0 && tqpair->flush_poller != NULL) {
-			spdk_poller_unregister(&tqpair->flush_poller);
-		} else if (rc == 1 && tqpair->flush_poller == NULL) {
-			tqpair->flush_poller = spdk_poller_register(spdk_nvmf_tcp_qpair_flush_pdus,
-					       tqpair, 50);
-		}
+	if (tqpair->state <= NVME_TCP_QPAIR_STATE_RUNNING) {
+		rc = spdk_nvmf_tcp_qpair_flush_pdus_internal(tqpair, false);
 	} else {
 		/*
 		 * If the tqpair state is not RUNNING, then
@@ -874,9 +930,15 @@ spdk_nvmf_tcp_qpair_flush_pdus(void *_tqpair)
 		 * empty - to make sure all data is sent before
 		 * closing the connection.
 		 */
+
+		/*
+		 * But if spdk_nvmf_tcp_qpair_flush_pdus_internal() got an
+		 * EAGAIN, stop trying to flush PDUs.
+		 */
+		errno = 0;
 		do {
-			rc = spdk_nvmf_tcp_qpair_flush_pdus_internal(tqpair);
-		} while (rc == 1);
+			rc = spdk_nvmf_tcp_qpair_flush_pdus_internal(tqpair, true);
+		} while (rc == 1 && errno == 0);
 	}
 
 	if (rc < 0 && tqpair->state < NVME_TCP_QPAIR_STATE_EXITING) {
@@ -888,7 +950,7 @@ spdk_nvmf_tcp_qpair_flush_pdus(void *_tqpair)
 		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
 	}
 
-	return -1;
+	return rc;
 }
 
 static void
@@ -2001,6 +2063,10 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 	enum nvme_tcp_pdu_recv_state prev_state;
 	uint32_t data_len;
 
+	if (spdk_unlikely(tqpair->pdu_write_no)) {
+		return rc;
+	}
+
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
 		prev_state = tqpair->recv_state;
@@ -2655,6 +2721,7 @@ spdk_nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock
 	int rc;
 
 	assert(tqpair != NULL);
+
 	rc = spdk_nvmf_tcp_sock_process(tqpair);
 
 	/* check the following two factors:
