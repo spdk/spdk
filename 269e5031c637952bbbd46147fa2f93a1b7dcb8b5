@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff98003b_9096c876",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-19T12:26:37Z",
+      "side": 1,
+      "message": "Use wraper deprecated_alias",
+      "revId": "269e5031c637952bbbd46147fa2f93a1b7dcb8b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0bd3c6d_0513570e",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-19T12:26:37Z",
+      "side": 1,
+      "message": "^",
+      "revId": "269e5031c637952bbbd46147fa2f93a1b7dcb8b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
