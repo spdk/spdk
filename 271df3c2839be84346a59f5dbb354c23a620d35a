@@ -34,6 +34,24 @@
       "revId": "271df3c2839be84346a59f5dbb354c23a620d35a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84dc4bf3_a632630d",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-19T22:19:43Z",
+      "side": 1,
+      "message": "Yeah - I think strnlen would be better for this kind of check.",
+      "parentUuid": "7d469868_50c3156f",
+      "revId": "271df3c2839be84346a59f5dbb354c23a620d35a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
