@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -430,6 +430,273 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	}
 }
 
+static struct spdk_nvmf_rdma_recv *
+create_recv(struct spdk_nvmf_rdma_qpair *rqpair, enum spdk_nvme_nvm_opcode opc)
+{
+	struct spdk_nvmf_rdma_recv *rdma_recv;
+	union nvmf_h2c_msg *cmd;
+	struct spdk_nvme_sgl_descriptor *sgl;
+
+	rdma_recv = calloc(1, sizeof(*rdma_recv));
+	rdma_recv->qpair = rqpair;
+	cmd = calloc(1, sizeof(*cmd));
+	rdma_recv->sgl[0].addr = (uintptr_t)cmd;
+	cmd->nvme_cmd.opc = opc;
+	sgl = &cmd->nvme_cmd.dptr.sgl1;
+	sgl->keyed.key = 0xEEEE;
+	sgl->address = 0xFFFF;
+	sgl->keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+	sgl->keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+	sgl->keyed.length = 1;
+
+	return rdma_recv;
+}
+
+static void
+free_recv(struct spdk_nvmf_rdma_recv *rdma_recv)
+{
+	free((void *)rdma_recv->sgl[0].addr);
+	free(rdma_recv);
+}
+
+static struct spdk_nvmf_rdma_request *
+create_req(struct spdk_nvmf_rdma_qpair *rqpair,
+	   struct spdk_nvmf_rdma_recv *rdma_recv)
+{
+	struct spdk_nvmf_rdma_request *rdma_req;
+	union nvmf_c2h_msg *cpl;
+
+	rdma_req = calloc(1, sizeof(*rdma_req));
+	rdma_req->recv = rdma_recv;
+	rdma_req->req.qpair = &rqpair->qpair;
+	rdma_req->state = RDMA_REQUEST_STATE_NEW;
+	rdma_req->data.wr.wr_id = (uintptr_t)&rdma_req->data.rdma_wr;
+	rdma_req->data.wr.sg_list = rdma_req->data.sgl;
+	cpl = calloc(1, sizeof(*cpl));
+	rdma_req->rsp.sgl[0].addr = (uintptr_t)cpl;
+	rdma_req->req.rsp = cpl;
+
+	return rdma_req;
+}
+
+static void
+free_req(struct spdk_nvmf_rdma_request *rdma_req)
+{
+	free((void *)rdma_req->rsp.sgl[0].addr);
+	free(rdma_req);
+}
+
+static void
+qpair_reset(struct spdk_nvmf_rdma_qpair *rqpair,
+	    struct spdk_nvmf_rdma_poller *poller,
+	    struct spdk_nvmf_rdma_port *port,
+	    struct spdk_nvmf_rdma_resources *resources)
+{
+	memset(rqpair, 0, sizeof(*rqpair));
+	STAILQ_INIT(&rqpair->pending_rdma_write_queue);
+	STAILQ_INIT(&rqpair->pending_rdma_read_queue);
+	rqpair->poller = poller;
+	rqpair->port = port;
+	rqpair->resources = resources;
+	rqpair->qpair.qid = 1;
+	rqpair->ibv_state = IBV_QPS_RTS;
+	rqpair->qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+	rqpair->max_send_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
+	rqpair->max_send_depth = 16;
+	rqpair->max_read_depth = 16;
+	resources->recvs_to_post.first = resources->recvs_to_post.last = NULL;
+}
+
+static void
+poller_reset(struct spdk_nvmf_rdma_poller *poller,
+	     struct spdk_nvmf_rdma_poll_group *group)
+{
+	memset(poller, 0, sizeof(*poller));
+	STAILQ_INIT(&poller->qpairs_pending_recv);
+	STAILQ_INIT(&poller->qpairs_pending_send);
+	poller->group = group;
+}
+
+static void
+test_spdk_nvmf_rdma_request_process(void)
+{
+	struct spdk_nvmf_rdma_transport rtransport = {};
+	struct spdk_nvmf_rdma_poll_group group = {};
+	struct spdk_nvmf_rdma_poller poller = {};
+	struct spdk_nvmf_rdma_port port = {};
+	struct spdk_nvmf_rdma_device device = {};
+	struct spdk_nvmf_rdma_resources resources = {};
+	struct spdk_nvmf_rdma_qpair rqpair = {};
+	struct spdk_nvmf_rdma_recv *rdma_recv;
+	struct spdk_nvmf_rdma_request *rdma_req;
+	bool progress;
+
+	STAILQ_INIT(&group.group.buf_cache);
+	STAILQ_INIT(&group.pending_data_buf_queue);
+	group.group.buf_cache_size = 0;
+	group.group.buf_cache_count = 0;
+	port.device = &device;
+	poller_reset(&poller, &group);
+	qpair_reset(&rqpair, &poller, &port, &resources);
+
+	rtransport.transport.opts = g_rdma_ut_transport_opts;
+	rtransport.transport.data_buf_pool = spdk_mempool_create("test_data_pool", 16, 128, 0, 0);
+	rtransport.data_wr_pool = spdk_mempool_create("test_wr_pool", 128,
+				  sizeof(struct spdk_nvmf_rdma_request_data),
+				  0, 0);
+	MOCK_CLEAR(spdk_mempool_get);
+
+	device.attr.device_cap_flags = 0;
+	device.map = (void *)0x0;
+	g_rdma_mr.lkey = 0xABCD;
+
+	/* Test 1: single SGL READ request */
+	rdma_recv = create_recv(&rqpair, SPDK_NVME_OPC_READ);
+	rdma_req = create_req(&rqpair, rdma_recv);
+	rqpair.current_recv_depth = 1;
+	/* NEW -> EXECUTING */
+	progress = spdk_nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_EXECUTING);
+	CU_ASSERT(rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST);
+	/* EXECUTED -> TRANSFERRING_C2H */
+	rdma_req->state = RDMA_REQUEST_STATE_EXECUTED;
+	progress = spdk_nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
+	CU_ASSERT(rdma_req->recv == NULL);
+	CU_ASSERT(rqpair.sends_to_post.first == &rdma_req->data.wr);
+	CU_ASSERT(rqpair.sends_to_post.last == &rdma_req->rsp.wr);
+	CU_ASSERT(resources.recvs_to_post.first == &rdma_recv->wr);
+	CU_ASSERT(resources.recvs_to_post.last == &rdma_recv->wr);
+	/* COMPLETED -> FREE */
+	rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+	progress = spdk_nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_FREE);
+
+	free_recv(rdma_recv);
+	free_req(rdma_req);
+	poller_reset(&poller, &group);
+	qpair_reset(&rqpair, &poller, &port, &resources);
+
+	/* Test 2: single SGL WRITE request */
+	rdma_recv = create_recv(&rqpair, SPDK_NVME_OPC_WRITE);
+	rdma_req = create_req(&rqpair, rdma_recv);
+	rqpair.current_recv_depth = 1;
+	/* NEW -> TRANSFERRING_H2C */
+	progress = spdk_nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+	CU_ASSERT(rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
+	CU_ASSERT(rqpair.sends_to_post.first == &rdma_req->data.wr);
+	CU_ASSERT(rqpair.sends_to_post.last == &rdma_req->data.wr);
+	rqpair.sends_to_post.first = rqpair.sends_to_post.last = NULL;
+	STAILQ_INIT(&poller.qpairs_pending_send);
+	/* READY_TO_EXECUTE -> EXECUTING */
+	rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
+	progress = spdk_nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_EXECUTING);
+	/* EXECUTED -> COMPLETING */
+	rdma_req->state = RDMA_REQUEST_STATE_EXECUTED;
+	progress = spdk_nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_COMPLETING);
+	CU_ASSERT(rdma_req->recv == NULL);
+	CU_ASSERT(rqpair.sends_to_post.first == &rdma_req->rsp.wr);
+	CU_ASSERT(rqpair.sends_to_post.last == &rdma_req->rsp.wr);
+	CU_ASSERT(resources.recvs_to_post.first == &rdma_recv->wr);
+	CU_ASSERT(resources.recvs_to_post.last == &rdma_recv->wr);
+	/* COMPLETED -> FREE */
+	rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+	progress = spdk_nvmf_rdma_request_process(&rtransport, rdma_req);
+	CU_ASSERT(progress == true);
+	CU_ASSERT(rdma_req->state == RDMA_REQUEST_STATE_FREE);
+
+	free_recv(rdma_recv);
+	free_req(rdma_req);
+	poller_reset(&poller, &group);
+	qpair_reset(&rqpair, &poller, &port, &resources);
+
+	/* Test 3: WRITE+WRITE ibv_send batching */
+	{
+		struct spdk_nvmf_rdma_recv *recv1, *recv2;
+		struct spdk_nvmf_rdma_request *req1, *req2;
+		recv1 = create_recv(&rqpair, SPDK_NVME_OPC_WRITE);
+		req1 = create_req(&rqpair, recv1);
+		recv2 = create_recv(&rqpair, SPDK_NVME_OPC_WRITE);
+		req2 = create_req(&rqpair, recv2);
+
+		/* WRITE 1: NEW -> TRANSFERRING_H2C */
+		rqpair.current_recv_depth = 1;
+		spdk_nvmf_rdma_request_process(&rtransport, req1);
+		CU_ASSERT(req1->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+		/* WRITE 1 is the first in batching list */
+		CU_ASSERT(rqpair.sends_to_post.first == &req1->data.wr);
+		CU_ASSERT(rqpair.sends_to_post.last == &req1->data.wr);
+
+		/* WRITE 2: NEW -> TRANSFERRING_H2C */
+		rqpair.current_recv_depth = 2;
+		spdk_nvmf_rdma_request_process(&rtransport, req2);
+		CU_ASSERT(req2->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+		/* WRITE 2 is now also in the batching list */
+		CU_ASSERT(rqpair.sends_to_post.first->next == &req2->data.wr);
+		CU_ASSERT(rqpair.sends_to_post.last == &req2->data.wr);
+
+		/* Send everything */
+		rqpair.sends_to_post.first = rqpair.sends_to_post.last = NULL;
+		STAILQ_INIT(&poller.qpairs_pending_send);
+
+		/* WRITE 1 completes before WRITE 2 has finished RDMA reading */
+		/* WRITE 1: READY_TO_EXECUTE -> EXECUTING */
+		req1->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
+		spdk_nvmf_rdma_request_process(&rtransport, req1);
+		CU_ASSERT(req1->state == RDMA_REQUEST_STATE_EXECUTING);
+		/* WRITE 1: EXECUTED -> COMPLETING */
+		req1->state = RDMA_REQUEST_STATE_EXECUTED;
+		spdk_nvmf_rdma_request_process(&rtransport, req1);
+		CU_ASSERT(req1->state == RDMA_REQUEST_STATE_COMPLETING);
+		CU_ASSERT(rqpair.sends_to_post.first == &req1->rsp.wr);
+		CU_ASSERT(rqpair.sends_to_post.last == &req1->rsp.wr);
+		rqpair.sends_to_post.first = rqpair.sends_to_post.last = NULL;
+		STAILQ_INIT(&poller.qpairs_pending_send);
+		/* WRITE 1: COMPLETED -> FREE */
+		req1->state = RDMA_REQUEST_STATE_COMPLETED;
+		spdk_nvmf_rdma_request_process(&rtransport, req1);
+		CU_ASSERT(req1->state == RDMA_REQUEST_STATE_FREE);
+
+		/* Now WRITE 2 has finished reading and completes */
+		/* WRITE 2: COMPLETED -> FREE */
+		/* WRITE 2: READY_TO_EXECUTE -> EXECUTING */
+		req2->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
+		spdk_nvmf_rdma_request_process(&rtransport, req2);
+		CU_ASSERT(req2->state == RDMA_REQUEST_STATE_EXECUTING);
+		/* WRITE 1: EXECUTED -> COMPLETING */
+		req2->state = RDMA_REQUEST_STATE_EXECUTED;
+		spdk_nvmf_rdma_request_process(&rtransport, req2);
+		CU_ASSERT(req2->state == RDMA_REQUEST_STATE_COMPLETING);
+		CU_ASSERT(rqpair.sends_to_post.first == &req2->rsp.wr);
+		CU_ASSERT(rqpair.sends_to_post.last == &req2->rsp.wr);
+		rqpair.sends_to_post.first = rqpair.sends_to_post.last = NULL;
+		STAILQ_INIT(&poller.qpairs_pending_send);
+		/* WRITE 1: COMPLETED -> FREE */
+		req2->state = RDMA_REQUEST_STATE_COMPLETED;
+		spdk_nvmf_rdma_request_process(&rtransport, req2);
+		CU_ASSERT(req2->state == RDMA_REQUEST_STATE_FREE);
+
+		free_recv(recv1);
+		free_req(req1);
+		free_recv(recv2);
+		free_req(req2);
+		poller_reset(&poller, &group);
+		qpair_reset(&rqpair, &poller, &port, &resources);
+	}
+
+	spdk_mempool_free(rtransport.transport.data_buf_pool);
+	spdk_mempool_free(rtransport.data_wr_pool);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -445,8 +712,8 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	if (
-		CU_add_test(suite, "test_parse_sgl", test_spdk_nvmf_rdma_request_parse_sgl) == NULL) {
+	if (!CU_add_test(suite, "test_parse_sgl", test_spdk_nvmf_rdma_request_parse_sgl) ||
+	    !CU_add_test(suite, "test_request_process", test_spdk_nvmf_rdma_request_process)) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
