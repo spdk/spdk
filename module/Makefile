@@ -43,6 +43,7 @@ DEPDIRS-copy :=
 DEPDIRS-sock :=
 
 DEPDIRS-bdev := blob
+DEPDIRS-event := bdev blob
 
 .PHONY: all clean $(DIRS-y)
 

@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = net.c
 LIBNAME = event_net
 
+SPDK_DEP_LIBNAMES = event net sock
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

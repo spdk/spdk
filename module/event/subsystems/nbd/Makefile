@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = nbd.c
 LIBNAME = event_nbd
 
+SPDK_DEP_LIBNAMES = event nbd
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
