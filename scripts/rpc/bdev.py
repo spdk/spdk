@@ -183,14 +183,15 @@ def bdev_malloc_create(client, num_blocks, block_size, name=None, uuid=None):
     return client.call('bdev_malloc_create', params)
 
 
-def delete_malloc_bdev(client, name):
+@deprecated_alias('delete_malloc_bdev')
+def bdev_malloc_delete(client, name):
     """Delete malloc block device.
 
     Args:
         bdev_name: name of malloc bdev to delete
     """
     params = {'name': name}
-    return client.call('delete_malloc_bdev', params)
+    return client.call('bdev_malloc_delete', params)
 
 
 @deprecated_alias('construct_null_bdev')

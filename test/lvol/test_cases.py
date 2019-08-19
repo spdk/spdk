@@ -333,7 +333,7 @@ class TestCases(object):
         fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
                                                          self.cluster_size)
         self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
         if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
             fail_count += 1
 
@@ -372,7 +372,7 @@ class TestCases(object):
                                                      lvs_size)
         self.c.bdev_lvol_delete(uuid_bdev)
         self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - call successful, return code = 0
@@ -418,7 +418,7 @@ class TestCases(object):
                 self.c.bdev_lvol_delete(uuid_bdev)
 
         self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -455,7 +455,7 @@ class TestCases(object):
 
         fail_count += self.c.bdev_lvol_delete(uuid_bdev)
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -505,8 +505,8 @@ class TestCases(object):
         fail_count += self.c.bdev_lvol_delete(uuid_bdev_2)
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store_1)
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store_2)
-        fail_count += self.c.delete_malloc_bdev(base_name_1)
-        fail_count += self.c.delete_malloc_bdev(base_name_2)
+        fail_count += self.c.bdev_malloc_delete(base_name_1)
+        fail_count += self.c.bdev_malloc_delete(base_name_2)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -569,7 +569,7 @@ class TestCases(object):
 
         self.c.bdev_lvol_delete(uuid_bdev)
         self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - first call successful
@@ -612,7 +612,7 @@ class TestCases(object):
 
         self.c.bdev_lvol_delete(uuid_bdev)
         self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected results:
         # - creating two logical volumes with the same friendly name within the same
@@ -668,7 +668,7 @@ class TestCases(object):
 
         self.c.bdev_lvol_delete(uuid_bdev)
         self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - lvol bdev should change size after resize operations
         # - calls successful, return code = 0
@@ -726,7 +726,7 @@ class TestCases(object):
 
         self.c.bdev_lvol_delete(uuid_bdev)
         self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - bdev_lvol_resize call return code != 0
@@ -757,7 +757,7 @@ class TestCases(object):
         # Check correct response bdev_lvol_get_lvstores command
         if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
             fail_count += 1
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -788,7 +788,7 @@ class TestCases(object):
         # Check correct response bdev_lvol_get_lvstores command
         if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
             fail_count += 1
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -829,7 +829,7 @@ class TestCases(object):
         # Check correct response bdev_lvol_get_lvstores command
         if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
             fail_count += 1
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -870,7 +870,7 @@ class TestCases(object):
         # Check correct response bdev_lvol_get_lvstores command
         if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
             fail_count += 1
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - call successful, return code = 0
@@ -938,7 +938,7 @@ class TestCases(object):
         self.c.bdev_lvol_delete_lvstore(uuid_store)
         if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
             fail_count += 1
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - lvol bdev should change size after resize operations
@@ -1025,7 +1025,7 @@ class TestCases(object):
                                                          self.cluster_size)
 
         # Delete malloc bdev
-        if self.c.delete_malloc_bdev(base_name) != 0:
+        if self.c.bdev_malloc_delete(base_name) != 0:
             fail_count += 1
 
         # Try to destroy lvol store. This call should fail as lvol store
@@ -1081,7 +1081,7 @@ class TestCases(object):
                                            self.lvs_name) == 0:
             fail_count += 1
         self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
         return fail_count
 
     @case_message
@@ -1115,8 +1115,8 @@ class TestCases(object):
             fail_count += 1
 
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store_1)
-        fail_count += self.c.delete_malloc_bdev(base_name_1)
-        fail_count += self.c.delete_malloc_bdev(base_name_2)
+        fail_count += self.c.bdev_malloc_delete(base_name_1)
+        fail_count += self.c.bdev_malloc_delete(base_name_2)
 
         return fail_count
 
@@ -1162,7 +1162,7 @@ class TestCases(object):
         if self.c.bdev_lvol_create(nested_lvs_uuid, nested_lbd_name, nested_size) == 0:
             fail_count += 1
 
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - second bdev_lvol_create call on nested lvol store return code != 0
@@ -1188,7 +1188,7 @@ class TestCases(object):
         fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, uuid_store,
                                                          self.cluster_size)
         # Delete malloc bdev
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
         #  Check response bdev_lvol_get_lvstores command
         if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
             fail_count += 1
@@ -1256,7 +1256,7 @@ class TestCases(object):
             fail_count += 1
 
         # Delete malloc bdev
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
         # - no other operation fails
@@ -1316,7 +1316,7 @@ class TestCases(object):
             fail_count += 1
 
         # Delete malloc bdev
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - bdev_lvol_get_lvstores: response should be of no value after destroyed lvol store
         # - no other operation fails
@@ -1364,7 +1364,7 @@ class TestCases(object):
         snapshot_bdev2 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name2)
 
         # Delete malloc bdev
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         #  Check response bdev_lvol_get_lvstores command
         if self.c.check_bdev_lvol_get_lvstores("", "", "") == 1:
@@ -1394,7 +1394,7 @@ class TestCases(object):
                                                     (self.total_size * 1024 * 1024) + 1) == 0
         if self.c.check_bdev_lvol_get_lvstores(base_name, lvol_uuid) == 0:
             fail_count += 1
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - return code != 0
@@ -1418,7 +1418,7 @@ class TestCases(object):
         # Verify that lvol store was not created
         if self.c.check_bdev_lvol_get_lvstores(base_name, lvol_uuid) == 0:
             fail_count += 1
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - construct lvol store return code != 0
@@ -1439,7 +1439,7 @@ class TestCases(object):
         # Construct lvol store with clear method 'none'
         lvol_uuid = self.c.bdev_lvol_create_lvstore(base_name, self.lvs_name, clear_method="none")
         fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, lvol_uuid)
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Create malloc bdev
         base_name = self.c.bdev_malloc_create(self.total_size,
@@ -1447,7 +1447,7 @@ class TestCases(object):
         # Construct lvol store with clear method 'unmap'
         lvol_uuid = self.c.bdev_lvol_create_lvstore(base_name, self.lvs_name, clear_method="unmap")
         fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, lvol_uuid)
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Create malloc bdev
         base_name = self.c.bdev_malloc_create(self.total_size,
@@ -1455,7 +1455,7 @@ class TestCases(object):
         # Construct lvol store with clear method 'write_zeroes'
         lvol_uuid = self.c.bdev_lvol_create_lvstore(base_name, self.lvs_name, clear_method="write_zeroes")
         fail_count += self.c.check_bdev_lvol_get_lvstores(base_name, lvol_uuid)
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - construct lvol store return code != 0
@@ -1536,7 +1536,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # destroy malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
@@ -1594,7 +1594,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # destroy malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
@@ -1636,7 +1636,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # destroy malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - verification ends with success
@@ -1708,7 +1708,7 @@ class TestCases(object):
 
         self.c.bdev_lvol_delete(uuid_bdev)
         self.c.bdev_lvol_delete_lvstore(uuid_store)
-        self.c.delete_malloc_bdev(base_name)
+        self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -1781,7 +1781,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # destroy malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
@@ -1839,7 +1839,7 @@ class TestCases(object):
         # destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # destroy malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
@@ -2165,7 +2165,7 @@ class TestCases(object):
         # Destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # Delete malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2240,7 +2240,7 @@ class TestCases(object):
         # Destroy snapshot
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # Delete malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2298,7 +2298,7 @@ class TestCases(object):
         # Destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # Delete malloc bdevs
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2343,7 +2343,7 @@ class TestCases(object):
         # Destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # Delete malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2405,7 +2405,7 @@ class TestCases(object):
         # Delete lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # Destroy malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2477,7 +2477,7 @@ class TestCases(object):
         # Destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # Delete malloc
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2568,7 +2568,7 @@ class TestCases(object):
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
 
         # Delete malloc
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2658,7 +2658,7 @@ class TestCases(object):
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
 
         # Delete malloc
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2728,7 +2728,7 @@ class TestCases(object):
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
 
         # Delete malloc
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2831,7 +2831,7 @@ class TestCases(object):
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
 
         # Delete malloc
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2895,7 +2895,7 @@ class TestCases(object):
         # Destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # Delete malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -2973,7 +2973,7 @@ class TestCases(object):
         # Destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # Delete malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -3094,7 +3094,7 @@ class TestCases(object):
         # Destroy lvol store
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
         # Delete malloc bdev
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -3177,7 +3177,7 @@ class TestCases(object):
         for bdev in new_bdev_aliases:
             fail_count += self.c.bdev_lvol_delete(bdev)
         fail_count += self.c.bdev_lvol_delete_lvstore(new_lvs_name)
-        fail_count += self.c.delete_malloc_bdev(base_name)
+        fail_count += self.c.bdev_malloc_delete(base_name)
 
         # Expected results:
         # - lvol store and lvol bdevs correctly created
@@ -3296,8 +3296,8 @@ class TestCases(object):
             fail_count += self.c.bdev_lvol_delete(lvol_uuid)
         fail_count += self.c.bdev_lvol_delete_lvstore(lvs_uuid_1)
         fail_count += self.c.bdev_lvol_delete_lvstore(lvs_uuid_2)
-        fail_count += self.c.delete_malloc_bdev(base_bdev_1)
-        fail_count += self.c.delete_malloc_bdev(base_bdev_2)
+        fail_count += self.c.bdev_malloc_delete(base_bdev_1)
+        fail_count += self.c.bdev_malloc_delete(base_bdev_2)
 
         # Expected results:
         # - bdev_lvol_rename_lvstore return code != 0; not possible to rename to already
@@ -3370,7 +3370,7 @@ class TestCases(object):
         fail_count += self.c.bdev_lvol_delete(bdev_uuid_1)
         fail_count += self.c.bdev_lvol_delete(bdev_uuid_2)
         fail_count += self.c.bdev_lvol_delete_lvstore(lvs_uuid)
-        fail_count += self.c.delete_malloc_bdev(base_bdev)
+        fail_count += self.c.bdev_malloc_delete(base_bdev)
 
         # Expected results:
         # - bdev_lvol_rename return code != 0; not possible to rename to already

@@ -31,7 +31,7 @@ def get_bdev_name(bdev):
 
 
 def get_bdev_destroy_method(bdev):
-    destroy_method_map = {'bdev_malloc_create': "delete_malloc_bdev",
+    destroy_method_map = {'bdev_malloc_create': "bdev_malloc_delete",
                           'bdev_null_create': "bdev_null_delete",
                           'construct_rbd_bdev': "delete_rbd_bdev",
                           'bdev_pmem_create': "bdev_pmem_delete",
