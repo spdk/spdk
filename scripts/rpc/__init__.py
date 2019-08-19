@@ -32,7 +32,7 @@ def wait_subsystem_init(client):
 
 
 @deprecated_alias("get_rpc_methods")
-def rpc_get_methods(client, current=None):
+def rpc_get_methods(client, current=None, include_aliases=None):
     """Get list of supported RPC methods.
     Args:
         current: Get list of RPC methods only callable in the current state.
@@ -41,6 +41,8 @@ def rpc_get_methods(client, current=None):
 
     if current:
         params['current'] = current
+    if include_aliases:
+        params['include_aliases'] = include_aliases
 
     return client.call('rpc_get_methods', params)
 
