@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = vbdev_zone_block.c
+C_SRCS = vbdev_zone_block.c vbdev_zone_block_rpc.c
 LIBNAME = bdev_zone_block
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
