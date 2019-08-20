@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b56efaa2_1f760977",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 801,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-20T06:59:01Z",
+      "side": 1,
+      "message": "I think you are right, but we can add this feature more smoothly.\n\nfio_extended_lba_setup_pi() contains the initialization for dif_ctx and dif generation, I think we should break the function into 2 parts, dif_ctx initialization and dif generation, the first part should when fio_qpair-\u003eextended_lba is true.",
+      "revId": "bcf8586706c6fbce19e253b633fd6d8a12745fd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
