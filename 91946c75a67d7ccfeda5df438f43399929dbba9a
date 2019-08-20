@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "721f00f8_91e64743",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:08:11Z",
+      "side": 1,
+      "message": "This wording is a bit off.",
+      "revId": "91946c75a67d7ccfeda5df438f43399929dbba9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b27c913_f105e342",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:08:11Z",
+      "side": 1,
+      "message": "this is a bit of a nit - but the function name doesn\u0027t really match the return type\n\nsomething like compress_has_orphan(const char *name) might be better",
+      "revId": "91946c75a67d7ccfeda5df438f43399929dbba9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c9dbece_6a30a7ec",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:08:11Z",
+      "side": 1,
+      "message": "comp bdev \u0027%s\u0027 is not an orphan\n\n(i.e. it may exist, but just isn\u0027t an orphan)",
+      "revId": "91946c75a67d7ccfeda5df438f43399929dbba9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b1405c8_92c60f09",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:08:11Z",
+      "side": 1,
+      "message": "would this be simpler?\n\nif (comp_bdev-\u003eorphaned) {\n  spdk_json_write_string(w, compress_get_name(comp_bdev));\n}",
+      "revId": "91946c75a67d7ccfeda5df438f43399929dbba9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
