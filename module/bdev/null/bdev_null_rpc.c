@@ -63,8 +63,8 @@ static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 };
 
 static void
-spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
-			     const struct spdk_json_val *params)
+spdk_rpc_bdev_null_create(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct rpc_construct_null req = {};
 	struct spdk_json_write_ctx *w;
@@ -117,7 +117,7 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 	opts.block_size = req.block_size;
 	opts.md_size = req.md_size;
 	opts.md_interleave = true;
-	rc = create_null_bdev(&bdev, &opts);
+	rc = bdev_null_create(&bdev, &opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -132,7 +132,8 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_construct_null(&req);
 }
-SPDK_RPC_REGISTER("construct_null_bdev", spdk_rpc_construct_null_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_null_create", spdk_rpc_bdev_null_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_null_create, construct_null_bdev)
 
 struct rpc_delete_null {
 	char *name;
@@ -149,7 +150,7 @@ static const struct spdk_json_object_decoder rpc_delete_null_decoders[] = {
 };
 
 static void
-_spdk_rpc_delete_null_bdev_cb(void *cb_arg, int bdeverrno)
+_spdk_rpc_bdev_null_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
@@ -159,7 +160,7 @@ _spdk_rpc_delete_null_bdev_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_delete_null_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_null_delete(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_delete_null req = {NULL};
@@ -179,7 +180,7 @@ spdk_rpc_delete_null_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	delete_null_bdev(bdev, _spdk_rpc_delete_null_bdev_cb, request);
+	bdev_null_delete(bdev, _spdk_rpc_bdev_null_delete_cb, request);
 
 	free_rpc_delete_null(&req);
 
@@ -188,4 +189,5 @@ spdk_rpc_delete_null_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_delete_null(&req);
 }
-SPDK_RPC_REGISTER("delete_null_bdev", spdk_rpc_delete_null_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_null_delete", spdk_rpc_bdev_null_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_null_delete, delete_null_bdev)
