@@ -478,7 +478,7 @@ class SPDKTarget(Target):
 
     def spdk_tgt_add_nullblock(self):
         self.log_print("Adding null block bdev to config via RPC")
-        rpc.bdev.construct_null_bdev(self.client, 102400, 4096, "Nvme0n1")
+        rpc.bdev.bdev_null_create(self.client, 102400, 4096, "Nvme0n1")
         self.log_print("SPDK Bdevs configuration:")
         rpc.client.print_dict(rpc.bdev.get_bdevs(self.client))
 
