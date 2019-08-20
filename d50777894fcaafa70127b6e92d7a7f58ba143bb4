@@ -70,6 +70,30 @@
       "revId": "d50777894fcaafa70127b6e92d7a7f58ba143bb4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8b5a500_2c1b491f",
+        "filename": "test/unit/lib/nvmf/fc.c/fc_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1015300
+      },
+      "writtenOn": "2019-08-20T00:09:45Z",
+      "side": 1,
+      "message": "Notices this too. FC UT is covered as spdk_nvmf_tgt_create() overwrites \u00270\u0027 with SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS. My guess is the original developer did not stress subsystem and namespace limits assuming it is covered in respective modules or rdma transport. However we do have max subsystem and max namespace tests in CI test suite.",
+      "parentUuid": "8d5eec8b_8ba02a19",
+      "range": {
+        "startLine": 273,
+        "startChar": 1,
+        "endLine": 273,
+        "endChar": 43
+      },
+      "revId": "d50777894fcaafa70127b6e92d7a7f58ba143bb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
