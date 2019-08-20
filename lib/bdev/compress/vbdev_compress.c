@@ -1461,16 +1461,20 @@ error_bdev_name:
 }
 
 void
-bdev_compress_delete(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
+bdev_compress_delete(const char *name, spdk_delete_compress_complete cb_fn, void *cb_arg)
 {
 	struct vbdev_compress *comp_bdev = NULL;
 
-	if (!bdev || bdev->module != &compress_if) {
+	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
+		if (strcmp(name, comp_bdev->comp_bdev.name) == 0) {
+			break;
+		}
+	}
+
+	if (comp_bdev == NULL) {
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
-
-	comp_bdev = SPDK_CONTAINEROF(bdev, struct vbdev_compress, comp_bdev);
 
 	/* Save these for after the vol is destroyed. */
 	comp_bdev->delete_cb_fn = cb_fn;
