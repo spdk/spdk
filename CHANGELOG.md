@@ -25,6 +25,12 @@ connections is moving to a more dynamic model.
 The `bdev_delay_update_latency` has been added to allow users to update
 a latency value for a given delay bdev.
 
+### compress bdev
+
+A new RPC `bdev_compress_get_orphans` has been added to list compress bdevs
+that were not loaded due to a missing pm metadata file. In this state they
+can only be deleted.
+
 ## v19.07:
 
 ### ftl
