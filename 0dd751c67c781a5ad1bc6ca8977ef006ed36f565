@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b245692_2e9c66ed",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:54:55Z",
+      "side": 1,
+      "message": "could we reduce the changes in this file by always checking first if the tgt exists?\n\nthen you could create a helper function that calls spdk_nvmf_get_tgt(), sends an error response if it doesn\u0027t exist and return the tgt pointer or NULL\n\nthen each RPC function can immediately return if it returned NULL, without having to worry about freeing requests etc that may be have been parsed",
+      "revId": "0dd751c67c781a5ad1bc6ca8977ef006ed36f565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
