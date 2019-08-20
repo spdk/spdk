@@ -189,7 +189,8 @@ def delete_malloc_bdev(client, name):
     return client.call('delete_malloc_bdev', params)
 
 
-def construct_null_bdev(client, num_blocks, block_size, name, uuid=None):
+@deprecated_alias('construct_null_bdev')
+def bdev_null_create(client, num_blocks, block_size, name, uuid=None):
     """Construct a null block device.
 
     Args:
@@ -205,17 +206,18 @@ def construct_null_bdev(client, num_blocks, block_size, name, uuid=None):
               'block_size': block_size}
     if uuid:
         params['uuid'] = uuid
-    return client.call('construct_null_bdev', params)
+    return client.call('bdev_null_create', params)
 
 
-def delete_null_bdev(client, name):
+@deprecated_alias('delete_null_bdev')
+def bdev_null_delete(client, name):
     """Remove null bdev from the system.
 
     Args:
         name: name of null bdev to delete
     """
     params = {'name': name}
-    return client.call('delete_null_bdev', params)
+    return client.call('bdev_null_delete', params)
 
 
 def get_raid_bdevs(client, category):
