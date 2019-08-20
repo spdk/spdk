@@ -1306,7 +1306,9 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 			goto nomem;
 		}
 
-		fc_req->req.iov[i].iov_base = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
+		fc_req->req.iov[i].iov_base = (void *)((uintptr_t)((char *)buf +
+						       NVMF_DATA_BUFFER_MASK) &
+						       ~NVMF_DATA_BUFFER_MASK);
 		fc_req->req.iov[i].iov_len  = spdk_min(length,
 						       fc_transport->transport.opts.io_unit_size);
 		fc_req->req.iovcnt++;
@@ -1861,7 +1863,6 @@ nvmf_fc_opts_init(struct spdk_nvmf_transport_opts *opts)
 static struct spdk_nvmf_transport *
 nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 {
-	size_t cache_size;
 	uint32_t sge_count;
 
 	SPDK_INFOLOG(SPDK_LOG_NVMF_FC, "*** FC Transport Init ***\n"
@@ -1908,12 +1909,10 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	/* Create a databuff pool */
-	cache_size = (opts->num_shared_buffers / 2) / spdk_env_get_core_count();
-	cache_size = spdk_min(cache_size, SPDK_MEMPOOL_DEFAULT_CACHE_SIZE);
-
 	g_nvmf_fc_transport->data_buff_pool = spdk_mempool_create("spdk_nvmf_fc_data_buff",
 					      opts->num_shared_buffers,
-					      opts->io_unit_size + 512, cache_size,
+					      opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
+					      SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					      SPDK_ENV_SOCKET_ID_ANY);
 
 	if (!g_nvmf_fc_transport->data_buff_pool) {
