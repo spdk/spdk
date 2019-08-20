@@ -245,6 +245,24 @@
       "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8da2b2e5_73e8a3fd",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-20T18:04:22Z",
+      "side": 1,
+      "message": "From a few comments up:\n\n\"This only \"kicks\" the poller if the whole call to epoll found nothing. What if a user sent a burst of commands on one socket, some of which were queued up for a data buffer, and then consistently kept other sockets busy? Wouldn\u0027t that leave the first socket stuck? I think we need to find a way to trigger calling the poller specifically when a request gets a data buffer after having been queued for one.\"",
+      "parentUuid": "6e2281c2_d789c393",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
