@@ -202,7 +202,7 @@ bdev_null_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "construct_null_bdev");
+	spdk_json_write_named_string(w, "method", "bdev_null_create");
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);
@@ -227,7 +227,7 @@ static const struct spdk_bdev_fn_table null_fn_table = {
 };
 
 int
-create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts)
+bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts)
 {
 	struct null_bdev *null_disk;
 	uint32_t data_block_size;
@@ -323,7 +323,7 @@ create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 }
 
 void
-delete_null_bdev(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn, void *cb_arg)
+bdev_null_delete(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn, void *cb_arg)
 {
 	if (!bdev || bdev->module != &null_if) {
 		cb_fn(cb_arg, -ENODEV);
@@ -480,7 +480,7 @@ bdev_null_initialize(void)
 		opts.md_interleave = true;
 		opts.dif_type = dif_type;
 		opts.dif_is_head_of_md = false;
-		rc = create_null_bdev(&bdev, &opts);
+		rc = bdev_null_create(&bdev, &opts);
 		if (rc) {
 			SPDK_ERRLOG("Could not create null bdev\n");
 			goto end;

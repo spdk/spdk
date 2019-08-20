@@ -324,7 +324,7 @@ class UINullBdev(UIBdev):
         UIBdev.__init__(self, "null", parent)
 
     def delete(self, name):
-        self.get_root().delete_null_bdev(name=name)
+        self.get_root().bdev_null_delete(name=name)
 
     def ui_command_create(self, name, size, block_size, uuid=None):
         """
@@ -341,7 +341,7 @@ class UINullBdev(UIBdev):
         size = self.ui_eval_param(size, "number", None)
         block_size = self.ui_eval_param(block_size, "number", None)
         num_blocks = size * 1024 * 1024 // block_size
-        ret_name = self.get_root().create_null_bdev(num_blocks=num_blocks,
+        ret_name = self.get_root().bdev_null_create(num_blocks=num_blocks,
                                                     block_size=block_size,
                                                     name=name, uuid=uuid)
         self.shell.log.info(ret_name)

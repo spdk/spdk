@@ -294,7 +294,7 @@ Example response:
     "apply_nvme_firmware",
     "delete_nvme_controller",
     "construct_nvme_bdev",
-    "construct_null_bdev",
+    "bdev_null_create",
     "delete_malloc_bdev",
     "bdev_malloc_create",
     "delete_ftl_bdev",
@@ -1231,7 +1231,7 @@ Example response:
 }
 ~~~
 
-## construct_null_bdev {#rpc_construct_null_bdev}
+## bdev_null_create {#rpc_bdev_null_create}
 
 Construct @ref bdev_config_null
 
@@ -1267,7 +1267,7 @@ Example request:
     "dif_is_head_of_md": true
   },
   "jsonrpc": "2.0",
-  "method": "construct_null_bdev",
+  "method": "bdev_null_create",
   "id": 1
 }
 ~~~
@@ -1282,7 +1282,7 @@ Example response:
 }
 ~~~
 
-## delete_null_bdev {#rpc_delete_null_bdev}
+## bdev_null_delete {#rpc_bdev_null_delete}
 
 Delete @ref bdev_config_null.
 
@@ -1302,7 +1302,7 @@ Example request:
     "name": "Null0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_null_bdev",
+  "method": "bdev_null_delete",
   "id": 1
 }
 ~~~
