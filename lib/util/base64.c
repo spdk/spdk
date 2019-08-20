@@ -35,6 +35,10 @@
 #include "spdk/endian.h"
 #include "spdk/base64.h"
 
+#ifdef __aarch64__
+#include "base64_neon.c"
+#endif
+
 #define BASE64_ENC_BITMASK 0x3FUL
 #define BASE64_PADDING_CHAR '='
 
@@ -97,6 +101,10 @@ _spdk_base64_encode(char *dst, const char *enc_table, const void *src, size_t sr
 		return -EINVAL;
 	}
 
+#ifdef __aarch64__
+	_spdk_base64_encode_neon64(&dst, enc_table, &src, &src_len);
+#endif
+
 	while (src_len >= 4) {
 		raw_u32 = from_be32(src);
 
@@ -140,10 +148,16 @@ spdk_base64_urlsafe_encode(char *dst, const void *src, size_t src_len)
 	return _spdk_base64_encode(dst, base64_urfsafe_enc_table, src, src_len);
 }
 
+#ifdef __aarch64__
+static int
+_spdk_base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table,
+		    const uint8_t *dec_table_opt, const char *src)
+#else
 static int
 _spdk_base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const char *src)
+#endif
 {
-	size_t src_strlen, dst_len;
+	size_t src_strlen;
 	size_t tail_len = 0;
 	const uint8_t *src_in;
 	uint32_t tmp[4];
@@ -173,8 +187,18 @@ _spdk_base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const
 		return -EINVAL;
 	}
 
-	dst_len = spdk_base64_get_decoded_len(src_strlen);
+	if (_dst_len) {
+		*_dst_len = spdk_base64_get_decoded_len(src_strlen);
+	}
 	src_in = (const uint8_t *) src;
+
+#ifdef __aarch64__
+	_spdk_base64_decode_neon64(&dst, dec_table_opt, &src_in, &src_strlen);
+
+	if (src_strlen == 0) {
+		return 0;
+	}
+#endif
 
 	/* space of dst can be used by to_be32 */
 	while (src_strlen > 4) {
@@ -207,22 +231,26 @@ _spdk_base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const
 	to_be32(&tmp[3], tmp[3] << 8 | tmp[2] << 14 | tmp[1] << 20 | tmp[0] << 26);
 	memcpy(dst, (uint8_t *)&tmp[3], tail_len);
 
-	/* Assign pointers */
-	if (_dst_len) {
-		*_dst_len = dst_len;
-	}
-
 	return 0;
 }
 
 int
 spdk_base64_decode(void *dst, size_t *dst_len, const char *src)
 {
+#ifdef __aarch64__
+	return _spdk_base64_decode(dst, dst_len, base64_dec_table, base64_dec_table_neon64, src);
+#else
 	return _spdk_base64_decode(dst, dst_len, base64_dec_table, src);
+#endif
 }
 
 int
 spdk_base64_urlsafe_decode(void *dst, size_t *dst_len, const char *src)
 {
+#ifdef __aarch64__
+	return _spdk_base64_decode(dst, dst_len, base64_urlsafe_dec_table, base64_urlsafe_dec_table_neon64,
+				   src);
+#else
 	return _spdk_base64_decode(dst, dst_len, base64_urlsafe_dec_table, src);
+#endif
 }
