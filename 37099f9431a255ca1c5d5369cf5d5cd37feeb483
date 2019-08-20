@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "66dff256_077e6399",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-20T21:15:26Z",
+      "side": 1,
+      "message": "in the orphaned case the lock was never initialized.  Orphaned comp bdevs don\u0027t go through the entire claim() function, they only do the things required in order to support deletion. Are you suggesting we init the lock in this path even though it won\u0027t get used?",
+      "parentUuid": "a025981a_01400275",
+      "revId": "37099f9431a255ca1c5d5369cf5d5cd37feeb483",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "14b02177_fde47c75",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "c843ada5_64456b99",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-20T21:15:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "14b02177_fde47c75",
+      "revId": "37099f9431a255ca1c5d5369cf5d5cd37feeb483",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10702c50_8d8ec931",
         "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
         "patchSetId": 3
@@ -50,6 +86,24 @@
       "revId": "37099f9431a255ca1c5d5369cf5d5cd37feeb483",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdef9f97_0a83c8b7",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-20T21:15:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "10702c50_8d8ec931",
+      "revId": "37099f9431a255ca1c5d5369cf5d5cd37feeb483",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
