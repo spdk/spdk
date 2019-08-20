@@ -54,6 +54,21 @@ def set_compress_pmd(client, pmd):
     return client.call('set_compress_pmd', params)
 
 
+def bdev_compress_get_orphans(client, name=None):
+    """Get a list of comp bdevs that do not have a pmem file (aka orphaned).
+
+    Args:
+        name: comp bdev name to query (optional; if omitted, query all comp bdevs)
+
+    Returns:
+        List of comp bdev names.
+    """
+    params = {}
+    if name:
+        params['name'] = name
+    return client.call('bdev_compress_get_orphans', params)
+
+
 def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
     """Construct a crypto virtual block device.
 
