@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d4adb2a_e1e0d9e8",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T22:02:33Z",
+      "side": 1,
+      "message": "debug_flags is probably better than nvme_debug",
+      "revId": "990666c2b6658492e69093ba45bbc8fc058cf409",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8cfbad9_b0372631",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T22:02:33Z",
+      "side": 1,
+      "message": "This seems to duplicate lines 413-427 below.  413-427 seems correct - it looks at ctrlr-\u003envme_debug while this looks at ctrlr-\u003eflags which is different.",
+      "revId": "990666c2b6658492e69093ba45bbc8fc058cf409",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
