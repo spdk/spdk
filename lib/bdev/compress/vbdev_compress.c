@@ -122,6 +122,7 @@ struct vbdev_compress {
 	struct spdk_reduce_vol		*vol;		/* the reduce volume */
 	spdk_delete_compress_complete	delete_cb_fn;
 	void				*delete_cb_arg;
+	bool				orphaned;	/* base bdev claimed but comp_bdev not registered */
 	TAILQ_HEAD(, vbdev_comp_op)	queued_comp_ops;
 	TAILQ_ENTRY(vbdev_compress)	link;
 };
@@ -836,7 +837,12 @@ vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
 		spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 		spdk_bdev_close(comp_bdev->base_desc);
 		comp_bdev->vol = NULL;
-		spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
+		if (comp_bdev->orphaned == false) {
+			spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
+		} else {
+			comp_bdev->delete_cb_fn(comp_bdev->delete_cb_arg, 0);
+			_device_unregister_cb(comp_bdev);
+		}
 	}
 }
 
@@ -851,8 +857,13 @@ _reduce_destroy_cb(void *ctx, int reduce_errno)
 
 	comp_bdev->vol = NULL;
 	spdk_put_io_channel(comp_bdev->base_ch);
-	spdk_bdev_unregister(&comp_bdev->comp_bdev, comp_bdev->delete_cb_fn,
-			     comp_bdev->delete_cb_arg);
+	if (comp_bdev->orphaned == false) {
+		spdk_bdev_unregister(&comp_bdev->comp_bdev, comp_bdev->delete_cb_fn,
+				     comp_bdev->delete_cb_arg);
+	} else {
+		vbdev_compress_destruct_cb((void *)comp_bdev, 0);
+	}
+
 }
 
 /* Called by reduceLib after performing unload vol actions */
@@ -1113,6 +1124,7 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 		return NULL;
 	}
 
+	meta_ctx->drv_name = "None";
 	meta_ctx->base_bdev = bdev;
 	meta_ctx->backing_dev.unmap = _comp_reduce_unmap;
 	meta_ctx->backing_dev.readv = _comp_reduce_readv;
@@ -1132,7 +1144,6 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 static bool
 _set_pmd(struct vbdev_compress *comp_dev)
 {
-	comp_dev->drv_name = "None";
 	if (g_opts == COMPRESS_PMD_AUTO) {
 		if (g_qat_available) {
 			comp_dev->drv_name = QAT_PMD;
@@ -1490,7 +1501,11 @@ bdev_compress_delete(const char *name, spdk_delete_compress_complete cb_fn, void
 	comp_bdev->delete_cb_arg = cb_arg;
 
 	/* Tell reducelib that we're done with this volume. */
-	spdk_reduce_vol_unload(comp_bdev->vol, delete_vol_unload_cb, comp_bdev);
+	if (comp_bdev->orphaned == false) {
+		spdk_reduce_vol_unload(comp_bdev->vol, delete_vol_unload_cb, comp_bdev);
+	} else {
+		delete_vol_unload_cb(comp_bdev, 0);
+	}
 }
 
 /* Callback from reduce for then load is complete. We'll pass the vbdev_comp struct
@@ -1501,19 +1516,54 @@ static void
 vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
 	struct vbdev_compress *meta_ctx = cb_arg;
+	int rc;
 
 	/* Done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
 	spdk_bdev_close(meta_ctx->base_desc);
 	meta_ctx->base_desc = NULL;
 
-	if (reduce_errno != 0) {
+	if (reduce_errno != 0 && reduce_errno != -ENOENT) {
 		/* This error means it is not a compress disk. */
 		if (reduce_errno != -EILSEQ) {
 			SPDK_ERRLOG("for vol %s, error %u\n",
 				    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
 		}
 		free(meta_ctx);
+		spdk_bdev_module_examine_done(&compress_if);
+		return;
+	}
+
+	/* this status means that the vol could not be loaded because
+	 * the pmem file can't be found.
+	 */
+	if (reduce_errno == -ENOENT) {
+		if (_set_compbdev_name(meta_ctx)) {
+			goto err;
+		}
+
+		/* We still want to open and claim the backing device to protect the data until
+		 * either the pm metadata file is reocvered or the comp bdev is deleted.
+		 */
+		rc = spdk_bdev_open(meta_ctx->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
+				    meta_ctx->base_bdev, &meta_ctx->base_desc);
+		if (rc) {
+			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
+			goto err;
+		}
+
+		meta_ctx->comp_bdev.module = &compress_if;
+		pthread_mutex_init(&meta_ctx->reduce_lock, NULL);
+		rc = spdk_bdev_module_claim_bdev(meta_ctx->base_bdev, meta_ctx->base_desc,
+						 meta_ctx->comp_bdev.module);
+		if (rc) {
+			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(meta_ctx->base_bdev));
+			goto err;
+		}
+
+		meta_ctx->orphaned = true;
+		TAILQ_INSERT_TAIL(&g_vbdev_comp, meta_ctx, link);
+err:
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
 	}
