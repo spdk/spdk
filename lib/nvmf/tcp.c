@@ -55,7 +55,7 @@
 #define NVMF_TCP_PDU_MAX_C2H_DATA_SIZE	131072
 #define NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM  64  /* Maximal c2h_data pdu number for ecah tqpair */
 #define SPDK_NVMF_TCP_DEFAULT_MAX_SOCK_PRIORITY 6
-#define SPDK_NVMF_TCP_DEFUALT_PDU_RECV_BUF_SIZE 8192
+#define SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR 4
 
 /* spdk nvmf related structure */
 enum spdk_nvmf_tcp_req_state {
@@ -200,8 +200,9 @@ struct spdk_nvmf_tcp_req  {
 };
 
 struct nvme_tcp_pdu_recv_buf {
-	char                                    buf[SPDK_NVMF_TCP_DEFUALT_PDU_RECV_BUF_SIZE];
+	char                                    *buf;
 	uint32_t                                off;
+	uint32_t				size;
 	uint32_t                                remain_size;
 };
 
@@ -510,6 +511,7 @@ spdk_nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 	free(tqpair->reqs);
 	spdk_free(tqpair->buf);
 	spdk_free(tqpair->bufs);
+	free(tqpair->pdu_recv_buf.buf);
 	free(tqpair);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Leave\n");
 }
@@ -1057,6 +1059,16 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair, uint16
 			TAILQ_INSERT_TAIL(&tqpair->free_queue, &tqpair->pdu[i], tailq);
 		}
 
+		tqpair->pdu_recv_buf.size = (in_capsule_data_size + sizeof(struct spdk_nvme_tcp_cmd) + 2 *
+					     SPDK_NVME_TCP_DIGEST_LEN) * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
+		tqpair->pdu_recv_buf.buf = calloc(1, tqpair->pdu_recv_buf.size);
+		if (!tqpair->pdu_recv_buf.buf) {
+			SPDK_ERRLOG("Unable to allocate the pdu recv buf on tqpair=%p with size=%d\n", tqpair,
+				    tqpair->pdu_recv_buf.size);
+			return -1;
+		}
+		tqpair->pdu_in_progress.hdr = (union nvme_tcp_pdu_hdr *)tqpair->pdu_recv_buf.buf;
+
 	} else {
 		tqpair->reqs = calloc(size, sizeof(*tqpair->reqs));
 		if (!tqpair->reqs) {
@@ -1129,7 +1141,6 @@ spdk_nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 
 	tqpair->host_hdgst_enable = true;
 	tqpair->host_ddgst_enable = true;
-	tqpair->pdu_in_progress.hdr = (union nvme_tcp_pdu_hdr *)tqpair->pdu_recv_buf.buf;
 	return 0;
 }
 
@@ -1319,7 +1330,7 @@ spdk_nvmf_tcp_reset_pdu_in_process(struct spdk_nvmf_tcp_qpair *tqpair)
 	uint32_t i ;
 
 	if (spdk_unlikely((pdu_recv_buf->off + sizeof(union nvme_tcp_pdu_hdr)) >
-			  SPDK_NVMF_TCP_DEFUALT_PDU_RECV_BUF_SIZE)) {
+			  pdu_recv_buf->size)) {
 		if (pdu_recv_buf->remain_size) {
 			dst = pdu_recv_buf->buf;
 			src = (char *)((void *)pdu_recv_buf->buf + pdu_recv_buf->off);
@@ -1813,7 +1824,13 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "maxr2t =%u\n", (ic_req->maxr2t + 1u));
 
 	tqpair->host_hdgst_enable = ic_req->dgst.bits.hdgst_enable ? true : false;
+	if (!tqpair->host_hdgst_enable) {
+		tqpair->pdu_recv_buf.size -= SPDK_NVME_TCP_DIGEST_LEN * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
+	}
 	tqpair->host_ddgst_enable = ic_req->dgst.bits.ddgst_enable ? true : false;
+	if (!tqpair->host_ddgst_enable) {
+		tqpair->pdu_recv_buf.size -= SPDK_NVME_TCP_DIGEST_LEN * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR;
+	}
 
 	tqpair->cpda = spdk_min(ic_req->hpda, SPDK_NVME_TCP_CPDA_MAX);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "cpda of tqpair=(%p) is : %u\n", tqpair, tqpair->cpda);
@@ -2013,7 +2030,7 @@ nvme_tcp_recv_buf_read(struct spdk_sock *sock, struct nvme_tcp_pdu_recv_buf *pdu
 {
 	int rc;
 
-	rc = nvme_tcp_read_data(sock, SPDK_NVMF_TCP_DEFUALT_PDU_RECV_BUF_SIZE - pdu_recv_buf->off,
+	rc = nvme_tcp_read_data(sock, pdu_recv_buf->size - pdu_recv_buf->off,
 				(void *)pdu_recv_buf->buf + pdu_recv_buf->off);
 	if (rc < 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconnect sock=%p\n", sock);
