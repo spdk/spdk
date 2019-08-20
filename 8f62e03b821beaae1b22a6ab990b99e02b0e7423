@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cc01a971_739d1fd8",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-20T21:18:32Z",
+      "side": 1,
+      "message": "I\u0027ll take another look",
+      "parentUuid": "272c5fb7_ab20b431",
+      "revId": "8f62e03b821beaae1b22a6ab990b99e02b0e7423",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5f01a583_d9f3a779",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-20T19:58:50Z",
       "side": 1,
       "message": "I don\u0027t follow this part of the change.  I think in general it should be considered a programming error if we pass NULL to this function.  If there\u0027s a code path that expects to be able to call this with vol \u003d\u003d NULL and get its callback invoked with -ENOENT, let\u0027s just have that code directly call the callback instead.",
+      "revId": "8f62e03b821beaae1b22a6ab990b99e02b0e7423",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb323365_92a54859",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-20T21:18:32Z",
+      "side": 1,
+      "message": "It\u0027s tied to the compress bdev changes. Let me see if I can simplify.",
+      "parentUuid": "5f01a583_d9f3a779",
       "revId": "8f62e03b821beaae1b22a6ab990b99e02b0e7423",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
