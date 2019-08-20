@@ -172,13 +172,13 @@ class UIRoot(UINode):
         rpc.bdev.delete_nvme_controller(self.client, **kwargs)
 
     @verbose
-    def create_null_bdev(self, **kwargs):
-        response = rpc.bdev.construct_null_bdev(self.client, **kwargs)
+    def bdev_null_create(self, **kwargs):
+        response = rpc.bdev.bdev_null_create(self.client, **kwargs)
         return response
 
     @verbose
-    def delete_null_bdev(self, **kwargs):
-        rpc.bdev.delete_null_bdev(self.client, **kwargs)
+    def bdev_null_delete(self, **kwargs):
+        rpc.bdev.bdev_null_delete(self.client, **kwargs)
 
     @verbose
     def create_error_bdev(self, **kwargs):
