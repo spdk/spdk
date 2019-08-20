@@ -150,7 +150,7 @@ bdev_null_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "construct_null_bdev");
+	spdk_json_write_named_string(w, "method", "bdev_null_create");
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);
@@ -233,7 +233,7 @@ create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 }
 
 void
-delete_null_bdev(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn, void *cb_arg)
+bdev_null_delete(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn, void *cb_arg)
 {
 	if (!bdev || bdev->module != &null_if) {
 		cb_fn(cb_arg, -ENODEV);
