@@ -58,6 +58,9 @@ DEPDIRS-bdev_nvme = bdev conf json jsonrpc log nvme rpc thread util
 ifeq ($(OS),Linux)
 DEPDIRS-bdev_nvme += ftl
 endif
+ifeq ($(CONFIG_SHARED),y)
+DEPDIRS-bdev_ocf := bdev conf json jsonrpc log rpc thread util
+endif
 DEPDIRS-bdev_passthru := bdev conf json jsonrpc log rpc thread util
 DEPDIRS-bdev_pmem := bdev conf json jsonrpc log rpc thread util
 DEPDIRS-bdev_raid := bdev conf json jsonrpc log rpc thread util

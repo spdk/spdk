@@ -59,6 +59,7 @@ DEPDIRS-vmd := log
 
 # Phase 3 dependencies.
 DEPDIRS-blobfs := blob conf log thread trace
+DEPDIRS-env_ocf :=
 DEPDIRS-ftl := bdev log nvme thread trace util
 DEPDIRS-iscsi := conf event json jsonrpc log rpc scsi sock thread trace util
 DEPDIRS-lvol := blob log util

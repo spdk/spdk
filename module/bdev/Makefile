@@ -42,8 +42,6 @@ endif
 
 ifeq ($(CONFIG_OCF), y)
 DIRS-y += ocf
-DIRS-y += ocf/env
-DEPDIRS-ocf := ocf/env
 endif
 
 ifeq ($(CONFIG_REDUCE),y)
