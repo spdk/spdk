@@ -324,7 +324,7 @@ class UINullBdev(UIBdev):
         UIBdev.__init__(self, "null", parent)
 
     def delete(self, name):
-        self.get_root().delete_null_bdev(name=name)
+        self.get_root().bdev_null_delete(name=name)
 
     def ui_command_create(self, name, size, block_size, uuid=None):
         """

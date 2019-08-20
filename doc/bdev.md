@@ -371,17 +371,17 @@ application.
 The SPDK null bdev driver is a dummy block I/O target that discards all writes and returns undefined
 data for reads.  It is useful for benchmarking the rest of the bdev I/O stack with minimal block
 device overhead and for testing configurations that can't easily be created with the Malloc bdev.
-To create Null bdev RPC command `construct_null_bdev` should be used.
+To create Null bdev RPC command `bdev_null_create` should be used.
 
 Example command
 
-`rpc.py construct_null_bdev Null0 8589934592 4096`
+`rpc.py bdev_null_create Null0 8589934592 4096`
 
 This command will create an 8 petabyte `Null0` device with block size 4096.
 
-To delete a null bdev use the delete_null_bdev command.
+To delete a null bdev use the bdev_null_delete command.
 
-`rpc.py delete_null_bdev Null0`
+`rpc.py bdev_null_delete Null0`
 
 # NVMe bdev {#bdev_config_nvme}
 
