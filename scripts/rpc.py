@@ -254,18 +254,18 @@ if __name__ == "__main__":
     p.add_argument('name', help='malloc bdev name')
     p.set_defaults(func=delete_malloc_bdev)
 
-    def construct_null_bdev(args):
+    def bdev_null_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
-        print_json(rpc.bdev.construct_null_bdev(args.client,
-                                                num_blocks=num_blocks,
-                                                block_size=args.block_size,
-                                                name=args.name,
-                                                uuid=args.uuid,
-                                                md_size=args.md_size,
-                                                dif_type=args.dif_type,
-                                                dif_is_head_of_md=args.dif_is_head_of_md))
+        print_json(rpc.bdev.create_null_bdev(args.client,
+                                             num_blocks=num_blocks,
+                                             block_size=args.block_size,
+                                             name=args.name,
+                                             uuid=args.uuid,
+                                             md_size=args.md_size,
+                                             dif_type=args.dif_type,
+                                             dif_is_head_of_md=args.dif_is_head_of_md))
 
-    p = subparsers.add_parser('construct_null_bdev',
+    p = subparsers.add_parser('bdev_null_create', aliases=['construct_null_bdev'],
                               help='Add a bdev with null backend')
     p.add_argument('name', help='Block device name')
     p.add_argument('-u', '--uuid', help='UUID of the bdev')
@@ -278,15 +278,16 @@ if __name__ == "__main__":
                    help='Protection information type. Default: 0 - no protection')
     p.add_argument('-d', '--dif-is-head-of-md', action='store_true',
                    help='Protection information is in the first 8 bytes of metadata. Default: in the last 8 bytes')
-    p.set_defaults(func=construct_null_bdev)
+    p.set_defaults(func=create_null_bdev)
 
-    def delete_null_bdev(args):
-        rpc.bdev.delete_null_bdev(args.client,
+    def bdev_null_delete(args):
+        rpc.bdev.bdev_null_delete(args.client,
                                   name=args.name)
 
-    p = subparsers.add_parser('delete_null_bdev', help='Delete a null bdev')
+    p = subparsers.add_parser('bdev_null_delete', aliases=['delete_null_bdev'],
+                              help='Delete a null bdev')
     p.add_argument('name', help='null bdev name')
-    p.set_defaults(func=delete_null_bdev)
+    p.set_defaults(func=bdev_null_delete)
 
     def bdev_aio_create(args):
         print_json(rpc.bdev.bdev_aio_create(args.client,
