@@ -172,6 +172,12 @@ compression vbdev will not be available.
 
 `rpc.py delete_compress_bdev COMP_LVS/myLvol`
 
+To list compression volumes that are only available for deletion because their PMEM file
+was missing use the following. The name parameter is optional and if not included will list
+all volumes, if used it will return the name or an error that the device does not exist.
+
+`rpc.py bdev_compress_get_orphans --name COMP_Nvme0n1`
+
 # Crypto Virtual Bdev Module {#bdev_config_crypto}
 
 The crypto virtual bdev module can be configured to provide at rest data encryption
