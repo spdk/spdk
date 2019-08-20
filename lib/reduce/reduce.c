@@ -699,10 +699,6 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 	if (vol->pm_file.pm_buf == NULL) {
 		SPDK_ERRLOG("could not pmem_map_file(%s): %s\n", vol->pm_file.path, strerror(errno));
 		rc = -errno;
-		if (rc == -ENOENT) {
-			load_ctx->cb_fn(load_ctx->cb_arg, vol, rc);
-			return;
-		}
 		goto error;
 	}
 
