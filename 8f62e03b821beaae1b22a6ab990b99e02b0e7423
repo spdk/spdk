@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "272c5fb7_ab20b431",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T19:58:50Z",
+      "side": 1,
+      "message": "Does this return the vol back to the caller, even though rc !\u003d 0?\n\nI really don\u0027t want to return a \u0027valid\u0027 handle if it doesn\u0027t succeed.  It\u0027s a special case that doesn\u0027t exist anywhere else to my knowledge in SPDK.  I think we pass NULL w/ -ENOENT, and then either add or modify an API to allow someone to say \"assuming this bdev has valid compress metadata, erase that metadata even if you can\u0027t find the associated PM metadata file\".\n\nI may be misreading the next patch, but it seems like the vol doesn\u0027t actually get \u0027saved\u0027 when it\u0027s returned here.  So maybe this should just pass NULL instead?  But then I think the vol gets leaked.  Maybe this code isn\u0027t needed at all and it can just goto error?",
+      "revId": "8f62e03b821beaae1b22a6ab990b99e02b0e7423",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f01a583_d9f3a779",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T19:58:50Z",
+      "side": 1,
+      "message": "I don\u0027t follow this part of the change.  I think in general it should be considered a programming error if we pass NULL to this function.  If there\u0027s a code path that expects to be able to call this with vol \u003d\u003d NULL and get its callback invoked with -ENOENT, let\u0027s just have that code directly call the callback instead.",
+      "revId": "8f62e03b821beaae1b22a6ab990b99e02b0e7423",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
