@@ -57,7 +57,7 @@ int create_null_bdev(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_null_bdev(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn,
+void bdev_null_delete(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn,
 		      void *cb_arg);
 
 #endif /* SPDK_BDEV_NULL_H */
