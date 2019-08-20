@@ -37,7 +37,7 @@
 # Else if SPDK is configured with OCF precompiled library
 # we just use it as SPDK lib by copying it to /build/lib/
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 OCFDIR=$(CONFIG_OCF_DIR)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
@@ -76,17 +76,17 @@ all: ocf_inc ocf_src
 	$(Q)$(MAKE) $(LIB)
 
 ocf_inc:
-	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" inc O="$(SPDK_ROOT_DIR)/module/bdev/ocf/env/" --quiet
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" inc O="$(SPDK_ROOT_DIR)/lib/env_ocf/" ENV= --quiet
 
 ocf_src: ocf_inc
-	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" src O="$(SPDK_ROOT_DIR)/module/bdev/ocf/env/" CMD=cp --quiet
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" src O="$(SPDK_ROOT_DIR)/lib/env_ocf/" CMD=cp ENV= --quiet
 
 ocf_distclean:
-	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" distclean O="$(SPDK_ROOT_DIR)/module/bdev/ocf/env/" --quiet
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" distclean O="$(SPDK_ROOT_DIR)/lib/env_ocf/" ENV= --quiet
 
 clean: ocf_distclean
-	$(Q)rm -rf	"$(SPDK_ROOT_DIR)/module/bdev/ocf/env/include" \
-				"$(SPDK_ROOT_DIR)/module/bdev/ocf/env/src" \
+	$(Q)rm -rf	"$(SPDK_ROOT_DIR)/lib/env_ocf/include" \
+				"$(SPDK_ROOT_DIR)/lib/env_ocf/src" \
 				$(LIB) $(OBJS);
 
 $(LIB): $(OBJS)
