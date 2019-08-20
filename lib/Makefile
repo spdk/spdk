@@ -41,6 +41,10 @@ ifeq ($(OS),Linux)
 DIRS-y += nbd ftl
 endif
 
+ifeq ($(CONFIG_OCF), y)
+DIRS-y +=env_ocf
+endif
+
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
 DIRS-$(CONFIG_REDUCE) += reduce
@@ -80,6 +84,7 @@ DEPDIRS-vmd := log
 
 # Phase 3 dependencies.
 DEPDIRS-blobfs := blob conf log thread trace
+DEPDIRS-env_ocf :=
 DEPDIRS-ftl := bdev log nvme thread trace util
 DEPDIRS-iscsi := conf event json jsonrpc log rpc scsi sock thread trace util
 DEPDIRS-lvol := blob log util
