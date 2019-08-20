@@ -419,17 +419,15 @@ nvmf_fc_req_in_get_buff(struct spdk_nvmf_fc_request *fc_req)
 static void
 nvmf_fc_request_free_buffers(struct spdk_nvmf_fc_request *fc_req)
 {
-	if (fc_req->data_from_pool) {
-		for (uint32_t i = 0; i < fc_req->req.iovcnt; i++) {
-			spdk_mempool_put(fc_req->hwqp->fc_poll_group->fc_transport->data_buff_pool,
-					 fc_req->buffers[i]);
-			fc_req->req.iov[i].iov_base = NULL;
-			fc_req->buffers[i] = NULL;
-		}
-		fc_req->data_from_pool = false;
+	uint32_t i;
+
+	for (i = 0; i < fc_req->req.iovcnt; i++) {
+		spdk_mempool_put(fc_req->hwqp->fc_poll_group->fc_transport->data_buff_pool,
+				 fc_req->buffers[i]);
+		fc_req->req.iov[i].iov_base = NULL;
+		fc_req->buffers[i] = NULL;
 	}
-	fc_req->req.data = NULL;
-	fc_req->req.iovcnt  = 0;
+	fc_req->data_from_pool = false;
 }
 
 void
@@ -1320,6 +1318,7 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 
 nomem:
 	nvmf_fc_request_free_buffers(fc_req);
+	fc_req->req.iovcnt  = 0;
 	return -ENOMEM;
 }
 
@@ -1486,7 +1485,11 @@ spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 	}
 
 	/* Release IO buffers */
-	nvmf_fc_request_free_buffers(fc_req);
+	if (fc_req->data_from_pool) {
+		nvmf_fc_request_free_buffers(fc_req);
+	}
+	fc_req->req.data = NULL;
+	fc_req->req.iovcnt  = 0;
 
 	/* Release Q buffer */
 	nvmf_fc_rqpair_buffer_release(fc_req->hwqp, fc_req->buf_index);
