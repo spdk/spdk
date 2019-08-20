@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "004db3e4_b7ee66d1",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:35:27Z",
+      "side": 1,
+      "message": "The new open function requires the user to provide a callback function which will be\ncalled for asynchronous events such as bdev removal.\n\nI think it\u0027s better to use the word \"requires\" instead of \"option\" since you aren\u0027t making it an option anymore.  :-)",
+      "revId": "fb0078a2c5208d4efebb64f8afa75833b15dc0fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e9a2783_988b2417",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:35:27Z",
+      "side": 1,
+      "message": "The other important point of this new function is that it takes \"name\" as a parameter instead of the bdev itself.  You should talk about how this avoids race conditions when opening a bdev that\u0027s being removed.",
+      "revId": "fb0078a2c5208d4efebb64f8afa75833b15dc0fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dee85d7b_ac89223e",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:35:27Z",
+      "side": 1,
+      "message": "\"have to be\" - \"must be\"",
+      "revId": "fb0078a2c5208d4efebb64f8afa75833b15dc0fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a92dc04b_061b6453",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:35:27Z",
+      "side": 1,
+      "message": "Maybe \"Asynchronous event type\"?\n\nThis comment isn\u0027t clear - it seems to indicate it\u0027s something use when opening a bdev.",
+      "revId": "fb0078a2c5208d4efebb64f8afa75833b15dc0fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cba945ad_383a5fb3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:35:27Z",
+      "side": 1,
+      "message": "can you remove \"spdk_bdev_callbacks\" here?  or just call it bdev_event_callbacks (removing the spdk_ prefix)\n\nsince this structure isn\u0027t actually allocated anywhere outside of this structure, I don\u0027t think you need to give the struct type an actual name (similar to how you don\u0027t specify a name for the union just below)",
+      "revId": "fb0078a2c5208d4efebb64f8afa75833b15dc0fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4b696d3_ba69e5fe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4367,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:35:27Z",
+      "side": 1,
+      "message": "This is a bit of a nit, but spdk_bdev_open_ext() below calls _spdk_bdev_open with the g_bdev_mgr.mutex locked, but here we don\u0027t - I think we should make this consistent, even if you don\u0027t really need it locked here.",
+      "revId": "fb0078a2c5208d4efebb64f8afa75833b15dc0fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
