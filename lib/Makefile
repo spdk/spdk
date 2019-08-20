@@ -44,6 +44,10 @@ ifeq ($(OS),Linux)
 DIRS-y += nbd ftl
 endif
 
+ifeq ($(CONFIG_OCF), y)
+DIRS-y +=env_ocf
+endif
+
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
 DIRS-$(CONFIG_REDUCE) += reduce

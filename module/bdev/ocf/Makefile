@@ -35,13 +35,13 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS) -I$(CURDIR)/env -I$(CURDIR)/env/include
+CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/env_ocf -I$(SPDK_ROOT_DIR)/lib/env_ocf/include
 C_SRCS = $(shell ls *.c)
 
 LIBNAME := bdev_ocf
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
 
-SPDK_DEP_LIBS = $(call spdk_lib_list_to_static_libs,ocfenv)
+SPDK_DEP_LIBS += $(call spdk_lib_list_to_static_libs,ocfenv)
 
 $(LIB) : $(SPDK_DEP_LIBS)
