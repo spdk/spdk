@@ -887,6 +887,45 @@ delete_vol_unload_cb(void *cb_arg, int reduce_errno)
 	}
 }
 
+const char *
+compress_get_name(const struct vbdev_compress *comp_bdev)
+{
+	return comp_bdev->comp_bdev.name;
+}
+
+struct vbdev_compress *
+compress_bdev_first(void)
+{
+	struct vbdev_compress *comp_bdev;
+
+	comp_bdev = TAILQ_FIRST(&g_vbdev_comp);
+
+	return comp_bdev;
+}
+
+struct vbdev_compress *
+compress_bdev_next(struct vbdev_compress *prev)
+{
+	struct vbdev_compress *comp_bdev;
+
+	comp_bdev = TAILQ_NEXT(prev, link);
+
+	return comp_bdev;
+}
+
+bool
+compress_has_orphan(const char *name)
+{
+	struct vbdev_compress *comp_bdev;
+
+	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
+		if (strcmp(name, comp_bdev->comp_bdev.name) == 0 && comp_bdev->orphaned) {
+			return true;
+		}
+	}
+	return false;
+}
+
 /* Called after we've unregistered following a hot remove callback.
  * Our finish entry point will be called next.
  */
