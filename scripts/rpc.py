@@ -161,6 +161,14 @@ if __name__ == "__main__":
     p.add_argument('-p', '--pmd', type=int, help='0 = auto-select, 1= QAT only, 2 = ISAL only')
     p.set_defaults(func=set_compress_pmd)
 
+    def bdev_compress_get_orphans(args):
+        print_dict(rpc.bdev.bdev_compress_get_orphans(args.client,
+                                                      name=args.name))
+    p = subparsers.add_parser(
+        'bdev_compress_get_orphans', help='Display list of orphaned compress bdevs.')
+    p.add_argument('-b', '--name', help="Name of a comp bdev. Example: COMP_Nvme0n1", required=False)
+    p.set_defaults(func=bdev_compress_get_orphans)
+
     def bdev_crypto_create(args):
         print_json(rpc.bdev.bdev_crypto_create(args.client,
                                                base_bdev_name=args.base_bdev_name,
