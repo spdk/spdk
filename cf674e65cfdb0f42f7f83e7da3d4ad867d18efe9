@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0766ee0d_406abe9a",
+        "filename": "Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-20T17:58:15Z",
+      "side": 1,
+      "message": "are these backwards? (ie module: module and shared_lib: lib) I\u0027m guessing not since things work but don\u0027t know Makefiles from shinola :)",
+      "revId": "cf674e65cfdb0f42f7f83e7da3d4ad867d18efe9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
