@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db32b461_d64026a6",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T19:14:52Z",
+      "side": 1,
+      "message": "There should be a \"brief\" line (first line) follow by an empty line and then the rest of the description.  See other examples in this file as a template.  (Although one just below doesn\u0027t have the empty line.)\n\nI\u0027m not sure how much this matters in reality - i.e. compared to the first line of a git commit message.  I haven\u0027t found any examples in our tree that *don\u0027t* follow this, to see if the Doxygen documentation tries to put the whole paragraph in the function table.  But for consistency, I\u0027d suggest sticking with it.\n\nAlso - please capitalize \"Retrieve\".  :-)",
+      "revId": "f74e498472b18fe1aff179eef6b9cca870d17be4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
