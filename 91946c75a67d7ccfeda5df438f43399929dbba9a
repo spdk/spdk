@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "2db46b4c_4baf53a8",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-20T21:43:00Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6c9dbece_6a30a7ec",
+      "revId": "91946c75a67d7ccfeda5df438f43399929dbba9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1b1405c8_92c60f09",
         "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
         "patchSetId": 2
@@ -64,6 +82,24 @@
       "writtenOn": "2019-08-20T20:08:11Z",
       "side": 1,
       "message": "would this be simpler?\n\nif (comp_bdev-\u003eorphaned) {\n  spdk_json_write_string(w, compress_get_name(comp_bdev));\n}",
+      "revId": "91946c75a67d7ccfeda5df438f43399929dbba9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "651fe4cb_ee807d1a",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-20T21:43:00Z",
+      "side": 1,
+      "message": "if the comp_bdev struct were in the .h file it would but its in the C file",
+      "parentUuid": "1b1405c8_92c60f09",
       "revId": "91946c75a67d7ccfeda5df438f43399929dbba9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
