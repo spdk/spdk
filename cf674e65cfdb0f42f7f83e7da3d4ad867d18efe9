@@ -16,6 +16,24 @@
       "revId": "cf674e65cfdb0f42f7f83e7da3d4ad867d18efe9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8eacab84_9c81db01",
+        "filename": "Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-20T18:21:47Z",
+      "side": 1,
+      "message": "Good question. The shared_lib name is a bit of a misnomer at this point. Originally, we only built a single SPDK shared library based off of each of the individual archives. However at this point, we build a shared library off of each archive and we do that in line. The shared_lib label merely collects those individual shared libraries into a linker script.\nSo lib creates the library archives and shared libraries and then module makes the module archives and shared objects. Module depends on lib because each bdev and event subsystem depends on the top level bdev or event library.\nThen once all of the shared objects have been built, we pull all of the shared libraries created by lib and module into a single linker script called libspdk.so\nSo that\u0027s why the dependency chain goes shared_object-\u003emodule-\u003elib.",
+      "parentUuid": "0766ee0d_406abe9a",
+      "revId": "cf674e65cfdb0f42f7f83e7da3d4ad867d18efe9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
