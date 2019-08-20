@@ -52,6 +52,25 @@ char text_E[] = "AbC12===";
 char text_F[] = "AbCd112";
 char text_G[] = "AbCd12";
 char text_H[] = "AbC12";
+char text_I[] = "AQu/1+cCCBUnOBFWv+HzoL3BOVUBItP2mRDdqhnxAtIT4hD1wbQ30Ylm8R+7khPS";//64 bytes
+char text_urlsafe_I[] =
+	"AQu_1-cCCBUnOBFWv-HzoL3BOVUBItP2mRDdqhnxAtIT4hD1wbQ30Ylm8R-7khPS";//64 bytes
+uint8_t raw_I[] = {0x01, 0x0B, 0xBF, 0xD7, 0xE7, 0x02, 0x08, 0x15, 0x27, 0x38, 0x11, 0x56, 0xBF, 0xE1, 0xF3, 0xA0,
+		   0xBD, 0xC1, 0x39, 0x55, 0x01, 0x22, 0xD3, 0xF6, 0x99, 0x10, 0xDD, 0xAA, 0x19, 0xF1, 0x02, 0xD2,
+		   0x13, 0xE2, 0x10, 0xF5, 0xC1, 0xB4, 0x37, 0xD1, 0x89, 0x66, 0xF1, 0x1F, 0xBB, 0x92, 0x13, 0xD2
+		  };
+char text_J[] =
+	"AQu/1+cCCBUnOBFWv+HzoL3BOVUBItP2mRDdqhnxAtIT4hD1wbQ30Ylm8R+7khPSvcE5VecCCBUZ8QLiEPVm8b3BOVUBItP2GfEC4hD1ZvE5VQEi0/aJZvEfu5LiEPUTvcE5VQEi0/YZEQ==";
+char text_urlsafe_J[] =
+	"AQu_1-cCCBUnOBFWv-HzoL3BOVUBItP2mRDdqhnxAtIT4hD1wbQ30Ylm8R-7khPSvcE5VecCCBUZ8QLiEPVm8b3BOVUBItP2GfEC4hD1ZvE5VQEi0_aJZvEfu5LiEPUTvcE5VQEi0_YZEQ==";
+uint8_t raw_J[] = {0x01, 0x0B, 0xBF, 0xD7, 0xE7, 0x02, 0x08, 0x15, 0x27, 0x38, 0x11, 0x56, 0xBF, 0xE1, 0xF3, 0xA0,
+		   0xBD, 0xC1, 0x39, 0x55, 0x01, 0x22, 0xD3, 0xF6, 0x99, 0x10, 0xDD, 0xAA, 0x19, 0xF1, 0x02, 0xD2,
+		   0x13, 0xE2, 0x10, 0xF5, 0xC1, 0xB4, 0x37, 0xD1, 0x89, 0x66, 0xF1, 0x1F, 0xBB, 0x92, 0x13, 0xD2,
+		   0xBD, 0xC1, 0x39, 0x55, 0xE7, 0x02, 0x08, 0x15, 0x19, 0xF1, 0x02, 0xE2, 0x10, 0xF5, 0x66, 0xF1,
+		   0xBD, 0xC1, 0x39, 0x55, 0x01, 0x22, 0xD3, 0xF6, 0x19, 0xF1, 0x02, 0xE2, 0x10, 0xF5, 0x66, 0xF1,
+		   0x39, 0x55, 0x01, 0x22, 0xD3, 0xF6, 0x89, 0x66, 0xF1, 0x1F, 0xBB, 0x92, 0xE2, 0x10, 0xF5, 0x13,
+		   0xBD, 0xC1, 0x39, 0x55, 0x01, 0x22, 0xD3, 0xF6, 0x19, 0x11
+		  };
 
 static void
 test_base64_get_encoded_strlen(void)
@@ -84,7 +103,7 @@ test_base64_get_decoded_len(void)
 static void
 test_base64_encode(void)
 {
-	char text[100];
+	char text[200];
 	int ret;
 
 	ret = spdk_base64_encode(text, raw_A, sizeof(raw_A));
@@ -105,6 +124,14 @@ test_base64_encode(void)
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT(strcmp(text, text_D) == 0);
 
+	ret = spdk_base64_encode(text, raw_I, sizeof(raw_I));
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT(strcmp(text, text_I) == 0);
+
+	ret = spdk_base64_encode(text, raw_J, sizeof(raw_J));
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT(strcmp(text, text_J) == 0);
+
 	ret = spdk_base64_encode(NULL, raw_A, sizeof(raw_A));
 	CU_ASSERT_EQUAL(ret, -EINVAL);
 	ret = spdk_base64_encode(text, NULL, sizeof(raw_A));
@@ -116,7 +143,7 @@ test_base64_encode(void)
 static void
 test_base64_decode(void)
 {
-	char raw_buf[100];
+	char raw_buf[200];
 	void *raw = (void *)raw_buf;
 	size_t raw_len;
 	int ret;
@@ -141,6 +168,16 @@ test_base64_decode(void)
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_D));
 	CU_ASSERT(memcmp(raw, raw_D, sizeof(raw_D)) == 0);
 
+	ret = spdk_base64_decode(raw, &raw_len, text_I);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_I));
+	CU_ASSERT(memcmp(raw, raw_I, sizeof(raw_I)) == 0);
+
+	ret = spdk_base64_decode(raw, &raw_len, text_J);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_J));
+	CU_ASSERT(memcmp(raw, raw_J, sizeof(raw_J)) == 0);
+
 	ret = spdk_base64_decode(raw, &raw_len, text_E);
 	CU_ASSERT_EQUAL(ret, -EINVAL);
 	ret = spdk_base64_decode(raw, &raw_len, text_F);
@@ -158,7 +195,7 @@ test_base64_decode(void)
 static void
 test_base64_urlsafe_encode(void)
 {
-	char text[100];
+	char text[200];
 	int ret;
 
 	ret = spdk_base64_urlsafe_encode(text, raw_A, sizeof(raw_A));
@@ -179,6 +216,14 @@ test_base64_urlsafe_encode(void)
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT(strcmp(text, text_urlsafe_D) == 0);
 
+	ret = spdk_base64_urlsafe_encode(text, raw_I, sizeof(raw_I));
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT(strcmp(text, text_urlsafe_I) == 0);
+
+	ret = spdk_base64_urlsafe_encode(text, raw_J, sizeof(raw_J));
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT(strcmp(text, text_urlsafe_J) == 0);
+
 	ret = spdk_base64_urlsafe_encode(NULL, raw_A, sizeof(raw_A));
 	CU_ASSERT_EQUAL(ret, -EINVAL);
 	ret = spdk_base64_urlsafe_encode(text, NULL, sizeof(raw_A));
@@ -190,7 +235,7 @@ test_base64_urlsafe_encode(void)
 static void
 test_base64_urlsafe_decode(void)
 {
-	char raw_buf[100];
+	char raw_buf[200];
 	void *raw = (void *)raw_buf;
 	size_t raw_len = 0;
 	int ret;
@@ -214,6 +259,16 @@ test_base64_urlsafe_decode(void)
 	CU_ASSERT_EQUAL(ret, 0);
 	CU_ASSERT_EQUAL(raw_len, sizeof(raw_D));
 	CU_ASSERT(memcmp(raw, raw_D, sizeof(raw_D)) == 0);
+
+	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_urlsafe_I);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_I));
+	CU_ASSERT(memcmp(raw, raw_I, sizeof(raw_I)) == 0);
+
+	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_urlsafe_J);
+	CU_ASSERT_EQUAL(ret, 0);
+	CU_ASSERT_EQUAL(raw_len, sizeof(raw_J));
+	CU_ASSERT(memcmp(raw, raw_J, sizeof(raw_J)) == 0);
 
 	ret = spdk_base64_urlsafe_decode(raw, &raw_len, text_E);
 	CU_ASSERT_EQUAL(ret, -EINVAL);
