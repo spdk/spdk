@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ffdd75a_2a6ffad0",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T20:42:20Z",
+      "side": 1,
+      "message": "I think you need a section header for this (### event ?)",
+      "revId": "533d99fd6f9ec0fc1aef978d84d858e0f28fdb66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
