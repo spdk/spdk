@@ -171,25 +171,16 @@ spdk_rpc_delete_compress_bdev(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct rpc_delete_compress req = {NULL};
-	struct spdk_bdev *bdev;
 
 	if (spdk_json_decode_object(params, rpc_delete_compress_decoders,
 				    SPDK_COUNTOF(rpc_delete_compress_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto cleanup;
+	} else {
+		delete_compress_bdev(req.name, _spdk_rpc_delete_compress_bdev_cb, request);
 	}
 
-	bdev = spdk_bdev_get_by_name(req.name);
-	if (bdev == NULL) {
-		spdk_jsonrpc_send_error_response(request, ENODEV, spdk_strerror(-ENODEV));
-		goto cleanup;
-	}
-
-	delete_compress_bdev(bdev, _spdk_rpc_delete_compress_bdev_cb, request);
-
-cleanup:
 	free_rpc_delete_compress(&req);
 }
 SPDK_RPC_REGISTER("delete_compress_bdev", spdk_rpc_delete_compress_bdev, SPDK_RPC_RUNTIME)
