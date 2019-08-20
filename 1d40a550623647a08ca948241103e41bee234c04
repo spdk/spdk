@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a1baf004_ca5d3532",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-20T23:23:21Z",
+      "side": 1,
+      "message": "Oh wait, I think I might understand now after looking at the next change. Is it that currently even when you do delete the OCF bdev, it still shows up, but the behavior will change after the code in your next change is merged?",
+      "parentUuid": "dd4f79ae_730eb464",
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "51ce4621_b411ca5a",
         "filename": "test/ocf/management/remove.sh",
         "patchSetId": 1
