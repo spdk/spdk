@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd4f79ae_730eb464",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-20T23:20:39Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this return nothing since you just deleted the OCF bdev in the line above this one?",
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51ce4621_b411ca5a",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-20T23:20:39Z",
+      "side": 1,
+      "message": "You probably want to include this line in your traps.",
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
