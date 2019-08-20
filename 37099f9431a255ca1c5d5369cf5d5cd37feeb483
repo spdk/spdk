@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a025981a_01400275",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T19:50:07Z",
+      "side": 1,
+      "message": "This doesn\u0027t destroy the reduce_lock.\n\nI think it would be simpler to just call _device_unregister_cb() here directly to avoid code duplication.  It\u0027s not clear if the reduce_lock has been initialized on an orphaned \"bdev\" - if not, we should add a patch to do that earlier in the process so that we know it\u0027s always been initialized when we get to this point.",
+      "revId": "37099f9431a255ca1c5d5369cf5d5cd37feeb483",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14b02177_fde47c75",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T19:50:07Z",
+      "side": 1,
+      "message": "these _set_compbdev_name and the delete_compress_bdev changes below could be done in a separate patch before this one",
+      "revId": "37099f9431a255ca1c5d5369cf5d5cd37feeb483",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10702c50_8d8ec931",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-20T19:50:07Z",
+      "side": 1,
+      "message": "similar to comment on previous file - these bdev -\u003e name changes are a good candidate to be split out into a separate patch",
+      "revId": "37099f9431a255ca1c5d5369cf5d5cd37feeb483",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
