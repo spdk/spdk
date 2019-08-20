@@ -419,15 +419,14 @@ nvmf_fc_req_in_get_buff(struct spdk_nvmf_fc_request *fc_req)
 static void
 nvmf_fc_request_free_buffers(struct spdk_nvmf_fc_request *fc_req)
 {
-	if (fc_req->data_from_pool) {
-		for (uint32_t i = 0; i < fc_req->req.iovcnt; i++) {
-			spdk_mempool_put(fc_req->hwqp->fc_poll_group->fc_transport->data_buff_pool,
-					 fc_req->buffers[i]);
-			fc_req->req.iov[i].iov_base = NULL;
-			fc_req->buffers[i] = NULL;
-		}
-		fc_req->data_from_pool = false;
+	for (uint32_t i = 0; i < fc_req->req.iovcnt; i++) {
+		spdk_mempool_put(fc_req->hwqp->fc_poll_group->fc_transport->data_buff_pool,
+				 fc_req->buffers[i]);
+		fc_req->req.iov[i].iov_base = NULL;
+		fc_req->buffers[i] = NULL;
 	}
+	fc_req->data_from_pool = false;
+
 	fc_req->req.data = NULL;
 	fc_req->req.iovcnt  = 0;
 }
@@ -1486,7 +1485,9 @@ spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 	}
 
 	/* Release IO buffers */
-	nvmf_fc_request_free_buffers(fc_req);
+	if (fc_req->data_from_pool) {
+		nvmf_fc_request_free_buffers(fc_req);
+	}
 
 	/* Release Q buffer */
 	nvmf_fc_rqpair_buffer_release(fc_req->hwqp, fc_req->buf_index);
