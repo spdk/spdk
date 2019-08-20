@@ -1361,10 +1361,8 @@ static struct spdk_bdev_module compress_if = {
 
 SPDK_BDEV_MODULE_REGISTER(compress, &compress_if)
 
-static void
-vbdev_compress_claim(struct vbdev_compress *comp_bdev)
+static int _set_compbdev_name(struct vbdev_compress *comp_bdev)
 {
-	int rc;
 	struct spdk_bdev_alias *aliases;
 
 	if (!TAILQ_EMPTY(spdk_bdev_get_aliases(comp_bdev->base_bdev))) {
@@ -1372,14 +1370,25 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 		comp_bdev->comp_bdev.name = spdk_sprintf_alloc("COMP_%s", aliases->alias);
 		if (!comp_bdev->comp_bdev.name) {
 			SPDK_ERRLOG("could not allocate comp_bdev name for alias\n");
-			goto error_bdev_name;
+			return -ENOMEM;
 		}
 	} else {
 		comp_bdev->comp_bdev.name = spdk_sprintf_alloc("COMP_%s", comp_bdev->base_bdev->name);
 		if (!comp_bdev->comp_bdev.name) {
 			SPDK_ERRLOG("could not allocate comp_bdev name for unique name\n");
-			goto error_bdev_name;
+			return -ENOMEM;
 		}
+	}
+	return 0;
+}
+
+static void
+vbdev_compress_claim(struct vbdev_compress *comp_bdev)
+{
+	int rc;
+
+	if (_set_compbdev_name(comp_bdev)) {
+		goto error_bdev_name;
 	}
 
 	/* Note: some of the fields below will change in the future - for example,
