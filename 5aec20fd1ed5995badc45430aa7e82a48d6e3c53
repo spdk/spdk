@@ -263,6 +263,24 @@
       "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79550fe3_7fab5221",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-20T23:23:13Z",
+      "side": 1,
+      "message": "No, it will not. The first one socket will firstly obtain the buffer. Even if the other sockets are busy, they will finally wait for the buffer and wait for the first one socket to complete.\nYou can see the code to wait for the data buffer is in *_group_poll, so the issue you mentioned will never happen.",
+      "parentUuid": "8da2b2e5_73e8a3fd",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
