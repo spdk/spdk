@@ -40,6 +40,7 @@
 
 JSON_LIBS := json jsonrpc rpc
 
+DEPDIRS-env_ocf :=
 DEPDIRS-log :=
 
 DEPDIRS-ioat := log
@@ -120,6 +121,7 @@ DEPDIRS-bdev_nvme = $(BDEV_DEPS_CONF_THREAD) nvme
 ifeq ($(OS),Linux)
 DEPDIRS-bdev_nvme += ftl
 endif
+DEPDIRS-bdev_ocf := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_passthru := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_pmem := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_raid := $(BDEV_DEPS_CONF_THREAD)
