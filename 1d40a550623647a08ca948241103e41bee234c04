@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "99acced7_195e5766",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-21T11:14:28Z",
+      "side": 1,
+      "message": "This test will fail on current code (without next patch from this series) I\u0027m aware of that, but also as far I know, each test needs to be added explicitly to the CI test suite, so as long as we don\u0027t\nadd this test to CI suite, it doesn\u0027t matter where this patch is in a series.\n\nBTW. I\u0027m not experienced SPDK developer from here my question: What the procedure looks like in the case of when we have failing test but still don\u0027t have fix for that?",
+      "parentUuid": "74c4a42d_497391f5",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 39
+      },
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a749dbed_df5aaec3",
         "filename": "test/ocf/management/remove.sh",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "91dce985_6d8d931b",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-21T11:14:28Z",
+      "side": 1,
+      "message": "That\u0027s right",
+      "parentUuid": "a749dbed_df5aaec3",
+      "range": {
+        "startLine": 14,
+        "startChar": 5,
+        "endLine": 16,
+        "endChar": 21
+      },
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "32257053_5fb32c77",
         "filename": "test/ocf/management/remove.sh",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2019-08-21T08:52:29Z",
       "side": 1,
       "message": "Comment is outdated - we don\u0027t have many devices, but we still need to sort json because it is unordered dictionary",
+      "range": {
+        "startLine": 32,
+        "startChar": 2,
+        "endLine": 33,
+        "endChar": 34
+      },
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e5abee4_585cf0d5",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-21T11:14:28Z",
+      "side": 1,
+      "message": "Yup, I will rewrite this comment.",
+      "parentUuid": "32257053_5fb32c77",
       "range": {
         "startLine": 32,
         "startChar": 2,
@@ -106,6 +178,24 @@
     },
     {
       "key": {
+        "uuid": "ce5adb72_a531b4f8",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-21T11:14:28Z",
+      "side": 1,
+      "message": "It\u0027s exactly as you wrote.",
+      "parentUuid": "a1baf004_ca5d3532",
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "51ce4621_b411ca5a",
         "filename": "test/ocf/management/remove.sh",
         "patchSetId": 1
@@ -117,6 +207,24 @@
       "writtenOn": "2019-08-20T23:20:39Z",
       "side": 1,
       "message": "You probably want to include this line in your traps.",
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efc1f92d_fbc71236",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-21T11:14:28Z",
+      "side": 1,
+      "message": "Yup, it should be also in trap from line 44.",
+      "parentUuid": "51ce4621_b411ca5a",
       "revId": "1d40a550623647a08ca948241103e41bee234c04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
