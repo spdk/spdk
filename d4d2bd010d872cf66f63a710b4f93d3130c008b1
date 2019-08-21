@@ -16,6 +16,24 @@
       "revId": "d4d2bd010d872cf66f63a710b4f93d3130c008b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec67bd0d_79ad2e11",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-21T12:28:51Z",
+      "side": 1,
+      "message": "Ok, thanks. I will update this code.",
+      "parentUuid": "2273bfdd_f774ea4c",
+      "revId": "d4d2bd010d872cf66f63a710b4f93d3130c008b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
