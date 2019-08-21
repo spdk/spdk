@@ -328,7 +328,24 @@ if __name__ == "__main__":
                    help='How often the hotplug is processed for insert and remove events', type=int)
     p.set_defaults(func=set_bdev_nvme_hotplug)
 
+    ftl_valid_limits = ('crit', 'high', 'low', 'start')
+
     def construct_nvme_bdev(args):
+        def parse_limits(limits, arg_dict, key_suffix=''):
+            for limit in limits.split(','):
+                key, value = limit.split(':', 1)
+                if key in ftl_valid_limits:
+                    arg_dict['limit_' + key + key_suffix] = int(value)
+                else:
+                    raise ValueError('Limit {} is not supported'.format(key))
+
+        arg_limits = {}
+        if args.limit_threshold:
+            parse_limits(args.limit_threshold, arg_limits, '_threshold')
+
+        if args.limit:
+            parse_limits(args.limit, arg_limits)
+
         print_array(rpc.bdev.construct_nvme_bdev(args.client,
                                                  name=args.name,
                                                  trtype=args.trtype,
@@ -340,8 +357,14 @@ if __name__ == "__main__":
                                                  hostnqn=args.hostnqn,
                                                  hostaddr=args.hostaddr,
                                                  hostsvcid=args.hostsvcid,
+                                                 punits=args.punits,
+                                                 uuid=args.uuid,
                                                  prchk_reftag=args.prchk_reftag,
-                                                 prchk_guard=args.prchk_guard))
+                                                 prchk_guard=args.prchk_guard,
+                                                 cache=args.wb_cache,
+                                                 allow_open_bands=args.allow_open_bands,
+                                                 overprovisioning=args.overprovisioning,
+                                                 **arg_limits))
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdevs with nvme backend')
@@ -361,10 +384,24 @@ if __name__ == "__main__":
                    help='NVMe-oF host address: e.g., an ip address')
     p.add_argument('-c', '--hostsvcid',
                    help='NVMe-oF host svcid: e.g., a port number')
+    p.add_argument('-p', '--punits', help='Parallel unit range in the form of start-end: e.g. 4-8')
+    p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
+                   'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d')
+    p.add_argument('-w', '--wb-cache', help='Name of the bdev to be used as a write buffer cache (optional)')
+    p.add_argument('-o', '--allow_open_bands', help='Restoring after dirty shutdown without cache will'
+                   ' result in partial data recovery, instead of error', action='store_true')
+    p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
+                   ' to user (optional)', type=int)
     p.add_argument('-r', '--prchk-reftag',
                    help='Enable checking of PI reference tag for I/O processing.', action='store_true')
     p.add_argument('-g', '--prchk-guard',
                    help='Enable checking of PI guard for I/O processing.', action='store_true')
+    limits = p.add_argument_group('Defrag limits', 'Configures defrag limits and thresholds for'
+                                  ' levels ' + str(ftl_valid_limits)[1:-1])
+    limits.add_argument('--limit', help='Percentage of allowed user versus internal writes at given'
+                        ' levels, e.g. crit:0,high:20,low:80')
+    limits.add_argument('--limit-threshold', help='Number of free bands triggering a given level of'
+                        ' write limiting e.g. crit:1,high:2,low:3,start:4')
     p.set_defaults(func=construct_nvme_bdev)
 
     def get_nvme_controllers(args):
@@ -1316,60 +1353,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=destruct_split_vbdev)
 
     # ftl
-    ftl_valid_limits = ('crit', 'high', 'low', 'start')
-
-    def construct_ftl_bdev(args):
-        def parse_limits(limits, arg_dict, key_suffix=''):
-            for limit in limits.split(','):
-                key, value = limit.split(':', 1)
-                if key in ftl_valid_limits:
-                    arg_dict['limit_' + key + key_suffix] = int(value)
-                else:
-                    raise ValueError('Limit {} is not supported'.format(key))
-
-        arg_limits = {}
-        if args.limit_threshold:
-            parse_limits(args.limit_threshold, arg_limits, '_threshold')
-
-        if args.limit:
-            parse_limits(args.limit, arg_limits)
-
-        print_dict(rpc.bdev.construct_ftl_bdev(args.client,
-                                               name=args.name,
-                                               trtype=args.trtype,
-                                               traddr=args.traddr,
-                                               punits=args.punits,
-                                               uuid=args.uuid,
-                                               cache=args.cache,
-                                               allow_open_bands=args.allow_open_bands,
-                                               overprovisioning=args.overprovisioning,
-                                               **arg_limits))
-
-    p = subparsers.add_parser('construct_ftl_bdev',
-                              help='Add FTL bdev')
-    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
-    p.add_argument('-t', '--trtype',
-                   help='NVMe target trtype: e.g., pcie', default='pcie')
-    p.add_argument('-a', '--traddr',
-                   help='NVMe target address: e.g., an ip address or BDF', required=True)
-    p.add_argument('-l', '--punits', help='Parallel unit range in the form of start-end: e.g. 4-8',
-                   required=True)
-    p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
-                   'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)')
-    p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache (optional)')
-    p.add_argument('-o', '--allow_open_bands', help='Restoring after dirty shutdown without cache will'
-                   ' result in partial data recovery, instead of error', action='store_true')
-    p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
-                   ' to user (optional)', type=int)
-
-    limits = p.add_argument_group('Defrag limits', 'Configures defrag limits and thresholds for'
-                                  ' levels ' + str(ftl_valid_limits)[1:-1])
-    limits.add_argument('--limit', help='Percentage of allowed user versus internal writes at given'
-                        ' levels, e.g. crit:0,high:20,low:80')
-    limits.add_argument('--limit-threshold', help='Number of free bands triggering a given level of'
-                        ' write limiting e.g. crit:1,high:2,low:3,start:4')
-    p.set_defaults(func=construct_ftl_bdev)
-
     def delete_ftl_bdev(args):
         print_dict(rpc.bdev.delete_ftl_bdev(args.client, name=args.name))
 

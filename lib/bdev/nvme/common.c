@@ -37,6 +37,12 @@
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
 pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+void
+nvme_bdev_ftl_conf_init_defaults(struct spdk_ftl_conf *conf)
+{
+	*conf = g_default_ftl_conf;
+}
+
 struct nvme_bdev_ctrlr *
 nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 {

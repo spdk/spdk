@@ -297,6 +297,9 @@ free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 	free(req->hostnqn);
 	free(req->hostaddr);
 	free(req->hostsvcid);
+	free(req->punits);
+	free(req->uuid);
+	free(req->cache_bdev);
 	free(req->mode);
 }
 
@@ -319,6 +322,72 @@ static const struct spdk_json_object_decoder rpc_construct_basic_nvme_decoders[]
 	{"prchk_reftag", offsetof(struct rpc_construct_nvme, prchk_reftag), spdk_json_decode_bool, true},
 	{"prchk_guard", offsetof(struct rpc_construct_nvme, prchk_guard), spdk_json_decode_bool, true},
 	{"mode", offsetof(struct rpc_construct_nvme, mode), spdk_json_decode_string, true}
+};
+
+static const struct spdk_json_object_decoder rpc_construct_ftl_nvme_decoders[] = {
+	{"name", offsetof(struct rpc_construct_nvme, name), spdk_json_decode_string},
+	{"trtype", offsetof(struct rpc_construct_nvme, trtype), spdk_json_decode_string},
+	{"traddr", offsetof(struct rpc_construct_nvme, traddr), spdk_json_decode_string},
+	{"punits", offsetof(struct rpc_construct_nvme, punits), spdk_json_decode_string},
+	{"uuid", offsetof(struct rpc_construct_nvme, uuid), spdk_json_decode_string, true},
+	{"mode", offsetof(struct rpc_construct_nvme, mode), spdk_json_decode_string},
+	{"cache", offsetof(struct rpc_construct_nvme, cache_bdev), spdk_json_decode_string, true},
+	{
+		"allow_open_bands", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, allow_open_bands), spdk_json_decode_bool, true
+	},
+	{
+		"overprovisioning", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, lba_rsvd), spdk_json_decode_uint64, true
+	},
+	{
+		"limit_crit", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_CRIT]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_crit_threshold", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_CRIT]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_high", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_HIGH]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_high_threshold", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_HIGH]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_low", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_LOW]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_low_threshold", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_LOW]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_start", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_START]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_start_threshold", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_START]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
 };
 
 struct rpc_construct_nvme_bdev_ctx {
@@ -390,6 +459,14 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 							 "spdk_json_decode_object failed");
 			goto cleanup;
 		}
+	} else if (!strcasecmp(mode_req.mode, "ftl")) {
+		nvme_bdev_ftl_conf_init_defaults(&req.ftl_conf);
+		if (spdk_json_decode_object(params, rpc_construct_ftl_nvme_decoders,
+					    SPDK_COUNTOF(rpc_construct_ftl_nvme_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			goto cleanup;
+		}
 	} else {
 		SPDK_ERRLOG("Unknown NVMe bdev type\n");
 		goto cleanup;
@@ -409,6 +486,9 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 
 	opts.name = req.name;
 
+	ctx->req = req;
+	ctx->request = request;
+
 	if (req.mode != NULL) {
 		SLIST_FOREACH(m, &g_construct_methods, slist) {
 			if (!strcasecmp(req.mode, m->bdev_type)) {
@@ -426,8 +506,6 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 	} else {
-		ctx->req = req;
-		ctx->request = request;
 		spdk_rpc_parse_generic_bdev_args(&req, &opts);
 		spdk_rpc_construct_generic_nvme_bdev(&opts, spdk_rpc_construct_nvme_bdev_cb, ctx);
 	}

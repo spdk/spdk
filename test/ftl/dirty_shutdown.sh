@@ -45,9 +45,9 @@ if [ -n "$nv_cache" ]; then
 	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache $pu_count)
 fi
 
-ftl_construct_args="construct_ftl_bdev -b nvme0 -a $device -l $pu_start-$pu_end -o"
+ftl_construct_args="construct_nvme_bdev -b nvme0 -t PCIe -a $device -m ftl -p $pu_start-$pu_end -o"
 
-[ -n "$nvc_bdev" ] && ftl_construct_args+=" -c $nvc_bdev"
+[ -n "$nvc_bdev" ] && ftl_construct_args+=" -w $nvc_bdev"
 [ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
 
 $rpc_py $ftl_construct_args
