@@ -88,6 +88,18 @@ static bool g_context_switch_monitor_enabled = true;
 
 static struct spdk_mempool *g_spdk_event_mempool = NULL;
 
+static void
+spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
+{
+	reactor->lcore = lcore;
+	reactor->is_valid = true;
+
+	TAILQ_INIT(&reactor->threads);
+
+	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
+	assert(reactor->events != NULL);
+}
+
 static struct spdk_reactor *
 spdk_reactor_get(uint32_t lcore)
 {
@@ -100,6 +112,51 @@ spdk_reactor_get(uint32_t lcore)
 	}
 
 	return reactor;
+}
+
+static int spdk_reactor_schedule_thread(struct spdk_thread *thread);
+
+int
+spdk_reactors_init(void)
+{
+	int rc;
+	uint32_t i, last_core;
+	char mempool_name[32];
+
+	snprintf(mempool_name, sizeof(mempool_name), "evtpool_%d", getpid());
+	g_spdk_event_mempool = spdk_mempool_create(mempool_name,
+			       262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
+			       sizeof(struct spdk_event),
+			       SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+			       SPDK_ENV_SOCKET_ID_ANY);
+
+	if (g_spdk_event_mempool == NULL) {
+		SPDK_ERRLOG("spdk_event_mempool creation failed\n");
+		return -1;
+	}
+
+	/* struct spdk_reactor must be aligned on 64 byte boundary */
+	last_core = spdk_env_get_last_core();
+	rc = posix_memalign((void **)&g_reactors, 64,
+			    (last_core + 1) * sizeof(struct spdk_reactor));
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not allocate array size=%u for g_reactors\n",
+			    last_core + 1);
+		spdk_mempool_free(g_spdk_event_mempool);
+		return -1;
+	}
+
+	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
+
+	spdk_thread_lib_init(spdk_reactor_schedule_thread, sizeof(struct spdk_lw_thread));
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_reactor_construct(&g_reactors[i], i);
+	}
+
+	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
+
+	return 0;
 }
 
 struct spdk_event *
@@ -302,18 +359,6 @@ _spdk_reactor_run(void *arg)
 	return 0;
 }
 
-static void
-spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
-{
-	reactor->lcore = lcore;
-	reactor->is_valid = true;
-
-	TAILQ_INIT(&reactor->threads);
-
-	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
-	assert(reactor->events != NULL);
-}
-
 int
 spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
@@ -454,49 +499,6 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	}
 
 	spdk_event_call(evt);
-
-	return 0;
-}
-
-int
-spdk_reactors_init(void)
-{
-	int rc;
-	uint32_t i, last_core;
-	char mempool_name[32];
-
-	snprintf(mempool_name, sizeof(mempool_name), "evtpool_%d", getpid());
-	g_spdk_event_mempool = spdk_mempool_create(mempool_name,
-			       262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
-			       sizeof(struct spdk_event),
-			       SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-			       SPDK_ENV_SOCKET_ID_ANY);
-
-	if (g_spdk_event_mempool == NULL) {
-		SPDK_ERRLOG("spdk_event_mempool creation failed\n");
-		return -1;
-	}
-
-	/* struct spdk_reactor must be aligned on 64 byte boundary */
-	last_core = spdk_env_get_last_core();
-	rc = posix_memalign((void **)&g_reactors, 64,
-			    (last_core + 1) * sizeof(struct spdk_reactor));
-	if (rc != 0) {
-		SPDK_ERRLOG("Could not allocate array size=%u for g_reactors\n",
-			    last_core + 1);
-		spdk_mempool_free(g_spdk_event_mempool);
-		return -1;
-	}
-
-	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
-
-	spdk_thread_lib_init(spdk_reactor_schedule_thread, sizeof(struct spdk_lw_thread));
-
-	SPDK_ENV_FOREACH_CORE(i) {
-		spdk_reactor_construct(&g_reactors[i], i);
-	}
-
-	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
 
 	return 0;
 }
