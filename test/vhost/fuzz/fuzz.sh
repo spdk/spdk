@@ -67,4 +67,6 @@ trap - SIGINT SIGTERM exit
 
 killprocess $vhostpid
 killprocess $fuzzpid
+rm -f /dev/shm/vhost_fuzz_trace*
+
 timing_exit fuzz_test
