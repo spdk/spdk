@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "180e8030_46d63233",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:48:03Z",
+      "side": 1,
+      "message": "why don\u0027t we also backup kernel-hybrid-polling io_poll_delay parameter?\n\nwe can fix that in a separate patch though",
+      "revId": "440665bf1afa9f36fce0abf4f44600fa05e3c298",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae5ff5f7_b56d2e25",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:48:03Z",
+      "side": 1,
+      "message": "for some of these parameters - shouldn\u0027t we also change them in hybrid and libaio case?  for example, why not disable iostats?  and nomerges?\n\nI think what you have here is perfect but think we should do separate patches to get the hybrid and libaio cases to match what you\u0027re doing here.",
+      "revId": "440665bf1afa9f36fce0abf4f44600fa05e3c298",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
