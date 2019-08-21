@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfbae18b_6d869e7b",
+        "filename": "lib/bdev/null/bdev_null.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:20:58Z",
+      "side": 1,
+      "message": "bdev_null_create?",
+      "revId": "48ec8103893a31dbea450b97d8df31b9a6fdc4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7fc47b6_ba435c2a",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:20:58Z",
+      "side": 1,
+      "message": "delete_null_bdev",
+      "revId": "48ec8103893a31dbea450b97d8df31b9a6fdc4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "621a159d_d321173d",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:20:58Z",
+      "side": 1,
+      "message": "bdev_null_create",
+      "revId": "48ec8103893a31dbea450b97d8df31b9a6fdc4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f45618f_eae0b7c3",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:20:58Z",
+      "side": 1,
+      "message": "bdev_null_create",
+      "revId": "48ec8103893a31dbea450b97d8df31b9a6fdc4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
