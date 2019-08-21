@@ -66,18 +66,21 @@ struct spdk_lw_thread {
 };
 
 struct spdk_reactor {
-	/* Logical core number for this reactor. */
-	uint32_t					lcore;
-
 	/* Lightweight threads running on this reactor */
 	TAILQ_HEAD(, spdk_lw_thread)			threads;
 
-	/* The last known rusage values */
-	struct rusage					rusage;
+	/* Logical core number for this reactor. */
+	uint32_t					lcore;
+
+	struct {
+		uint32_t				is_valid : 1;
+		uint32_t				reserved : 31;
+	} flags;
 
 	struct spdk_ring				*events;
 
-	bool						is_valid;
+	/* The last known rusage values */
+	struct rusage					rusage;
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor *g_reactors;
@@ -92,7 +95,7 @@ static void
 spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 {
 	reactor->lcore = lcore;
-	reactor->is_valid = true;
+	reactor->flags.is_valid = true;
 
 	TAILQ_INIT(&reactor->threads);
 
@@ -112,7 +115,7 @@ spdk_reactor_get(uint32_t lcore)
 
 	reactor = &g_reactors[lcore];
 
-	if (reactor->is_valid == false) {
+	if (reactor->flags.is_valid == false) {
 		return NULL;
 	}
 
