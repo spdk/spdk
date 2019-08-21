@@ -20,18 +20,18 @@ $rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
 waitforlisten $svcpid
 
 # Create new bdev from json configuration
-$rootdir/scripts/gen_ftl.sh -j -a $device -n nvme0 -l 0-1 | $rpc_py load_subsystem_config
+$rootdir/scripts/gen_ftl.sh -j -a $device -n nvme0 -p 0-1 | $rpc_py load_subsystem_config
 
 uuid=$($rpc_py get_bdevs | jq -r '.[0].uuid')
 
 $rpc_py delete_ftl_bdev -b nvme0
 
 # Restore bdev from json configuration
-$rootdir/scripts/gen_ftl.sh -j -a $device -n nvme0 -l 0-1 -u $uuid | $rpc_py load_subsystem_config
+$rootdir/scripts/gen_ftl.sh -j -a $device -n nvme0 -p 0-1 -u $uuid | $rpc_py load_subsystem_config
 # Create new bdev from json configuration
-$rootdir/scripts/gen_ftl.sh -j -a $device -n nvme1 -l 2-2 | $rpc_py load_subsystem_config
+$rootdir/scripts/gen_ftl.sh -j -a $device -n nvme1 -p 2-2 | $rpc_py load_subsystem_config
 # Create new bdev from RPC
-$rpc_py construct_ftl_bdev -b nvme2 -a $device -l 3-3
+$rpc_py construct_nvme_bdev -b nvme2 -a $device -p 3-3
 
 $rpc_py delete_ftl_bdev -b nvme2
 $rpc_py delete_ftl_bdev -b nvme0
