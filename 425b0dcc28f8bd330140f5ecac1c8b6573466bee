@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "719a361e_8d89ab52",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 832,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-21T22:39:58Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "fd8dd38d_216d2f2d",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7d1acf8d_519d0527",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-21T22:21:45Z",
       "side": 1,
       "message": "can you just call comp_bdev-\u003edelete_cb_fn() here?  then you don\u0027t have to add the check in _device_unregister_cb()",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58d85576_c7af8afb",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 848,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-21T22:39:58Z",
+      "side": 1,
+      "message": "Yeah, I don\u0027t see why note.  I\u0027ll check it out",
+      "parentUuid": "7d1acf8d_519d0527",
       "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "9d8434e8_7ff64c3c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1511,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-21T22:39:58Z",
+      "side": 1,
+      "message": "Yup yup",
+      "parentUuid": "4b705af7_bd6376d9",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "277b195c_1ac2e4a7",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 12
@@ -64,6 +118,24 @@
       "writtenOn": "2019-08-21T22:21:45Z",
       "side": 1,
       "message": "in the -ENOENT case, should we still bother with _set_pmd?  I\u0027m thinking this should go after the -ENOENT check below",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d2c825b_82bcbb79",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-21T22:39:58Z",
+      "side": 1,
+      "message": "The name is needed for the RPCs - both delete and list orphans",
+      "parentUuid": "277b195c_1ac2e4a7",
       "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -84,6 +156,24 @@
       "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97b8ba3d_78f69b4b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1549,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-21T22:39:58Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d99d8a0f_13f82382",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
