@@ -407,7 +407,6 @@ ftl_get_io_channel(const struct spdk_ftl_dev *dev)
 	return NULL;
 }
 
-
 int
 ftl_io_erase(struct ftl_io *io)
 {
