@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd8dd38d_216d2f2d",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 832,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T22:21:45Z",
+      "side": 1,
+      "message": "I\u0027m not sure about this comment.  \"hot remove\" to me says \"hotplug\".  Is this comment needed for this patch?",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d1acf8d_519d0527",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 848,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T22:21:45Z",
+      "side": 1,
+      "message": "can you just call comp_bdev-\u003edelete_cb_fn() here?  then you don\u0027t have to add the check in _device_unregister_cb()",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b705af7_bd6376d9",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1511,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T22:21:45Z",
+      "side": 1,
+      "message": "could you just pass 0 here instead of -ENOENT?  then delete_vol_unload_cb doesn\u0027t have to be modified",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "277b195c_1ac2e4a7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T22:21:45Z",
+      "side": 1,
+      "message": "in the -ENOENT case, should we still bother with _set_pmd?  I\u0027m thinking this should go after the -ENOENT check below",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d99d8a0f_13f82382",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1549,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T22:21:45Z",
+      "side": 1,
+      "message": "maybe add a short explanation to the comment about why you still want to open and claim it in this -ENOENT case",
+      "revId": "425b0dcc28f8bd330140f5ecac1c8b6573466bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
