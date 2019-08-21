@@ -1363,7 +1363,17 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 }
 
 static void
-iscsi_fini_done(struct spdk_io_channel_iter *i, int status)
+iscsi_fini_done(void *io_device)
+{
+	free(g_spdk_iscsi.authfile);
+	free(g_spdk_iscsi.nodebase);
+
+	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
+	g_fini_cb_fn(g_fini_cb_arg);
+}
+
+static void
+_iscsi_fini_dev_unreg(struct spdk_io_channel_iter *i, int status)
 {
 	iscsi_check_pools();
 	iscsi_free_pools();
@@ -1374,11 +1384,8 @@ iscsi_fini_done(struct spdk_io_channel_iter *i, int status)
 	spdk_iscsi_init_grps_destroy();
 	spdk_iscsi_portal_grps_destroy();
 	iscsi_auth_groups_destroy();
-	free(g_spdk_iscsi.authfile);
-	free(g_spdk_iscsi.nodebase);
 
-	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
-	g_fini_cb_fn(g_fini_cb_arg);
+	spdk_io_device_unregister(&g_spdk_iscsi, iscsi_fini_done);
 }
 
 static void
@@ -1402,7 +1409,7 @@ _iscsi_fini_thread(struct spdk_io_channel_iter *i)
 void
 spdk_shutdown_iscsi_conns_done(void)
 {
-	spdk_for_each_channel(&g_spdk_iscsi, _iscsi_fini_thread, NULL, iscsi_fini_done);
+	spdk_for_each_channel(&g_spdk_iscsi, _iscsi_fini_thread, NULL, _iscsi_fini_dev_unreg);
 }
 
 void
