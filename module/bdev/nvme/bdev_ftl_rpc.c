@@ -128,7 +128,7 @@ static const struct spdk_json_object_decoder rpc_construct_ftl_decoders[] = {
 #define FTL_RANGE_MAX_LENGTH 32
 
 static void
-_spdk_rpc_construct_ftl_bdev_cb(const struct ftl_bdev_info *bdev_info, void *ctx, int status)
+_spdk_rpc_bdev_ftl_create_cb(const struct ftl_bdev_info *bdev_info, void *ctx, int status)
 {
 	struct spdk_jsonrpc_request *request = ctx;
 	char bdev_uuid[SPDK_UUID_STRING_LEN];
@@ -151,8 +151,8 @@ _spdk_rpc_construct_ftl_bdev_cb(const struct ftl_bdev_info *bdev_info, void *ctx
 }
 
 static void
-spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
+spdk_rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
 {
 	struct rpc_construct_ftl req = {};
 	struct ftl_bdev_init_opts opts = {};
@@ -220,7 +220,7 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	rc = bdev_ftl_init_bdev(&opts, _spdk_rpc_construct_ftl_bdev_cb, request);
+	rc = bdev_ftl_init_bdev(&opts, _spdk_rpc_bdev_ftl_create_cb, request);
 	if (rc) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Failed to create FTL bdev: %s",
@@ -232,7 +232,8 @@ invalid:
 	free_rpc_construct_ftl(&req);
 }
 
-SPDK_RPC_REGISTER("construct_ftl_bdev", spdk_rpc_construct_ftl_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_ftl_create", spdk_rpc_bdev_ftl_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ftl_create, construct_ftl_bdev)
 
 struct rpc_delete_ftl {
 	char *name;
@@ -243,7 +244,7 @@ static const struct spdk_json_object_decoder rpc_delete_ftl_decoders[] = {
 };
 
 static void
-_spdk_rpc_delete_ftl_bdev_cb(void *cb_arg, int bdeverrno)
+_spdk_rpc_bdev_ftl_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
@@ -253,7 +254,7 @@ _spdk_rpc_delete_ftl_bdev_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_delete_ftl_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_ftl_delete(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
 	struct rpc_delete_ftl attrs = {};
@@ -266,9 +267,10 @@ spdk_rpc_delete_ftl_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev_ftl_delete_bdev(attrs.name, _spdk_rpc_delete_ftl_bdev_cb, request);
+	bdev_ftl_delete_bdev(attrs.name, _spdk_rpc_bdev_ftl_delete_cb, request);
 invalid:
 	free(attrs.name);
 }
 
-SPDK_RPC_REGISTER("delete_ftl_bdev", spdk_rpc_delete_ftl_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_ftl_delete", spdk_rpc_bdev_ftl_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ftl_delete, delete_ftl_bdev)
