@@ -37,6 +37,54 @@
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
 pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+const struct spdk_ftl_conf	g_default_ftl_conf = {
+	.limits = {
+		/* 5 free bands  / 0 % host writes */
+		[SPDK_FTL_LIMIT_CRIT]  = { .thld = 5,  .limit = 0 },
+		/* 10 free bands / 5 % host writes */
+		[SPDK_FTL_LIMIT_HIGH]  = { .thld = 10, .limit = 5 },
+		/* 20 free bands / 40 % host writes */
+		[SPDK_FTL_LIMIT_LOW]   = { .thld = 20, .limit = 40 },
+		/* 40 free bands / 100 % host writes - defrag starts running */
+		[SPDK_FTL_LIMIT_START] = { .thld = 40, .limit = 100 },
+	},
+	/* 10 percent valid lbks */
+	.invalid_thld = 10,
+	/* 20% spare lbks */
+	.lba_rsvd = 20,
+	/* 6M write buffer */
+	.rwb_size = 6 * 1024 * 1024,
+	/* 90% band fill threshold */
+	.band_thld = 90,
+	/* Max 32 IO depth per band relocate */
+	.max_reloc_qdepth = 32,
+	/* Max 3 active band relocates */
+	.max_active_relocs = 3,
+	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
+	.user_io_pool_size = 2048,
+	/* Number of interleaving units per ws_opt */
+	/* 1 for default and 3 for 3D TLC NAND */
+	.num_interleave_units = 1,
+	/*
+	 * If clear ftl will return error when restoring after a dirty shutdown
+	 * If set, last band will be padded, ftl will restore based only on closed bands - this
+	 * will result in lost data after recovery.
+	 */
+	.allow_open_bands = false,
+	.nv_cache = {
+		/* Maximum number of concurrent requests */
+		.max_request_cnt = 2048,
+		/* Maximum number of blocks per request */
+		.max_request_size = 16,
+	}
+};
+
+void
+nvme_bdev_ftl_conf_init_defaults(struct spdk_ftl_conf *conf)
+{
+	*conf = g_default_ftl_conf;
+}
+
 struct nvme_bdev_ctrlr *
 nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 {

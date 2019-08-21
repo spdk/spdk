@@ -96,6 +96,14 @@ struct spdk_bdev_nvme_construct_opts {
 	struct spdk_nvme_host_id		hostid;
 	/* Host NQN */
 	const char				*hostnqn;
+	/* Parallel unit range (FTL bdev specific) */
+	struct spdk_ftl_punit_range		range;
+	/* UUID if device is restored from SSD (FTL bdev specific) */
+	struct spdk_uuid			*uuid;
+	/* Name of the bdev to be used as a write buffer cache (FTL bdev specific) */
+	const char				*cache_bdev;
+	/* FTL bdev configuration */
+	struct spdk_ftl_conf			ftl_conf;
 	uint32_t				prchk_flags;
 };
 
@@ -109,6 +117,10 @@ struct rpc_construct_nvme {
 	char *hostnqn;
 	char *hostaddr;
 	char *hostsvcid;
+	char *punits;
+	char *uuid;
+	char *cache_bdev;
+	struct spdk_ftl_conf ftl_conf;
 	char *mode;
 	bool prchk_reftag;
 	bool prchk_guard;
@@ -128,6 +140,8 @@ struct nvme_bdev_ctrlr *nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev);
 
 void nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
+
+void nvme_bdev_ftl_conf_init_defaults(struct spdk_ftl_conf *conf);
 
 void spdk_rpc_register_nvme_construct_methods(const char *bdev_type,
 		spdk_rpc_construct_bdev_fn construct_fn, spdk_rpc_parse_args_fn parse_fn);
