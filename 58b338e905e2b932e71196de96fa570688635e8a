@@ -93,6 +93,30 @@
       "revId": "58b338e905e2b932e71196de96fa570688635e8a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfb182a2_6f7e2343",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-21T00:57:54Z",
+      "side": 1,
+      "message": "If there is any possibility to have two crossings, should we have different indices and total for iov and mbuf like iov_index, src_iovcnt, mbuf_index, and src_mbuf_total? I didn\u0027t understand if we have to modify src_iovs.\n\nsrc_mbuf_total \u003d src_iovcnt;\niov_index \u003d 0;\nmbuf_index \u003d 0;\nwhile (iov_index \u003c src_iovcnt) {\n\tcurrent_src_base \u003d src_iovs[iov_index].iov_base;\n\ttotal_length +\u003d src_iovs[iov_index].iov_len;\n\tupdated_length \u003d src_iovs[iov_index].iov_len;\n\tphys_addr \u003d spdk_vtophys((void *)current_src_base, \u0026updated_length);\n\n\trte_pktmbuf_attach_extbuf(src_mbufs[iov_index],\n\t\t\t\t  current_src_base,\n\t\t\t\t  phys_addr,\n\t\t\t\t  updated_length,\n\t\t\t\t  \u0026g_shinfo);\n\trte_pktmbuf_append(src_mbufs[mbuf_index], updated_length);\n\n\tif (mbuf_index \u003e 0) {\n\t\trte_pktmbuf_chain(src_mbufs[0], src_mbufs[mbuf_index]);\n\t}\n\tmbuf_index++;\n\n\tif (updated_length \u003c src_iovs[iov_index].iov_len) {\n\t\trte_pktmbuf_alloc_bulk(g_mbuf_mp, \u0026src_mbufs[src_mbuf_total], 1);\n\t\tsrc_mbuf_total++;\n\n\t\tcurrent_src_base +\u003d updated_length;\n\t\tupdated_length \u003d src_iovs[iov_index].iov_len - updated_length;\n\n\t\tphys_addr \u003d spdk_vtophys((void *)current_src_base, \u0026updated_length);\n\n\t\trte_pktmbuf_attach_extbuf(src_mbufs[mbuf_index],\n\t\t\t\t\t  current_src_base,\n\t\t\t\t\t  phys_addr,\n\t\t\t\t\t  updated_length,\n\t\t\t\t\t  \u0026g_sh_info);\n\t\trte_pktmbuf_append(src_mbufs[mbuf_index], updated_length);\n\t\trte_pktmbuf_chain(src_mbufs[0], src_mbufs[iov_index]);\n\t\tmbuf_index++;\n\t}\n\tiov_index++;\n}",
+      "parentUuid": "4fed8bc8_8d4f10f7",
+      "range": {
+        "startLine": 522,
+        "startChar": 39,
+        "endLine": 522,
+        "endChar": 48
+      },
+      "revId": "58b338e905e2b932e71196de96fa570688635e8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
