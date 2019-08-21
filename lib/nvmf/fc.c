@@ -1298,16 +1298,12 @@ complete:
 }
 
 static int
-nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
+nvmf_fc_request_get_buffers(struct spdk_nvmf_fc_request *fc_req,
+			    struct spdk_nvmf_transport_poll_group *group,
+			    struct spdk_nvmf_transport *transport,
+			    uint32_t num_buffers)
 {
-	uint32_t length = fc_req->req.length;
-	uint32_t num_buffers;
 	uint32_t i = 0;
-	struct spdk_nvmf_fc_poll_group *fc_poll_group = fc_req->hwqp->fc_poll_group;
-	struct spdk_nvmf_transport_poll_group *group = &fc_poll_group->tp_poll_group;
-	struct spdk_nvmf_transport *transport = &fc_poll_group->fc_transport->transport;
-
-	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
 
 	while (i < num_buffers) {
 		if (!(STAILQ_EMPTY(&group->buf_cache))) {
@@ -1324,6 +1320,18 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 			i += num_buffers - i;
 		}
 	}
+	return 0;
+
+err_exit:
+	nvmf_fc_request_free_buffers(fc_req, group, transport, i);
+	return -ENOMEM;
+}
+
+static void
+nvmf_fc_request_fill_buffers(struct spdk_nvmf_fc_request *fc_req,
+			     struct spdk_nvmf_transport *transport, uint32_t length)
+{
+	uint32_t i;
 
 	fc_req->req.iovcnt = 0;
 
@@ -1337,12 +1345,26 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 		length -= fc_req->req.iov[i].iov_len;
 	}
 	fc_req->data_from_pool = true;
+}
+
+static int
+nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
+{
+	uint32_t length = fc_req->req.length;
+	uint32_t num_buffers;
+	struct spdk_nvmf_fc_poll_group *fc_poll_group = fc_req->hwqp->fc_poll_group;
+	struct spdk_nvmf_transport_poll_group *group = &fc_poll_group->tp_poll_group;
+	struct spdk_nvmf_transport *transport = &fc_poll_group->fc_transport->transport;
+
+	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
+
+	if (nvmf_fc_request_get_buffers(fc_req, group, transport, num_buffers)) {
+		return -ENOMEM;
+	}
+
+	nvmf_fc_request_fill_buffers(fc_req, transport, length);
 
 	return 0;
-
-err_exit:
-	nvmf_fc_request_free_buffers(fc_req, group, transport, i);
-	return -ENOMEM;
 }
 
 static int
