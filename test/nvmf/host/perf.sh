@@ -13,7 +13,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 timing_enter perf
 
 nvmftestinit
-nvmfappstart "-m 0xF"
+nvmfappstart "-m $(random_coremask)"
 
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 
