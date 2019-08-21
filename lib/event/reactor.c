@@ -78,6 +78,7 @@ struct spdk_reactor {
 	struct spdk_ring				*events;
 
 	bool						is_valid;
+	bool						is_scheduler;
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor *g_reactors;
@@ -120,6 +121,7 @@ spdk_reactor_get(uint32_t lcore)
 }
 
 static int spdk_reactor_schedule_thread(struct spdk_thread *thread);
+static void spdk_reactors_reschedule_threads(void *arg1, void *arg2);
 
 int
 spdk_reactors_init(void)
@@ -333,6 +335,11 @@ _spdk_reactor_run(void *arg)
 	uint64_t		last_rusage = 0;
 	struct spdk_lw_thread	*lw_thread, *tmp;
 	char			thread_name[32];
+	uint64_t		last_sched = 0;
+	uint64_t		sched_period;
+	struct spdk_event	*evt;
+
+	sched_period = spdk_get_ticks_hz();
 
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
@@ -371,6 +378,19 @@ _spdk_reactor_run(void *arg)
 				get_rusage(reactor);
 				last_rusage = now;
 			}
+		}
+
+		if (reactor->is_scheduler && (now - last_sched) > sched_period) {
+			uint32_t next_core;
+
+			last_sched = now;
+			next_core = spdk_env_get_next_core(reactor->lcore);
+			if (next_core == UINT32_MAX) {
+				next_core = spdk_env_get_first_core();
+			}
+
+			evt = spdk_event_allocate(next_core, spdk_reactors_reschedule_threads, NULL, NULL);
+			spdk_event_call(evt);
 		}
 	}
 
@@ -458,6 +478,7 @@ spdk_reactors_start(void)
 	/* Start the master reactor */
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
+	reactor->is_scheduler = true;
 	_spdk_reactor_run(reactor);
 
 	spdk_env_thread_wait_all();
@@ -527,6 +548,28 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	spdk_event_call(evt);
 
 	return 0;
+}
+
+static void
+spdk_reactors_reschedule_threads(void *arg1, void *arg2)
+{
+	uint32_t next_core;
+	struct spdk_reactor *reactor;
+	struct spdk_event *evt;
+
+	reactor = spdk_reactor_get(spdk_env_get_current_core());
+
+	if (reactor->is_scheduler) {
+		return;
+	}
+
+	next_core = spdk_env_get_next_core(reactor->lcore);
+	if (next_core == UINT32_MAX) {
+		next_core = spdk_env_get_first_core();
+	}
+
+	evt = spdk_event_allocate(next_core, spdk_reactors_reschedule_threads, NULL, NULL);
+	spdk_event_call(evt);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("reactor", SPDK_LOG_REACTOR)
