@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39193898_a8bae1b2",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T21:37:46Z",
+      "side": 1,
+      "message": "We should probably change the iov_len just above to use 0x1000 also, instead of using 1024 * 4 in one place and 0x1000 in the other.\n\nWould it be better to scatter the iov_base a bit more though?  meaning the iov_len is 4096 (0x1000) so the iov_bases will end up being effectively contiguous:\n\nsrc_iovs[0].iov_base \u003d 0x10000000; /* with iov_len 0x1000 */\nsrc_iovs[1].iov_base \u003d 0x10001000; /* with iov_len 0x1000 */\nsrc_iovs[2].iov_base \u003d 0x20002000; /* with iov_len 0x1000 */\n\nMaybe it doesn\u0027t matter but I think usually the iovs will not be contiguous like this, otherwise the user would have just passed a single iov.",
+      "revId": "b657b0247007140388cabbcc251311ee3b83df25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a053e92_c46b910a",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T21:37:46Z",
+      "side": 1,
+      "message": "You could replace:\n\n(void *)ut_expected_op.m_src-\u003ebuf_addr\n\nwith\n\nsrc_iovs[0].iov_base\n\nwhich is shorter and a bit easier to read.  Same for spdk_vtophys lines below.",
+      "revId": "b657b0247007140388cabbcc251311ee3b83df25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56497602_5882ecb7",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T21:37:46Z",
+      "side": 1,
+      "message": "similar comments as above",
+      "revId": "b657b0247007140388cabbcc251311ee3b83df25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
