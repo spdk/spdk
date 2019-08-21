@@ -41,8 +41,20 @@ $rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
 # Wait until spdk_tgt starts
 waitforlisten $svcpid
 
+<<<<<<< HEAD
 if [ -n "$nv_cache" ]; then
 	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache $(($pu_end - $pu_start + 1)))
+||||||| parent of 11c294df4... bdev/ftl: Use common construst RPC call for FTL bdevs
+if [ -n "$uuid" ]; then
+	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3 -u $uuid
+else
+	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3
+=======
+if [ -n "$uuid" ]; then
+	$rpc_py construct_nvme_bdev -b nvme0 -t PCIe -a $device -m ftl -p 0-3 -u $uuid
+else
+	$rpc_py construct_nvme_bdev -b nvme0 -t PCIe -a $device -m ftl -p 0-3
+>>>>>>> 11c294df4... bdev/ftl: Use common construst RPC call for FTL bdevs
 fi
 
 ftl_construct_args="construct_ftl_bdev -b nvme0 -a $device -l ${pu_start}-${pu_end}"
