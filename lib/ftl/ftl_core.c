@@ -1792,7 +1792,7 @@ ftl_dev_needs_defrag(struct spdk_ftl_dev *dev)
 		return false;
 	}
 
-	if (dev->df_band) {
+	if (ftl_reloc_is_defrag_active(dev->reloc)) {
 		return false;
 	}
 
@@ -1867,10 +1867,9 @@ ftl_process_relocs(struct spdk_ftl_dev *dev)
 	struct ftl_band *band;
 
 	if (ftl_dev_needs_defrag(dev)) {
-		band = dev->df_band = ftl_select_defrag_band(dev);
-
+		band = ftl_select_defrag_band(dev);
 		if (band) {
-			ftl_reloc_add(dev->reloc, band, 0, ftl_num_band_lbks(dev), 0);
+			ftl_reloc_add(dev->reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
 			ftl_trace_defrag_band(dev, band);
 		}
 	}
@@ -2135,7 +2134,7 @@ ftl_process_anm_event(struct ftl_anm_event *event)
 	band = ftl_band_from_ppa(dev, event->ppa);
 	lbkoff = ftl_band_lbkoff_from_ppa(band, event->ppa);
 
-	ftl_reloc_add(dev->reloc, band, lbkoff, event->num_lbks, 0);
+	ftl_reloc_add(dev->reloc, band, lbkoff, event->num_lbks, 0, false);
 	ftl_anm_event_complete(event);
 }
 

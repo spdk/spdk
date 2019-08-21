@@ -139,11 +139,7 @@ ftl_band_write_failed(struct ftl_band *band)
 
 	band->high_prio = 1;
 
-	if (!dev->df_band) {
-		dev->df_band = band;
-	}
-
-	ftl_reloc_add(dev->reloc, band, 0, ftl_num_band_lbks(dev), 1);
+	ftl_reloc_add(dev->reloc, band, 0, ftl_num_band_lbks(dev), 1, true);
 	ftl_band_set_state(band, FTL_BAND_STATE_CLOSED);
 }
 
@@ -174,10 +170,6 @@ _ftl_band_set_free(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_band *lband, *prev;
-
-	if (band == dev->df_band) {
-		dev->df_band = NULL;
-	}
 
 	/* Remove the band from the closed band list */
 	LIST_REMOVE(band, list_entry);
