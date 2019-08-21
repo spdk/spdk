@@ -281,6 +281,24 @@
       "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d9585c0_e2867a7e",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-21T20:55:00Z",
+      "side": 1,
+      "message": "I\u0027ll explain it a different way. Say we have two sockets, A and B. On the first call to epoll_wait, both A and B receive a full 8k into their recv buffer. Let\u0027s say they are all read commands for both sockets. First A processes 32 PDUs, but then breaks out, leaving some PDUs unprocessed in the recv buffer. Then B does the same. Then, let\u0027s say the user only ever sends commands on socket B from that point forward. Now, epoll_wait will not return 0 because socket B is busy, but nothing ever comes back to process the remaining PDUs in socket A\u0027s recv_buf. They\u0027re stuck until all sockets go idle, which in the worst case is an infinitely long time.",
+      "parentUuid": "79550fe3_7fab5221",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
