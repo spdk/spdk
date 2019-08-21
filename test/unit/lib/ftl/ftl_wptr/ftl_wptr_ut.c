@@ -63,7 +63,7 @@ DEFINE_STUB_V(ftl_io_fail, (struct ftl_io *io, int status));
 DEFINE_STUB_V(ftl_trace_completion, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     enum ftl_trace_completion completion));
 DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
-			      size_t num_lbks, int prio));
+			      size_t num_lbks, int prio, bool defrag));
 DEFINE_STUB_V(ftl_trace_write_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
 DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     struct ftl_ppa ppa, size_t ppa_cnt));

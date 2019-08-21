@@ -87,6 +87,8 @@ struct ftl_band_reloc {
 
 	/* Indicates band being acitvely processed */
 	int					active;
+	/* The band is being defragged */
+	bool					defrag;
 
 	/* Reloc map iterator */
 	struct {
@@ -124,6 +126,8 @@ struct ftl_reloc {
 
 	/* Maximum transfer size (in logical blocks) per single IO */
 	size_t					xfer_size;
+	/* Number of bands being defragged */
+	size_t					num_defrag_bands;
 
 	/* Array of band relocates */
 	struct ftl_band_reloc			*brelocs;
@@ -140,6 +144,12 @@ struct ftl_reloc {
 	/* Pending band relocates queue */
 	TAILQ_HEAD(, ftl_band_reloc)		pending_queue;
 };
+
+bool
+ftl_reloc_is_defrag_active(const struct ftl_reloc *reloc)
+{
+	return reloc->num_defrag_bands > 0;
+}
 
 static size_t
 ftl_reloc_iter_chk_offset(struct ftl_band_reloc *breloc)
@@ -168,7 +178,6 @@ ftl_reloc_clr_lbk(struct ftl_band_reloc *breloc, size_t lbkoff)
 	assert(breloc->num_lbks);
 	breloc->num_lbks--;
 }
-
 
 static void
 ftl_reloc_read_lba_map_cb(struct ftl_io *io, void *arg, int status)
@@ -563,6 +572,12 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 
 	if (ftl_band_empty(band) && band->state == FTL_BAND_STATE_CLOSED) {
 		ftl_band_set_state(breloc->band, FTL_BAND_STATE_FREE);
+
+		if (breloc->defrag) {
+			breloc->defrag = false;
+			assert(reloc->num_defrag_bands > 0);
+			reloc->num_defrag_bands--;
+		}
 	}
 }
 
@@ -670,6 +685,7 @@ ftl_reloc_init(struct spdk_ftl_dev *dev)
 	reloc->max_qdepth = dev->conf.max_reloc_qdepth;
 	reloc->max_active = dev->conf.max_active_relocs;
 	reloc->xfer_size = dev->xfer_size;
+	reloc->num_defrag_bands = 0;
 
 	if (reloc->max_qdepth > FTL_RELOC_MAX_MOVES) {
 		goto error;
@@ -775,7 +791,7 @@ ftl_reloc(struct ftl_reloc *reloc)
 
 void
 ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
-	      size_t num_lbks, int prio)
+	      size_t num_lbks, int prio, bool is_defrag)
 {
 	struct ftl_band_reloc *breloc = &reloc->brelocs[band->id];
 	size_t i, prev_lbks = breloc->num_lbks;
@@ -788,6 +804,12 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 	pthread_spin_lock(&band->lba_map.lock);
 	if (band->lba_map.num_vld == 0) {
 		pthread_spin_unlock(&band->lba_map.lock);
+
+		/* If the band is closed and has no valid blocks, free it */
+		if (band->state == FTL_BAND_STATE_CLOSED) {
+			ftl_band_set_state(band, FTL_BAND_STATE_FREE);
+		}
+
 		return;
 	}
 	pthread_spin_unlock(&band->lba_map.lock);
@@ -802,6 +824,13 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 
 	if (!prio && prev_lbks == breloc->num_lbks) {
 		return;
+	}
+
+	/* If the band is coming from the defrag process, mark it appropriately */
+	if (is_defrag) {
+		assert(offset == 0 && num_lbks == ftl_num_band_lbks(band->dev));
+		reloc->num_defrag_bands++;
+		breloc->defrag = true;
 	}
 
 	if (!prev_lbks && !prio && !breloc->active) {

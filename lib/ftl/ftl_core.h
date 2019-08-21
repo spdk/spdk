@@ -191,8 +191,6 @@ struct spdk_ftl_dev {
 
 	/* Array of bands */
 	struct ftl_band				*bands;
-	/* Band being curently defraged */
-	struct ftl_band				*df_band;
 	/* Number of operational bands */
 	size_t					num_bands;
 	/* Next write band */
