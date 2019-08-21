@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "91d112d9_6a356bfb",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-21T22:11:23Z",
+      "side": 1,
+      "message": "it actually doesn\u0027t matter what\u0027s in these base values, the UT just makes sure that the expected mbufs created from these IOVs match up.  The other values were fine but seemed stupid as base addresses.  I can change the 1024 * 4 of coruse",
+      "parentUuid": "39193898_a8bae1b2",
+      "revId": "b657b0247007140388cabbcc251311ee3b83df25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1a053e92_c46b910a",
         "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-21T21:37:46Z",
       "side": 1,
       "message": "You could replace:\n\n(void *)ut_expected_op.m_src-\u003ebuf_addr\n\nwith\n\nsrc_iovs[0].iov_base\n\nwhich is shorter and a bit easier to read.  Same for spdk_vtophys lines below.",
+      "revId": "b657b0247007140388cabbcc251311ee3b83df25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03ffcb8d_05061f0d",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-21T22:11:23Z",
+      "side": 1,
+      "message": "LOL, OK :)",
+      "parentUuid": "1a053e92_c46b910a",
       "revId": "b657b0247007140388cabbcc251311ee3b83df25",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "b657b0247007140388cabbcc251311ee3b83df25",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ec70510_0c1a6fde",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-21T22:11:23Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "56497602_5882ecb7",
+      "revId": "b657b0247007140388cabbcc251311ee3b83df25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
