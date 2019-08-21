@@ -36,6 +36,8 @@
 
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
+#include "spdk/ftl.h"
+#include "spdk/rpc.h"
 
 TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
 extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
@@ -107,12 +109,18 @@ struct rpc_construct_nvme {
 	char *hostnqn;
 	char *hostaddr;
 	char *hostsvcid;
+	char *mode;
 	bool prchk_reftag;
 	bool prchk_guard;
 };
 
 typedef void (*spdk_rpc_construct_bdev_cb_fn)(struct nvme_bdev_info *bdev_info, void *ctx,
 		int status);
+typedef void (*spdk_rpc_construct_bdev_fn)(struct spdk_bdev_nvme_construct_opts *opts,
+		spdk_rpc_construct_bdev_cb_fn cb_fn, void *cb_arg);
+typedef int (*spdk_rpc_parse_args_fn)(struct rpc_construct_nvme *req,
+				      struct spdk_bdev_nvme_construct_opts *opts);
+
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
 struct nvme_bdev_ctrlr *nvme_bdev_first_ctrlr(void);
@@ -120,5 +128,14 @@ struct nvme_bdev_ctrlr *nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev);
 
 void nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
+
+void spdk_rpc_register_nvme_construct_methods(const char *bdev_type,
+		spdk_rpc_construct_bdev_fn construct_fn, spdk_rpc_parse_args_fn parse_fn);
+
+#define SPDK_RPC_REGISTER_CONSTRUCT_FNS(bdev_type, construct_fn, parse_fn) \
+static void __attribute__((constructor)) rpc_register_##construct_fn(void) \
+{ \
+	spdk_rpc_register_nvme_construct_methods(bdev_type, construct_fn, parse_fn); \
+}
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
