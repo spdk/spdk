@@ -417,10 +417,6 @@ rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op
 static int
 test_setup(void)
 {
-	g_mbuf_mp = rte_pktmbuf_pool_create("mbuf_mp", NUM_MBUFS, POOL_CACHE_SIZE,
-					    sizeof(struct rte_mbuf), 0, rte_socket_id());
-	assert(g_mbuf_mp != NULL);
-
 	g_comp_bdev.backing_dev.unmap = _comp_reduce_unmap;
 	g_comp_bdev.backing_dev.readv = _comp_reduce_readv;
 	g_comp_bdev.backing_dev.writev = _comp_reduce_writev;
@@ -489,7 +485,6 @@ test_setup(void)
 static int
 test_cleanup(void)
 {
-	spdk_mempool_free((struct spdk_mempool *)g_mbuf_mp);
 	free(g_dst_mbufs[0]);
 	free(g_src_mbufs[0]);
 	free(g_dst_mbufs[1]);
@@ -735,10 +730,6 @@ static void
 test_initdrivers(void)
 {
 	int rc;
-	static struct rte_mempool *orig_mbuf_mp;
-
-	orig_mbuf_mp = g_mbuf_mp;
-	g_mbuf_mp = NULL;
 
 	/* test return values from rte_vdev_init() */
 	MOCK_SET(rte_eal_get_configuration, g_test_config);
@@ -751,6 +742,7 @@ test_initdrivers(void)
 	MOCK_SET(rte_vdev_init, 0);
 	rc = vbdev_init_compress_drivers();
 	CU_ASSERT(rc == 0);
+	spdk_mempool_free((struct spdk_mempool *)g_mbuf_mp);
 
 	/* error */
 	MOCK_SET(rte_vdev_init, -2);
@@ -817,8 +809,6 @@ test_initdrivers(void)
 	ut_rte_compressdev_private_xform_create = 0;
 	rc = vbdev_init_compress_drivers();
 	CU_ASSERT(rc == 0);
-
-	g_mbuf_mp = orig_mbuf_mp;
 }
 
 static void
