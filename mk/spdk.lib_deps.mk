@@ -109,7 +109,6 @@ DEPDIRS-bdev_gpt := bdev conf json log thread util
 
 DEPDIRS-bdev_lvol := $(BDEV_DEPS) lvol blob blob_bdev
 DEPDIRS-bdev_rpc := $(BDEV_DEPS)
-DEPDIRS-bdev_zone_block := $(BDEV_DEPS)
 
 DEPDIRS-bdev_error := $(BDEV_DEPS_CONF)
 DEPDIRS-bdev_malloc := $(BDEV_DEPS_CONF) copy
@@ -117,6 +116,7 @@ DEPDIRS-bdev_split := $(BDEV_DEPS_CONF)
 
 DEPDIRS-bdev_compress := $(BDEV_DEPS_THREAD) reduce
 DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
+DEPDIRS-bdev_zone_block := $(BDEV_DEPS_THREAD)
 
 DEPDIRS-bdev_aio := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_crypto := $(BDEV_DEPS_CONF_THREAD)
