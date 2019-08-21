@@ -27,7 +27,7 @@ function create_json_config()
 	echo '"subsystem": "bdev",'
 	echo '"config": ['
 	echo '{'
-	echo '"method": "construct_ftl_bdev",'
+	echo '"method": "construct_nvme_bdev",'
 	echo '"params": {'
 	echo "\"name\": \"$2\","
 	echo '"trtype": "PCIe",'
@@ -47,12 +47,12 @@ function create_json_config()
 
 uuid=00000000-0000-0000-0000-000000000000
 
-while getopts "ja:n:l:m:u:c:" arg; do
+while getopts "ja:n:p:m:u:c:" arg; do
 	case "$arg" in
 		j)	json=1		;;
 		a)	addr=$OPTARG	;;
 		n)	name=$OPTARG	;;
-		l)	punits=$OPTARG	;;
+		p)	punits=$OPTARG	;;
 		u)	uuid=$OPTARG	;;
 		c)	cache=$OPTARG	;;
 		h)	usage

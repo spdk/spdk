@@ -298,7 +298,6 @@ Example response:
     "delete_malloc_bdev",
     "bdev_malloc_create",
     "delete_ftl_bdev",
-    "construct_ftl_bdev",
     "get_lvol_stores",
     "destroy_lvol_bdev",
     "resize_lvol_bdev",
@@ -1497,6 +1496,9 @@ hostaddr                | Optional | string      | NVMe-oF host address: ip addr
 hostsvcid               | Optional | string      | NVMe-oF host trsvcid: port number
 prchk_reftag            | Optional | bool        | Enable checking of PI reference tag for I/O processing
 prchk_guard             | Optional | bool        | Enable checking of PI guard for I/O processing
+punits                  | Optional | string      | Parallel unit range in the form of start-end e.g 4-8 (required for ftl mode)
+cache                   | Optional | string      | Name of the bdev to be used as a write buffer cache (required for ftl mode)
+uuid                    | Optional | string      | UUID of restored bdev (not applicable when creating new instance)
 
 ### Example
 
@@ -1997,59 +1999,6 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
-}
-~~~
-
-## construct_ftl_bdev {#rpc_construct_ftl_bdev}
-
-Create FTL bdev.
-
-This RPC is subject to change.
-
-### Parameters
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-name                    | Required | string      | Bdev name
-trtype                  | Required | string      | Transport type
-traddr                  | Required | string      | NVMe target address
-punits                  | Required | string      | Parallel unit range in the form of start-end e.g 4-8
-uuid                    | Optional | string      | UUID of restored bdev (not applicable when creating new instance)
-cache                   | Optional | string      | Name of the bdev to be used as a write buffer cache
-
-### Result
-
-Name of newly created bdev.
-
-### Example
-
-Example request:
-
-~~~
-{
-  "params": {
-    "name": "nvme0"
-    "trtype" "pcie"
-    "traddr": "0000:00:04.0"
-    "punits": "0-3"
-    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
-  },
-  "jsonrpc": "2.0",
-  "method": "construct_ftl_bdev",
-  "id": 1
-}
-~~~
-
-Example response:
-
-~~~
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": {
-      "name" : "nvme0"
-      "uuid" : "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
-  }
 }
 ~~~
 
