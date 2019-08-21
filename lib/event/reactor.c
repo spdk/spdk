@@ -72,9 +72,6 @@ struct spdk_reactor {
 	/* Lightweight threads running on this reactor */
 	TAILQ_HEAD(, spdk_lw_thread)			threads;
 
-	/* Poller for get the rusage for the reactor. */
-	struct spdk_poller				*rusage_poller;
-
 	/* The last known rusage values */
 	struct rusage					rusage;
 
