@@ -1373,58 +1373,6 @@ spdk_nvmf_rdma_check_contiguous_entries(uint64_t addr_1, uint64_t addr_2)
 	return addr_1 == addr_2;
 }
 
-static void
-spdk_nvmf_rdma_request_free_buffers(struct spdk_nvmf_rdma_request *rdma_req,
-				    struct spdk_nvmf_transport_poll_group *group, struct spdk_nvmf_transport *transport,
-				    uint32_t num_buffers)
-{
-	uint32_t i;
-
-	for (i = 0; i < num_buffers; i++) {
-		if (group->buf_cache_count < group->buf_cache_size) {
-			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->req.buffers[i], link);
-			group->buf_cache_count++;
-		} else {
-			spdk_mempool_put(transport->data_buf_pool, rdma_req->req.buffers[i]);
-		}
-		rdma_req->req.iov[i].iov_base = NULL;
-		rdma_req->req.buffers[i] = NULL;
-		rdma_req->req.iov[i].iov_len = 0;
-
-	}
-	rdma_req->data_from_pool = false;
-}
-
-static int
-nvmf_rdma_request_get_buffers(struct spdk_nvmf_rdma_request *rdma_req,
-			      struct spdk_nvmf_transport_poll_group *group, struct spdk_nvmf_transport *transport,
-			      uint32_t num_buffers)
-{
-	uint32_t i = 0;
-
-	while (i < num_buffers) {
-		if (!(STAILQ_EMPTY(&group->buf_cache))) {
-			group->buf_cache_count--;
-			rdma_req->req.buffers[i] = STAILQ_FIRST(&group->buf_cache);
-			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
-			assert(rdma_req->req.buffers[i] != NULL);
-			i++;
-		} else {
-			if (spdk_mempool_get_bulk(transport->data_buf_pool, &rdma_req->req.buffers[i], num_buffers - i)) {
-				goto err_exit;
-			}
-			i += num_buffers - i;
-		}
-	}
-
-	return 0;
-
-err_exit:
-	spdk_nvmf_rdma_request_free_buffers(rdma_req, group, transport, i);
-	return -ENOMEM;
-}
-
 typedef enum spdk_nvme_data_transfer spdk_nvme_data_transfer_t;
 
 static spdk_nvme_data_transfer_t
@@ -1594,7 +1542,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	num_buffers = SPDK_CEIL_DIV(rdma_req->req.length, rtransport->transport.opts.io_unit_size);
 
-	if (nvmf_rdma_request_get_buffers(rdma_req, &rgroup->group, &rtransport->transport, num_buffers)) {
+	if (spdk_nvmf_request_get_buffers(&rdma_req->req, &rgroup->group, &rtransport->transport,
+					  num_buffers)) {
 		return -ENOMEM;
 	}
 
@@ -1613,7 +1562,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	return rc;
 
 err_exit:
-	spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport, num_buffers);
+	spdk_nvmf_request_free_buffers(&rdma_req->req, &rgroup->group, &rtransport->transport, num_buffers);
+	rdma_req->data_from_pool = false;
 	while (i) {
 		i--;
 		rdma_req->data.wr.sg_list[i].addr = 0;
@@ -1658,13 +1608,14 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	if (num_buffers > NVMF_REQ_MAX_BUFFERS) {
 		return -EINVAL;
 	}
-	if (nvmf_rdma_request_get_buffers(rdma_req, &rgroup->group, &rtransport->transport,
+	if (spdk_nvmf_request_get_buffers(req, &rgroup->group, &rtransport->transport,
 					  num_buffers) != 0) {
 		return -ENOMEM;
 	}
 
 	if (nvmf_request_alloc_wrs(rtransport, rdma_req, num_sgl_descriptors - 1) != 0) {
-		spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport, num_buffers);
+		spdk_nvmf_request_free_buffers(req, &rgroup->group, &rtransport->transport, num_buffers);
+		rdma_req->data_from_pool = false;
 		return -ENOMEM;
 	}
 
@@ -1715,7 +1666,8 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	return 0;
 
 err_exit:
-	spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport, num_buffers);
+	spdk_nvmf_request_free_buffers(req, &rgroup->group, &rtransport->transport, num_buffers);
+	rdma_req->data_from_pool = false;
 	nvmf_rdma_request_free_data(rdma_req, rtransport);
 	return rc;
 }
@@ -1856,8 +1808,9 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	if (rdma_req->data_from_pool) {
 		rgroup = rqpair->poller->group;
 
-		spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport,
-						    rdma_req->req.iovcnt);
+		spdk_nvmf_request_free_buffers(&rdma_req->req, &rgroup->group, &rtransport->transport,
+					       rdma_req->req.iovcnt);
+		rdma_req->data_from_pool = false;
 	}
 	nvmf_rdma_request_free_data(rdma_req, rtransport);
 	rdma_req->req.length = 0;
