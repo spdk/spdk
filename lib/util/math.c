@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright(c) Intel Corporation. All rights reserved.
+ *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -31,36 +31,15 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * General utility functions
- */
-
-#ifndef SPDK_UTIL_H
-#define SPDK_UTIL_H
-
 #include "spdk/stdinc.h"
+#include "spdk/util.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define spdk_min(a,b) (((a)<(b))?(a):(b))
-#define spdk_max(a,b) (((a)>(b))?(a):(b))
-
-#define SPDK_COUNTOF(arr) (sizeof(arr) / sizeof((arr)[0]))
-
-#define SPDK_CONTAINEROF(ptr, type, member) ((type *)((uintptr_t)ptr - offsetof(type, member)))
-
-#define SPDK_SEC_TO_USEC 1000000ULL
-#define SPDK_SEC_TO_NSEC 1000000000ULL
-
-/* Ceiling division of unsigned integers */
-#define SPDK_CEIL_DIV(x,y) (((x)+(y)-1)/(y))
-
+/* The following will automatically generate several version of
+ * this function, targeted at different architectures. This
+ * is only supported by GCC 6 or newer. */
 #if defined(__GNUC__) && __GNUC__ >= 6 && !defined(__clang__)
-uint32_t spdk_u32log2(uint32_t x);
-#else
-static inline uint32_t
+__attribute__((target_clones("bmi", "arch=core2", "arch=atom", "default")))
+inline uint32_t
 spdk_u32log2(uint32_t x)
 {
 	if (x == 0) {
@@ -71,16 +50,12 @@ spdk_u32log2(uint32_t x)
 }
 #endif
 
-static inline uint32_t
-spdk_align32pow2(uint32_t x)
-{
-	return 1u << (1 + spdk_u32log2(x - 1));
-}
-
+/* The following will automatically generate several version of
+ * this function, targeted at different architectures. This
+ * is only supported by GCC 6 or newer. */
 #if defined(__GNUC__) && __GNUC__ >= 6 && !defined(__clang__)
-uint64_t spdk_u64log2(uint64_t x);
-#else
-static inline uint64_t
+__attribute__((target_clones("bmi", "arch=core2", "arch=atom", "default")))
+inline uint64_t
 spdk_u64log2(uint64_t x)
 {
 	if (x == 0) {
@@ -89,35 +64,4 @@ spdk_u64log2(uint64_t x)
 	}
 	return 63u - __builtin_clzl(x);
 }
-#endif
-
-static inline uint64_t
-spdk_align64pow2(uint64_t x)
-{
-	return 1u << (1 + spdk_u64log2(x - 1));
-}
-
-/**
- * Check if a uint32_t is a power of 2.
- */
-static inline bool
-spdk_u32_is_pow2(uint32_t x)
-{
-	if (x == 0) {
-		return false;
-	}
-
-	return (x & (x - 1)) == 0;
-}
-
-static inline uint64_t
-spdk_divide_round_up(uint64_t num, uint64_t divisor)
-{
-	return (num + divisor - 1) / divisor;
-}
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif
