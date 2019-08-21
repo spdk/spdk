@@ -66,19 +66,22 @@ struct spdk_lw_thread {
 };
 
 struct spdk_reactor {
-	/* Logical core number for this reactor. */
-	uint32_t					lcore;
-
 	/* Lightweight threads running on this reactor */
 	TAILQ_HEAD(, spdk_lw_thread)			threads;
 
-	/* The last known rusage values */
-	struct rusage					rusage;
+		/* Logical core number for this reactor. */
+	uint32_t					lcore;
+
+	struct {
+		uint32_t				is_valid : 1;
+		uint32_t				is_scheduler : 1;
+		uint32_t				reserved : 30;
+	} flags;
 
 	struct spdk_ring				*events;
 
-	bool						is_valid;
-	bool						is_scheduler;
+	/* The last known rusage values */
+	struct rusage					rusage;
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor *g_reactors;
@@ -93,7 +96,7 @@ static void
 spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 {
 	reactor->lcore = lcore;
-	reactor->is_valid = true;
+	reactor->flags.is_valid = true;
 
 	TAILQ_INIT(&reactor->threads);
 
@@ -108,7 +111,7 @@ spdk_reactor_get(uint32_t lcore)
 
 	reactor = &g_reactors[lcore];
 
-	if (reactor->is_valid == false) {
+	if (reactor->flags.is_valid == false) {
 		return NULL;
 	}
 
@@ -375,7 +378,7 @@ _spdk_reactor_run(void *arg)
 			}
 		}
 
-		if (reactor->is_scheduler && (now - last_sched) > sched_period) {
+		if (reactor->flags.is_scheduler && (now - last_sched) > sched_period) {
 			uint32_t next_core;
 
 			last_sched = now;
@@ -473,7 +476,7 @@ spdk_reactors_start(void)
 	/* Start the master reactor */
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
-	reactor->is_scheduler = true;
+	reactor->flags.is_scheduler = true;
 	_spdk_reactor_run(reactor);
 
 	spdk_env_thread_wait_all();
@@ -554,7 +557,7 @@ spdk_reactors_reschedule_threads(void *arg1, void *arg2)
 
 	reactor = spdk_reactor_get(spdk_env_get_current_core());
 
-	if (reactor->is_scheduler) {
+	if (reactor->flags.is_scheduler) {
 		return;
 	}
 
