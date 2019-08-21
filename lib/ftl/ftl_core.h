@@ -157,6 +157,8 @@ struct spdk_ftl_dev {
 	/* Indicates the device is about to be stopped */
 	int					halt;
 
+	/* Status to return for halt completion callback */
+	int					halt_complete_status;
 	/* Initializaton context */
 	struct ftl_init_context			init_ctx;
 	/* Destruction context */
