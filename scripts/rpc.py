@@ -53,10 +53,12 @@ if __name__ == "__main__":
 
     def rpc_get_methods(args):
         print_dict(rpc.rpc_get_methods(args.client,
-                                       current=args.current))
+                                       current=args.current,
+                                       include_aliases=args.include_aliases))
 
     p = subparsers.add_parser('rpc_get_methods', help='Get list of supported RPC methods', aliases=['get_rpc_methods'])
     p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
+    p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
     p.set_defaults(func=rpc_get_methods)
 
     def get_spdk_version(args):
@@ -77,9 +79,11 @@ if __name__ == "__main__":
     p.set_defaults(func=save_config)
 
     def load_config(args):
-        rpc.load_config(args.client, sys.stdin)
+        rpc.load_config(args.client, sys.stdin,
+                        include_aliases=args.include_aliases)
 
     p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and targets using JSON RPC read from stdin.""")
+    p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
     p.set_defaults(func=load_config)
 
     def save_subsystem_config(args):
