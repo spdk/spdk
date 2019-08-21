@@ -164,6 +164,27 @@ spdk_reactors_init(void)
 	return 0;
 }
 
+void
+spdk_reactors_fini(void)
+{
+	uint32_t i;
+	struct spdk_reactor *reactor;
+
+	spdk_thread_lib_fini();
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		reactor = spdk_reactor_get(i);
+		if (spdk_likely(reactor != NULL) && reactor->events != NULL) {
+			spdk_ring_free(reactor->events);
+		}
+	}
+
+	spdk_mempool_free(g_spdk_event_mempool);
+
+	free(g_reactors);
+	g_reactors = NULL;
+}
+
 struct spdk_event *
 spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 {
@@ -506,27 +527,6 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	spdk_event_call(evt);
 
 	return 0;
-}
-
-void
-spdk_reactors_fini(void)
-{
-	uint32_t i;
-	struct spdk_reactor *reactor;
-
-	spdk_thread_lib_fini();
-
-	SPDK_ENV_FOREACH_CORE(i) {
-		reactor = spdk_reactor_get(i);
-		if (spdk_likely(reactor != NULL) && reactor->events != NULL) {
-			spdk_ring_free(reactor->events);
-		}
-	}
-
-	spdk_mempool_free(g_spdk_event_mempool);
-
-	free(g_reactors);
-	g_reactors = NULL;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("reactor", SPDK_LOG_REACTOR)
