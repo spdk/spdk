@@ -426,14 +426,14 @@ nvmf_fc_request_free_buffers(struct spdk_nvmf_fc_request *fc_req,
 	for (i = 0; i < fc_req->req.iovcnt; i++) {
 		if (group->buf_cache_count < group->buf_cache_size) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)fc_req->buffers[i],
+					   (struct spdk_nvmf_transport_pg_cache_buf *)fc_req->req.buffers[i],
 					   link);
 			group->buf_cache_count++;
 		} else {
-			spdk_mempool_put(transport->data_buf_pool, fc_req->buffers[i]);
+			spdk_mempool_put(transport->data_buf_pool, fc_req->req.buffers[i]);
 		}
 		fc_req->req.iov[i].iov_base = NULL;
-		fc_req->buffers[i] = NULL;
+		fc_req->req.buffers[i] = NULL;
 	}
 	fc_req->data_from_pool = false;
 }
@@ -1307,12 +1307,12 @@ nvmf_fc_request_get_buffers(struct spdk_nvmf_fc_request *fc_req,
 	while (i < num_buffers) {
 		if (!(STAILQ_EMPTY(&group->buf_cache))) {
 			group->buf_cache_count--;
-			fc_req->buffers[i] = STAILQ_FIRST(&group->buf_cache);
+			fc_req->req.buffers[i] = STAILQ_FIRST(&group->buf_cache);
 			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
-			assert(fc_req->buffers[i] != NULL);
+			assert(fc_req->req.buffers[i] != NULL);
 			i++;
 		} else {
-			if (spdk_mempool_get_bulk(transport->data_buf_pool, &fc_req->buffers[i],
+			if (spdk_mempool_get_bulk(transport->data_buf_pool, &fc_req->req.buffers[i],
 						  num_buffers - i)) {
 				goto err_exit;
 			}
@@ -1336,7 +1336,7 @@ nvmf_fc_request_fill_buffers(struct spdk_nvmf_fc_request *fc_req,
 
 	while (length) {
 		i = fc_req->req.iovcnt;
-		fc_req->req.iov[i].iov_base = (void *)((uintptr_t)((char *)fc_req->buffers[i] +
+		fc_req->req.iov[i].iov_base = (void *)((uintptr_t)((char *)fc_req->req.buffers[i] +
 						       NVMF_DATA_BUFFER_MASK) &
 						       ~NVMF_DATA_BUFFER_MASK);
 		fc_req->req.iov[i].iov_len  = spdk_min(length, transport->opts.io_unit_size);
