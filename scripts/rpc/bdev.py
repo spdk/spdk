@@ -373,6 +373,7 @@ def construct_nvme_bdev(
         name,
         trtype,
         traddr,
+        mode=None,
         adrfam=None,
         trsvcid=None,
         subnqn=None,
@@ -384,6 +385,7 @@ def construct_nvme_bdev(
     """Construct NVMe namespace block devices.
 
     Args:
+        mode: NVMe working mode
         name: bdev name prefix; "n" + namespace ID will be appended to create unique names
         trtype: transport type ("PCIe", "RDMA")
         traddr: transport address (PCI BDF or IP address)
@@ -420,6 +422,9 @@ def construct_nvme_bdev(
 
     if subnqn:
         params['subnqn'] = subnqn
+
+    if mode:
+        params['mode'] = mode
 
     if prchk_reftag:
         params['prchk_reftag'] = prchk_reftag
