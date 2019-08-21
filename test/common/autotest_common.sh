@@ -530,6 +530,14 @@ function rbd_cleanup() {
 	fi
 }
 
+function random_coremask() {
+	local random_number=$(( RANDOM % ($(nproc) - $(nproc)/2 +1) + $(nproc)/2))
+	local hex_coremask=$(printf %x $((random_number|3)))
+	local random_coremask=0x$hex_coremask
+
+	echo "$random_coremask"
+}
+
 function start_stub() {
 	# Disable ASLR for multi-process testing.  SPDK does support using DPDK multi-process,
 	# but ASLR can still be unreliable in some cases.
