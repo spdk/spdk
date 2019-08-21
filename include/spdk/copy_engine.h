@@ -39,6 +39,7 @@
 #define SPDK_COPY_ENGINE_H
 
 #include "spdk/stdinc.h"
+#include "spdk/json.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,6 +85,13 @@ void spdk_copy_engine_finish(spdk_copy_fini_cb cb_fn, void *cb_arg);
  * \param fp The pointer to a file that will be written to the configuration.
  */
 void spdk_copy_engine_config_text(FILE *fp);
+
+/**
+ * Write copy engine configuration into provided JSON context.
+ *
+ * \param w pointer to a JSON write context where the configuration will be written.
+ */
+void spdk_copy_engine_config_json(struct spdk_json_write_ctx *w);
 
 /**
  * Close the copy engine module and perform any necessary cleanup.

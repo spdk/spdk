@@ -60,11 +60,19 @@ spdk_copy_engine_subsystem_finish(void)
 	spdk_copy_engine_finish(spdk_copy_engine_subsystem_finish_done, NULL);
 }
 
+static void
+_spdk_copy_engine_subsystem_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_copy_engine_config_json(w);
+}
+
+
 static struct spdk_subsystem g_spdk_subsystem_copy = {
 	.name = "copy",
 	.init = spdk_copy_engine_subsystem_initialize,
 	.fini = spdk_copy_engine_subsystem_finish,
 	.config = spdk_copy_engine_config_text,
+	.write_config_json = _spdk_copy_engine_subsystem_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_copy);

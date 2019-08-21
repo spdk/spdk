@@ -72,7 +72,7 @@ free_rpc_copy_engine_ioat(struct rpc_copy_engine_ioat *p)
 }
 
 static const struct spdk_json_object_decoder rpc_copy_engine_ioat_decoder[] = {
-	{"pci_whitelist", offsetof(struct rpc_copy_engine_ioat, pci_whitelist), decode_rpc_pci_whitelist},
+	{"pci_whitelist", offsetof(struct rpc_copy_engine_ioat, pci_whitelist), decode_rpc_pci_whitelist, true},
 };
 
 static void
@@ -83,17 +83,17 @@ spdk_rpc_scan_ioat_copy_engine(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_copy_engine_ioat_decoder,
-					    SPDK_COUNTOF(rpc_copy_engine_ioat_decoder),
-					    &req)) {
-			free_rpc_copy_engine_ioat(&req);
-			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
-			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			return;
-		}
+	if (params && spdk_json_decode_object(params, rpc_copy_engine_ioat_decoder,
+					      SPDK_COUNTOF(rpc_copy_engine_ioat_decoder),
+					      &req)) {
+		free_rpc_copy_engine_ioat(&req);
+		SPDK_ERRLOG("spdk_json_decode_object() failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		return;
+	}
 
+	if (req.pci_whitelist.num_bdfs != 0) {
 		rc = copy_engine_ioat_add_whitelist_devices((const char **)req.pci_whitelist.bdfs,
 				req.pci_whitelist.num_bdfs);
 		free_rpc_copy_engine_ioat(&req);

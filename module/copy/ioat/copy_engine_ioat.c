@@ -117,6 +117,7 @@ struct ioat_task {
 static int copy_engine_ioat_init(void);
 static void copy_engine_ioat_exit(void *ctx);
 static void copy_engine_ioat_config_text(FILE *fp);
+static void copy_engine_ioat_config_json(struct spdk_json_write_ctx *w);
 
 static size_t
 copy_engine_ioat_get_ctx_size(void)
@@ -126,6 +127,7 @@ copy_engine_ioat_get_ctx_size(void)
 
 SPDK_COPY_MODULE_REGISTER(copy_engine_ioat_init, copy_engine_ioat_exit,
 			  copy_engine_ioat_config_text,
+			  copy_engine_ioat_config_json,
 			  copy_engine_ioat_get_ctx_size)
 
 static void
@@ -416,6 +418,37 @@ copy_engine_ioat_config_text(FILE *fp)
 		fprintf(fp, COPY_ENGINE_IOAT_WHITELIST_TMPL,
 			dev->domain, dev->bus, dev->dev, dev->func);
 	}
+}
+
+static void
+copy_engine_ioat_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_pci_addr *dev;
+	int i;
+
+	if (!g_ioat_enable) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "scan_ioat_copy_engine");
+
+	spdk_json_write_named_object_begin(w, "params");
+
+	if (g_probe_ctx.num_whitelist_devices != 0) {
+		spdk_json_write_named_array_begin(w, "pci_whitelist");
+
+		for (i = 0; i < g_probe_ctx.num_whitelist_devices; i++) {
+			dev = &g_probe_ctx.whitelist[i];
+			spdk_json_write_string_fmt(w, "%.4" PRIx16 ":%.2" PRIx8 ":%.2" PRIx8 ".%" PRIx8,
+						   dev->domain, dev->bus, dev->dev, dev->func);
+		}
+		spdk_json_write_array_end(w);
+	}
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("copy_ioat", SPDK_LOG_COPY_IOAT)

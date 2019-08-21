@@ -38,6 +38,7 @@
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
+#include "spdk/json.h"
 #include "spdk/thread.h"
 
 static size_t g_max_copy_module_size = 0;
@@ -314,5 +315,23 @@ spdk_copy_engine_config_text(FILE *fp)
 	}
 }
 
+void
+spdk_copy_engine_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_copy_module_if *copy_engine_module;
+
+	assert(w != NULL);
+
+	spdk_json_write_array_begin(w);
+
+	TAILQ_FOREACH(copy_engine_module, &spdk_copy_module_list, tailq) {
+		if (copy_engine_module->config_json) {
+			copy_engine_module->config_json(w);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+}
+
 SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, copy_engine_mem_fini,
-			  NULL, copy_engine_mem_get_ctx_size)
+			  NULL, NULL, copy_engine_mem_get_ctx_size)

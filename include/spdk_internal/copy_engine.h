@@ -52,6 +52,8 @@ struct spdk_copy_engine {
 	struct spdk_io_channel *(*get_io_channel)(void);
 };
 
+struct spdk_json_write_ctx;
+
 struct spdk_copy_module_if {
 	/** Initialization function for the module.  Called by the spdk
 	 *   application during startup.
@@ -73,6 +75,8 @@ struct spdk_copy_module_if {
 	 */
 	void	(*config_text)(FILE *fp);
 
+	void	(*config_json)(struct spdk_json_write_ctx *w);
+
 	size_t	(*get_ctx_size)(void);
 	TAILQ_ENTRY(spdk_copy_module_if)	tailq;
 };
@@ -80,11 +84,12 @@ struct spdk_copy_module_if {
 void spdk_copy_engine_register(struct spdk_copy_engine *copy_engine);
 void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module);
 
-#define SPDK_COPY_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)				\
+#define SPDK_COPY_MODULE_REGISTER(init_fn, fini_fn, config_fn, json_fn, ctx_size_fn)			\
 	static struct spdk_copy_module_if init_fn ## _if = {						\
 	.module_init	= init_fn,									\
 	.module_fini	= fini_fn,									\
 	.config_text	= config_fn,									\
+	.config_json	= json_fn,									\
 	.get_ctx_size	= ctx_size_fn,									\
 	};												\
 	__attribute__((constructor)) static void init_fn ## _init(void)					\
