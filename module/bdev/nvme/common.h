@@ -36,6 +36,8 @@
 
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
+#include "spdk/ftl.h"
+#include "spdk/rpc.h"
 
 TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
 extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
@@ -107,12 +109,14 @@ struct rpc_construct_nvme {
 	char *hostnqn;
 	char *hostaddr;
 	char *hostsvcid;
+	char *mode;
 	bool prchk_reftag;
 	bool prchk_guard;
 };
 
 typedef void (*spdk_rpc_construct_bdev_cb_fn)(struct nvme_bdev_info *bdev_info, void *ctx,
 		int status);
+
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
 struct nvme_bdev_ctrlr *nvme_bdev_first_ctrlr(void);
