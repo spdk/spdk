@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "e854275b_545143c2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-21T11:41:05Z",
+      "side": 1,
+      "message": "Sorry, in your question, you asked if existing test fails?\nUsually test gets temporary disabled on CI and we create an issue on github related to what test discovered",
+      "parentUuid": "c6a03267_81375135",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 39
+      },
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a749dbed_df5aaec3",
         "filename": "test/ocf/management/remove.sh",
         "patchSetId": 1
