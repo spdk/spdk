@@ -341,12 +341,14 @@ def construct_nvme_bdev(
         hostnqn=None,
         hostaddr=None,
         hostsvcid=None,
+        punits=None,
         prchk_reftag=None,
-        prchk_guard=None):
+        prchk_guard=None,
+        **kwargs):
     """Construct NVMe namespace block devices.
 
     Args:
-        mode: NVMe working mode
+        mode: NVMe working mode ("generic", "ftl")
         name: bdev name prefix; "n" + namespace ID will be appended to create unique names
         trtype: transport type ("PCIe", "RDMA")
         traddr: transport address (PCI BDF or IP address)
@@ -358,6 +360,7 @@ def construct_nvme_bdev(
         hostsvcid: host transport service ID (port number for IP-based transports, NULL for PCIe or FC; optional)
         prchk_reftag: Enable checking of PI reference tag for I/O processing (optional)
         prchk_guard: Enable checking of PI guard for I/O processing (optional)
+        kwargs: Optional parameters
 
     Returns:
         Names of created block devices.
@@ -387,11 +390,21 @@ def construct_nvme_bdev(
     if mode:
         params['mode'] = mode
 
+    if punits:
+        params['punits'] = punits
+
     if prchk_reftag:
         params['prchk_reftag'] = prchk_reftag
 
     if prchk_guard:
         params['prchk_guard'] = prchk_guard
+
+    for key, value in kwargs.items():
+        if value is not None:
+            params[key] = value
+
+    if mode != 'ftl':
+        params.pop('allow_open_bands', None)
 
     return client.call('construct_nvme_bdev', params)
 
@@ -636,27 +649,6 @@ def destruct_split_vbdev(client, base_bdev):
     }
 
     return client.call('destruct_split_vbdev', params)
-
-
-def construct_ftl_bdev(client, name, trtype, traddr, punits, **kwargs):
-    """Construct FTL bdev
-
-    Args:
-        name: name of the bdev
-        trtype: transport type
-        traddr: transport address
-        punit: parallel unit range
-        kwargs: optional parameters
-    """
-    params = {'name': name,
-              'trtype': trtype,
-              'traddr': traddr,
-              'punits': punits}
-    for key, value in kwargs.items():
-        if value is not None:
-            params[key] = value
-
-    return client.call('construct_ftl_bdev', params)
 
 
 def delete_ftl_bdev(client, name):
