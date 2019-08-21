@@ -381,7 +381,8 @@ def construct_nvme_bdev(
         hostaddr=None,
         hostsvcid=None,
         prchk_reftag=None,
-        prchk_guard=None):
+        prchk_guard=None,
+        mode=None):
     """Construct NVMe namespace block devices.
 
     Args:
@@ -396,6 +397,7 @@ def construct_nvme_bdev(
         hostsvcid: host transport service ID (port number for IP-based transports, NULL for PCIe or FC; optional)
         prchk_reftag: Enable checking of PI reference tag for I/O processing (optional)
         prchk_guard: Enable checking of PI guard for I/O processing (optional)
+        mode: NVMe working mode
 
     Returns:
         Names of created block devices.
@@ -427,6 +429,9 @@ def construct_nvme_bdev(
 
     if prchk_guard:
         params['prchk_guard'] = prchk_guard
+
+    if mode:
+        params['mode'] = mode
 
     return client.call('construct_nvme_bdev', params)
 
