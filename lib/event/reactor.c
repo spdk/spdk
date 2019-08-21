@@ -76,25 +76,29 @@ struct spdk_reactor {
 	struct rusage					rusage;
 
 	struct spdk_ring				*events;
+
+	bool						is_valid;
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor *g_reactors;
-
+static struct spdk_cpuset *g_reactor_core_mask;
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
 static bool g_context_switch_monitor_enabled = true;
 
-static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore);
-
 static struct spdk_mempool *g_spdk_event_mempool = NULL;
-
-static struct spdk_cpuset *g_spdk_app_core_mask;
 
 static struct spdk_reactor *
 spdk_reactor_get(uint32_t lcore)
 {
 	struct spdk_reactor *reactor;
-	reactor = spdk_likely(g_reactors) ? &g_reactors[lcore] : NULL;
+
+	reactor = &g_reactors[lcore];
+
+	if (reactor->is_valid == false) {
+		return NULL;
+	}
+
 	return reactor;
 }
 
@@ -131,7 +135,9 @@ spdk_event_call(struct spdk_event *event)
 
 	reactor = spdk_reactor_get(event->lcore);
 
+	assert(reactor != NULL);
 	assert(reactor->events != NULL);
+
 	rc = spdk_ring_enqueue(reactor->events, (void **)&event, 1, NULL);
 	if (rc != 1) {
 		assert(false);
@@ -300,6 +306,7 @@ static void
 spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 {
 	reactor->lcore = lcore;
+	reactor->is_valid = true;
 
 	TAILQ_INIT(&reactor->threads);
 
@@ -327,7 +334,7 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 struct spdk_cpuset *
 spdk_app_get_core_mask(void)
 {
-	return g_spdk_app_core_mask;
+	return g_reactor_core_mask;
 }
 
 void
@@ -347,12 +354,16 @@ spdk_reactors_start(void)
 	}
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
-	g_spdk_app_core_mask = spdk_cpuset_alloc();
+	g_reactor_core_mask = spdk_cpuset_alloc();
 
 	current_core = spdk_env_get_current_core();
 	SPDK_ENV_FOREACH_CORE(i) {
 		if (i != current_core) {
 			reactor = spdk_reactor_get(i);
+			if (reactor == NULL) {
+				continue;
+			}
+
 			rc = spdk_env_thread_launch_pinned(reactor->lcore, _spdk_reactor_run, reactor);
 			if (rc < 0) {
 				SPDK_ERRLOG("Unable to start reactor thread on core %u\n", reactor->lcore);
@@ -368,20 +379,21 @@ spdk_reactors_start(void)
 
 			spdk_thread_create(thread_name, tmp_cpumask);
 		}
-		spdk_cpuset_set_cpu(g_spdk_app_core_mask, i, true);
+		spdk_cpuset_set_cpu(g_reactor_core_mask, i, true);
 	}
 
 	spdk_cpuset_free(tmp_cpumask);
 
 	/* Start the master reactor */
 	reactor = spdk_reactor_get(current_core);
+	assert(reactor != NULL);
 	_spdk_reactor_run(reactor);
 
 	spdk_env_thread_wait_all();
 
 	g_reactor_state = SPDK_REACTOR_STATE_SHUTDOWN;
-	spdk_cpuset_free(g_spdk_app_core_mask);
-	g_spdk_app_core_mask = NULL;
+	spdk_cpuset_free(g_reactor_core_mask);
+	g_reactor_core_mask = NULL;
 }
 
 void
@@ -400,6 +412,7 @@ _schedule_thread(void *arg1, void *arg2)
 	struct spdk_reactor *reactor;
 
 	reactor = spdk_reactor_get(spdk_env_get_current_core());
+	assert(reactor != NULL);
 
 	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
 }
@@ -450,7 +463,6 @@ spdk_reactors_init(void)
 {
 	int rc;
 	uint32_t i, last_core;
-	struct spdk_reactor *reactor;
 	char mempool_name[32];
 
 	snprintf(mempool_name, sizeof(mempool_name), "evtpool_%d", getpid());
@@ -481,8 +493,7 @@ spdk_reactors_init(void)
 	spdk_thread_lib_init(spdk_reactor_schedule_thread, sizeof(struct spdk_lw_thread));
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		reactor = spdk_reactor_get(i);
-		spdk_reactor_construct(reactor, i);
+		spdk_reactor_construct(&g_reactors[i], i);
 	}
 
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
