@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e65e7c6b_707e0bd0",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-21T19:58:23Z",
+      "side": 1,
+      "message": "I think you may have accidentally replaced your tabs with spaces.",
+      "revId": "07bc846062b33812a81d5804bfac5f4fda1334db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
