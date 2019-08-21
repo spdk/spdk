@@ -32,15 +32,18 @@ def wait_subsystem_init(client):
 
 
 @deprecated_alias("get_rpc_methods")
-def rpc_get_methods(client, current=None):
+def rpc_get_methods(client, current=None, include_aliases=None):
     """Get list of supported RPC methods.
     Args:
         current: Get list of RPC methods only callable in the current state.
+        include_aliases: Include aliases in the list with RPC methods.
     """
     params = {}
 
     if current:
         params['current'] = current
+    if include_aliases:
+        params['include_aliases'] = include_aliases
 
     return client.call('rpc_get_methods', params)
 
@@ -80,7 +83,7 @@ def save_config(client, fd, indent=2):
     _json_dump(config, fd, indent)
 
 
-def load_config(client, fd):
+def load_config(client, fd, include_aliases=False):
     """Configure SPDK subsystems and targets using JSON RPC read from stdin.
     Args:
         fd: opened file descriptor where data will be taken from
@@ -94,7 +97,7 @@ def load_config(client, fd):
             subsystems.remove(subsystem)
 
     # check if methods in the config file are known
-    allowed_methods = client.call('rpc_get_methods')
+    allowed_methods = client.call('rpc_get_methods', {'include_aliases': include_aliases})
     if not subsystems and 'start_subsystem_init' in allowed_methods:
         start_subsystem_init(client)
         return
@@ -106,7 +109,8 @@ def load_config(client, fd):
                 raise rpc_client.JSONRPCException("Unknown method was included in the config file")
 
     while subsystems:
-        allowed_methods = client.call('rpc_get_methods', {'current': True})
+        allowed_methods = client.call('rpc_get_methods', {'current': True,
+                                                          'include_aliases': include_aliases})
         allowed_found = False
 
         for subsystem in list(subsystems):
