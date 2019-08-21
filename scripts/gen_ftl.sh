@@ -27,7 +27,7 @@ function create_json_config()
 	echo '"subsystem": "bdev",'
 	echo '"config": ['
 	echo '{'
-	echo '"method": "construct_ftl_bdev",'
+	echo '"method": "bdev_ftl_create",'
 	echo '"params": {'
 	echo "\"name\": \"$2\","
 	echo '"trtype": "PCIe",'
