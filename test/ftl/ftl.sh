@@ -80,7 +80,7 @@ if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	trap 'killprocess $svc_pid; exit 1' SIGINT SIGTERM EXIT
 
 	waitforlisten $svc_pid
-	uuid=$($rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3 | jq -r '.uuid')
+	uuid=$($rpc_py bdev_ftl_create -b nvme0 -a $device -l 0-3 | jq -r '.uuid')
 	killprocess $svc_pid
 
 	trap - SIGINT SIGTERM EXIT

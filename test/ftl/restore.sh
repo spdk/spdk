@@ -30,7 +30,7 @@ restore_kill() {
 	rm -f $testdir/testfile2.md5
 	rm -f $testdir/config/ftl.json
 
-	$rpc_py delete_ftl_bdev -b nvme0
+	$rpc_py bdev_ftl_delete -b nvme0
 	killprocess $svcpid
 	rmmod nbd || true
 }
@@ -45,7 +45,7 @@ if [ -n "$nv_cache" ]; then
 	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache $(($pu_end - $pu_start + 1)))
 fi
 
-ftl_construct_args="construct_ftl_bdev -b nvme0 -a $device -l ${pu_start}-${pu_end}"
+ftl_construct_args="bdev_ftl_create -b nvme0 -a $device -l ${pu_start}-${pu_end}"
 
 [ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
 [ -n "$nv_cache" ] && ftl_construct_args+=" -c $nvc_bdev"
