@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd0de79f_0b18ea08",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1537,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:38:27Z",
+      "side": 1,
+      "message": "OK - I see.  But that really wasn\u0027t obvious reading the code here (regarding why we need to call _set_pmd() if we got -ENOENT).\n\nCould you just move this line from _set_pmd() to wherever the comp_bdev is initially created?\n\ncomp_dev-\u003edrv_name \u003d \"None\";\n\nThen we know drv_name will always be set and we can move this _set_pmd() call after the -ENOENT check.\n\nI like how that looks too in the case where the bdev is orphaned - it will show the drv_name as \"None\" which is technically more correct.",
+      "revId": "211bc895d31af888e4f3e6cc4e511e962018fafb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
