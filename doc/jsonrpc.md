@@ -297,8 +297,8 @@ Example response:
     "bdev_null_create",
     "delete_malloc_bdev",
     "bdev_malloc_create",
-    "delete_ftl_bdev",
-    "construct_ftl_bdev",
+    "bdev_ftl_delete",
+    "bdev_ftl_create",
     "get_lvol_stores",
     "destroy_lvol_bdev",
     "resize_lvol_bdev",
@@ -1999,7 +1999,7 @@ Example response:
 }
 ~~~
 
-## construct_ftl_bdev {#rpc_construct_ftl_bdev}
+## bdev_ftl_create {#rpc_bdev_ftl_create}
 
 Create FTL bdev.
 
@@ -2034,7 +2034,7 @@ Example request:
     "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
   },
   "jsonrpc": "2.0",
-  "method": "construct_ftl_bdev",
+  "method": "bdev_ftl_create",
   "id": 1
 }
 ~~~
@@ -2052,7 +2052,7 @@ Example response:
 }
 ~~~
 
-## delete_ftl_bdev {#rpc_delete_ftl_bdev}
+## bdev_ftl_delete {#rpc_bdev_ftl_delete}
 
 Delete FTL bdev.
 
@@ -2074,7 +2074,7 @@ Example request:
     "name": "nvme0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_ftl_bdev",
+  "method": "bdev_ftl_delete",
   "id": 1
 }
 ~~~
