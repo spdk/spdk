@@ -75,10 +75,19 @@ struct spdk_reactor {
 	struct {
 		uint32_t				is_valid : 1;
 		uint32_t				is_scheduler : 1;
+		uint32_t				is_scheduling : 1;
 		uint32_t				reserved : 30;
 	} flags;
 
 	struct spdk_ring				*events;
+
+	/* This is only updated/used by the thread rescheduling logic. */
+	struct {
+		uint32_t				num_threads;
+		uint32_t				threads_to_move;
+		uint32_t				target_lcore;
+		uint32_t				threads_incoming;
+	} sched;
 
 	/* The last known rusage values */
 	struct rusage					rusage;
@@ -124,7 +133,7 @@ spdk_reactor_get(uint32_t lcore)
 }
 
 static int spdk_reactor_schedule_thread(struct spdk_thread *thread);
-static void spdk_reactors_reschedule_threads(void *arg1, void *arg2);
+static void spdk_reactors_scheduler_gather_stats(void *arg1, void *arg2);
 
 int
 spdk_reactors_init(void)
@@ -383,8 +392,12 @@ _spdk_reactor_run(void *arg)
 			}
 		}
 
-		if (reactor->flags.is_scheduler && (now - last_sched) > sched_period) {
+		if (reactor->flags.is_scheduler &&
+		    !reactor->flags.is_scheduling &&
+		    (now - last_sched) > sched_period) {
 			uint32_t next_core;
+
+			reactor->flags.is_scheduling = true;
 
 			last_sched = now;
 			next_core = spdk_env_get_next_core(reactor->lcore);
@@ -392,7 +405,7 @@ _spdk_reactor_run(void *arg)
 				next_core = spdk_env_get_first_core();
 			}
 
-			evt = spdk_event_allocate(next_core, spdk_reactors_reschedule_threads, NULL, NULL);
+			evt = spdk_event_allocate(next_core, spdk_reactors_scheduler_gather_stats, NULL, NULL);
 			spdk_event_call(evt);
 		}
 	}
@@ -554,15 +567,35 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 }
 
 static void
-spdk_reactors_reschedule_threads(void *arg1, void *arg2)
+spdk_reactors_reschedule_thread(void *arg1, void *arg2)
 {
 	uint32_t next_core;
 	struct spdk_reactor *reactor;
 	struct spdk_event *evt;
+	struct spdk_lw_thread *lw_thread;
 
 	reactor = spdk_reactor_get(spdk_env_get_current_core());
 
+	SPDK_NOTICELOG("Rebalancing %u\n", reactor->lcore);
+
+	while (reactor->sched.threads_to_move > 0) {
+		lw_thread = TAILQ_FIRST(&reactor->threads);
+		assert(lw_thread != NULL);
+		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+
+		evt = spdk_event_allocate(reactor->sched.target_lcore, _schedule_thread, lw_thread, NULL);
+		spdk_event_call(evt);
+		reactor->sched.threads_to_move--;
+	}
+
+	reactor->sched.num_threads = 0;
+	reactor->sched.threads_to_move = 0;
+	reactor->sched.target_lcore = 0;
+	reactor->sched.threads_incoming = 0;
+
 	if (reactor->flags.is_scheduler) {
+		reactor->flags.is_scheduling = false;
+		SPDK_NOTICELOG("Done\n");
 		return;
 	}
 
@@ -571,7 +604,105 @@ spdk_reactors_reschedule_threads(void *arg1, void *arg2)
 		next_core = spdk_env_get_first_core();
 	}
 
-	evt = spdk_event_allocate(next_core, spdk_reactors_reschedule_threads, NULL, NULL);
+	evt = spdk_event_allocate(next_core, spdk_reactors_reschedule_thread, NULL, NULL);
+	spdk_event_call(evt);
+}
+
+static void
+spdk_reactors_rebalance_threads(struct spdk_reactor *sched_reactor)
+{
+	uint32_t num_threads, num_reactors;
+	uint32_t i, j;
+	struct spdk_reactor *reactor, *target_reactor;
+	uint32_t average;
+	struct spdk_event *evt;
+	uint32_t next_core;
+
+	/* Calculate the average number of threads per reactor */
+	num_threads = 0;
+	num_reactors = 0;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		reactor = spdk_reactor_get(i);
+		assert(reactor != NULL);
+		num_reactors++;
+
+		SPDK_NOTICELOG("%u threads on reactor %u\n", reactor->sched.num_threads, reactor->lcore);
+
+		num_threads += reactor->sched.num_threads;
+	}
+
+	/* TODO: This will be 0 sometimes */
+	average = num_threads / num_reactors;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		reactor = spdk_reactor_get(i);
+		assert(reactor != NULL);
+
+		if (reactor->sched.num_threads <= average) {
+			continue;
+		}
+
+		/* For reactors with a higher than average number of threads, try to
+		 * rebalance */
+		SPDK_ENV_FOREACH_CORE(j) {
+			target_reactor = spdk_reactor_get(j);
+
+			if (reactor == target_reactor) {
+				continue;
+			}
+
+			if (target_reactor->sched.num_threads + target_reactor->sched.threads_incoming >= average) {
+				continue;
+			}
+
+			target_reactor->sched.threads_incoming++;
+			reactor->sched.threads_to_move = 1;
+			reactor->sched.target_lcore = target_reactor->lcore;
+			break;
+		}
+	}
+
+	SPDK_NOTICELOG("Average number of threads per reactor: %u\n", average);
+
+	/* Tell the reactors to reschedule */
+	next_core = spdk_env_get_next_core(sched_reactor->lcore);
+	if (next_core == UINT32_MAX) {
+		next_core = spdk_env_get_first_core();
+	}
+
+	evt = spdk_event_allocate(next_core, spdk_reactors_reschedule_thread, NULL, NULL);
+	spdk_event_call(evt);
+}
+
+static void
+spdk_reactors_scheduler_gather_stats(void *arg1, void *arg2)
+{
+	uint32_t next_core;
+	struct spdk_reactor *reactor;
+	struct spdk_event *evt;
+	struct spdk_lw_thread *lw_thread;
+
+	reactor = spdk_reactor_get(spdk_env_get_current_core());
+
+	SPDK_NOTICELOG("Gathering stats on %u\n", reactor->lcore);
+
+	/* The only metric currently used is the number of threads. */
+	TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
+		reactor->sched.num_threads++;
+	}
+
+	if (reactor->flags.is_scheduler) {
+		spdk_reactors_rebalance_threads(reactor);
+		return;
+	}
+
+	next_core = spdk_env_get_next_core(reactor->lcore);
+	if (next_core == UINT32_MAX) {
+		next_core = spdk_env_get_first_core();
+	}
+
+	evt = spdk_event_allocate(next_core, spdk_reactors_scheduler_gather_stats, NULL, NULL);
 	spdk_event_call(evt);
 }
 
