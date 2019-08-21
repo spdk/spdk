@@ -158,21 +158,31 @@ invalid:
 SPDK_RPC_REGISTER("bdev_nvme_set_hotplug", spdk_rpc_bdev_nvme_set_hotplug, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_set_hotplug, set_bdev_nvme_hotplug)
 
+enum construt_nvme_decoders {
+	STANDARD_NVME_DECODERS,
+	NVME_DECODERS_COUNT,
+};
+
 static void
 free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 {
-	free(req->name);
-	free(req->trtype);
-	free(req->adrfam);
-	free(req->traddr);
-	free(req->trsvcid);
-	free(req->subnqn);
-	free(req->hostnqn);
-	free(req->hostaddr);
-	free(req->hostsvcid);
+	uint8_t i;
+
+	for (i = 0; i < NVME_DECODERS_COUNT; i++) {
+		free(req[i].name);
+		free(req[i].trtype);
+		free(req[i].adrfam);
+		free(req[i].traddr);
+		free(req[i].trsvcid);
+		free(req[i].subnqn);
+		free(req[i].hostnqn);
+		free(req[i].hostaddr);
+		free(req[i].hostsvcid);
+		free(req[i].mode);
+	}
 }
 
-static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
+static const struct spdk_json_object_decoder rpc_construct_standard_nvme_decoders[] = {
 	{"name", offsetof(struct rpc_construct_nvme, name), spdk_json_decode_string},
 	{"trtype", offsetof(struct rpc_construct_nvme, trtype), spdk_json_decode_string},
 	{"traddr", offsetof(struct rpc_construct_nvme, traddr), spdk_json_decode_string},
@@ -185,7 +195,8 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"hostsvcid", offsetof(struct rpc_construct_nvme, hostsvcid), spdk_json_decode_string, true},
 
 	{"prchk_reftag", offsetof(struct rpc_construct_nvme, prchk_reftag), spdk_json_decode_bool, true},
-	{"prchk_guard", offsetof(struct rpc_construct_nvme, prchk_guard), spdk_json_decode_bool, true}
+	{"prchk_guard", offsetof(struct rpc_construct_nvme, prchk_guard), spdk_json_decode_bool, true},
+	{"mode", offsetof(struct rpc_construct_nvme, mode), spdk_json_decode_string, true}
 };
 
 struct rpc_create_nvme_bdev_ctx {
@@ -241,7 +252,7 @@ invalid:
 
 struct rpc_construct_nvme_bdev_ctx {
 	struct spdk_jsonrpc_request *request;
-	struct rpc_construct_nvme req;
+	struct rpc_construct_nvme req[NVME_DECODERS_COUNT];
 };
 
 static void
@@ -267,13 +278,13 @@ spdk_rpc_construct_nvme_bdev_cb(struct nvme_bdev_info *bdev_info, void *cb_ctx, 
 	spdk_jsonrpc_end_result(ctx->request, w);
 
 exit:
-	free_rpc_construct_nvme(&ctx->req);
+	free_rpc_construct_nvme(ctx->req);
 	free(ctx);
 }
 
 static int
-spdk_rpc_parse_construct_bdev_args(struct rpc_construct_nvme *req,
-				   struct nvme_bdev_construct_opts *opts)
+spdk_rpc_parse_construct_standard_bdev_args(struct rpc_construct_nvme *req,
+		struct nvme_bdev_construct_opts *opts)
 {
 	int rc;
 
@@ -318,8 +329,13 @@ static void
 spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
+	const struct spdk_json_object_decoder *decoders[NVME_DECODERS_COUNT];
+	size_t num_decoders[NVME_DECODERS_COUNT];
+	int results[NVME_DECODERS_COUNT];
 	struct nvme_bdev_construct_opts opts = {};
 	struct rpc_construct_nvme_bdev_ctx *ctx;
+	uint8_t i;
+	int nvme_decoder = 0;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -329,41 +345,61 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_json_decode_object(params, rpc_construct_nvme_decoders,
-				    SPDK_COUNTOF(rpc_construct_nvme_decoders),
-				    &ctx->req)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "spdk_json_decode_object failed");
-		goto cleanup;
+	decoders[STANDARD_NVME_DECODERS] = rpc_construct_standard_nvme_decoders;
+	num_decoders[STANDARD_NVME_DECODERS] = SPDK_COUNTOF(rpc_construct_standard_nvme_decoders);
+
+	spdk_json_decode_objects(params, NVME_DECODERS_COUNT, decoders, num_decoders, ctx->req,
+				 sizeof(struct rpc_construct_nvme),
+				 results);
+
+	for (i = 0; i < NVME_DECODERS_COUNT; i++) {
+		if (results[i] == 0) {
+			nvme_decoder = i;
+			break;
+		}
+
+		if (i == NVME_DECODERS_COUNT - 1) {
+			SPDK_ERRLOG("spdk_json_decode_objects failed - no matching decoders found\n");
+			spdk_jsonrpc_send_error_response(request, -EINVAL,
+							 "spdk_json_decode_objects failed");
+			goto cleanup;
+		}
 	}
 
+	/* Parse common arguments */
+
 	/* Parse trtype */
-	rc = spdk_nvme_transport_id_parse_trtype(&opts.trid.trtype, ctx->req.trtype);
+	rc = spdk_nvme_transport_id_parse_trtype(&opts.trid.trtype, ctx->req[nvme_decoder].trtype);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to parse trtype: %s\n", ctx->req.trtype);
+		SPDK_ERRLOG("Failed to parse trtype: %s\n", ctx->req[nvme_decoder].trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse trtype: %s",
-						     ctx->req.trtype);
+						     ctx->req[nvme_decoder].trtype);
 		goto cleanup;
 	}
 
 	/* Parse traddr */
-	snprintf(opts.trid.traddr, sizeof(opts.trid.traddr), "%s", ctx->req.traddr);
+	snprintf(opts.trid.traddr, sizeof(opts.trid.traddr), "%s", ctx->req[nvme_decoder].traddr);
 
-	rc = spdk_rpc_parse_construct_bdev_args(&ctx->req, &opts);
-	if (rc < 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse parameters");
+	opts.name = ctx->req[nvme_decoder].name;
+	ctx->request = request;
+
+	if (ctx->req[nvme_decoder].mode == NULL || !strcasecmp(ctx->req[nvme_decoder].mode, "standard")) {
+		rc = spdk_rpc_parse_construct_standard_bdev_args(&ctx->req[STANDARD_NVME_DECODERS], &opts);
+		if (rc < 0) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse parameters");
+			goto cleanup;
+		}
+
+		spdk_rpc_construct_standard_nvme_bdev(&opts, spdk_rpc_construct_nvme_bdev_cb, ctx);
+	} else {
+		SPDK_ERRLOG("Unknown NVMe bdev type\n");
 		goto cleanup;
 	}
-
-	opts.name = ctx->req.name;
-	ctx->request = request;
-	spdk_rpc_construct_standard_nvme_bdev(&opts, spdk_rpc_construct_nvme_bdev_cb, ctx);
 
 	return;
 
 cleanup:
-	free_rpc_construct_nvme(&ctx->req);
+	free_rpc_construct_nvme(ctx->req);
 	free(ctx);
 }
 SPDK_RPC_REGISTER("construct_nvme_bdev", spdk_rpc_construct_nvme_bdev, SPDK_RPC_RUNTIME)
