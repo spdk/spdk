@@ -2071,56 +2071,6 @@ spdk_nvmf_tcp_req_get_xfer(struct spdk_nvmf_tcp_req *tcp_req) {
 }
 
 static void
-spdk_nvmf_tcp_request_free_buffers(struct spdk_nvmf_tcp_req *tcp_req,
-				   struct spdk_nvmf_transport_poll_group *group, struct spdk_nvmf_transport *transport,
-				   uint32_t num_buffers)
-{
-	for (uint32_t i = 0; i < num_buffers; i++) {
-		assert(tcp_req->req.buffers[i] != NULL);
-		if (group->buf_cache_count < group->buf_cache_size) {
-			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)tcp_req->req.buffers[i], link);
-			group->buf_cache_count++;
-		} else {
-			spdk_mempool_put(transport->data_buf_pool, tcp_req->req.buffers[i]);
-		}
-		tcp_req->req.iov[i].iov_base = NULL;
-		tcp_req->req.buffers[i] = NULL;
-		tcp_req->req.iov[i].iov_len = 0;
-	}
-	tcp_req->data_from_pool = false;
-}
-
-static int
-spdk_nvmf_tcp_req_get_buffers(struct spdk_nvmf_tcp_req *tcp_req,
-			      struct spdk_nvmf_transport_poll_group *group,
-			      struct spdk_nvmf_transport *transport,
-			      uint32_t num_buffers)
-{
-	uint32_t i = 0;
-
-	while (i < num_buffers) {
-		if (!(STAILQ_EMPTY(&group->buf_cache))) {
-			group->buf_cache_count--;
-			tcp_req->req.buffers[i] = STAILQ_FIRST(&group->buf_cache);
-			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
-			assert(tcp_req->req.buffers[i] != NULL);
-			i++;
-		} else {
-			if (spdk_mempool_get_bulk(transport->data_buf_pool,
-						  &tcp_req->req.buffers[i], num_buffers - i)) {
-				goto nomem;
-			}
-			i += num_buffers - i;
-		}
-	}
-
-nomem:
-	spdk_nvmf_tcp_request_free_buffers(tcp_req, group, transport, i);
-	return -ENOMEM;
-}
-
-static void
 spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 			       struct spdk_nvmf_transport *transport,
 			       uint32_t length)
@@ -2155,7 +2105,7 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 
 	num_buffers = SPDK_CEIL_DIV(tcp_req->req.length, ttransport->transport.opts.io_unit_size);
 
-	if (spdk_nvmf_tcp_req_get_buffers(tcp_req, group, &ttransport->transport, num_buffers)) {
+	if (spdk_nvmf_request_get_buffers(&tcp_req->req, group, &ttransport->transport, num_buffers)) {
 		return -ENOMEM;
 	}
 
@@ -2614,8 +2564,9 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 		case TCP_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, 0, 0, (uintptr_t)tcp_req, 0);
 			if (tcp_req->data_from_pool) {
-				spdk_nvmf_tcp_request_free_buffers(tcp_req, group, &ttransport->transport,
-								   tcp_req->req.iovcnt);
+				spdk_nvmf_request_free_buffers(&tcp_req->req, group, &ttransport->transport,
+							       tcp_req->req.iovcnt);
+				tcp_req->data_from_pool = false;
 			}
 			tcp_req->req.length = 0;
 			tcp_req->req.iovcnt = 0;
