@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef9c9114_c259007f",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T22:28:20Z",
+      "side": 1,
+      "message": "this is a nit - but this would be more efficient if you do the orphaned check first and then the strcmp\n\nthat way the strcmp (which is more expensive) gets short-circuited in the most common case where the bdev is not orphaned - this might be important if we have 1000s of compress bdevs",
+      "revId": "3a511592f0a35df9a998898131940ad0986c134b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cde6948f_51695fbc",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T22:28:20Z",
+      "side": 1,
+      "message": "I think you should remove this ERRLOG.  I could see cases where someone calls this RPC just to see if the bdev is orphaned or not (i.e. the RPC failing is OK and expected in many cases).\n\n(I know - I think in a previous review I suggested you reword this error message.  Sorry...)",
+      "revId": "3a511592f0a35df9a998898131940ad0986c134b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
