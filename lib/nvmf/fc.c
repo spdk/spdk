@@ -417,11 +417,19 @@ nvmf_fc_req_in_get_buff(struct spdk_nvmf_fc_request *fc_req)
 
 static void
 nvmf_fc_request_free_buffers(struct spdk_nvmf_fc_request *fc_req,
+			     struct spdk_nvmf_transport_poll_group *group,
 			     struct spdk_nvmf_transport *transport,
 			     uint32_t num_buffers)
 {
 	for (uint32_t i = 0; i < num_buffers; i++) {
-		spdk_mempool_put(transport->data_buf_pool, fc_req->buffers[i]);
+		if (group->buf_cache_count < group->buf_cache_size) {
+			STAILQ_INSERT_HEAD(&group->buf_cache,
+					   (struct spdk_nvmf_transport_pg_cache_buf *)fc_req->buffers[i],
+					   link);
+			group->buf_cache_count++;
+		} else {
+			spdk_mempool_put(transport->data_buf_pool, fc_req->buffers[i]);
+		}
 		fc_req->req.iov[i].iov_base = NULL;
 		fc_req->buffers[i] = NULL;
 	}
@@ -1295,13 +1303,26 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 	uint32_t length = fc_req->req.length;
 	uint32_t num_buffers;
 	uint32_t i = 0;
-	struct spdk_nvmf_fc_transport *fc_transport = fc_req->hwqp->fc_poll_group->fc_transport;
-	struct spdk_nvmf_transport *transport = &fc_transport->transport;
+	struct spdk_nvmf_fc_poll_group *fc_poll_group = fc_req->hwqp->fc_poll_group;
+	struct spdk_nvmf_transport_poll_group *group = &fc_poll_group->tp_poll_group;
+	struct spdk_nvmf_transport *transport = &fc_poll_group->fc_transport->transport;
 
 	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
 
-	if (spdk_mempool_get_bulk(transport->data_buf_pool, fc_req->buffers, num_buffers)) {
-		return -ENOMEM;
+	while (i < num_buffers) {
+		if (!(STAILQ_EMPTY(&group->buf_cache))) {
+			group->buf_cache_count--;
+			fc_req->buffers[i] = STAILQ_FIRST(&group->buf_cache);
+			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
+			assert(fc_req->buffers[i] != NULL);
+			i++;
+		} else {
+			if (spdk_mempool_get_bulk(transport->data_buf_pool, &fc_req->buffers[i],
+						  num_buffers - i)) {
+				goto err_exit;
+			}
+			i += num_buffers - i;
+		}
 	}
 
 	fc_req->req.iovcnt = 0;
@@ -1318,6 +1339,10 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 	fc_req->data_from_pool = true;
 
 	return 0;
+
+err_exit:
+	nvmf_fc_request_free_buffers(fc_req, group, transport, i);
+	return -ENOMEM;
 }
 
 static int
@@ -1474,8 +1499,9 @@ void
 spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 {
 	struct spdk_nvmf_fc_hwqp *hwqp = fc_req->hwqp;
-	struct spdk_nvmf_fc_transport *fc_transport = hwqp->fc_poll_group->fc_transport;
-	struct spdk_nvmf_transport *transport = &fc_transport->transport;
+	struct spdk_nvmf_fc_poll_group *fc_poll_group = hwqp->fc_poll_group;
+	struct spdk_nvmf_transport_poll_group *group = &fc_poll_group->tp_poll_group;
+	struct spdk_nvmf_transport *transport = &fc_poll_group->fc_transport->transport;
 
 	if (!fc_req) {
 		return;
@@ -1488,7 +1514,7 @@ spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 
 	/* Release IO buffers */
 	if (fc_req->data_from_pool) {
-		nvmf_fc_request_free_buffers(fc_req, transport, fc_req->req.iovcnt);
+		nvmf_fc_request_free_buffers(fc_req, group, transport, fc_req->req.iovcnt);
 	}
 
 	/* Release Q buffer */
