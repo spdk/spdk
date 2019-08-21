@@ -270,7 +270,7 @@ test_reloc_iter_full(void)
 
 	set_band_valid_map(band, 0, ftl_num_band_lbks(dev));
 
-	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0);
+	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
 
@@ -313,7 +313,7 @@ test_reloc_empty_band(void)
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
 
-	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0);
+	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, 0);
 
@@ -338,7 +338,7 @@ test_reloc_full_band(void)
 
 	set_band_valid_map(band, 0, ftl_num_band_lbks(dev));
 
-	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0);
+	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
 
@@ -384,7 +384,7 @@ test_reloc_scatter_band(void)
 		}
 	}
 
-	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0);
+	ftl_reloc_add(reloc, band, 0, ftl_num_band_lbks(dev), 0, true);
 	ftl_reloc_add_active_queue(breloc);
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
@@ -422,7 +422,7 @@ test_reloc_chunk(void)
 	set_band_valid_map(band, 0, ftl_num_band_lbks(dev));
 
 	ftl_reloc_add(reloc, band, ftl_dev_lbks_in_chunk(dev) * 3,
-		      ftl_dev_lbks_in_chunk(dev), 1);
+		      ftl_dev_lbks_in_chunk(dev), 1, false);
 	ftl_reloc_add_active_queue(breloc);
 
 	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_dev_lbks_in_chunk(dev));
@@ -462,7 +462,7 @@ test_reloc_single_lbk(void)
 
 	set_band_valid_map(band, TEST_RELOC_OFFSET, 1);
 
-	ftl_reloc_add(reloc, band, TEST_RELOC_OFFSET, 1, 0);
+	ftl_reloc_add(reloc, band, TEST_RELOC_OFFSET, 1, 0, false);
 	SPDK_CU_ASSERT_FATAL(breloc == TAILQ_FIRST(&reloc->pending_queue));
 	ftl_reloc_add_active_queue(breloc);
 
