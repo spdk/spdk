@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "74c4a42d_497391f5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-21T08:52:29Z",
+      "side": 1,
+      "message": "But submitted test accepts current behaviour, not desired one (described in the comment), so this comment needs to be changed. You will probably need to change the test in following patch because it will reject desired behaviour, or change the test now and place it after the functional change in series because we need CI to pass on each patch",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 39
+      },
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a749dbed_df5aaec3",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-21T08:52:29Z",
+      "side": 1,
+      "message": "So using AIO here is safe because we don\u0027t use many of them, right?",
+      "range": {
+        "startLine": 14,
+        "startChar": 5,
+        "endLine": 16,
+        "endChar": 21
+      },
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32257053_5fb32c77",
+        "filename": "test/ocf/management/remove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-21T08:52:29Z",
+      "side": 1,
+      "message": "Comment is outdated - we don\u0027t have many devices, but we still need to sort json because it is unordered dictionary",
+      "range": {
+        "startLine": 32,
+        "startChar": 2,
+        "endLine": 33,
+        "endChar": 34
+      },
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dd4f79ae_730eb464",
         "filename": "test/ocf/management/remove.sh",
         "patchSetId": 1
