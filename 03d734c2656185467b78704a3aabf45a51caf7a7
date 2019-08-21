@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "141763f6_decca64e",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1347,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:25:07Z",
+      "side": 1,
+      "message": "aliases\u003d[\u0027construct_ftl_bdev\u0027]",
+      "revId": "03d734c2656185467b78704a3aabf45a51caf7a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83a2219a_02fdf32e",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:25:07Z",
+      "side": 1,
+      "message": "aliases\u003d[\u0027delete_ftl_bdev\u0027]",
+      "revId": "03d734c2656185467b78704a3aabf45a51caf7a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6c40145_6efafc2d",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:25:07Z",
+      "side": 1,
+      "message": "@deprecated_alias",
+      "revId": "03d734c2656185467b78704a3aabf45a51caf7a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "635746b6_6d3d17a8",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:25:07Z",
+      "side": 1,
+      "message": "@deprecated_alias",
+      "revId": "03d734c2656185467b78704a3aabf45a51caf7a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
