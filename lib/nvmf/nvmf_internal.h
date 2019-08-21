@@ -47,6 +47,9 @@
 
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
+/* The maximum number of buffers per request */
+#define NVMF_REQ_MAX_BUFFERS	(SPDK_NVMF_MAX_SGL_ENTRIES * 2)
+
 /* AIO backend requires block size aligned data buffers,
  * extra 4KiB aligned data buffer should work for most devices.
  */
@@ -209,7 +212,8 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
-	struct iovec			iov[SPDK_NVMF_MAX_SGL_ENTRIES * 2];
+	void				*buffers[NVMF_REQ_MAX_BUFFERS];
+	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
 	uint32_t			iovcnt;
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 

@@ -264,7 +264,6 @@ struct spdk_nvmf_rdma_request {
 	} rsp;
 
 	struct spdk_nvmf_rdma_request_data	data;
-	void					*buffers[NVMF_REQ_MAX_BUFFERS];
 
 	uint32_t				num_outstanding_data_wr;
 	uint64_t				receive_tsc;
@@ -1384,13 +1383,13 @@ spdk_nvmf_rdma_request_free_buffers(struct spdk_nvmf_rdma_request *rdma_req,
 	for (i = 0; i < num_buffers; i++) {
 		if (group->buf_cache_count < group->buf_cache_size) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->buffers[i], link);
+					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->req.buffers[i], link);
 			group->buf_cache_count++;
 		} else {
-			spdk_mempool_put(transport->data_buf_pool, rdma_req->buffers[i]);
+			spdk_mempool_put(transport->data_buf_pool, rdma_req->req.buffers[i]);
 		}
 		rdma_req->req.iov[i].iov_base = NULL;
-		rdma_req->buffers[i] = NULL;
+		rdma_req->req.buffers[i] = NULL;
 		rdma_req->req.iov[i].iov_len = 0;
 
 	}
@@ -1407,12 +1406,12 @@ nvmf_rdma_request_get_buffers(struct spdk_nvmf_rdma_request *rdma_req,
 	while (i < num_buffers) {
 		if (!(STAILQ_EMPTY(&group->buf_cache))) {
 			group->buf_cache_count--;
-			rdma_req->buffers[i] = STAILQ_FIRST(&group->buf_cache);
+			rdma_req->req.buffers[i] = STAILQ_FIRST(&group->buf_cache);
 			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
-			assert(rdma_req->buffers[i] != NULL);
+			assert(rdma_req->req.buffers[i] != NULL);
 			i++;
 		} else {
-			if (spdk_mempool_get_bulk(transport->data_buf_pool, &rdma_req->buffers[i], num_buffers - i)) {
+			if (spdk_mempool_get_bulk(transport->data_buf_pool, &rdma_req->req.buffers[i], num_buffers - i)) {
 				goto err_exit;
 			}
 			i += num_buffers - i;
@@ -1547,7 +1546,7 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 
 	while (remaining_length) {
 		iovcnt = rdma_req->req.iovcnt;
-		rdma_req->req.iov[iovcnt].iov_base = (void *)((uintptr_t)(rdma_req->buffers[iovcnt] +
+		rdma_req->req.iov[iovcnt].iov_base = (void *)((uintptr_t)(rdma_req->req.buffers[iovcnt] +
 						     NVMF_DATA_BUFFER_MASK) &
 						     ~NVMF_DATA_BUFFER_MASK);
 		rdma_req->req.iov[iovcnt].iov_len  = spdk_min(remaining_length,
