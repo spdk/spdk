@@ -2097,34 +2097,41 @@ static int
 spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 			    struct spdk_nvmf_tcp_req *tcp_req, uint32_t length)
 {
-	void					*buf = NULL;
 	uint32_t				i = 0;
+	uint32_t				num_buffers;
 	struct spdk_nvmf_tcp_qpair		*tqpair;
 	struct spdk_nvmf_transport_poll_group	*group;
 
 	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
 
-	tcp_req->req.iovcnt = 0;
-	while (length) {
+	num_buffers = SPDK_CEIL_DIV(tcp_req->req.length, ttransport->transport.opts.io_unit_size);
+
+	while (i < num_buffers) {
 		if (!(STAILQ_EMPTY(&group->buf_cache))) {
 			group->buf_cache_count--;
-			buf = STAILQ_FIRST(&group->buf_cache);
+			tcp_req->buffers[i] = STAILQ_FIRST(&group->buf_cache);
 			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
+			assert(tcp_req->buffers[i] != NULL);
+			i++;
 		} else {
-			buf = spdk_mempool_get(ttransport->transport.data_buf_pool);
-			if (!buf) {
+			if (spdk_mempool_get_bulk(ttransport->transport.data_buf_pool,
+						  &tcp_req->buffers[i], num_buffers - i)) {
 				goto nomem;
 			}
+			i += num_buffers - i;
 		}
+	}
 
-		tcp_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
+	tcp_req->req.iovcnt = 0;
+	while (length) {
+		i = tcp_req->req.iovcnt;
+		tcp_req->req.iov[i].iov_base = (void *)((uintptr_t)(tcp_req->buffers[i] +
+							NVMF_DATA_BUFFER_MASK) &
 							~NVMF_DATA_BUFFER_MASK);
 		tcp_req->req.iov[i].iov_len  = spdk_min(length, ttransport->transport.opts.io_unit_size);
 		tcp_req->req.iovcnt++;
-		tcp_req->buffers[i] = buf;
 		length -= tcp_req->req.iov[i].iov_len;
-		i++;
 	}
 
 	assert(tcp_req->req.iovcnt <= SPDK_NVMF_MAX_SGL_ENTRIES);
