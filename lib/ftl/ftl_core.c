@@ -403,10 +403,8 @@ ftl_get_io_channel(const struct spdk_ftl_dev *dev)
 		return dev->read_thread.ioch;
 	}
 
-	assert(0);
-	return NULL;
+	return dev->ioch;
 }
-
 
 int
 ftl_io_erase(struct ftl_io *io)

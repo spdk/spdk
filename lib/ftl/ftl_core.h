@@ -162,6 +162,9 @@ struct spdk_ftl_dev {
 	/* Destruction context */
 	struct ftl_init_context			fini_ctx;
 
+	/* IO channel for I/O on user thread (e.g. nv_cache shutdown) */
+	struct spdk_io_channel			*ioch;
+
 	/* NVMe controller */
 	struct spdk_nvme_ctrlr			*ctrlr;
 	/* NVMe namespace */

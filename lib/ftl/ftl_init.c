@@ -909,12 +909,26 @@ ftl_clear_nv_cache_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 }
 
+static void
+_ftl_nv_cache_scrub(void *ctx)
+{
+	struct spdk_ftl_dev *dev = ctx;
+	int rc;
+
+	rc = ftl_nv_cache_scrub(&dev->nv_cache, ftl_clear_nv_cache_cb, dev);
+
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Unable to clear the non-volatile cache bdev: %s\n",
+			    spdk_strerror(-rc));
+		ftl_init_fail(dev);
+	}
+}
+
 static int
 ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 {
 	struct spdk_ftl_conf *conf = &dev->conf;
 	size_t i;
-	int rc;
 
 	spdk_uuid_generate(&dev->uuid);
 
@@ -938,12 +952,7 @@ ftl_setup_initial_state(struct spdk_ftl_dev *dev)
 	if (!ftl_dev_has_nv_cache(dev)) {
 		ftl_init_complete(dev);
 	} else {
-		rc = ftl_nv_cache_scrub(&dev->nv_cache, ftl_clear_nv_cache_cb, dev);
-		if (spdk_unlikely(rc != 0)) {
-			SPDK_ERRLOG("Unable to clear the non-volatile cache bdev: %s\n",
-				    spdk_strerror(-rc));
-			return -1;
-		}
+		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_nv_cache_scrub, dev);
 	}
 
 	return 0;
@@ -1072,6 +1081,12 @@ ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
 	spdk_io_device_register(dev, ftl_io_channel_create_cb, ftl_io_channel_destroy_cb,
 				sizeof(struct ftl_io_channel),
 				NULL);
+
+	dev->ioch = spdk_get_io_channel(dev);
+	if (!dev->ioch) {
+		spdk_io_device_unregister(dev, NULL);
+		return -1;
+	}
 
 	return 0;
 }
@@ -1225,7 +1240,10 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	ftl_dev_dump_bands(dev);
 	ftl_dev_dump_stats(dev);
 
-	spdk_io_device_unregister(dev, NULL);
+	if (dev->ioch) {
+		spdk_put_io_channel(dev->ioch);
+		spdk_io_device_unregister(dev, NULL);
+	}
 
 	if (dev->bands) {
 		for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
