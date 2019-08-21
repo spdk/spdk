@@ -63,6 +63,10 @@ enum spdk_reactor_state {
 
 struct spdk_lw_thread {
 	TAILQ_ENTRY(spdk_lw_thread)	link;
+
+	/* The following is only used by the thread rescheduling logic. */
+	struct spdk_thread_stats	stats;
+	uint32_t			target_lcore;
 };
 
 struct spdk_reactor {
@@ -74,10 +78,18 @@ struct spdk_reactor {
 
 	struct {
 		uint32_t				is_valid : 1;
-		uint32_t				reserved : 31;
+		uint32_t				is_scheduler : 1;
+		uint32_t				is_scheduling : 1;
+		uint32_t				reserved : 30;
 	} flags;
 
 	struct spdk_ring				*events;
+
+	/* This is only updated/used by the thread rescheduling logic. */
+	struct {
+		uint32_t				num_active_threads;
+		uint32_t				threads_incoming;
+	} sched;
 
 	/* The last known rusage values */
 	struct rusage					rusage;
@@ -123,6 +135,7 @@ spdk_reactor_get(uint32_t lcore)
 }
 
 static int spdk_reactor_schedule_thread(struct spdk_thread *thread);
+static void spdk_reactors_scheduler_gather_metrics(void *arg1, void *arg2);
 
 int
 spdk_reactors_init(void)
@@ -336,6 +349,11 @@ _spdk_reactor_run(void *arg)
 	uint64_t		last_rusage = 0;
 	struct spdk_lw_thread	*lw_thread, *tmp;
 	char			thread_name[32];
+	uint64_t		last_sched = 0;
+	uint64_t		sched_period;
+	struct spdk_event	*evt;
+
+	sched_period = spdk_get_ticks_hz();
 
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
@@ -374,6 +392,23 @@ _spdk_reactor_run(void *arg)
 				get_rusage(reactor);
 				last_rusage = now;
 			}
+		}
+
+		if (reactor->flags.is_scheduler &&
+		    !reactor->flags.is_scheduling &&
+		    (now - last_sched) > sched_period) {
+			uint32_t next_core;
+
+			reactor->flags.is_scheduling = true;
+
+			last_sched = now;
+			next_core = spdk_env_get_next_core(reactor->lcore);
+			if (next_core == UINT32_MAX) {
+				next_core = spdk_env_get_first_core();
+			}
+
+			evt = spdk_event_allocate(next_core, spdk_reactors_scheduler_gather_metrics, NULL, NULL);
+			spdk_event_call(evt);
 		}
 	}
 
@@ -461,6 +496,7 @@ spdk_reactors_start(void)
 	/* Start the master reactor */
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
+	reactor->flags.is_scheduler = true;
 	_spdk_reactor_run(reactor);
 
 	spdk_env_thread_wait_all();
@@ -484,6 +520,11 @@ _schedule_thread(void *arg1, void *arg2)
 {
 	struct spdk_lw_thread *lw_thread = arg1;
 	struct spdk_reactor *reactor;
+
+	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "lw_thread %p arrived on reactor %u\n", lw_thread,
+		      lw_thread->target_lcore);
+
+	lw_thread->target_lcore = SPDK_ENV_LCORE_ID_ANY;
 
 	reactor = spdk_reactor_get(spdk_env_get_current_core());
 	assert(reactor != NULL);
@@ -515,6 +556,7 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 		g_next_core = spdk_env_get_next_core(g_next_core);
 
 		if (spdk_cpuset_get_cpu(cpumask, core)) {
+			lw_thread->target_lcore = core;
 			evt = spdk_event_allocate(core, _schedule_thread, lw_thread, NULL);
 			break;
 		}
@@ -530,6 +572,225 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	spdk_event_call(evt);
 
 	return 0;
+}
+
+static bool
+_thread_is_idle(struct spdk_thread_stats *stats)
+{
+	return (stats->busy_tsc * 100) < stats->idle_tsc;
+}
+
+/* Phase 3 is executing the thread movement that was decided upon */
+static void
+spdk_reactors_reschedule_thread(void *arg1, void *arg2)
+{
+	uint32_t next_core;
+	struct spdk_reactor *reactor;
+	struct spdk_event *evt;
+	struct spdk_lw_thread *lw_thread, *tmp;
+
+	reactor = spdk_reactor_get(spdk_env_get_current_core());
+
+	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Rebalancing reactor %u\n", reactor->lcore);
+
+	reactor->flags.is_scheduling = false;
+
+	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
+		if (lw_thread->target_lcore != SPDK_ENV_LCORE_ID_ANY) {
+			TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+			SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Sending lw_thread %p to reactor %u\n", lw_thread,
+				      lw_thread->target_lcore);
+			evt = spdk_event_allocate(lw_thread->target_lcore, _schedule_thread, lw_thread, NULL);
+			spdk_event_call(evt);
+		}
+	}
+
+	reactor->sched.num_active_threads = 0;
+	reactor->sched.threads_incoming = 0;
+
+	if (reactor->flags.is_scheduler) {
+		reactor->flags.is_scheduling = false;
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Done\n");
+		return;
+	}
+
+	next_core = spdk_env_get_next_core(reactor->lcore);
+	if (next_core == UINT32_MAX) {
+		next_core = spdk_env_get_first_core();
+	}
+
+	evt = spdk_event_allocate(next_core, spdk_reactors_reschedule_thread, NULL, NULL);
+	spdk_event_call(evt);
+}
+
+/* Phase 2 of scheduling is deciding which threads to move where.
+ * This algorithm, for now, simply attempts to make all reactors have
+ * an equal number of threads. */
+static void
+spdk_reactors_rebalance_threads(struct spdk_reactor *sched_reactor)
+{
+	uint32_t num_active_threads, num_reactors;
+	uint32_t i, j;
+	struct spdk_reactor *reactor, *target_reactor;
+	struct spdk_lw_thread *lw_thread;
+	uint32_t average;
+	struct spdk_event *evt;
+	uint32_t next_core;
+
+	/* Calculate the average number of threads per reactor */
+	num_active_threads = 0;
+	num_reactors = 0;
+
+	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "***** BEGIN REBALANCE *****\n");
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Determining idle/active on reactor %u\n", i);
+		reactor = spdk_reactor_get(i);
+		assert(reactor != NULL);
+		assert(reactor->flags.is_scheduling == true);
+		num_reactors++;
+
+		reactor->sched.num_active_threads = 0;
+
+		/* We can touch this list because is_scheduling is blocking any changes. */
+		TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
+			if (_thread_is_idle(&lw_thread->stats)) {
+				SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "lw thread %p is idle\n", lw_thread);
+				/* Move all idle threads to the scheduler reactor */
+				if (sched_reactor->lcore != i) {
+					SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Moving lw_thread %p to reactor %u\n", lw_thread,
+						      sched_reactor->lcore);
+					lw_thread->target_lcore = sched_reactor->lcore;
+				}
+			} else {
+				SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "lw_thread %p was busy for %lu ticks and idle for %lu ticks\n",
+					      lw_thread,
+					      lw_thread->stats.busy_tsc, lw_thread->stats.idle_tsc);
+				num_active_threads++;
+				reactor->sched.num_active_threads++;
+			}
+		}
+
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "%u threads on reactor %u\n", reactor->sched.num_active_threads,
+			      reactor->lcore);
+	}
+
+	assert(num_reactors > 0);
+
+	average = num_active_threads / num_reactors;
+
+	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Average number of active threads per reactor: %u\n", average);
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		reactor = spdk_reactor_get(i);
+		assert(reactor != NULL);
+
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Finding suitable location for active threads on reactor %u\n", i);
+
+		lw_thread = TAILQ_FIRST(&reactor->threads);
+
+		while (reactor->sched.num_active_threads > average) {
+			/* Find an active thread */
+			while (lw_thread != NULL) {
+				if (!_thread_is_idle(&lw_thread->stats)) {
+					lw_thread->target_lcore = SPDK_ENV_LCORE_ID_ANY;
+					break;
+				}
+				lw_thread = TAILQ_NEXT(lw_thread, link);
+			}
+
+			if (lw_thread == NULL) {
+				break;
+			}
+
+			/* Find a suitable reactor */
+			SPDK_ENV_FOREACH_CORE(j) {
+				target_reactor = spdk_reactor_get(j);
+
+				if (reactor == target_reactor) {
+					continue;
+				}
+
+				if (target_reactor->sched.num_active_threads + target_reactor->sched.threads_incoming >= average) {
+					continue;
+				}
+
+				target_reactor->sched.threads_incoming++;
+				lw_thread->target_lcore = target_reactor->lcore;
+
+				SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Moving lw_thread %p to reactor %u\n", lw_thread,
+					      lw_thread->target_lcore);
+				break;
+			}
+
+			if (lw_thread->target_lcore == SPDK_ENV_LCORE_ID_ANY) {
+				/* No where to move this. */
+				SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Unable to move lw_thread %p. No suitable reactors.\n", lw_thread);
+				break;
+			}
+
+			reactor->sched.num_active_threads--;
+			lw_thread = TAILQ_NEXT(lw_thread, link);
+		}
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "***** END REBALANCE *****\n");
+
+	/* Begin phase 3, where the actual threads are moved. */
+	next_core = spdk_env_get_next_core(sched_reactor->lcore);
+	if (next_core == UINT32_MAX) {
+		next_core = spdk_env_get_first_core();
+	}
+
+	evt = spdk_event_allocate(next_core, spdk_reactors_reschedule_thread, NULL, NULL);
+	spdk_event_call(evt);
+}
+
+/* Phase 1 of thread scheduling is to gather metrics on the existing threads */
+static void
+spdk_reactors_scheduler_gather_metrics(void *arg1, void *arg2)
+{
+	uint32_t next_core;
+	struct spdk_reactor *reactor;
+	struct spdk_event *evt;
+	struct spdk_lw_thread *lw_thread;
+	struct spdk_thread *thread;
+	struct spdk_thread_stats stats;
+
+	reactor = spdk_reactor_get(spdk_env_get_current_core());
+
+	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "Gathering metrics on %u\n", reactor->lcore);
+
+	/* Flag the reactor as scheduling to prevent other operations */
+	reactor->flags.is_scheduling = true;
+
+	TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
+		lw_thread->target_lcore = SPDK_ENV_LCORE_ID_ANY;
+
+		thread = spdk_thread_get_from_ctx(lw_thread);
+
+		stats = lw_thread->stats;
+
+		spdk_set_thread(thread);
+		spdk_thread_get_stats(&lw_thread->stats);
+
+		lw_thread->stats.busy_tsc -= stats.busy_tsc;
+		lw_thread->stats.idle_tsc -= stats.idle_tsc;
+	}
+
+	/* If we've looped back around to the scheduler thread, move to the next phase */
+	if (reactor->flags.is_scheduler) {
+		spdk_reactors_rebalance_threads(reactor);
+		return;
+	}
+
+	next_core = spdk_env_get_next_core(reactor->lcore);
+	if (next_core == UINT32_MAX) {
+		next_core = spdk_env_get_first_core();
+	}
+
+	evt = spdk_event_allocate(next_core, spdk_reactors_scheduler_gather_metrics, NULL, NULL);
+	spdk_event_call(evt);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("reactor", SPDK_LOG_REACTOR)
