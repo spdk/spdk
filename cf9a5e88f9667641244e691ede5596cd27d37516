@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9f3d664_5c48a071",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-08-21T13:53:34Z",
+      "side": 1,
+      "message": "I think we should avoid having a separate IO channel that isn\u0027t tied to any thread. If we need an IO channel during shutdown, but the internal IO channel is already freed, we should modify the shutdown procedure, so that it\u0027s still around when we need it.",
+      "range": {
+        "startLine": 165,
+        "startChar": 0,
+        "endLine": 166,
+        "endChar": 32
+      },
+      "revId": "cf9a5e88f9667641244e691ede5596cd27d37516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
