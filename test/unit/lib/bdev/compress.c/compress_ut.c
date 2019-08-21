@@ -736,8 +736,6 @@ test_initdrivers(void)
 {
 	int rc;
 	static struct rte_mempool *orig_mbuf_mp;
-	struct comp_device_qp *dev_qp;
-	struct comp_device_qp *tmp_qp;
 
 	orig_mbuf_mp = g_mbuf_mp;
 	g_mbuf_mp = NULL;
@@ -819,12 +817,6 @@ test_initdrivers(void)
 	ut_rte_compressdev_private_xform_create = 0;
 	rc = vbdev_init_compress_drivers();
 	CU_ASSERT(rc == 0);
-
-	TAILQ_FOREACH_SAFE(dev_qp, &g_comp_device_qp, link, tmp_qp) {
-		TAILQ_REMOVE(&g_comp_device_qp, dev_qp, link);
-		free(dev_qp->device);
-		free(dev_qp);
-	}
 
 	g_mbuf_mp = orig_mbuf_mp;
 }
