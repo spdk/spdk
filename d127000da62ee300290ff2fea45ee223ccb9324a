@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60ea0309_ef64ba43",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-08-21T13:25:33Z",
+      "side": 1,
+      "message": "Here i use my defalt path from ubuntu. Maybe I should use some another patch ?",
+      "range": {
+        "startLine": 59,
+        "startChar": 23,
+        "endLine": 59,
+        "endChar": 42
+      },
+      "revId": "d127000da62ee300290ff2fea45ee223ccb9324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
