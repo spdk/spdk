@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f5b32fc_70aee880",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "This should go under 19.10.",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37acbc9a_3afddf92",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "vice versa",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b1750c6_454448e9",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "differ",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f43db67c_29d21133",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "Do we need to use size_t here?  I guess it\u0027s fine but I prefer uintXX_t variants.",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82f28bcd_a1139231",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "two element iovec array",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d7eec49_47967e60",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "Consumes memory previously obtained from the pipe by spdk_pipe_writer_get_buffer().",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a20fb7d3_7f0d844a",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "The size to advance?  \"requested\" seems wrong here",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c2bd748_0ac25bda",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "two element iovec array",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "250e3113_86ad8c26",
+        "filename": "include/spdk/pipe.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "The size to advance?",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91306507_1edf3fd4",
+        "filename": "lib/util/pipe.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "related to previous comment on size_t - size_t is 64 bits (on 64-bit platform) so I\u0027d suggest using uint32_t in the API if that\u0027s the intended maximum",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8dc367b5_a7140bba",
+        "filename": "test/unit/lib/util/pipe.c/pipe_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "I\u0027m not following - why should this return 3 instead of 2?  pipe-\u003eread \u003d 0 - so if you advance the write pointer 7 bytes, there are 7 bytes now written that haven\u0027t been read yet.",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0f3905f_5dfb81d0",
+        "filename": "test/unit/lib/util/pipe.c/pipe_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-21T23:11:18Z",
+      "side": 1,
+      "message": "3 bytes in?",
+      "revId": "897b3d4ada3919a5caade9ec12a69a4f7533a700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
