@@ -649,7 +649,8 @@ def destruct_split_vbdev(client, base_bdev):
     return client.call('destruct_split_vbdev', params)
 
 
-def construct_ftl_bdev(client, name, trtype, traddr, punits, **kwargs):
+@deprecated_alias('construct_ftl_bdev')
+def bdev_ftl_create(client, name, trtype, traddr, punits, **kwargs):
     """Construct FTL bdev
 
     Args:
@@ -667,10 +668,11 @@ def construct_ftl_bdev(client, name, trtype, traddr, punits, **kwargs):
         if value is not None:
             params[key] = value
 
-    return client.call('construct_ftl_bdev', params)
+    return client.call('bdev_ftl_create', params)
 
 
-def delete_ftl_bdev(client, name):
+@deprecated_alias('delete_ftl_bdev')
+def bdev_ftl_delete(client, name):
     """Delete FTL bdev
 
     Args:
@@ -678,7 +680,7 @@ def delete_ftl_bdev(client, name):
     """
     params = {'name': name}
 
-    return client.call('delete_ftl_bdev', params)
+    return client.call('bdev_ftl_delete', params)
 
 
 def get_bdevs(client, name=None):
