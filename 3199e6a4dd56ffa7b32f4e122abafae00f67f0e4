@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7950ad2c_25efba27",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-21T17:28:13Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "18235b4b_897e89f5",
+      "range": {
+        "startLine": 342,
+        "startChar": 3,
+        "endLine": 342,
+        "endChar": 38
+      },
+      "revId": "3199e6a4dd56ffa7b32f4e122abafae00f67f0e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d97006e_9eb261a0",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "5b624c04_99cc651e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-21T17:28:13Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1d97006e_9eb261a0",
+      "range": {
+        "startLine": 355,
+        "startChar": 3,
+        "endLine": 355,
+        "endChar": 38
+      },
+      "revId": "3199e6a4dd56ffa7b32f4e122abafae00f67f0e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e710807_46c4e2b7",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2019-08-21T08:40:02Z",
       "side": 1,
       "message": "As per comment in vbdev_ocf.h, we should be able to move this check and following vbdev_ocf_mngt_start() up to vbdev_ocf_delete() and vbdev_ocf_delete_clean() so that we don\u0027t have to add implicit state to vbdev",
+      "range": {
+        "startLine": 376,
+        "startChar": 1,
+        "endLine": 377,
+        "endChar": 51
+      },
+      "revId": "3199e6a4dd56ffa7b32f4e122abafae00f67f0e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0c2a75f_de787c23",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-21T17:28:13Z",
+      "side": 1,
+      "message": "If I understand correctly we can\u0027t trigger removing of device (vbdev_ocf_mngt_start()) as long as ocf bdev is visible in bdev lists, because other bdevs can issuing io to our device and we can stuck here for ages, am I right? If yes, first step to remove ocf instance is call \nspdk_bdev_unregister, and then whole path is common for both dirty and clean shutdown, so we need something to distinguish which management path we should call in unregister_cb.",
+      "parentUuid": "8e710807_46c4e2b7",
       "range": {
         "startLine": 376,
         "startChar": 1,
