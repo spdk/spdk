@@ -97,37 +97,6 @@ spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev)
 	return NULL;
 }
 
-static struct spdk_cpuset *g_app_core_mask;
-
-struct spdk_cpuset *
-spdk_app_get_core_mask(void)
-{
-	int i;
-	if (!g_app_core_mask) {
-		g_app_core_mask = spdk_cpuset_alloc();
-		for (i = 0; i < SPDK_CPUSET_SIZE; i++) {
-			spdk_cpuset_set_cpu(g_app_core_mask, i, true);
-		}
-	}
-	return g_app_core_mask;
-}
-
-int
-spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
-{
-	int rc;
-
-	if (mask == NULL || cpumask == NULL) {
-		return -1;
-	}
-
-	rc = spdk_cpuset_parse(cpumask, mask);
-	if (rc < 0) {
-		return -1;
-	}
-	return 0;
-}
-
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
 	    (uint32_t core, spdk_event_fn fn, void *arg1, void *arg2), NULL);
 
