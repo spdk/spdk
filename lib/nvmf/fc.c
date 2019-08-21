@@ -1293,34 +1293,32 @@ complete:
 static int
 nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 {
-	void	 *buf = NULL;
 	uint32_t length = fc_req->req.length;
+	uint32_t num_buffers;
 	uint32_t i = 0;
 	struct spdk_nvmf_fc_transport *fc_transport = fc_req->hwqp->fc_poll_group->fc_transport;
 	struct spdk_nvmf_transport *transport = &fc_transport->transport;
 
-	fc_req->req.iovcnt = 0;
-	fc_req->data_from_pool = true;
-	while (length) {
-		buf = spdk_mempool_get(transport->data_buf_pool);
-		if (!buf) {
-			goto nomem;
-		}
+	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
 
-		fc_req->req.iov[i].iov_base = (void *)((uintptr_t)((char *)buf +
+	if (spdk_mempool_get_bulk(transport->data_buf_pool, fc_req->buffers, num_buffers)) {
+		return -ENOMEM;
+	}
+
+	fc_req->req.iovcnt = 0;
+
+	while (length) {
+		i = fc_req->req.iovcnt;
+		fc_req->req.iov[i].iov_base = (void *)((uintptr_t)((char *)fc_req->buffers[i] +
 						       NVMF_DATA_BUFFER_MASK) &
 						       ~NVMF_DATA_BUFFER_MASK);
 		fc_req->req.iov[i].iov_len  = spdk_min(length, transport->opts.io_unit_size);
 		fc_req->req.iovcnt++;
-		fc_req->buffers[i] = buf;
-		length -= fc_req->req.iov[i++].iov_len;
+		length -= fc_req->req.iov[i].iov_len;
 	}
+	fc_req->data_from_pool = true;
 
 	return 0;
-
-nomem:
-	nvmf_fc_request_free_buffers(fc_req);
-	return -ENOMEM;
 }
 
 static int
