@@ -825,6 +825,22 @@ _device_unregister_cb(void *io_device)
 }
 
 static void
+vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
+{
+	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
+
+	if (reduce_errno) {
+		SPDK_ERRLOG("number %d\n", reduce_errno);
+	} else {
+		TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
+		spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
+		spdk_bdev_close(comp_bdev->base_desc);
+		comp_bdev->vol = NULL;
+		spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
+	}
+}
+
+static void
 _reduce_destroy_cb(void *ctx, int reduce_errno)
 {
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
@@ -853,22 +869,6 @@ delete_vol_unload_cb(void *cb_arg, int reduce_errno)
 
 		/* Clean the device before we free our resources. */
 		spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _reduce_destroy_cb, comp_bdev);
-	}
-}
-
-static void
-vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
-{
-	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
-
-	if (reduce_errno) {
-		SPDK_ERRLOG("number %d\n", reduce_errno);
-	} else {
-		TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
-		spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
-		spdk_bdev_close(comp_bdev->base_desc);
-		comp_bdev->vol = NULL;
-		spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
 	}
 }
 
