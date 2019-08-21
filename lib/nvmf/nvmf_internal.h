@@ -382,6 +382,15 @@ void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
+void spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
+				    struct spdk_nvmf_transport_poll_group *group,
+				    struct spdk_nvmf_transport *transport,
+				    uint32_t num_buffers);
+int spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
+				  struct spdk_nvmf_transport_poll_group *group,
+				  struct spdk_nvmf_transport *transport,
+				  uint32_t num_buffers);
+
 bool spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx);
 
 void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, const char *hostnqn,
