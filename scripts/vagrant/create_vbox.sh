@@ -19,14 +19,15 @@ display_help() {
 	echo
 	echo "  distro = <centos7 | ubuntu16 | ubuntu18 | fedora28 | fedora29 | fedora 30 | freebsd11> "
 	echo
-	echo "  -b <nvme-backing-file>    default: ${NVME_FILE}"
-	echo "  -s <ram-size> in kb       default: ${SPDK_VAGRANT_VMRAM}"
-	echo "  -n <num-cpus> 1 to 4      default: ${SPDK_VAGRANT_VMCPU}"
-	echo "  -x <http-proxy>           default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
-	echo "  -p <provider>             libvirt or virtualbox"
-	echo "  --vhost-host-dir=<path>   directory path with vhost test dependencies"
-	echo "                            (test VM qcow image, fio binary, ssh keys)"
-	echo "  --vhost-vm-dir=<path>     directory where to put vhost dependencies in VM"
+	echo "  -b <nvme-backing-file>          default: ${NVME_FILE}"
+	echo "  -s <ram-size> in kb             default: ${SPDK_VAGRANT_VMRAM}"
+	echo "  -n <num-cpus> 1 to 4            default: ${SPDK_VAGRANT_VMCPU}"
+	echo "  -x <http-proxy>                 default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
+	echo "  -p <provider>                   libvirt or virtualbox"
+	echo "  --vhost-host-dir=<path>         directory path with vhost test dependencies"
+	echo "                                  (test VM qcow image, fio binary, ssh keys)"
+	echo "  --vhost-vm-dir=<path>           directory where to put vhost dependencies in VM"
+	echo "  --qemu-emulator=<path>          directory path with emulator, default: ${SPDK_QEMU_EMULATOR}"
 	echo "  -r dry-run"
 	echo "  -l use a local copy of spdk, don't try to rsync from the host."
 	echo "  -d deploy a test vm by provisioning all prerequisites for spdk autotest"
@@ -55,6 +56,7 @@ SPDK_VAGRANT_DISTRO="distro"
 SPDK_VAGRANT_VMCPU=4
 SPDK_VAGRANT_VMRAM=4096
 SPDK_VAGRANT_PROVIDER="virtualbox"
+SPDK_QEMU_EMULATOR=""
 OPTIND=1
 NVME_FILE="nvme_disk.img"
 
@@ -64,6 +66,7 @@ while getopts ":b:n:s:x:p:vrldh-:" opt; do
 		case "${OPTARG}" in
 			vhost-host-dir=*) VHOST_HOST_DIR="${OPTARG#*=}" ;;
 			vhost-vm-dir=*) VHOST_VM_DIR="${OPTARG#*=}" ;;
+			qemu-emulator=*) SPDK_QEMU_EMULATOR="${OPTARG#*=}" ;;
 			*) echo "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -161,6 +164,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo SPDK_VAGRANT_HTTP_PROXY=$SPDK_VAGRANT_HTTP_PROXY
 	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
 	echo VHOST_VM_DIR=$VHOST_VM_DIR
+	echo SPDK_QEMU_EMULATOR=$SPDK_QEMU_EMULATOR
 	echo
 fi
 
@@ -188,6 +192,10 @@ if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
     export SPDK_VAGRANT_PROVIDER
 fi
 
+if [ -n "$SPDK_QEMU_EMULATOR" ] && [ "$SPDK_VAGRANT_PROVIDER" == "libvirt"  ]; then
+    export SPDK_QEMU_EMULATOR
+fi
+
 if [ ${DRY_RUN} = 1 ]; then
 	echo "Environemnt Variables"
 	printenv SPDK_VAGRANT_DISTRO
@@ -195,6 +203,7 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv SPDK_VAGRANT_VMCPU
 	printenv SPDK_VAGRANT_PROVIDER
 	printenv SPDK_VAGRANT_HTTP_PROXY
+	printenv SPDK_QEMU_EMULATOR
 	printenv SPDK_DIR
 fi
 

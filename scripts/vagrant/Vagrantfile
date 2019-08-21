@@ -94,6 +94,7 @@ Vagrant.configure(2) do |config|
   spdk_dir=(ENV['SPDK_DIR'] || "none")
   vhost_host_dir=(ENV['VHOST_HOST_DIR'] || "none")
   vhost_vm_dir=(ENV['VHOST_VM_DIR'] || "none")
+  vmemulator=(ENV['SPDK_QEMU_EMULATOR'] || "")
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
@@ -121,6 +122,9 @@ Vagrant.configure(2) do |config|
   config.vm.provider "libvirt" do |libvirt, override|
     libvirt.random_hostname = "1"
     libvirt.disk_bus = "virtio"
+    if not vmemulator.empty?
+      libvirt.emulator_path = "#{vmemulator}"
+    end
 
     # we put nvme_disk inside default pool to eliminate libvirt/SELinux Permissions Problems
     # and to be able to run vagrant from user $HOME directory
@@ -139,10 +143,10 @@ Vagrant.configure(2) do |config|
     libvirt.qemuargs :value => "-device"
     libvirt.qemuargs :value => "nvme,drive=D22,serial=1234"
     libvirt.driver = "kvm"
-    libvirt.graphics_type = "spice"
+    libvirt.graphics_type = "vnc"
     libvirt.memory = "#{vmram}"
     libvirt.cpus = "#{vmcpu}"
-    libvirt.video_type = "qxl"
+    libvirt.video_type = "cirrus"
 
     # Optional field if we want use other storage pools than default
     # libvirt.storage_pool_name = "vm"
