@@ -225,7 +225,7 @@ Logical blks per chunk: 24576
 
 Similarly to other bdevs, the FTL bdevs can be created either based on config files or via RPC. Both
 interfaces require the same arguments which are described by the `--help` option of the
-`construct_ftl_bdev` RPC call, which are:
+`bdev_ftl_create` RPC call, which are:
  - bdev's name
  - transport type of the device (e.g. PCIe)
  - transport address of the device (e.g. `00:0a.0`)
@@ -248,12 +248,12 @@ The above will result in creation of two devices:
 The same can be achieved with the following two RPC calls:
 
 ```
-$ scripts/rpc.py construct_ftl_bdev -b nvme0 -l 0-3 -a 00:0a.0
+$ scripts/rpc.py bdev_ftl_create -b nvme0 -l 0-3 -a 00:0a.0
 {
         "name": "nvme0",
         "uuid": "b4624a89-3174-476a-b9e5-5fd27d73e870"
 }
-$ scripts/rpc.py construct_ftl_bdev -b nvme1 -l 0-3 -a 00:0a.0 -u e9825835-b03c-49d7-bc3e-5827cbde8a88
+$ scripts/rpc.py bdev_ftl_create -b nvme1 -l 0-3 -a 00:0a.0 -u e9825835-b03c-49d7-bc3e-5827cbde8a88
 {
         "name": "nvme1",
         "uuid": "e9825835-b03c-49d7-bc3e-5827cbde8a88"
