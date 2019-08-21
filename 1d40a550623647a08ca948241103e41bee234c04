@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "c6a03267_81375135",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-21T11:34:59Z",
+      "side": 1,
+      "message": "Oh, my bad, I missed that you delete OCF bdev before doing get_ocf_bdevs rpc. You are right, this will fail with current code.\n\nTo enable test on CI you need to just add a path to it in test/ocf/ocf.sh file (do it in this patch)\nBut because this will fail, you better move it after the fix patch in series. After rebase you can also attach a fail log from jenkins showing that this fails before rebase\n\nIf patch with test fails, it will not be merged",
+      "parentUuid": "99acced7_195e5766",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 39
+      },
+      "revId": "1d40a550623647a08ca948241103e41bee234c04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a749dbed_df5aaec3",
         "filename": "test/ocf/management/remove.sh",
         "patchSetId": 1
