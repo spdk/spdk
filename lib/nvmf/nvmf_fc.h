@@ -350,7 +350,6 @@ struct spdk_nvmf_fc_request {
 	uint32_t magic;
 	uint32_t s_id;
 	uint32_t d_id;
-	void *buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
 	bool data_from_pool;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) link;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) pending_link;
