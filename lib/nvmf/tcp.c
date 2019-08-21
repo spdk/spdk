@@ -175,8 +175,6 @@ struct spdk_nvmf_tcp_req  {
 
 	enum spdk_nvmf_tcp_req_state		state;
 
-	void					*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
-
 	/*
 	 * next_expected_r2t_offset is used when we receive the h2c_data PDU.
 	 */
@@ -2078,16 +2076,16 @@ spdk_nvmf_tcp_request_free_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 				   uint32_t num_buffers)
 {
 	for (uint32_t i = 0; i < num_buffers; i++) {
-		assert(tcp_req->buffers[i] != NULL);
+		assert(tcp_req->req.buffers[i] != NULL);
 		if (group->buf_cache_count < group->buf_cache_size) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)tcp_req->buffers[i], link);
+					   (struct spdk_nvmf_transport_pg_cache_buf *)tcp_req->req.buffers[i], link);
 			group->buf_cache_count++;
 		} else {
-			spdk_mempool_put(transport->data_buf_pool, tcp_req->buffers[i]);
+			spdk_mempool_put(transport->data_buf_pool, tcp_req->req.buffers[i]);
 		}
 		tcp_req->req.iov[i].iov_base = NULL;
-		tcp_req->buffers[i] = NULL;
+		tcp_req->req.buffers[i] = NULL;
 		tcp_req->req.iov[i].iov_len = 0;
 	}
 	tcp_req->data_from_pool = false;
@@ -2104,13 +2102,13 @@ spdk_nvmf_tcp_req_get_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 	while (i < num_buffers) {
 		if (!(STAILQ_EMPTY(&group->buf_cache))) {
 			group->buf_cache_count--;
-			tcp_req->buffers[i] = STAILQ_FIRST(&group->buf_cache);
+			tcp_req->req.buffers[i] = STAILQ_FIRST(&group->buf_cache);
 			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
-			assert(tcp_req->buffers[i] != NULL);
+			assert(tcp_req->req.buffers[i] != NULL);
 			i++;
 		} else {
 			if (spdk_mempool_get_bulk(transport->data_buf_pool,
-						  &tcp_req->buffers[i], num_buffers - i)) {
+						  &tcp_req->req.buffers[i], num_buffers - i)) {
 				goto nomem;
 			}
 			i += num_buffers - i;
@@ -2135,7 +2133,7 @@ spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 	tcp_req->req.iovcnt = 0;
 	while (length) {
 		i = tcp_req->req.iovcnt;
-		tcp_req->req.iov[i].iov_base = (void *)((uintptr_t)(tcp_req->buffers[i] +
+		tcp_req->req.iov[i].iov_base = (void *)((uintptr_t)(tcp_req->req.buffers[i] +
 							NVMF_DATA_BUFFER_MASK) &
 							~NVMF_DATA_BUFFER_MASK);
 		tcp_req->req.iov[i].iov_len  = spdk_min(length, transport->opts.io_unit_size);
