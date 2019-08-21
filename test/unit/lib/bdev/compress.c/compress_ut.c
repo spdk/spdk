@@ -47,10 +47,10 @@ struct vbdev_compress g_comp_bdev;
 struct comp_device_qp g_device_qp;
 struct compress_dev g_device;
 struct rte_compressdev_capabilities g_cdev_cap;
-static struct rte_mbuf *g_src_mbufs[2];
-static struct rte_mbuf *g_dst_mbufs[2];
-static struct rte_mbuf g_expected_src_mbufs[2];
-static struct rte_mbuf g_expected_dst_mbufs[2];
+static struct rte_mbuf *g_src_mbufs[3];
+static struct rte_mbuf *g_dst_mbufs[3];
+static struct rte_mbuf g_expected_src_mbufs[3];
+static struct rte_mbuf g_expected_dst_mbufs[3];
 struct comp_bdev_io *g_io_ctx;
 struct comp_io_channel *g_comp_ch;
 struct rte_config *g_test_config;
@@ -176,15 +176,16 @@ int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbuf
 int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
 				unsigned count)
 {
-	/* This mocked function only supports the alloc of 2 src and 2 dst. */
-	CU_ASSERT(count == 2);
+	/* This mocked function only supports the alloc of up to 3 src and 3 dst. */
 	ut_rte_pktmbuf_alloc_bulk += count;
-	if (ut_rte_pktmbuf_alloc_bulk == 2) {
+	if (ut_rte_pktmbuf_alloc_bulk == 3) {
 		*mbufs++ = g_src_mbufs[0];
-		*mbufs = g_src_mbufs[1];
-	} else if (ut_rte_pktmbuf_alloc_bulk == 4) {
+		*mbufs++ = g_src_mbufs[1];
+		*mbufs = g_src_mbufs[2];
+	} else if (ut_rte_pktmbuf_alloc_bulk == 6) {
 		*mbufs++ = g_dst_mbufs[0];
-		*mbufs = g_dst_mbufs[1];
+		*mbufs++ = g_dst_mbufs[1];
+		*mbufs = g_dst_mbufs[2];
 		ut_rte_pktmbuf_alloc_bulk = 0;
 	} else {
 		return -1;
@@ -462,8 +463,10 @@ test_setup(void)
 
 	g_src_mbufs[0] = calloc(1, sizeof(struct rte_mbuf));
 	g_src_mbufs[1] = calloc(1, sizeof(struct rte_mbuf));
+	g_src_mbufs[2] = calloc(1, sizeof(struct rte_mbuf));
 	g_dst_mbufs[0] = calloc(1, sizeof(struct rte_mbuf));
 	g_dst_mbufs[1] = calloc(1, sizeof(struct rte_mbuf));
+	g_dst_mbufs[2] = calloc(1, sizeof(struct rte_mbuf));
 
 	g_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct comp_bdev_io));
 	g_bdev_io->u.bdev.iovs = calloc(128, sizeof(struct iovec));
@@ -491,6 +494,8 @@ test_cleanup(void)
 	free(g_src_mbufs[0]);
 	free(g_dst_mbufs[1]);
 	free(g_src_mbufs[1]);
+	free(g_dst_mbufs[2]);
+	free(g_src_mbufs[2]);
 	free(g_bdev_io->u.bdev.iovs);
 	free(g_bdev_io);
 	free(g_io_ch);
@@ -501,26 +506,21 @@ test_cleanup(void)
 static void
 test_compress_operation(void)
 {
-	struct iovec src_iovs[2] = {};
+	struct iovec src_iovs[3] = {};
 	int src_iovcnt;
-	struct iovec dst_iovs[2] = {};
+	struct iovec dst_iovs[3] = {};
 	int dst_iovcnt;
 	struct spdk_reduce_vol_cb_args cb_arg;
-	int rc;
+	int rc, i;
 	struct vbdev_comp_op *op;
 
-	src_iovcnt = dst_iovcnt = 2;
-	src_iovs[0].iov_len = 1024 * 4;
-	dst_iovs[0].iov_len = 1024 * 4;
-
-	src_iovs[1].iov_len = 1024 * 2;
-	dst_iovs[1].iov_len = 1024 * 2;
-
-	src_iovs[0].iov_base = (void *)0xfeedbeef;
-	dst_iovs[0].iov_base = (void *)0xdeadbeef;
-
-	src_iovs[1].iov_base = (void *)0xdeadbeef;
-	dst_iovs[1].iov_base = (void *)0xfeedbeef;
+	src_iovcnt = dst_iovcnt = 3;
+	for (i = 0; i < dst_iovcnt; i++) {
+		src_iovs[i].iov_len = 1024 * 4;
+		dst_iovs[i].iov_len = 1024 * 4;
+		src_iovs[i].iov_base = (void *)0x10000000;
+		dst_iovs[i].iov_base = (void *)0x20000000;
+	}
 
 	/* test rte_comp_op_alloc failure */
 	MOCK_SET(rte_comp_op_alloc, NULL);
@@ -567,10 +567,10 @@ test_compress_operation(void)
 	CU_ASSERT(rc == 0);
 	ut_enqueue_value = 1;
 
-	/* test success with 2 vector iovec */
+	/* test success with 3 vector iovec */
 	ut_expected_op.private_xform = &g_decomp_xform;
 	ut_expected_op.src.offset = 0;
-	ut_expected_op.src.length = src_iovs[0].iov_len + src_iovs[1].iov_len;
+	ut_expected_op.src.length = src_iovs[0].iov_len + src_iovs[1].iov_len + src_iovs[2].iov_len;
 	ut_expected_op.m_src = &g_expected_src_mbufs[0];
 	ut_expected_op.m_src->buf_addr = src_iovs[0].iov_base;
 	ut_expected_op.m_src->next = &g_expected_src_mbufs[1];
@@ -659,9 +659,9 @@ test_poller(void)
 	SPDK_CU_ASSERT_FATAL(op_to_queue != NULL);
 	op_to_queue->backing_dev = &g_comp_bdev.backing_dev;
 	op_to_queue->src_iovs = &src_iovs[0];
-	op_to_queue->src_iovcnt = 2;
+	op_to_queue->src_iovcnt = 3;
 	op_to_queue->dst_iovs = &dst_iovs[0];
-	op_to_queue->dst_iovcnt = 2;
+	op_to_queue->dst_iovcnt = 3;
 	op_to_queue->compress = true;
 	op_to_queue->cb_arg = cb_args;
 	ut_enqueue_value = FAKE_ENQUEUE_SUCCESS;
