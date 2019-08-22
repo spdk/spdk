@@ -416,10 +416,10 @@ nvmf_fc_req_in_get_buff(struct spdk_nvmf_fc_request *fc_req)
 }
 
 static void
-nvmf_fc_request_free_buffers(struct spdk_nvmf_fc_request *fc_req)
+nvmf_fc_request_free_buffers(struct spdk_nvmf_fc_request *fc_req,
+			     struct spdk_nvmf_transport *transport,
+			     uint32_t num_buffers)
 {
-	struct spdk_nvmf_fc_transport *fc_transport = fc_req->hwqp->fc_poll_group->fc_transport;
-	struct spdk_nvmf_transport *transport = &fc_transport->transport;
 	uint32_t i;
 
 	for (i = 0; i < fc_req->req.iovcnt; i++) {
@@ -1472,27 +1472,31 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 void
 spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 {
+	struct spdk_nvmf_fc_hwqp *hwqp = fc_req->hwqp;
+	struct spdk_nvmf_fc_transport *fc_transport = hwqp->fc_poll_group->fc_transport;
+	struct spdk_nvmf_transport *transport = &fc_transport->transport;
+
 	if (!fc_req) {
 		return;
 	}
 
 	if (fc_req->xchg) {
-		nvmf_fc_put_xchg(fc_req->hwqp, fc_req->xchg);
+		nvmf_fc_put_xchg(hwqp, fc_req->xchg);
 		fc_req->xchg = NULL;
 	}
 
 	/* Release IO buffers */
 	if (fc_req->data_from_pool) {
-		nvmf_fc_request_free_buffers(fc_req);
+		nvmf_fc_request_free_buffers(fc_req, transport, fc_req->req.iovcnt);
 	}
 	fc_req->req.data = NULL;
 	fc_req->req.iovcnt  = 0;
 
 	/* Release Q buffer */
-	nvmf_fc_rqpair_buffer_release(fc_req->hwqp, fc_req->buf_index);
+	nvmf_fc_rqpair_buffer_release(hwqp, fc_req->buf_index);
 
 	/* Free Fc request */
-	nvmf_fc_hwqp_free_fc_request(fc_req->hwqp, fc_req);
+	nvmf_fc_hwqp_free_fc_request(hwqp, fc_req);
 }
 
 void
