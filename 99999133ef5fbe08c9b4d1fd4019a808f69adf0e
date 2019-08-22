@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ac18077_0626ee2b",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 11
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-22T22:15:25Z",
+      "side": 1,
+      "message": "I think the phase 1/2/3 stuff might be confusing down the road.  Phase 2 and 3 are sorted alphabetically, while phase 1 is sorted by dependencies (i.e. any given line only has dependencies on previous lines).\n\nWhat if we removed the phase 1/2/3 sections, and just sorted everything like you did phase 1?  This may be easier too down the road from a review standpoint - you could clearly say in the comments that the value for any DEPDIRS-xxx variable must only contain names from earlier lines.\n\nI think we want to consistently order the library names in the DEPDIRS values too.  For example, always start with \"log\" since that\u0027s the base library for everything.  If it depends on both log and util, then the line should start with \"log util\".  Right now that\u0027s a bit inconsistent below.",
+      "revId": "99999133ef5fbe08c9b4d1fd4019a808f69adf0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
