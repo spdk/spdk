@@ -76,6 +76,60 @@ DEFINE_STUB(spdk_nvme_transport_id_compare, int, (const struct spdk_nvme_transpo
 		const struct spdk_nvme_transport_id *trid2), 0);
 DEFINE_STUB_V(spdk_nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
 
+void
+spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
+			       struct spdk_nvmf_transport_poll_group *group,
+			       struct spdk_nvmf_transport *transport,
+			       uint32_t num_buffers)
+{
+	uint32_t i;
+
+	for (i = 0; i < num_buffers; i++) {
+		if (group->buf_cache_count < group->buf_cache_size) {
+			STAILQ_INSERT_HEAD(&group->buf_cache,
+					   (struct spdk_nvmf_transport_pg_cache_buf *)req->buffers[i],
+					   link);
+			group->buf_cache_count++;
+		} else {
+			spdk_mempool_put(transport->data_buf_pool, req->buffers[i]);
+		}
+		req->iov[i].iov_base = NULL;
+		req->buffers[i] = NULL;
+		req->iov[i].iov_len = 0;
+	}
+	req->data_from_pool = false;
+}
+
+int
+spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
+			      struct spdk_nvmf_transport_poll_group *group,
+			      struct spdk_nvmf_transport *transport,
+			      uint32_t num_buffers)
+{
+	uint32_t i = 0;
+
+	while (i < num_buffers) {
+		if (!(STAILQ_EMPTY(&group->buf_cache))) {
+			group->buf_cache_count--;
+			req->buffers[i] = STAILQ_FIRST(&group->buf_cache);
+			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
+			i++;
+		} else {
+			if (spdk_mempool_get_bulk(transport->data_buf_pool, &req->buffers[i],
+						  num_buffers - i)) {
+				goto err_exit;
+			}
+			i += num_buffers - i;
+		}
+	}
+
+	return 0;
+
+err_exit:
+	spdk_nvmf_request_free_buffers(req, group, transport, i);
+	return -ENOMEM;
+}
+
 uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
 {
