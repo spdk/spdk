@@ -300,7 +300,8 @@ def bdev_aio_delete(client, name):
     return client.call('bdev_aio_delete', params)
 
 
-def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
+@deprecated_alias('set_bdev_nvme_options')
+def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
                           nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None):
     """Set options for the bdev nvme. This is startup command.
 
@@ -332,7 +333,7 @@ def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry
     if io_queue_requests:
         params['io_queue_requests'] = io_queue_requests
 
-    return client.call('set_bdev_nvme_options', params)
+    return client.call('bdev_nvme_set_options', params)
 
 
 def set_bdev_nvme_hotplug(client, enable, period_us=None):
