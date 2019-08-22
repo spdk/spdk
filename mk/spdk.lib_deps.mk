@@ -31,15 +31,5 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-C_SRCS = conn.c \
-	 init_grp.c iscsi.c md5.c param.c portal_grp.c \
-	 tgt_node.c iscsi_subsystem.c \
-	 iscsi_rpc.c task.c
-LIBNAME = iscsi
-LOCAL_SYS_LIBS = -lcrypto
-
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+DEPDIRS-iscsi := scsi
+DEPDIRS-bdev := notify
