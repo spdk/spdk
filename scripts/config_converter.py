@@ -11,7 +11,7 @@ bdev_dict["set_bdev_options"] = []
 bdev_dict["construct_split_vbdev"] = []
 bdev_dict["bdev_nvme_set_options"] = []
 bdev_dict["construct_nvme_bdev"] = []
-bdev_dict["set_bdev_nvme_hotplug"] = []
+bdev_dict["bdev_nvme_set_hotplug"] = []
 bdev_dict["bdev_malloc_create"] = []
 bdev_dict["bdev_aio_create"] = []
 bdev_dict["construct_pmem_bdev"] = []
@@ -238,7 +238,7 @@ def get_nvme_bdev_json(config, section):
     params[6][3] = params[6][3] * 100
     nvme_json.append({
         "params": to_json_params(params[5:7]),
-        "method": "set_bdev_nvme_hotplug"
+        "method": "bdev_nvme_set_hotplug"
     })
     nvme_json.append({
         "params": to_json_params(params[0:5]),
