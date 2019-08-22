@@ -136,12 +136,12 @@ class UIRoot(UINode):
 
     @verbose
     def create_iscsi_bdev(self, **kwargs):
-        response = rpc.bdev.construct_iscsi_bdev(self.client, **kwargs)
+        response = rpc.bdev.bdev_iscsi_create(self.client, **kwargs)
         return response
 
     @verbose
-    def delete_iscsi_bdev(self, **kwargs):
-        rpc.bdev.delete_iscsi_bdev(self.client, **kwargs)
+    def bdev_iscsi_delete(self, **kwargs):
+        rpc.bdev.bdev_iscsi_delete(self.client, **kwargs)
 
     @verbose
     def bdev_aio_create(self, **kwargs):

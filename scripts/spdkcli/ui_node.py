@@ -487,7 +487,7 @@ class UIiSCSIBdev(UIBdev):
         UIBdev.__init__(self, "iscsi", parent)
 
     def delete(self, name):
-        self.get_root().delete_iscsi_bdev(name=name)
+        self.get_root().bdev_iscsi_delete(name=name)
 
     def ui_command_create(self, name, url, initiator_iqn):
         """

@@ -566,7 +566,7 @@ bdev_iscsi_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx 
 	pthread_mutex_lock(&lun->mutex);
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "construct_iscsi_bdev");
+	spdk_json_write_named_string(w, "method", "bdev_iscsi_create");
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);

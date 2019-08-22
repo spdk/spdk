@@ -1923,7 +1923,7 @@ Example response:
 }
 ~~~
 
-## construct_iscsi_bdev {#rpc_construct_iscsi_bdev}
+## bdev_iscsi_create {#rpc_bdev_iscsi_create}
 
 Connect to iSCSI target and create bdev backed by this connection.
 
@@ -1953,7 +1953,7 @@ Example request:
     "name": "iSCSI0"
   },
   "jsonrpc": "2.0",
-  "method": "construct_iscsi_bdev",
+  "method": "bdev_iscsi_create",
   "id": 1
 }
 ~~~
@@ -1968,7 +1968,7 @@ Example response:
 }
 ~~~
 
-## delete_iscsi_bdev {#rpc_delete_iscsi_bdev}
+## bdev_iscsi_delete {#rpc_bdev_iscsi_delete}
 
 Delete iSCSI bdev and terminate connection to target.
 
@@ -1990,7 +1990,7 @@ Example request:
     "name": "iSCSI0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_iscsi_bdev",
+  "method": "bdev_iscsi_delete",
   "id": 1
 }
 ~~~
