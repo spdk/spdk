@@ -251,7 +251,6 @@ struct spdk_nvmf_rdma_request_data {
 
 struct spdk_nvmf_rdma_request {
 	struct spdk_nvmf_request		req;
-	bool					data_from_pool;
 
 	enum spdk_nvmf_rdma_request_state	state;
 
@@ -683,7 +682,7 @@ nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
 static void
 nvmf_rdma_dump_request(struct spdk_nvmf_rdma_request *req)
 {
-	SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", req->data_from_pool);
+	SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", req->req.data_from_pool);
 	if (req->req.cmd) {
 		SPDK_ERRLOG("\t\tRequest opcode: %d\n", req->req.cmd->nvmf_cmd.opcode);
 	}
@@ -1393,7 +1392,7 @@ spdk_nvmf_rdma_request_free_buffers(struct spdk_nvmf_rdma_request *rdma_req,
 		rdma_req->req.iov[i].iov_len = 0;
 
 	}
-	rdma_req->data_from_pool = false;
+	rdma_req->req.data_from_pool = false;
 }
 
 static int
@@ -1608,7 +1607,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	assert(rdma_req->req.iovcnt <= rqpair->max_send_sge);
 
-	rdma_req->data_from_pool = true;
+	rdma_req->req.data_from_pool = true;
 
 	return rc;
 
@@ -1710,7 +1709,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 #endif
 
 	rdma_req->num_outstanding_data_wr = num_sgl_descriptors;
-	rdma_req->data_from_pool = true;
+	rdma_req->req.data_from_pool = true;
 
 	return 0;
 
@@ -1810,7 +1809,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 
 		rdma_req->num_outstanding_data_wr = 0;
 		rdma_req->req.data = rdma_req->recv->buf + offset;
-		rdma_req->data_from_pool = false;
+		rdma_req->req.data_from_pool = false;
 		rdma_req->req.length = sgl->unkeyed.length;
 
 		rdma_req->req.iov[0].iov_base = rdma_req->req.data;
@@ -1853,7 +1852,7 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	if (rdma_req->data_from_pool) {
+	if (rdma_req->req.data_from_pool) {
 		rgroup = rqpair->poller->group;
 
 		spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport,
@@ -1972,7 +1971,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			/* If data is transferring from host to controller and the data didn't
 			 * arrive using in capsule data, we need to do a transfer from the host.
 			 */
-			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER && rdma_req->data_from_pool) {
+			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER &&
+			    rdma_req->req.data_from_pool) {
 				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_read_queue, rdma_req, state_link);
 				rdma_req->state = RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING;
 				break;
