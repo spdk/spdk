@@ -1793,8 +1793,12 @@ test_nvme_ctrlr_init_delay(void)
 	g_ut_nvme_regs.cc.bits.en = 0;
 	g_ut_nvme_regs.csts.bits.rdy = 0;
 
-	/* Delay initiation and default time is 2s */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	/* Test that the initialization delay works correctly.  We only
+	 * do the initialization delay on SSDs that require it, so
+	 * set that quirk here.
+	 */
+	ctrlr.quirks = NVME_QUIRK_DELAY_BEFORE_INIT;
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
 	ctrlr.state = NVME_CTRLR_STATE_INIT_DELAY;
