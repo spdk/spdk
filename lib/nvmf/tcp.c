@@ -2070,25 +2070,25 @@ spdk_nvmf_tcp_req_get_xfer(struct spdk_nvmf_tcp_req *tcp_req) {
 }
 
 static void
-spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_tcp_req *tcp_req,
+spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_request *req,
 			       struct spdk_nvmf_transport *transport,
 			       uint32_t length)
 {
 	uint32_t i = 0;
 
-	tcp_req->req.iovcnt = 0;
+	req->iovcnt = 0;
 	while (length) {
-		i = tcp_req->req.iovcnt;
-		tcp_req->req.iov[i].iov_base = (void *)((uintptr_t)(tcp_req->req.buffers[i] +
-							NVMF_DATA_BUFFER_MASK) &
-							~NVMF_DATA_BUFFER_MASK);
-		tcp_req->req.iov[i].iov_len  = spdk_min(length, transport->opts.io_unit_size);
-		tcp_req->req.iovcnt++;
-		length -= tcp_req->req.iov[i].iov_len;
+		i = req->iovcnt;
+		req->iov[i].iov_base = (void *)((uintptr_t)(req->buffers[i] +
+						NVMF_DATA_BUFFER_MASK) &
+						~NVMF_DATA_BUFFER_MASK);
+		req->iov[i].iov_len  = spdk_min(length, transport->opts.io_unit_size);
+		req->iovcnt++;
+		length -= req->iov[i].iov_len;
 	}
 
-	assert(tcp_req->req.iovcnt <= SPDK_NVMF_MAX_SGL_ENTRIES);
-	tcp_req->req.data_from_pool = true;
+	assert(req->iovcnt <= SPDK_NVMF_MAX_SGL_ENTRIES);
+	req->data_from_pool = true;
 }
 
 static int
@@ -2109,7 +2109,7 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 		return -ENOMEM;
 	}
 
-	spdk_nvmf_tcp_req_fill_buffers(tcp_req, &ttransport->transport, length);
+	spdk_nvmf_tcp_req_fill_buffers(&tcp_req->req, &ttransport->transport, length);
 
 	return 0;
 }
