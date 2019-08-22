@@ -42,6 +42,17 @@ endif
 
 DIRS-$(CONFIG_VHOST) += vhost
 
+# These dependencies are not based specifically on symbols, but rather
+# the subsystem dependency tree defined within the event subsystem C files
+# themselves. Should that tree change, these dependencies should change
+# accordingly.
+DEPDIRS-bdev := copy vmd
+DEPDIRS-iscsi := scsi
+DEPDIRS-nbd := bdev
+DEPDIRS-nvmf := bdev
+DEPDIRS-scsi := bdev
+DEPDIRS-vhost := scsi
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
