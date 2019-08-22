@@ -9,7 +9,7 @@ from collections import OrderedDict
 bdev_dict = OrderedDict()
 bdev_dict["set_bdev_options"] = []
 bdev_dict["construct_split_vbdev"] = []
-bdev_dict["set_bdev_nvme_options"] = []
+bdev_dict["bdev_nvme_set_options"] = []
 bdev_dict["construct_nvme_bdev"] = []
 bdev_dict["set_bdev_nvme_hotplug"] = []
 bdev_dict["bdev_malloc_create"] = []
@@ -242,7 +242,7 @@ def get_nvme_bdev_json(config, section):
     })
     nvme_json.append({
         "params": to_json_params(params[0:5]),
-        "method": "set_bdev_nvme_options"
+        "method": "bdev_nvme_set_options"
     })
     return nvme_json
 
