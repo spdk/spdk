@@ -2140,7 +2140,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	 * before enabling hotplug poller.
 	 */
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "method", "set_bdev_nvme_hotplug");
+	spdk_json_write_named_string(w, "method", "bdev_nvme_set_hotplug");
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_uint64(w, "period_us", g_nvme_hotplug_poll_period_us);

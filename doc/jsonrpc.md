@@ -1434,7 +1434,7 @@ Example response:
 }
 ~~~
 
-## set_bdev_nvme_hotplug {#rpc_set_bdev_nvme_hotplug}
+## bdev_nvme_set_hotplug {#rpc_bdev_nvme_set_hotplug}
 
 Change settings of the NVMe hotplug feature. If enabled, PCIe NVMe bdevs will be automatically discovered on insertion
 and deleted on removal.
@@ -1458,7 +1458,7 @@ request:
     "period_us": 2000
   },
   "jsonrpc": "2.0",
-  "method": "set_bdev_nvme_hotplug",
+  "method": "bdev_nvme_set_hotplug",
   "id": 1
 }
 ~~~
