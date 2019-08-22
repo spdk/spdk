@@ -1086,6 +1086,23 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return rc;
 }
 
+static int
+vtophys_check_contiguous_entries(uint64_t vaddr1, uint64_t vaddr2)
+{
+	uint64_t paddr1, paddr2;
+
+	/* check if physical addresses are contiguous.
+	 *
+	 * we translate vaddrs without the size param, so only the
+	 * vaddr itself will be translated - without checking any
+	 * contiguity and calling this callback recursively.
+	 */
+	paddr1 = spdk_mem_map_translate(g_vtophys_map, vaddr1, NULL);
+	paddr2 = spdk_mem_map_translate(g_vtophys_map, vaddr2, NULL);
+
+	return vaddr2 - vaddr1 == paddr2 - paddr1;
+}
+
 #if SPDK_VFIO_ENABLED
 
 static bool
@@ -1274,7 +1291,7 @@ spdk_vtophys_init(void)
 {
 	const struct spdk_mem_map_ops vtophys_map_ops = {
 		.notify_cb = spdk_vtophys_notify,
-		.are_contiguous = NULL
+		.are_contiguous = vtophys_check_contiguous_entries,
 	};
 
 #if SPDK_VFIO_ENABLED
