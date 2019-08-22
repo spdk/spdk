@@ -238,7 +238,6 @@ struct spdk_nvmf_fc_adm_port_link_break_cb_data {
 
 struct spdk_nvmf_fc_transport {
 	struct spdk_nvmf_transport transport;
-	struct spdk_mempool *data_buff_pool;
 	pthread_mutex_t lock;
 };
 
@@ -419,11 +418,12 @@ nvmf_fc_req_in_get_buff(struct spdk_nvmf_fc_request *fc_req)
 static void
 nvmf_fc_request_free_buffers(struct spdk_nvmf_fc_request *fc_req)
 {
+	struct spdk_nvmf_fc_transport *fc_transport = fc_req->hwqp->fc_poll_group->fc_transport;
+	struct spdk_nvmf_transport *transport = &fc_transport->transport;
 	uint32_t i;
 
 	for (i = 0; i < fc_req->req.iovcnt; i++) {
-		spdk_mempool_put(fc_req->hwqp->fc_poll_group->fc_transport->data_buff_pool,
-				 fc_req->buffers[i]);
+		spdk_mempool_put(transport->data_buf_pool, fc_req->buffers[i]);
 		fc_req->req.iov[i].iov_base = NULL;
 		fc_req->buffers[i] = NULL;
 	}
@@ -1295,11 +1295,12 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 	uint32_t length = fc_req->req.length;
 	uint32_t i = 0;
 	struct spdk_nvmf_fc_transport *fc_transport = fc_req->hwqp->fc_poll_group->fc_transport;
+	struct spdk_nvmf_transport *transport = &fc_transport->transport;
 
 	fc_req->req.iovcnt = 0;
 	fc_req->data_from_pool = true;
 	while (length) {
-		buf = spdk_mempool_get(fc_transport->data_buff_pool);
+		buf = spdk_mempool_get(transport->data_buf_pool);
 		if (!buf) {
 			goto nomem;
 		}
@@ -1307,8 +1308,7 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 		fc_req->req.iov[i].iov_base = (void *)((uintptr_t)((char *)buf +
 						       NVMF_DATA_BUFFER_MASK) &
 						       ~NVMF_DATA_BUFFER_MASK);
-		fc_req->req.iov[i].iov_len  = spdk_min(length,
-						       fc_transport->transport.opts.io_unit_size);
+		fc_req->req.iov[i].iov_len  = spdk_min(length, transport->opts.io_unit_size);
 		fc_req->req.iovcnt++;
 		fc_req->buffers[i] = buf;
 		length -= fc_req->req.iov[i++].iov_len;
@@ -1911,19 +1911,6 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	/* Create a databuff pool */
-	g_nvmf_fc_transport->data_buff_pool = spdk_mempool_create("spdk_nvmf_fc_data_buff",
-					      opts->num_shared_buffers,
-					      opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
-					      SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					      SPDK_ENV_SOCKET_ID_ANY);
-
-	if (!g_nvmf_fc_transport->data_buff_pool) {
-		free(g_nvmf_fc_transport);
-		g_nvmf_fc_transport = NULL;
-		return NULL;
-	}
-
 	/* initialize the low level FC driver */
 	nvmf_fc_lld_init();
 
@@ -1938,7 +1925,6 @@ nvmf_fc_destroy(struct spdk_nvmf_transport *transport)
 		struct spdk_nvmf_fc_poll_group *fc_poll_group, *pg_tmp;
 
 		fc_transport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_fc_transport, transport);
-		spdk_mempool_free(fc_transport->data_buff_pool);
 
 		free(fc_transport);
 
