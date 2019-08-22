@@ -252,6 +252,8 @@ SC2199,SC2206,SC2207,SC2209,SC2214,SC2219,SC2220,SC2223,SC2230,SC2231,SC2235"
 	# We will not try to fix these error checks, but instead just leave the error types here
 	# so that we can still run with older versions of shellcheck.
 	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC1117"
+	# Don't enforce single quotes in trap definitions. Double quotes are still useful.
+	SHCK_EXCLUDE="$SHCK_EXCLUDE,SC2064"
 
 	SHCK_FORMAT="diff"
 	SHCK_APPLY=true
