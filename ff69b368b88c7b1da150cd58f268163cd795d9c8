@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5e82ac3_9e981fc6",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-22T21:07:52Z",
+      "side": 0,
+      "message": "This code looks to me like it already includes aliases because it isn\u0027t checking for them. Is there something weird going on where an alias has it\u0027s state_mask set to 0?",
+      "revId": "ff69b368b88c7b1da150cd58f268163cd795d9c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
