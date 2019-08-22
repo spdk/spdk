@@ -140,7 +140,8 @@ if __name__ == "__main__":
         print_json(rpc.bdev.bdev_compress_create(args.client,
                                                  base_bdev_name=args.base_bdev_name,
                                                  pm_path=args.pm_path))
-    p = subparsers.add_parser('bdev_compress_create',
+
+    p = subparsers.add_parser('bdev_compress_create', aliases=['construct_compress_bdev']
                               help='Add a compress vbdev')
     p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
     p.add_argument('-p', '--pm_path', help="Path to persistent memory")
@@ -150,7 +151,8 @@ if __name__ == "__main__":
         rpc.bdev.bdev_compress_delete(args.client,
                                       name=args.name)
 
-    p = subparsers.add_parser('bdev_compress_delete', help='Delete a compress disk')
+    p = subparsers.add_parser('bdev_compress_delete', aliases=['delete_compress_bdev'],
+                              help='Delete a compress disk')
     p.add_argument('name', help='compress bdev name')
     p.set_defaults(func=bdev_compress_delete)
 
@@ -175,7 +177,7 @@ if __name__ == "__main__":
                                                name=args.name,
                                                crypto_pmd=args.crypto_pmd,
                                                key=args.key))
-    p = subparsers.add_parser('bdev_crypto_create',
+    p = subparsers.add_parser('bdev_crypto_create', aliases=['construct_crypto_bdev'],
                               help='Add a crypto vbdev')
     p.add_argument('base_bdev_name', help="Name of the base bdev")
     p.add_argument('name', help="Name of the crypto vbdev")
@@ -187,7 +189,8 @@ if __name__ == "__main__":
         rpc.bdev.bdev_crypto_delete(args.client,
                                     name=args.name)
 
-    p = subparsers.add_parser('bdev_crypto_delete', help='Delete a crypto disk')
+    p = subparsers.add_parser('bdev_crypto_delete', aliases=['delete_crypto_bdev'],
+                              help='Delete a crypto disk')
     p.add_argument('name', help='crypto bdev name')
     p.set_defaults(func=bdev_crypto_delete)
 
@@ -294,7 +297,7 @@ if __name__ == "__main__":
                                             name=args.name,
                                             block_size=args.block_size))
 
-    p = subparsers.add_parser('bdev_aio_create',
+    p = subparsers.add_parser('bdev_aio_create', aliases=['construct_aio_bdev'],
                               help='Add a bdev with aio backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
     p.add_argument('name', help='Block device name')
@@ -305,7 +308,8 @@ if __name__ == "__main__":
         rpc.bdev.bdev_aio_delete(args.client,
                                  name=args.name)
 
-    p = subparsers.add_parser('bdev_aio_delete', help='Delete an aio disk')
+    p = subparsers.add_parser('bdev_aio_delete', aliases=['delete_aio_bdev'],
+                              help='Delete an aio disk')
     p.add_argument('name', help='aio bdev name')
     p.set_defaults(func=bdev_aio_delete)
 
