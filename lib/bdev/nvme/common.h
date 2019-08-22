@@ -65,6 +65,7 @@ struct nvme_bdev_ctrlr {
 	uint32_t			num_ns;
 	/** Array of bdevs indexed by nsid - 1 */
 	struct nvme_bdev		*bdevs;
+	TAILQ_HEAD(, ftl_bdev)		ftl_bdevs;
 
 	struct spdk_poller		*adminq_timer_poller;
 
@@ -78,6 +79,14 @@ struct nvme_bdev {
 	uint32_t		id;
 	bool			active;
 	struct spdk_nvme_ns	*ns;
+};
+
+struct ftl_bdev {
+	struct spdk_bdev		bdev;
+	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
+	struct spdk_ftl_dev		*dev;
+	struct spdk_bdev_desc		*cache_bdev_desc;
+	TAILQ_ENTRY(ftl_bdev)		tailq;
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
