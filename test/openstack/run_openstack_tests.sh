@@ -23,7 +23,7 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/conf.json
 $rootdir/app/spdk_tgt/spdk_tgt -m 0x3 -p 0 -s 1024 -c $testdir/conf.json &
 nvmfpid=$!
 waitforlisten $nvmfpid
-$rpc_py set_bdev_nvme_hotplug -e
+$rpc_py bdev_nvme_set_hotplug -e
 timing_exit run_spdk_tgt
 
 timing_enter run_rpc_proxy
