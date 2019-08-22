@@ -74,6 +74,7 @@ static TAILQ_HEAD(, bdev_names) g_bdev_names = TAILQ_HEAD_INITIALIZER(g_bdev_nam
 
 struct block_zone {
 	struct spdk_bdev_zone_info zone_info;
+	bool busy;
 };
 
 /* List of block vbdevs and associated info for each. */
@@ -94,6 +95,10 @@ struct zone_block_io_channel {
 struct zone_block_io {
 	/* bdev related */
 	struct spdk_io_channel *ch;
+	/* bdev IO was issued to */
+	struct bdev_zone_block *bdev_zone_block;
+	/* zone IO was issued to */
+	struct block_zone *zone;
 };
 
 static int
@@ -225,6 +230,87 @@ zone_block_get_zone_info(struct bdev_zone_block *bdev_node, struct block_zone *z
 }
 
 static int
+zone_block_open_zone(struct bdev_zone_block *bdev_node, struct block_zone *zone,
+		     struct spdk_bdev_io *bdev_io)
+{
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_FULL:
+	case SPDK_BDEV_ZONE_STATE_READ_ONLY:
+	case SPDK_BDEV_ZONE_STATE_OFFLINE:
+		return -EINVAL;
+	default:
+		break;
+	}
+
+	if (__atomic_exchange_n(&zone->busy, true, __ATOMIC_SEQ_CST)) {
+		return -ENOMEM;
+	}
+	zone->zone_info.state = SPDK_BDEV_ZONE_STATE_OPEN;
+	__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	return 0;
+}
+
+static void
+_zone_block_complete_unmap(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct zone_block_io *io_ctx = (struct zone_block_io *)orig_io->driver_ctx;
+	struct block_zone *zone = io_ctx->zone;
+
+	if (success) {
+		if (zone->zone_info.state == SPDK_BDEV_ZONE_STATE_READ_ONLY) {
+			zone->zone_info.state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+		} else {
+			zone->zone_info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
+		}
+		zone->zone_info.write_pointer = zone->zone_info.zone_id;
+	}
+
+	__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
+
+	/* Complete the original IO and then free the one that we created here
+	 * as a result of issuing an IO via submit_reqeust.
+	 */
+	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static int
+zone_block_reset_zone(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
+		      struct block_zone *zone, struct spdk_bdev_io *bdev_io)
+{
+	struct zone_block_io *io_ctx = (struct zone_block_io *)bdev_io->driver_ctx;
+	int rc;
+
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_OFFLINE:
+		return -EINVAL;
+	case SPDK_BDEV_ZONE_STATE_EMPTY:
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		return 0;
+	default:
+		break;
+	}
+
+	/* If a write is already being processed on the zone, reschedule it */
+	if (__atomic_exchange_n(&zone->busy, true, __ATOMIC_SEQ_CST)) {
+		return -ENOMEM;
+	}
+
+	io_ctx->zone = zone;
+	io_ctx->bdev_zone_block = bdev_node;
+
+	rc = spdk_bdev_unmap_blocks(bdev_node->base_desc, ch->base_ch,
+				    zone->zone_info.zone_id, zone->zone_info.capacity,
+				    _zone_block_complete_unmap, bdev_io);
+
+	return rc;
+}
+
+static int
 zone_block_zone_management(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
 			   struct spdk_bdev_io *bdev_io)
 {
@@ -238,9 +324,31 @@ zone_block_zone_management(struct bdev_zone_block *bdev_node, struct zone_block_
 	switch (bdev_io->u.zdev.zone_action) {
 	case SPDK_BDEV_ZONE_INFO:
 		return zone_block_get_zone_info(bdev_node, zone, bdev_io);
+	case SPDK_BDEV_ZONE_RESET:
+		return zone_block_reset_zone(bdev_node, ch, zone, bdev_io);
+	case SPDK_BDEV_ZONE_OPEN:
+		return zone_block_open_zone(bdev_node, zone, bdev_io);
 	default:
 		return -EINVAL;
 	}
+}
+
+static int
+zone_block_unmap(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
+		 struct spdk_bdev_io *bdev_io)
+{
+	struct block_zone *zone;
+
+	zone = zone_block_get_zone(bdev_node, bdev_io->u.bdev.offset_blocks);
+	if (!zone) {
+		return -EINVAL;
+	}
+
+	if (bdev_io->u.bdev.num_blocks != zone->zone_info.capacity) {
+		return -EINVAL;
+	}
+
+	return zone_block_reset_zone(bdev_node, ch, zone, bdev_io);
 }
 
 static void
@@ -253,6 +361,9 @@ zone_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
 		rc = zone_block_zone_management(bdev_node, dev_ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		rc = zone_block_unmap(bdev_node, dev_ch, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("vbdev_block: unknown I/O type %d\n", bdev_io->type);
@@ -276,6 +387,7 @@ zone_block_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return true;
 	default:
 		return false;
