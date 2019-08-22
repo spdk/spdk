@@ -37,6 +37,7 @@
 
 #include "spdk/config.h"
 #include "spdk/nvme.h"
+#include "spdk/bdev_zone.h"
 
 #include "spdk_internal/log.h"
 
@@ -64,9 +65,15 @@ SPDK_BDEV_MODULE_REGISTER(bdev_zoned_block, &bdev_zoned_if)
 struct bdev_names {
 	char			*vbdev_name;
 	char			*bdev_name;
+	size_t			num_zones;
+	size_t			max_open_zones;
 	TAILQ_ENTRY(bdev_names)	link;
 };
 static TAILQ_HEAD(, bdev_names) g_bdev_names = TAILQ_HEAD_INITIALIZER(g_bdev_names);
+
+struct vbdev_zone {
+	struct spdk_bdev_zone_info zone_info;
+};
 
 /* List of block vbdevs and associated info for each. */
 struct vbdev_block {
@@ -74,6 +81,8 @@ struct vbdev_block {
 	struct spdk_bdev_desc		*base_desc; /* its descriptor we get from open */
 	struct spdk_bdev		bdev;    /* the block zoned bdev */
 	TAILQ_ENTRY(vbdev_block)	link;
+	struct vbdev_zone		*zone_buf; /* array of zones */
+	size_t				num_zones; /* number of zones */
 };
 static TAILQ_HEAD(, vbdev_block) g_bdev_nodes = TAILQ_HEAD_INITIALIZER(g_bdev_nodes);
 
@@ -133,6 +142,8 @@ vbdev_block_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "bdev_name", spdk_bdev_get_name(bdev_node->base_bdev));
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&bdev_node->bdev));
+		spdk_json_write_named_uint64(w, "num_zones", bdev_node->num_zones);
+		spdk_json_write_named_uint64(w, "max_open_zones", bdev_node->bdev.max_open_zones);
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}
@@ -153,6 +164,7 @@ _device_unregister_cb(void *io_device)
 	struct vbdev_block *bdev_node  = io_device;
 
 	free(bdev_node->bdev.name);
+	free(bdev_node->zone_buf);
 	free(bdev_node);
 }
 
@@ -206,6 +218,8 @@ vbdev_block_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&bdev_node->bdev));
 	spdk_json_write_named_string(w, "bdev_name", spdk_bdev_get_name(bdev_node->base_bdev));
+	spdk_json_write_named_uint64(w, "num_zones", bdev_node->num_zones);
+	spdk_json_write_named_uint64(w, "max_open_zones", bdev_node->bdev.max_open_zones);
 	spdk_json_write_object_end(w);
 
 	return 0;
@@ -254,7 +268,8 @@ block_vbdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 static int
-block_vbdev_insert_name(const char *bdev_name, const char *vbdev_name)
+block_vbdev_insert_name(const char *bdev_name, const char *vbdev_name, size_t num_zones,
+			size_t max_open_zones)
 {
 	struct bdev_names *name;
 
@@ -290,9 +305,30 @@ block_vbdev_insert_name(const char *bdev_name, const char *vbdev_name)
 		return -ENOMEM;
 	}
 
+	name->num_zones = num_zones;
+	name->max_open_zones = max_open_zones;
+
 	TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
 
 	return 0;
+}
+
+static void
+block_vbdev_init_zone_info(struct vbdev_block *bdev_node)
+{
+	size_t i;
+	struct vbdev_zone *zone;
+
+	for (i = 0; i < bdev_node->num_zones; i++) {
+		zone = &bdev_node->zone_buf[i];
+		zone->zone_info.zone_id = bdev_node->bdev.zone_size * i;
+		zone->zone_info.write_pointer = zone->zone_info.zone_id;
+		zone->zone_info.capacity = bdev_node->bdev.zone_size;
+		zone->zone_info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
+		/* TODO switch to these after testing */
+		/* zone->zone_info.write_pointer = zone->zone_info.zone_id + zone->zone_info.capacity; */
+		/* zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL; */
+	}
 }
 
 static int
@@ -331,6 +367,15 @@ vbdev_block_register(struct spdk_bdev *bdev)
 			SPDK_ERRLOG("could not allocate bdev_node name\n");
 			goto strdup_failed;
 		}
+
+		bdev_node->num_zones = name->num_zones;
+		bdev_node->zone_buf = calloc(bdev_node->num_zones, sizeof(struct vbdev_zone));
+		if (!bdev_node->zone_buf) {
+			rc = -ENOMEM;
+			SPDK_ERRLOG("could not allocate zone_buf\n");
+			goto calloc_failed;
+		}
+
 		bdev_node->bdev.product_name = "vbdev_block";
 
 		/* Copy some properties from the underlying base bdev. */
@@ -351,6 +396,13 @@ vbdev_block_register(struct spdk_bdev *bdev)
 		bdev_node->bdev.ctxt = bdev_node;
 		bdev_node->bdev.fn_table = &vbdev_block_fn_table;
 		bdev_node->bdev.module = &bdev_zoned_if;
+
+		/* bdev specific info */
+		bdev_node->bdev.zone_size = bdev->blockcnt / bdev_node->num_zones;
+		bdev_node->bdev.optimal_open_zones = name->max_open_zones;
+		bdev_node->bdev.max_open_zones = name->max_open_zones;
+		block_vbdev_init_zone_info(bdev_node);
+
 		TAILQ_INSERT_TAIL(&g_bdev_nodes, bdev_node, link);
 
 		spdk_io_device_register(bdev_node, block_vbdev_ch_create_cb, block_vbdev_ch_destroy_cb,
@@ -386,6 +438,8 @@ claim_failed:
 open_failed:
 	TAILQ_REMOVE(&g_bdev_nodes, bdev_node, link);
 	spdk_io_device_unregister(bdev_node, NULL);
+	free(bdev_node->zone_buf);
+calloc_failed:
 	free(bdev_node->bdev.name);
 strdup_failed:
 	free(bdev_node);
@@ -415,7 +469,7 @@ spdk_vbdev_zone_block_create(const char *bdev_name, const char *vbdev_name, size
 	/* Insert the bdev into our global name list even if it doesn't exist yet,
 	 * it may show up soon...
 	 */
-	rc = block_vbdev_insert_name(bdev_name, vbdev_name);
+	rc = block_vbdev_insert_name(bdev_name, vbdev_name, num_zones, max_open_zones);
 	if (rc) {
 		return rc;
 	}

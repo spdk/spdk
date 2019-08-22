@@ -122,6 +122,18 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
+int spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val)
+{
+	struct rpc_construct_vbdev *req = g_rpc_req;
+	if (strcmp(name, "num_zones") == 0) {
+		CU_ASSERT(req->num_zones == val);
+	} else if (strcmp(name, "max_open_zones") == 0) {
+		CU_ASSERT(req->max_open_zones == val);
+	}
+
+	return 0;
+}
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
