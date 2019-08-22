@@ -1086,6 +1086,17 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return rc;
 }
 
+static int
+vtophys_check_contiguous_entries(uint64_t paddr1, uint64_t paddr2)
+{
+	/* This function is always called with paddrs for two subsequent
+	 * 2MB chunks in virtual address space, so those chunks will be only
+	 * physically contiguous if the physical addresses are 2MB apart
+	 * from each other as well.
+	 */
+	return (paddr2 - paddr1 == VALUE_2MB);
+}
+
 #if SPDK_VFIO_ENABLED
 
 static bool
@@ -1274,7 +1285,7 @@ spdk_vtophys_init(void)
 {
 	const struct spdk_mem_map_ops vtophys_map_ops = {
 		.notify_cb = spdk_vtophys_notify,
-		.are_contiguous = NULL
+		.are_contiguous = vtophys_check_contiguous_entries,
 	};
 
 #if SPDK_VFIO_ENABLED
