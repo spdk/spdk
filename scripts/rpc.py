@@ -487,26 +487,26 @@ if __name__ == "__main__":
     p.add_argument('name', help='error bdev name')
     p.set_defaults(func=delete_error_bdev)
 
-    def construct_iscsi_bdev(args):
-        print_json(rpc.bdev.construct_iscsi_bdev(args.client,
-                                                 name=args.name,
-                                                 url=args.url,
-                                                 initiator_iqn=args.initiator_iqn))
+    def bdev_iscsi_create(args):
+        print_json(rpc.bdev.bdev_iscsi_create(args.client,
+                                              name=args.name,
+                                              url=args.url,
+                                              initiator_iqn=args.initiator_iqn))
 
-    p = subparsers.add_parser('construct_iscsi_bdev',
+    p = subparsers.add_parser('bdev_iscsi_create',
                               help='Add bdev with iSCSI initiator backend')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.add_argument('-i', '--initiator-iqn', help="Initiator IQN", required=True)
     p.add_argument('--url', help="iSCSI Lun URL", required=True)
-    p.set_defaults(func=construct_iscsi_bdev)
+    p.set_defaults(func=bdev_iscsi_create)
 
-    def delete_iscsi_bdev(args):
-        rpc.bdev.delete_iscsi_bdev(args.client,
+    def bdev_iscsi_delete(args):
+        rpc.bdev.bdev_iscsi_delete(args.client,
                                    name=args.name)
 
-    p = subparsers.add_parser('delete_iscsi_bdev', help='Delete an iSCSI bdev')
+    p = subparsers.add_parser('bdev_iscsi_delete', help='Delete an iSCSI bdev')
     p.add_argument('name', help='iSCSI bdev name')
-    p.set_defaults(func=delete_iscsi_bdev)
+    p.set_defaults(func=bdev_iscsi_delete)
 
     def construct_pmem_bdev(args):
         print_json(rpc.bdev.construct_pmem_bdev(args.client,
