@@ -16,6 +16,24 @@
       "revId": "72bea393ecfcaca259123c8ce0c357aff56d19c8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af332746_6eb3f88d",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-22T15:37:18Z",
+      "side": 1,
+      "message": "Oh cool. Thanks! I didn\u0027t realize that we had this. But figures we had to be doing it somewhere. I\u0027ll do it that way.\n\nOn an unrelated note, how did you pull in a file that wasn\u0027t included in my original change and make an inline comment on it? I\u0027ve wanted to do this from time to time, but never needed it enough to research how.",
+      "parentUuid": "b65edfd1_a9907c4e",
+      "revId": "72bea393ecfcaca259123c8ce0c357aff56d19c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
