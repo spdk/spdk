@@ -84,7 +84,13 @@ DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_han
 DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
-	    (void *)1);
+	    (void *)0);
+
+static void
+set_test_opts(void)
+{
+	g_max_io_size = 1024;
+}
 
 static void
 init_test_globals(void)
@@ -99,6 +105,12 @@ free_test_globals(void)
 {
 	free(g_io_output);
 	g_io_output = NULL;
+}
+
+void
+spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
+{
+	free(bdev_io);
 }
 
 int
@@ -286,6 +298,41 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 				     int error_code, const char *fmt, ...)
 {
 	g_rpc_err = 1;
+}
+
+static void
+set_io_output(struct io_output *output,
+	      struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	      uint64_t offset_blocks, uint64_t num_blocks,
+	      spdk_bdev_io_completion_cb cb, void *cb_arg,
+	      enum spdk_bdev_io_type iotype)
+{
+	output->desc = desc;
+	output->ch = ch;
+	output->offset_blocks = offset_blocks;
+	output->num_blocks = num_blocks;
+	output->cb = cb;
+	output->cb_arg = cb_arg;
+	output->iotype = iotype;
+}
+
+int
+spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		       uint64_t offset_blocks, uint64_t num_blocks,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct io_output *output = &g_io_output[g_io_output_index];
+	struct spdk_bdev_io *child_io;
+
+	set_io_output(output, desc, ch, offset_blocks, num_blocks, cb, cb_arg,
+		      SPDK_BDEV_IO_TYPE_UNMAP);
+	g_io_output_index++;
+
+	child_io = calloc(1, sizeof(struct spdk_bdev_io));
+	SPDK_CU_ASSERT_FATAL(child_io != NULL);
+	cb(child_io, true, cb_arg);
+
+	return 0;
 }
 
 static void
@@ -581,6 +628,17 @@ bdev_io_zone_info_initialize(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bde
 }
 
 static void
+bdev_io_zone_initialize(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev,
+			uint64_t zone_id, uint32_t num_zones, uint8_t zone_action)
+{
+	bdev_io->bdev = bdev;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT;
+
+	bdev_io->u.zone_mgmt.zone_action = zone_action;
+	bdev_io->u.zone_mgmt.zone_id = zone_id;
+}
+
+static void
 bdev_io_zone_cleanup(struct spdk_bdev_io *bdev_io)
 {
 	free(bdev_io->u.zone_mgmt.buf);
@@ -746,6 +804,157 @@ test_get_zone_info(void)
 	test_cleanup();
 }
 
+static void
+send_zone_management(struct bdev_zone_block *bdev, struct spdk_io_channel *ch, uint64_t zone_id,
+		     uint32_t output_index, enum spdk_bdev_zone_action action, bool success)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct zone_block_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io_zone_initialize(bdev_io, &bdev->bdev, zone_id, 1, action);
+	memset(g_io_output, 0, (g_max_io_size * sizeof(struct io_output)));
+	g_io_output_index = output_index;
+
+	g_io_comp_status = !success;
+	zone_block_submit_request(ch, bdev_io);
+
+	CU_ASSERT(g_io_comp_status == success);
+	bdev_io_zone_cleanup(bdev_io);
+}
+
+static void
+send_reset_zone(struct bdev_zone_block *bdev, struct spdk_io_channel *ch, uint64_t zone_id,
+		uint32_t output_index, bool success)
+{
+	send_zone_management(bdev, ch, zone_id, output_index, SPDK_BDEV_ZONE_RESET, success);
+}
+
+static void
+send_open_zone(struct bdev_zone_block *bdev, struct spdk_io_channel *ch, uint64_t zone_id,
+	       uint32_t output_index, bool success)
+{
+	send_zone_management(bdev, ch, zone_id, output_index, SPDK_BDEV_ZONE_OPEN, success);
+}
+
+static void
+test_reset_zone(void)
+{
+	struct spdk_io_channel *ch;
+	struct bdev_zone_block *bdev;
+	char *name = "Nvme0n1";
+	uint32_t num_zones = 16;
+	uint64_t zone_id;
+	uint32_t output_index = 0;
+
+	init_test_globals();
+	CU_ASSERT(zone_block_init() == 0);
+
+	/* Create zone dev */
+	bdev = create_and_get_vbdev("zone_dev1", name, num_zones, 1, true);
+
+	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct zone_block_io_channel));
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	/* Send reset to zone 0 */
+	zone_id = 0;
+	send_reset_zone(bdev, ch, zone_id, output_index, true);
+	send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_EMPTY, output_index, true);
+
+	/* Send reset to last zone */
+	zone_id = (num_zones - 1) * bdev->bdev.zone_size;
+	send_reset_zone(bdev, ch, zone_id, output_index, true);
+	send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_EMPTY, output_index, true);
+
+	/* Send reset with misaligned LBA */
+	zone_id = 1;
+	send_reset_zone(bdev, ch, zone_id, output_index, false);
+
+	/* Send reset to non-existing zone */
+	zone_id = num_zones * bdev->bdev.zone_size;
+	send_reset_zone(bdev, ch, zone_id, output_index, false);
+
+	/* Send reset to already resetted zone */
+	zone_id = 0;
+	send_reset_zone(bdev, ch, zone_id, output_index, true);
+	send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_EMPTY, output_index, true);
+
+	/* Delete zone dev */
+	send_delete_vbdev("zone_dev1", true);
+
+	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
+	free(ch);
+
+	test_cleanup();
+}
+
+static void
+test_open_zone(void)
+{
+	struct spdk_io_channel *ch;
+	struct bdev_zone_block *bdev;
+	char *name = "Nvme0n1";
+	uint32_t num_zones = 16;
+	uint64_t zone_id;
+	uint32_t output_index = 0, i;
+
+	init_test_globals();
+	CU_ASSERT(zone_block_init() == 0);
+
+	/* Create zone dev */
+	bdev = create_and_get_vbdev("zone_dev1", name, num_zones, 1, true);
+
+	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct zone_block_io_channel));
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	/* Try to open full zone */
+	zone_id = 0;
+	send_open_zone(bdev, ch, zone_id, output_index, false);
+
+	/* Open all zones */
+	for (i = 0; i < num_zones; i++) {
+		zone_id = i * bdev->bdev.zone_size;
+		send_reset_zone(bdev, ch, zone_id, output_index, true);
+		send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_EMPTY, output_index, true);
+	}
+	for (i = 0; i < num_zones; i++) {
+		zone_id = i * bdev->bdev.zone_size;
+		send_open_zone(bdev, ch, zone_id, output_index, true);
+		send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_OPEN, output_index, true);
+	}
+
+	/* Reset one of the zones and open it again */
+	zone_id = 0;
+	send_reset_zone(bdev, ch, zone_id, output_index, true);
+	send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_EMPTY, output_index, true);
+	send_open_zone(bdev, ch, zone_id, output_index, true);
+	send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_OPEN, output_index, true);
+
+	/* Send open with misaligned LBA */
+	zone_id = 0;
+	send_reset_zone(bdev, ch, zone_id, output_index, true);
+	zone_id = 1;
+	send_open_zone(bdev, ch, zone_id, output_index, false);
+
+	/* Send open to non-existing zone */
+	zone_id = num_zones * bdev->bdev.zone_size;
+	send_open_zone(bdev, ch, zone_id, output_index, false);
+
+	/* Send open to already opened zone */
+	zone_id = bdev->bdev.zone_size;
+	send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_OPEN, output_index, true);
+	send_open_zone(bdev, ch, zone_id, output_index, true);
+	send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_OPEN, output_index, true);
+
+	/* Delete zone dev */
+	send_delete_vbdev("zone_dev1", true);
+
+	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
+	free(ch);
+
+	test_cleanup();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite       suite = NULL;
@@ -765,7 +974,9 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_zone_block_create", test_zone_block_create) == NULL ||
 		CU_add_test(suite, "test_zone_block_create_invalid", test_zone_block_create_invalid) == NULL ||
 		CU_add_test(suite, "test_get_zone_info", test_get_zone_info) == NULL ||
-		CU_add_test(suite, "test_supported_io_types", test_supported_io_types) == NULL
+		CU_add_test(suite, "test_supported_io_types", test_supported_io_types) == NULL ||
+		CU_add_test(suite, "test_reset_zone", test_reset_zone) == NULL ||
+		CU_add_test(suite, "test_open_zone", test_open_zone) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
@@ -775,6 +986,7 @@ int main(int argc, char **argv)
 	spdk_set_thread(g_thread);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
+	set_test_opts();
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 
