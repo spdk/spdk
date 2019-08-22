@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cff637bf_47122a83",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-22T21:06:46Z",
+      "side": 1,
+      "message": "Let\u0027s word this instead like this:\n\nWhen getting the list of available RPCs from a tool like rpc.py, aliases often should be hidden. However, when getting the list of RPCs available for loading from a JSON config file, aliases should be included.",
+      "revId": "1e93b6beee742ea7ab1608c0e1f604c4b068a11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2ce1aaf_6ef1035e",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-22T21:06:46Z",
+      "side": 1,
+      "message": "Do you need to get the state mask from the alias? I think the alias state mask and the real method state mask must match, so this could just be m-\u003estate_mask.",
+      "revId": "1e93b6beee742ea7ab1608c0e1f604c4b068a11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
