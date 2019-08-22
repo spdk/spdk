@@ -38,20 +38,20 @@
 
 #include "spdk_internal/log.h"
 
-struct rpc_construct_iscsi_bdev {
+struct rpc_bdev_iscsi_create {
 	char *name;
 	char *initiator_iqn;
 	char *url;
 };
 
-static const struct spdk_json_object_decoder rpc_construct_iscsi_bdev_decoders[] = {
-	{"name", offsetof(struct rpc_construct_iscsi_bdev, name), spdk_json_decode_string},
-	{"initiator_iqn", offsetof(struct rpc_construct_iscsi_bdev, initiator_iqn), spdk_json_decode_string},
-	{"url", offsetof(struct rpc_construct_iscsi_bdev, url), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_iscsi_create_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_iscsi_create, name), spdk_json_decode_string},
+	{"initiator_iqn", offsetof(struct rpc_bdev_iscsi_create, initiator_iqn), spdk_json_decode_string},
+	{"url", offsetof(struct rpc_bdev_iscsi_create, url), spdk_json_decode_string},
 };
 
 static void
-free_rpc_construct_iscsi_bdev(struct rpc_construct_iscsi_bdev *req)
+free_rpc_bdev_iscsi_create(struct rpc_bdev_iscsi_create *req)
 {
 	free(req->name);
 	free(req->initiator_iqn);
@@ -59,7 +59,7 @@ free_rpc_construct_iscsi_bdev(struct rpc_construct_iscsi_bdev *req)
 }
 
 static void
-construct_iscsi_bdev_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
+bdev_iscsi_create_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
@@ -78,14 +78,14 @@ construct_iscsi_bdev_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
 }
 
 static void
-spdk_rpc_construct_iscsi_bdev(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+spdk_rpc_bdev_iscsi_create(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
-	struct rpc_construct_iscsi_bdev req = {};
+	struct rpc_bdev_iscsi_create req = {};
 	int rc = 0;
 
-	if (spdk_json_decode_object(params, rpc_construct_iscsi_bdev_decoders,
-				    SPDK_COUNTOF(rpc_construct_iscsi_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_iscsi_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_iscsi_create_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -93,15 +93,16 @@ spdk_rpc_construct_iscsi_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = create_iscsi_disk(req.name, req.url, req.initiator_iqn, construct_iscsi_bdev_cb, request);
+	rc = create_iscsi_disk(req.name, req.url, req.initiator_iqn, bdev_iscsi_create_cb, request);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 	}
 
 cleanup:
-	free_rpc_construct_iscsi_bdev(&req);
+	free_rpc_bdev_iscsi_create(&req);
 }
-SPDK_RPC_REGISTER("construct_iscsi_bdev", spdk_rpc_construct_iscsi_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_iscsi_create", spdk_rpc_bdev_iscsi_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_iscsi_create, construct_iscsi_bdev)
 
 struct rpc_delete_iscsi {
 	char *name;
@@ -118,7 +119,7 @@ static const struct spdk_json_object_decoder rpc_delete_iscsi_decoders[] = {
 };
 
 static void
-_spdk_rpc_delete_iscsi_bdev_cb(void *cb_arg, int bdeverrno)
+_spdk_rpc_bdev_iscsi_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
@@ -128,7 +129,7 @@ _spdk_rpc_delete_iscsi_bdev_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_delete_iscsi_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_iscsi_delete(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
 	struct rpc_delete_iscsi req = {NULL};
@@ -148,9 +149,10 @@ spdk_rpc_delete_iscsi_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	delete_iscsi_disk(bdev, _spdk_rpc_delete_iscsi_bdev_cb, request);
+	delete_iscsi_disk(bdev, _spdk_rpc_bdev_iscsi_delete_cb, request);
 
 cleanup:
 	free_rpc_delete_iscsi(&req);
 }
-SPDK_RPC_REGISTER("delete_iscsi_bdev", spdk_rpc_delete_iscsi_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_iscsi_delete", spdk_rpc_bdev_iscsi_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_iscsi_delete, delete_iscsi_bdev)
