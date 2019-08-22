@@ -18,8 +18,7 @@ suite "$testdir/integrity/fio-modes.sh"
 suite "$testdir/integrity/bdevperf-iotypes.sh"
 suite "$testdir/management/create-destruct.sh"
 suite "$testdir/management/multicore.sh"
-# disabled due to intermittent failures. See github isssue #815
-#suite "$testdir/management/persistent-metadata.sh"
+suite "$testdir/management/persistent-metadata.sh"
 
 timing_exit ocf
 report_test_completion "ocf"
