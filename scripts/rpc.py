@@ -325,16 +325,16 @@ if __name__ == "__main__":
                    help='The number of requests allocated for each NVMe I/O queue. Default: 512', type=int)
     p.set_defaults(func=bdev_nvme_set_options)
 
-    def set_bdev_nvme_hotplug(args):
-        rpc.bdev.set_bdev_nvme_hotplug(args.client, enable=args.enable, period_us=args.period_us)
+    def bdev_nvme_set_hotplug(args):
+        rpc.bdev.bdev_nvme_set_hotplug(args.client, enable=args.enable, period_us=args.period_us)
 
-    p = subparsers.add_parser('set_bdev_nvme_hotplug',
+    p = subparsers.add_parser('bdev_nvme_set_hotplug', aliases=['set_bdev_nvme_hotplug'],
                               help='Set hotplug options for bdev nvme type.')
     p.add_argument('-d', '--disable', dest='enable', default=False, action='store_false', help="Disable hotplug (default)")
     p.add_argument('-e', '--enable', dest='enable', action='store_true', help="Enable hotplug")
     p.add_argument('-r', '--period-us',
                    help='How often the hotplug is processed for insert and remove events', type=int)
-    p.set_defaults(func=set_bdev_nvme_hotplug)
+    p.set_defaults(func=bdev_nvme_set_hotplug)
 
     def construct_nvme_bdev(args):
         print_array(rpc.bdev.construct_nvme_bdev(args.client,

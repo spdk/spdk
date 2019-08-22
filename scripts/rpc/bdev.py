@@ -336,7 +336,8 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, retry
     return client.call('bdev_nvme_set_options', params)
 
 
-def set_bdev_nvme_hotplug(client, enable, period_us=None):
+@deprecated_alias('bdev_nvme_set_hotplug')
+def bdev_nvme_set_hotplug(client, enable, period_us=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -348,7 +349,7 @@ def set_bdev_nvme_hotplug(client, enable, period_us=None):
     if period_us:
         params['period_us'] = period_us
 
-    return client.call('set_bdev_nvme_hotplug', params)
+    return client.call('bdev_nvme_set_hotplug', params)
 
 
 def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
