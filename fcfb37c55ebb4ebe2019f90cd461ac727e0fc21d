@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85e4b449_a134b1d5",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1099,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-22T21:00:15Z",
+      "side": 1,
+      "message": "Couldn\u0027t you have a case where there is a 2MB chunk that is physically off somewhere else, but the 2MB chunks on the ends happen to work out correctly?",
+      "revId": "fcfb37c55ebb4ebe2019f90cd461ac727e0fc21d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
