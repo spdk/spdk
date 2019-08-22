@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd4d7a7e_d64a1ec3",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-22T00:29:03Z",
+      "side": 1,
+      "message": "This should be only valid when:\nif(fio_qpair-\u003eio_flags \u0026 g_spdk_pract_flag \u0026\u0026 md_size \u003d\u003d 8), otherwise looks good to me.",
+      "revId": "c4113bf9bce88cf3428c0cf7cc8dcdaebc044cd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
