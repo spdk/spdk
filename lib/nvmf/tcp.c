@@ -167,7 +167,6 @@ struct spdk_nvmf_tcp_req  {
 	/* In-capsule data buffer */
 	uint8_t					*buf;
 
-	bool					data_from_pool;
 	bool					has_incapsule_data;
 
 	/* transfer_tag */
@@ -451,7 +450,7 @@ nvmf_tcp_dump_qpair_req_contents(struct spdk_nvmf_tcp_qpair *tqpair)
 	for (i = 1; i < TCP_REQUEST_NUM_STATES; i++) {
 		SPDK_ERRLOG("\tNum of requests in state[%d] = %d\n", i, tqpair->state_cntr[i]);
 		TAILQ_FOREACH(tcp_req, &tqpair->state_queue[i], state_link) {
-			SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", tcp_req->data_from_pool);
+			SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", tcp_req->req.data_from_pool);
 			SPDK_ERRLOG("\t\tRequest opcode: %d\n", tcp_req->req.cmd->nvmf_cmd.opcode);
 		}
 	}
@@ -2088,7 +2087,7 @@ spdk_nvmf_tcp_request_free_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 		tcp_req->req.buffers[i] = NULL;
 		tcp_req->req.iov[i].iov_len = 0;
 	}
-	tcp_req->data_from_pool = false;
+	tcp_req->req.data_from_pool = false;
 }
 
 static int
@@ -2142,7 +2141,7 @@ spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 	}
 
 	assert(tcp_req->req.iovcnt <= SPDK_NVMF_MAX_SGL_ENTRIES);
-	tcp_req->data_from_pool = true;
+	tcp_req->req.data_from_pool = true;
 }
 
 static int
@@ -2241,7 +2240,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		}
 
 		tcp_req->req.data = tcp_req->buf + offset;
-		tcp_req->data_from_pool = false;
+		tcp_req->req.data_from_pool = false;
 		tcp_req->req.length = length;
 
 		if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
@@ -2435,7 +2434,7 @@ spdk_nvmf_tcp_pdu_set_buf_from_req(struct spdk_nvmf_tcp_qpair *tqpair,
 {
 	struct nvme_tcp_pdu *pdu;
 
-	if (tcp_req->data_from_pool) {
+	if (tcp_req->req.data_from_pool) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Will send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
 		tcp_req->next_expected_r2t_offset = 0;
 		spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
@@ -2616,7 +2615,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			break;
 		case TCP_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, 0, 0, (uintptr_t)tcp_req, 0);
-			if (tcp_req->data_from_pool) {
+			if (tcp_req->req.data_from_pool) {
 				spdk_nvmf_tcp_request_free_buffers(tcp_req, group, &ttransport->transport,
 								   tcp_req->req.iovcnt);
 			}

@@ -215,6 +215,7 @@ struct spdk_nvmf_request {
 	void				*buffers[NVMF_REQ_MAX_BUFFERS];
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
 	uint32_t			iovcnt;
+	bool				data_from_pool;
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
