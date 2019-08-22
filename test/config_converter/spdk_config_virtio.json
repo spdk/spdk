@@ -37,7 +37,7 @@
             "enable": false,
             "period_us": 100000
           },
-          "method": "set_bdev_nvme_hotplug"
+          "method": "bdev_nvme_set_hotplug"
         },
         {
           "params": {
