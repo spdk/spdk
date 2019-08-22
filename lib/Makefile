@@ -33,6 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
 
 DIRS-y += bdev blob blobfs conf copy event json jsonrpc \
           log log_rpc lvol net rpc sock thread trace util nvme vmd nvmf scsi \
@@ -51,9 +52,6 @@ ENV_NAME := $(notdir $(CONFIG_ENV))
 ifeq ($(abspath $(CONFIG_ENV)),$(SPDK_ROOT_DIR)/lib/$(ENV_NAME))
 DIRS-y += $(ENV_NAME)
 endif
-
-DEPDIRS-iscsi := scsi
-DEPDIRS-bdev := notify
 
 .PHONY: all clean $(DIRS-y)
 

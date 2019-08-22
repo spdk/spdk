@@ -32,6 +32,7 @@
 #
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/shared_lib/spdk.map
 LIB := $(call spdk_lib_list_to_static_libs,$(LIBNAME))
@@ -50,7 +51,7 @@ else
 LOCAL_SYS_LIBS += -lrt
 endif
 
-SPDK_DEP_LIBS = $(call spdk_lib_list_to_shared_libs,$(SPDK_DEP_LIBNAMES))
+SPDK_DEP_LIBS = $(call spdk_lib_list_to_shared_libs,$(DEPDIRS-$(LIBNAME)))
 
 .PHONY: all clean $(DIRS-y)
 
