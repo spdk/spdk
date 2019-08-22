@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b65edfd1_a9907c4e",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-22T11:23:50Z",
+      "side": 1,
+      "message": "^ that\u0027s where we clean up all the shm files.\nIt can be run with `setup.sh cleanup`, which is done automatically at the end of each autotest run.\n\nCan we put this fuzz entry here?",
+      "revId": "72bea393ecfcaca259123c8ce0c357aff56d19c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
