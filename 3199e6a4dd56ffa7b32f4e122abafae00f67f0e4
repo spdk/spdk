@@ -166,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "f5ad0415_b0913153",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-22T12:09:30Z",
+      "side": 1,
+      "message": "I think that we should have the same approach to handle clean/dirty shutdown regardless state of cache. These two function aren\u0027t consuming many lines, so my recommendation is leave this as is in this patch for better predictability behavior of rpc delete command.",
+      "parentUuid": "b2f9d951_153a31f8",
+      "range": {
+        "startLine": 436,
+        "startChar": 1,
+        "endLine": 437,
+        "endChar": 34
+      },
+      "revId": "3199e6a4dd56ffa7b32f4e122abafae00f67f0e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bed65c97_f7150812",
         "filename": "lib/bdev/ocf/vbdev_ocf.h",
         "patchSetId": 1
