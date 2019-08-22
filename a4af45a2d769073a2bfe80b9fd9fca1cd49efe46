@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ffb6129_6067ca4a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-22T16:20:50Z",
+      "side": 1,
+      "message": "Aliases needed here",
+      "revId": "a4af45a2d769073a2bfe80b9fd9fca1cd49efe46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a501d8a4_2c4e72ef",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-22T16:20:50Z",
+      "side": 1,
+      "message": "^",
+      "revId": "a4af45a2d769073a2bfe80b9fd9fca1cd49efe46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24579419_d10a5aeb",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-22T16:20:50Z",
+      "side": 1,
+      "message": "^",
+      "revId": "a4af45a2d769073a2bfe80b9fd9fca1cd49efe46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
