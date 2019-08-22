@@ -19,6 +19,41 @@
     },
     {
       "key": {
+        "uuid": "ca387651_956a3418",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-22T23:59:41Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "1e5bf2cd_5f5b5d9b",
+      "revId": "497a14433f5b0383582939b03de4db0fb8e412ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "907f3b74_49ada552",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1321,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-22T23:59:41Z",
+      "side": 1,
+      "message": "I added fc_req-\u003ereq.iovcnt \u003d 0 here.",
+      "revId": "497a14433f5b0383582939b03de4db0fb8e412ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f786d4f0_ba3986f2",
         "filename": "lib/nvmf/fc.c",
         "patchSetId": 1
@@ -30,6 +65,24 @@
       "writtenOn": "2019-08-22T21:31:38Z",
       "side": 1,
       "message": "This won\u0027t NULL out fc_req-\u003ereq.data or fc_req-\u003ereq.iovcnt if the data buffer wasn\u0027t from the pool. Is that ok?",
+      "revId": "497a14433f5b0383582939b03de4db0fb8e412ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0008128e_57bdcf89",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1487,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-22T23:59:41Z",
+      "side": 1,
+      "message": "Thank you Ben, No, I fixed it.",
+      "parentUuid": "f786d4f0_ba3986f2",
       "revId": "497a14433f5b0383582939b03de4db0fb8e412ad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
