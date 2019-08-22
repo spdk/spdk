@@ -526,8 +526,8 @@ def delete_error_bdev(client, name):
     params = {'name': name}
     return client.call('delete_error_bdev', params)
 
-
-def construct_iscsi_bdev(client, name, url, initiator_iqn):
+@deprecated_alias('construct_iscsi_bdev')
+def bdev_iscsi_create(client, name, url, initiator_iqn):
     """Construct a iSCSI block device.
 
     Args:
@@ -543,17 +543,17 @@ def construct_iscsi_bdev(client, name, url, initiator_iqn):
         'url': url,
         'initiator_iqn': initiator_iqn,
     }
-    return client.call('construct_iscsi_bdev', params)
+    return client.call('bdev_iscsi_create', params)
 
-
-def delete_iscsi_bdev(client, name):
+@deprecated_alias('delete_iscsi_bdev')
+def bdev_iscsi_delete(client, name):
     """Remove iSCSI bdev from the system.
 
     Args:
         bdev_name: name of iSCSI bdev to delete
     """
     params = {'name': name}
-    return client.call('delete_iscsi_bdev', params)
+    return client.call('bdev_iscsi_delete', params)
 
 
 def construct_pmem_bdev(client, pmem_file, name):
