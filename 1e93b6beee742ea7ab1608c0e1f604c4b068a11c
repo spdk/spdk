@@ -33,6 +33,24 @@
       "revId": "1e93b6beee742ea7ab1608c0e1f604c4b068a11c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2df00828_a387323b",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-22T22:45:44Z",
+      "side": 1,
+      "message": "Not with how the alias registration is done today.  The alias state mask is always 0.  But we should fix the alias registration instead so we can make this simpler like you mention.  We just need to add this near the end of spdk_rpc_register_alias_deprecated():\n\nm-\u003estate_mask \u003d base-\u003estate_mask;\n\nGo ahead and just add that line to this patch, then simplify this here like Ben suggested.",
+      "parentUuid": "e2ce1aaf_6ef1035e",
+      "revId": "1e93b6beee742ea7ab1608c0e1f604c4b068a11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
