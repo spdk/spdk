@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76fb8284_ae73107c",
+        "filename": "lib/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-22T22:39:27Z",
+      "side": 1,
+      "message": "nit - add space before env_ocf",
+      "revId": "8833336d3c689f044e189c81c28898a260a1bbd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da2e979f_43fa13b2",
+        "filename": "mk/spdk.module_deps.mk",
+        "patchSetId": 7
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-22T22:39:27Z",
+      "side": 1,
+      "message": "I\u0027m not following why CONFIG_SHARED is needed here.\n\nDo you also need to add ocf_env as a dependency?  Or maybe that\u0027s done in that extra line in the bdev/ocf/Makefile - would be nice if we could do that dependency here though",
+      "revId": "8833336d3c689f044e189c81c28898a260a1bbd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
