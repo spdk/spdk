@@ -32,7 +32,8 @@
  */
 
 #include "spdk_cunit.h"
-
+/* We have our own mock for this */
+#define UNIT_TEST_NO_VTOPHYS
 #include "common/lib/test_env.c"
 #include "spdk_internal/mock.h"
 #include "unit/lib/json_mock.c"
@@ -283,6 +284,12 @@ DEFINE_STUB(rte_eal_get_configuration, struct rte_config *, (void), NULL);
 DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
 DEFINE_STUB_V(rte_comp_op_free, (struct rte_comp_op *op));
 DEFINE_STUB(rte_comp_op_alloc, struct rte_comp_op *, (struct rte_mempool *mempool), NULL);
+
+uint64_t
+spdk_vtophys(void *buf, uint64_t *size)
+{
+	return (uint64_t)buf;
+}
 
 void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
@@ -584,13 +591,14 @@ test_compress_operation(void)
 	ut_expected_op.src.length = src_iovs[0].iov_len + src_iovs[1].iov_len + src_iovs[2].iov_len;
 	ut_expected_op.m_src = &g_expected_src_mbufs[0];
 	ut_expected_op.m_src->buf_addr = src_iovs[0].iov_base;
-	ut_expected_op.m_src->buf_iova = spdk_vtophys(src_iovs[0].iov_base, NULL);
+	ut_expected_op.m_src->buf_iova = spdk_vtophys(src_iovs[0].iov_base, &src_iovs[0].iov_len);
 	ut_expected_op.m_src->next = &g_expected_src_mbufs[1];
 	ut_expected_op.m_src->next->buf_addr = src_iovs[1].iov_base;
-	ut_expected_op.m_src->next->buf_iova = spdk_vtophys(src_iovs[1].iov_base, NULL);
+	ut_expected_op.m_src->next->buf_iova = spdk_vtophys(src_iovs[1].iov_base, &src_iovs[1].iov_len);
 	ut_expected_op.m_src->next->next = &g_expected_src_mbufs[2];
 	ut_expected_op.m_src->next->next->buf_addr = src_iovs[2].iov_base;
-	ut_expected_op.m_src->next->next->buf_iova = spdk_vtophys(src_iovs[2].iov_base, NULL);
+	ut_expected_op.m_src->next->next->buf_iova = spdk_vtophys(src_iovs[2].iov_base,
+			&src_iovs[2].iov_len);
 
 	ut_expected_op.m_src->buf_len = src_iovs[0].iov_len;
 	ut_expected_op.m_src->pkt_len = src_iovs[0].iov_len;
@@ -599,13 +607,14 @@ test_compress_operation(void)
 	ut_expected_op.dst.offset = 0;
 	ut_expected_op.m_dst = &g_expected_dst_mbufs[0];
 	ut_expected_op.m_dst->buf_addr = dst_iovs[0].iov_base;
-	ut_expected_op.m_dst->buf_iova = spdk_vtophys(dst_iovs[0].iov_base, NULL);
+	ut_expected_op.m_dst->buf_iova = spdk_vtophys(dst_iovs[0].iov_base, &dst_iovs[0].iov_len);
 	ut_expected_op.m_dst->next = &g_expected_dst_mbufs[1];
 	ut_expected_op.m_dst->next->buf_addr = dst_iovs[1].iov_base;
-	ut_expected_op.m_dst->next->buf_iova = spdk_vtophys(dst_iovs[1].iov_base, NULL);
+	ut_expected_op.m_dst->next->buf_iova = spdk_vtophys(dst_iovs[1].iov_base, &dst_iovs[1].iov_len);
 	ut_expected_op.m_dst->next->next = &g_expected_dst_mbufs[2];
 	ut_expected_op.m_dst->next->next->buf_addr = dst_iovs[2].iov_base;
-	ut_expected_op.m_dst->next->next->buf_iova = spdk_vtophys(dst_iovs[2].iov_base, NULL);
+	ut_expected_op.m_dst->next->next->buf_iova = spdk_vtophys(dst_iovs[2].iov_base,
+			&dst_iovs[2].iov_len);
 
 	ut_expected_op.m_dst->buf_len = dst_iovs[0].iov_len;
 	ut_expected_op.m_dst->pkt_len = dst_iovs[0].iov_len;
