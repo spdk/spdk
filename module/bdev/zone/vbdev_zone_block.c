@@ -198,7 +198,19 @@ vbdev_block_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	struct vbdev_block *bdev_node = (struct vbdev_block *)ctx;
 
-	return spdk_bdev_io_type_supported(bdev_node->base_bdev, io_type);
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		return true;
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		return spdk_bdev_io_type_supported(bdev_node->base_bdev, io_type);
+	default:
+		return false;
+	}
 }
 
 static struct spdk_io_channel *
