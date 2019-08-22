@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3995b84a_ed7fe630",
+        "filename": "test/vhost/fuzz/fuzz.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-22T21:09:26Z",
+      "side": 1,
+      "message": "Remove this if you\u0027re forced to rebase at some point. Otherwise +2.",
+      "revId": "97ba311d34aa6b3334466c65fe55c13a8debeaae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
