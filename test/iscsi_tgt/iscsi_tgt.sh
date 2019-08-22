@@ -67,7 +67,7 @@ if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	# they can only be run on posix sockets.
 	if [ "$TEST_TYPE" == "posix" ]; then
 		# Test configure remote NVMe device from rpc and conf file
-		run_test suite ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
+		run_test suite ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 	fi
 fi
 
