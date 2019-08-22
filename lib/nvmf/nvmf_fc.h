@@ -350,7 +350,6 @@ struct spdk_nvmf_fc_request {
 	uint32_t magic;
 	uint32_t s_id;
 	uint32_t d_id;
-	bool data_from_pool;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) link;
 	TAILQ_ENTRY(spdk_nvmf_fc_request) pending_link;
 	TAILQ_HEAD(, spdk_nvmf_fc_caller_ctx) abort_cbs;

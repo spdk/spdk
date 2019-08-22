@@ -435,7 +435,7 @@ nvmf_fc_request_free_buffers(struct spdk_nvmf_fc_request *fc_req,
 		fc_req->req.iov[i].iov_base = NULL;
 		fc_req->req.buffers[i] = NULL;
 	}
-	fc_req->data_from_pool = false;
+	fc_req->req.data_from_pool = false;
 }
 
 void
@@ -1343,7 +1343,7 @@ nvmf_fc_request_fill_buffers(struct spdk_nvmf_fc_request *fc_req,
 		fc_req->req.iovcnt++;
 		length -= fc_req->req.iov[i].iov_len;
 	}
-	fc_req->data_from_pool = true;
+	fc_req->req.data_from_pool = true;
 }
 
 static int
@@ -1534,7 +1534,7 @@ spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 	}
 
 	/* Release IO buffers */
-	if (fc_req->data_from_pool) {
+	if (fc_req->req.data_from_pool) {
 		nvmf_fc_request_free_buffers(fc_req, group, transport, fc_req->req.iovcnt);
 	}
 	fc_req->req.data = NULL;
