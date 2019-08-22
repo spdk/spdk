@@ -50,6 +50,29 @@
       "revId": "02d10846bc561b69fe6012b78034bccb1773f4cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03a49ce6_0c194253",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-08-22T12:31:08Z",
+      "side": 1,
+      "message": "info and num_zones too :)",
+      "range": {
+        "startLine": 49,
+        "startChar": 69,
+        "endLine": 49,
+        "endChar": 73
+      },
+      "revId": "02d10846bc561b69fe6012b78034bccb1773f4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
