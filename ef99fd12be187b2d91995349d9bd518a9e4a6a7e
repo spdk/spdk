@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2dbf1522_1f272227",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-22T15:11:42Z",
+      "side": 1,
+      "message": "I like the memset decision. That is a lot cleaner. Would you be open to the following to avoid adding another variable to the request structure?\n\nuint64_t req_wrid;\nstruct ibv_send_wr *send_wr;\n\ndata_wr \u003d \u0026rdma_req-\u003edata;\nreq_wrid \u003d data_wr-\u003ewr_id;\nwhile(data_wr \u0026\u0026 data_wr-\u003ewr_id \u003d\u003d req_wrid) {\nmemset...\ndata_wr...\nsend_wr \u003d data_wr-\u003ewr.next;\ndata_wr \u003d send_wr \u003d\u003d \u0026rdma_req-\u003ersp.wr ? NULL : SPDK_CONTAINEROF(send_wr...;\n\nThe trade off here obviously being that my suggestion has two extra checks per loop. For most cases, that will just mean two extra checks total, but it does prevent us from increasing the complexity of the code with another variable that we have to keep track of.",
+      "revId": "ef99fd12be187b2d91995349d9bd518a9e4a6a7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
