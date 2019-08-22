@@ -335,6 +335,8 @@ free_test_req(struct rpc_construct_vbdev *r)
 {
 	free(r->name);
 	free(r->bdev_name);
+
+	g_rpc_req = NULL;
 }
 
 static void
@@ -386,8 +388,10 @@ verify_zone_config(struct rpc_construct_vbdev *r, bool presence)
 static void
 verify_zone_bdev(struct rpc_construct_vbdev *r, bool presence)
 {
+	struct block_zone *zone;
 	struct bdev_zone_block *bdev;
 	bool   bdev_found;
+	uint32_t i;
 
 	bdev_found = false;
 	TAILQ_FOREACH(bdev, &g_bdev_nodes, link) {
@@ -404,10 +408,16 @@ verify_zone_bdev(struct rpc_construct_vbdev *r, bool presence)
 			CU_ASSERT(bdev->bdev.fn_table == &zone_block_fn_table);
 			CU_ASSERT(bdev->bdev.module == &bdev_zoned_if);
 			CU_ASSERT(bdev->bdev.write_unit_size == 1);
+			CU_ASSERT(bdev->num_zones == BLOCK_CNT / r->zone_size);
 			CU_ASSERT(bdev->bdev.zone_size == r->zone_size);
 			CU_ASSERT(bdev->bdev.optimal_open_zones == r->optimal_open_zones);
 			CU_ASSERT(bdev->bdev.max_open_zones == 0);
 
+			for (i = 0; i < bdev->num_zones; i++) {
+				zone = &bdev->zones[i];
+				CU_ASSERT(zone->zone_info.state == SPDK_BDEV_ZONE_STATE_FULL);
+				CU_ASSERT(zone->zone_info.capacity == r->zone_size);
+			}
 			break;
 		}
 	}
@@ -420,11 +430,37 @@ verify_zone_bdev(struct rpc_construct_vbdev *r, bool presence)
 }
 
 static void
-test_zone_block_create(void)
+send_create_vbdev(char *vdev_name, char *name, uint64_t zone_size, uint64_t optimal_open_zones,
+		  bool create_bdev, bool success)
 {
 	struct rpc_construct_vbdev req;
+
+	initialize_create_req(&req, vdev_name, name, zone_size, optimal_open_zones, true);
+	rpc_vbdev_block_create(NULL, NULL);
+	CU_ASSERT(g_rpc_err != success);
+	verify_zone_config(&req, success);
+	verify_zone_bdev(&req, success);
+	free_test_req(&req);
+}
+
+static void
+send_delete_vbdev(char *name, bool success)
+{
 	struct rpc_delete_vbdev delete_req;
+
+	create_delete_req(&delete_req, name);
+	rpc_vbdev_block_delete(NULL, NULL);
+	verify_config_present(name, false);
+	verify_bdev_present(name, false);
+	CU_ASSERT(g_rpc_err != success);
+	g_rpc_req = NULL;
+}
+
+static void
+test_zone_block_create(void)
+{
 	struct spdk_bdev *bdev;
+	struct rpc_construct_vbdev req;
 	char *name = "Nvme0n1";
 	size_t num_zones = 20;
 	size_t zone_size = BLOCK_CNT / num_zones;
@@ -446,28 +482,12 @@ test_zone_block_create(void)
 	free_test_req(&req);
 
 	/* Delete bdev */
-	create_delete_req(&delete_req, "zone_dev1");
-	rpc_vbdev_block_delete(NULL, NULL);
-	verify_config_present("zone_dev1", false);
-	verify_bdev_present("zone_dev1", false);
-	CU_ASSERT(g_rpc_err == 0);
+	send_delete_vbdev("zone_dev1", true);
 
 	/* Create zoned virtual device and verify its correctness */
 	verify_config_present("zone_dev1", false);
-	verify_bdev_present("zone_dev1", false);
-	initialize_create_req(&req, "zone_dev1", name, zone_size, 1, false);
-	rpc_vbdev_block_create(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 0);
-	verify_zone_config(&req, true);
-	verify_zone_bdev(&req, true);
-	free_test_req(&req);
-
-	/* Delete bdev */
-	create_delete_req(&delete_req, "zone_dev1");
-	rpc_vbdev_block_delete(NULL, NULL);
-	verify_config_present("zone_dev1", false);
-	verify_bdev_present("zone_dev1", false);
-	CU_ASSERT(g_rpc_err == 0);
+	send_create_vbdev("zone_dev1", name, zone_size, 1, false, true);
+	send_delete_vbdev("zone_dev1", true);
 
 	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
 	zone_block_finish();
@@ -478,8 +498,6 @@ test_zone_block_create(void)
 static void
 test_zone_block_create_invalid(void)
 {
-	struct rpc_construct_vbdev req;
-	struct rpc_delete_vbdev delete_req;
 	char *name = "Nvme0n1";
 	size_t num_zones = 10;
 	size_t zone_size = BLOCK_CNT / num_zones;
@@ -490,51 +508,22 @@ test_zone_block_create_invalid(void)
 	/* Create zoned virtual device and verify its correctness */
 	verify_config_present("zone_dev1", false);
 	verify_bdev_present("zone_dev1", false);
-	initialize_create_req(&req, "zone_dev1", name, zone_size, 1, true);
-	rpc_vbdev_block_create(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 0);
-	verify_zone_config(&req, true);
-	verify_zone_bdev(&req, true);
-	free_test_req(&req);
+	send_create_vbdev("zone_dev1", name, zone_size, 1, true, true);
 
 	/* Try to create another zoned virtual device on the same bdev */
-	initialize_create_req(&req, "zone_dev2", name, zone_size, 1, false);
-	rpc_vbdev_block_create(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 1);
-	verify_config_present("zone_dev2", false);
-	verify_bdev_present("zone_dev2", false);
-	free_test_req(&req);
+	send_create_vbdev("zone_dev2", name, zone_size, 1, false, false);
 
 	/* Try to create zoned virtual device on the zoned bdev */
-	initialize_create_req(&req, "zone_dev2", "zone_dev1", zone_size, 1, false);
-	rpc_vbdev_block_create(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 1);
-	verify_config_present("zone_dev2", false);
-	verify_bdev_present("zone_dev2", false);
-	free_test_req(&req);
+	send_create_vbdev("zone_dev2", "zone_dev1", zone_size, 1, false, false);
 
 	/* Unclaim the base bdev */
-	create_delete_req(&delete_req, "zone_dev1");
-	rpc_vbdev_block_delete(NULL, NULL);
-	verify_config_present("zone_dev1", false);
-	verify_bdev_present("zone_dev1", false);
-	CU_ASSERT(g_rpc_err == 0);
+	send_delete_vbdev("zone_dev1", true);
 
 	/* Try to create zoned virtual device with 0 zone size */
-	initialize_create_req(&req, "zone_dev2", name, 0, 1, false);
-	rpc_vbdev_block_create(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 1);
-	verify_config_present("zone_dev2", false);
-	verify_bdev_present("zone_dev2", false);
-	free_test_req(&req);
+	send_create_vbdev("zone_dev1", name, 0, 1, false, false);
 
 	/* Try to create zoned virtual device with 0 optimal number of zones */
-	initialize_create_req(&req, "zone_dev2", name, zone_size, 0, false);
-	rpc_vbdev_block_create(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 1);
-	verify_config_present("zone_dev2", false);
-	verify_bdev_present("zone_dev2", false);
-	free_test_req(&req);
+	send_create_vbdev("zone_dev1", name, zone_size, 0, false, false);
 
 	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
 
