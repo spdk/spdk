@@ -73,6 +73,7 @@ static TAILQ_HEAD(, bdev_zone_block_config) g_bdev_configs = TAILQ_HEAD_INITIALI
 
 struct block_zone {
 	struct spdk_bdev_zone_info zone_info;
+	pthread_spinlock_t lock;
 };
 
 /* List of block vbdevs and associated info for each. */
@@ -92,7 +93,7 @@ struct zone_block_io_channel {
 };
 
 struct zone_block_io {
-	/* bdev IO was issued to */
+	/* vbdev to which IO was issued */
 	struct bdev_zone_block *bdev_zone_block;
 };
 
@@ -153,9 +154,13 @@ zone_block_config_json(struct spdk_json_write_ctx *w)
 static void
 _device_unregister_cb(void *io_device)
 {
-	struct bdev_zone_block *bdev_node  = io_device;
+	struct bdev_zone_block *bdev_node = io_device;
+	uint64_t i;
 
 	free(bdev_node->bdev.name);
+	for (i = 0; i < bdev_node->num_zones; i++) {
+		pthread_spin_destroy(&bdev_node->zones[i].lock);
+	}
 	free(bdev_node->zones);
 	free(bdev_node);
 }
@@ -180,7 +185,7 @@ zone_block_destruct(void *ctx)
 }
 
 static struct block_zone *
-zone_block_get_zone(struct bdev_zone_block *bdev_node, uint64_t start_lba)
+zone_block_get_zone_by_slba(struct bdev_zone_block *bdev_node, uint64_t start_lba)
 {
 	struct block_zone *zone = NULL;
 	size_t index = start_lba >> bdev_node->zone_shift;
@@ -205,7 +210,7 @@ zone_block_get_zone_info(struct bdev_zone_block *bdev_node, struct spdk_bdev_io 
 	uint64_t zone_id = bdev_io->u.zone_mgmt.zone_id;
 	size_t i;
 
-	zone = zone_block_get_zone(bdev_node, zone_id);
+	zone = zone_block_get_zone_by_slba(bdev_node, zone_id);
 	if (!zone) {
 		return -EINVAL;
 	}
@@ -214,7 +219,7 @@ zone_block_get_zone_info(struct bdev_zone_block *bdev_node, struct spdk_bdev_io 
 	 * boundaries
 	 */
 	for (i = 0; i < bdev_io->u.zone_mgmt.num_zones; i++, zone_id += bdev_node->bdev.zone_size) {
-		zone = zone_block_get_zone(bdev_node, zone_id);
+		zone = zone_block_get_zone_by_slba(bdev_node, zone_id);
 		if (!zone) {
 			return -EINVAL;
 		}
@@ -225,15 +230,130 @@ zone_block_get_zone_info(struct bdev_zone_block *bdev_node, struct spdk_bdev_io 
 	return 0;
 }
 
+static int
+zone_block_open_zone(struct block_zone *zone)
+{
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_EMPTY:
+	case SPDK_BDEV_ZONE_STATE_OPEN:
+	case SPDK_BDEV_ZONE_STATE_CLOSED:
+		zone->zone_info.state = SPDK_BDEV_ZONE_STATE_OPEN;
+		return 0;
+	default:
+		return -EINVAL;
+	}
+}
+
+static int
+zone_block_management_open_zone(struct block_zone *zone, struct spdk_bdev_io *bdev_io)
+{
+	int rc;
+
+	pthread_spin_lock(&zone->lock);
+	rc = zone_block_open_zone(zone);
+
+	pthread_spin_unlock(&zone->lock);
+	if (!rc) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	}
+
+	return rc;
+}
+
+static void
+_zone_block_complete_unmap(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+
+	/* Complete the original IO and then free the one that we created here
+	 * as a result of issuing an IO via submit_reqeust.
+	 */
+	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static int
+zone_block_reset_zone(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
+		      struct block_zone *zone, struct spdk_bdev_io *bdev_io)
+{
+	pthread_spin_lock(&zone->lock);
+
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_EMPTY:
+		pthread_spin_unlock(&zone->lock);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		return 0;
+	case SPDK_BDEV_ZONE_STATE_OPEN:
+	case SPDK_BDEV_ZONE_STATE_FULL:
+	case SPDK_BDEV_ZONE_STATE_CLOSED:
+		zone->zone_info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
+		zone->zone_info.write_pointer = zone->zone_info.zone_id;
+		pthread_spin_unlock(&zone->lock);
+		return spdk_bdev_unmap_blocks(bdev_node->base_desc, ch->base_ch,
+					      zone->zone_info.zone_id, zone->zone_info.capacity,
+					      _zone_block_complete_unmap, bdev_io);
+	default:
+		pthread_spin_unlock(&zone->lock);
+		return -EINVAL;
+	}
+}
+
+static int
+zone_block_zone_management(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
+			   struct spdk_bdev_io *bdev_io)
+{
+	struct block_zone *zone;
+
+	zone = zone_block_get_zone_by_slba(bdev_node, bdev_io->u.zone_mgmt.zone_id);
+	if (!zone) {
+		return -EINVAL;
+	}
+
+	switch (bdev_io->u.zone_mgmt.zone_action) {
+	case SPDK_BDEV_ZONE_RESET:
+		return zone_block_reset_zone(bdev_node, ch, zone, bdev_io);
+	case SPDK_BDEV_ZONE_OPEN:
+		return zone_block_management_open_zone(zone, bdev_io);
+	default:
+		return -EINVAL;
+	}
+}
+
+static int
+zone_block_unmap(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
+		 struct spdk_bdev_io *bdev_io)
+{
+	struct block_zone *zone;
+
+	zone = zone_block_get_zone_by_slba(bdev_node, bdev_io->u.bdev.offset_blocks);
+	if (!zone) {
+		return -EINVAL;
+	}
+
+	if (bdev_io->u.bdev.num_blocks != zone->zone_info.capacity) {
+		return -EINVAL;
+	}
+
+	return zone_block_reset_zone(bdev_node, ch, zone, bdev_io);
+}
+
 static void
 zone_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct bdev_zone_block *bdev_node = SPDK_CONTAINEROF(bdev_io->bdev, struct bdev_zone_block, bdev);
+	struct zone_block_io_channel *dev_ch = spdk_io_channel_get_ctx(ch);
 	int rc = 0;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_GET_ZONE_INFO:
 		rc = zone_block_get_zone_info(bdev_node, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+		rc = zone_block_zone_management(bdev_node, dev_ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		rc = zone_block_unmap(bdev_node, dev_ch, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("vbdev_block: unknown I/O type %u\n", bdev_io->type);
@@ -257,6 +377,7 @@ zone_block_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return true;
 	default:
 		return false;
@@ -378,11 +499,12 @@ zone_block_insert_name(const char *bdev_name, const char *vbdev_name, uint64_t z
 	return 0;
 }
 
-static void
+static int
 zone_block_init_zone_info(struct bdev_zone_block *bdev_node)
 {
 	size_t i;
 	struct block_zone *zone;
+	int rc = 0;
 
 	for (i = 0; i < bdev_node->num_zones; i++) {
 		zone = &bdev_node->zones[i];
@@ -390,7 +512,20 @@ zone_block_init_zone_info(struct bdev_zone_block *bdev_node)
 		zone->zone_info.capacity = bdev_node->zone_capacity;
 		zone->zone_info.write_pointer = zone->zone_info.zone_id + zone->zone_info.capacity;
 		zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL;
+		if (pthread_spin_init(&zone->lock, PTHREAD_PROCESS_PRIVATE)) {
+			SPDK_ERRLOG("pthread_spin_init() failed\n");
+			rc = -ENOMEM;
+			break;
+		}
 	}
+
+	if (rc) {
+		for (; i > 0; i--) {
+			pthread_spin_destroy(&bdev_node->zones[i - 1].lock);
+		}
+	}
+
+	return rc;
 }
 
 static int
@@ -484,7 +619,10 @@ zone_block_register(struct spdk_bdev *base_bdev)
 		bdev_node->zone_capacity = name->zone_capacity;
 		bdev_node->bdev.optimal_open_zones = name->optimal_open_zones;
 		bdev_node->bdev.max_open_zones = 0;
-		zone_block_init_zone_info(bdev_node);
+		if (zone_block_init_zone_info(bdev_node)) {
+			SPDK_ERRLOG("could not init zone info\n");
+			goto zone_info_failed;
+		}
 
 		TAILQ_INSERT_TAIL(&g_bdev_nodes, bdev_node, link);
 
@@ -521,6 +659,7 @@ claim_failed:
 open_failed:
 	TAILQ_REMOVE(&g_bdev_nodes, bdev_node, link);
 	spdk_io_device_unregister(bdev_node, NULL);
+zone_info_failed:
 	free(bdev_node->zones);
 calloc_failed:
 roundup_failed:
