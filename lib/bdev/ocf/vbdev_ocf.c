@@ -339,8 +339,8 @@ flush_vbdev(struct vbdev_ocf *vbdev)
 	vbdev_ocf_mngt_poll(vbdev, flush_vbdev_poll);
 }
 
-/* Procedures called during unregister */
-vbdev_ocf_mngt_fn unregister_path[] = {
+/* Procedures called during dirty unregister */
+vbdev_ocf_mngt_fn unregister_path_dirty[] = {
 	flush_vbdev,
 	wait_for_requests,
 	stop_vbdev,
@@ -352,17 +352,66 @@ vbdev_ocf_mngt_fn unregister_path[] = {
 	NULL
 };
 
+/* Procedures called during clean unregister */
+vbdev_ocf_mngt_fn unregister_path_clean[] = {
+	flush_vbdev,
+	wait_for_requests,
+	detach_core,
+	close_core_bdev,
+	stop_vbdev,
+	detach_cache,
+	close_cache_bdev,
+	unregister_finish,
+	NULL
+};
+
 /* Start asynchronous management operation using unregister_path */
 static void
 unregister_cb(void *opaque)
 {
 	struct vbdev_ocf *vbdev = opaque;
+	vbdev_ocf_mngt_fn *unregister_path;
 	int rc;
+
+	unregister_path = vbdev->state.doing_clean_delete ?
+			  unregister_path_clean : unregister_path_dirty;
 
 	rc = vbdev_ocf_mngt_start(vbdev, unregister_path, NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("Unable to unregister OCF bdev: %d\n", rc);
 		spdk_bdev_destruct_done(&vbdev->exp_bdev, rc);
+	}
+}
+
+/* Clear remove case - remove core and then cache, this order
+ * will remove instance permanently */
+static void
+_vbdev_ocf_destruct_clear(struct vbdev_ocf *vbdev)
+{
+	if (vbdev->core.attached) {
+		detach_core(vbdev);
+		close_core_bdev(vbdev);
+	}
+
+	if (vbdev->cache.attached) {
+		detach_cache(vbdev);
+		close_cache_bdev(vbdev);
+	}
+}
+
+/* Dirty shutdown/hot remove case - remove cache and then core, this order
+ * will allow us to recovery this instance in the future */
+static void
+_vbdev_ocf_destruct_dirty(struct vbdev_ocf *vbdev)
+{
+	if (vbdev->cache.attached) {
+		detach_cache(vbdev);
+		close_cache_bdev(vbdev);
+	}
+
+	if (vbdev->core.attached) {
+		detach_core(vbdev);
+		close_core_bdev(vbdev);
 	}
 }
 
@@ -384,14 +433,8 @@ vbdev_ocf_destruct(void *opaque)
 		return 1;
 	}
 
-	if (vbdev->cache.attached) {
-		detach_cache(vbdev);
-		close_cache_bdev(vbdev);
-	}
-	if (vbdev->core.attached) {
-		detach_core(vbdev);
-		close_core_bdev(vbdev);
-	}
+	vbdev->state.doing_clean_delete ? _vbdev_ocf_destruct_clear(vbdev) :
+	_vbdev_ocf_destruct_dirty(vbdev);
 
 	return 0;
 }
@@ -413,6 +456,17 @@ vbdev_ocf_delete(struct vbdev_ocf *vbdev, void (*cb)(void *, int), void *cb_arg)
 
 	return rc;
 }
+
+/* Remove cores permanently and then stop OCF cache and unregister SPDK bdev */
+int
+vbdev_ocf_delete_clean(struct vbdev_ocf *vbdev, void (*cb)(void *, int),
+		       void *cb_arg)
+{
+	vbdev->state.doing_clean_delete = true;
+
+	return vbdev_ocf_delete(vbdev, cb, cb_arg);
+}
+
 
 /* If vbdev is online, return its object */
 struct vbdev_ocf *
