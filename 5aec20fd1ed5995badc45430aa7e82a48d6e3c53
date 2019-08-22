@@ -317,6 +317,24 @@
       "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7cf759c_0505aa81",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-22T21:47:56Z",
+      "side": 1,
+      "message": "Have you re-run your benchmarks on this latest version? I\u0027m concerned this will be significantly worse performance-wise because now it\u0027s effectively the version I originally proposed that didn\u0027t benchmark well.\n\nWe\u0027re still not on the same page with the previous bug. Connection A can\u0027t be starved by activity on connection B - getting disconnected is not a reasonable solution. However, we can come back to this issue only if your current version doesn\u0027t perform as well.",
+      "parentUuid": "500f0db5_3d52774e",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
