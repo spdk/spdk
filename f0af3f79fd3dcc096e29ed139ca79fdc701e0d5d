@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "0da4b836_ab0a083b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2679,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-22T10:44:20Z",
+      "side": 1,
+      "message": "do we need anything besides atomicity here? We don\u0027t read any data after this operation, so the ACQUIRE doesn\u0027t seem to protect from anything.\n\nCould we do just:\n__atomic_test_and_set(\u0026rqpair-\u003edisconnect_started, __ATOMIC_RELAXED);\n?",
+      "range": {
+        "startLine": 2679,
+        "startChar": 5,
+        "endLine": 2679,
+        "endChar": 21
+      },
+      "revId": "f0af3f79fd3dcc096e29ed139ca79fdc701e0d5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d90d7c79_fc40028f",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 2
@@ -31,6 +54,24 @@
       "side": 1,
       "message": "That will make thinks non-atomic. I think it should be actual_old_state \u003d expected_old_state. And __atomic_compare_exchange_n(\u0026subsystem-\u003estate, \u0026actual_old_state, ...) will set actual_old_state to subsystem-\u003estate if subsystem-\u003estate !\u003d actual_old_state .",
       "parentUuid": "d90d7c79_fc40028f",
+      "revId": "f0af3f79fd3dcc096e29ed139ca79fdc701e0d5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06032c10_5182779e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-22T10:44:20Z",
+      "side": 1,
+      "message": "Looks good to me",
+      "parentUuid": "db7dfa52_be46d2da",
       "revId": "f0af3f79fd3dcc096e29ed139ca79fdc701e0d5d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
