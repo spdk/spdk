@@ -172,7 +172,7 @@ a thinly provisioned logical volume.  See documentation for complete details.
 
 ### nvme
 
-Added an optional parameter `--io-queue-requests` to RPC `set_bdev_nvme_options`, which
+Added an optional parameter `--io-queue-requests` to RPC `bdev_nvme_set_options`, which
 can be used to change the number of requests allocated for one NVMe I/O queue.  For
 very big I/O size, e.g. 128MiB, with this option user will not get an error due to
 limited requests in NVMe driver layer.

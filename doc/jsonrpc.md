@@ -1389,7 +1389,7 @@ Example response:
 }
 ~~~
 
-## set_bdev_nvme_options {#rpc_set_bdev_nvme_options}
+## bdev_nvme_set_options {#rpc_bdev_nvme_set_options}
 
 Set global parameters for all bdev NVMe. This RPC may only be called before SPDK subsystems have been initialized.
 
@@ -1419,7 +1419,7 @@ request:
     "io_queue_requests" : 2048,
   },
   "jsonrpc": "2.0",
-  "method": "set_bdev_nvme_options",
+  "method": "bdev_nvme_set_options",
   "id": 1
 }
 ~~~

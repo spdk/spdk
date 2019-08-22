@@ -79,7 +79,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = 
 };
 
 static void
-spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct spdk_bdev_nvme_opts opts;
@@ -108,7 +108,8 @@ spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
 
 	return;
 }
-SPDK_RPC_REGISTER("set_bdev_nvme_options", spdk_rpc_set_bdev_nvme_options, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("bdev_nvme_set_options", spdk_rpc_bdev_nvme_set_options, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("set_bdev_nvme_options", "bdev_nvme_set_options")
 
 struct rpc_bdev_nvme_hotplug {
 	bool enabled;

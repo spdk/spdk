@@ -300,8 +300,8 @@ if __name__ == "__main__":
     p.add_argument('name', help='aio bdev name')
     p.set_defaults(func=bdev_aio_delete)
 
-    def set_bdev_nvme_options(args):
-        rpc.bdev.set_bdev_nvme_options(args.client,
+    def bdev_nvme_set_options(args):
+        rpc.bdev.bdev_nvme_set_options(args.client,
                                        action_on_timeout=args.action_on_timeout,
                                        timeout_us=args.timeout_us,
                                        retry_count=args.retry_count,
@@ -309,7 +309,7 @@ if __name__ == "__main__":
                                        nvme_ioq_poll_period_us=args.nvme_ioq_poll_period_us,
                                        io_queue_requests=args.io_queue_requests)
 
-    p = subparsers.add_parser('set_bdev_nvme_options',
+    p = subparsers.add_parser('bdev_nvme_set_options', aliases=['set_bdev_nvme_options'],
                               help='Set options for the bdev nvme type. This is startup command.')
     p.add_argument('-a', '--action-on-timeout',
                    help="Action to take on command time out. Valid valies are: none, reset, abort")
@@ -323,7 +323,7 @@ if __name__ == "__main__":
                    help='How often to poll I/O queues for completions', type=int)
     p.add_argument('-s', '--io-queue-requests',
                    help='The number of requests allocated for each NVMe I/O queue. Default: 512', type=int)
-    p.set_defaults(func=set_bdev_nvme_options)
+    p.set_defaults(func=bdev_nvme_set_options)
 
     def set_bdev_nvme_hotplug(args):
         rpc.bdev.set_bdev_nvme_hotplug(args.client, enable=args.enable, period_us=args.period_us)
