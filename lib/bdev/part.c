@@ -109,7 +109,7 @@ spdk_bdev_part_free_cb(void *io_device)
 
 	TAILQ_REMOVE(base->tailq, part, tailq);
 
-	if (__sync_sub_and_fetch(&base->ref, 1) == 0) {
+	if (--base->ref == 0) {
 		spdk_bdev_module_release_bdev(base->bdev);
 		spdk_bdev_part_base_free(base);
 	}
@@ -457,7 +457,7 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 		return -1;
 	}
 
-	__sync_fetch_and_add(&base->ref, 1);
+	base->ref++;
 	part->internal.base = base;
 
 	if (!base->claimed) {
