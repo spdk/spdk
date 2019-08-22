@@ -93,7 +93,10 @@ spdk_reactor_get(uint32_t lcore)
 {
 	struct spdk_reactor *reactor;
 
-	assert(g_reactors != NULL);
+	if (g_reactors == NULL) {
+		SPDK_WARNLOG("Called spdk_reactor_get() while the g_reactors array was NULL!\n");
+		return NULL;
+	}
 
 	reactor = &g_reactors[lcore];
 
