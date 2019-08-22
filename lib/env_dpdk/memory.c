@@ -1005,82 +1005,135 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		return -EINVAL;
 	}
 
-	while (len > 0) {
-		/* Get the physical address from the DPDK memsegs */
-		paddr = vtophys_get_paddr_memseg((uint64_t)vaddr);
+	/* Get the physical address from the DPDK memsegs */
+	paddr = vtophys_get_paddr_memseg((uint64_t)vaddr);
 
-		switch (action) {
-		case SPDK_MEM_MAP_NOTIFY_REGISTER:
-			if (paddr == SPDK_VTOPHYS_ERROR) {
-				/* This is not an address that DPDK is managing. */
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		if (paddr == SPDK_VTOPHYS_ERROR) {
+			/* This is not an address that DPDK is managing. */
 #if SPDK_VFIO_ENABLED
-				if (spdk_iommu_is_enabled()) {
-					/* We'll use the virtual address as the iova. DPDK
-					 * currently uses physical addresses as the iovas (or counts
-					 * up from 0 if it can't get physical addresses), so
-					 * the range of user space virtual addresses and physical
-					 * addresses will never overlap.
-					 */
-					paddr = (uint64_t)vaddr;
-					rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
-					if (rc) {
+			if (spdk_iommu_is_enabled()) {
+				/* We'll use the virtual address as the iova. DPDK
+				 * currently uses physical addresses as the iovas (or counts
+				 * up from 0 if it can't get physical addresses), so
+				 * the range of user space virtual addresses and physical
+				 * addresses will never overlap.
+				 */
+				paddr = (uint64_t)vaddr;
+				rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, len);
+				if (rc) {
+					return -EFAULT;
+				}
+				while (len > 0) {
+					rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
+					if (rc != 0) {
+						return rc;
+					}
+					vaddr += VALUE_2MB;
+					paddr += VALUE_2MB;
+					len -= VALUE_2MB;
+				}
+			} else
+#endif
+			{
+				/* Get the physical address from /proc/self/pagemap. */
+				paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
+				if (paddr == SPDK_VTOPHYS_ERROR) {
+					/* Get the physical address from PCI devices */
+					paddr = vtophys_get_paddr_pci((uint64_t)vaddr);
+					if (paddr == SPDK_VTOPHYS_ERROR) {
+						DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
 						return -EFAULT;
 					}
-				} else
-#endif
-				{
-					/* Get the physical address from /proc/self/pagemap. */
-					paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
-					if (paddr == SPDK_VTOPHYS_ERROR) {
-						/* Get the physical address from PCI devices */
-						paddr = vtophys_get_paddr_pci((uint64_t)vaddr);
-						if (paddr == SPDK_VTOPHYS_ERROR) {
-							DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
-							return -EFAULT;
-						}
-						pci_phys = 1;
-					}
+					/* The beginning of this address range points to a PCI resource,
+					 * so the rest must point to a PCI resource as well.
+					 */
+					pci_phys = 1;
 				}
-			}
-			/* Since PCI paddr can break the 2MiB physical alignment skip this check for that. */
-			if (!pci_phys && (paddr & MASK_2MB)) {
-				DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
-				return -EINVAL;
-			}
 
-			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
-			break;
-		case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-#if SPDK_VFIO_ENABLED
-			if (paddr == SPDK_VTOPHYS_ERROR) {
-				/*
-				 * This is not an address that DPDK is managing. If vfio is enabled,
-				 * we need to unmap the range from the IOMMU
-				 */
-				if (spdk_iommu_is_enabled()) {
-					uint64_t buffer_len = VALUE_2MB;
-					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, &buffer_len);
-					if (buffer_len != VALUE_2MB) {
+				/* Get paddr for each 2MB chunk in this address range */
+				while (len > 0) {
+					/* Get the physical address from /proc/self/pagemap. */
+					if (pci_phys) {
+						paddr = vtophys_get_paddr_pci((uint64_t)vaddr);
+					} else {
+						paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
+					}
+
+					if (paddr == SPDK_VTOPHYS_ERROR) {
+						DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
+						return -EFAULT;
+					}
+
+					/* Since PCI paddr can break the 2MiB physical alignment skip this check for that. */
+					if (!pci_phys && (paddr & MASK_2MB)) {
+						DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
 						return -EINVAL;
 					}
-					rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
-					if (rc) {
-						return -EFAULT;
+
+					rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
+					if (rc != 0) {
+						return rc;
 					}
+
+					vaddr += VALUE_2MB;
+					len -= VALUE_2MB;
 				}
 			}
-#endif
-			rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, VALUE_2MB);
-			break;
-		default:
-			SPDK_UNREACHABLE();
+		} else {
+			/* This is an address managed by DPDK. Just setup the translations. */
+			while (len > 0) {
+				paddr = vtophys_get_paddr_memseg((uint64_t)vaddr);
+				if (paddr == SPDK_VTOPHYS_ERROR) {
+					DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
+					return -EFAULT;
+				}
+
+				rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
+				if (rc != 0) {
+					return rc;
+				}
+
+				vaddr += VALUE_2MB;
+				len -= VALUE_2MB;
+			}
 		}
 
-		if (rc != 0) {
-			return rc;
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+#if SPDK_VFIO_ENABLED
+		if (paddr == SPDK_VTOPHYS_ERROR) {
+			/*
+			 * This is not an address that DPDK is managing. If vfio is enabled,
+			 * we need to unmap the range from the IOMMU
+			 */
+			if (spdk_iommu_is_enabled()) {
+				uint64_t buffer_len = len;
+				paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, &buffer_len);
+				if (buffer_len != len) {
+					return -EINVAL;
+				}
+				rc = vtophys_iommu_unmap_dma(paddr, len);
+				if (rc) {
+					return -EFAULT;
+				}
+			}
 		}
-		vaddr += VALUE_2MB;
-		len -= VALUE_2MB;
+#endif
+		while (len > 0) {
+			rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, VALUE_2MB);
+			if (rc != 0) {
+				return rc;
+			}
+
+			vaddr += VALUE_2MB;
+			len -= VALUE_2MB;
+		}
+
+		break;
+	default:
+		SPDK_UNREACHABLE();
 	}
 
 	return rc;
