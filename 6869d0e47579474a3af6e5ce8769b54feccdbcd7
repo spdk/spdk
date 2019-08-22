@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ab2a69f_d58cb77b",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-22T05:13:38Z",
+      "side": 1,
+      "message": "registed should be registered?",
+      "range": {
+        "startLine": 97,
+        "startChar": 6,
+        "endLine": 97,
+        "endChar": 14
+      },
+      "revId": "6869d0e47579474a3af6e5ce8769b54feccdbcd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
