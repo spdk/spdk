@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "12efb816_a4da2511",
+        "filename": "mk/spdk.module_deps.mk",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-22T22:36:35Z",
+      "side": 1,
+      "message": "Actually now I\u0027m thinking that this file becomes spdk.module_dir_deps.mk, and only keep the top level module directory dependencies in this file.  Move the second-level ones to spdk.lib_deps.mk.\n\nThat way you can avoid the LIB_DOMAIN stuff.  module/Makefile will include the spdk.module_dir_deps.mk file (or you could even inline those dependencies in module/Makefile itself).  And spdk.lib.mk can just always include spdk.lib_deps.mk.\n\nOr at least I think that will work???",
+      "parentUuid": "45a69ae1_4c93609d",
+      "revId": "d2d9564d48cec561809db488acdef1cad2d913a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f839fa28_8a51f83e",
         "filename": "mk/spdk.module_deps.mk",
         "patchSetId": 7
