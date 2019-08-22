@@ -48,22 +48,6 @@
 
 #define FTL_COMPLETION_RING_SIZE 4096
 
-struct ftl_bdev {
-	struct spdk_bdev		bdev;
-
-	struct nvme_bdev_ctrlr		*ctrlr;
-
-	struct spdk_ftl_dev		*dev;
-
-	struct spdk_bdev_desc		*cache_bdev_desc;
-
-	spdk_rpc_construct_bdev_cb_fn	init_cb;
-
-	void				*init_arg;
-
-	LIST_ENTRY(ftl_bdev)		list_entry;
-};
-
 struct ftl_io_channel {
 	struct spdk_ftl_dev		*dev;
 
@@ -94,9 +78,14 @@ struct ftl_deferred_init {
 	LIST_ENTRY(ftl_deferred_init)	entry;
 };
 
+struct ftl_bdev_ctx {
+	struct ftl_bdev			*bdev;
+	spdk_rpc_construct_bdev_cb_fn	cb;
+	void				*cb_arg;
+};
+
 typedef void (*bdev_ftl_finish_fn)(void);
 
-static LIST_HEAD(, ftl_bdev)		g_ftl_bdevs = LIST_HEAD_INITIALIZER(g_ftl_bdevs);
 static bdev_ftl_finish_fn		g_finish_cb;
 static size_t				g_num_conf_bdevs;
 static size_t				g_num_init_bdevs;
@@ -153,6 +142,7 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 			goto out;
 		}
 
+		TAILQ_INIT(&ftl_ctrlr->ftl_bdevs);
 		TAILQ_INSERT_HEAD(&g_nvme_bdev_ctrlrs, ftl_ctrlr, tailq);
 	}
 out:
@@ -183,16 +173,24 @@ static void
 bdev_ftl_free_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
 	struct ftl_bdev *ftl_bdev = ctx;
-	bool finish_done;
+	struct nvme_bdev_ctrlr *ctrlr = NULL;
+	bool finish_done = true;
 
-	pthread_mutex_lock(&g_ftl_bdev_lock);
-	LIST_REMOVE(ftl_bdev, list_entry);
-	finish_done = LIST_EMPTY(&g_ftl_bdevs);
-	pthread_mutex_unlock(&g_ftl_bdev_lock);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
+	TAILQ_REMOVE(&ftl_bdev->nvme_bdev_ctrlr->ftl_bdevs, ftl_bdev, tailq);
+
+	TAILQ_FOREACH(ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		if (!TAILQ_EMPTY(&ctrlr->ftl_bdevs)) {
+			finish_done = false;
+		}
+	}
+
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	spdk_io_device_unregister(ftl_bdev, NULL);
 
-	bdev_ftl_remove_ctrlr(ftl_bdev->ctrlr);
+	bdev_ftl_remove_ctrlr(ftl_bdev->nvme_bdev_ctrlr);
 
 	if (ftl_bdev->cache_bdev_desc) {
 		spdk_bdev_module_release_bdev(spdk_bdev_desc_get_bdev(ftl_bdev->cache_bdev_desc));
@@ -410,12 +408,12 @@ _bdev_ftl_write_config_info(struct ftl_bdev *ftl_bdev, struct spdk_json_write_ct
 
 	spdk_ftl_dev_get_attrs(ftl_bdev->dev, &attrs);
 
-	trtype_str = spdk_nvme_transport_id_trtype_str(ftl_bdev->ctrlr->trid.trtype);
+	trtype_str = spdk_nvme_transport_id_trtype_str(ftl_bdev->nvme_bdev_ctrlr->trid.trtype);
 	if (trtype_str) {
 		spdk_json_write_named_string(w, "trtype", trtype_str);
 	}
 
-	spdk_json_write_named_string(w, "traddr", ftl_bdev->ctrlr->trid.traddr);
+	spdk_json_write_named_string(w, "traddr", ftl_bdev->nvme_bdev_ctrlr->trid.traddr);
 	spdk_json_write_named_string_fmt(w, "punits", "%d-%d", attrs.range.begin, attrs.range.end);
 
 	if (ftl_bdev->cache_bdev_desc) {
@@ -716,11 +714,12 @@ bdev_ftl_cache_removed_cb(void *ctx)
 static void
 bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
-	struct ftl_bdev			*ftl_bdev = ctx;
+	struct ftl_bdev_ctx		*ftl_bdev_ctx = ctx;
+	struct ftl_bdev			*ftl_bdev = ftl_bdev_ctx->bdev;
 	struct nvme_bdev_info		info = {};
 	struct spdk_ftl_attrs		attrs;
-	spdk_rpc_construct_bdev_cb_fn	init_cb = ftl_bdev->init_cb;
-	void				*init_arg = ftl_bdev->init_arg;
+	spdk_rpc_construct_bdev_cb_fn	init_cb = ftl_bdev_ctx->cb;
+	void				*init_arg = ftl_bdev_ctx->cb_arg;
 	int				rc = -ENODEV;
 
 	if (status) {
@@ -760,17 +759,18 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	info.names[0] = ftl_bdev->bdev.name;
 	info.count = 1;
 
-	pthread_mutex_lock(&g_ftl_bdev_lock);
-	LIST_INSERT_HEAD(&g_ftl_bdevs, ftl_bdev, list_entry);
-	pthread_mutex_unlock(&g_ftl_bdev_lock);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_INSERT_HEAD(&ftl_bdev->nvme_bdev_ctrlr->ftl_bdevs, ftl_bdev, tailq);
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	init_cb(&info, init_arg, 0);
+	free(ftl_bdev_ctx);
 	return;
 
 error_unregister:
 	spdk_io_device_unregister(ftl_bdev, NULL);
 error_dev:
-	bdev_ftl_remove_ctrlr(ftl_bdev->ctrlr);
+	bdev_ftl_remove_ctrlr(ftl_bdev->nvme_bdev_ctrlr);
 
 	if (ftl_bdev->cache_bdev_desc) {
 		spdk_bdev_module_release_bdev(spdk_bdev_desc_get_bdev(ftl_bdev->cache_bdev_desc));
@@ -778,6 +778,7 @@ error_dev:
 	}
 
 	free(ftl_bdev->bdev.name);
+	free(ftl_bdev_ctx);
 	free(ftl_bdev);
 
 	init_cb(NULL, init_arg, rc);
@@ -789,6 +790,7 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *
 {
 	struct ftl_bdev *ftl_bdev = NULL;
 	struct spdk_bdev *cache_bdev = NULL;
+	struct ftl_bdev_ctx *ftl_bdev_ctx = NULL;
 	struct nvme_bdev_ctrlr *ftl_ctrlr;
 	struct spdk_ftl_dev_init_opts opts = {};
 	int rc;
@@ -835,9 +837,18 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *
 		}
 	}
 
-	ftl_bdev->ctrlr = ftl_ctrlr;
-	ftl_bdev->init_cb = cb;
-	ftl_bdev->init_arg = cb_arg;
+	ftl_bdev_ctx = calloc(1, sizeof(*ftl_bdev_ctx));
+	if (!ftl_bdev_ctx) {
+		SPDK_ERRLOG("Could not allocate ftl_bdev\n");
+		rc = -ENOMEM;
+		goto error_name;
+	}
+
+	ftl_bdev->nvme_bdev_ctrlr = ftl_ctrlr;
+
+	ftl_bdev_ctx->bdev = ftl_bdev;
+	ftl_bdev_ctx->cb = cb;
+	ftl_bdev_ctx->cb_arg = cb_arg;
 
 	opts.ctrlr = ctrlr;
 	opts.trid = bdev_opts->trid;
@@ -851,7 +862,7 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *
 	/* TODO: set threads based on config */
 	opts.core_thread = opts.read_thread = spdk_get_thread();
 
-	rc = spdk_ftl_dev_init(&opts, bdev_ftl_create_cb, ftl_bdev);
+	rc = spdk_ftl_dev_init(&opts, bdev_ftl_create_cb, ftl_bdev_ctx);
 	if (rc) {
 		SPDK_ERRLOG("Could not create FTL device\n");
 		goto error_cache;
@@ -864,6 +875,7 @@ error_cache:
 		spdk_bdev_module_release_bdev(cache_bdev);
 		spdk_bdev_close(ftl_bdev->cache_bdev_desc);
 	}
+	free(ftl_bdev_ctx);
 error_name:
 	free(ftl_bdev->bdev.name);
 error_ctrlr:
@@ -1058,18 +1070,21 @@ void
 bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct ftl_bdev *ftl_bdev, *tmp;
+	struct nvme_bdev_ctrlr *ftl_ctrlr;
 
-	pthread_mutex_lock(&g_ftl_bdev_lock);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
 
-	LIST_FOREACH_SAFE(ftl_bdev, &g_ftl_bdevs, list_entry, tmp) {
-		if (strcmp(ftl_bdev->bdev.name, name) == 0) {
-			pthread_mutex_unlock(&g_ftl_bdev_lock);
-			spdk_bdev_unregister(&ftl_bdev->bdev, cb_fn, cb_arg);
-			return;
+	TAILQ_FOREACH(ftl_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		TAILQ_FOREACH_SAFE(ftl_bdev, &ftl_ctrlr->ftl_bdevs, tailq, tmp) {
+			if (strcmp(ftl_bdev->bdev.name, name) == 0) {
+				pthread_mutex_unlock(&g_bdev_nvme_mutex);
+				spdk_bdev_unregister(&ftl_bdev->bdev, cb_fn, cb_arg);
+				return;
+			}
 		}
 	}
 
-	pthread_mutex_unlock(&g_ftl_bdev_lock);
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	cb_fn(cb_arg, -ENODEV);
 }
 
@@ -1096,16 +1111,26 @@ bdev_ftl_finish_cb(void)
 static void
 bdev_ftl_finish(void)
 {
-	pthread_mutex_lock(&g_ftl_bdev_lock);
+	struct nvme_bdev_ctrlr *ctrlr;
+	bool finish = true;
 
-	if (LIST_EMPTY(&g_ftl_bdevs)) {
-		pthread_mutex_unlock(&g_ftl_bdev_lock);
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
+	TAILQ_FOREACH(ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		if (!TAILQ_EMPTY(&ctrlr->ftl_bdevs)) {
+			finish = false;
+		}
+	}
+
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	if (finish) {
 		bdev_ftl_finish_cb();
 		return;
 	}
 
 	g_finish_cb = bdev_ftl_finish_cb;
-	pthread_mutex_unlock(&g_ftl_bdev_lock);
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_ftl", SPDK_LOG_BDEV_FTL)
