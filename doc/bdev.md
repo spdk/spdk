@@ -405,9 +405,9 @@ This command will create NVMe bdev of physical device in the system.
 
 This command will create NVMe bdev of NVMe-oF resource.
 
-To remove a NVMe controller use the delete_nvme_controller command.
+To remove an NVMe controller use the bdev_nvme_detach_controller command.
 
-`rpc.py delete_nvme_controller Nvme0`
+`rpc.py bdev_nvme_detach_controller Nvme0`
 
 This command will remove NVMe controller named Nvme0.
 

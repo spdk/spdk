@@ -402,14 +402,14 @@ if __name__ == "__main__":
     p.add_argument('-n', '--name', help="Name of the NVMe controller. Example: Nvme0", required=False)
     p.set_defaults(func=bdev_nvme_get_controllers)
 
-    def delete_nvme_controller(args):
-        rpc.bdev.delete_nvme_controller(args.client,
-                                        name=args.name)
+    def bdev_nvme_detach_controller(args):
+        rpc.bdev.bdev_nvme_detach_controller(args.client,
+                                             name=args.name)
 
-    p = subparsers.add_parser('delete_nvme_controller',
-                              help='Delete a NVMe controller using controller name')
+    p = subparsers.add_parser('bdev_nvme_detach_controller', aliases=['delete_nvme_controller'],
+                              help='Delete an NVMe controller using controller name')
     p.add_argument('name', help="Name of the controller")
-    p.set_defaults(func=delete_nvme_controller)
+    p.set_defaults(func=bdev_nvme_detach_controller)
 
     def construct_rbd_bdev(args):
         config = None

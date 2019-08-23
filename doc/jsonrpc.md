@@ -292,7 +292,7 @@ Example response:
     "bdev_error_create",
     "construct_passthru_bdev",
     "bdev_nvme_apply_firmware",
-    "delete_nvme_controller",
+    "bdev_nvme_detach_controller",
     "bdev_nvme_attach_controller",
     "bdev_null_create",
     "bdev_malloc_delete",
@@ -1582,7 +1582,7 @@ Example response:
 }
 ~~~
 
-## delete_nvme_controller {#rpc_delete_nvme_controller}
+## bdev_nvme_detach_controller {#rpc_bdev_nvme_detach_controller}
 
 Delete NVMe controller.
 
@@ -1602,7 +1602,7 @@ Example requests:
     "name": "Nvme0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_nvme_controller",
+  "method": "bdev_nvme_detach_controller",
   "id": 1
 }
 ~~~

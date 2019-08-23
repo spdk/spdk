@@ -45,10 +45,10 @@ function migration_tc2_cleanup_vhost_config()
 
 	notice "Removing vhost devices & controllers via RPC ..."
 	# Delete bdev first to remove all LUNs and SCSI targets
-	$rpc_0 delete_nvme_controller Nvme0
+	$rpc_0 bdev_nvme_detach_controller Nvme0
 	$rpc_0 remove_vhost_controller $incoming_vm_ctrlr
 
-	$rpc_1 delete_nvme_controller Nvme0
+	$rpc_1 bdev_nvme_detach_controller Nvme0
 	$rpc_1 remove_vhost_controller $target_vm_ctrlr
 
 	notice "killing vhost app"

@@ -128,7 +128,7 @@ fi
 
 blk_ro_tc1
 
-$rpc_py delete_nvme_controller Nvme0
+$rpc_py bdev_nvme_detach_controller Nvme0
 
 vhost_kill 0
 
