@@ -107,7 +107,7 @@ run_spdk_fio $testdir/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$testdi
 	--spdk_conf=$testdir/bdev.conf
 timing_exit run_spdk_fio_unmap
 
-$RPC_PY delete_nvme_controller Nvme0
+$RPC_PY bdev_nvme_detach_controller Nvme0
 
 timing_enter vhost_kill
 vhost_kill 0

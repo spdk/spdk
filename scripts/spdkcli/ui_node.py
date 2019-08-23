@@ -284,7 +284,7 @@ class UINvmeBdev(UIBdev):
         UIBdev.__init__(self, "nvme", parent)
 
     def delete(self, name):
-        self.get_root().delete_nvme_controller(name=name)
+        self.get_root().bdev_nvme_detach_controller(name=name)
 
     def ui_command_create(self, name, trtype, traddr,
                           adrfam=None, trsvcid=None, subnqn=None):

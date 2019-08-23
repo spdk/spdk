@@ -84,7 +84,7 @@ function host1_cleanup_vhost()
 	vm_kill $incoming_vm
 
 	notice "Removing bdev & controller from vhost on local server"
-	$rpc_0 delete_nvme_controller Nvme0
+	$rpc_0 bdev_nvme_detach_controller Nvme0
 	$rpc_0 remove_vhost_controller $incoming_vm_ctrlr
 
 	notice "Shutting down vhost app"
