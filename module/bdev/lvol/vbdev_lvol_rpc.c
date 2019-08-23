@@ -562,25 +562,25 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_lvol_clone", spdk_rpc_bdev_lvol_clone, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_clone, clone_lvol_bdev)
 
-struct rpc_rename_lvol_bdev {
+struct rpc_bdev_lvol_rename {
 	char *old_name;
 	char *new_name;
 };
 
 static void
-free_rpc_rename_lvol_bdev(struct rpc_rename_lvol_bdev *req)
+free_rpc_bdev_lvol_rename(struct rpc_bdev_lvol_rename *req)
 {
 	free(req->old_name);
 	free(req->new_name);
 }
 
-static const struct spdk_json_object_decoder rpc_rename_lvol_bdev_decoders[] = {
-	{"old_name", offsetof(struct rpc_rename_lvol_bdev, old_name), spdk_json_decode_string},
-	{"new_name", offsetof(struct rpc_rename_lvol_bdev, new_name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_lvol_rename_decoders[] = {
+	{"old_name", offsetof(struct rpc_bdev_lvol_rename, old_name), spdk_json_decode_string},
+	{"new_name", offsetof(struct rpc_bdev_lvol_rename, new_name), spdk_json_decode_string},
 };
 
 static void
-_spdk_rpc_rename_lvol_bdev_cb(void *cb_arg, int lvolerrno)
+_spdk_rpc_bdev_lvol_rename_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -600,17 +600,17 @@ invalid:
 }
 
 static void
-spdk_rpc_rename_lvol_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_lvol_rename(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_rename_lvol_bdev req = {};
+	struct rpc_bdev_lvol_rename req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Renaming lvol\n");
 
-	if (spdk_json_decode_object(params, rpc_rename_lvol_bdev_decoders,
-				    SPDK_COUNTOF(rpc_rename_lvol_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_rename_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_rename_decoders),
 				    &req)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -632,13 +632,14 @@ spdk_rpc_rename_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_rename(lvol, req.new_name, _spdk_rpc_rename_lvol_bdev_cb, request);
+	vbdev_lvol_rename(lvol, req.new_name, _spdk_rpc_bdev_lvol_rename_cb, request);
 
 cleanup:
-	free_rpc_rename_lvol_bdev(&req);
+	free_rpc_bdev_lvol_rename(&req);
 }
 
-SPDK_RPC_REGISTER("rename_lvol_bdev", spdk_rpc_rename_lvol_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_rename", spdk_rpc_bdev_lvol_rename, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_rename, rename_lvol_bdev)
 
 struct rpc_inflate_lvol_bdev {
 	char *name;
