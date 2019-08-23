@@ -27,7 +27,7 @@ function create_json_config()
 		echo "\"name\": \"Nvme$i\","
 		echo "\"traddr\": \"${bdfs[i]}\""
 		echo '},'
-		echo '"method": "construct_nvme_bdev"'
+		echo '"method": "bdev_nvme_attach_controller"'
 		if [ -z ${bdfs[i+1]} ]; then
 			echo '}'
 		else

@@ -360,10 +360,11 @@ def set_bdev_nvme_hotplug(client, enable, period_us=None):
     return client.call('set_bdev_nvme_hotplug', params)
 
 
-def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
-                        subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None,
-                        prchk_reftag=None, prchk_guard=None):
-    """Construct NVMe namespace block devices.
+@deprecated_alias('construct_nvme_bdev')
+def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvcid=None,
+                                subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None,
+                                prchk_reftag=None, prchk_guard=None):
+    """Construct block devices for each NVMe namespace in the attached controller.
 
     Args:
         name: bdev name prefix; "n" + namespace ID will be appended to create unique names
@@ -409,7 +410,7 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
     if prchk_guard:
         params['prchk_guard'] = prchk_guard
 
-    return client.call('construct_nvme_bdev', params)
+    return client.call('bdev_nvme_attach_controller', params)
 
 
 def delete_nvme_controller(client, name):
