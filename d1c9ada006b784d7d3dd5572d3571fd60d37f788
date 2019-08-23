@@ -46,6 +46,30 @@
       "revId": "d1c9ada006b784d7d3dd5572d3571fd60d37f788",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e700ffa_8a819a00",
+        "filename": "module/bdev/null/bdev_null.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-23T13:43:23Z",
+      "side": 1,
+      "message": "Yes that is the default of NVMe SSD. Will you take that?",
+      "parentUuid": "33cd2846_afa36254",
+      "range": {
+        "startLine": 482,
+        "startChar": 27,
+        "endLine": 482,
+        "endChar": 31
+      },
+      "revId": "d1c9ada006b784d7d3dd5572d3571fd60d37f788",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
