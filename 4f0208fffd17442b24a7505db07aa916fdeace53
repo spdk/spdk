@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "52a591c3_3161fbf4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-08-23T07:43:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2b905b80_fce665d3",
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db15082d_e9efee0a",
         "filename": "lib/bdev/null/bdev_null.c",
         "patchSetId": 1
@@ -132,6 +150,30 @@
     },
     {
       "key": {
+        "uuid": "e33416c1_404c294a",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-08-23T07:43:31Z",
+      "side": 1,
+      "message": "Updated block size definition and added the suggested check with slightly different non-interleaved branch, since it is not supported at the moment",
+      "parentUuid": "09d50e26_9dd9a901",
+      "range": {
+        "startLine": 209,
+        "startChar": 34,
+        "endLine": 209,
+        "endChar": 45
+      },
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7b7954b_310eecea",
         "filename": "lib/bdev/null/bdev_null.c",
         "patchSetId": 1
@@ -176,6 +218,30 @@
       "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e4764db_87d70199",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-08-23T07:43:31Z",
+      "side": 1,
+      "message": "I added the check for non-interleaved metadata and return -ENOTSUP in this case.\nI will add support for separate metadata later since it requires more testing.",
+      "parentUuid": "4c654a4b_15569ea6",
+      "range": {
+        "startLine": 212,
+        "startChar": 33,
+        "endLine": 212,
+        "endChar": 52
+      },
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
