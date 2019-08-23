@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "30b2b628_909947b7",
+        "filename": "mk/spdk.module_deps.mk",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-23T17:22:00Z",
+      "side": 1,
+      "message": "Works! Thanks!",
+      "parentUuid": "12efb816_a4da2511",
+      "revId": "d2d9564d48cec561809db488acdef1cad2d913a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f839fa28_8a51f83e",
         "filename": "mk/spdk.module_deps.mk",
         "patchSetId": 7
@@ -51,6 +69,24 @@
       "revId": "d2d9564d48cec561809db488acdef1cad2d913a0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5a169dd_d13d6a48",
+        "filename": "mk/spdk.module_deps.mk",
+        "patchSetId": 7
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-23T17:22:00Z",
+      "side": 1,
+      "message": "I created a few categories of bdevs. I figure as we add more bdevs, they will fall into one of the categories I created and they can easily be added into the makefile.",
+      "parentUuid": "f839fa28_8a51f83e",
+      "revId": "d2d9564d48cec561809db488acdef1cad2d913a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
