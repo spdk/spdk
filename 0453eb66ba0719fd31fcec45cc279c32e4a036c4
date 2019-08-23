@@ -22,6 +22,30 @@
       "revId": "0453eb66ba0719fd31fcec45cc279c32e4a036c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e440ef8_02685416",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 1243,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-08-23T07:44:14Z",
+      "side": 1,
+      "message": "Updated block size to be data size + md size",
+      "parentUuid": "47e6de69_5cb313eb",
+      "range": {
+        "startLine": 1243,
+        "startChar": 51,
+        "endLine": 1243,
+        "endChar": 61
+      },
+      "revId": "0453eb66ba0719fd31fcec45cc279c32e4a036c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
