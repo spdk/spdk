@@ -77,9 +77,7 @@ timing_enter "$make_timing_label"
 
 $MAKE $MAKEFLAGS clean
 if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
-	./configure $config_params --with-shared
-	$MAKE $MAKEFLAGS
-	$MAKE $MAKEFLAGS clean
+	$rootdir/test/make/check_so_deps.sh
 	report_test_completion "shared_object_build"
 fi
 
