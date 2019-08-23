@@ -174,6 +174,30 @@
     },
     {
       "key": {
+        "uuid": "aeb76ff3_db33e4fa",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-23T08:16:49Z",
+      "side": 1,
+      "message": "Thank you, got it.",
+      "parentUuid": "e33416c1_404c294a",
+      "range": {
+        "startLine": 209,
+        "startChar": 34,
+        "endLine": 209,
+        "endChar": 45
+      },
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7b7954b_310eecea",
         "filename": "lib/bdev/null/bdev_null.c",
         "patchSetId": 1
@@ -233,6 +257,30 @@
       "side": 1,
       "message": "I added the check for non-interleaved metadata and return -ENOTSUP in this case.\nI will add support for separate metadata later since it requires more testing.",
       "parentUuid": "4c654a4b_15569ea6",
+      "range": {
+        "startLine": 212,
+        "startChar": 33,
+        "endLine": 212,
+        "endChar": 52
+      },
+      "revId": "4f0208fffd17442b24a7505db07aa916fdeace53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be2b7d3e_ce3f95a0",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-23T08:16:49Z",
+      "side": 1,
+      "message": "OK, very reasonable",
+      "parentUuid": "1e4764db_87d70199",
       "range": {
         "startLine": 212,
         "startChar": 33,
