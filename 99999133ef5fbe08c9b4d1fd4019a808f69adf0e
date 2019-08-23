@@ -16,6 +16,24 @@
       "revId": "99999133ef5fbe08c9b4d1fd4019a808f69adf0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65470f57_8d9f501d",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 11
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-23T17:22:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7ac18077_0626ee2b",
+      "revId": "99999133ef5fbe08c9b4d1fd4019a808f69adf0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
