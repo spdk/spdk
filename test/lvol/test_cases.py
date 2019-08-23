@@ -178,8 +178,8 @@ def case_message(func):
             800: 'rename_positive',
             801: 'rename_lvs_nonexistent',
             802: 'rename_lvs_EEXIST',
-            803: 'rename_lvol_bdev_nonexistent',
-            804: 'rename_lvol_bdev_EEXIST',
+            803: 'bdev_lvol_rename_nonexistent',
+            804: 'bdev_lvol_rename_EEXIST',
             # SIGTERM
             10000: 'SIGTERM',
         }
@@ -3158,7 +3158,7 @@ class TestCases(object):
         bdev_aliases = ["/".join([new_lvs_name, name]) for name in bdev_names]
         print(bdev_aliases)
         for uuid, new_name, new_alias in zip(bdev_uuids, bdev_names, bdev_aliases):
-            fail_count += self.c.rename_lvol_bdev(uuid, new_name)
+            fail_count += self.c.bdev_lvol_rename(uuid, new_name)
             fail_count += self.c.check_get_bdevs_methods(uuid,
                                                          bdev_size,
                                                          new_alias)
@@ -3168,7 +3168,7 @@ class TestCases(object):
         new_bdev_aliases = ["/".join([new_lvs_name, name]) for name in bdev_names]
         print(bdev_aliases)
         for uuid, old_alias, new_alias, new_name in zip(bdev_uuids, bdev_aliases, new_bdev_aliases, bdev_names):
-            fail_count += self.c.rename_lvol_bdev(old_alias, new_name)
+            fail_count += self.c.bdev_lvol_rename(old_alias, new_name)
             fail_count += self.c.check_get_bdevs_methods(uuid,
                                                          bdev_size,
                                                          new_alias)
@@ -3309,25 +3309,25 @@ class TestCases(object):
     @case_message
     def test_case803(self):
         """
-        rename_lvol_bdev_nonexistent
+        bdev_lvol_rename_nonexistent
 
         Negative test case for lvol bdev rename.
         Check that error is returned when trying to rename not existing lvol bdev.
         """
         fail_count = 0
-        # Call rename_lvol_bdev with name pointing to not existing lvol bdev
-        if self.c.rename_lvol_bdev("NOTEXIST", "WHATEVER") == 0:
+        # Call bdev_lvol_rename with name pointing to not existing lvol bdev
+        if self.c.bdev_lvol_rename("NOTEXIST", "WHATEVER") == 0:
             fail_count += 1
 
         # Expected results:
-        # - rename_lvol_bdev return code != 0
+        # - bdev_lvol_rename return code != 0
         # - no other operation fails
         return fail_count
 
     @case_message
     def test_case804(self):
         """
-        rename_lvol_bdev_EEXIST
+        bdev_lvol_rename_EEXIST
 
         Negative test case for lvol bdev rename.
         Check that error is returned when trying to rename to a name which is already
@@ -3358,9 +3358,9 @@ class TestCases(object):
         fail_count += self.c.check_get_bdevs_methods(bdev_uuid_2,
                                                      bdev_size)
 
-        # Call rename_lvol_bdev on first lvol bdev and try to change its name to
+        # Call bdev_lvol_rename on first lvol bdev and try to change its name to
         # the same name as used by second lvol bdev
-        if self.c.rename_lvol_bdev(self.lbd_name + "1", self.lbd_name + "2") == 0:
+        if self.c.bdev_lvol_rename(self.lbd_name + "1", self.lbd_name + "2") == 0:
             fail_count += 1
         # Verify that lvol bdev still have the same names as before
         fail_count += self.c.check_get_bdevs_methods(bdev_uuid_1,
@@ -3373,7 +3373,7 @@ class TestCases(object):
         fail_count += self.c.delete_malloc_bdev(base_bdev)
 
         # Expected results:
-        # - rename_lvol_bdev return code != 0; not possible to rename to already
+        # - bdev_lvol_rename return code != 0; not possible to rename to already
         #   used name
         # - no other operation fails
         return fail_count
