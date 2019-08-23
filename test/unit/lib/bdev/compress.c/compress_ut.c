@@ -46,6 +46,10 @@
  * the data or both for a max of 3.
  */
 #define UT_MBUFS_PER_OP 3
+/* For testing the crossing of a huge page boundary on address translation,
+ * we'll have an extra one but we only test on the source side.
+ */
+#define UT_MBUFS_PER_OP_BOUND_TEST 4
 
 struct spdk_bdev_io *g_bdev_io;
 struct spdk_io_channel *g_io_ch;
@@ -54,9 +58,9 @@ struct vbdev_compress g_comp_bdev;
 struct comp_device_qp g_device_qp;
 struct compress_dev g_device;
 struct rte_compressdev_capabilities g_cdev_cap;
-static struct rte_mbuf *g_src_mbufs[UT_MBUFS_PER_OP];
+static struct rte_mbuf *g_src_mbufs[UT_MBUFS_PER_OP_BOUND_TEST];
 static struct rte_mbuf *g_dst_mbufs[UT_MBUFS_PER_OP];
-static struct rte_mbuf g_expected_src_mbufs[UT_MBUFS_PER_OP];
+static struct rte_mbuf g_expected_src_mbufs[UT_MBUFS_PER_OP_BOUND_TEST];
 static struct rte_mbuf g_expected_dst_mbufs[UT_MBUFS_PER_OP];
 struct comp_bdev_io *g_io_ctx;
 struct comp_io_channel *g_comp_ch;
@@ -180,6 +184,7 @@ void mock_rte_pktmbuf_free(struct rte_mbuf *m)
 {
 }
 
+static bool ut_boundary_alloc = false;
 static int ut_rte_pktmbuf_alloc_bulk = 0;
 int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
 				unsigned count);
@@ -192,19 +197,22 @@ int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbuf
 	/* This mocked function only supports the alloc of up to 3 src and 3 dst. */
 	ut_rte_pktmbuf_alloc_bulk += count;
 
-	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
-		g_src_mbufs[i]->next = NULL;
-		g_dst_mbufs[i]->next = NULL;
-	}
-
-	if (ut_rte_pktmbuf_alloc_bulk == UT_MBUFS_PER_OP) {
-		/* first test allocation */
+	if (ut_rte_pktmbuf_alloc_bulk == 1) {
+		/* allocation of an extra mbuf for boundary cross test */
+		ut_boundary_alloc = true;
+		g_src_mbufs[UT_MBUFS_PER_OP_BOUND_TEST - 1]->next = NULL;
+		*mbufs = g_src_mbufs[UT_MBUFS_PER_OP_BOUND_TEST - 1];
+		ut_rte_pktmbuf_alloc_bulk = 0;
+	} else if (ut_rte_pktmbuf_alloc_bulk == UT_MBUFS_PER_OP) {
+		/* first test allocation, src mbufs */
 		for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+			g_src_mbufs[i]->next = NULL;
 			*mbufs++ = g_src_mbufs[i];
 		}
 	} else if (ut_rte_pktmbuf_alloc_bulk == UT_MBUFS_PER_OP * 2) {
-		/* second test allocation */
+		/* second test allocation, dst mbufs */
 		for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+			g_dst_mbufs[i]->next = NULL;
 			*mbufs++ = g_dst_mbufs[i];
 		}
 		ut_rte_pktmbuf_alloc_bulk = 0;
@@ -293,9 +301,18 @@ DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
 DEFINE_STUB_V(rte_comp_op_free, (struct rte_comp_op *op));
 DEFINE_STUB(rte_comp_op_alloc, struct rte_comp_op *, (struct rte_mempool *mempool), NULL);
 
+int g_small_size_counter = 0;
+int g_small_size_modify = 0;
+uint64_t g_small_size = 0;
 uint64_t
 spdk_vtophys(void *buf, uint64_t *size)
 {
+	g_small_size_counter++;
+	if (g_small_size_counter == g_small_size_modify) {
+		*size = g_small_size;
+		g_small_size_counter = 0;
+		g_small_size_modify = 0;
+	}
 	return (uint64_t)buf;
 }
 
@@ -400,6 +417,23 @@ _compress_done(void *_req, int reduce_errno)
 	}
 }
 
+static void
+_get_mbuf_array(struct rte_mbuf *mbuf_array[UT_MBUFS_PER_OP_BOUND_TEST],
+		struct rte_mbuf *mbuf_head, int mbuf_count, bool null_final)
+{
+	int i;
+
+	for (i = 0; i < mbuf_count; i++) {
+		mbuf_array[i] = mbuf_head;
+		if (mbuf_head) {
+			mbuf_head = mbuf_head->next;
+		}
+	}
+	if (null_final) {
+		mbuf_array[i - 1] = NULL;
+	}
+}
+
 #define FAKE_ENQUEUE_SUCCESS 255
 static uint16_t ut_enqueue_value = 0;
 static struct rte_comp_op ut_expected_op;
@@ -408,6 +442,9 @@ rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op
 			      uint16_t nb_ops)
 {
 	struct rte_comp_op *op = *ops;
+	struct rte_mbuf *op_mbuf[UT_MBUFS_PER_OP_BOUND_TEST];
+	struct rte_mbuf *exp_mbuf[UT_MBUFS_PER_OP_BOUND_TEST];
+	int i, num_src_mbufs = UT_MBUFS_PER_OP;
 
 	if (ut_enqueue_value == 0) {
 		return 0;
@@ -419,26 +456,51 @@ rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op
 	/* by design the compress module will never send more than 1 op at a time */
 	CU_ASSERT(op->private_xform == ut_expected_op.private_xform);
 
-	/* check src mbuf values, some that are faked in our stub are done so
-	 * to indirectly test functionality in the code under test.
+	/* setup our local pointers to the chained mbufs, those pointed to in the
+	 * operation struct and the expected values.
 	 */
-	CU_ASSERT(op->m_src->buf_addr == ut_expected_op.m_src->buf_addr);
-	CU_ASSERT(op->m_src->next->buf_addr == ut_expected_op.m_src->next->buf_addr);
-	CU_ASSERT(op->m_src->next->next->buf_addr == ut_expected_op.m_src->next->next->buf_addr);
-	CU_ASSERT(op->m_src->buf_iova == ut_expected_op.m_src->buf_iova);
-	CU_ASSERT(op->m_src->buf_len == ut_expected_op.m_src->buf_len);
-	CU_ASSERT(op->m_src->pkt_len == ut_expected_op.m_src->pkt_len);
+	_get_mbuf_array(op_mbuf, op->m_src, SPDK_COUNTOF(op_mbuf), true);
+	_get_mbuf_array(exp_mbuf, ut_expected_op.m_src, SPDK_COUNTOF(exp_mbuf), true);
+
+	if (ut_boundary_alloc == true) {
+		/* if we crossed a boundary, we need to check the 4th src mbuf and
+		 * reset the global that is used to identify whether we crossed
+		 * or not
+		 */
+		num_src_mbufs = UT_MBUFS_PER_OP_BOUND_TEST;
+		exp_mbuf[UT_MBUFS_PER_OP_BOUND_TEST - 1] = ut_expected_op.m_src->next->next->next;
+		op_mbuf[UT_MBUFS_PER_OP_BOUND_TEST - 1] = op->m_src->next->next->next;
+		ut_boundary_alloc = false;
+	}
+
+
+	for (i = 0; i < num_src_mbufs; i++) {
+		CU_ASSERT(op_mbuf[i]->buf_addr == exp_mbuf[i]->buf_addr);
+		CU_ASSERT(op_mbuf[i]->buf_iova == exp_mbuf[i]->buf_iova);
+		CU_ASSERT(op_mbuf[i]->buf_len == exp_mbuf[i]->buf_len);
+		CU_ASSERT(op_mbuf[i]->pkt_len == exp_mbuf[i]->pkt_len);
+	}
+
+	/* if only 3 mbufs were used in the test, the 4th should be zeroed */
+	if (num_src_mbufs == UT_MBUFS_PER_OP) {
+		CU_ASSERT(op_mbuf[UT_MBUFS_PER_OP_BOUND_TEST - 1] == NULL);
+		CU_ASSERT(exp_mbuf[UT_MBUFS_PER_OP_BOUND_TEST - 1] == NULL);
+	}
+
 	CU_ASSERT(op->m_src->userdata == ut_expected_op.m_src->userdata);
 	CU_ASSERT(op->src.offset == ut_expected_op.src.offset);
 	CU_ASSERT(op->src.length == ut_expected_op.src.length);
 
 	/* check dst mbuf values */
-	CU_ASSERT(op->m_dst->buf_addr == ut_expected_op.m_dst->buf_addr);
-	CU_ASSERT(op->m_dst->next->buf_addr == ut_expected_op.m_dst->next->buf_addr);
-	CU_ASSERT(op->m_dst->next->next->buf_addr == ut_expected_op.m_dst->next->next->buf_addr);
-	CU_ASSERT(op->m_dst->buf_iova == ut_expected_op.m_dst->buf_iova);
-	CU_ASSERT(op->m_dst->buf_len == ut_expected_op.m_dst->buf_len);
-	CU_ASSERT(op->m_dst->pkt_len == ut_expected_op.m_dst->pkt_len);
+	_get_mbuf_array(op_mbuf, op->m_dst, SPDK_COUNTOF(op_mbuf), true);
+	_get_mbuf_array(exp_mbuf, ut_expected_op.m_dst, SPDK_COUNTOF(exp_mbuf), true);
+
+	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+		CU_ASSERT(op_mbuf[i]->buf_addr == exp_mbuf[i]->buf_addr);
+		CU_ASSERT(op_mbuf[i]->buf_iova == exp_mbuf[i]->buf_iova);
+		CU_ASSERT(op_mbuf[i]->buf_len == exp_mbuf[i]->buf_len);
+		CU_ASSERT(op_mbuf[i]->pkt_len == exp_mbuf[i]->pkt_len);
+	}
 	CU_ASSERT(op->dst.offset == ut_expected_op.dst.offset);
 
 	return ut_enqueue_value;
@@ -448,6 +510,8 @@ rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op
 static int
 test_setup(void)
 {
+	int i;
+
 	g_comp_bdev.backing_dev.unmap = _comp_reduce_unmap;
 	g_comp_bdev.backing_dev.readv = _comp_reduce_readv;
 	g_comp_bdev.backing_dev.writev = _comp_reduce_writev;
@@ -487,13 +551,12 @@ test_setup(void)
 	g_cdev_cap.comp_feature_flags = RTE_COMP_FF_SHAREABLE_PRIV_XFORM;
 	g_device.cdev_info.driver_name = "compress_isal";
 	g_device.cdev_info.capabilities = &g_cdev_cap;
-
-	g_src_mbufs[0] = calloc(1, sizeof(struct rte_mbuf));
-	g_src_mbufs[1] = calloc(1, sizeof(struct rte_mbuf));
-	g_src_mbufs[2] = calloc(1, sizeof(struct rte_mbuf));
-	g_dst_mbufs[0] = calloc(1, sizeof(struct rte_mbuf));
-	g_dst_mbufs[1] = calloc(1, sizeof(struct rte_mbuf));
-	g_dst_mbufs[2] = calloc(1, sizeof(struct rte_mbuf));
+	for (i = 0; i < UT_MBUFS_PER_OP_BOUND_TEST; i++) {
+		g_src_mbufs[i] = calloc(1, sizeof(struct rte_mbuf));
+	}
+	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+		g_dst_mbufs[i] = calloc(1, sizeof(struct rte_mbuf));
+	}
 
 	g_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct comp_bdev_io));
 	g_bdev_io->u.bdev.iovs = calloc(128, sizeof(struct iovec));
@@ -509,6 +572,17 @@ test_setup(void)
 	g_test_config = calloc(1, sizeof(struct rte_config));
 	g_test_config->lcore_count = 1;
 
+	for (i = 0; i < UT_MBUFS_PER_OP_BOUND_TEST - 1; i++) {
+		g_expected_src_mbufs[i].next = &g_expected_src_mbufs[i + 1];
+	}
+	g_expected_src_mbufs[UT_MBUFS_PER_OP_BOUND_TEST - 1].next = NULL;
+
+	/* we only test w/4 mbufs on src side */
+	for (i = 0; i < UT_MBUFS_PER_OP - 1; i++) {
+		g_expected_dst_mbufs[i].next = &g_expected_dst_mbufs[i + 1];
+	}
+	g_expected_dst_mbufs[UT_MBUFS_PER_OP - 1].next = NULL;
+
 	return 0;
 }
 
@@ -516,12 +590,14 @@ test_setup(void)
 static int
 test_cleanup(void)
 {
-	free(g_dst_mbufs[0]);
-	free(g_src_mbufs[0]);
-	free(g_dst_mbufs[1]);
-	free(g_src_mbufs[1]);
-	free(g_dst_mbufs[2]);
-	free(g_src_mbufs[2]);
+	int i;
+
+	for (i = 0; i < UT_MBUFS_PER_OP_BOUND_TEST; i++) {
+		free(g_src_mbufs[i]);
+	}
+	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+		free(g_dst_mbufs[i]);
+	}
 	free(g_bdev_io->u.bdev.iovs);
 	free(g_bdev_io);
 	free(g_io_ch);
@@ -539,6 +615,8 @@ test_compress_operation(void)
 	struct spdk_reduce_vol_cb_args cb_arg;
 	int rc, i;
 	struct vbdev_comp_op *op;
+	struct rte_mbuf *exp_src_mbuf[UT_MBUFS_PER_OP];
+	struct rte_mbuf *exp_dst_mbuf[UT_MBUFS_PER_OP];
 
 	src_iovcnt = dst_iovcnt = 3;
 	for (i = 0; i < dst_iovcnt; i++) {
@@ -597,35 +675,175 @@ test_compress_operation(void)
 	ut_expected_op.private_xform = &g_decomp_xform;
 	ut_expected_op.src.offset = 0;
 	ut_expected_op.src.length = src_iovs[0].iov_len + src_iovs[1].iov_len + src_iovs[2].iov_len;
-	ut_expected_op.m_src = &g_expected_src_mbufs[0];
-	ut_expected_op.m_src->buf_addr = src_iovs[0].iov_base;
-	ut_expected_op.m_src->buf_iova = spdk_vtophys(src_iovs[0].iov_base, &src_iovs[0].iov_len);
-	ut_expected_op.m_src->next = &g_expected_src_mbufs[1];
-	ut_expected_op.m_src->next->buf_addr = src_iovs[1].iov_base;
-	ut_expected_op.m_src->next->buf_iova = spdk_vtophys(src_iovs[1].iov_base, &src_iovs[1].iov_len);
-	ut_expected_op.m_src->next->next = &g_expected_src_mbufs[2];
-	ut_expected_op.m_src->next->next->buf_addr = src_iovs[2].iov_base;
-	ut_expected_op.m_src->next->next->buf_iova = spdk_vtophys(src_iovs[2].iov_base,
-			&src_iovs[2].iov_len);
 
-	ut_expected_op.m_src->buf_len = src_iovs[0].iov_len;
-	ut_expected_op.m_src->pkt_len = src_iovs[0].iov_len;
-	ut_expected_op.m_src->userdata = &cb_arg;
+	/* setup the src expected values */
+	_get_mbuf_array(exp_src_mbuf, &g_expected_src_mbufs[0], SPDK_COUNTOF(exp_src_mbuf), false);
+	ut_expected_op.m_src = exp_src_mbuf[0];
 
+	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+		exp_src_mbuf[i]->userdata = &cb_arg;
+		exp_src_mbuf[i]->buf_addr = src_iovs[i].iov_base;
+		exp_src_mbuf[i]->buf_iova = spdk_vtophys(src_iovs[i].iov_base, &src_iovs[i].iov_len);
+		exp_src_mbuf[i]->buf_len = src_iovs[i].iov_len;
+		exp_src_mbuf[i]->pkt_len = src_iovs[i].iov_len;
+	}
+
+	/* setup the dst expected values */
+	_get_mbuf_array(exp_dst_mbuf, &g_expected_dst_mbufs[0], SPDK_COUNTOF(exp_dst_mbuf), false);
 	ut_expected_op.dst.offset = 0;
-	ut_expected_op.m_dst = &g_expected_dst_mbufs[0];
-	ut_expected_op.m_dst->buf_addr = dst_iovs[0].iov_base;
-	ut_expected_op.m_dst->buf_iova = spdk_vtophys(dst_iovs[0].iov_base, &dst_iovs[0].iov_len);
-	ut_expected_op.m_dst->next = &g_expected_dst_mbufs[1];
-	ut_expected_op.m_dst->next->buf_addr = dst_iovs[1].iov_base;
-	ut_expected_op.m_dst->next->buf_iova = spdk_vtophys(dst_iovs[1].iov_base, &dst_iovs[1].iov_len);
-	ut_expected_op.m_dst->next->next = &g_expected_dst_mbufs[2];
-	ut_expected_op.m_dst->next->next->buf_addr = dst_iovs[2].iov_base;
-	ut_expected_op.m_dst->next->next->buf_iova = spdk_vtophys(dst_iovs[2].iov_base,
-			&dst_iovs[2].iov_len);
+	ut_expected_op.m_dst = exp_dst_mbuf[0];
 
-	ut_expected_op.m_dst->buf_len = dst_iovs[0].iov_len;
-	ut_expected_op.m_dst->pkt_len = dst_iovs[0].iov_len;
+	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+		exp_dst_mbuf[i]->buf_addr = dst_iovs[i].iov_base;
+		exp_dst_mbuf[i]->buf_iova = spdk_vtophys(dst_iovs[i].iov_base, &dst_iovs[i].iov_len);
+		exp_dst_mbuf[i]->buf_len = dst_iovs[i].iov_len;
+		exp_dst_mbuf[i]->pkt_len = dst_iovs[i].iov_len;
+	}
+
+	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], src_iovcnt,
+				 &dst_iovs[0], dst_iovcnt, false, &cb_arg);
+	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
+	CU_ASSERT(rc == 0);
+
+}
+
+static void
+test_compress_operation_cross_boundary(void)
+{
+	struct iovec src_iovs[3] = {};
+	int src_iovcnt;
+	struct iovec dst_iovs[3] = {};
+	int dst_iovcnt;
+	struct spdk_reduce_vol_cb_args cb_arg;
+	int rc, i;
+	struct rte_mbuf *exp_src_mbuf[UT_MBUFS_PER_OP_BOUND_TEST];
+	struct rte_mbuf *exp_dst_mbuf[UT_MBUFS_PER_OP_BOUND_TEST];
+
+	/* Setup the same basic 3 IOV test as used in the simple success case
+	 * but then we'll start testing a vtophy boundary crossing at each
+	 * position.
+	 */
+	src_iovcnt = dst_iovcnt = 3;
+	for (i = 0; i < dst_iovcnt; i++) {
+		src_iovs[i].iov_len = 0x1000;
+		dst_iovs[i].iov_len = 0x1000;
+		src_iovs[i].iov_base = (void *)0x10000000 + 0x1000 * i;
+		dst_iovs[i].iov_base = (void *)0x20000000 + 0x1000 * i;
+	}
+
+	ut_expected_op.private_xform = &g_decomp_xform;
+	ut_expected_op.src.offset = 0;
+	ut_expected_op.src.length = src_iovs[0].iov_len + src_iovs[1].iov_len + src_iovs[2].iov_len;
+
+	/* setup the src expected values */
+	_get_mbuf_array(exp_src_mbuf, &g_expected_src_mbufs[0], SPDK_COUNTOF(exp_src_mbuf), false);
+	ut_expected_op.m_src = exp_src_mbuf[0];
+
+	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+		exp_src_mbuf[i]->userdata = &cb_arg;
+		exp_src_mbuf[i]->buf_addr = src_iovs[i].iov_base;
+		exp_src_mbuf[i]->buf_iova = spdk_vtophys(src_iovs[i].iov_base, &src_iovs[i].iov_len);
+		exp_src_mbuf[i]->buf_len = src_iovs[i].iov_len;
+		exp_src_mbuf[i]->pkt_len = src_iovs[i].iov_len;
+	}
+
+	/* setup the dst expected values, we don't test needing a 4th dst mbuf */
+	_get_mbuf_array(exp_dst_mbuf, &g_expected_dst_mbufs[0], SPDK_COUNTOF(exp_dst_mbuf), false);
+	ut_expected_op.dst.offset = 0;
+	ut_expected_op.m_dst = exp_dst_mbuf[0];
+
+	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+		exp_dst_mbuf[i]->buf_addr = dst_iovs[i].iov_base;
+		exp_dst_mbuf[i]->buf_iova = spdk_vtophys(dst_iovs[i].iov_base, &dst_iovs[i].iov_len);
+		exp_dst_mbuf[i]->buf_len = dst_iovs[i].iov_len;
+		exp_dst_mbuf[i]->pkt_len = dst_iovs[i].iov_len;
+	}
+
+	/* force the 1st IOV to get partial length from spdk_vtophys */
+	g_small_size_counter = 0;
+	g_small_size_modify = 1;
+	g_small_size = 0x800;
+	exp_src_mbuf[3]->userdata = &cb_arg;
+
+	/* first only has shorter length */
+	exp_src_mbuf[0]->pkt_len = exp_src_mbuf[0]->buf_len = 0x800;
+
+	/* 2nd was inserted by the boundary crossing condition and finishes off
+	 * the length from the first */
+	exp_src_mbuf[1]->buf_addr = (void *)0x10000800;
+	exp_src_mbuf[1]->buf_iova = 0x10000800;
+	exp_src_mbuf[1]->pkt_len = exp_src_mbuf[1]->buf_len = 0x800;
+
+	/* 3rd looks like that the 2nd would have */
+	exp_src_mbuf[2]->buf_addr = (void *)0x10001000;
+	exp_src_mbuf[2]->buf_iova = 0x10001000;
+	exp_src_mbuf[2]->pkt_len = exp_src_mbuf[2]->buf_len = 0x1000;
+
+	/* a new 4th looks like what the 3rd would have */
+	exp_src_mbuf[3]->buf_addr = (void *)0x10002000;
+	exp_src_mbuf[3]->buf_iova = 0x10002000;
+	exp_src_mbuf[3]->pkt_len = exp_src_mbuf[3]->buf_len = 0x1000;
+
+	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], src_iovcnt,
+				 &dst_iovs[0], dst_iovcnt, false, &cb_arg);
+	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
+	CU_ASSERT(rc == 0);
+
+	/* Now force the 2nd IOV to get partial length from spdk_vtophys */
+	g_small_size_counter = 0;
+	g_small_size_modify = 2;
+	g_small_size = 0x800;
+
+	/* first is normal */
+	exp_src_mbuf[0]->buf_addr = (void *)0x10000000;
+	exp_src_mbuf[0]->buf_iova = 0x10000000;
+	exp_src_mbuf[0]->pkt_len = exp_src_mbuf[0]->buf_len = 0x1000;
+
+	/* second only has shorter length */
+	exp_src_mbuf[1]->buf_addr = (void *)0x10001000;
+	exp_src_mbuf[1]->buf_iova = 0x10001000;
+	exp_src_mbuf[1]->pkt_len = exp_src_mbuf[1]->buf_len = 0x800;
+
+	/* 3rd was inserted by the boundary crossing condition and finishes off
+	 * the length from the first */
+	exp_src_mbuf[2]->buf_addr = (void *)0x10001800;
+	exp_src_mbuf[2]->buf_iova = 0x10001800;
+	exp_src_mbuf[2]->pkt_len = exp_src_mbuf[2]->buf_len = 0x800;
+
+	/* a new 4th looks like what the 3rd would have */
+	exp_src_mbuf[3]->buf_addr = (void *)0x10002000;
+	exp_src_mbuf[3]->buf_iova = 0x10002000;
+	exp_src_mbuf[3]->pkt_len = exp_src_mbuf[3]->buf_len = 0x1000;
+
+	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], src_iovcnt,
+				 &dst_iovs[0], dst_iovcnt, false, &cb_arg);
+	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
+	CU_ASSERT(rc == 0);
+
+	/* Finally force the 3rd IOV to get partial length from spdk_vtophys */
+	g_small_size_counter = 0;
+	g_small_size_modify = 3;
+	g_small_size = 0x800;
+
+	/* first is normal */
+	exp_src_mbuf[0]->buf_addr = (void *)0x10000000;
+	exp_src_mbuf[0]->buf_iova = 0x10000000;
+	exp_src_mbuf[0]->pkt_len = exp_src_mbuf[0]->buf_len = 0x1000;
+
+	/* second is normal */
+	exp_src_mbuf[1]->buf_addr = (void *)0x10001000;
+	exp_src_mbuf[1]->buf_iova = 0x10001000;
+	exp_src_mbuf[1]->pkt_len = exp_src_mbuf[1]->buf_len = 0x1000;
+
+	/* 3rd has shorter length */
+	exp_src_mbuf[2]->buf_addr = (void *)0x10002000;
+	exp_src_mbuf[2]->buf_iova = 0x10002000;
+	exp_src_mbuf[2]->pkt_len = exp_src_mbuf[2]->buf_len = 0x800;
+
+	/* a new 4th handles the remainder from the 3rd */
+	exp_src_mbuf[3]->buf_addr = (void *)0x10002800;
+	exp_src_mbuf[3]->buf_iova = 0x10002800;
+	exp_src_mbuf[3]->pkt_len = exp_src_mbuf[3]->buf_len = 0x800;
 
 	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], src_iovcnt,
 				 &dst_iovs[0], dst_iovcnt, false, &cb_arg);
@@ -881,6 +1099,8 @@ main(int argc, char **argv)
 
 	if (CU_add_test(suite, "test_compress_operation",
 			test_compress_operation) == NULL ||
+	    CU_add_test(suite, "test_compress_operation_cross_boundary",
+			test_compress_operation_cross_boundary) == NULL ||
 	    CU_add_test(suite, "vbdev_compress_submit_request",
 			test_vbdev_compress_submit_request) == NULL ||
 	    CU_add_test(suite, "test_passthru",
