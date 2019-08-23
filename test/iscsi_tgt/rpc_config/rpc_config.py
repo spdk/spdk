@@ -464,11 +464,11 @@ def verify_add_nvme_bdev_rpc_methods(rpc_py):
     addrs = re.findall(r'^([0-9]{2}:[0-9]{2}.[0-9]) "Non-Volatile memory controller \[0108\]".*-p02', output.decode(), re.MULTILINE)
     for addr in addrs:
         ctrlr_address = "-b Nvme{} -t pcie -a 0000:{}".format(addrs.index(addr), addr)
-        rpc.construct_nvme_bdev(ctrlr_address)
+        rpc.bdev_nvme_attach_controller(ctrlr_address)
         print("add nvme device passed first time")
         test_pass = 0
         try:
-            rpc.construct_nvme_bdev(ctrlr_address)
+            rpc.bdev_nvme_attach_controller(ctrlr_address)
         except Exception as e:
             print("add nvme device passed second time")
             test_pass = 1

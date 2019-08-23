@@ -393,15 +393,15 @@ To delete a null bdev use the bdev_null_delete command.
 
 There are two ways to create block device based on NVMe device in SPDK. First
 way is to connect local PCIe drive and second one is to connect NVMe-oF device.
-In both cases user should use `construct_nvme_bdev` RPC command to achieve that.
+In both cases user should use `bdev_nvme_attach_controller` RPC command to achieve that.
 
 Example commands
 
-`rpc.py construct_nvme_bdev -b NVMe1 -t PCIe -a 0000:01:00.0`
+`rpc.py bdev_nvme_attach_controller -b NVMe1 -t PCIe -a 0000:01:00.0`
 
 This command will create NVMe bdev of physical device in the system.
 
-`rpc.py construct_nvme_bdev -b Nvme0 -t RDMA -a 192.168.100.1 -f IPv4 -s 4420 -n nqn.2016-06.io.spdk:cnode1`
+`rpc.py bdev_nvme_attach_controller -b Nvme0 -t RDMA -a 192.168.100.1 -f IPv4 -s 4420 -n nqn.2016-06.io.spdk:cnode1`
 
 This command will create NVMe bdev of NVMe-oF resource.
 

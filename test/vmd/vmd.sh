@@ -51,7 +51,7 @@ $rpc_py enable_vmd
 $rpc_py start_subsystem_init
 
 for bdf in $pci_devs; do
-	$rpc_py construct_nvme_bdev -b NVMe_$bdf -t PCIe -a $bdf
+	$rpc_py bdev_nvme_attach_controller -b NVMe_$bdf -t PCIe -a $bdf
 done
 
 timing_exit vmd

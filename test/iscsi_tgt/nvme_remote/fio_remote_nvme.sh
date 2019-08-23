@@ -32,7 +32,7 @@ function run_nvme_remote() {
 	$rpc_py -s "$iscsi_rpc_addr" set_iscsi_options -o 30 -a 16
 	$rpc_py -s "$iscsi_rpc_addr" start_subsystem_init
 	if [ "$1" = "remote" ]; then
-		$rpc_py -s $iscsi_rpc_addr construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
+		$rpc_py -s $iscsi_rpc_addr bdev_nvme_attach_controller -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
 	fi
 
 	echo "iSCSI target has started."
@@ -43,7 +43,7 @@ function run_nvme_remote() {
 	$rpc_py -s "$iscsi_rpc_addr" iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 	$rpc_py -s "$iscsi_rpc_addr" add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 	if [ "$1" = "local" ]; then
-		$rpc_py -s "$iscsi_rpc_addr" construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
+		$rpc_py -s "$iscsi_rpc_addr" bdev_nvme_attach_controller -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
 	fi
 	$rpc_py -s "$iscsi_rpc_addr" iscsi_create_target_node Target1 Target1_alias 'Nvme0n1:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
 	sleep 1

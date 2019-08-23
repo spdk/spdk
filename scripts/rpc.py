@@ -355,21 +355,21 @@ if __name__ == "__main__":
                    help='How often the hotplug is processed for insert and remove events', type=int)
     p.set_defaults(func=bdev_nvme_set_hotplug)
 
-    def construct_nvme_bdev(args):
-        print_array(rpc.bdev.construct_nvme_bdev(args.client,
-                                                 name=args.name,
-                                                 trtype=args.trtype,
-                                                 traddr=args.traddr,
-                                                 adrfam=args.adrfam,
-                                                 trsvcid=args.trsvcid,
-                                                 subnqn=args.subnqn,
-                                                 hostnqn=args.hostnqn,
-                                                 hostaddr=args.hostaddr,
-                                                 hostsvcid=args.hostsvcid,
-                                                 prchk_reftag=args.prchk_reftag,
-                                                 prchk_guard=args.prchk_guard))
+    def bdev_nvme_attach_controller(args):
+        print_array(rpc.bdev.bdev_nvme_attach_controller(args.client,
+                                                         name=args.name,
+                                                         trtype=args.trtype,
+                                                         traddr=args.traddr,
+                                                         adrfam=args.adrfam,
+                                                         trsvcid=args.trsvcid,
+                                                         subnqn=args.subnqn,
+                                                         hostnqn=args.hostnqn,
+                                                         hostaddr=args.hostaddr,
+                                                         hostsvcid=args.hostsvcid,
+                                                         prchk_reftag=args.prchk_reftag,
+                                                         prchk_guard=args.prchk_guard))
 
-    p = subparsers.add_parser('construct_nvme_bdev',
+    p = subparsers.add_parser('bdev_nvme_attach_controller', aliases=['construct_nvme_bdev'],
                               help='Add bdevs with nvme backend')
     p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
     p.add_argument('-t', '--trtype',
@@ -390,7 +390,7 @@ if __name__ == "__main__":
                    help='Enable checking of PI reference tag for I/O processing.', action='store_true')
     p.add_argument('-g', '--prchk-guard',
                    help='Enable checking of PI guard for I/O processing.', action='store_true')
-    p.set_defaults(func=construct_nvme_bdev)
+    p.set_defaults(func=bdev_nvme_attach_controller)
 
     def bdev_nvme_get_controllers(args):
         print_dict(rpc.nvme.bdev_nvme_get_controllers(args.client,

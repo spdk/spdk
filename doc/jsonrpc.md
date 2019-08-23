@@ -293,7 +293,7 @@ Example response:
     "construct_passthru_bdev",
     "bdev_nvme_apply_firmware",
     "delete_nvme_controller",
-    "construct_nvme_bdev",
+    "bdev_nvme_attach_controller",
     "bdev_null_create",
     "bdev_malloc_delete",
     "bdev_malloc_create",
@@ -452,7 +452,7 @@ Example response:
         "name": "Nvme1",
         "traddr": "0000:01:00.0"
       },
-      "method": "construct_nvme_bdev"
+      "method": "bdev_nvme_attach_controller"
     },
     {
       "params": {
@@ -460,7 +460,7 @@ Example response:
         "name": "Nvme2",
         "traddr": "0000:03:00.0"
       },
-      "method": "construct_nvme_bdev"
+      "method": "bdev_nvme_attach_controller"
     },
     {
       "params": {
@@ -1479,7 +1479,7 @@ Example response:
 }
 ~~~
 
-## construct_nvme_bdev {#rpc_construct_nvme_bdev}
+## bdev_nvme_attach_controller {#rpc_bdev_nvme_attach_controller}
 
 Construct @ref bdev_config_nvme
 
@@ -1515,7 +1515,7 @@ Example request:
     "traddr": "0000:0a:00.0"
   },
   "jsonrpc": "2.0",
-  "method": "construct_nvme_bdev",
+  "method": "bdev_nvme_attach_controller",
   "id": 1
 }
 ~~~

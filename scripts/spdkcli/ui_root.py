@@ -164,7 +164,7 @@ class UIRoot(UINode):
 
     @verbose
     def create_nvme_bdev(self, **kwargs):
-        response = rpc.bdev.construct_nvme_bdev(self.client, **kwargs)
+        response = rpc.bdev.bdev_nvme_attach_controller(self.client, **kwargs)
         return response
 
     @verbose

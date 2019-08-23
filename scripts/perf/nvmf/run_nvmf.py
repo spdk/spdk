@@ -496,7 +496,7 @@ class SPDKTarget(Target):
                 bdfs = bdfs[0:req_num_disks]
 
         for i, bdf in enumerate(bdfs):
-            rpc.bdev.construct_nvme_bdev(self.client, name="Nvme%s" % i, trtype="PCIe", traddr=bdf)
+            rpc.bdev.bdev_nvme_attach_controller(self.client, name="Nvme%s" % i, trtype="PCIe", traddr=bdf)
 
         self.log_print("SPDK Bdevs configuration:")
         rpc.client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))

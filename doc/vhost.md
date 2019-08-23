@@ -260,7 +260,7 @@ reactor.c: 424:_spdk_reactor_run: *NOTICE*: Reactor started on core 0 on socket 
 ~~~
 
 ~~~{.sh}
-host:~# ./scripts/rpc.py construct_nvme_bdev -b Nvme0 -t pcie -a 0000:01:00.0
+host:~# ./scripts/rpc.py bdev_nvme_attach_controller -b Nvme0 -t pcie -a 0000:01:00.0
 EAL: PCI device 0000:01:00.0 on NUMA socket 0
 EAL:   probe driver: 8086:953 spdk_nvme
 EAL:   using IOMMU type 1 (Type 1)
