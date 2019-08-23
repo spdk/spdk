@@ -1412,7 +1412,7 @@ static void
 bdev_io_alignment(void)
 {
 	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_opts bdev_opts = {
 		.bdev_io_pool_size = 20,
@@ -1630,7 +1630,7 @@ static void
 bdev_io_alignment_with_boundary(void)
 {
 	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
+	struct spdk_bdev_desc *desc = NULL;
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_opts bdev_opts = {
 		.bdev_io_pool_size = 20,
