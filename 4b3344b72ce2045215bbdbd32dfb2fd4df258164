@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc23d2dc_b34b4420",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-23T17:55:30Z",
+      "side": 1,
+      "message": "rename bdev_iscsi RPCs\n\n(to reduce confusion with the iscsi target RPCs.)",
+      "revId": "4b3344b72ce2045215bbdbd32dfb2fd4df258164",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
