@@ -22,6 +22,30 @@
       "revId": "13120ccff89ef963472563483f0a7af77c91bfaf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "861376cf_9594ea1b",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1015600
+      },
+      "writtenOn": "2019-08-23T07:45:58Z",
+      "side": 1,
+      "message": "base64_neon.c is included in this file. It compiles.",
+      "parentUuid": "965647b5_88740948",
+      "range": {
+        "startLine": 238,
+        "startChar": 60,
+        "endLine": 238,
+        "endChar": 83
+      },
+      "revId": "13120ccff89ef963472563483f0a7af77c91bfaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
