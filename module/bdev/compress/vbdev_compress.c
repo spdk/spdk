@@ -489,7 +489,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		current_src_base = src_iovs[iov_index].iov_base;
 		total_length += src_iovs[iov_index].iov_len;
 		assert(src_mbufs[mbuf_index] != NULL);
-		src_mbufs[iov_index]->userdata = reduce_cb_arg;
+		src_mbufs[mbuf_index]->userdata = reduce_cb_arg;
 		updated_length = src_iovs[iov_index].iov_len;
 		phys_addr = spdk_vtophys((void *)current_src_base, &updated_length);
 
@@ -515,6 +515,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 			}
 			src_mbuf_total++;
 			mbuf_index++;
+			src_mbufs[mbuf_index]->userdata = reduce_cb_arg;
 			current_src_base += updated_length;
 			phys_addr = spdk_vtophys((void *)current_src_base, &remainder);
 			/* assert we don't cross another */
