@@ -16,6 +16,24 @@
       "revId": "3afb8358a709bdb775d572615fd122cd671ab565",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf8389db_7ff6fa30",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-23T08:08:39Z",
+      "side": 1,
+      "message": "That\u0027s an option - but we won\u0027t be able to run scan-build with older DPDKs.\n\nIf you\u0027re concerned about adding those 15 lines in the crypto hot I/O path, then another option could be to add the same code as a function or macro in the utils lib.\n\n#define SPDK_CLANG_ANALYZER_PREINIT_PTR_ARRAY(arr, arr_size, buf_size)\n do {\n  static char dummy_buf[buf_size];\n  int i;\n\n  for (i \u003d 0; i \u003c arr_size; i++) {\n   arr[i] \u003d (void *)dummy_buf;\n  } while (0)\n\n\nThen in the crypto code:\n\n\n#ifdef __clang_analyzer__\n SPDK_CLANG_ANALYZER_PREINIT_PTR_ARRAY(crypto_ops, MAX_ENQUEUE_ARRAY_SIZE, 0x1000);\n#endif",
+      "parentUuid": "2aa685cb_fdb06399",
+      "revId": "3afb8358a709bdb775d572615fd122cd671ab565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
