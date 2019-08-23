@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2cb0e60_6de73667",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-23T22:36:22Z",
+      "side": 1,
+      "message": "rcp -\u003e rpc, but it\u0027s ok",
+      "revId": "082020d764d0cb24ccc5a1badecef6762db45dbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
