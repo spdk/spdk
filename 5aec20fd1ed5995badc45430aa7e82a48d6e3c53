@@ -353,6 +353,24 @@
       "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb36534a_4c858228",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-23T16:48:00Z",
+      "side": 1,
+      "message": "There\u0027s a third case where the bug is. You received 4608 bytes of data into the recv buffer - exactly 64 PDUs containing read commands. Before, you broke out of processing after 32, so 32 get processed and the remaining 32 are sitting in the recv buffer. Then, the initiator doesn\u0027t perform any more operations on that socket, but some other client is busy sending operations on another socket that\u0027s in this poll group. Those 32 commands are stranded until all activity on the poll group ceases, which could be seconds or even minutes later.\n\nBut you\u0027ve changed the logic to now always process the full recv buffer each time, so the bug is gone anyway. I\u0027m curious to know why your new patch is still fast and my proposed version was slow. That doesn\u0027t make sense - the main difference between what I proposed and what you proposed is the logic to break out after 32 PDUs.",
+      "parentUuid": "d059971e_102e7261",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
