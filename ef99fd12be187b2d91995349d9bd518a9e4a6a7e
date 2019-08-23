@@ -16,6 +16,24 @@
       "revId": "ef99fd12be187b2d91995349d9bd518a9e4a6a7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60bf0e4c_5f633f67",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-08-23T12:44:55Z",
+      "side": 1,
+      "message": "Done. Now without extra vars. I kept memset and some refactoring.",
+      "parentUuid": "2dbf1522_1f272227",
+      "revId": "ef99fd12be187b2d91995349d9bd518a9e4a6a7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
