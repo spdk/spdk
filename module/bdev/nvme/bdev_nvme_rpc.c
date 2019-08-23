@@ -421,8 +421,8 @@ static const struct spdk_json_object_decoder rpc_delete_nvme_decoders[] = {
 };
 
 static void
-spdk_rpc_delete_nvme_controller(struct spdk_jsonrpc_request *request,
-				const struct spdk_json_val *params)
+spdk_rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
 {
 	struct rpc_delete_nvme req = {NULL};
 	struct spdk_json_write_ctx *w;
@@ -449,7 +449,8 @@ spdk_rpc_delete_nvme_controller(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_delete_nvme(&req);
 }
-SPDK_RPC_REGISTER("delete_nvme_controller", spdk_rpc_delete_nvme_controller, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_nvme_detach_controller", spdk_rpc_bdev_nvme_detach_controller, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_detach_controller, delete_nvme_controller)
 
 struct rpc_apply_firmware {
 	char *filename;

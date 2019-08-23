@@ -74,7 +74,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	$rpc_py destroy_lvol_store -l lvs_n_0
 	$rpc_py destroy_lvol_bdev lvs_0/lbd_0
 	$rpc_py destroy_lvol_store -l lvs_0
-	$rpc_py delete_nvme_controller Nvme0
+	$rpc_py bdev_nvme_detach_controller Nvme0
 fi
 
 trap - SIGINT SIGTERM EXIT
