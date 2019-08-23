@@ -305,7 +305,7 @@ Example response:
     "set_read_only_lvol_bdev",
     "decouple_parent_lvol_bdev",
     "inflate_lvol_bdev",
-    "rename_lvol_bdev",
+    "bdev_lvol_rename",
     "bdev_lvol_clone",
     "snapshot_lvol_bdev",
     "construct_lvol_bdev",
@@ -5065,7 +5065,7 @@ Example response:
 }
 ~~~
 
-## rename_lvol_bdev {#rpc_rename_lvol_bdev}
+## bdev_lvol_rename {#rpc_bdev_lvol_rename}
 
 Rename a logical volume. New name will rename only the alias of the logical volume.
 
@@ -5083,7 +5083,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "rename_lvol_bdev",
+  "method": "bdev_lvol_rename",
   "id": 1,
   "params": {
     "old_name": "067df606-6dbc-4143-a499-0d05855cb3b8",

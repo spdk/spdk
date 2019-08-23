@@ -100,7 +100,8 @@ def bdev_lvol_clone(client, snapshot_name, clone_name):
     return client.call('bdev_lvol_clone', params)
 
 
-def rename_lvol_bdev(client, old_name, new_name):
+@deprecated_alias('rename_lvol_bdev')
+def bdev_lvol_rename(client, old_name, new_name):
     """Rename a logical volume.
 
     Args:
@@ -111,7 +112,7 @@ def rename_lvol_bdev(client, old_name, new_name):
         'old_name': old_name,
         'new_name': new_name
     }
-    return client.call('rename_lvol_bdev', params)
+    return client.call('bdev_lvol_rename', params)
 
 
 def resize_lvol_bdev(client, name, size):
