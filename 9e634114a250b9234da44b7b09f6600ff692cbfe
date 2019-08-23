@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb8a5d2f_950d277f",
+        "filename": "lib/nvmf/fc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1312,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-23T00:25:02Z",
+      "side": 0,
+      "message": "I fixed this bug.",
+      "range": {
+        "startLine": 1312,
+        "startChar": 3,
+        "endLine": 1312,
+        "endChar": 38
+      },
+      "revId": "9e634114a250b9234da44b7b09f6600ff692cbfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
