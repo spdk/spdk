@@ -219,5 +219,5 @@ function delete_nvme() {
 }
 
 function add_nvme() {
-    $rpc_py construct_nvme_bdev -b $1 -t PCIe -a $2
+    $rpc_py bdev_nvme_attach_controller -b $1 -t PCIe -a $2
 }
