@@ -1,3 +1,6 @@
+from .helpers import deprecated_alias
+
+
 def construct_lvol_store(client, bdev_name, lvs_name, cluster_sz=None, clear_method=None):
     """Construct a logical volume store.
 
@@ -79,7 +82,8 @@ def snapshot_lvol_bdev(client, lvol_name, snapshot_name):
     return client.call('snapshot_lvol_bdev', params)
 
 
-def clone_lvol_bdev(client, snapshot_name, clone_name):
+@deprecated_alias('clone_lvol_bdev')
+def bdev_lvol_clone(client, snapshot_name, clone_name):
     """Create a logical volume based on a snapshot.
 
     Args:
@@ -93,7 +97,7 @@ def clone_lvol_bdev(client, snapshot_name, clone_name):
         'snapshot_name': snapshot_name,
         'clone_name': clone_name
     }
-    return client.call('clone_lvol_bdev', params)
+    return client.call('bdev_lvol_clone', params)
 
 
 def rename_lvol_bdev(client, old_name, new_name):

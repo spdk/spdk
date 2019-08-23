@@ -1234,7 +1234,7 @@ class TestCases(object):
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         # Create clone of snapshot and check if it ends with success
-        fail_count += self.c.clone_lvol_bdev(self.lvs_name + "/" + snapshot_name, clone_name)
+        fail_count += self.c.bdev_lvol_clone(self.lvs_name + "/" + snapshot_name, clone_name)
         clone_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name)
 
         # Try to destroy snapshot with clones and check if it fails
@@ -1296,7 +1296,7 @@ class TestCases(object):
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
-        fail_count += self.c.clone_lvol_bdev(self.lvs_name + "/" + snapshot_name, clone_name)
+        fail_count += self.c.bdev_lvol_clone(self.lvs_name + "/" + snapshot_name, clone_name)
         clone_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name)
 
         fail_count += self.c.snapshot_lvol_bdev(clone_bdev['name'], snapshot_name2)
@@ -1357,7 +1357,7 @@ class TestCases(object):
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
-        fail_count += self.c.clone_lvol_bdev(self.lvs_name + "/" + snapshot_name, clone_name)
+        fail_count += self.c.bdev_lvol_clone(self.lvs_name + "/" + snapshot_name, clone_name)
         clone_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name)
 
         fail_count += self.c.snapshot_lvol_bdev(clone_bdev['name'], snapshot_name2)
@@ -2378,19 +2378,19 @@ class TestCases(object):
 
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev)
         # Create clone of lvol bdev and check if it fails
-        rv = self.c.clone_lvol_bdev(lvol_bdev['name'], clone_name)
+        rv = self.c.bdev_lvol_clone(lvol_bdev['name'], clone_name)
         if rv == 0:
             print("ERROR: Creating clone of lvol bdev ended with unexpected success")
             fail_count += 1
         # Create snapshot of lvol bdev
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
         # Create again clone of lvol bdev and check if it fails
-        rv = self.c.clone_lvol_bdev(lvol_bdev['name'], clone_name)
+        rv = self.c.bdev_lvol_clone(lvol_bdev['name'], clone_name)
         if rv == 0:
             print("ERROR: Creating clone of lvol bdev ended with unexpected success")
             fail_count += 1
         # Create clone of snapshot and check if it ends with success
-        rv = self.c.clone_lvol_bdev(self.lvs_name + "/" + snapshot_name, clone_name)
+        rv = self.c.bdev_lvol_clone(self.lvs_name + "/" + snapshot_name, clone_name)
         if rv != 0:
             print("ERROR: Creating clone of snapshot ended with unexpected failure")
             fail_count += 1
@@ -2449,8 +2449,8 @@ class TestCases(object):
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
         # Create two clones of created snapshot
-        fail_count += self.c.clone_lvol_bdev(snapshot_bdev['name'], clone_name0)
-        fail_count += self.c.clone_lvol_bdev(snapshot_bdev['name'], clone_name1)
+        fail_count += self.c.bdev_lvol_clone(snapshot_bdev['name'], clone_name0)
+        fail_count += self.c.bdev_lvol_clone(snapshot_bdev['name'], clone_name1)
 
         lvol_clone0 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name0)
         fail_count += self.c.start_nbd_disk(lvol_clone0['name'], nbd_name[1])
@@ -2518,7 +2518,7 @@ class TestCases(object):
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         # Create clone of created snapshot
-        fail_count += self.c.clone_lvol_bdev(snapshot_bdev['name'], clone_name0)
+        fail_count += self.c.bdev_lvol_clone(snapshot_bdev['name'], clone_name0)
 
         # Get current bdevs configuration
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
@@ -2874,7 +2874,7 @@ class TestCases(object):
         fail_count += self.run_fio_test(nbd_name0, 0, size, "write", "0xcc", 1)
 
         # Create clone of lvol set to read only
-        rv = self.c.clone_lvol_bdev(lvol_bdev['name'], clone_name)
+        rv = self.c.bdev_lvol_clone(lvol_bdev['name'], clone_name)
         if rv != 0:
             print("ERROR: Creating clone of snapshot ended with unexpected failure")
             fail_count += 1

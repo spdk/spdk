@@ -51,7 +51,7 @@ sleep 1
 # Perform some operations on the logical volume
 snapshot=$($rpc_py snapshot_lvol_bdev $lvol "MY_SNAPSHOT")
 $rpc_py resize_lvol_bdev $lvol $LVOL_BDEV_FINAL_SIZE
-clone=$($rpc_py clone_lvol_bdev $snapshot "MY_CLONE")
+clone=$($rpc_py bdev_lvol_clone $snapshot "MY_CLONE")
 $rpc_py inflate_lvol_bdev $clone
 
 # Wait for I/O to complete

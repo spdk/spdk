@@ -483,25 +483,25 @@ cleanup:
 
 SPDK_RPC_REGISTER("snapshot_lvol_bdev", spdk_rpc_snapshot_lvol_bdev, SPDK_RPC_RUNTIME)
 
-struct rpc_clone_lvol_bdev {
+struct rpc_bdev_lvol_clone {
 	char *snapshot_name;
 	char *clone_name;
 };
 
 static void
-free_rpc_clone_lvol_bdev(struct rpc_clone_lvol_bdev *req)
+free_rpc_bdev_lvol_clone(struct rpc_bdev_lvol_clone *req)
 {
 	free(req->snapshot_name);
 	free(req->clone_name);
 }
 
-static const struct spdk_json_object_decoder rpc_clone_lvol_bdev_decoders[] = {
-	{"snapshot_name", offsetof(struct rpc_clone_lvol_bdev, snapshot_name), spdk_json_decode_string},
-	{"clone_name", offsetof(struct rpc_clone_lvol_bdev, clone_name), spdk_json_decode_string, true},
+static const struct spdk_json_object_decoder rpc_bdev_lvol_clone_decoders[] = {
+	{"snapshot_name", offsetof(struct rpc_bdev_lvol_clone, snapshot_name), spdk_json_decode_string},
+	{"clone_name", offsetof(struct rpc_bdev_lvol_clone, clone_name), spdk_json_decode_string, true},
 };
 
 static void
-_spdk_rpc_clone_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+_spdk_rpc_bdev_lvol_clone_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -521,17 +521,17 @@ invalid:
 }
 
 static void
-spdk_rpc_clone_lvol_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_lvol_clone(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
-	struct rpc_clone_lvol_bdev req = {};
+	struct rpc_bdev_lvol_clone req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Cloning blob\n");
 
-	if (spdk_json_decode_object(params, rpc_clone_lvol_bdev_decoders,
-				    SPDK_COUNTOF(rpc_clone_lvol_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_clone_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_clone_decoders),
 				    &req)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -553,13 +553,14 @@ spdk_rpc_clone_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_create_clone(lvol, req.clone_name, _spdk_rpc_clone_lvol_bdev_cb, request);
+	vbdev_lvol_create_clone(lvol, req.clone_name, _spdk_rpc_bdev_lvol_clone_cb, request);
 
 cleanup:
-	free_rpc_clone_lvol_bdev(&req);
+	free_rpc_bdev_lvol_clone(&req);
 }
 
-SPDK_RPC_REGISTER("clone_lvol_bdev", spdk_rpc_clone_lvol_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_clone", spdk_rpc_bdev_lvol_clone, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_clone, clone_lvol_bdev)
 
 struct rpc_rename_lvol_bdev {
 	char *old_name;

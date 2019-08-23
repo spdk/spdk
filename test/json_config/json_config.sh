@@ -204,7 +204,7 @@ function create_bdev_subsystem_config() {
 		tgt_rpc construct_lvol_bdev -l lvs_test lvol0 32
 		tgt_rpc construct_lvol_bdev -l lvs_test -t lvol1 32
 		tgt_rpc snapshot_lvol_bdev     lvs_test/lvol0 snapshot0
-		tgt_rpc clone_lvol_bdev        lvs_test/snapshot0 clone0
+		tgt_rpc bdev_lvol_clone        lvs_test/snapshot0 clone0
 
 		expected_notifications+=(
 			"bdev_register:$RE_UUID"
