@@ -444,15 +444,16 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
     return client.call('bdev_nvme_attach_controller', params)
 
 
-def delete_nvme_controller(client, name):
-    """Remove NVMe controller from the system.
+@deprecated_alias('delete_nvme_controller')
+def bdev_nvme_detach_controller(client, name):
+    """Detach NVMe controller and delete any associated bdevs.
 
     Args:
         name: controller name
     """
 
     params = {'name': name}
-    return client.call('delete_nvme_controller', params)
+    return client.call('bdev_nvme_detach_controller', params)
 
 
 @deprecated_alias('construct_rbd_bdev')
