@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "930c33ab_832dcfa5",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-08-23T06:35:31Z",
+      "side": 1,
+      "message": "This command should also return the LBA on which data was ultimately written to (probably in bdev_io?)",
+      "revId": "cc3566d5ef017421f464aec003dd381bc61772ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e2e2355d_0b9759df",
         "filename": "lib/bdev/zdev.c",
         "patchSetId": 9
