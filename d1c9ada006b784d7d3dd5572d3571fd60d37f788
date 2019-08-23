@@ -22,6 +22,30 @@
       "revId": "d1c9ada006b784d7d3dd5572d3571fd60d37f788",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33cd2846_afa36254",
+        "filename": "module/bdev/null/bdev_null.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-08-23T13:15:17Z",
+      "side": 1,
+      "message": "Is DIF in the end a more common configuration?",
+      "parentUuid": "45891a49_b84c34d3",
+      "range": {
+        "startLine": 482,
+        "startChar": 27,
+        "endLine": 482,
+        "endChar": 31
+      },
+      "revId": "d1c9ada006b784d7d3dd5572d3571fd60d37f788",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
