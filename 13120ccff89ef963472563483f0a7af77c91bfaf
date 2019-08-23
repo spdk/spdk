@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "965647b5_88740948",
+        "filename": "lib/util/base64.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-23T07:11:06Z",
+      "side": 1,
+      "message": "I\u0027m kind of lost here. base64_dec_table_neon64 is defined as static in a different .c file.\n\nDoes this really compile?",
+      "range": {
+        "startLine": 238,
+        "startChar": 60,
+        "endLine": 238,
+        "endChar": 83
+      },
+      "revId": "13120ccff89ef963472563483f0a7af77c91bfaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
