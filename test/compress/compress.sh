@@ -23,7 +23,7 @@ bdev_svc_pid=$!
 trap 'killprocess $bdev_svc_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdev_svc_pid
 bdf=$(iter_pci_class_code 01 08 02 | head -1)
-$rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
+$rpc_py bdev_nvme_attach_controller -b "Nvme0" -t "pcie" -a $bdf
 lvs_u=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0)
 $rpc_py bdev_lvol_create -t -u $lvs_u lv0 100
 # this will force isal_pmd as some of the CI systems need a qat driver update
@@ -39,7 +39,7 @@ bdevio_pid=$!
 trap 'killprocess $bdevio_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevio_pid
 $rpc_py set_compress_pmd -p 2
-$rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
+$rpc_py bdev_nvme_attach_controller -b "Nvme0" -t "pcie" -a $bdf
 waitforbdev $compress_bdev
 $rootdir/test/bdev/bdevio/tests.py perform_tests
 trap - SIGINT SIGTERM EXIT
@@ -59,7 +59,7 @@ bdevperf_pid=$!
 trap 'killprocess $bdevperf_pid; compress_err_cleanup; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid
 $rpc_py set_compress_pmd -p 2
-$rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
+$rpc_py bdev_nvme_attach_controller -b "Nvme0" -t "pcie" -a $bdf
 waitforbdev $compress_bdev
 $rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
 

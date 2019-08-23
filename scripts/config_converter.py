@@ -10,7 +10,7 @@ bdev_dict = OrderedDict()
 bdev_dict["set_bdev_options"] = []
 bdev_dict["construct_split_vbdev"] = []
 bdev_dict["bdev_nvme_set_options"] = []
-bdev_dict["construct_nvme_bdev"] = []
+bdev_dict["bdev_nvme_attach_controller"] = []
 bdev_dict["bdev_nvme_set_hotplug"] = []
 bdev_dict["bdev_malloc_create"] = []
 bdev_dict["bdev_aio_create"] = []
@@ -230,7 +230,7 @@ def get_nvme_bdev_json(config, section):
                     "name": nvme_name,
                     "traddr": traddr
                 },
-                "method": "construct_nvme_bdev"
+                "method": "bdev_nvme_attach_controller"
             })
         else:
             set_param(params, option, value)
