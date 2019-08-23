@@ -210,7 +210,7 @@ struct rpc_create_nvme_bdev_ctx {
 };
 
 static void
-spdk_rpc_construct_nvme_bdev_done(void *cb_ctx, int rc)
+spdk_rpc_bdev_nvme_attach_controller_done(void *cb_ctx, int rc)
 {
 	struct rpc_create_nvme_bdev_ctx *ctx = cb_ctx;
 	struct spdk_jsonrpc_request *request = ctx->request;
@@ -236,7 +236,7 @@ exit:
 }
 
 static void
-spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_create_nvme_bdev_ctx *ctx;
@@ -312,7 +312,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
 	rc = spdk_bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, &ctx->count, ctx->req.hostnqn,
-				   prchk_flags, spdk_rpc_construct_nvme_bdev_done, ctx);
+				   prchk_flags, spdk_rpc_bdev_nvme_attach_controller_done, ctx);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -324,7 +324,8 @@ cleanup:
 	free_rpc_construct_nvme(&ctx->req);
 	free(ctx);
 }
-SPDK_RPC_REGISTER("construct_nvme_bdev", spdk_rpc_construct_nvme_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_nvme_attach_controller", spdk_rpc_bdev_nvme_attach_controller, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_attach_controller, construct_nvme_bdev)
 
 static void
 spdk_rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
