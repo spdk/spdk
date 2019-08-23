@@ -44,6 +44,9 @@
 #define BLOCK_SIZE 4096
 
 /* Globals */
+struct io_output *g_io_output = NULL;
+uint32_t g_io_output_index;
+uint32_t g_max_io_size;
 uint32_t g_io_comp_status;
 uint8_t g_rpc_err;
 uint8_t g_json_decode_obj_construct;
@@ -54,6 +57,16 @@ struct waitq g_io_waitq;
 void *g_rpc_req;
 uint32_t g_rpc_req_size;
 static struct spdk_thread *g_thread;
+
+struct io_output {
+	struct spdk_bdev_desc       *desc;
+	struct spdk_io_channel      *ch;
+	uint64_t                    offset_blocks;
+	uint64_t                    num_blocks;
+	spdk_bdev_io_completion_cb  cb;
+	void                        *cb_arg;
+	enum spdk_bdev_io_type      iotype;
+};
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
@@ -78,6 +91,12 @@ DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bde
 	    (void *)1);
 
 static void
+set_test_opts(void)
+{
+	g_max_io_size = 1024;
+}
+
+static void
 set_globals(void)
 {
 	g_rpc_err = 0;
@@ -85,6 +104,9 @@ set_globals(void)
 	TAILQ_INIT(&g_bdev_list);
 	TAILQ_INIT(&g_io_waitq);
 
+	g_io_output = calloc(g_max_io_size, sizeof(struct io_output));
+	SPDK_CU_ASSERT_FATAL(g_io_output != NULL);
+	g_io_output_index = 0;
 	g_rpc_req = NULL;
 	g_rpc_req_size = 0;
 }
@@ -92,7 +114,20 @@ set_globals(void)
 static void
 reset_globals(void)
 {
+	if (g_io_output) {
+		free(g_io_output);
+		g_io_output = NULL;
+	}
+
 	g_rpc_req = NULL;
+}
+
+void
+spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
+{
+	if (bdev_io) {
+		free(bdev_io);
+	}
 }
 
 int
@@ -279,6 +314,55 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 				     int error_code, const char *fmt, ...)
 {
 	g_rpc_err = 1;
+}
+
+static void
+set_io_output(struct io_output *output,
+	      struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	      uint64_t offset_blocks, uint64_t num_blocks,
+	      spdk_bdev_io_completion_cb cb, void *cb_arg,
+	      enum spdk_bdev_io_type iotype)
+{
+	output->desc = desc;
+	output->ch = ch;
+	output->offset_blocks = offset_blocks;
+	output->num_blocks = num_blocks;
+	output->cb = cb;
+	output->cb_arg = cb_arg;
+	output->iotype = iotype;
+}
+
+int
+spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				struct iovec *iov, int iovcnt, void *md,
+				uint64_t offset_blocks, uint64_t num_blocks,
+				spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct io_output *output = &g_io_output[g_io_output_index];
+	struct spdk_bdev_io *child_io;
+
+	SPDK_CU_ASSERT_FATAL(g_io_output_index < (g_max_io_size));
+
+	set_io_output(output, desc, ch, offset_blocks, num_blocks, cb, cb_arg,
+		      SPDK_BDEV_IO_TYPE_WRITE);
+	g_io_output_index++;
+
+	child_io = calloc(1, sizeof(struct spdk_bdev_io));
+	SPDK_CU_ASSERT_FATAL(child_io != NULL);
+	cb(child_io, true, cb_arg);
+
+	return 0;
+}
+
+int
+spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			struct iovec *iov, int iovcnt,
+			uint64_t offset_blocks, uint64_t num_blocks,
+			spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+
+	return spdk_bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks, num_blocks,
+					       cb, cb_arg);
 }
 
 static void
@@ -552,6 +636,7 @@ int main(int argc, char **argv)
 	spdk_set_thread(g_thread);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
+	set_test_opts();
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 
