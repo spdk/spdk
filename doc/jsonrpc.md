@@ -306,7 +306,7 @@ Example response:
     "decouple_parent_lvol_bdev",
     "inflate_lvol_bdev",
     "rename_lvol_bdev",
-    "clone_lvol_bdev",
+    "bdev_lvol_clone",
     "snapshot_lvol_bdev",
     "construct_lvol_bdev",
     "destroy_lvol_store",
@@ -5024,7 +5024,7 @@ Example response:
 }
 ~~~
 
-## clone_lvol_bdev {#rpc_clone_lvol_bdev}
+## bdev_lvol_clone {#rpc_bdev_lvol_clone}
 
 Create a logical volume based on a snapshot.
 
@@ -5046,7 +5046,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0"
-  "method": "clone_lvol_bdev",
+  "method": "bdev_lvol_clone",
   "id": 1,
   "params": {
     "snapshot_name": "cc8d7fdf-7865-4d1f-9fc6-35da8e368670",

@@ -1181,15 +1181,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('snapshot_name', help='lvol snapshot name')
     p.set_defaults(func=snapshot_lvol_bdev)
 
-    def clone_lvol_bdev(args):
-        print_json(rpc.lvol.clone_lvol_bdev(args.client,
+    def bdev_lvol_clone(args):
+        print_json(rpc.lvol.bdev_lvol_clone(args.client,
                                             snapshot_name=args.snapshot_name,
                                             clone_name=args.clone_name))
 
-    p = subparsers.add_parser('clone_lvol_bdev', help='Create a clone of an lvol snapshot')
+    p = subparsers.add_parser('bdev_lvol_clone', aliases=['clone_lvol_bdev'],
+                              help='Create a clone of an lvol snapshot')
     p.add_argument('snapshot_name', help='lvol snapshot name')
     p.add_argument('clone_name', help='lvol clone name')
-    p.set_defaults(func=clone_lvol_bdev)
+    p.set_defaults(func=bdev_lvol_clone)
 
     def rename_lvol_bdev(args):
         rpc.lvol.rename_lvol_bdev(args.client,

@@ -133,7 +133,7 @@ snapshot_lvol_bdev [-h] lvol_name snapshot_name
     Create a snapshot with snapshot_name of a given lvol bdev.
     optional arguments:
     -h, --help  show help
-clone_lvol_bdev [-h] snapshot_name clone_name
+bdev_lvol_clone [-h] snapshot_name clone_name
     Create a clone with clone_name of a given lvol snapshot.
     optional arguments:
     -h, --help  show help
