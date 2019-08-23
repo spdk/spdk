@@ -335,6 +335,24 @@
       "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d059971e_102e7261",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2829,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-23T02:42:03Z",
+      "side": 1,
+      "message": "Yes, I -rerun this benchmark, it should practice well on my platform (should use the another patch, to remove the copy, the performance is good).\n\nAs I mentioned, the issue you mentioned should not happen.\n\nLet me explain more: \nthere will be two cases:\n1 The half data is stored in the big recv buffer, and still wait for the another half buffer. So there will be epoll_wait in another round. If the initiator intentionally do not send the another half data, we will have timeout or keep alive policy to track.\n\n2 The data is read to the big recv buffer, but the data should be handled in the central managed group based sharing buffer to do I/O. Since we already put this as the request in the data buf wait list, so next round, it will be executed (see the code in the XXX_group_poll) function, so it will be executed. \n\nSo for what ever case, we will not hang, and there will be no starvation cases.",
+      "parentUuid": "a7cf759c_0505aa81",
+      "revId": "5aec20fd1ed5995badc45430aa7e82a48d6e3c53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
