@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d000d3a_d145414a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1376,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-23T07:46:15Z",
+      "side": 0,
+      "message": "Was this line moved on purpose?",
+      "range": {
+        "startLine": 1376,
+        "startChar": 1,
+        "endLine": 1376,
+        "endChar": 38
+      },
+      "revId": "8579dde557ae7d9e6ad5752026dddb1e61271004",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
