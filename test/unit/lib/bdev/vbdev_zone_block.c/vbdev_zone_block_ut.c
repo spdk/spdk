@@ -49,6 +49,8 @@ uint8_t g_rpc_err;
 uint8_t g_json_decode_obj_construct;
 TAILQ_HEAD(bdev, spdk_bdev);
 struct bdev g_bdev_list;
+TAILQ_HEAD(waitq, spdk_bdev_io_wait_entry);
+struct waitq g_io_waitq;
 void *g_rpc_req;
 uint32_t g_rpc_req_size;
 static struct spdk_thread *g_thread;
@@ -81,6 +83,7 @@ set_globals(void)
 	g_rpc_err = 0;
 	g_io_comp_status = 0;
 	TAILQ_INIT(&g_bdev_list);
+	TAILQ_INIT(&g_io_waitq);
 
 	g_rpc_req = NULL;
 	g_rpc_req_size = 0;
@@ -168,6 +171,17 @@ spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 {
 	CU_ASSERT(bdev->internal.claim_module != NULL);
 	bdev->internal.claim_module = NULL;
+}
+
+int
+spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			struct spdk_bdev_io_wait_entry *entry)
+{
+	CU_ASSERT(bdev == entry->bdev);
+	CU_ASSERT(entry->cb_fn != NULL);
+	CU_ASSERT(entry->cb_arg != NULL);
+	TAILQ_INSERT_TAIL(&g_io_waitq, entry, link);
+	return 0;
 }
 
 void

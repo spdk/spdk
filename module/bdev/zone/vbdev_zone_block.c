@@ -46,6 +46,7 @@ static int vbdev_block_get_ctx_size(void);
 static void vbdev_block_finish(void);
 static int vbdev_block_config_json(struct spdk_json_write_ctx *w);
 static void vbdev_block_examine(struct spdk_bdev *bdev);
+static void vbdev_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 static struct spdk_bdev_module bdev_zoned_if = {
 	.name = "bdev_zoned_block",
@@ -73,6 +74,7 @@ static TAILQ_HEAD(, bdev_names) g_bdev_names = TAILQ_HEAD_INITIALIZER(g_bdev_nam
 
 struct vbdev_zone {
 	struct spdk_bdev_zone_info zone_info;
+	size_t zone_id;
 };
 
 /* List of block vbdevs and associated info for each. */
@@ -188,9 +190,114 @@ vbdev_block_destruct(void *ctx)
 }
 
 static void
+vbdev_block_resubmit_io(void *arg)
+{
+	struct spdk_bdev_io *bdev_io = (struct spdk_bdev_io *)arg;
+	struct block_vbdev_io *io_ctx = (struct block_vbdev_io *)bdev_io->driver_ctx;
+
+	vbdev_block_submit_request(io_ctx->ch, bdev_io);
+}
+
+static void
+vbdev_block_queue_io(struct spdk_bdev_io *bdev_io)
+{
+	struct block_vbdev_io *io_ctx = (struct block_vbdev_io *)bdev_io->driver_ctx;
+	int rc;
+
+	io_ctx->bdev_io_wait.bdev = bdev_io->bdev;
+	io_ctx->bdev_io_wait.cb_fn = vbdev_block_resubmit_io;
+	io_ctx->bdev_io_wait.cb_arg = bdev_io;
+
+	rc = spdk_bdev_queue_io_wait(bdev_io->bdev, io_ctx->ch, &io_ctx->bdev_io_wait);
+	if (rc != 0) {
+		SPDK_ERRLOG("Queue io failed in vbdev_block_queue_io, rc=%d.\n", rc);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static struct vbdev_zone *
+vbdev_get_zone(struct vbdev_block *bdev_node, uint64_t start_lba)
+{
+	struct vbdev_zone *zone = NULL;
+	size_t index = start_lba / bdev_node->bdev.zone_size;
+
+	if (index >= bdev_node->num_zones) {
+		return NULL;
+	}
+
+	if (bdev_node->zone_buf[index].zone_info.zone_id == start_lba) {
+		zone = &bdev_node->zone_buf[index];
+	}
+
+	return zone;
+}
+
+static int
+vbdev_block_get_zone_info(struct vbdev_block *bdev_node, struct spdk_bdev_io *bdev_io)
+{
+	struct vbdev_zone *zone;
+	void *buffer = bdev_io->u.zdev.buf;
+	size_t i, zone_id;
+
+	zone = vbdev_get_zone(bdev_node, bdev_io->u.zdev.zone_id);
+	if (!zone) {
+		return -EINVAL;
+	}
+
+	/* User can request info from more zones than exist, need to check both internal and user boundaries
+	 */
+	for (i = 0, zone_id = zone->zone_id; i < bdev_io->u.zdev.num_zones &&
+	     zone_id < bdev_node->num_zones; i++, zone_id++) {
+		zone = &bdev_node->zone_buf[zone_id];
+		memcpy(((struct spdk_bdev_zone_info *)buffer) + i, &zone->zone_info,
+		       sizeof(struct spdk_bdev_zone_info));
+	}
+
+	return 0;
+}
+
+static int
+vbdev_block_zone_management(struct vbdev_block *bdev_node, struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->u.zdev.zone_action) {
+	case SPDK_BDEV_ZONE_INFO:
+		return vbdev_block_get_zone_info(bdev_node, bdev_io);
+	default:
+		return -EINVAL;
+	}
+}
+
+static void
 vbdev_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	struct vbdev_block *bdev_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_block, bdev);
+	struct block_vbdev_io *io_ctx = (struct block_vbdev_io *)bdev_io->driver_ctx;
+	int rc = 0;
+	bool passed_request = true;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+		rc = vbdev_block_zone_management(bdev_node, bdev_io);
+		passed_request = false;
+		break;
+	default:
+		SPDK_ERRLOG("vbdev_block: unknown I/O type %d\n", bdev_io->type);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	if (rc != 0) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("No memory, start to queue io for vbdev.\n");
+			io_ctx->ch = ch;
+			vbdev_block_queue_io(bdev_io);
+		} else {
+			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	} else if (!passed_request) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	}
 }
 
 static bool
@@ -337,6 +444,7 @@ block_vbdev_init_zone_info(struct vbdev_block *bdev_node)
 		zone->zone_info.write_pointer = zone->zone_info.zone_id;
 		zone->zone_info.capacity = bdev_node->bdev.zone_size;
 		zone->zone_info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
+		zone->zone_id = i;
 		/* TODO switch to these after testing */
 		/* zone->zone_info.write_pointer = zone->zone_info.zone_id + zone->zone_info.capacity; */
 		/* zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL; */
