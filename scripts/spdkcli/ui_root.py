@@ -168,8 +168,8 @@ class UIRoot(UINode):
         return response
 
     @verbose
-    def delete_nvme_controller(self, **kwargs):
-        rpc.bdev.delete_nvme_controller(self.client, **kwargs)
+    def bdev_nvme_detach_controller(self, **kwargs):
+        rpc.bdev.bdev_nvme_detach_controller(self.client, **kwargs)
 
     @verbose
     def bdev_null_create(self, **kwargs):
