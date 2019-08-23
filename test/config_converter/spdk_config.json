@@ -46,7 +46,7 @@
             "name": "Nvme0",
             "traddr": "0000:00:04.0"
           },
-          "method": "construct_nvme_bdev"
+          "method": "bdev_nvme_attach_controller"
         },
         {
           "params": {

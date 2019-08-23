@@ -119,11 +119,11 @@ function migration_tc2_configure_vhost()
 	$rpc_nvmf nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Nvme0n1
 	$rpc_nvmf nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $nvmf_target_ip -s 4420
 
-	$rpc_0 construct_nvme_bdev -b Nvme0 -t rdma -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
+	$rpc_0 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
 	$rpc_0 construct_vhost_scsi_controller $incoming_vm_ctrlr
 	$rpc_0 add_vhost_scsi_lun $incoming_vm_ctrlr 0 Nvme0n1
 
-	$rpc_1 construct_nvme_bdev -b Nvme0 -t rdma -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
+	$rpc_1 bdev_nvme_attach_controller -b Nvme0 -t rdma -f ipv4 -a $nvmf_target_ip -s 4420 -n "nqn.2016-06.io.spdk:cnode1"
 	$rpc_1 construct_vhost_scsi_controller $target_vm_ctrlr
 	$rpc_1 add_vhost_scsi_lun $target_vm_ctrlr 0 Nvme0n1
 

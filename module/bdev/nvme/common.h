@@ -56,7 +56,7 @@ struct nvme_bdev_ctrlr {
 	bool				destruct;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
-	 * through construct_nvme_bdev RPC or .INI config file. Hot added
+	 * through bdev_nvme_attach_controller RPC or .INI config file. Hot added
 	 * NVMe controllers are not included.
 	 */
 	uint32_t			prchk_flags;
