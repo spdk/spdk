@@ -70,6 +70,30 @@
       "revId": "d1c9ada006b784d7d3dd5572d3571fd60d37f788",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b48668a2_9e111807",
+        "filename": "module/bdev/null/bdev_null.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-08-23T14:17:12Z",
+      "side": 1,
+      "message": "Done. False is the default now.",
+      "parentUuid": "2e700ffa_8a819a00",
+      "range": {
+        "startLine": 482,
+        "startChar": 27,
+        "endLine": 482,
+        "endChar": 31
+      },
+      "revId": "d1c9ada006b784d7d3dd5572d3571fd60d37f788",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
