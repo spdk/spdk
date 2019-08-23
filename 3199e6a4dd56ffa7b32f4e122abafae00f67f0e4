@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "d710ea35_ef0ed3d0",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-23T07:31:42Z",
+      "side": 1,
+      "message": "Yes, unregister can last really long because all descriptors must be closed manually before we get to unregister_cb(), but those who are responsible for closing should respect the fact that bdev is not in READY state.\nBut I don\u0027t see how that is connected to vbdev_ocf_mngt_start(), the only thing calling it will change is that concurrent management operation during unregister will be rejected by vbdev_ocf_mngt_* interface, but that is ok.\nSo what is the problem with using vbdev_ocf_mngt_start() for a long operation like this?",
+      "parentUuid": "a0c2a75f_de787c23",
+      "range": {
+        "startLine": 376,
+        "startChar": 1,
+        "endLine": 377,
+        "endChar": 51
+      },
+      "revId": "3199e6a4dd56ffa7b32f4e122abafae00f67f0e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b2f9d951_153a31f8",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 1
@@ -178,6 +202,30 @@
       "side": 1,
       "message": "I think that we should have the same approach to handle clean/dirty shutdown regardless state of cache. These two function aren\u0027t consuming many lines, so my recommendation is leave this as is in this patch for better predictability behavior of rpc delete command.",
       "parentUuid": "b2f9d951_153a31f8",
+      "range": {
+        "startLine": 436,
+        "startChar": 1,
+        "endLine": 437,
+        "endChar": 34
+      },
+      "revId": "3199e6a4dd56ffa7b32f4e122abafae00f67f0e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40b65366_1247cae9",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-23T07:31:42Z",
+      "side": 1,
+      "message": "I am ok with leaving as is, but I am still not sure if this gives us more predictable behaviour.\nI think that the value of having same approach would be greater if paths with different vbdev-\u003estarted were more simillar, but they are very different regardless of approach. For instance, neither ocf cache nor core are actually touched if vbdev-\u003estarted \u003d\u003d false because ocf cache was not loaded or created. If vbdev-\u003estarted \u003d\u003d false, we basically modify only the internal structures of this module.",
+      "parentUuid": "f5ad0415_b0913153",
       "range": {
         "startLine": 436,
         "startChar": 1,
