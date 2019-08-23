@@ -110,6 +110,8 @@ struct spdk_vpp_session {
 	uint64_t handle;
 	uint32_t context;
 
+	uint64_t counter;
+
 	/* Listener fields */
 	pthread_mutex_t accept_session_lock;
 	uint32_t *accept_session_index_fifo;
@@ -1059,6 +1061,12 @@ _spdk_vpp_session_read_ready(struct spdk_vpp_session *session)
 		 */
 		return true;
 	}
+
+	session->counter++;
+	if (session->counter < 1000) {
+		return false;
+	}
+	session->counter = 0;
 
 	if (session->app_session.session_state == VPP_SESSION_STATE_READY) {
 		rx_fifo = session->app_session.rx_fifo;
