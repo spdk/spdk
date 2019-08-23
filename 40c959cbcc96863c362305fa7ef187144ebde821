@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d30da6f_16f4cba8",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-23T12:19:19Z",
+      "side": 0,
+      "message": "Probably somehwhere here you should add a check - SPDK_VAGRANT_EMULATOR vs SPDK_VAGRANT_PROVIDER.\nWe only want to use emulator option for libvirt provider. For Virtualbox let\u0027s always use default one.",
+      "revId": "40c959cbcc96863c362305fa7ef187144ebde821",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68707388_a62f4f36",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-23T12:19:19Z",
+      "side": 1,
+      "message": "If you follow my advice to use empty string (or don\u0027t set the env variable) as default value for emulator, then you should probably check if vmemulator is a empty string.\nIf it\u0027s empty then don\u0027t set libvirt.emulator, only set it if vmemulator contains emulator path.",
+      "revId": "866a67acce292b436f06c2f0705010732aea72af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d9f477a_d2c090dc",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-23T12:19:19Z",
+      "side": 1,
+      "message": "QEMU",
+      "range": {
+        "startLine": 30,
+        "startChar": 88,
+        "endLine": 30,
+        "endChar": 95
+      },
+      "revId": "866a67acce292b436f06c2f0705010732aea72af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "988b8000_01e01381",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-23T12:19:19Z",
+      "side": 1,
+      "message": "qemu-emulator-dir, not vhost.\nWhy do we need to point to a directory instead of just a binary?",
+      "range": {
+        "startLine": 30,
+        "startChar": 11,
+        "endLine": 30,
+        "endChar": 29
+      },
+      "revId": "866a67acce292b436f06c2f0705010732aea72af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4cedb13_700906e4",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-23T12:19:19Z",
+      "side": 1,
+      "message": "path",
+      "range": {
+        "startLine": 30,
+        "startChar": 51,
+        "endLine": 30,
+        "endChar": 57
+      },
+      "revId": "866a67acce292b436f06c2f0705010732aea72af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f821e4e4_f3a610fc",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-23T12:19:19Z",
+      "side": 1,
+      "message": "Is it the default emulator when using Vagrant to run a VM using libvirt provider? kvm-spices?\nI think it always was /usr/bin/qemu-kvm.\n\nI\u0027d leave this variable empty or unset by default.",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 43
+      },
+      "revId": "866a67acce292b436f06c2f0705010732aea72af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
