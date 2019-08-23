@@ -44,6 +44,7 @@
 #define BLOCK_SIZE 4096
 
 /* Globals */
+uint64_t g_block_cnt;
 struct io_output *g_io_output = NULL;
 uint32_t g_max_io_size;
 uint32_t g_io_output_index;
@@ -93,11 +94,12 @@ set_test_opts(void)
 }
 
 static void
-init_test_globals(void)
+init_test_globals(uint64_t block_cnt)
 {
 	g_io_output = calloc(g_max_io_size, sizeof(struct io_output));
 	SPDK_CU_ASSERT_FATAL(g_io_output != NULL);
 	g_io_output_index = 0;
+	g_block_cnt = block_cnt;
 }
 
 static void
@@ -248,7 +250,7 @@ create_nvme_bdev(void)
 	base_bdev->name = strdup(name);
 	SPDK_CU_ASSERT_FATAL(base_bdev->name != NULL);
 	base_bdev->blocklen = BLOCK_SIZE;
-	base_bdev->blockcnt = BLOCK_CNT;
+	base_bdev->blockcnt = g_block_cnt;
 	base_bdev->write_unit_size = 1;
 	TAILQ_INSERT_TAIL(&g_bdev_list, base_bdev, internal.link);
 
@@ -333,6 +335,47 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	cb(child_io, true, cb_arg);
 
 	return 0;
+}
+
+int
+spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				struct iovec *iov, int iovcnt, void *md,
+				uint64_t offset_blocks, uint64_t num_blocks,
+				spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct io_output *output = &g_io_output[g_io_output_index];
+	struct spdk_bdev_io *child_io;
+
+	SPDK_CU_ASSERT_FATAL(g_io_output_index < g_max_io_size);
+
+	set_io_output(output, desc, ch, offset_blocks, num_blocks, cb, cb_arg,
+		      SPDK_BDEV_IO_TYPE_WRITE);
+	g_io_output_index++;
+
+	child_io = calloc(1, sizeof(struct spdk_bdev_io));
+	SPDK_CU_ASSERT_FATAL(child_io != NULL);
+	child_io->internal.desc = desc;
+	child_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	child_io->u.bdev.iovs = iov;
+	child_io->u.bdev.iovcnt = iovcnt;
+	child_io->u.bdev.md_buf = md;
+	child_io->u.bdev.num_blocks = num_blocks;
+	child_io->u.bdev.offset_blocks = offset_blocks;
+	cb(child_io, true, cb_arg);
+
+	return 0;
+}
+
+
+int
+spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			struct iovec *iov, int iovcnt,
+			uint64_t offset_blocks, uint64_t num_blocks,
+			spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+
+	return spdk_bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks, num_blocks,
+					       cb, cb_arg);
 }
 
 static void
@@ -480,7 +523,7 @@ verify_zone_bdev(bool presence)
 			}
 
 			expected_optimal_open_zones = spdk_max(r->optimal_open_zones, 1);
-			expected_num_zones = BLOCK_CNT / spdk_align64pow2(r->zone_capacity) / expected_optimal_open_zones;
+			expected_num_zones = g_block_cnt / spdk_align64pow2(r->zone_capacity) / expected_optimal_open_zones;
 			expected_num_zones *= expected_optimal_open_zones;
 
 			CU_ASSERT(bdev->num_zones == expected_num_zones);
@@ -551,6 +594,7 @@ test_zone_block_create(void)
 	size_t num_zones = 16;
 	size_t zone_capacity = BLOCK_CNT / num_zones;
 
+	init_test_globals(BLOCK_CNT);
 	CU_ASSERT(zone_block_init() == 0);
 
 	/* Create zoned virtual device before nvme device */
@@ -585,6 +629,7 @@ test_zone_block_create_invalid(void)
 	size_t num_zones = 8;
 	size_t zone_capacity = BLOCK_CNT / num_zones;
 
+	init_test_globals(BLOCK_CNT);
 	CU_ASSERT(zone_block_init() == 0);
 
 	/* Create zoned virtual device and verify its correctness */
@@ -645,11 +690,38 @@ bdev_io_zone_cleanup(struct spdk_bdev_io *bdev_io)
 	free(bdev_io);
 }
 
+static void
+bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev,
+		   uint64_t lba, uint64_t blocks, int16_t iotype)
+{
+	bdev_io->bdev = bdev;
+	bdev_io->u.bdev.offset_blocks = lba;
+	bdev_io->u.bdev.num_blocks = blocks;
+	bdev_io->type = iotype;
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP || bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
+		return;
+	}
+
+	bdev_io->u.bdev.iovcnt = 1;
+	bdev_io->u.bdev.iovs =  &bdev_io->iov;
+	bdev_io->u.bdev.iovs->iov_base = calloc(1, bdev_io->u.bdev.num_blocks * BLOCK_SIZE);
+	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs->iov_base != NULL);
+	bdev_io->u.bdev.iovs->iov_len = bdev_io->u.bdev.num_blocks * BLOCK_SIZE;
+}
+
+static void
+bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
+{
+	free(bdev_io->iov.iov_base);
+	free(bdev_io);
+}
+
 static struct bdev_zone_block *
 create_and_get_vbdev(char *vdev_name, char *name, uint64_t num_zones, uint64_t optimal_open_zones,
 		     bool create_bdev)
 {
-	size_t zone_size = BLOCK_CNT / num_zones;
+	size_t zone_size = g_block_cnt / num_zones;
 	struct bdev_zone_block *bdev = NULL;
 
 	send_create_vbdev(vdev_name, name, zone_size, optimal_open_zones, create_bdev, true);
@@ -671,7 +743,7 @@ test_supported_io_types(void)
 	char *name = "Nvme0n1";
 	uint32_t num_zones = 8;
 
-	init_test_globals();
+	init_test_globals(BLOCK_CNT);
 	CU_ASSERT(zone_block_init() == 0);
 
 	/* Create zone dev */
@@ -680,7 +752,7 @@ test_supported_io_types(void)
 	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT) == true);
 	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_APPEND) == false);
 	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ) == false);
-	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE) == true);
 
 	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN) == false);
 	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO) == false);
@@ -735,7 +807,7 @@ test_get_zone_info(void)
 	uint32_t num_zones = 8, i;
 	struct spdk_bdev_zone_info *info;
 
-	init_test_globals();
+	init_test_globals(BLOCK_CNT);
 	CU_ASSERT(zone_block_init() == 0);
 
 	/* Create zone dev */
@@ -847,7 +919,7 @@ test_reset_zone(void)
 	uint64_t zone_id;
 	uint32_t output_index = 0;
 
-	init_test_globals();
+	init_test_globals(BLOCK_CNT);
 	CU_ASSERT(zone_block_init() == 0);
 
 	/* Create zone dev */
@@ -889,6 +961,25 @@ test_reset_zone(void)
 }
 
 static void
+send_write_zone(struct bdev_zone_block *bdev, struct spdk_io_channel *ch, uint64_t lba,
+		uint64_t blocks, uint32_t output_index, bool success)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct zone_block_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io_initialize(bdev_io, &bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_WRITE);
+	memset(g_io_output, 0, (g_max_io_size * sizeof(struct io_output)));
+	g_io_output_index = output_index;
+
+	g_io_comp_status = !success;
+	zone_block_submit_request(ch, bdev_io);
+
+	CU_ASSERT(g_io_comp_status == success);
+	bdev_io_cleanup(bdev_io);
+}
+
+static void
 test_open_zone(void)
 {
 	struct spdk_io_channel *ch;
@@ -898,7 +989,7 @@ test_open_zone(void)
 	uint64_t zone_id;
 	uint32_t output_index = 0, i;
 
-	init_test_globals();
+	init_test_globals(BLOCK_CNT);
 	CU_ASSERT(zone_block_init() == 0);
 
 	/* Create zone dev */
@@ -955,6 +1046,82 @@ test_open_zone(void)
 	test_cleanup();
 }
 
+static void
+test_zone_write(void)
+{
+	struct spdk_io_channel *ch;
+	struct bdev_zone_block *bdev;
+	char *name = "Nvme0n1";
+	uint32_t num_zones = 20;
+	uint64_t zone_id, lba, block_len;
+	uint32_t output_index = 0, i;
+
+	init_test_globals(20 * 1024ul);
+	CU_ASSERT(zone_block_init() == 0);
+
+	/* Create zone dev */
+	bdev = create_and_get_vbdev("zone_dev1", name, num_zones, 1, true);
+
+	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct zone_block_io_channel));
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	/* Write to full zone */
+	lba = 0;
+	send_write_zone(bdev, ch, lba, 1, output_index, false);
+
+	/* Write out of device range */
+	lba = g_block_cnt;
+	send_write_zone(bdev, ch, lba, 1, output_index, false);
+
+	/* Write 1 sector to zone 0 */
+	lba = 0;
+	send_reset_zone(bdev, ch, lba, output_index, true);
+	send_write_zone(bdev, ch, lba, 1, output_index, true);
+	send_zone_info(bdev, ch, lba, 1, SPDK_BDEV_ZONE_STATE_OPEN, output_index, true);
+
+	/* Write to another zone */
+	lba = bdev->bdev.zone_size;
+	send_reset_zone(bdev, ch, lba, output_index, true);
+	send_write_zone(bdev, ch, lba, 5, output_index, true);
+	send_zone_info(bdev, ch, lba, lba + 5, SPDK_BDEV_ZONE_STATE_OPEN, output_index, true);
+
+	/* Fill zone 0 and verify zone state change */
+	block_len = 15;
+	send_write_zone(bdev, ch, 1, block_len, output_index, true);
+	block_len = 16;
+	for (i = block_len; i < bdev->bdev.zone_size; i += block_len) {
+		send_write_zone(bdev, ch, i, block_len, output_index, true);
+	}
+	send_zone_info(bdev, ch, 0, bdev->bdev.zone_size, SPDK_BDEV_ZONE_STATE_FULL, output_index,
+		       true);
+
+	/* Write to wrong write pointer */
+	lba = bdev->bdev.zone_size;
+	send_write_zone(bdev, ch, lba + 7, 1, output_index, false);
+	/* Write to already written sectors */
+	send_write_zone(bdev, ch, lba, 1, output_index, false);
+
+	/* Write to two zones at once */
+	for (i = 0; i < num_zones; i++) {
+		zone_id = i * bdev->bdev.zone_size;
+		send_reset_zone(bdev, ch, zone_id, output_index, true);
+		send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_EMPTY, output_index, true);
+	}
+	block_len = 16;
+	for (i = 0; i < bdev->bdev.zone_size - block_len; i += block_len) {
+		send_write_zone(bdev, ch, i, block_len, output_index, true);
+	}
+	send_write_zone(bdev, ch, bdev->bdev.zone_size - block_len, 32, output_index, false);
+
+	/* Delete zone dev */
+	send_delete_vbdev("zone_dev1", true);
+
+	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
+	free(ch);
+
+	test_cleanup();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite       suite = NULL;
@@ -976,7 +1143,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_get_zone_info", test_get_zone_info) == NULL ||
 		CU_add_test(suite, "test_supported_io_types", test_supported_io_types) == NULL ||
 		CU_add_test(suite, "test_reset_zone", test_reset_zone) == NULL ||
-		CU_add_test(suite, "test_open_zone", test_open_zone) == NULL
+		CU_add_test(suite, "test_open_zone", test_open_zone) == NULL ||
+		CU_add_test(suite, "test_zone_write", test_zone_write) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
