@@ -2121,7 +2121,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 		spdk_json_write_object_begin(w);
 
-		spdk_json_write_named_string(w, "method", "construct_nvme_bdev");
+		spdk_json_write_named_string(w, "method", "bdev_nvme_attach_controller");
 
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
