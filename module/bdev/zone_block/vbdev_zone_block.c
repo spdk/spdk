@@ -200,6 +200,21 @@ zone_block_get_zone_by_slba(struct bdev_zone_block *bdev_node, uint64_t start_lb
 	}
 }
 
+static struct block_zone *
+zone_block_get_zone_containing_lba(struct bdev_zone_block *bdev_node, uint64_t lba)
+{
+	struct block_zone *zone = NULL;
+	size_t index = lba >> bdev_node->zone_shift;
+
+	if (index >= bdev_node->num_zones) {
+		return NULL;
+	}
+
+	zone = &bdev_node->zones[index];
+
+	return zone;
+}
+
 static int
 zone_block_get_zone_info(struct bdev_zone_block *bdev_node, struct spdk_bdev_io *bdev_io)
 {
@@ -355,6 +370,115 @@ zone_block_unmap(struct bdev_zone_block *bdev_node, struct zone_block_io_channel
 }
 
 static void
+_zone_block_complete_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct zone_block_io *io_ctx = (struct zone_block_io *)orig_io->driver_ctx;
+	struct block_zone *zone = io_ctx->zone;
+
+	if (success) {
+		zone->zone_info.write_pointer += bdev_io->u.bdev.num_blocks;
+		assert(zone->zone_info.write_pointer <= zone->zone_info.zone_id + zone->zone_info.capacity);
+		if (zone->zone_info.write_pointer == zone->zone_info.zone_id + zone->zone_info.capacity) {
+			zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL;
+		}
+	}
+
+	__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
+
+	/* Complete the original IO and then free the one that we created here
+	 * as a result of issuing an IO via submit_reqeust.
+	 */
+	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static int
+zone_block_write(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
+		 struct spdk_bdev_io *bdev_io)
+{
+	struct zone_block_io *io_ctx = (struct zone_block_io *)bdev_io->driver_ctx;
+	struct block_zone *zone;
+	uint64_t len = bdev_io->u.bdev.num_blocks;
+	uint64_t lba = bdev_io->u.bdev.offset_blocks;
+	uint64_t num_blocks_left, wp;
+	int rc = 0;
+	bool busy;
+
+	zone = zone_block_get_zone_containing_lba(bdev_node, lba);
+	if (!zone) {
+		SPDK_ERRLOG("Trying to write to invalid zone (lba 0x%lx)\n", lba);
+		return -EINVAL;
+	}
+
+	io_ctx->bdev_zone_block = bdev_node;
+	io_ctx->zone = zone;
+
+	/* If a write is already being processed on the zone, reschedule it */
+	busy = __atomic_exchange_n(&zone->busy, true, __ATOMIC_SEQ_CST);
+	if (busy) {
+		return -ENOMEM;
+	}
+
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_OPEN:
+	case SPDK_BDEV_ZONE_STATE_EMPTY:
+	case SPDK_BDEV_ZONE_STATE_CLOSED:
+		break;
+	default:
+		SPDK_ERRLOG("Trying to write to zone in invalid state %u\n", zone->zone_info.state);
+		rc = -EINVAL;
+		goto write_fail;
+	}
+
+	wp = zone->zone_info.write_pointer;
+
+	if (lba != wp) {
+		SPDK_ERRLOG("Trying to write to zone with invalid address (lba 0x%lx, wp 0x%lx)\n", lba, wp);
+		rc = -EINVAL;
+		goto write_fail;
+	}
+
+	num_blocks_left = zone->zone_info.zone_id + zone->zone_info.capacity - wp;
+	if (len > num_blocks_left) {
+		SPDK_ERRLOG("Write exceeds zone capacity (lba 0x%" PRIu64 ", len 0x%lx, wp 0x%lx)\n", lba, len, wp);
+		rc = -EINVAL;
+		goto write_fail;
+	}
+
+	if (zone->zone_info.state != SPDK_BDEV_ZONE_STATE_OPEN) {
+		rc = zone_block_open_zone(zone);
+		if (rc) {
+			goto write_fail;
+		}
+	}
+
+	if (bdev_io->u.bdev.md_buf == NULL) {
+		rc = spdk_bdev_writev_blocks(bdev_node->base_desc, ch->base_ch, bdev_io->u.bdev.iovs,
+					     bdev_io->u.bdev.iovcnt, lba,
+					     bdev_io->u.bdev.num_blocks, _zone_block_complete_write,
+					     bdev_io);
+	} else {
+		rc = spdk_bdev_writev_blocks_with_md(bdev_node->base_desc, ch->base_ch,
+						     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						     bdev_io->u.bdev.md_buf,
+						     lba, bdev_io->u.bdev.num_blocks,
+						     _zone_block_complete_write, bdev_io);
+	}
+
+	if (rc) {
+		goto write_fail;
+	}
+
+	return rc;
+
+write_fail:
+	__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
+	return rc;
+}
+
+static void
 zone_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct bdev_zone_block *bdev_node = SPDK_CONTAINEROF(bdev_io->bdev, struct bdev_zone_block, bdev);
@@ -370,6 +494,9 @@ zone_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		rc = zone_block_unmap(bdev_node, dev_ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		rc = zone_block_write(bdev_node, dev_ch, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("vbdev_block: unknown I/O type %u\n", bdev_io->type);
@@ -394,6 +521,7 @@ zone_block_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE:
 		return true;
 	default:
 		return false;
