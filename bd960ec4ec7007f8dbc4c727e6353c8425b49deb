@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6c999ac_b936e84a",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-23T08:28:23Z",
+      "side": 1,
+      "message": "If my QEMU vhost-user-scsi driver connected to the vhost-user-blk socket file, is the original code reports an error here? If so I suggest to keep it.",
+      "revId": "bd960ec4ec7007f8dbc4c727e6353c8425b49deb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
