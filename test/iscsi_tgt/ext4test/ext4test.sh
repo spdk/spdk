@@ -127,7 +127,7 @@ $rpc_py destruct_split_vbdev Nvme0n1
 $rpc_py bdev_error_delete EE_Malloc0
 
 if [ -z "$NO_NVME" ]; then
-	$rpc_py delete_nvme_controller Nvme0
+	$rpc_py bdev_nvme_detach_controller Nvme0
 fi
 
 killprocess $pid
