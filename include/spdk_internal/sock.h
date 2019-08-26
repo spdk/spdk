@@ -80,9 +80,14 @@ struct spdk_net_impl {
 	ssize_t (*readv)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 	ssize_t (*writev)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
+	void (*writev_async)(struct spdk_sock *sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+			     void *cb_arg);
+
 	int (*set_recvlowat)(struct spdk_sock *sock, int nbytes);
 	int (*set_recvbuf)(struct spdk_sock *sock, int sz);
 	int (*set_sendbuf)(struct spdk_sock *sock, int sz);
+	int (*set_max_iovcnt)(struct spdk_sock *sock, int *num);
+	int (*set_max_async_ops)(struct spdk_sock *sock, int *num);
 	int (*set_priority)(struct spdk_sock *sock, int priority);
 
 	bool (*is_ipv6)(struct spdk_sock *sock);
