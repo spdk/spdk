@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba3d85c3_b425ed3b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-26T18:42:11Z",
+      "side": 1,
+      "message": "Let\u0027s not change this here.  The previous name is what was valid when this CHANGELOG entry was written.  In general we shouldn\u0027t modify CHANGELOG entries for previous releases.",
+      "revId": "4686ac6b5a6d9504eb685a726b87e38d6cd202d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "863d2042_ca02821d",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-26T18:42:11Z",
+      "side": 1,
+      "message": "Let\u0027s change this help message to:\n\nConstruct block devices for each NVMe namespace in the attached controller.",
+      "revId": "4686ac6b5a6d9504eb685a726b87e38d6cd202d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
