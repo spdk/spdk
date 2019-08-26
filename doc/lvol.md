@@ -145,7 +145,7 @@ resize_lvol_bdev [-h] name size
     Resize existing lvol bdev
     optional arguments:
     -h, --help  show help
-set_read_only_lvol_bdev [-h] name
+bdev_lvol_set_read_only [-h] name
     Mark lvol bdev as read only
     optional arguments:
     -h, --help  show help
