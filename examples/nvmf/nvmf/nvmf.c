@@ -61,6 +61,8 @@ enum nvmf_target_state {
 	NVMF_INIT_SUBSYSTEM = 0,
 	NVMF_INIT_TARGET,
 	NVMF_INIT_POLL_GROUPS,
+	NVMF_INIT_START_SUBSYSTEMS,
+	NVMF_FINI_STOP_SUBSYSTEMS,
 	NVMF_FINI_POLL_GROUPS,
 	NVMF_FINI_TARGET,
 	NVMF_FINI_SUBSYSTEM,
@@ -408,9 +410,83 @@ nvmf_tgt_destroy_poll_group(struct spdk_io_channel_iter *i)
 }
 
 static void
+nvmf_tgt_subsystem_stop_next(struct spdk_nvmf_subsystem *subsystem,
+			     void *cb_arg, int status)
+{
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	if (subsystem) {
+		spdk_nvmf_subsystem_stop(subsystem,
+					 nvmf_tgt_subsystem_stop_next,
+					 cb_arg);
+		return;
+	}
+
+	fprintf(stdout, "all subsystems of target stopped\n");
+
+	g_target_state = NVMF_FINI_POLL_GROUPS;
+	nvmf_target_advance_state();
+}
+
+static void
+nvmf_tgt_stop_subsystems(struct nvmf_target *nvmf_tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_get_first(nvmf_tgt->tgt);
+	if (subsystem) {
+		spdk_nvmf_subsystem_stop(subsystem,
+					 nvmf_tgt_subsystem_stop_next,
+					 NULL);
+	} else {
+		g_target_state = NVMF_FINI_POLL_GROUPS;
+	}
+}
+
+static void
+nvmf_tgt_subsystem_start_next(struct spdk_nvmf_subsystem *subsystem,
+			      void *cb_arg, int status)
+{
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_start_next,
+					  cb_arg);
+		return;
+	}
+
+	fprintf(stdout, "all subsystems of the target started\n");
+}
+
+static void
+nvmf_tgt_start_subsystems(struct nvmf_target *nvmf_tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	/* Subsystem is the NVM subsystem which is a combine of namespaces
+	 * except the discovery subsystem which is used for discovery service.
+	 * It also controls the hosts that means the subsystem determines whether
+	 * the host can access this subsystem.
+	 */
+	subsystem = spdk_nvmf_subsystem_get_first(nvmf_tgt->tgt);
+	if (subsystem) {
+		/* In SPDK there are three states in subsystem: Inactive, Active, Paused.
+		 * Start subsystem means make it from inactive to active that means
+		 * subsystem start to work or it can be accessed.
+		 */
+		spdk_nvmf_subsystem_start(subsystem,
+					  nvmf_tgt_subsystem_start_next,
+					  NULL);
+	} else {
+		g_target_state = NVMF_FINI_STOP_SUBSYSTEMS;
+	}
+}
+
+static void
 nvmf_tgt_create_poll_groups_done(void *ctx)
 {
 	fprintf(stdout, "create targets's poll groups done\n");
+
+	g_target_state = NVMF_INIT_START_SUBSYSTEMS;
+	nvmf_target_advance_state();
 }
 
 static void
@@ -568,6 +644,12 @@ nvmf_target_advance_state(void)
 		case NVMF_INIT_POLL_GROUPS:
 			nvmf_poll_groups_create();
 			break;
+		case NVMF_INIT_START_SUBSYSTEMS:
+			nvmf_tgt_start_subsystems(&g_nvmf_tgt);
+			break;
+		case NVMF_FINI_STOP_SUBSYSTEMS:
+			nvmf_tgt_stop_subsystems(&g_nvmf_tgt);
+			break;
 		case NVMF_FINI_POLL_GROUPS:
 			nvmf_poll_groups_destroy();
 			break;
@@ -592,15 +674,15 @@ static void
 _nvmf_shutdown_cb(void *ctx)
 {
 	/* Still in initialization state, defer shutdown operation */
-	if (g_target_state < NVMF_INIT_POLL_GROUPS) {
+	if (g_target_state < NVMF_INIT_START_SUBSYSTEMS) {
 		spdk_thread_send_msg(spdk_get_thread(), _nvmf_shutdown_cb, NULL);
 		return;
-	} else if (g_target_state >= NVMF_FINI_POLL_GROUPS) {
+	} else if (g_target_state >= NVMF_FINI_STOP_SUBSYSTEMS) {
 		/* Already in Shutdown status, ignore the signal */
 		return;
 	}
 
-	g_target_state = NVMF_FINI_POLL_GROUPS;
+	g_target_state = NVMF_FINI_STOP_SUBSYSTEMS;
 	nvmf_target_advance_state();
 }
 
