@@ -229,9 +229,9 @@ class Commands_Rpc(object):
         output, rc = self.rpc.inflate_lvol_bdev(clone_name)
         return rc
 
-    def decouple_parent_lvol_bdev(self, clone_name):
-        print("INFO: RPC COMMAND decouple_parent_lvol_bdev")
-        output, rc = self.rpc.decouple_parent_lvol_bdev(clone_name)
+    def bdev_lvol_decouple_parent(self, clone_name):
+        print("INFO: RPC COMMAND bdev_lvol_decouple_parent")
+        output, rc = self.rpc.bdev_lvol_decouple_parent(clone_name)
         return rc
 
     def bdev_aio_create(self, aio_path, aio_name, aio_bs=""):
