@@ -168,16 +168,61 @@ spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport
 	return sock->net_impl->getaddr(sock, saddr, slen, sport, caddr, clen, cport);
 }
 
+#define SOCK_REQUEST_SIZE(max) (sizeof(struct spdk_sock_request) + (max * sizeof(struct iovec)))
+
+static int
+_sock_alloc_requests(struct spdk_sock *sock, uint32_t num_reqs, int iovcnt)
+{
+	struct spdk_sock_request *req;
+	uint32_t i;
+	uint8_t *buf;
+
+	if (iovcnt == sock->max_iovcnt && num_reqs == sock->num_reqs) {
+		return 0;
+	}
+
+	if (!TAILQ_EMPTY(&sock->queued_reqs)) {
+		return -EAGAIN;
+	}
+
+	buf = realloc(sock->req_mem, num_reqs * SOCK_REQUEST_SIZE(iovcnt));
+	if (buf == NULL) {
+		return -ENOMEM;
+	}
+	memset(buf, 0, num_reqs * SOCK_REQUEST_SIZE(iovcnt));
+
+	sock->req_mem = (struct spdk_sock_request *)buf;
+	sock->max_iovcnt = iovcnt;
+	sock->num_reqs = num_reqs;
+	TAILQ_INIT(&sock->free_reqs);
+	TAILQ_INIT(&sock->queued_reqs);
+
+	for (i = 0; i < sock->num_reqs; i++) {
+		req = (struct spdk_sock_request *)buf;
+		TAILQ_INSERT_TAIL(&sock->free_reqs, req, link);
+		buf += SOCK_REQUEST_SIZE(sock->max_iovcnt);
+	}
+
+	return 0;
+}
+
 struct spdk_sock *
 spdk_sock_connect(const char *ip, int port)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
+	int rc;
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
 		sock = impl->connect(ip, port);
 		if (sock != NULL) {
 			sock->net_impl = impl;
+
+			rc = _sock_alloc_requests(sock, DEFAULT_NUM_SOCK_REQS, DEFAULT_MAX_IOV);
+			if (rc) {
+				spdk_sock_close(&sock);
+				return NULL;
+			}
 			return sock;
 		}
 	}
@@ -206,34 +251,52 @@ struct spdk_sock *
 spdk_sock_accept(struct spdk_sock *sock)
 {
 	struct spdk_sock *new_sock;
+	int rc;
 
 	new_sock = sock->net_impl->accept(sock);
 	if (new_sock != NULL) {
 		new_sock->net_impl = sock->net_impl;
+
+		rc = _sock_alloc_requests(new_sock, sock->num_reqs, sock->max_iovcnt);
+		if (rc) {
+			spdk_sock_close(&new_sock);
+		}
 	}
 
 	return new_sock;
 }
 
 int
-spdk_sock_close(struct spdk_sock **sock)
+spdk_sock_close(struct spdk_sock **_sock)
 {
+	struct spdk_sock *sock = *_sock;
 	int rc;
 
-	if (*sock == NULL) {
+	if (sock == NULL) {
 		errno = EBADF;
 		return -1;
 	}
 
-	if ((*sock)->cb_fn != NULL) {
+	if (sock->cb_fn != NULL) {
 		/* This sock is still part of a sock_group. */
 		errno = EBUSY;
 		return -1;
 	}
 
-	rc = (*sock)->net_impl->close(*sock);
+	sock->flags.closed = true;
+
+	if (sock->cb_cnt > 0) {
+		/* Let the callback unwind before destroying the socket */
+		return 0;
+	}
+
+	spdk_sock_abort_requests(sock);
+
+	free(sock->req_mem);
+
+	rc = sock->net_impl->close(sock);
 	if (rc == 0) {
-		*sock = NULL;
+		*_sock = NULL;
 	}
 
 	return rc;
@@ -272,6 +335,39 @@ spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return sock->net_impl->writev(sock, iov, iovcnt);
 }
 
+void
+spdk_sock_writev_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
+		       spdk_sock_op_cb cb_fn, void *cb_arg)
+{
+
+	struct spdk_sock_request *req;
+
+	assert(cb_fn != NULL);
+
+	if (sock == NULL) {
+		cb_fn(cb_arg, -EBADF);
+		return;
+	}
+
+	if (iovcnt > sock->max_iovcnt) {
+		cb_fn(cb_arg, -ENOTSUP);
+		return;
+	}
+
+	req = spdk_sock_request_get(sock);
+	if (req == NULL) {
+		cb_fn(cb_arg, -EAGAIN);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	memcpy(req->iov, iov, sizeof(*iov) * iovcnt);
+	req->iovcnt = iovcnt;
+
+	sock->net_impl->writev_async(sock, req);
+}
+
 int
 spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 {
@@ -288,6 +384,22 @@ int
 spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 {
 	return sock->net_impl->set_sendbuf(sock, sz);
+}
+
+int
+spdk_sock_set_max_iovcnt(struct spdk_sock *sock, int *num)
+{
+	assert(num != NULL);
+
+	return _sock_alloc_requests(sock, sock->num_reqs, *num);
+}
+
+int
+spdk_sock_set_max_async_ops(struct spdk_sock *sock, uint32_t *num)
+{
+	assert(num != NULL);
+
+	return _sock_alloc_requests(sock, *num, sock->max_iovcnt);
 }
 
 int
