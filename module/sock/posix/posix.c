@@ -47,6 +47,7 @@
 #define PORTNUMLEN 32
 #define SO_RCVBUF_SIZE (2 * 1024 * 1024)
 #define SO_SNDBUF_SIZE (2 * 1024 * 1024)
+#define IOV_BATCH_SIZE 64
 
 struct spdk_posix_sock {
 	struct spdk_sock	base;
@@ -433,6 +434,103 @@ spdk_posix_sock_close(struct spdk_sock *_sock)
 	return 0;
 }
 
+static int
+_sock_flush(struct spdk_sock *sock)
+{
+	struct spdk_posix_sock *psock = __posix_sock(sock);
+	struct iovec iovs[IOV_BATCH_SIZE];
+	int iovcnt;
+	int retval;
+	struct spdk_sock_request *req;
+	int i;
+	ssize_t rc;
+	unsigned int offset;
+	size_t len;
+
+	/* Gather an iov */
+	iovcnt = 0;
+	req = TAILQ_FIRST(&sock->queued_reqs);
+	while (req) {
+		offset = req->internal.offset;
+
+		for (i = 0; i < req->iovcnt; i++) {
+			/* Consume any offset first */
+			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
+				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
+				continue;
+			}
+
+			iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
+			iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
+			iovcnt++;
+
+			offset = 0;
+
+			if (iovcnt >= IOV_BATCH_SIZE) {
+				break;
+			}
+		}
+
+		if (iovcnt >= IOV_BATCH_SIZE) {
+			break;
+		}
+
+		req = TAILQ_NEXT(req, internal.link);
+	}
+
+	if (iovcnt == 0) {
+		return 0;
+	}
+
+	/* Perform the vectored write */
+	rc = writev(psock->fd, iovs, iovcnt);
+	if (rc <= 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			return 0;
+		}
+		return rc;
+	}
+
+	/* Consume the requests that were actually written */
+	req = TAILQ_FIRST(&sock->queued_reqs);
+	while (req) {
+		offset = req->internal.offset;
+
+		for (i = 0; i < req->iovcnt; i++) {
+			/* Advance by the offset first */
+			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
+				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
+				continue;
+			}
+
+			/* Calculate the remaining length of this element */
+			len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
+
+			if (len > (size_t)rc) {
+				/* This element was partially sent. */
+				req->internal.offset += rc;
+				return 0;
+			}
+
+			offset = 0;
+			req->internal.offset += len;
+			rc -= len;
+		}
+
+		/* Handled a full request. */
+		req->internal.offset = 0;
+		retval = spdk_sock_request_put(sock, req, 0);
+
+		if (rc == 0 || retval) {
+			break;
+		}
+
+		req = TAILQ_FIRST(&sock->queued_reqs);
+	}
+
+	return 0;
+}
+
 static ssize_t
 spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 {
@@ -453,8 +551,43 @@ static ssize_t
 spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
+
+	/* In order to process a writev, we need to flush any asynchronous writes
+	 * first. */
+	rc = _sock_flush(_sock);
+	if (rc < 0) {
+		return rc;
+	}
+
+	if (!TAILQ_EMPTY(&_sock->queued_reqs)) {
+		/* We weren't able to flush all requests */
+		errno = EAGAIN;
+		return -1;
+	}
 
 	return writev(sock->fd, iov, iovcnt);
+}
+
+static void
+spdk_posix_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
+{
+	int rc;
+
+	spdk_sock_request_queue(sock, req);
+
+	if (sock->group_impl == NULL) {
+		spdk_sock_request_put(sock, req, -ENOTSUP);
+		return;
+	}
+
+	/* If there are a sufficient number queued, just flush them out immediately. */
+	if (sock->queued_iovcnt > IOV_BATCH_SIZE) {
+		rc = _sock_flush(sock);
+		if (rc) {
+			spdk_sock_abort_requests(sock);
+		}
+	}
 }
 
 static int
@@ -632,6 +765,7 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	int rc;
+
 #if defined(__linux__)
 	struct epoll_event event;
 
@@ -649,6 +783,9 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 		errno = event.data;
 	}
 #endif
+
+	spdk_sock_abort_requests(_sock);
+
 	return rc;
 }
 
@@ -657,16 +794,25 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 				struct spdk_sock **socks)
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
-	int num_events, i;
-
+	struct spdk_sock *sock, *tmp;
+	int num_events, i, rc;
 #if defined(__linux__)
 	struct epoll_event events[MAX_EVENTS_PER_POLL];
-
-	num_events = epoll_wait(group->fd, events, max_events, 0);
 #elif defined(__FreeBSD__)
 	struct kevent events[MAX_EVENTS_PER_POLL];
 	struct timespec ts = {0};
+#endif
 
+	TAILQ_FOREACH_SAFE(sock, &_group->socks, link, tmp) {
+		rc = _sock_flush(sock);
+		if (rc) {
+			spdk_sock_abort_requests(sock);
+		}
+	}
+
+#if defined(__linux__)
+	num_events = epoll_wait(group->fd, events, max_events, 0);
+#elif defined(__FreeBSD__)
 	num_events = kevent(group->fd, NULL, 0, events, max_events, &ts);
 #endif
 
@@ -706,6 +852,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.recv		= spdk_posix_sock_recv,
 	.readv		= spdk_posix_sock_readv,
 	.writev		= spdk_posix_sock_writev,
+	.writev_async	= spdk_posix_sock_writev_async,
 	.set_recvlowat	= spdk_posix_sock_set_recvlowat,
 	.set_recvbuf	= spdk_posix_sock_set_recvbuf,
 	.set_sendbuf	= spdk_posix_sock_set_sendbuf,

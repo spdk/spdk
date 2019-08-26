@@ -48,6 +48,7 @@ DEFINE_STUB(spdk_sock_readv, ssize_t, (struct spdk_sock *sock, struct iovec *iov
 DEFINE_STUB(spdk_sock_set_recvlowat, int, (struct spdk_sock *sock, int nbytes), 0);
 DEFINE_STUB(spdk_sock_set_recvbuf, int, (struct spdk_sock *sock, int sz), 0);
 DEFINE_STUB(spdk_sock_set_sendbuf, int, (struct spdk_sock *sock, int sz), 0);
+DEFINE_STUB_V(spdk_sock_writev_async, (struct spdk_sock *sock, struct spdk_sock_request *req));
 DEFINE_STUB(spdk_sock_is_ipv6, bool, (struct spdk_sock *sock), false);
 DEFINE_STUB(spdk_sock_is_ipv4, bool, (struct spdk_sock *sock), true);
 DEFINE_STUB(spdk_sock_is_connected, bool, (struct spdk_sock *sock), true);
