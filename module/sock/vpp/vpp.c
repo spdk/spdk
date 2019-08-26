@@ -962,6 +962,17 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	return total;
 }
 
+static void
+spdk_vpp_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
+{
+	/* TODO. We don't test VPP with NVMe-oF TCP right now. This will
+	 * need to be implemented later. */
+	assert(false);
+
+	spdk_sock_request_queue(sock, req);
+	spdk_sock_request_put(sock, req, -ENOTSUP);
+}
+
 static int
 spdk_vpp_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
@@ -1442,6 +1453,7 @@ static struct spdk_net_impl g_vpp_net_impl = {
 	.recv		= spdk_vpp_sock_recv,
 	.readv		= spdk_vpp_sock_readv,
 	.writev		= spdk_vpp_sock_writev,
+	.writev_async	= spdk_vpp_sock_writev_async,
 	.set_recvlowat	= spdk_vpp_sock_set_recvlowat,
 	.set_recvbuf	= spdk_vpp_sock_set_recvbuf,
 	.set_sendbuf	= spdk_vpp_sock_set_sendbuf,
