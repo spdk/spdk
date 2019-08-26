@@ -40,12 +40,44 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/queue.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct spdk_sock;
 struct spdk_sock_group;
+
+/**
+ * Anywhere this struct is used, an iovec array is assumed to
+ * immediately follow the last member in memory, without any
+ * padding.
+ *
+ * A simpler implementation would be to place a 0-length array
+ * of struct iovec at the end of this request. However, embedding
+ * a structure that ends with a variable length array inside of
+ * another structure is a GNU C extension and not standard.
+ */
+struct spdk_sock_request {
+	/* When the request is completed, this callback will be called.
+	 * err will be 0 on success or a negated errno value on failure. */
+	void	(*cb_fn)(void *cb_arg, int err);
+	void				*cb_arg;
+
+	/**
+	 * These fields are used by the socket layer and should not be modified
+	 */
+	struct __sock_request_internal {
+		TAILQ_ENTRY(spdk_sock_request)	link;
+		unsigned int			offset;
+	} internal;
+
+	int				iovcnt;
+	/* struct iovec			iov[]; */
+};
+
+#define SPDK_SOCK_REQUEST_IOV(req, i) ((struct iovec *)(((uint8_t *)req + sizeof(struct spdk_sock_request)) + (sizeof(struct iovec) * i)))
 
 /**
  * Get client and server addresses of the given socket.
@@ -125,6 +157,15 @@ ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
  * \return the length of written message on success, -1 on failure.
  */
 ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
+
+/**
+ * Write data to the given socket asynchronously, calling
+ * the provided callback when the data has been written.
+ *
+ * \param sock Socket to write to.
+ * \param req The write request to submit.
+ */
+void spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req);
 
 /**
  * Read message from the given socket to the I/O vector array.
