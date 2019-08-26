@@ -61,6 +61,8 @@ enum nvmf_target_state {
 	NVMF_INIT_SUBSYSTEM = 0,
 	NVMF_INIT_TARGET,
 	NVMF_INIT_POLL_GROUPS,
+	NVMF_INIT_START_SUBSYSTEMS,
+	NVMF_FINI_STOP_SUBSYSTEMS,
 	NVMF_FINI_POLL_GROUPS,
 	NVMF_FINI_TARGET,
 	NVMF_FINI_SUBSYSTEM,
@@ -416,11 +418,75 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 }
 
 static void
+nvmf_tgt_subsystem_stop_next(struct spdk_nvmf_subsystem *subsystem,
+			     void *cb_arg, int status)
+{
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	if (subsystem) {
+		spdk_nvmf_subsystem_stop(subsystem,
+					 nvmf_tgt_subsystem_stop_next,
+					 cb_arg);
+		return;
+	}
+
+	fprintf(stdout, "all subsystems of target stoped\n");
+
+	g_target_state = NVMF_FINI_POLL_GROUPS;
+	nvmf_target_advance_state();
+}
+
+static void
+nvmf_tgt_stop_subsystems(struct nvmf_target *nvmf_tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_get_first(nvmf_tgt->tgt);
+	if (subsystem) {
+		spdk_nvmf_subsystem_stop(subsystem,
+					 nvmf_tgt_subsystem_stop_next,
+					 NULL);
+	} else {
+		g_target_state = NVMF_FINI_POLL_GROUPS;
+	}
+}
+
+static void
+nvmf_tgt_subsystem_start_next(struct spdk_nvmf_subsystem *subsystem,
+			      void *cb_arg, int status)
+{
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_start_next,
+					  cb_arg);
+		return;
+	}
+
+	fprintf(stdout, "all the subsystems of target started\n");
+	g_target_state = NVMF_FINI_STOP_SUBSYSTEMS;
+	nvmf_target_advance_state();
+}
+
+static void
+nvmf_tgt_start_subsystems(struct nvmf_target *nvmf_tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_get_first(nvmf_tgt->tgt);
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem,
+					  nvmf_tgt_subsystem_start_next,
+					  NULL);
+	} else {
+		g_target_state = NVMF_FINI_STOP_SUBSYSTEMS;
+	}
+}
+
+static void
 nvmf_tgt_create_poll_groups_done(void *ctx)
 {
 	fprintf(stdout, "create targets's poll groups done\n");
 
-	g_target_state = NVMF_FINI_POLL_GROUPS;
+	g_target_state = NVMF_INIT_START_SUBSYSTEMS;
 	nvmf_target_advance_state();
 }
 
@@ -555,6 +621,12 @@ nvmf_target_advance_state(void)
 			spdk_for_each_thread(nvmf_tgt_create_poll_group,
 					     NULL,
 					     nvmf_tgt_create_poll_groups_done);
+			break;
+		case NVMF_INIT_START_SUBSYSTEMS:
+			nvmf_tgt_start_subsystems(g_nvmf_tgt);
+			break;
+		case NVMF_FINI_STOP_SUBSYSTEMS:
+			nvmf_tgt_stop_subsystems(g_nvmf_tgt);
 			break;
 		case NVMF_FINI_POLL_GROUPS:
 			/* destroy poll groups */
