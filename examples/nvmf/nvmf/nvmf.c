@@ -60,6 +60,8 @@ static int g_acceptor_rate = ACCEPT_TIMEOUT_US;
 enum nvmf_target_state {
 	NVMF_INIT_SUBSYSTEM = 0,
 	NVMF_INIT_TARGET,
+	NVMF_INIT_POLL_GROUPS,
+	NVMF_FINI_POLL_GROUPS,
 	NVMF_FINI_TARGET,
 	NVMF_FINI_SUBSYSTEM,
 };
@@ -76,6 +78,12 @@ struct nvmf_reactor {
 	TAILQ_ENTRY(nvmf_reactor)	link;
 };
 
+struct nvmf_target_poll_group {
+	struct spdk_nvmf_poll_group		*group;
+	struct spdk_thread			*thread;
+	TAILQ_ENTRY(nvmf_target_poll_group)	link;
+};
+
 struct nvmf_target {
 	struct spdk_nvmf_tgt	*tgt;
 
@@ -84,6 +92,8 @@ struct nvmf_target {
 		int acceptor_poll_rate;
 		int conn_sched;
 	} tgt_params;
+
+	TAILQ_HEAD(, nvmf_target_poll_group) poll_groups;
 };
 
 TAILQ_HEAD(, nvmf_reactor) g_reactors = TAILQ_HEAD_INITIALIZER(g_reactors);
@@ -373,6 +383,80 @@ nvmf_destroy_nvmf_tgt(void)
 	}
 }
 
+static void
+nvmf_tgt_destroy_poll_groups_done(void *ctx)
+{
+	fprintf(stdout, "destroy targets's poll groups done\n");
+
+	g_target_state = NVMF_FINI_TARGET;
+	nvmf_target_advance_state();
+}
+
+static void
+nvmf_tgt_destroy_poll_group(void *ctx)
+{
+	struct nvmf_target_poll_group *pg, *tmp;
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+
+	TAILQ_FOREACH_SAFE(pg, &g_nvmf_tgt->poll_groups, link, tmp) {
+		if (pg->thread == thread) {
+			TAILQ_REMOVE(&g_nvmf_tgt->poll_groups, pg, link);
+			spdk_nvmf_poll_group_destroy(pg->group);
+			free(pg);
+			break;
+		}
+	}
+}
+
+static void
+nvmf_tgt_create_poll_groups_done(void *ctx)
+{
+	fprintf(stdout, "create targets's poll groups done\n");
+
+	g_target_state = NVMF_FINI_POLL_GROUPS;
+	nvmf_target_advance_state();
+}
+
+static void
+nvmf_tgt_create_poll_group(void *ctx)
+{
+	struct nvmf_target_poll_group *pg;
+
+	pg = calloc(1, sizeof(struct nvmf_target_poll_group));
+	if (!pg) {
+		fprintf(stderr, "failed to allocate poll group\n");
+		return;
+	}
+
+	pg->thread = spdk_get_thread();
+	pg->group = spdk_nvmf_poll_group_create(g_nvmf_tgt->tgt);
+	if (!pg->group) {
+		fprintf(stderr, "failed to create poll group of the target\n");
+		return;
+	}
+	TAILQ_INSERT_TAIL(&g_nvmf_tgt->poll_groups, pg, link);
+}
+
+static void
+nvmf_poll_groups_create(void)
+{
+	/* create poll groups */
+	spdk_for_each_thread(nvmf_tgt_create_poll_group,
+			     NULL,
+			     nvmf_tgt_create_poll_groups_done);
+}
+
+static void
+nvmf_poll_groups_destroy(void)
+{
+	/* destroy poll groups */
+	spdk_for_each_thread(nvmf_tgt_destroy_poll_group,
+			     NULL,
+			     nvmf_tgt_destroy_poll_groups_done);
+}
+
 static int
 nvmf_tgt_add_discovery_subsystem(void)
 {
@@ -410,6 +494,8 @@ nvmf_tgt_init(void)
 		g_nvmf_tgt->tgt_params.conn_sched = CONNECT_SCHED_ROUND_ROBIN;
 	}
 
+	TAILQ_INIT(&g_nvmf_tgt->poll_groups);
+
 	return 0;
 }
 
@@ -440,6 +526,8 @@ nvmf_create_nvmf_tgt(void)
 	}
 
 	fprintf(stdout, "created a nvmf target service\n");
+	g_target_state = NVMF_INIT_POLL_GROUPS;
+	return;
 error:
 	g_target_state = NVMF_FINI_TARGET;
 }
@@ -478,6 +566,12 @@ nvmf_target_advance_state(void)
 			break;
 		case NVMF_INIT_TARGET:
 			nvmf_create_nvmf_tgt();
+			break;
+		case NVMF_INIT_POLL_GROUPS:
+			nvmf_poll_groups_create();
+			break;
+		case NVMF_FINI_POLL_GROUPS:
+			nvmf_poll_groups_destroy();
 			break;
 		case NVMF_FINI_TARGET:
 			nvmf_destroy_nvmf_tgt();
