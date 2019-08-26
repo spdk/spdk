@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f44781ef_a510de8d",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-26T19:35:39Z",
+      "side": 1,
+      "message": "and wipe on-disk metadata",
+      "revId": "87353126e4616c132e202ea551913b0884a558d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "392917a8_20d5f488",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-26T19:35:39Z",
+      "side": 1,
+      "message": "I think you can remove the \"deleting the compression vol also deletes the pmem file\".  Or reword something like:\n\nGracefully destroy the vols via bdev_compress_delete API.  bdev_compress_delete will delete the on-disk metadata as well as the persistent memory file containing its metadata.",
+      "revId": "87353126e4616c132e202ea551913b0884a558d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc4851f7_31247d4e",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-26T19:35:39Z",
+      "side": 1,
+      "message": "I don\u0027t understand this comment.  It says with compressed vols created w/ prev test.  But previous test is run_bdevperf, and run_bdevperf calls destroy_vols.",
+      "revId": "87353126e4616c132e202ea551913b0884a558d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd7ea431_87566ffa",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-26T19:35:39Z",
+      "side": 1,
+      "message": "can this just run in foreground?  avoids saving perf_pid and trap/wait commands",
+      "revId": "87353126e4616c132e202ea551913b0884a558d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
