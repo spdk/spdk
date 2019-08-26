@@ -159,9 +159,9 @@ class Commands_Rpc(object):
         output, rc = self.rpc.destroy_lvol_bdev(bdev_name)
         return rc
 
-    def resize_lvol_bdev(self, uuid, new_size):
-        print("INFO: RPC COMMAND resize_lvol_bdev")
-        output, rc = self.rpc.resize_lvol_bdev(uuid, new_size)
+    def bdev_lvol_resize(self, uuid, new_size):
+        print("INFO: RPC COMMAND bdev_lvol_resize")
+        output, rc = self.rpc.bdev_lvol_resize(uuid, new_size)
         return rc
 
     def bdev_lvol_set_read_only(self, uuid):

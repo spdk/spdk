@@ -50,7 +50,7 @@ sleep 1
 
 # Perform some operations on the logical volume
 snapshot=$($rpc_py snapshot_lvol_bdev $lvol "MY_SNAPSHOT")
-$rpc_py resize_lvol_bdev $lvol $LVOL_BDEV_FINAL_SIZE
+$rpc_py bdev_lvol_resize $lvol $LVOL_BDEV_FINAL_SIZE
 clone=$($rpc_py bdev_lvol_clone $snapshot "MY_CLONE")
 $rpc_py inflate_lvol_bdev $clone
 
