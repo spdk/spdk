@@ -140,12 +140,15 @@ endif
 # Allow users to specify EXTRA_DPDK_CFLAGS if they want to build DPDK using unsupported compiler versions
 DPDK_CFLAGS += $(EXTRA_DPDK_CFLAGS)
 
+# Force-disable scan-build
+SUB_CC = $(patsubst %ccc-analyzer,$(DEFAULT_CC),$(CC))
+
 $(SPDK_ROOT_DIR)/dpdk/build: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG) $(DPDK_OPTS)
 
 all: $(SPDK_ROOT_DIR)/dpdk/build
-	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" EXTRA_LDFLAGS="$(DPDK_LDFLAGS)" MAKEFLAGS="T=$(DPDK_CONFIG) -j$(NPROC)" $(DPDK_OPTS)
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" EXTRA_LDFLAGS="$(DPDK_LDFLAGS)" CC=$(SUB_CC) T="$(DPDK_CONFIG)" $(DPDK_OPTS)
 
 clean:
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
