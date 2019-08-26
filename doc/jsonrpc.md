@@ -302,7 +302,7 @@ Example response:
     "bdev_lvol_get_lvstores",
     "destroy_lvol_bdev",
     "resize_lvol_bdev",
-    "set_read_only_lvol_bdev",
+    "bdev_lvol_set_read_only",
     "decouple_parent_lvol_bdev",
     "inflate_lvol_bdev",
     "bdev_lvol_rename",
@@ -5145,7 +5145,7 @@ Example response:
 }
 ~~~
 
-## set_read_only_lvol_bdev{#rpc_set_read_only_lvol_bdev}
+## bdev_lvol_set_read_only{#rpc_bdev_lvol_set_read_only}
 
 Mark logical volume as read only.
 
@@ -5162,7 +5162,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "set_read_only_lvol_bdev",
+  "method": "bdev_lvol_set_read_only",
   "id": 1,
   "params": {
     "name": "51638754-ca16-43a7-9f8f-294a0805ab0a",

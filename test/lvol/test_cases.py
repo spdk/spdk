@@ -2866,7 +2866,7 @@ class TestCases(object):
                                                bdev_size)
         # Set lvol bdev as read only
         lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_name)
-        fail_count += self.c.set_read_only_lvol_bdev(lvol_bdev['name'])
+        fail_count += self.c.bdev_lvol_set_read_only(lvol_bdev['name'])
 
         # Try to perform write operation on lvol marked as read only
         fail_count += self.c.start_nbd_disk(lvol_bdev['name'], nbd_name0)
