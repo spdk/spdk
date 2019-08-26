@@ -93,6 +93,7 @@ static struct nvmf_target *g_nvmf_tgt = NULL;
 struct nvmf_thread *g_master_thread;
 static bool g_threads_done = false;
 
+static void nvmf_spdk_tgt_destroy(struct spdk_nvmf_tgt *tgt);
 static void nvmf_cleanup_threads(void);
 static void nvmf_exit_threads(void);
 
@@ -438,6 +439,499 @@ nvmf_exit_threads(void)
 	spdk_thread_lib_fini();
 }
 
+nvmf_tgt_listen_done(void *cb_arg, int status)
+{
+	/* TODO: Config parsing should wait for this operation to finish. */
+
+	if (status) {
+		fprintf(stderr, "Failed to listen on transport address\n");
+	}
+}
+
+static int
+nvmf_parse_and_create_subsystem(struct spdk_conf_section *sp)
+{
+	const char *nqn, *mode;
+	size_t i;
+	int ret;
+	int lcore;
+	bool allow_any_host;
+	const char *sn;
+	const char *mn;
+	struct spdk_nvmf_subsystem *subsystem;
+	int num_ns;
+
+	nqn = spdk_conf_section_get_val(sp, "NQN");
+	if (nqn == NULL) {
+		fprintf(stderr, "Subsystem missing NQN\n");
+		return -1;
+	}
+
+	mode = spdk_conf_section_get_val(sp, "Mode");
+	lcore = spdk_conf_section_get_intval(sp, "Core");
+	num_ns = spdk_conf_section_get_intval(sp, "MaxNamespaces");
+
+	if (num_ns < 1) {
+		num_ns = 0;
+	} else if (num_ns > SPDK_NVMF_MAX_NAMESPACES) {
+		num_ns = SPDK_NVMF_MAX_NAMESPACES;
+	}
+
+	/* Mode is no longer a valid parameter, but print out a nice
+	 * message if it exists to inform users.
+	 */
+	if (mode) {
+		if (strcasecmp(mode, "Virtual") == 0) {
+			fprintf(stdout, "Your mode value is 'Virtual' which is now the only possible mode.\n"
+				"Your configuration file will work as expected.\n");
+		} else {
+			fprintf(stdout, "Please remove Mode from your configuration file.\n");
+			return -1;
+		}
+	}
+
+	/* Core is no longer a valid parameter, but print out a nice
+	 * message if it exists to inform users.
+	 */
+	if (lcore >= 0) {
+		fprintf(stdout, "Core present in the [Subsystem] section of the config file.\n"
+			"Core was removed as an option. Subsystems can now run on all available cores.\n");
+		fprintf(stdout, "Please remove Core from your configuration file. Ignoring it and continuing.\n");
+	}
+
+	sn = spdk_conf_section_get_val(sp, "SN");
+	if (sn == NULL) {
+		fprintf(stderr, "Subsystem %s: missing serial number\n", nqn);
+		return -1;
+	}
+
+	subsystem = spdk_nvmf_subsystem_create(g_nvmf_tgt->tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, num_ns);
+	if (subsystem == NULL) {
+		goto done;
+	}
+
+	if (spdk_nvmf_subsystem_set_sn(subsystem, sn)) {
+		fprintf(stderr, "Subsystem %s: invalid serial number '%s'\n", nqn, sn);
+		spdk_nvmf_subsystem_destroy(subsystem);
+		subsystem = NULL;
+		goto done;
+	}
+
+	mn = spdk_conf_section_get_val(sp, "MN");
+	if (mn == NULL) {
+		fprintf(stdout,
+			"Subsystem %s: missing model number, will use default\n",
+			nqn);
+	}
+
+	if (mn != NULL) {
+		if (spdk_nvmf_subsystem_set_mn(subsystem, mn)) {
+			fprintf(stderr, "Subsystem %s: invalid model number '%s'\n", nqn, mn);
+			spdk_nvmf_subsystem_destroy(subsystem);
+			subsystem = NULL;
+			goto done;
+		}
+	}
+
+	/* Parse Namespace sections */
+	for (i = 0; ; i++) {
+		struct spdk_nvmf_ns_opts ns_opts;
+		struct spdk_bdev *bdev;
+		const char *bdev_name;
+		const char *uuid_str;
+		char *nsid_str;
+
+		bdev_name = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
+		if (!bdev_name) {
+			break;
+		}
+
+		bdev = spdk_bdev_get_by_name(bdev_name);
+		if (bdev == NULL) {
+			fprintf(stderr, "Could not find namespace bdev '%s'\n", bdev_name);
+			spdk_nvmf_subsystem_destroy(subsystem);
+			subsystem = NULL;
+			goto done;
+		}
+
+		spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+
+		nsid_str = spdk_conf_section_get_nmval(sp, "Namespace", i, 1);
+		if (nsid_str) {
+			char *end;
+			unsigned long nsid_ul = strtoul(nsid_str, &end, 0);
+
+			if (*end != '\0' || nsid_ul == 0 || nsid_ul >= UINT32_MAX) {
+				fprintf(stderr, "Invalid NSID %s\n", nsid_str);
+				spdk_nvmf_subsystem_destroy(subsystem);
+				subsystem = NULL;
+				goto done;
+			}
+
+			ns_opts.nsid = (uint32_t)nsid_ul;
+		}
+
+		uuid_str = spdk_conf_section_get_nmval(sp, "Namespace", i, 2);
+		if (uuid_str) {
+			if (spdk_uuid_parse(&ns_opts.uuid, uuid_str)) {
+				fprintf(stderr, "Invalid UUID %s\n", uuid_str);
+				spdk_nvmf_subsystem_destroy(subsystem);
+				subsystem = NULL;
+				goto done;
+			}
+		}
+
+		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts), NULL) == 0) {
+			fprintf(stderr, "Unable to add namespace\n");
+			spdk_nvmf_subsystem_destroy(subsystem);
+			subsystem = NULL;
+			goto done;
+		}
+
+		fprintf(stderr, "Attaching block device %s to subsystem %s\n",
+			spdk_bdev_get_name(bdev), spdk_nvmf_subsystem_get_nqn(subsystem));
+	}
+
+	/* Parse Listen sections */
+	for (i = 0; ; i++) {
+		struct spdk_nvme_transport_id trid = {0};
+		const char *transport;
+		const char *address;
+		char *address_dup;
+		char *host;
+		char *port;
+
+		transport = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
+		if (!transport) {
+			break;
+		}
+
+		if (spdk_nvme_transport_id_parse_trtype(&trid.trtype, transport)) {
+			fprintf(stderr, "Invalid listen address transport type '%s'\n", transport);
+			continue;
+		}
+
+		address = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
+		if (!address) {
+			break;
+		}
+
+		address_dup = strdup(address);
+		if (!address_dup) {
+			break;
+		}
+
+		ret = spdk_parse_ip_addr(address_dup, &host, &port);
+		if (ret < 0) {
+			fprintf(stderr, "Unable to parse listen address '%s'\n", address);
+			free(address_dup);
+			continue;
+		}
+
+		if (strchr(host, ':')) {
+			trid.adrfam = SPDK_NVMF_ADRFAM_IPV6;
+		} else {
+			trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+		}
+
+		snprintf(trid.traddr, sizeof(trid.traddr), "%s", host);
+		if (port) {
+			snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", port);
+		}
+		free(address_dup);
+
+		spdk_nvmf_tgt_listen(g_nvmf_tgt->tgt, &trid, nvmf_tgt_listen_done, NULL);
+
+		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
+	}
+
+	/* Parse Host sections */
+	for (i = 0; ; i++) {
+		const char *host = spdk_conf_section_get_nval(sp, "Host", i);
+
+		if (!host) {
+			break;
+		}
+
+		spdk_nvmf_subsystem_add_host(subsystem, host);
+	}
+
+	allow_any_host = spdk_conf_section_get_boolval(sp, "AllowAnyHost", false);
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, allow_any_host);
+
+done:
+	return (subsystem != NULL);
+}
+
+static int
+nvmf_parse_and_create_subsystems(void)
+{
+	int rc = 0;
+	struct spdk_conf_section *sp;
+
+	sp = spdk_conf_first_section(NULL);
+	while (sp != NULL) {
+		if (spdk_conf_section_match_prefix(sp, "Subsystem")) {
+			rc = nvmf_parse_and_create_subsystem(sp);
+			if (rc < 0) {
+				return rc;
+			}
+		}
+		sp = spdk_conf_next_section(sp);
+	}
+
+	return 0;
+}
+
+static void
+nvmf_tgt_add_transport_done(void *cb_arg, int status)
+{
+	/* TODO: Config parsing should wait for this operation to finish. */
+
+	if (status) {
+		fprintf(stderr, "Failed to add the transport\n");
+	}
+}
+
+static int
+nvmf_parse_and_create_transport(struct spdk_conf_section *sp)
+{
+	const char *type;
+	struct spdk_nvmf_transport_opts opts = { 0 };
+	enum spdk_nvme_transport_type trtype;
+	struct spdk_nvmf_transport *transport;
+	bool bval;
+	int val;
+
+	type = spdk_conf_section_get_val(sp, "Type");
+	if (type == NULL) {
+		fprintf(stderr, "Transport missing Type\n");
+		return -1;
+	}
+
+	if (spdk_nvme_transport_id_parse_trtype(&trtype, type)) {
+		fprintf(stderr, "Invalid transport type '%s'\n", type);
+		return -1;
+	}
+
+	if (spdk_nvmf_tgt_get_transport(g_nvmf_tgt->tgt, trtype)) {
+		fprintf(stderr, "Duplicate transport type '%s'\n", type);
+		return -1;
+	}
+
+	if (!spdk_nvmf_transport_opts_init(trtype, &opts)) {
+		fprintf(stderr, "spdk_nvmf_transport_opts_init() failed\n");
+		return -1;
+	}
+
+	val = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
+	if (val >= 0) {
+		opts.max_queue_depth = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "MaxQueuesPerSession");
+	if (val >= 0) {
+		opts.max_qpairs_per_ctrlr = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "InCapsuleDataSize");
+	if (val >= 0) {
+		opts.in_capsule_data_size = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "MaxIOSize");
+	if (val >= 0) {
+		opts.max_io_size = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "IOUnitSize");
+	if (val >= 0) {
+		opts.io_unit_size = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "MaxAQDepth");
+	if (val >= 0) {
+		opts.max_aq_depth = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "NumSharedBuffers");
+	if (val >= 0) {
+		opts.num_shared_buffers = val;
+	}
+	val = spdk_conf_section_get_intval(sp, "BufCacheSize");
+	if (val >= 0) {
+		opts.buf_cache_size = val;
+	}
+
+	val = spdk_conf_section_get_intval(sp, "MaxSRQDepth");
+	if (val >= 0) {
+		if (trtype == SPDK_NVME_TRANSPORT_RDMA) {
+			opts.max_srq_depth = val;
+		} else {
+			fprintf(stderr, "MaxSRQDepth is relevant only for RDMA transport '%s'\n", type);
+			return -1;
+		}
+	}
+
+	if (trtype == SPDK_NVME_TRANSPORT_TCP) {
+		bval = spdk_conf_section_get_boolval(sp, "C2HSuccess", true);
+		opts.c2h_success = bval;
+	}
+
+	transport = spdk_nvmf_transport_create(trtype, &opts);
+	if (transport) {
+		spdk_nvmf_tgt_add_transport(g_nvmf_tgt->tgt, transport,
+					    nvmf_tgt_add_transport_done,
+					    NULL);
+	} else {
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+nvmf_parse_and_create_transports(void)
+{
+	int rc;
+	struct spdk_conf_section *sp;
+
+	sp = spdk_conf_first_section(NULL);
+
+	while (sp != NULL) {
+		if (spdk_conf_section_match_prefix(sp, "Transport")) {
+			rc = nvmf_parse_and_create_transport(sp);
+			if (rc < 0) {
+				return rc;
+			}
+		}
+		sp = spdk_conf_next_section(sp);
+	}
+
+	return 0;
+}
+
+static int
+nvmf_tgt_add_discovery_subsystem(struct nvmf_target *nvmf_tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_create(nvmf_tgt->tgt, SPDK_NVMF_DISCOVERY_NQN,
+					       SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+	if (subsystem == NULL) {
+		fprintf(stderr, "Failed creating discovery nvmf library subsystem\n");
+		return -EINVAL;
+	}
+
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, true);
+
+	return 0;
+}
+
+static int
+nvmf_read_config_file_nvmf_section(struct spdk_conf_section *sp)
+{
+	int val;
+	char *conn_scheduler;
+
+	val = spdk_conf_section_get_intval(sp, "MaxSubsystems");
+	if (val >= 0) {
+		g_nvmf_tgt->tgt_params.max_subsystems = val;
+	}
+
+	val = spdk_conf_section_get_intval(sp, "AcceptorPollRate");
+	if (val >= 0) {
+		g_nvmf_tgt->tgt_params.acceptor_poll_rate = val;
+	}
+
+	conn_scheduler = spdk_conf_section_get_val(sp, "ConnectionScheduler");
+
+	if (conn_scheduler) {
+		if (strcasecmp(conn_scheduler, "RoundRobin") == 0) {
+			g_nvmf_tgt->tgt_params.conn_sched = CONNECT_SCHED_ROUND_ROBIN;
+		} else if (strcasecmp(conn_scheduler, "Host") == 0) {
+			g_nvmf_tgt->tgt_params.conn_sched = CONNECT_SCHED_HOST_IP;
+		} else if (strcasecmp(conn_scheduler, "Transport") == 0) {
+			g_nvmf_tgt->tgt_params.conn_sched = CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP;
+		} else {
+			fprintf(stderr, "The valid value of ConnectionScheduler should be:\n"
+				"\t RoundRobin\n"
+				"\t Host\n"
+				"\t Transport\n");
+			return -1;
+		}
+
+	} else {
+		fprintf(stderr, "The value of ConnectionScheduler is not configured,\n"
+			"we will use RoundRobin as the default scheduler\n");
+	}
+
+	return 0;
+}
+
+static int
+nvmf_parse_and_create_nvmf_tgt(void)
+{
+	int rc;
+	struct spdk_conf_section *sp;
+	struct spdk_nvmf_target_opts tgt_opts;
+
+	/* parse nvmf section */
+	sp = spdk_conf_find_section(NULL, "Nvmf");
+	if (sp) {
+		rc = nvmf_read_config_file_nvmf_section(sp);
+		if (rc < 0) {
+			fprintf(stderr, "fail to parse the Nvmf section\n");
+			return rc;
+		}
+	}
+
+	tgt_opts.max_subsystems = g_nvmf_tgt->tgt_params.max_subsystems;
+	snprintf(tgt_opts.name, sizeof(tgt_opts.name), "%s", "nvmf_example");
+	g_nvmf_tgt->tgt = spdk_nvmf_tgt_create(&tgt_opts);
+	if (g_nvmf_tgt->tgt == NULL) {
+		fprintf(stderr, "spdk_nvmf_tgt_create() failed\n");
+		return -EINVAL;
+	}
+
+	/* create and add discovery subsystem */
+	rc = nvmf_tgt_add_discovery_subsystem(g_nvmf_tgt);
+	if (rc != 0) {
+		fprintf(stderr, "spdk_add_nvmf_discovery_subsystem() failed\n");
+		nvmf_spdk_tgt_destroy(g_nvmf_tgt->tgt);
+		return rc;
+	}
+
+	/* parse and add transports */
+	rc = nvmf_parse_and_create_transports();
+	if (rc != 0) {
+		fprintf(stderr, "create transports failed\n");
+		nvmf_spdk_tgt_destroy(g_nvmf_tgt->tgt);
+		return rc;
+	}
+
+	/* parse and add subsystems */
+	rc = nvmf_parse_and_create_subsystems();
+	if (rc != 0) {
+		fprintf(stderr, "fail to create subsystems\n");
+		nvmf_spdk_tgt_destroy(g_nvmf_tgt->tgt);
+		return rc;
+	}
+
+	return 0;
+}
+
+static void
+nvmf_tgt_destroy_done(void *ctx, int status)
+{
+	*(bool *)ctx = true;
+}
+
+static void
+nvmf_spdk_tgt_destroy(struct spdk_nvmf_tgt *tgt)
+{
+	bool done = false;
+
+	spdk_nvmf_tgt_destroy(tgt, nvmf_tgt_destroy_done, &done);
+	do {
+		spdk_thread_poll(g_master_thread->thread, 0, 0);
+	} while (!done);
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -488,6 +982,16 @@ int main(int argc, char **argv)
 	/* Initialize the bdev layer */
 	nvmf_bdev_init();
 
+	/* Initialize the nvmf tgt */
+	rc = nvmf_parse_and_create_nvmf_tgt();
+	if (rc != 0) {
+		fprintf(stderr, "create nvmf_tgt failed\n");
+		nvmf_bdev_fini();
+		nvmf_exit_threads();
+		goto cleanup;
+	}
+
+	nvmf_spdk_tgt_destroy(g_nvmf_tgt->tgt);
 	nvmf_bdev_fini();
 	nvmf_exit_threads();
 cleanup:
