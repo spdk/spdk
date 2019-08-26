@@ -82,10 +82,17 @@ struct nvmf_thread {
 	TAILQ_ENTRY(nvmf_thread) link;
 };
 
+struct nvmf_target_poll_group {
+	struct spdk_nvmf_poll_group		*group;
+	struct spdk_thread			*thread;
+	TAILQ_ENTRY(nvmf_target_poll_group)	link;
+};
+
 struct nvmf_target {
 	struct spdk_nvmf_tgt	*tgt;
 
 	TAILQ_HEAD(, nvmf_transport_id) tgt_trids;
+	TAILQ_HEAD(, nvmf_target_poll_group) poll_groups;
 	TAILQ_ENTRY(nvmf_target) link;
 };
 
@@ -465,6 +472,7 @@ nvmf_create_nvmf_tgt(void)
 
 	TAILQ_INSERT_TAIL(&g_nvmf_tgts, nvmf_tgt, link);
 	TAILQ_INIT(&nvmf_tgt->tgt_trids);
+	TAILQ_INIT(&nvmf_tgt->poll_groups);
 
 	return nvmf_tgt;
 }
@@ -1076,6 +1084,93 @@ nvmf_parse_and_create_nvmf_tgts(void)
 	return 0;
 }
 
+static void
+nvmf_tgt_create_poll_groups_done(void *ctx)
+{
+	bool *done = ctx;
+
+	*done = true;
+	fprintf(stdout, "create targets's poll groups done\n");
+}
+
+static void
+nvmf_tgt_create_poll_group(void *ctx)
+{
+	struct nvmf_target_poll_group *pg;
+	struct nvmf_target *nvmf_tgt;
+
+	TAILQ_FOREACH(nvmf_tgt, &g_nvmf_tgts, link) {
+		pg = calloc(1, sizeof(struct nvmf_target_poll_group));
+		if (!pg) {
+			fprintf(stderr, "failed to allocate poll group\n");
+			return;
+		}
+
+		pg->thread = spdk_get_thread();
+		pg->group = spdk_nvmf_poll_group_create(nvmf_tgt->tgt);
+		TAILQ_INSERT_TAIL(&nvmf_tgt->poll_groups, pg, link);
+	}
+}
+
+static void
+nvmf_tgt_create_poll_groups(void)
+{
+	bool done = false;
+
+	spdk_for_each_thread(nvmf_tgt_create_poll_group,
+			     &done,
+			     nvmf_tgt_create_poll_groups_done);
+
+	do {
+		spdk_thread_poll(g_master_thread->thread, 0, 0);
+	} while (!done);
+}
+
+static void
+nvmf_tgt_destroy_poll_groups_done(void *ctx)
+{
+	bool *done = ctx;
+
+	*done = true;
+	fprintf(stdout, "destroy targets's poll groups done\n");
+}
+
+static void
+nvmf_tgt_destroy_poll_group(void *ctx)
+{
+	struct nvmf_target_poll_group *pg, *tmp;
+	struct nvmf_target *nvmf_tgt;
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+
+	TAILQ_FOREACH(nvmf_tgt, &g_nvmf_tgts, link) {
+		TAILQ_FOREACH_SAFE(pg, &nvmf_tgt->poll_groups, link, tmp) {
+			if (pg->thread == thread) {
+				TAILQ_REMOVE(&nvmf_tgt->poll_groups, pg, link);
+				spdk_nvmf_poll_group_destroy(pg->group);
+				free(pg);
+				break;
+			}
+		}
+	}
+}
+
+static void
+nvmf_tgt_destroy_poll_groups(void)
+{
+	bool done = false;
+
+	/* Send a message to each thread and destroy the poll group */
+	spdk_for_each_thread(nvmf_tgt_destroy_poll_group,
+			     &done,
+			     nvmf_tgt_destroy_poll_groups_done);
+
+	do {
+		spdk_thread_poll(g_master_thread->thread, 0, 0);
+	} while (!done);
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -1126,6 +1221,10 @@ int main(int argc, char **argv)
 		goto exit;
 	}
 
+	/* Create poll groups of each target */
+	nvmf_tgt_create_poll_groups();
+
+	nvmf_tgt_destroy_poll_groups();
 	nvmf_destroy_nvmf_tgts();
 exit:
 	spdk_rpc_finish();
