@@ -4,6 +4,7 @@
 TEST_DIR=$(readlink -f $rootdir/..)
 VM_DIR=$VHOST_DIR/vms
 TARGET_DIR=$VHOST_DIR/vhost
+VM_PASSWORD="root"
 
 #TODO: Move vhost_vm_image.qcow2 into VHOST_DIR on test systems.
 VM_IMAGE=$HOME/vhost_vm_image.qcow2
@@ -308,7 +309,7 @@ function vm_exec()
 	local vm_num="$1"
 	shift
 
-	sshpass -p root ssh \
+	sshpass -p "$VM_PASSWORD" ssh \
 		-o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-o User=root \
@@ -326,7 +327,7 @@ function vm_scp()
 	local vm_num="$1"
 	shift
 
-	sshpass -p root scp \
+	sshpass -p "$VM_PASSWORD" scp \
 		-o UserKnownHostsFile=/dev/null \
 		-o StrictHostKeyChecking=no \
 		-o User=root \
