@@ -41,7 +41,9 @@ REDIRECT=> /dev/null
 endif
 
 all:
-	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/intel-ipsec-mb -j$(NPROC) all SHARED=n EXTRA_CFLAGS=-fPIC CC=cc $(REDIRECT)
+	$(eval SUB_MAKEFLAGS := $(filter-out CXX=%/c++-analyzer,$(MAKEFLAGS)))
+	$(eval SUB_MAKEFLAGS := $(filter-out CC=%/ccc-analyzer,$(SUB_MAKEFLAGS)))
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/intel-ipsec-mb all SHARED=n EXTRA_CFLAGS=-fPIC MAKEFLAGS="$(SUB_MAKEFLAGS)" $(REDIRECT)
 
 install: all
 
