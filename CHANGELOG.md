@@ -1228,7 +1228,7 @@ and Clones of existing Snapshots.
 See the [lvol snapshots](http://www.spdk.io/doc/logical_volumes.html#lvol_snapshots) documentation
 for more details.
 
-Resizing logical volumes is now supported via the `resize_lvol_bdev` RPC method.
+Resizing logical volumes is now supported via the `bdev_lvol_resize` RPC method.
 
 ### Lib
 

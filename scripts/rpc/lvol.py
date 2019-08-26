@@ -115,7 +115,8 @@ def bdev_lvol_rename(client, old_name, new_name):
     return client.call('bdev_lvol_rename', params)
 
 
-def resize_lvol_bdev(client, name, size):
+@deprecated_alias('resize_lvol_bdev')
+def bdev_lvol_resize(client, name, size):
     """Resize a logical volume.
 
     Args:
@@ -126,7 +127,7 @@ def resize_lvol_bdev(client, name, size):
         'name': name,
         'size': size,
     }
-    return client.call('resize_lvol_bdev', params)
+    return client.call('bdev_lvol_resize', params)
 
 
 @deprecated_alias('set_read_only_lvol_bdev')
