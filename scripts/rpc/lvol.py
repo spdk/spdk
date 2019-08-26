@@ -129,7 +129,8 @@ def resize_lvol_bdev(client, name, size):
     return client.call('resize_lvol_bdev', params)
 
 
-def set_read_only_lvol_bdev(client, name):
+@deprecated_alias('set_read_only_lvol_bdev')
+def bdev_lvol_set_read_only(client, name):
     """Mark logical volume as read only.
 
     Args:
@@ -138,7 +139,7 @@ def set_read_only_lvol_bdev(client, name):
     params = {
         'name': name,
     }
-    return client.call('set_read_only_lvol_bdev', params)
+    return client.call('bdev_lvol_set_read_only', params)
 
 
 def destroy_lvol_bdev(client, name):
