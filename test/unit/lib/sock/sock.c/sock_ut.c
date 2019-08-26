@@ -36,6 +36,8 @@
 
 #include "spdk_cunit.h"
 
+#include "spdk_internal/sock.h"
+
 #include "sock/sock.c"
 #include "sock/posix/posix.c"
 
@@ -696,6 +698,122 @@ posix_sock_group_fairness(void)
 	CU_ASSERT(rc == 0);
 }
 
+struct close_ctx {
+	struct spdk_sock_group *group;
+	struct spdk_sock *sock;
+	bool called;
+};
+
+static void
+_first_close_cb(void *cb_arg, int err)
+{
+	struct close_ctx *ctx = cb_arg;
+	int rc;
+
+	ctx->called = true;
+
+	/* Always close the socket here */
+	rc = spdk_sock_group_remove_sock(ctx->group, ctx->sock);
+	CU_ASSERT(rc == 0);
+	spdk_sock_close(&ctx->sock);
+
+	CU_ASSERT(err == 0);
+}
+
+static void
+_second_close_cb(void *cb_arg, int err)
+{
+	*(bool *)cb_arg = true;
+	CU_ASSERT(err == -ECANCELED);
+}
+
+static void
+_sock_close(const char *ip, int port)
+{
+	struct spdk_sock_group *group;
+	struct spdk_sock *listen_sock;
+	struct spdk_sock *server_sock;
+	struct spdk_sock *client_sock;
+	uint8_t data_buf[64];
+	struct spdk_sock_request *req1, *req2;
+	struct close_ctx ctx = {};
+	bool cb_arg2 = false;
+	int rc;
+
+	listen_sock = spdk_sock_listen(ip, port);
+	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
+
+	server_sock = spdk_sock_accept(listen_sock);
+	CU_ASSERT(server_sock == NULL);
+	CU_ASSERT(errno == EAGAIN || errno == EWOULDBLOCK);
+
+	client_sock = spdk_sock_connect(ip, port);
+	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
+
+	usleep(1000);
+
+	server_sock = spdk_sock_accept(listen_sock);
+	SPDK_CU_ASSERT_FATAL(server_sock != NULL);
+
+	group = spdk_sock_group_create(NULL);
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+
+	rc = spdk_sock_group_add_sock(group, server_sock, read_data, server_sock);
+	CU_ASSERT(rc == 0);
+
+	/* Submit multiple async writevs on the server sock */
+
+	req1 = calloc(1, sizeof(struct spdk_sock_request) + sizeof(struct iovec));
+	SPDK_CU_ASSERT_FATAL(req1 != NULL);
+	SPDK_SOCK_REQUEST_IOV(req1, 0)->iov_base = data_buf;
+	SPDK_SOCK_REQUEST_IOV(req1, 0)->iov_len = 64;
+	ctx.group = group;
+	ctx.sock = server_sock;
+	ctx.called = false;
+	req1->iovcnt = 1;
+	req1->cb_fn = _first_close_cb;
+	req1->cb_arg = &ctx;
+	spdk_sock_writev_async(server_sock, req1);
+	CU_ASSERT(ctx.called == false);
+
+	req2 = calloc(1, sizeof(struct spdk_sock_request) + sizeof(struct iovec));
+	SPDK_CU_ASSERT_FATAL(req2 != NULL);
+	SPDK_SOCK_REQUEST_IOV(req2, 0)->iov_base = data_buf;
+	SPDK_SOCK_REQUEST_IOV(req2, 0)->iov_len = 64;
+	req2->iovcnt = 1;
+	req2->cb_fn = _second_close_cb;
+	req2->cb_arg = &cb_arg2;
+	spdk_sock_writev_async(server_sock, req2);
+	CU_ASSERT(cb_arg2 == false);
+
+	/* Poll the socket so the writev_async's send. The first one's
+	 * callback will close the socket. */
+	spdk_sock_group_poll(group);
+	CU_ASSERT(ctx.called == true);
+	CU_ASSERT(cb_arg2 == true);
+
+	rc = spdk_sock_group_close(&group);
+	CU_ASSERT(group == NULL);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_sock_close(&client_sock);
+	CU_ASSERT(client_sock == NULL);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_sock_close(&listen_sock);
+	CU_ASSERT(listen_sock == NULL);
+	CU_ASSERT(rc == 0);
+
+	free(req1);
+	free(req2);
+}
+
+static void
+posix_sock_close(void)
+{
+	_sock_close("127.0.0.1", UT_PORT);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -717,7 +835,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "ut_sock", ut_sock) == NULL ||
 		CU_add_test(suite, "posix_sock_group", posix_sock_group) == NULL ||
 		CU_add_test(suite, "ut_sock_group", ut_sock_group) == NULL ||
-		CU_add_test(suite, "posix_sock_group_fairness", posix_sock_group_fairness) == NULL) {
+		CU_add_test(suite, "posix_sock_group_fairness", posix_sock_group_fairness) == NULL ||
+		CU_add_test(suite, "posix_sock_close", posix_sock_close) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
