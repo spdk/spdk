@@ -190,9 +190,9 @@ class UIRoot(UINode):
 
     @verbose
     @is_method_available
-    def get_lvol_stores(self):
+    def bdev_lvol_get_lvstores(self):
         if self.is_init:
-            self.current_lvol_stores = rpc.lvol.get_lvol_stores(self.client)
+            self.current_lvol_stores = rpc.lvol.bdev_lvol_get_lvstores(self.client)
             for lvs in self.current_lvol_stores:
                 yield LvolStore(lvs)
 

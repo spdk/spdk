@@ -299,7 +299,7 @@ Example response:
     "bdev_malloc_create",
     "delete_ftl_bdev",
     "construct_ftl_bdev",
-    "get_lvol_stores",
+    "bdev_lvol_get_lvstores",
     "destroy_lvol_bdev",
     "resize_lvol_bdev",
     "set_read_only_lvol_bdev",
@@ -4848,7 +4848,7 @@ Example response:
 }
 ~~~
 
-## get_lvol_stores {#rpc_get_lvol_stores}
+## bdev_lvol_get_lvstores {#rpc_bdev_lvol_get_lvstores}
 
 Get a list of logical volume stores.
 
@@ -4869,7 +4869,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_lvol_stores",
+  "method": "bdev_lvol_get_lvstores",
   "id": 1,
   "params": {
     "lvs_name": "LVS0"

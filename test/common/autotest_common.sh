@@ -778,7 +778,7 @@ function fio_nvme()
 function get_lvs_free_mb()
 {
 	local lvs_uuid=$1
-	local lvs_info=$($rpc_py get_lvol_stores)
+	local lvs_info=$($rpc_py bdev_lvol_get_lvstores)
 	local fc=$(jq ".[] | select(.uuid==\"$lvs_uuid\") .free_clusters" <<< "$lvs_info")
 	local cs=$(jq ".[] | select(.uuid==\"$lvs_uuid\") .cluster_size" <<< "$lvs_info")
 

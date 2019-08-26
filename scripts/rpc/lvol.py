@@ -197,7 +197,8 @@ def destroy_lvol_store(client, uuid=None, lvs_name=None):
     return client.call('destroy_lvol_store', params)
 
 
-def get_lvol_stores(client, uuid=None, lvs_name=None):
+@deprecated_alias('get_lvol_stores')
+def bdev_lvol_get_lvstores(client, uuid=None, lvs_name=None):
     """List logical volume stores.
 
     Args:
@@ -214,4 +215,4 @@ def get_lvol_stores(client, uuid=None, lvs_name=None):
         params['uuid'] = uuid
     if lvs_name:
         params['lvs_name'] = lvs_name
-    return client.call('get_lvol_stores', params)
+    return client.call('bdev_lvol_get_lvstores', params)

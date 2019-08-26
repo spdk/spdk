@@ -433,7 +433,7 @@ This will create lvol store named `lvs` with cluster size 4096, build on top of
 `Malloc2` bdev. In response user will be provided with uuid which is unique lvol store
 identifier.
 
-User can get list of available lvol stores using `get_lvol_stores` RPC command (no
+User can get list of available lvol stores using `bdev_lvol_get_lvstores` RPC command (no
 parameters available).
 
 Example response
