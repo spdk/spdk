@@ -97,7 +97,7 @@ destroy_lvol_store [-h] [-u UUID] [-l LVS_NAME]
     using destroy_lvol_bdev rpc call.
     optional arguments:
     -h, --help  show help
-get_lvol_stores [-h] [-u UUID] [-l LVS_NAME]
+bdev_lvol_get_lvstores [-h] [-u UUID] [-l LVS_NAME]
     Display current logical volume store list
     optional arguments:
     -h, --help  show help

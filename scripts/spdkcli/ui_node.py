@@ -85,7 +85,7 @@ class UILvolStores(UINode):
 
     def refresh(self):
         self._children = set([])
-        for lvs in self.get_root().get_lvol_stores():
+        for lvs in self.get_root().bdev_lvol_get_lvstores():
             UILvsObj(lvs, self)
 
     def delete(self, name, uuid):

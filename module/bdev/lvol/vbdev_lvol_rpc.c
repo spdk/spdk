@@ -985,21 +985,21 @@ cleanup:
 
 SPDK_RPC_REGISTER("destroy_lvol_bdev", spdk_rpc_destroy_lvol_bdev, SPDK_RPC_RUNTIME)
 
-struct rpc_get_lvol_stores {
+struct rpc_bdev_lvol_get_lvstores {
 	char *uuid;
 	char *lvs_name;
 };
 
 static void
-free_rpc_get_lvol_stores(struct rpc_get_lvol_stores *req)
+free_rpc_bdev_lvol_get_lvstores(struct rpc_bdev_lvol_get_lvstores *req)
 {
 	free(req->uuid);
 	free(req->lvs_name);
 }
 
-static const struct spdk_json_object_decoder rpc_get_lvol_stores_decoders[] = {
-	{"uuid", offsetof(struct rpc_get_lvol_stores, uuid), spdk_json_decode_string, true},
-	{"lvs_name", offsetof(struct rpc_get_lvol_stores, lvs_name), spdk_json_decode_string, true},
+static const struct spdk_json_object_decoder rpc_bdev_lvol_get_lvstores_decoders[] = {
+	{"uuid", offsetof(struct rpc_bdev_lvol_get_lvstores, uuid), spdk_json_decode_string, true},
+	{"lvs_name", offsetof(struct rpc_bdev_lvol_get_lvstores, lvs_name), spdk_json_decode_string, true},
 };
 
 static void
@@ -1035,18 +1035,18 @@ spdk_rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_b
 }
 
 static void
-spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+spdk_rpc_bdev_lvol_get_lvstores(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
 {
-	struct rpc_get_lvol_stores req = {};
+	struct rpc_bdev_lvol_get_lvstores req = {};
 	struct spdk_json_write_ctx *w;
 	struct lvol_store_bdev *lvs_bdev = NULL;
 	struct spdk_lvol_store *lvs = NULL;
 	int rc;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_get_lvol_stores_decoders,
-					    SPDK_COUNTOF(rpc_get_lvol_stores_decoders),
+		if (spdk_json_decode_object(params, rpc_bdev_lvol_get_lvstores_decoders,
+					    SPDK_COUNTOF(rpc_bdev_lvol_get_lvstores_decoders),
 					    &req)) {
 			SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -1083,7 +1083,8 @@ spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_get_lvol_stores(&req);
+	free_rpc_bdev_lvol_get_lvstores(&req);
 }
 
-SPDK_RPC_REGISTER("get_lvol_stores", spdk_rpc_get_lvol_stores, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_get_lvstores", spdk_rpc_bdev_lvol_get_lvstores, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_get_lvstores, get_lvol_stores)

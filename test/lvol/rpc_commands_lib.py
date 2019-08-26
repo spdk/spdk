@@ -62,9 +62,9 @@ class Commands_Rpc(object):
                                     json_value=json_value))
         return 1
 
-    def check_get_lvol_stores(self, base_name, uuid, cluster_size=None, lvs_name=""):
-        print("INFO: RPC COMMAND get_lvol_stores")
-        json_value = self.get_lvol_stores()
+    def check_bdev_lvol_get_lvstores(self, base_name, uuid, cluster_size=None, lvs_name=""):
+        print("INFO: RPC COMMAND bdev_lvol_get_lvstores")
+        json_value = self.bdev_lvol_get_lvstores()
         if json_value:
             for i in range(len(json_value)):
                 json_uuid = json_value[i]['uuid']
@@ -75,14 +75,14 @@ class Commands_Rpc(object):
                 if base_name in json_base_name \
                         and uuid in json_uuid:
                     print("INFO: base_name:{base_name} is found in RPC "
-                          "Command: get_lvol_stores "
+                          "Command: bdev_lvol_get_lvstores "
                           "response".format(base_name=base_name))
                     print("INFO: UUID:{uuid} is found in RPC Command: "
-                          "get_lvol_stores response".format(uuid=uuid))
+                          "bdev_lvol_get_lvstores response".format(uuid=uuid))
                     if cluster_size:
                         if str(cluster_size) in str(json_cluster):
                             print("Info: Cluster size :{cluster_size} is found in RPC "
-                                  "Command: get_lvol_stores "
+                                  "Command: bdev_lvol_get_lvstores "
                                   "response".format(cluster_size=cluster_size))
                         else:
                             print("ERROR: Wrong cluster size in lvol store")
@@ -99,8 +99,8 @@ class Commands_Rpc(object):
                             return 1
                     return 0
             print("FAILED: UUID: lvol store {uuid} on base_bdev: "
-                  "{base_name} not found in get_lvol_stores()".format(uuid=uuid,
-                                                                      base_name=base_name))
+                  "{base_name} not found in bdev_lvol_get_lvstores()".format(uuid=uuid,
+                                                                             base_name=base_name))
             return 1
         else:
             print("INFO: Lvol store not exist")
@@ -179,12 +179,12 @@ class Commands_Rpc(object):
         output, rc = self.rpc.stop_nbd_disk(nbd_name)
         return rc
 
-    def get_lvol_stores(self, name=None):
-        print("INFO: RPC COMMAND get_lvol_stores")
+    def bdev_lvol_get_lvstores(self, name=None):
+        print("INFO: RPC COMMAND bdev_lvol_get_lvstores")
         if name:
-            output = json.loads(self.rpc.get_lvol_stores("-l", name)[0])
+            output = json.loads(self.rpc.bdev_lvol_get_lvstores("-l", name)[0])
         else:
-            output = json.loads(self.rpc.get_lvol_stores()[0])
+            output = json.loads(self.rpc.bdev_lvol_get_lvstores()[0])
         return output
 
     def get_lvol_bdevs(self):
