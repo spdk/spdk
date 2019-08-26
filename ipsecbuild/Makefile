@@ -40,8 +40,11 @@ ifneq ($(Q),)
 REDIRECT=> /dev/null
 endif
 
+# Force-disable scan-build
+SUB_CC = $(patsubst %ccc-analyzer,$(DEFAULT_CC),$(CC))
+
 all:
-	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/intel-ipsec-mb -j$(NPROC) all SHARED=n EXTRA_CFLAGS=-fPIC CC=cc $(REDIRECT)
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/intel-ipsec-mb all SHARED=n EXTRA_CFLAGS=-fPIC CC=$(SUB_CC) $(REDIRECT)
 
 install: all
 
