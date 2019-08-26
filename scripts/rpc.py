@@ -1222,15 +1222,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='lvol bdev name')
     p.set_defaults(func=decouple_parent_lvol_bdev)
 
-    def resize_lvol_bdev(args):
-        rpc.lvol.resize_lvol_bdev(args.client,
+    def bdev_lvol_resize(args):
+        rpc.lvol.bdev_lvol_resize(args.client,
                                   name=args.name,
                                   size=args.size * 1024 * 1024)
 
-    p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
+    p = subparsers.add_parser('bdev_lvol_resize', aliases=['resize_lvol_bdev'],
+                              help='Resize existing lvol bdev')
     p.add_argument('name', help='lvol bdev name')
     p.add_argument('size', help='new size in MiB for this bdev', type=int)
-    p.set_defaults(func=resize_lvol_bdev)
+    p.set_defaults(func=bdev_lvol_resize)
 
     def bdev_lvol_set_read_only(args):
         rpc.lvol.bdev_lvol_set_read_only(args.client,
