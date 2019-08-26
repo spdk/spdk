@@ -73,6 +73,8 @@ struct nvme_bdev_ctrlr {
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
 typedef void (*nvme_bdev_remove_fn)(struct nvme_bdev *nvme_bdev);
 
+struct ocssd_bdev;
+
 struct nvme_bdev {
 	struct spdk_bdev	disk;
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
@@ -80,6 +82,7 @@ struct nvme_bdev {
 	bool			active;
 	struct spdk_nvme_ns	*ns;
 	nvme_bdev_remove_fn	remove_fn;
+	struct ocssd_bdev	*ocssd_bdev;
 };
 
 struct nvme_async_probe_ctx {
