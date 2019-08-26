@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8455789d_234ef751",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-26T19:13:17Z",
+      "side": 1,
+      "message": "Let\u0027s just combine this with the previous line.",
+      "revId": "0698a0653d70114aa7f8038ec15a034ae0ffc1ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
