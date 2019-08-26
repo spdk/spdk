@@ -66,6 +66,12 @@ struct nvmf_reactor {
 	TAILQ_ENTRY(nvmf_reactor)	link;
 };
 
+struct nvmf_target_poll_group {
+	struct spdk_nvmf_poll_group		*group;
+	struct spdk_thread			*thread;
+	TAILQ_ENTRY(nvmf_target_poll_group)	link;
+};
+
 struct nvmf_target {
 	struct spdk_nvmf_tgt	*tgt;
 
@@ -74,6 +80,8 @@ struct nvmf_target {
 		int acceptor_poll_rate;
 		int conn_sched;
 	} tgt_params;
+
+	TAILQ_HEAD(, nvmf_target_poll_group) poll_groups;
 };
 
 TAILQ_HEAD(, nvmf_reactor) g_reactors = TAILQ_HEAD_INITIALIZER(g_reactors);
@@ -295,12 +303,19 @@ nvmf_destroy_threads(void)
 }
 
 static void
+nvmf_bdev_fini_done(void *cb_arg)
+{
+	fprintf(stdout, "bdev layer finish successfully\n");
+}
+
+static void
 nvmf_tgt_destroy_done(void *ctx, int status)
 {
 	struct nvmf_target *nvmf_target = ctx;
 
 	free(nvmf_target);
 	fprintf(stdout, "destroyed the nvmf target service\n");
+	spdk_subsystem_fini(nvmf_bdev_fini_done, NULL);
 }
 
 static void
@@ -313,6 +328,59 @@ nvmf_destroy_nvmf_tgt(struct nvmf_target *nvmf_target)
 	if (nvmf_target->tgt) {
 		spdk_nvmf_tgt_destroy(nvmf_target->tgt, nvmf_tgt_destroy_done, nvmf_target);
 	}
+}
+
+static void
+nvmf_tgt_destroy_poll_groups_done(void *ctx)
+{
+	fprintf(stdout, "destroy targets's poll groups done\n");
+
+	nvmf_destroy_nvmf_tgt(g_nvmf_tgt);
+}
+
+static void
+nvmf_tgt_destroy_poll_group(void *ctx)
+{
+	struct nvmf_target_poll_group *pg, *tmp;
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+
+	TAILQ_FOREACH_SAFE(pg, &g_nvmf_tgt->poll_groups, link, tmp) {
+		if (pg->thread == thread) {
+			TAILQ_REMOVE(&g_nvmf_tgt->poll_groups, pg, link);
+			spdk_nvmf_poll_group_destroy(pg->group);
+			free(pg);
+			break;
+		}
+	}
+}
+
+static void
+nvmf_tgt_create_poll_groups_done(void *ctx)
+{
+	fprintf(stdout, "create targets's poll groups done\n");
+
+	/* Send a message to each thread and destroy the poll group */
+	spdk_for_each_thread(nvmf_tgt_destroy_poll_group,
+			     NULL,
+			     nvmf_tgt_destroy_poll_groups_done);
+}
+
+static void
+nvmf_tgt_create_poll_group(void *ctx)
+{
+	struct nvmf_target_poll_group *pg;
+
+	pg = calloc(1, sizeof(struct nvmf_target_poll_group));
+	if (!pg) {
+		fprintf(stderr, "failed to allocate poll group\n");
+		return;
+	}
+
+	pg->thread = spdk_get_thread();
+	pg->group = spdk_nvmf_poll_group_create(g_nvmf_tgt->tgt);
+	TAILQ_INSERT_TAIL(&g_nvmf_tgt->poll_groups, pg, link);
 }
 
 static int
@@ -344,6 +412,8 @@ nvmf_tgt_init(void)
 	g_nvmf_tgt->tgt_params.max_subsystems = SPDK_NVMF_DEFAULT_NAMESPACES;
 	g_nvmf_tgt->tgt_params.acceptor_poll_rate = ACCEPT_TIMEOUT_US;
 	g_nvmf_tgt->tgt_params.conn_sched = DEFAULT_CONN_SCHED;
+
+	TAILQ_INIT(&g_nvmf_tgt->poll_groups);
 
 	return 0;
 }
@@ -377,13 +447,11 @@ nvmf_create_nvmf_tgt(void)
 	}
 
 	fprintf(stdout, "created a nvmf target service\n");
-	nvmf_destroy_nvmf_tgt(g_nvmf_tgt);
-}
 
-static void
-nvmf_bdev_fini_done(void *cb_arg)
-{
-	fprintf(stdout, "bdev layer finish successfully\n");
+	/* create poll group */
+	spdk_for_each_thread(nvmf_tgt_create_poll_group,
+			     NULL,
+			     nvmf_tgt_create_poll_groups_done);
 }
 
 static void
@@ -394,10 +462,7 @@ nvmf_bdev_init_done(int rc, void *cb_arg)
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
 
 	nvmf_create_nvmf_tgt();
-
-	spdk_subsystem_fini(nvmf_bdev_fini_done, NULL);
 }
-
 
 static void
 nvmf_target_app_start(void *arg)
