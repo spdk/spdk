@@ -38,8 +38,19 @@
 #include "spdk/thread.h"
 #include "spdk/bdev.h"
 #include "spdk/rpc.h"
+#include "spdk/nvmf.h"
 
 #include "spdk_internal/event.h"
+
+#define SPDK_NVMF_DEFAULT_NAMESPACES	32
+#define ACCEPT_TIMEOUT_US		10000 /* 10ms */
+#define DEFAULT_CONN_SCHED		CONNECT_SCHED_ROUND_ROBIN
+
+enum spdk_nvmf_connect_sched {
+	CONNECT_SCHED_ROUND_ROBIN = 0,
+	CONNECT_SCHED_HOST_IP,
+	CONNECT_SCHED_TRANSPORT_OPTIMAL_GROUP,
+};
 
 static const char *g_rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 
@@ -54,11 +65,23 @@ struct nvmf_reactor {
 	TAILQ_HEAD(, nvmf_lw_thread)	threads;
 	TAILQ_ENTRY(nvmf_reactor)	link;
 };
+
+struct nvmf_target {
+	struct spdk_nvmf_tgt	*tgt;
+
+	struct target_opts {
+		int max_subsystems;
+		int acceptor_poll_rate;
+		int conn_sched;
+	} tgt_params;
+};
+
 TAILQ_HEAD(, nvmf_reactor) g_reactors = TAILQ_HEAD_INITIALIZER(g_reactors);
 
 static struct nvmf_reactor *g_master_reactor = NULL;
 static struct nvmf_reactor *g_next_reactor = NULL;
 static struct spdk_thread *init_thread = NULL;
+static struct nvmf_target *g_nvmf_tgt = NULL;
 static bool g_reactors_exit = false;
 
 static void
@@ -272,6 +295,92 @@ nvmf_destroy_threads(void)
 }
 
 static void
+nvmf_tgt_destroy_done(void *ctx, int status)
+{
+	struct nvmf_target *nvmf_target = ctx;
+
+	free(nvmf_target);
+	fprintf(stdout, "destroyed the nvmf target service\n");
+}
+
+static void
+nvmf_destroy_nvmf_tgt(struct nvmf_target *nvmf_target)
+{
+	if (!nvmf_target) {
+		return;
+	}
+
+	if (nvmf_target->tgt) {
+		spdk_nvmf_tgt_destroy(nvmf_target->tgt, nvmf_tgt_destroy_done, nvmf_target);
+	}
+}
+
+static int
+nvmf_tgt_add_discovery_subsystem(struct nvmf_target *nvmf_tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_create(nvmf_tgt->tgt, SPDK_NVMF_DISCOVERY_NQN,
+					       SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+	if (subsystem == NULL) {
+		fprintf(stderr, "failed to create discovery nvmf library subsystem\n");
+		return -EINVAL;
+	}
+
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, true);
+	return 0;
+}
+
+static int
+nvmf_tgt_init(void)
+{
+	g_nvmf_tgt = calloc(1, sizeof(struct nvmf_target));
+	if (g_nvmf_tgt == NULL) {
+		fprintf(stderr, "fail to allocate g_nvmf_tgt\n");
+		return -ENOMEM;
+	}
+
+	/* set the default value */
+	g_nvmf_tgt->tgt_params.max_subsystems = SPDK_NVMF_DEFAULT_NAMESPACES;
+	g_nvmf_tgt->tgt_params.acceptor_poll_rate = ACCEPT_TIMEOUT_US;
+	g_nvmf_tgt->tgt_params.conn_sched = DEFAULT_CONN_SCHED;
+
+	return 0;
+}
+
+static void
+nvmf_create_nvmf_tgt(void)
+{
+	int rc;
+	struct spdk_nvmf_target_opts tgt_opts;
+
+	rc = nvmf_tgt_init();
+	if (rc) {
+		return;
+	}
+
+	tgt_opts.max_subsystems = g_nvmf_tgt->tgt_params.max_subsystems;
+	snprintf(tgt_opts.name, sizeof(tgt_opts.name), "%s", "nvmf_example");
+	g_nvmf_tgt->tgt = spdk_nvmf_tgt_create(&tgt_opts);
+	if (g_nvmf_tgt->tgt == NULL) {
+		fprintf(stderr, "spdk_nvmf_tgt_create() failed\n");
+		free(g_nvmf_tgt);
+		return;
+	}
+
+	/* create and add discovery subsystem */
+	rc = nvmf_tgt_add_discovery_subsystem(g_nvmf_tgt);
+	if (rc != 0) {
+		fprintf(stderr, "spdk_add_nvmf_discovery_subsystem() failed\n");
+		nvmf_destroy_nvmf_tgt(g_nvmf_tgt);
+		return;
+	}
+
+	fprintf(stdout, "created a nvmf target service\n");
+	nvmf_destroy_nvmf_tgt(g_nvmf_tgt);
+}
+
+static void
 nvmf_bdev_fini_done(void *cb_arg)
 {
 	fprintf(stdout, "bdev layer finish successfully\n");
@@ -283,6 +392,8 @@ nvmf_bdev_init_done(int rc, void *cb_arg)
 	fprintf(stdout, "bdev layer init successfully\n");
 	spdk_rpc_initialize(g_rpc_addr);
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+
+	nvmf_create_nvmf_tgt();
 
 	spdk_subsystem_fini(nvmf_bdev_fini_done, NULL);
 }
