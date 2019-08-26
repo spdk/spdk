@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "4960cac8_75593b47",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1016851
+      },
+      "writtenOn": "2019-08-26T10:36:10Z",
+      "side": 1,
+      "message": "I meant that, we should be 100 % sure that before calling unregister_path all IOs are completed because first step in unregistered path is waiting for all in flight IOs, so if we unregistered bdev (and it isn\u0027t on bdev list, so other bdevs can not issuing IOs to it) we have a guarantee that all in flight IOs will be completed soon. Other thing is that we have a timeout in mngt operations. Base on this in my opinion we should first call bdev_unregister and then unregister path.",
+      "parentUuid": "d710ea35_ef0ed3d0",
+      "range": {
+        "startLine": 376,
+        "startChar": 1,
+        "endLine": 377,
+        "endChar": 51
+      },
+      "revId": "3199e6a4dd56ffa7b32f4e122abafae00f67f0e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b2f9d951_153a31f8",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 1
