@@ -38,13 +38,18 @@
 #include "spdk/thread.h"
 #include "spdk/bdev.h"
 #include "spdk/rpc.h"
+#include "spdk/nvmf.h"
 
 #include "spdk_internal/event.h"
+
+#define NVMF_DEFAULT_SUBSYSTEMS		32
 
 static const char *g_rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 
 enum nvmf_target_state {
 	NVMF_INIT_SUBSYSTEM = 0,
+	NVMF_INIT_TARGET,
+	NVMF_FINI_TARGET,
 	NVMF_FINI_SUBSYSTEM,
 };
 
@@ -59,11 +64,21 @@ struct nvmf_reactor {
 	TAILQ_HEAD(, nvmf_lw_thread)	threads;
 	TAILQ_ENTRY(nvmf_reactor)	link;
 };
+
+struct nvmf_target {
+	struct spdk_nvmf_tgt	*tgt;
+
+	int max_subsystems;
+};
+
 TAILQ_HEAD(, nvmf_reactor) g_reactors = TAILQ_HEAD_INITIALIZER(g_reactors);
 
 static struct nvmf_reactor *g_master_reactor = NULL;
 static struct nvmf_reactor *g_next_reactor = NULL;
 static struct spdk_thread *g_init_thread = NULL;
+static struct nvmf_target g_nvmf_tgt = {
+	.max_subsystems = NVMF_DEFAULT_SUBSYSTEMS,
+};
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_reactors_exit = false;
 static enum nvmf_target_state g_target_state;
@@ -79,6 +94,7 @@ usage(char *program_name)
 	printf("\t[-h show this usage]\n");
 	printf("\t[-i shared memory ID (optional)]\n");
 	printf("\t[-m core mask for DPDK]\n");
+	printf("\t[-n max subsystems for target(default: 32)]\n");
 	printf("\t[-r RPC listen address (default /var/tmp/spdk.sock)]\n");
 	printf("\t[-s memory size in MB for DPDK (default: 0MB)]\n");
 	printf("\t[-u disable PCI access]\n");
@@ -90,7 +106,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 	int op;
 	long int value;
 
-	while ((op = getopt(argc, argv, "i:m:r:s:u:h")) != -1) {
+	while ((op = getopt(argc, argv, "i:m:n:r:s:u:h")) != -1) {
 		switch (op) {
 		case 'i':
 			value = spdk_strtol(optarg, 10);
@@ -102,6 +118,13 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 			break;
 		case 'm':
 			opts->core_mask = optarg;
+			break;
+		case 'n':
+			g_nvmf_tgt.max_subsystems = spdk_strtol(optarg, 10);
+			if (g_nvmf_tgt.max_subsystems < 0) {
+				fprintf(stderr, "converting a string to integer failed\n");
+				return -EINVAL;
+			}
 			break;
 		case 'r':
 			g_rpc_addr = optarg;
@@ -300,6 +323,69 @@ nvmf_destroy_threads(void)
 }
 
 static void
+nvmf_tgt_destroy_done(void *ctx, int status)
+{
+	fprintf(stdout, "destroyed the nvmf target service\n");
+
+	g_target_state = NVMF_FINI_SUBSYSTEM;
+	nvmf_target_advance_state();
+}
+
+static void
+nvmf_destroy_nvmf_tgt(void)
+{
+	if (g_nvmf_tgt.tgt) {
+		spdk_nvmf_tgt_destroy(g_nvmf_tgt.tgt, nvmf_tgt_destroy_done, NULL);
+	} else {
+		g_target_state = NVMF_FINI_SUBSYSTEM;
+	}
+}
+
+static void
+nvmf_create_nvmf_tgt(void)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_target_opts tgt_opts;
+
+	tgt_opts.max_subsystems = g_nvmf_tgt.max_subsystems;
+	snprintf(tgt_opts.name, sizeof(tgt_opts.name), "%s", "nvmf_example");
+	/* Construct the default NVMe-oF target
+	 * An NVMe-oF target is a collection of subsystems, namespace, and poll
+	 * groups, and defines the scope of the NVMe-oF discovery service.
+	 */
+	g_nvmf_tgt.tgt = spdk_nvmf_tgt_create(&tgt_opts);
+	if (g_nvmf_tgt.tgt == NULL) {
+		fprintf(stderr, "spdk_nvmf_tgt_create() failed\n");
+		goto error;
+	}
+
+	/* Create and add discovery subsystem to the NVMe-oF target.
+	 * NVMe-oF defines a discovery mechanism that a host uses to determine
+	 * the NVM subsystems that expose namespaces that the host may access.
+	 * It provides a host with following capabilities:
+	 *	1,The ability to discover a list of NVM subsystems with namespaces
+	 *	  that are accessible to the host.
+	 *	2,The ability to discover multiple paths to an NVM subsystem.
+	 *	3,The ability to discover controllers that are statically configured.
+	 */
+	subsystem = spdk_nvmf_subsystem_create(g_nvmf_tgt.tgt, SPDK_NVMF_DISCOVERY_NQN,
+					       SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+	if (subsystem == NULL) {
+		fprintf(stderr, "failed to create discovery nvmf library subsystem\n");
+		goto error;
+	}
+
+	/* Allow any host to access the discovery subsystem */
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, true);
+
+	fprintf(stdout, "created a nvmf target service\n");
+	return;
+
+error:
+	g_target_state = NVMF_FINI_TARGET;
+}
+
+static void
 nvmf_subsystem_fini_done(void *cb_arg)
 {
 	fprintf(stdout, "bdev subsystem finish successfully\n");
@@ -313,6 +399,9 @@ nvmf_subsystem_init_done(int rc, void *cb_arg)
 	fprintf(stdout, "bdev subsystem init successfully\n");
 	spdk_rpc_initialize(g_rpc_addr);
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+
+	g_target_state = NVMF_INIT_TARGET;
+	nvmf_target_advance_state();
 }
 
 static void
@@ -327,6 +416,12 @@ nvmf_target_advance_state(void)
 		case NVMF_INIT_SUBSYSTEM:
 			/* initlize the bdev layer */
 			spdk_subsystem_init(nvmf_subsystem_init_done, NULL);
+			break;
+		case NVMF_INIT_TARGET:
+			nvmf_create_nvmf_tgt();
+			break;
+		case NVMF_FINI_TARGET:
+			nvmf_destroy_nvmf_tgt();
 			break;
 		case NVMF_FINI_SUBSYSTEM:
 			spdk_subsystem_fini(nvmf_subsystem_fini_done, NULL);
@@ -346,15 +441,15 @@ static void
 _nvmf_shutdown_cb(void *ctx)
 {
 	/* Still in initialization state, defer shutdown operation */
-	if (g_target_state < NVMF_INIT_SUBSYSTEM) {
+	if (g_target_state < NVMF_INIT_TARGET) {
 		spdk_thread_send_msg(spdk_get_thread(), _nvmf_shutdown_cb, NULL);
 		return;
-	} else if (g_target_state >= NVMF_FINI_SUBSYSTEM) {
+	} else if (g_target_state >= NVMF_FINI_TARGET) {
 		/* Already in Shutdown status, ignore the signal */
 		return;
 	}
 
-	g_target_state = NVMF_FINI_SUBSYSTEM;
+	g_target_state = NVMF_FINI_TARGET;
 	nvmf_target_advance_state();
 }
 
