@@ -301,7 +301,7 @@ Example response:
     "construct_ftl_bdev",
     "get_lvol_stores",
     "destroy_lvol_bdev",
-    "resize_lvol_bdev",
+    "bdev_lvol_resize",
     "bdev_lvol_set_read_only",
     "decouple_parent_lvol_bdev",
     "inflate_lvol_bdev",
@@ -5108,7 +5108,7 @@ Example response:
 }
 ~~~
 
-## resize_lvol_bdev {#rpc_resize_lvol_bdev}
+## bdev_lvol_resize {#rpc_bdev_lvol_resize}
 
 Resize a logical volume.
 
@@ -5126,7 +5126,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "resize_lvol_bdev",
+  "method": "bdev_lvol_resize",
   "id": 1,
   "params": {
     "name": "51638754-ca16-43a7-9f8f-294a0805ab0a",
