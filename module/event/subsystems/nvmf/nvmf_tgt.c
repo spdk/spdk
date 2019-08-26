@@ -504,6 +504,65 @@ nvmf_tgt_advance_state(void)
 }
 
 static void
+spdk_nvmf_tgt_subsystem_start_next(struct spdk_nvmf_subsystem *subsystem,
+				   void *cb_arg, int status)
+{
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem,
+					  spdk_nvmf_tgt_subsystem_start_next,
+					  NULL);
+		return;
+	}
+
+	g_acceptor_poller = spdk_poller_register(acceptor_poll,
+			    g_spdk_nvmf_tgt,
+			    g_spdk_nvmf_tgt_conf->acceptor_poll_rate);
+	SPDK_INFOLOG(SPDK_LOG_NVMF, "Acceptor running\n");
+}
+
+
+static void
+spdk_nvmf_tgt_start_subsystems(void *ctx)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_get_first(g_spdk_nvmf_tgt);
+
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem,
+					  spdk_nvmf_tgt_subsystem_start_next,
+					  NULL);
+	}
+}
+
+static void
+spdk_nvmf_tgt_create_poller_groups(int status)
+{
+	if (status == 0) {
+		spdk_for_each_thread(nvmf_tgt_create_poll_group,
+				     NULL,
+				     spdk_nvmf_tgt_start_subsystems);
+	} else {
+		SPDK_ERRLOG("spdk_nvmf_tgt error happened\n");
+	}
+}
+
+int
+spdk_nvmf_tgt_init(void)
+{
+	bool done;
+
+	if (spdk_nvmf_parse_conf(spdk_nvmf_tgt_create_poller_groups)) {
+		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
 spdk_nvmf_subsystem_init(void)
 {
 	g_tgt_state = NVMF_TGT_INIT_NONE;
