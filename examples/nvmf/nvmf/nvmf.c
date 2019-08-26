@@ -1012,6 +1012,77 @@ nvmf_tgt_destroy_poll_groups(void)
 	} while (!done);
 }
 
+static void
+nvmf_tgt_subsystem_start_next(struct spdk_nvmf_subsystem *subsystem,
+			      void *cb_arg, int status)
+{
+	bool *done = cb_arg;
+
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_start_next,
+					  cb_arg);
+		return;
+	}
+
+	fprintf(stdout, "all the subsystems started\n");
+	*done = true;
+}
+
+static void
+nvmf_tgt_start_subsystems(void)
+{
+	bool done = false;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_get_first(g_nvmf_tgt->tgt);
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem,
+					  nvmf_tgt_subsystem_start_next,
+					  &done);
+
+		do {
+			spdk_thread_poll(g_master_thread->thread, 0, 0);
+		} while (!done);
+	}
+}
+
+static void
+nvmf_tgt_subsystem_stop_next(struct spdk_nvmf_subsystem *subsystem,
+			     void *cb_arg, int status)
+{
+	bool *done = cb_arg;
+
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	if (subsystem) {
+		spdk_nvmf_subsystem_stop(subsystem,
+					 nvmf_tgt_subsystem_stop_next,
+					 cb_arg);
+		return;
+	}
+
+	fprintf(stdout, "all subsystems stoped\n");
+	*done = true;
+}
+
+static void
+nvmf_tgt_stop_subsystems(void)
+{
+	bool done = false;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_get_first(g_nvmf_tgt->tgt);
+	if (subsystem) {
+		spdk_nvmf_subsystem_stop(subsystem,
+					 nvmf_tgt_subsystem_stop_next,
+					 &done);
+
+		do {
+			spdk_thread_poll(g_master_thread->thread, 0, 0);
+		} while (!done);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -1072,6 +1143,9 @@ int main(int argc, char **argv)
 	/* allocate the IO_Channels of the target */
 	nvmf_tgt_create_poll_groups();
 
+	nvmf_tgt_start_subsystems();
+
+	nvmf_tgt_stop_subsystems();
 	nvmf_tgt_destroy_poll_groups();
 	nvmf_spdk_tgt_destroy(g_nvmf_tgt->tgt);
 	nvmf_bdev_fini();
