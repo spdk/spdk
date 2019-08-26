@@ -987,6 +987,18 @@ spdk_vpp_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 }
 
 static int
+spdk_vpp_sock_set_max_iovcnt(struct spdk_sock *_sock, int *num)
+{
+	return 0;
+}
+
+static int
+spdk_vpp_sock_set_max_async_ops(struct spdk_sock *_sock, int *num)
+{
+	return 0;
+}
+
+static int
 spdk_vpp_sock_set_priority(struct spdk_sock *_sock, int priority)
 {
 	assert(g_svm.vpp_initialized);
@@ -1445,6 +1457,8 @@ static struct spdk_net_impl g_vpp_net_impl = {
 	.set_recvlowat	= spdk_vpp_sock_set_recvlowat,
 	.set_recvbuf	= spdk_vpp_sock_set_recvbuf,
 	.set_sendbuf	= spdk_vpp_sock_set_sendbuf,
+	.set_max_iovcnt	= spdk_vpp_sock_set_max_iovcnt,
+	.set_max_async_ops	= spdk_vpp_sock_set_max_async_ops,
 	.set_priority	= spdk_vpp_sock_set_priority,
 	.is_ipv6	= spdk_vpp_sock_is_ipv6,
 	.is_ipv4	= spdk_vpp_sock_is_ipv4,
