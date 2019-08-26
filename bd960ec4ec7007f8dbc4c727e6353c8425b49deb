@@ -16,6 +16,24 @@
       "revId": "bd960ec4ec7007f8dbc4c727e6353c8425b49deb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c7df22b_25abe27c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-08-26T06:02:09Z",
+      "side": 1,
+      "message": "Nope. We don\u0027t know anything about QEMU driver in SPDK. It was always possible to connect e.g. a QEMU vhost-user-scsi driver to a vhost-blk device and the only way to detect error would be feature flags incompatibility or different I/O request structure.\n\nThis backend pointer is only maintained internally in SPDK. It\u0027s set on vdev initialization and not changed anywhere later.",
+      "parentUuid": "b6c999ac_b936e84a",
+      "revId": "bd960ec4ec7007f8dbc4c727e6353c8425b49deb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
