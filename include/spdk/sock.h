@@ -40,12 +40,26 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/queue.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct spdk_sock;
 struct spdk_sock_group;
+
+struct spdk_sock_request {
+	void	(*cb_fn)(void *cb_arg, int len);
+	void				*cb_arg;
+
+	TAILQ_ENTRY(spdk_sock_request)	link;
+
+	unsigned int			offset;
+
+	int				iovcnt;
+	struct iovec			iov[];
+};
 
 /**
  * Get client and server addresses of the given socket.
@@ -125,6 +139,15 @@ ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
  * \return the length of written message on success, -1 on failure.
  */
 ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
+
+/**
+ * Write data to the given socket asynchronously, calling
+ * the provided callback when the data has been written.
+ *
+ * \param sock Socket to write to.
+ * \param req The write request to submit.
+ */
+void spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req);
 
 /**
  * Read message from the given socket to the I/O vector array.
