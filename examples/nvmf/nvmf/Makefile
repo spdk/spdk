@@ -39,6 +39,6 @@ APP := nvmf
 
 C_SRCS := nvmf.c
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += nvmf thread util bdev conf copy rpc jsonrpc json log sock trace notify
+SPDK_LIB_LIST += nvmf thread util bdev conf copy event rpc jsonrpc json log sock trace notify
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
