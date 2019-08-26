@@ -44,7 +44,9 @@ $(ISAL_DIR)/isa-l:
 	@ln -s $(ISAL_DIR)/include $(ISAL_DIR)/isa-l
 
 all: $(ISAL_DIR)/isa-l
-	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l -j$(NPROC) all CC=cc $(REDIRECT)
+	$(eval SUB_MAKEFLAGS := $(filter-out CXX=%/c++-analyzer,$(MAKEFLAGS)))
+	$(eval SUB_MAKEFLAGS := $(filter-out CC=%/ccc-analyzer,$(SUB_MAKEFLAGS)))
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l all MAKEFLAGS="$(SUB_MAKEFLAGS)" $(REDIRECT)
 
 install: all
 
