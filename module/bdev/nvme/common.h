@@ -72,6 +72,8 @@ struct nvme_bdev_ctrlr {
 
 typedef void (*nvme_bdev_remove_fn)(struct nvme_bdev *nvme_bdev);
 
+struct ocssd_bdev;
+
 struct nvme_bdev {
 	struct spdk_bdev	disk;
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
@@ -79,6 +81,7 @@ struct nvme_bdev {
 	bool			active;
 	struct spdk_nvme_ns	*ns;
 	nvme_bdev_remove_fn	remove_fn;
+	struct ocssd_bdev	*ocssd_bdev;
 };
 
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);

@@ -1893,6 +1893,32 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
     p.set_defaults(func=remove_virtio_bdev)
 
+    # OCSSD
+    def bdev_ocssd_attach_controller(args):
+        print_array(rpc.bdev.bdev_ocssd_attach_controller(args.client,
+                                                          name=args.name,
+                                                          trtype=args.trtype,
+                                                          traddr=args.traddr))
+
+    p = subparsers.add_parser('bdev_ocssd_attach_controller',
+                              help='Creates zoned bdevs on specified Open Channel controller')
+    p.add_argument('-b', '--name', help='Name of the OC NVMe controller, prefix for each bdev name',
+                   required=True)
+    p.add_argument('-t', '--trtype',
+                   help='NVMe-oF target trtype: e.g., rdma, pcie,  default: pcie', default='pcie')
+    p.add_argument('-a', '--traddr',
+                   help='NVMe-oF target address: e.g., an ip address or BDF', required=True)
+    p.set_defaults(func=bdev_ocssd_attach_controller)
+
+    def bdev_ocssd_detach_controller(args):
+        rpc.bdev.bdev_ocssd_detach_controller(args.client,
+                                              name=args.name)
+
+    p = subparsers.add_parser('bdev_ocssd_detach_controller',
+                              help='Detaches Open Channel controller and deletes bdevs created on top of it')
+    p.add_argument('-b', '--name', help='Name of the OC NVMe controller', required=True)
+    p.set_defaults(func=bdev_ocssd_detach_controller)
+
     # ioat
     def scan_ioat_copy_engine(args):
         pci_whitelist = []
