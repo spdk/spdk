@@ -435,9 +435,11 @@ _sock(const char *ip, int port)
 	CU_ASSERT(client_sock == NULL);
 	CU_ASSERT(rc == 0);
 
+#if defined(__FreeBSD__)
 	/* On FreeBSD, it takes a small amount of time for a close to propagate to the
 	 * other side, even in loopback. Introduce a small sleep. */
 	sleep(1);
+#endif
 	CU_ASSERT(spdk_sock_is_connected(server_sock) == false);
 
 	rc = spdk_sock_close(&server_sock);

@@ -127,6 +127,27 @@ ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
 ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
 /**
+ * A callback used for asynchronous socket operations.
+ *
+ * \param cb_arg passed by the caller in spdk_sock_recv/readv/writev_async
+ * \param len A negated errno value on error. 0 on success.
+ */
+typedef void (*spdk_sock_op_cb)(void *cb_arg, int len);
+
+/**
+ * Write data to the given socket asynchronously, calling
+ * the provided callback when the data has been written.
+ *
+ * \param sock Socket to write to.
+ * \param iov I/O vector.
+ * \param iovcnt Number of I/O vectors in the array.
+ * \param cb_fn The function to call when the data has been sent.
+ * \param cb_arg A context parameter passed to cb_fn
+ */
+void spdk_sock_writev_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
+			    spdk_sock_op_cb cb_fn, void *cb_arg);
+
+/**
  * Read message from the given socket to the I/O vector array.
  *
  * \param sock Socket to receive message.
@@ -176,6 +197,32 @@ int spdk_sock_set_priority(struct spdk_sock *sock, int priority);
  * \return 0 on success, -1 on failure.
  */
 int spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz);
+
+/**
+ * Set the maximum number of I/O vector elements for vectored
+ * operations.
+ *
+ * \param sock Socket to operate on
+ * \param iovcnt The requested maximum number of vector elements per operation.
+ *            This value will be updated with the actual number
+ *            allowed.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_sock_set_max_iovcnt(struct spdk_sock *sock, int *iovcnt);
+
+/**
+ * Set the maximum number of asynchronous operations that may be queued
+ * simultaneously for this socket.
+ *
+ * \param sock Socket to operate on
+ * \param num The maximum number of simultaneous asynchronous operations.
+ *            This value will be updated with the actual number
+ *            allowed.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_sock_set_max_async_ops(struct spdk_sock *sock, uint32_t *num);
 
 /**
  * Check whether the address of socket is ipv6.
