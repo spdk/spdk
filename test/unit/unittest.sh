@@ -86,6 +86,7 @@ $valgrind $testdir/lib/event/subsystem.c/subsystem_ut
 $valgrind $testdir/lib/event/app.c/app_ut
 
 $valgrind $testdir/lib/sock/sock.c/sock_ut
+$valgrind $testdir/lib/sock/posix.c/posix_ut
 
 $valgrind $testdir/lib/nvme/nvme.c/nvme_ut
 $valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
