@@ -167,7 +167,8 @@ def inflate_lvol_bdev(client, name):
     return client.call('inflate_lvol_bdev', params)
 
 
-def decouple_parent_lvol_bdev(client, name):
+@deprecated_alias('decouple_parent_lvol_bdev')
+def bdev_lvol_decouple_parent(client, name):
     """Decouple parent of a logical volume.
 
     Args:
@@ -176,7 +177,7 @@ def decouple_parent_lvol_bdev(client, name):
     params = {
         'name': name,
     }
-    return client.call('decouple_parent_lvol_bdev', params)
+    return client.call('bdev_lvol_decouple_parent', params)
 
 
 def destroy_lvol_store(client, uuid=None, lvs_name=None):

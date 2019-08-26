@@ -1214,13 +1214,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='lvol bdev name')
     p.set_defaults(func=inflate_lvol_bdev)
 
-    def decouple_parent_lvol_bdev(args):
-        rpc.lvol.decouple_parent_lvol_bdev(args.client,
+    def bdev_lvol_decouple_parent(args):
+        rpc.lvol.bdev_lvol_decouple_parent(args.client,
                                            name=args.name)
 
-    p = subparsers.add_parser('decouple_parent_lvol_bdev', help='Decouple parent of lvol')
+    p = subparsers.add_parser('bdev_lvol_decouple_parent', aliases=['decouple_parent_lvol_bdev'],
+                              help='Decouple parent of lvol')
     p.add_argument('name', help='lvol bdev name')
-    p.set_defaults(func=decouple_parent_lvol_bdev)
+    p.set_defaults(func=bdev_lvol_decouple_parent)
 
     def bdev_lvol_resize(args):
         rpc.lvol.bdev_lvol_resize(args.client,

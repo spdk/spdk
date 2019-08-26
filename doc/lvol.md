@@ -153,7 +153,7 @@ inflate_lvol_bdev [-h] name
     Inflate lvol bdev
     optional arguments:
     -h, --help  show help
-decouple_parent_lvol_bdev [-h] name
+bdev_lvol_decouple_parent [-h] name
     Decouple parent of a logical volume
     optional arguments:
     -h, --help  show help
