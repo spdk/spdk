@@ -4,6 +4,8 @@ set -e
 
 trap 'echo -e "\n\nConfiguration failed\n\n" >&2' ERR
 
+rootdir=$(readlink -f $(dirname $0))
+
 function usage()
 {
 	echo "'configure' configures SPDK to compile on supported platforms."
@@ -105,10 +107,10 @@ function usage()
 
 # Load default values
 # Convert config to sourcable configuration file
-sed -r 's/CONFIG_([[:alnum:]_]+)=(.*)/CONFIG[\1]=\2/g' CONFIG > CONFIG.sh
+sed -r 's/CONFIG_([[:alnum:]_]+)=(.*)/CONFIG[\1]=\2/g' $rootdir/CONFIG > $rootdir/CONFIG.sh
 declare -A CONFIG
-source CONFIG.sh
-rm CONFIG.sh
+source $rootdir/CONFIG.sh
+rm $rootdir/CONFIG.sh
 
 function check_dir() {
 	arg="$1"
@@ -364,10 +366,10 @@ for i in "$@"; do
 done
 
 # Detect the compiler toolchain
-scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}"  > mk/cc.mk
+$rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --ld="$LD" --cross-prefix="${CONFIG[CROSS_PREFIX]}"  > $rootdir/mk/cc.mk
 
-CC=$(cat mk/cc.mk | grep "CC=" | cut -d "=" -f 2)
-CC_TYPE=$(cat mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
+CC=$(cat $rootdir/mk/cc.mk | grep "CC=" | cut -d "=" -f 2)
+CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
 
 BUILD_CMD="$CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS"
 
@@ -386,7 +388,6 @@ if [[ "${CONFIG[ISAL]}" = "n" ]] && [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 fi
 
 if [ -z "${CONFIG[ENV]}" ]; then
-	rootdir=$(readlink -f $(dirname $0))
 	CONFIG[ENV]=$rootdir/lib/env_dpdk
 	echo "Using default SPDK env in ${CONFIG[ENV]}"
 	if [ -z "${CONFIG[DPDK_DIR]}" ]; then
@@ -685,7 +686,7 @@ fi
 
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
-if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" CONFIG) -ne ${#CONFIG[@]} ]; then
+if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" $rootdir/CONFIG) -ne ${#CONFIG[@]} ]; then
 	echo ""
 	echo "BUG: Some configuration options are not present in CONFIG file. Please update this file."
 	echo "Missing options in CONFIG (+) file and in current config (-): "
@@ -696,21 +697,21 @@ if [ $(egrep -c "^\s*CONFIG_[[:alnum:]_]+=" CONFIG) -ne ${#CONFIG[@]} ]; then
 fi
 
 echo -n "Creating mk/config.mk..."
-cp -f CONFIG mk/config.mk
+cp -f $rootdir/CONFIG $rootdir/mk/config.mk
 for key in ${!CONFIG[@]}; do
-	sed -i.bak -r "s#^\s*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" mk/config.mk
+	sed -i.bak -r "s#^\s*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" $rootdir/mk/config.mk
 done
 # On FreeBSD sed -i 'SUFFIX' - SUFFIX is mandatory. So no way but to delete the backed file.
-rm -f mk/config.mk.bak
+rm -f $rootdir/mk/config.mk.bak
 echo "done."
 
 # Environment variables
 echo -n "Creating mk/cc.flags.mk..."
-rm -f mk/cc.flags.mk
-[ -n "$CFLAGS" ] && echo "CFLAGS?=$CFLAGS" > mk/cc.flags.mk
-[ -n "$CXXFLAGS" ] && echo "CXXFLAGS?=$CXXFLAGS" >> mk/cc.flags.mk
-[ -n "$LDFLAGS" ] && echo "LDFLAGS?=$LDFLAGS" >> mk/cc.flags.mk
-[ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> mk/cc.flags.mk
+rm -f $rootdir/mk/cc.flags.mk
+[ -n "$CFLAGS" ] && echo "CFLAGS?=$CFLAGS" > $rootdir/mk/cc.flags.mk
+[ -n "$CXXFLAGS" ] && echo "CXXFLAGS?=$CXXFLAGS" >> $rootdir/mk/cc.flags.mk
+[ -n "$LDFLAGS" ] && echo "LDFLAGS?=$LDFLAGS" >> $rootdir/mk/cc.flags.mk
+[ -n "$DESTDIR" ] && echo "DESTDIR?=$DESTDIR" >> $rootdir/mk/cc.flags.mk
 echo "done."
 
 if [[ "$OSTYPE" == "freebsd"* ]]; then
