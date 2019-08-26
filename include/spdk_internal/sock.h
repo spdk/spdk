@@ -50,10 +50,20 @@ extern "C" {
 
 struct spdk_sock {
 	struct spdk_net_impl		*net_impl;
+	int				cb_cnt;
 	spdk_sock_cb			cb_fn;
 	void				*cb_arg;
 	struct spdk_sock_group_impl	*group_impl;
 	TAILQ_ENTRY(spdk_sock)		link;
+
+	int				max_iovcnt;
+	TAILQ_HEAD(, spdk_sock_request)	queued_reqs;
+	int				queued_iovcnt;
+
+	struct {
+		uint8_t		closed		: 1;
+		uint8_t		reserved	: 7;
+	} flags;
 };
 
 struct spdk_sock_group {
@@ -79,6 +89,8 @@ struct spdk_net_impl {
 	ssize_t (*recv)(struct spdk_sock *sock, void *buf, size_t len);
 	ssize_t (*readv)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 	ssize_t (*writev)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
+
+	void (*writev_async)(struct spdk_sock *sock, struct spdk_sock_request *req);
 
 	int (*set_recvlowat)(struct spdk_sock *sock, int nbytes);
 	int (*set_recvbuf)(struct spdk_sock *sock, int sz);
@@ -106,6 +118,73 @@ void spdk_net_impl_register(struct spdk_net_impl *impl);
 static void __attribute__((constructor)) net_impl_register_##name(void) \
 { \
 	spdk_net_impl_register(impl); \
+}
+
+static inline void
+spdk_sock_request_queue(struct spdk_sock *sock, struct spdk_sock_request *req)
+{
+	TAILQ_INSERT_TAIL(&sock->queued_reqs, req, internal.link);
+	sock->queued_iovcnt += req->iovcnt;
+}
+
+static inline int
+spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int err)
+{
+	bool closed;
+	int rc = 0;
+
+	TAILQ_REMOVE(&sock->queued_reqs, req, internal.link);
+	assert(sock->queued_iovcnt >= req->iovcnt);
+	sock->queued_iovcnt -= req->iovcnt;
+
+	closed = sock->flags.closed;
+	sock->cb_cnt++;
+	req->cb_fn(req->cb_arg, err);
+	assert(sock->cb_cnt > 0);
+	sock->cb_cnt--;
+
+	if (sock->cb_cnt == 0 && !closed && sock->flags.closed) {
+		/* The user closed the socket in response to a callback above. */
+		rc = -1;
+		spdk_sock_close(&sock);
+	}
+
+	return rc;
+}
+
+static inline int
+spdk_sock_abort_requests(struct spdk_sock *sock)
+{
+	struct spdk_sock_request *req;
+	bool closed;
+	int rc = 0;
+
+	closed = sock->flags.closed;
+	sock->cb_cnt++;
+
+	req = TAILQ_FIRST(&sock->queued_reqs);
+	while (req) {
+		TAILQ_REMOVE(&sock->queued_reqs, req, internal.link);
+
+		assert(sock->queued_iovcnt >= req->iovcnt);
+		sock->queued_iovcnt -= req->iovcnt;
+
+		req->cb_fn(req->cb_arg, -ECANCELED);
+
+		req = TAILQ_FIRST(&sock->queued_reqs);
+	}
+	assert(sock->cb_cnt > 0);
+	sock->cb_cnt--;
+
+	assert(TAILQ_EMPTY(&sock->queued_reqs));
+
+	if (sock->cb_cnt == 0 && !closed && sock->flags.closed) {
+		/* The user closed the socket in response to a callback above. */
+		rc = -1;
+		spdk_sock_close(&sock);
+	}
+
+	return rc;
 }
 
 #ifdef __cplusplus
