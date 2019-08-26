@@ -33,10 +33,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(wildcard $(SPDK_ROOT_DIR)/mk/config.mk),)
-$(error mk/config.mk: file not found. Please run configure before 'make $(filter-out clean,$(MAKECMDGOALS))')
-endif
+$(error mk/config.mk: file not found. Please run configure before make)
 endif
 
 include $(SPDK_ROOT_DIR)/mk/config.mk
