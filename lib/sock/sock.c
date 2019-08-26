@@ -272,6 +272,20 @@ spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return sock->net_impl->writev(sock, iov, iovcnt);
 }
 
+void
+spdk_sock_writev_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
+		       spdk_sock_op_cb cb_fn, void *cb_arg)
+{
+	assert(cb_fn != NULL);
+
+	if (sock == NULL) {
+		cb_fn(cb_arg, -EBADF);
+		return;
+	}
+
+	sock->net_impl->writev_async(sock, iov, iovcnt, cb_fn, cb_arg);
+}
+
 int
 spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 {
@@ -288,6 +302,18 @@ int
 spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 {
 	return sock->net_impl->set_sendbuf(sock, sz);
+}
+
+int
+spdk_sock_set_max_iovcnt(struct spdk_sock *sock, uint32_t *num)
+{
+	return sock->net_impl->set_max_iovcnt(sock, num);
+}
+
+int
+spdk_sock_set_max_async_ops(struct spdk_sock *sock, uint32_t *num)
+{
+	return sock->net_impl->set_max_async_ops(sock, num);
 }
 
 int
