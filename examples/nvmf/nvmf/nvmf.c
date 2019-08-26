@@ -357,14 +357,72 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 }
 
 static void
-nvmf_tgt_create_poll_groups_done(void *ctx)
+nvmf_tgt_subsystem_stop_next(struct spdk_nvmf_subsystem *subsystem,
+			     void *cb_arg, int status)
 {
-	fprintf(stdout, "create targets's poll groups done\n");
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	if (subsystem) {
+		spdk_nvmf_subsystem_stop(subsystem,
+					 nvmf_tgt_subsystem_stop_next,
+					 cb_arg);
+		return;
+	}
+
+	fprintf(stdout, "all subsystems of target stoped\n");
 
 	/* Send a message to each thread and destroy the poll group */
 	spdk_for_each_thread(nvmf_tgt_destroy_poll_group,
 			     NULL,
 			     nvmf_tgt_destroy_poll_groups_done);
+}
+
+static void
+nvmf_tgt_stop_subsystems(struct nvmf_target *nvmf_tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_get_first(nvmf_tgt->tgt);
+	if (subsystem) {
+		spdk_nvmf_subsystem_stop(subsystem,
+					 nvmf_tgt_subsystem_stop_next,
+					 NULL);
+	}
+}
+
+static void
+nvmf_tgt_subsystem_start_next(struct spdk_nvmf_subsystem *subsystem,
+			      void *cb_arg, int status)
+{
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_start_next,
+					  cb_arg);
+		return;
+	}
+
+	fprintf(stdout, "all the subsystems of target started\n");
+	nvmf_tgt_stop_subsystems(g_nvmf_tgt);
+}
+
+static void
+nvmf_tgt_start_subsystems(struct nvmf_target *nvmf_tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_nvmf_subsystem_get_first(nvmf_tgt->tgt);
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem,
+					  nvmf_tgt_subsystem_start_next,
+					  NULL);
+	}
+}
+
+static void
+nvmf_tgt_create_poll_groups_done(void *ctx)
+{
+	fprintf(stdout, "create targets's poll groups done\n");
+
+	nvmf_tgt_start_subsystems(g_nvmf_tgt);
 }
 
 static void
