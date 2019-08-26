@@ -406,6 +406,105 @@ write_fail:
 }
 
 static void
+_vbdev_fill_iovec_with_zeros(struct spdk_bdev_io *bdev_io, size_t offset)
+{
+	size_t current_block = 0;
+	struct iovec *iovs = bdev_io->u.bdev.iovs;
+	struct iovec *iov;
+	size_t iov_offset = 0;
+	size_t block_size = bdev_io->bdev->blocklen;
+	int iov_index = 0;
+	do {
+		assert(iov_index <= bdev_io->u.bdev.iovcnt);
+		iov = &iovs[iov_index];
+
+		if (current_block >= offset) {
+			memset(((char *)iovs->iov_base) + block_size * iov_offset, 0, block_size);
+		}
+
+		iov_offset++;
+		if (iov_offset * block_size == iov->iov_len) {
+			iov_index++;
+			iov_offset = 0;
+		}
+
+		current_block++;
+	} while (current_block < bdev_io->u.bdev.num_blocks);
+}
+
+static void
+_vbdev_complete_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	if (success) {
+		if (bdev_io->u.bdev.num_blocks < orig_io->u.bdev.num_blocks) {
+			_vbdev_fill_iovec_with_zeros(orig_io, bdev_io->u.bdev.num_blocks);
+		}
+	}
+
+	/* Complete the original IO and then free the one that we created here
+	 * as a result of issuing an IO via submit_reqeust.
+	 */
+	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static int
+vbdev_block_read(struct vbdev_block *bdev_node, struct vbdev_io_channel *ch,
+		 struct spdk_bdev_io *bdev_io)
+{
+	struct vbdev_zone *zone;
+	uint64_t len = bdev_io->u.bdev.num_blocks;
+	uint64_t lba = bdev_io->u.bdev.offset_blocks;
+	uint64_t wp;
+	int rc;
+
+	zone = vbdev_get_zone_containing_lba(bdev_node, lba);
+	if (!zone) {
+		SPDK_ERRLOG("Trying to read from invalid zone (lba 0x%lx)\n", lba);
+		return -EINVAL;
+	}
+
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_OFFLINE:
+		SPDK_ERRLOG("Trying to read from zone in invalid state %u\n", zone->zone_info.state);
+		return -EINVAL;
+	default:
+		break;
+	}
+
+	wp = zone->zone_info.write_pointer;
+	if ((lba + len) > (zone->zone_info.zone_id + zone->zone_info.capacity)) {
+		SPDK_ERRLOG("Read exceeds zone capacity (lba 0x%lx, len 0x%lx, wp 0x%lx)\n", lba, len, wp);
+		return -EINVAL;
+	}
+	if (lba > wp || zone->zone_info.state == SPDK_BDEV_ZONE_STATE_EMPTY) {
+		_vbdev_fill_iovec_with_zeros(bdev_io, 0);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		return 0;
+	}
+
+	len = spdk_min(wp - lba, len);
+
+	if (bdev_io->u.bdev.md_buf == NULL) {
+		rc = spdk_bdev_readv_blocks(bdev_node->base_desc, ch->base_ch, bdev_io->u.bdev.iovs,
+					    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+					    len, _vbdev_complete_read,
+					    bdev_io);
+	} else {
+		rc = spdk_bdev_readv_blocks_with_md(bdev_node->base_desc, ch->base_ch,
+						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						    bdev_io->u.bdev.md_buf,
+						    bdev_io->u.bdev.offset_blocks,
+						    len,
+						    _vbdev_complete_read, bdev_io);
+	}
+
+	return rc;
+}
+
+static void
 vbdev_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct vbdev_block *bdev_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_block, bdev);
@@ -421,6 +520,10 @@ vbdev_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		rc = vbdev_block_write(bdev_node, dev_ch, bdev_io);
+		passed_request = true;
+		break;
+	case SPDK_BDEV_IO_TYPE_READ:
+		rc = vbdev_block_read(bdev_node, dev_ch, bdev_io);
 		passed_request = true;
 		break;
 	default:
