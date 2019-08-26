@@ -32,7 +32,7 @@ fi
 
 set +x
 for i in $(seq 1 $num_iterations); do
-	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -i 8
 	waitforblk "nvme0n1"
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 	waitforblk_disconnect "nvme0n1"
