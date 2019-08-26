@@ -76,6 +76,7 @@ struct nvme_bdev {
 	uint32_t		id;
 	bool			active;
 	struct spdk_nvme_ns	*ns;
+	struct ocssd_bdev	*ocssd_bdev;
 };
 
 struct nvme_async_probe_ctx;
