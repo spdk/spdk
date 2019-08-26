@@ -49,6 +49,8 @@ static const char *g_rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 enum nvmf_target_state {
 	NVMF_INIT_SUBSYSTEM = 0,
 	NVMF_INIT_TARGET,
+	NVMF_INIT_POLL_GROUPS,
+	NVMF_FINI_POLL_GROUPS,
 	NVMF_FINI_TARGET,
 	NVMF_FINI_SUBSYSTEM,
 };
@@ -65,6 +67,12 @@ struct nvmf_reactor {
 	TAILQ_ENTRY(nvmf_reactor)	link;
 };
 
+struct nvmf_target_poll_group {
+	struct spdk_nvmf_poll_group		*group;
+	struct spdk_thread			*thread;
+	TAILQ_ENTRY(nvmf_target_poll_group)	link;
+};
+
 struct nvmf_target {
 	struct spdk_nvmf_tgt	*tgt;
 
@@ -72,6 +80,7 @@ struct nvmf_target {
 };
 
 TAILQ_HEAD(, nvmf_reactor) g_reactors = TAILQ_HEAD_INITIALIZER(g_reactors);
+TAILQ_HEAD(, nvmf_target_poll_group) g_poll_groups = TAILQ_HEAD_INITIALIZER(g_poll_groups);
 
 static struct nvmf_reactor *g_master_reactor = NULL;
 static struct nvmf_reactor *g_next_reactor = NULL;
@@ -340,6 +349,94 @@ nvmf_destroy_nvmf_tgt(void)
 }
 
 static void
+nvmf_tgt_destroy_poll_groups_done(struct spdk_io_channel_iter *i, int status)
+{
+	fprintf(stdout, "destroy targets's poll groups done\n");
+
+	g_target_state = NVMF_FINI_TARGET;
+	nvmf_target_advance_state();
+}
+
+static void
+nvmf_tgt_destroy_poll_group(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(io_ch);
+	struct nvmf_target_poll_group *pg, *tmp;
+
+	/* spdk_for_each_channel works like the spdk_for_each_thread
+	 * msgs are sent one by one so we don't need a lock.
+	 */
+	TAILQ_FOREACH_SAFE(pg, &g_poll_groups, link, tmp) {
+		if (pg->group == group) {
+			TAILQ_REMOVE(&g_poll_groups, pg, link);
+			spdk_nvmf_poll_group_destroy(group);
+			free(pg);
+			break;
+		}
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+nvmf_tgt_create_poll_groups_done(void *ctx)
+{
+	fprintf(stdout, "create targets's poll groups done\n");
+}
+
+static void
+nvmf_tgt_create_poll_group(void *ctx)
+{
+	struct nvmf_target_poll_group *pg;
+
+	pg = calloc(1, sizeof(struct nvmf_target_poll_group));
+	if (!pg) {
+		fprintf(stderr, "failed to allocate poll group\n");
+		return;
+	}
+
+	pg->thread = spdk_get_thread();
+	pg->group = spdk_nvmf_poll_group_create(g_nvmf_tgt.tgt);
+	if (!pg->group) {
+		fprintf(stderr, "failed to create poll group of the target\n");
+		free(pg);
+		return;
+	}
+
+	/* For the spdk_for_each_channel, each msg was sent one by one
+	 * that means next msg was sent when we complete this msg.
+	 * so although the g_poll_groups was shared we still don't need a lock.
+	 */
+	TAILQ_INSERT_TAIL(&g_poll_groups, pg, link);
+}
+
+static void
+nvmf_poll_groups_create(void)
+{
+	/* Send a message to each thread and create a poll group
+	 * Pgs are used to handle all the connections from the host so we
+	 * would like to create one pg in each core. We use the spdk_for_each
+	 * _thread because we have allocated one lightweight thread per core in
+	 * thread layer. You can also do this by traversing reactors
+	 * or SPDK_ENV_FOREACH_CORE().
+	 */
+	spdk_for_each_thread(nvmf_tgt_create_poll_group,
+			     NULL,
+			     nvmf_tgt_create_poll_groups_done);
+}
+
+static void
+nvmf_poll_groups_destroy(void)
+{
+	/* Send a message to each channel and destroy the poll group */
+	spdk_for_each_channel(g_nvmf_tgt.tgt,
+			      nvmf_tgt_destroy_poll_group,
+			      NULL,
+			      nvmf_tgt_destroy_poll_groups_done);
+}
+
+static void
 nvmf_create_nvmf_tgt(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
@@ -383,6 +480,8 @@ nvmf_create_nvmf_tgt(void)
 	spdk_nvmf_subsystem_set_allow_any_host(subsystem, true);
 
 	fprintf(stdout, "created a nvmf target service\n");
+
+	g_target_state = NVMF_INIT_POLL_GROUPS;
 	return;
 error:
 	g_target_state = NVMF_FINI_TARGET;
@@ -423,6 +522,12 @@ nvmf_target_advance_state(void)
 		case NVMF_INIT_TARGET:
 			nvmf_create_nvmf_tgt();
 			break;
+		case NVMF_INIT_POLL_GROUPS:
+			nvmf_poll_groups_create();
+			break;
+		case NVMF_FINI_POLL_GROUPS:
+			nvmf_poll_groups_destroy();
+			break;
 		case NVMF_FINI_TARGET:
 			nvmf_destroy_nvmf_tgt();
 			break;
@@ -444,15 +549,15 @@ static void
 _nvmf_shutdown_cb(void *ctx)
 {
 	/* Still in initialization state, defer shutdown operation */
-	if (g_target_state < NVMF_INIT_TARGET) {
+	if (g_target_state < NVMF_INIT_POLL_GROUPS) {
 		spdk_thread_send_msg(spdk_get_thread(), _nvmf_shutdown_cb, NULL);
 		return;
-	} else if (g_target_state >= NVMF_FINI_TARGET) {
+	} else if (g_target_state >= NVMF_FINI_POLL_GROUPS) {
 		/* Already in Shutdown status, ignore the signal */
 		return;
 	}
 
-	g_target_state = NVMF_FINI_TARGET;
+	g_target_state = NVMF_FINI_POLL_GROUPS;
 	nvmf_target_advance_state();
 }
 
