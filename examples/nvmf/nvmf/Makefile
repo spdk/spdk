@@ -2,6 +2,7 @@
 #  BSD LICENSE
 #
 #  Copyright (c) Intel Corporation.
+#  Copyright (c) 2015-2016, Micron Technology, Inc.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -30,15 +31,14 @@
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += bdev blob ioat nvme sock vmd nvmf
+APP := nvmf
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := nvmf.c
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SPDK_LIB_LIST += nvmf thread util bdev conf copy rpc jsonrpc json log sock trace notify
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
