@@ -757,24 +757,24 @@ cleanup:
 
 SPDK_RPC_REGISTER("decouple_parent_lvol_bdev", spdk_rpc_decouple_parent_lvol_bdev, SPDK_RPC_RUNTIME)
 
-struct rpc_resize_lvol_bdev {
+struct rpc_bdev_lvol_resize {
 	char *name;
 	uint64_t size;
 };
 
 static void
-free_rpc_resize_lvol_bdev(struct rpc_resize_lvol_bdev *req)
+free_rpc_bdev_lvol_resize(struct rpc_bdev_lvol_resize *req)
 {
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_resize_lvol_bdev_decoders[] = {
-	{"name", offsetof(struct rpc_resize_lvol_bdev, name), spdk_json_decode_string},
-	{"size", offsetof(struct rpc_resize_lvol_bdev, size), spdk_json_decode_uint64},
+static const struct spdk_json_object_decoder rpc_bdev_lvol_resize_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_lvol_resize, name), spdk_json_decode_string},
+	{"size", offsetof(struct rpc_bdev_lvol_resize, size), spdk_json_decode_uint64},
 };
 
 static void
-_spdk_rpc_resize_lvol_bdev_cb(void *cb_arg, int lvolerrno)
+_spdk_rpc_bdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -794,17 +794,17 @@ invalid:
 }
 
 static void
-spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_lvol_resize(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct rpc_resize_lvol_bdev req = {};
+	struct rpc_bdev_lvol_resize req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Resizing lvol\n");
 
-	if (spdk_json_decode_object(params, rpc_resize_lvol_bdev_decoders,
-				    SPDK_COUNTOF(rpc_resize_lvol_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_resize_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_resize_decoders),
 				    &req)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -825,13 +825,14 @@ spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_resize(lvol, req.size, _spdk_rpc_resize_lvol_bdev_cb, request);
+	vbdev_lvol_resize(lvol, req.size, _spdk_rpc_bdev_lvol_resize_cb, request);
 
 cleanup:
-	free_rpc_resize_lvol_bdev(&req);
+	free_rpc_bdev_lvol_resize(&req);
 }
 
-SPDK_RPC_REGISTER("resize_lvol_bdev", spdk_rpc_resize_lvol_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_resize", spdk_rpc_bdev_lvol_resize, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_resize, resize_lvol_bdev)
 
 struct rpc_set_ro_lvol_bdev {
 	char *name;
@@ -1037,7 +1038,7 @@ spdk_rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_b
 
 static void
 spdk_rpc_bdev_lvol_get_lvstores(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
+				const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_get_lvstores req = {};
 	struct spdk_json_write_ctx *w;

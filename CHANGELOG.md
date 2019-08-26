@@ -699,7 +699,7 @@ Bdev I/O statistics now track unmap opertations.
 
 ### logical volumes
 
-Logical volume bdev can now be marked as read only using `bdev_lvol_set_read_only` RPC.
+Logical volume bdev can now be marked as read only using `set_read_only_lvol_bdev` RPC.
 This allows for basing clones on top of lvol_bdev without first creating a snapshot.
 
 Added option to change method for data erasure when deleting lvol or resizing down.

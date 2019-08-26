@@ -141,7 +141,7 @@ bdev_lvol_rename [-h] old_name new_name
     Change lvol bdev name
     optional arguments:
     -h, --help  show help
-resize_lvol_bdev [-h] name size
+bdev_lvol_resize [-h] name size
     Resize existing lvol bdev
     optional arguments:
     -h, --help  show help
