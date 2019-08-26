@@ -1258,15 +1258,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.set_defaults(func=destroy_lvol_store)
 
-    def get_lvol_stores(args):
-        print_dict(rpc.lvol.get_lvol_stores(args.client,
-                                            uuid=args.uuid,
-                                            lvs_name=args.lvs_name))
+    def bdev_lvol_get_lvstores(args):
+        print_dict(rpc.lvol.bdev_lvol_get_lvstores(args.client,
+                                                   uuid=args.uuid,
+                                                   lvs_name=args.lvs_name))
 
-    p = subparsers.add_parser('get_lvol_stores', help='Display current logical volume store list')
+    p = subparsers.add_parser('bdev_lvol_get_lvstores', aliases=['get_lvol_stores'],
+                              help='Display current logical volume store list')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
     p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
-    p.set_defaults(func=get_lvol_stores)
+    p.set_defaults(func=bdev_lvol_get_lvstores)
 
     def get_raid_bdevs(args):
         print_array(rpc.bdev.get_raid_bdevs(args.client,
