@@ -303,7 +303,7 @@ Example response:
     "destroy_lvol_bdev",
     "bdev_lvol_resize",
     "bdev_lvol_set_read_only",
-    "decouple_parent_lvol_bdev",
+    "bdev_lvol_decouple_parent",
     "inflate_lvol_bdev",
     "bdev_lvol_rename",
     "bdev_lvol_clone",
@@ -5246,7 +5246,7 @@ Example response:
 }
 ~~~
 
-## decouple_parent_lvol_bdev {#rpc_decouple_parent_lvol_bdev}
+## bdev_lvol_decouple_parent {#rpc_bdev_lvol_decouple_parent}
 
 Decouple the parent of a logical volume. For unallocated clusters which is allocated in the parent, they are allocated and copied from the parent, but for unallocated clusters which is thin provisioned in the parent, they are kept thin provisioned. Then all dependencies on the parent are removed.
 
@@ -5263,7 +5263,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "decouple_parent_lvol_bdev",
+  "method": "bdev_lvol_decouple_parent",
   "id": 1.
   "params": {
     "name": "8d87fccc-c278-49f0-9d4c-6237951aca09"

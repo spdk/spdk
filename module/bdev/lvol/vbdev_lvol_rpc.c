@@ -717,7 +717,7 @@ cleanup:
 SPDK_RPC_REGISTER("inflate_lvol_bdev", spdk_rpc_inflate_lvol_bdev, SPDK_RPC_RUNTIME)
 
 static void
-spdk_rpc_decouple_parent_lvol_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
 				   const struct spdk_json_val *params)
 {
 	struct rpc_inflate_lvol_bdev req = {};
@@ -755,7 +755,8 @@ cleanup:
 	free_rpc_inflate_lvol_bdev(&req);
 }
 
-SPDK_RPC_REGISTER("decouple_parent_lvol_bdev", spdk_rpc_decouple_parent_lvol_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_decouple_parent", spdk_rpc_bdev_lvol_decouple_parent, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_decouple_parent, decouple_parent_lvol_bdev)
 
 struct rpc_bdev_lvol_resize {
 	char *name;
@@ -1038,7 +1039,7 @@ spdk_rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_b
 
 static void
 spdk_rpc_bdev_lvol_get_lvstores(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
+				const struct spdk_json_val *params)
 {
 	struct rpc_bdev_lvol_get_lvstores req = {};
 	struct spdk_json_write_ctx *w;

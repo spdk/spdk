@@ -2695,7 +2695,7 @@ class TestCases(object):
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
 
         # Decouple parent lvol bdev and check if it fails
-        ret_value = self.c.decouple_parent_lvol_bdev(lvol_bdev['name'])
+        ret_value = self.c.bdev_lvol_decouple_parent(lvol_bdev['name'])
         if ret_value == 0:
             print("ERROR: Decouple parent on bdev without parent should "
                   "fail but didn't")
@@ -2706,7 +2706,7 @@ class TestCases(object):
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         # Decouple parent lvol bdev
-        fail_count += self.c.decouple_parent_lvol_bdev(lvol_bdev['name'])
+        fail_count += self.c.bdev_lvol_decouple_parent(lvol_bdev['name'])
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
         if lvol_bdev['driver_specific']['lvol']['thin_provision'] is not True:
@@ -2803,7 +2803,7 @@ class TestCases(object):
                                             fill_range * MEGABYTE, "read", pattern[i])
 
         # Decouple parent
-        fail_count += self.c.decouple_parent_lvol_bdev(lvol_bdev['name'])
+        fail_count += self.c.bdev_lvol_decouple_parent(lvol_bdev['name'])
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
 
         # Check data consistency
