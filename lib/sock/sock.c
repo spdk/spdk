@@ -178,6 +178,7 @@ spdk_sock_connect(const char *ip, int port)
 		sock = impl->connect(ip, port);
 		if (sock != NULL) {
 			sock->net_impl = impl;
+			TAILQ_INIT(&sock->queued_reqs);
 			return sock;
 		}
 	}
@@ -195,6 +196,8 @@ spdk_sock_listen(const char *ip, int port)
 		sock = impl->listen(ip, port);
 		if (sock != NULL) {
 			sock->net_impl = impl;
+			/* Don't need to initialize the request queues for listen
+			 * sockets. */
 			return sock;
 		}
 	}
@@ -210,6 +213,7 @@ spdk_sock_accept(struct spdk_sock *sock)
 	new_sock = sock->net_impl->accept(sock);
 	if (new_sock != NULL) {
 		new_sock->net_impl = sock->net_impl;
+		TAILQ_INIT(&new_sock->queued_reqs);
 	}
 
 	return new_sock;
@@ -231,6 +235,15 @@ spdk_sock_close(struct spdk_sock **_sock)
 		errno = EBUSY;
 		return -1;
 	}
+
+	sock->flags.closed = true;
+
+	if (sock->cb_cnt > 0) {
+		/* Let the callback unwind before destroying the socket */
+		return 0;
+	}
+
+	spdk_sock_abort_requests(sock);
 
 	rc = sock->net_impl->close(sock);
 	if (rc == 0) {
@@ -271,6 +284,19 @@ spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	}
 
 	return sock->net_impl->writev(sock, iov, iovcnt);
+}
+
+void
+spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
+{
+	assert(req->cb_fn != NULL);
+
+	if (sock == NULL) {
+		req->cb_fn(req->cb_arg, -EBADF);
+		return;
+	}
+
+	sock->net_impl->writev_async(sock, req);
 }
 
 int

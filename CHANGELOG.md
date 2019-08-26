@@ -2,6 +2,13 @@
 
 ## v20.01: (Upcoming Release)
 
+### sock
+
+Added spdk_sock_writev_async for performing asynchronous writes to sockets. This call will
+never return EAGAIN, instead queueing internally until the data has all been sent. This can
+simplify many code flows that create pollers to continue attempting to flush writes
+on sockets.
+
 ### isa-l
 
 Updated ISA-L submodule to commit f3993f5c0b6911 which includes implementation and
