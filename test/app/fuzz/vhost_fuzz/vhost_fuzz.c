@@ -451,11 +451,11 @@ print_req_obj(struct fuzz_vhost_dev_ctx *dev_ctx, struct fuzz_vhost_io_ctx *io_c
 		print_iovs(w, io_ctx);
 		print_blk_io_data(w, io_ctx);
 	} else if (dev_ctx->test_scsi_tmf) {
-		spdk_json_write_named_object_begin(w, SCSI_IO_NAME);
+		spdk_json_write_named_object_begin(w, SCSI_MGMT_NAME);
 		print_iovs(w, io_ctx);
 		print_scsi_tmf_io_data(w, io_ctx);
 	} else {
-		spdk_json_write_named_object_begin(w, SCSI_MGMT_NAME);
+		spdk_json_write_named_object_begin(w, SCSI_IO_NAME);
 		print_iovs(w, io_ctx);
 		print_scsi_io_data(w, io_ctx);
 	}
