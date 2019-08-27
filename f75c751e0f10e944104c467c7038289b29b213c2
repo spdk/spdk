@@ -16,6 +16,23 @@
       "revId": "f75c751e0f10e944104c467c7038289b29b213c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a92b163_cc4fe6ef",
+        "filename": "module/bdev/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-27T18:48:47Z",
+      "side": 1,
+      "message": "some of these could be:\n\nDIRS-$(CONFIG_CRYPTO) +\u003d crypto\nDIRS-$(CONFIG_OCF) +\u003d ocf\n\netc.\n\nbut that\u0027s for a different patch...",
+      "revId": "f75c751e0f10e944104c467c7038289b29b213c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
