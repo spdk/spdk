@@ -266,6 +266,13 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_named_bool(w, "claimed", (bdev->internal.claim_module != NULL));
 
+	spdk_json_write_named_bool(w, "zoned", bdev->zoned);
+	if (bdev->zoned) {
+		spdk_json_write_named_uint64(w, "zone_size", bdev->zone_size);
+		spdk_json_write_named_uint64(w, "max_open_zones", bdev->max_open_zones);
+		spdk_json_write_named_uint64(w, "optimal_open_zones", bdev->optimal_open_zones);
+	}
+
 	spdk_json_write_named_object_begin(w, "supported_io_types");
 	spdk_json_write_named_bool(w, "read",
 				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
