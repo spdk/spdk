@@ -101,6 +101,9 @@ struct block_vbdev_io {
 	/* for bdev_io_wait */
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 
+	/* bdev IO was issued to */
+	struct vbdev_block *bdev_node;
+
 	/* zone IO was issued to */
 	struct vbdev_zone *zone;
 };
@@ -250,16 +253,11 @@ vbdev_get_zone_containing_lba(struct vbdev_block *bdev_node, uint64_t lba)
 }
 
 static int
-vbdev_block_get_zone_info(struct vbdev_block *bdev_node, struct spdk_bdev_io *bdev_io)
+vbdev_block_get_zone_info(struct vbdev_block *bdev_node, struct vbdev_zone *zone,
+			  struct spdk_bdev_io *bdev_io)
 {
-	struct vbdev_zone *zone;
 	void *buffer = bdev_io->u.zdev.buf;
 	size_t i, zone_id;
-
-	zone = vbdev_get_zone_by_lba(bdev_node, bdev_io->u.zdev.zone_id);
-	if (!zone) {
-		return -EINVAL;
-	}
 
 	/* User can request info from more zones than exist, need to check both internal and user boundaries
 	 */
@@ -272,13 +270,116 @@ vbdev_block_get_zone_info(struct vbdev_block *bdev_node, struct spdk_bdev_io *bd
 
 	return 0;
 }
+static int
+vbdev_block_open_zone(struct vbdev_block *bdev_node, struct vbdev_zone *zone)
+{
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_FULL:
+	case SPDK_BDEV_ZONE_STATE_READ_ONLY:
+	case SPDK_BDEV_ZONE_STATE_OFFLINE:
+		return -EINVAL;
+	case SPDK_BDEV_ZONE_STATE_OPEN:
+		return 0;
+	default:
+		break;
+	}
+	size_t open_zones = __atomic_add_fetch(&bdev_node->open_zones, 1, __ATOMIC_SEQ_CST);
+	if (open_zones > bdev_node->bdev.max_open_zones) {
+		__atomic_sub_fetch(&bdev_node->open_zones, 1, __ATOMIC_SEQ_CST);
+		SPDK_ERRLOG("Trying to open too many zones\n");
+		return -EINVAL;
+	}
+
+	zone->zone_info.state = SPDK_BDEV_ZONE_STATE_OPEN;
+	return 0;
+}
+
+static void
+_vbdev_complete_unmap(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	struct block_vbdev_io *io_ctx = (struct block_vbdev_io *)orig_io->driver_ctx;
+	struct vbdev_zone *zone = io_ctx->zone;
+
+	if (success) {
+		if (zone->zone_info.state == SPDK_BDEV_ZONE_STATE_OPEN) {
+			__atomic_sub_fetch(&io_ctx->bdev_node->open_zones, 1, __ATOMIC_SEQ_CST);
+		}
+
+		if (zone->zone_info.state == SPDK_BDEV_ZONE_STATE_READ_ONLY) {
+			zone->zone_info.state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+		} else {
+			zone->zone_info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
+		}
+		zone->zone_info.write_pointer = zone->zone_info.zone_id;
+	}
+
+	__atomic_store_n(&zone->write_inflight, false, __ATOMIC_SEQ_CST);
+
+	/* Complete the original IO and then free the one that we created here
+	 * as a result of issuing an IO via submit_reqeust.
+	 */
+	spdk_bdev_io_complete(orig_io, status);
+	spdk_bdev_free_io(bdev_io);
+}
 
 static int
-vbdev_block_zone_management(struct vbdev_block *bdev_node, struct spdk_bdev_io *bdev_io)
+vbdev_block_reset_zone(struct vbdev_block *bdev_node, struct vbdev_io_channel *ch,
+		       struct vbdev_zone *zone, struct spdk_bdev_io *bdev_io, bool *passed_request)
 {
+	struct block_vbdev_io *io_ctx = (struct block_vbdev_io *)bdev_io->driver_ctx;
+	int rc;
+
+	*passed_request = false;
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_OFFLINE:
+		return -EINVAL;
+	case SPDK_BDEV_ZONE_STATE_EMPTY:
+		return 0;
+	default:
+		break;
+	}
+
+	/* If a write is already being processed on the zone, reschedule it */
+	if (__atomic_exchange_n(&zone->write_inflight, true, __ATOMIC_SEQ_CST)) {
+		return -ENOMEM;
+	}
+
+	io_ctx->zone = zone;
+	io_ctx->bdev_node = bdev_node;
+
+	rc = spdk_bdev_unmap_blocks(bdev_node->base_desc, ch->base_ch,
+				    zone->zone_info.zone_id, zone->zone_info.capacity,
+				    _vbdev_complete_unmap, bdev_io);
+	if (!rc) {
+		*passed_request = true;
+	}
+
+	return rc;
+}
+
+static int
+vbdev_block_zone_management(struct vbdev_block *bdev_node, struct vbdev_io_channel *ch,
+			    struct spdk_bdev_io *bdev_io, bool *passed_request)
+{
+	struct vbdev_zone *zone;
+	*passed_request = false;
+
+	zone = vbdev_get_zone_by_lba(bdev_node, bdev_io->u.zdev.zone_id);
+	if (!zone) {
+		return -EINVAL;
+	}
+
 	switch (bdev_io->u.zdev.zone_action) {
 	case SPDK_BDEV_ZONE_INFO:
-		return vbdev_block_get_zone_info(bdev_node, bdev_io);
+		return vbdev_block_get_zone_info(bdev_node, zone, bdev_io);
+	case SPDK_BDEV_ZONE_RESET:
+		return vbdev_block_reset_zone(bdev_node, ch, zone, bdev_io, passed_request);
+	case SPDK_BDEV_ZONE_OPEN:
+		return vbdev_block_open_zone(bdev_node, zone);
+	case SPDK_BDEV_ZONE_CLOSE:
+	case SPDK_BDEV_ZONE_FINISH:
 	default:
 		return -EINVAL;
 	}
@@ -515,7 +616,7 @@ vbdev_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
-		rc = vbdev_block_zone_management(bdev_node, bdev_io);
+		rc = vbdev_block_zone_management(bdev_node, dev_ch, bdev_io, &passed_request);
 		passed_request = false;
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
