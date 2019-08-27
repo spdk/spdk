@@ -8,6 +8,7 @@
   },
   "block_size": $(N),
   "claimed": false,
+  "zoned": false,
   "driver_specific": {
     "split": {
       "base_bdev": "Nvme0n1",
