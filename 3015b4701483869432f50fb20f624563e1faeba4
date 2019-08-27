@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a18bc315_3c65bd31",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-27T11:06:31Z",
+      "side": 1,
+      "message": "Very simple change just to detect ASAN fail.\nNot sure if and how it will affect timeout loop in next line.\n\nCan either:\n- work on it some more to have both \"wait\" and \"timeout\" available while shutting done the app\n- or get rid of timeout and just do simple killprocess function call",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 134,
+        "endChar": 22
+      },
+      "revId": "3015b4701483869432f50fb20f624563e1faeba4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
