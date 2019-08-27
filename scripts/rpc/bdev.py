@@ -651,6 +651,32 @@ def delete_ftl_bdev(client, name):
     return client.call('delete_ftl_bdev', params)
 
 
+def zdev_ocssd_attach_controller(client, name, trtype, traddr):
+    """Creates Open Channel zdevs on specified Open Channel controller
+
+    Args:
+        name: name of the zdev
+        trtype: transport type
+        traddr: transport address
+    """
+    params = {'name': name,
+              'trtype': trtype,
+              'traddr': traddr}
+
+    return client.call('zdev_ocssd_attach_controller', params)
+
+
+def zdev_ocssd_detach_controller(client, name):
+    """Detaches Open Channel controller and deletes all bdevs created on top of it.
+
+    Args:
+        name: name of the controller
+    """
+    params = {'name': name}
+
+    return client.call('zdev_ocssd_detach_controller', params)
+
+
 def get_bdevs(client, name=None):
     """Get information about block devices.
 
