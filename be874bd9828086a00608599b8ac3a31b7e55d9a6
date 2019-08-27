@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "58cbed5d_da705b21",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1565,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-27T02:07:55Z",
+      "side": 1,
+      "message": "Please insert a line after variable definition.",
+      "range": {
+        "startLine": 1563,
+        "startChar": 0,
+        "endLine": 1565,
+        "endChar": 0
+      },
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae80acf2_bd40ecf2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1581,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-27T02:07:55Z",
+      "side": 1,
+      "message": "Could we simplify as follows?\n\nremaining_io_buffer_length \u003d spdk_min(remaining_length, rtransport-\u003etransport.opts.io_unit_size);\nrdma_req-\u003ereq.iov[iov_count].iov_len \u003d remaining_io_buffer_length;\nremaining_io_buffer_length -\u003d offset;\n++rdma_req-\u003ereq.iovcnt;\n\nThen can we remove io_buffer_length?",
+      "range": {
+        "startLine": 1575,
+        "startChar": 0,
+        "endLine": 1581,
+        "endChar": 0
+      },
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a8fe3a4b_bb57f8c5",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
@@ -34,6 +80,29 @@
       "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e25ba96a_27451181",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1614,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-27T02:07:55Z",
+      "side": 1,
+      "message": "should be remaining_io_buffer_length -\u003d spdk_min(remaining_io_buffer_length, md_size) ?\n\nIf not, remaining_io_buffer_length never become zero when remaining_io_buffer_length \u003c md_size.",
+      "range": {
+        "startLine": 1612,
+        "startChar": 4,
+        "endLine": 1614,
+        "endChar": 5
+      },
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
