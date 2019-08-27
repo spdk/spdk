@@ -1532,7 +1532,7 @@ Example response:
 }
 ~~~
 
-## get_nvme_controllers {#rpc_get_nvme_controllers}
+## bdev_nvme_get_controllers {#rpc_bdev_nvme_get_controllers}
 
 Get information about NVMe controllers.
 
@@ -1557,7 +1557,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "get_nvme_controllers",
+  "method": "bdev_nvme_get_controllers",
   "params": {
     "name": "Nvme0"
   }
