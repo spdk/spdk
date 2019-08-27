@@ -36,21 +36,13 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += delay error gpt lvol malloc null nvme passthru raid rpc split
 
-ifeq ($(CONFIG_CRYPTO),y)
-DIRS-y += crypto
-endif
+DIRS-$(CONFIG_CRYPTO) += crypto
 
-ifeq ($(CONFIG_OCF), y)
-DIRS-y += ocf
-endif
+DIRS-$(CONFIG_OCF) += ocf
 
-ifeq ($(CONFIG_REDUCE),y)
-DIRS-y += compress
-endif
+DIRS-$(CONFIG_REDUCE) += compress
 
-ifeq ($(CONFIG_URING),y)
-DIRS-y += uring
-endif
+DIRS-$(CONFIG_URING) += uring
 
 ifeq ($(OS),Linux)
 DIRS-y += aio
