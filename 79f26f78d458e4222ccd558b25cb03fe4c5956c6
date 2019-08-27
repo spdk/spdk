@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd2ff290_6466ac0f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2188,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-27T04:21:39Z",
+      "side": 1,
+      "message": "Please use num_blocks defined at the top of this function by the last patch",
+      "revId": "79f26f78d458e4222ccd558b25cb03fe4c5956c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71941164_e85a9dbe",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2190,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-27T04:21:39Z",
+      "side": 1,
+      "message": "We can use rc defined at the line 2001",
+      "revId": "79f26f78d458e4222ccd558b25cb03fe4c5956c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
