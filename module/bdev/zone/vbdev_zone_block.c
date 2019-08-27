@@ -457,6 +457,9 @@ _vbdev_complete_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		if (zone->zone_info.write_pointer == zone->zone_info.zone_id + zone->zone_info.capacity) {
 			zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL;
 		}
+		if (orig_io->type == SPDK_BDEV_IO_TYPE_ZONE_APPEND) {
+			orig_io->u.bdev.offset_blocks = bdev_io->u.bdev.offset_blocks;
+		}
 	}
 
 	__atomic_store_n(&zone->write_inflight, false, __ATOMIC_SEQ_CST);
@@ -470,7 +473,7 @@ _vbdev_complete_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 static int
 vbdev_block_write(struct vbdev_block *bdev_node, struct vbdev_io_channel *ch,
-		  struct spdk_bdev_io *bdev_io)
+		  struct spdk_bdev_io *bdev_io, bool is_append)
 {
 	struct block_vbdev_io *io_ctx = (struct block_vbdev_io *)bdev_io->driver_ctx;
 	struct vbdev_zone *zone;
@@ -480,7 +483,11 @@ vbdev_block_write(struct vbdev_block *bdev_node, struct vbdev_io_channel *ch,
 	int rc = 0;
 	bool write_inflight;
 
-	zone = vbdev_get_zone_containing_lba(bdev_node, lba);
+	if (is_append) {
+		zone = vbdev_get_zone_by_lba(bdev_node, lba);
+	} else {
+		zone = vbdev_get_zone_containing_lba(bdev_node, lba);
+	}
 	if (!zone) {
 		SPDK_ERRLOG("Trying to write to invalid zone (lba 0x%lx)\n", lba);
 		return -EINVAL;
@@ -505,6 +512,9 @@ vbdev_block_write(struct vbdev_block *bdev_node, struct vbdev_io_channel *ch,
 	}
 
 	wp = zone->zone_info.write_pointer;
+	if (is_append) {
+		lba = wp;
+	}
 
 	if (lba != wp) {
 		SPDK_ERRLOG("Trying to write to zone with invalid address (lba 0x%lx, wp 0x%lx)\n", lba, wp);
@@ -527,14 +537,14 @@ vbdev_block_write(struct vbdev_block *bdev_node, struct vbdev_io_channel *ch,
 
 	if (bdev_io->u.bdev.md_buf == NULL) {
 		rc = spdk_bdev_writev_blocks(bdev_node->base_desc, ch->base_ch, bdev_io->u.bdev.iovs,
-					     bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+					     bdev_io->u.bdev.iovcnt, lba,
 					     bdev_io->u.bdev.num_blocks, _vbdev_complete_write,
 					     bdev_io);
 	} else {
 		rc = spdk_bdev_writev_blocks_with_md(bdev_node->base_desc, ch->base_ch,
 						     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 						     bdev_io->u.bdev.md_buf,
-						     bdev_io->u.bdev.offset_blocks,
+						     lba,
 						     bdev_io->u.bdev.num_blocks,
 						     _vbdev_complete_write, bdev_io);
 	}
@@ -664,11 +674,15 @@ vbdev_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		passed_request = false;
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		rc = vbdev_block_write(bdev_node, dev_ch, bdev_io);
+		rc = vbdev_block_write(bdev_node, dev_ch, bdev_io, false);
 		passed_request = true;
 		break;
 	case SPDK_BDEV_IO_TYPE_READ:
 		rc = vbdev_block_read(bdev_node, dev_ch, bdev_io);
+		passed_request = true;
+		break;
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
+		rc = vbdev_block_write(bdev_node, dev_ch, bdev_io, true);
 		passed_request = true;
 		break;
 	default:
