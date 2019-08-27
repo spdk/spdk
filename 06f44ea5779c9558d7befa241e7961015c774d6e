@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e23e3ae_cae043fb",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1308,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-27T19:02:01Z",
+      "side": 1,
+      "message": "could you instead add something like this to spdk_ftl_dev:\n\nint halt_complete_status;\n\nthen you can just do something like:\n\nstatic void\nftl_halt_complete_cb(void *ctx)\n{\n  struct spdk_ftl_dev *dev \u003d ctx;\n\n  ftl_call_fini_complete(dev, dev-\u003ehalt_complete_status);\n)\n\nand here do:\n\ndev-\u003ehalt_complete_status \u003d success ? 0 : -EIO;\nspdk_thread_send_msg(dev-\u003efini_ctx.thread, ftl_halt_complete_cb, dev);\n\nand below when there is no nv_cache you can set dev-\u003ehalt_complete_status \u003d 0 before calling spdk_thread_send_msg\n\nAll of this would just simplify the code a bit.",
+      "revId": "06f44ea5779c9558d7befa241e7961015c774d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
