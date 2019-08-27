@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7704574a_3939d40b",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 5
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-27T15:43:37Z",
+      "side": 1,
+      "message": "extra space",
+      "revId": "eec5f02b7cbeb1dc24f9d07d2ce38b87d696ca10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
