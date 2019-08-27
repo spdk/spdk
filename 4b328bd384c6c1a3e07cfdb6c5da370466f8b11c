@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1063d0c1_82f332f6",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 7
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-27T22:04:21Z",
+      "side": 1,
+      "message": "is there an extra space after util?",
+      "revId": "4b328bd384c6c1a3e07cfdb6c5da370466f8b11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8288ba4_8f084249",
+        "filename": "module/event/subsystems/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-27T22:04:21Z",
+      "side": 1,
+      "message": "SHould",
+      "revId": "4b328bd384c6c1a3e07cfdb6c5da370466f8b11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
