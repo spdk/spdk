@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8c94ea9_a1c2c280",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-27T17:18:59Z",
+      "side": 1,
+      "message": "Instead of changing the function signatures of the existing functions, I\u0027d prefer we added 3 new functions:\n\nspdk_sock_recv_async\nspdk_sock_readv_async\nspdk_sock_writev_async\n\nThat will minimize the amount of code that has to change and keeps the public API stable.",
+      "revId": "0188f24676b782e01b99ab657b43c9465d98210d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
