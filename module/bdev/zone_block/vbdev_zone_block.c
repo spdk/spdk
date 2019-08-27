@@ -422,6 +422,9 @@ _zone_block_complete_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 		if (zone->zone_info.write_pointer == zone->zone_info.zone_id + zone->zone_info.capacity) {
 			zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL;
 		}
+		if (orig_io->type == SPDK_BDEV_IO_TYPE_ZONE_APPEND) {
+			orig_io->u.bdev.offset_blocks = bdev_io->u.bdev.offset_blocks;
+		}
 	}
 
 	__atomic_store_n(&zone->busy, false, __ATOMIC_SEQ_CST);
@@ -444,8 +447,13 @@ zone_block_write(struct bdev_zone_block *bdev_node, struct zone_block_io_channel
 	uint64_t num_blocks_left, wp;
 	int rc = 0;
 	bool busy;
+	bool is_append = bdev_io->type == SPDK_BDEV_IO_TYPE_ZONE_APPEND;
 
-	zone = zone_block_get_zone_containing_lba(bdev_node, lba);
+	if (is_append) {
+		zone = zone_block_get_zone_by_slba(bdev_node, lba);
+	} else {
+		zone = zone_block_get_zone_containing_lba(bdev_node, lba);
+	}
 	if (!zone) {
 		SPDK_ERRLOG("Trying to write to invalid zone (lba 0x%lx)\n", lba);
 		return -EINVAL;
@@ -472,11 +480,14 @@ zone_block_write(struct bdev_zone_block *bdev_node, struct zone_block_io_channel
 	}
 
 	wp = zone->zone_info.write_pointer;
-
-	if (lba != wp) {
-		SPDK_ERRLOG("Trying to write to zone with invalid address (lba 0x%lx, wp 0x%lx)\n", lba, wp);
-		rc = -EINVAL;
-		goto write_fail;
+	if (is_append) {
+		lba = wp;
+	} else {
+		if (lba != wp) {
+			SPDK_ERRLOG("Trying to write to zone with invalid address (lba 0x%lx, wp 0x%lx)\n", lba, wp);
+			rc = -EINVAL;
+			goto write_fail;
+		}
 	}
 
 	num_blocks_left = zone->zone_info.zone_id + zone->zone_info.capacity - wp;
@@ -583,11 +594,12 @@ zone_block_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		rc = zone_block_unmap(bdev_node, dev_ch, bdev_io);
 		break;
-	case SPDK_BDEV_IO_TYPE_WRITE:
-		rc = zone_block_write(bdev_node, dev_ch, bdev_io);
-		break;
 	case SPDK_BDEV_IO_TYPE_READ:
 		rc = zone_block_read(bdev_node, dev_ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
+		rc = zone_block_write(bdev_node, dev_ch, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("vbdev_block: unknown I/O type %u\n", bdev_io->type);
@@ -614,6 +626,7 @@ zone_block_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
 		return true;
 	default:
 		return false;
