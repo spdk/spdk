@@ -139,6 +139,24 @@
       "revId": "87353126e4616c132e202ea551913b0884a558d0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72d741d1_7eff6d73",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-08-27T14:25:57Z",
+      "side": 1,
+      "message": "wait, don\u0027t we need this to catch errors in nvmperf and perform cleanup?",
+      "parentUuid": "6f1bc9e0_ca020d3f",
+      "revId": "87353126e4616c132e202ea551913b0884a558d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
