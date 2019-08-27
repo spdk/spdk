@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "70cabf96_a0ff760a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-27T11:34:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ba3d85c3_b425ed3b",
+      "revId": "4686ac6b5a6d9504eb685a726b87e38d6cd202d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "863d2042_ca02821d",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 4
@@ -33,6 +51,24 @@
       "revId": "4686ac6b5a6d9504eb685a726b87e38d6cd202d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76c14bc5_bf5b1170",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-08-27T11:34:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "863d2042_ca02821d",
+      "revId": "4686ac6b5a6d9504eb685a726b87e38d6cd202d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
