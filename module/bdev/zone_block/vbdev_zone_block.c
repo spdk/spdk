@@ -290,6 +290,24 @@ zone_block_reset_zone(struct bdev_zone_block *bdev_node, struct zone_block_io_ch
 }
 
 static int
+zone_block_close_zone(struct block_zone *zone, struct spdk_bdev_io *bdev_io)
+{
+	pthread_spin_lock(&zone->lock);
+
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_OPEN:
+	case SPDK_BDEV_ZONE_STATE_CLOSED:
+		zone->zone_info.state = SPDK_BDEV_ZONE_STATE_CLOSED;
+		pthread_spin_unlock(&zone->lock);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		return 0;
+	default:
+		pthread_spin_unlock(&zone->lock);
+		return -EINVAL;
+	}
+}
+
+static int
 zone_block_zone_management(struct bdev_zone_block *bdev_node, struct zone_block_io_channel *ch,
 			   struct spdk_bdev_io *bdev_io)
 {
@@ -305,6 +323,8 @@ zone_block_zone_management(struct bdev_zone_block *bdev_node, struct zone_block_
 		return zone_block_reset_zone(bdev_node, ch, zone, bdev_io);
 	case SPDK_BDEV_ZONE_OPEN:
 		return zone_block_open_zone(zone, bdev_io);
+	case SPDK_BDEV_ZONE_CLOSE:
+		return zone_block_close_zone(zone, bdev_io);
 	default:
 		return -EINVAL;
 	}
