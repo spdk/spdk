@@ -36,7 +36,20 @@
 #include "spdk_cunit.h"
 
 #include "util/bit_array.c"
-#include "common/lib/test_env.c"
+
+void *
+spdk_realloc(void *buf, size_t size, size_t align)
+{
+	return realloc(buf, size);
+}
+
+void
+spdk_free(void *buf)
+{
+	/* fix for false-positives in *certain* static analysis tools. */
+	assert((uintptr_t)buf != UINTPTR_MAX);
+	free(buf);
+}
 
 static void
 test_1bit(void)
