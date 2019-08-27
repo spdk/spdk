@@ -344,30 +344,30 @@ spdk_rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-struct rpc_get_nvme_controllers {
+struct rpc_bdev_nvme_get_controllers {
 	char *name;
 };
 
 static void
-free_rpc_get_nvme_controllers(struct rpc_get_nvme_controllers *r)
+free_rpc_bdev_nvme_get_controllers(struct rpc_bdev_nvme_get_controllers *r)
 {
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_get_nvme_controllers_decoders[] = {
-	{"name", offsetof(struct rpc_get_nvme_controllers, name), spdk_json_decode_string, true},
+static const struct spdk_json_object_decoder rpc_bdev_nvme_get_controllers_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_nvme_get_controllers, name), spdk_json_decode_string, true},
 };
 
 static void
-spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+spdk_rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
 {
-	struct rpc_get_nvme_controllers req = {};
+	struct rpc_bdev_nvme_get_controllers req = {};
 	struct spdk_json_write_ctx *w;
 	struct nvme_bdev_ctrlr *ctrlr = NULL;
 
-	if (params && spdk_json_decode_object(params, rpc_get_nvme_controllers_decoders,
-					      SPDK_COUNTOF(rpc_get_nvme_controllers_decoders),
+	if (params && spdk_json_decode_object(params, rpc_bdev_nvme_get_controllers_decoders,
+					      SPDK_COUNTOF(rpc_bdev_nvme_get_controllers_decoders),
 					      &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -400,9 +400,10 @@ spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_get_nvme_controllers(&req);
+	free_rpc_bdev_nvme_get_controllers(&req);
 }
-SPDK_RPC_REGISTER("get_nvme_controllers", spdk_rpc_get_nvme_controllers, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_nvme_get_controllers", spdk_rpc_bdev_nvme_get_controllers, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_get_controllers, get_nvme_controllers)
 
 struct rpc_delete_nvme {
 	char *name;
