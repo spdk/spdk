@@ -178,6 +178,30 @@
     },
     {
       "key": {
+        "uuid": "02fd3032_f7af2526",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1614,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-27T09:13:48Z",
+      "side": 1,
+      "message": "Thank you Alexey.\n\nMy intention was that if io_unit_size (buffer_size) is 516, data_block_size is 512, and md_size is 8, then the first 4 bytes of metadata is in the first buffer and the last 4 bytes of metadata is in the second buffer. In this case, remaining_io_buffer_length is still 4. Hence remaining_io_buffer_length must be zeroed at the line 1612 to 1614. Hence I proposed remaining_io_buffer_length -\u003d spdk_min(remaining_io_buffer_length, md_size).\n\nSplitting metadata into two buffers is unlikely if we set io_unit_size reasonably. However we should not expect such assumption.\n\nI believe this change will be no harm and fix the split case.",
+      "parentUuid": "3a31f422_5ec4fc94",
+      "range": {
+        "startLine": 1612,
+        "startChar": 4,
+        "endLine": 1614,
+        "endChar": 5
+      },
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "34fecaab_b454f1a6",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
