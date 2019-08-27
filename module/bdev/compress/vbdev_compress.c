@@ -1193,6 +1193,7 @@ bdev_hotremove_vol_unload_cb(void *cb_arg, int reduce_errno)
 		SPDK_ERRLOG("number %d\n", reduce_errno);
 	}
 
+	comp_bdev->vol = NULL;
 	spdk_bdev_unregister(&comp_bdev->comp_bdev, NULL, NULL);
 }
 
