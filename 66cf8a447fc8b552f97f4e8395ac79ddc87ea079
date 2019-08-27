@@ -16,6 +16,24 @@
       "revId": "66cf8a447fc8b552f97f4e8395ac79ddc87ea079",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "857403a6_68dba877",
+        "filename": "test/nvmf/target/connect_disconnect.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-27T10:31:42Z",
+      "side": 1,
+      "message": "It\u0027s already limited to 10 for per-patch tests.\n200 is for extended nightly tests, and we want to use higher values in nightlies.",
+      "parentUuid": "36d60ced_258c5f97",
+      "revId": "66cf8a447fc8b552f97f4e8395ac79ddc87ea079",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
