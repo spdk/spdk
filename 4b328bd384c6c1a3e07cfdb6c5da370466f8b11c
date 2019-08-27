@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "78a1b8f5_5680dc5c",
+        "filename": "mk/spdk.lib_deps.mk",
+        "patchSetId": 7
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-27T22:31:39Z",
+      "side": 1,
+      "message": "Ah my bad. I just did an inline edit, but it got removed when I rebased.",
+      "parentUuid": "7ff03ef9_951494eb",
+      "revId": "4b328bd384c6c1a3e07cfdb6c5da370466f8b11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c8288ba4_8f084249",
         "filename": "module/event/subsystems/Makefile",
         "patchSetId": 7
@@ -51,6 +69,24 @@
       "revId": "4b328bd384c6c1a3e07cfdb6c5da370466f8b11c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef0dbf79_fde9dbfc",
+        "filename": "module/event/subsystems/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-27T22:31:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8288ba4_8f084249",
+      "revId": "4b328bd384c6c1a3e07cfdb6c5da370466f8b11c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
