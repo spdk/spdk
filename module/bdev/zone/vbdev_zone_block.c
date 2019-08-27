@@ -360,6 +360,27 @@ vbdev_block_reset_zone(struct vbdev_block *bdev_node, struct vbdev_io_channel *c
 }
 
 static int
+vbdev_block_close_zone(struct vbdev_block *bdev_node, struct vbdev_zone *zone)
+{
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_OFFLINE:
+	case SPDK_BDEV_ZONE_STATE_EMPTY:
+	case SPDK_BDEV_ZONE_STATE_FULL:
+	case SPDK_BDEV_ZONE_STATE_READ_ONLY:
+		return -EINVAL;
+	case SPDK_BDEV_ZONE_STATE_CLOSED:
+		return 0;
+	default:
+		break;
+	}
+
+	__atomic_sub_fetch(&bdev_node->open_zones, 1, __ATOMIC_SEQ_CST);
+	zone->zone_info.state = SPDK_BDEV_ZONE_STATE_CLOSED;
+
+	return 0;
+}
+
+static int
 vbdev_block_zone_management(struct vbdev_block *bdev_node, struct vbdev_io_channel *ch,
 			    struct spdk_bdev_io *bdev_io, bool *passed_request)
 {
@@ -379,6 +400,7 @@ vbdev_block_zone_management(struct vbdev_block *bdev_node, struct vbdev_io_chann
 	case SPDK_BDEV_ZONE_OPEN:
 		return vbdev_block_open_zone(bdev_node, zone);
 	case SPDK_BDEV_ZONE_CLOSE:
+		return vbdev_block_close_zone(bdev_node, zone);
 	case SPDK_BDEV_ZONE_FINISH:
 	default:
 		return -EINVAL;
