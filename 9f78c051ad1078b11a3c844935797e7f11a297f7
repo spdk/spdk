@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fafd3fd_e226aeaa",
+        "filename": "test/compress/compress.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-27T18:43:29Z",
+      "side": 1,
+      "message": "if nvme/perf fails it will return an error code and the previous trap statement (line 82) will do the cleanup\n\nbut I guess this would allow us to kill $perf_pid if the background nvmf_tgt application has a failure?\n\nanyways - never mind my comment, what you have here is ok",
+      "revId": "9f78c051ad1078b11a3c844935797e7f11a297f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
