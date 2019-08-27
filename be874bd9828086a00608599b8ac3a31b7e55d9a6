@@ -103,6 +103,23 @@
       "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34fecaab_b454f1a6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2145,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-27T04:17:32Z",
+      "side": 1,
+      "message": "Will you move the definition of num_blocks to the top of this function? Then you can share num_blocks in the next two patch",
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
