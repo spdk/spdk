@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce3f4916_f0137c09",
+        "filename": "lib/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-27T18:47:49Z",
+      "side": 1,
+      "message": "sorry, missed this earlier...\n\nshouldn\u0027t this just be:\n\nDIRS-$(CONFIG_OCF) +\u003d env_ocf\n\nActually I\u0027m fine with this for now.  I see that modules/bdev/Makefile is also doing these type of ifeq instead of just DIRS-$(CONFIG_XXX).  Could you follow this series up with a patch that fixes these?",
+      "revId": "f75c751e0f10e944104c467c7038289b29b213c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
