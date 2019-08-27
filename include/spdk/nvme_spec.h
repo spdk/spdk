@@ -2521,7 +2521,7 @@ struct spdk_nvme_sanitize {
 	/* reserved */
 	uint32_t reserved	: 22;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_format) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_sanitize) == 4, "Incorrect size");
 
 /* Sanitize Action */
 enum spdk_sanitize_action {
