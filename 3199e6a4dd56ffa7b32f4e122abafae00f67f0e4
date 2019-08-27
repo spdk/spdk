@@ -191,6 +191,30 @@
     },
     {
       "key": {
+        "uuid": "99b81de2_cb7d88ad",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-08-27T10:24:56Z",
+      "side": 1,
+      "message": "During unregister path we only wait for requests that OCF might issue to backend devices, like during backfill. The moment we get to unregister_cb() there will be no IOs from other bdevs.\nBut I still don\u0027t get how would moving the mngt_start() result in different behaviour that we have now. We will still wait for request that OCF issues before shutdown in \"wait_for_requests\" which might timeout since it uses mngt_poll(), but that will not change at all",
+      "parentUuid": "4960cac8_75593b47",
+      "range": {
+        "startLine": 376,
+        "startChar": 1,
+        "endLine": 377,
+        "endChar": 51
+      },
+      "revId": "3199e6a4dd56ffa7b32f4e122abafae00f67f0e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b2f9d951_153a31f8",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 1
