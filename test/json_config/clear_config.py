@@ -62,7 +62,7 @@ def clear_bdev_subsystem(args, bdev_config):
         if destroy_method:
             args.client.call(destroy_method, {bdev_name_key: bdev_name})
 
-    nvme_controllers = args.client.call("get_nvme_controllers")
+    nvme_controllers = args.client.call("bdev_nvme_get_controllers")
     for ctrlr in nvme_controllers:
         args.client.call('delete_nvme_controller', {'name': ctrlr['name']})
 

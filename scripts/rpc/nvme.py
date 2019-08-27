@@ -39,7 +39,8 @@ def send_nvme_cmd(client, name, cmd_type, data_direction, cmdbuf,
     return client.call('send_nvme_cmd', params)
 
 
-def get_nvme_controllers(client, name=None):
+@deprecated_alias('get_nvme_controllers')
+def bdev_nvme_get_controllers(client, name=None):
     """Get information about NVMe controllers.
 
     Args:
@@ -51,4 +52,4 @@ def get_nvme_controllers(client, name=None):
     params = {}
     if name:
         params['name'] = name
-    return client.call('get_nvme_controllers', params)
+    return client.call('bdev_nvme_get_controllers', params)
