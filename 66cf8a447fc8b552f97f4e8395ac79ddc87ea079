@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36d60ced_258c5f97",
+        "filename": "test/nvmf/target/connect_disconnect.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-27T08:24:44Z",
+      "side": 1,
+      "message": "Instead of limit the number of queues, I suggest to limit the num_iterations to a small value, 10 is already a big value.",
+      "revId": "66cf8a447fc8b552f97f4e8395ac79ddc87ea079",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
