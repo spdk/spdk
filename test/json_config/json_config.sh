@@ -131,6 +131,7 @@ function json_config_test_shutdown_app() {
 
 	# kill_instance RPC will trigger ASAN
 	kill -SIGINT ${app_pid[$app]}
+	wait ${app_pid[$app]}
 
 	for (( i=0; i<30; i++ )); do
 		if ! kill -0 ${app_pid[$app]} 2>/dev/null; then
