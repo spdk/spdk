@@ -776,7 +776,7 @@ test_supported_io_types(void)
 	CU_ASSERT(bdev != NULL);
 
 	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT) == true);
-	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_APPEND) == false);
+	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_APPEND) == true);
 	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ) == true);
 	CU_ASSERT(zone_block_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE) == true);
 
@@ -1040,6 +1040,25 @@ send_read_zone(struct bdev_zone_block *bdev, struct spdk_io_channel *ch, uint64_
 	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct zone_block_io));
 	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 	bdev_io_initialize(bdev_io, &bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_READ);
+	memset(g_io_output, 0, (g_max_io_size * sizeof(struct io_output)));
+	g_io_output_index = output_index;
+
+	g_io_comp_status = !success;
+	zone_block_submit_request(ch, bdev_io);
+
+	CU_ASSERT(g_io_comp_status == success);
+	bdev_io_cleanup(bdev_io);
+}
+
+static void
+send_append_zone(struct bdev_zone_block *bdev, struct spdk_io_channel *ch, uint64_t lba,
+		 uint64_t blocks, uint32_t output_index, bool success)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct zone_block_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io_initialize(bdev_io, &bdev->bdev, lba, blocks, SPDK_BDEV_IO_TYPE_ZONE_APPEND);
 	memset(g_io_output, 0, (g_max_io_size * sizeof(struct io_output)));
 	g_io_output_index = output_index;
 
@@ -1476,6 +1495,81 @@ test_finish_zone(void)
 	free_test_globals();
 }
 
+static void
+test_append_zone(void)
+{
+	struct spdk_io_channel *ch;
+	struct bdev_zone_block *bdev;
+	char *name = "Nvme0n1";
+	uint32_t num_zones = 20;
+	uint64_t zone_id, block_len, i;
+	uint32_t output_index = 0;
+
+	init_test_globals(20 * 1024ul);
+	CU_ASSERT(zone_block_init() == 0);
+
+	/* Create zone dev */
+	bdev = create_and_get_vbdev("zone_dev1", name, num_zones, 1, true);
+	CU_ASSERT(bdev != NULL);
+
+	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct zone_block_io_channel));
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	/* Append to full zone */
+	zone_id = 0;
+	send_append_zone(bdev, ch, zone_id, 1, output_index, false);
+
+	/* Append out of device range */
+	zone_id = g_block_cnt;
+	send_append_zone(bdev, ch, zone_id, 1, output_index, false);
+
+	/* Append 1 sector to zone 0 */
+	zone_id = 0;
+	send_reset_zone(bdev, ch, zone_id, output_index, true);
+	send_append_zone(bdev, ch, zone_id, 1, output_index, true);
+	send_zone_info(bdev, ch, zone_id, 1, SPDK_BDEV_ZONE_STATE_OPEN, output_index, true);
+
+	/* Append to another zone */
+	zone_id = bdev->bdev.zone_size;
+	send_reset_zone(bdev, ch, zone_id, output_index, true);
+	send_append_zone(bdev, ch, zone_id, 5, output_index, true);
+	send_zone_info(bdev, ch, zone_id, zone_id + 5, SPDK_BDEV_ZONE_STATE_OPEN, output_index, true);
+
+	/* Fill zone 0 and verify zone state change */
+	zone_id = 0;
+	block_len = 15;
+	send_append_zone(bdev, ch, zone_id, block_len, output_index, true);
+	block_len++;
+	for (i = block_len; i < bdev->bdev.zone_size; i += block_len) {
+		send_append_zone(bdev, ch, zone_id, block_len, output_index, true);
+	}
+	send_zone_info(bdev, ch, zone_id, bdev->bdev.zone_size, SPDK_BDEV_ZONE_STATE_FULL, output_index,
+		       true);
+
+	/* Append to two zones at once */
+	for (i = 0; i < num_zones; i++) {
+		zone_id = i * bdev->bdev.zone_size;
+		send_reset_zone(bdev, ch, zone_id, output_index, true);
+		send_zone_info(bdev, ch, zone_id, zone_id, SPDK_BDEV_ZONE_STATE_EMPTY, output_index, true);
+	}
+	block_len = 16;
+	for (i = 0; i < bdev->bdev.zone_size - block_len; i += block_len) {
+		send_append_zone(bdev, ch, zone_id, block_len, output_index, true);
+	}
+	send_append_zone(bdev, ch, zone_id, 32, output_index, false);
+
+	/* Delete zone dev */
+	send_delete_vbdev("zone_dev1", true);
+
+	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
+	free(ch);
+
+	zone_block_finish();
+	base_bdevs_cleanup();
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_list));
+	free_test_globals();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite       suite = NULL;
@@ -1502,7 +1596,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_zone_write", test_zone_write) == NULL ||
 		CU_add_test(suite, "test_zone_read", test_zone_read) == NULL ||
 		CU_add_test(suite, "test_close_zone", test_close_zone) == NULL ||
-		CU_add_test(suite, "test_finish_zone", test_finish_zone) == NULL
+		CU_add_test(suite, "test_finish_zone", test_finish_zone) == NULL ||
+		CU_add_test(suite, "test_append_zone", test_append_zone) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
