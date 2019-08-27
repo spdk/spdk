@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b87a9999_143ec931",
+        "filename": "isalbuild/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-27T21:23:09Z",
+      "side": 1,
+      "message": "So this is probably fine.  But it assumes that \u0027default\u0027 CC is cc.  Technically it could be something different.  For example, we support specifying an alternate CC/CXX when running configure.\n\nCC\u003dclang CXX\u003dclang ./configure\n\nIn this case, I think we should replace ccc-analyzer with clang, not cc.  But this would require additional changes elsewhere - probably adding a DEFAULT_CC variable to the mk/cc.mk output so that these Makefiles can read that in and get the correct value to use here.\n\nI\u0027ll leave it up to you whether you want to worry about this or not.  If you don\u0027t, just remove my -1 and I\u0027ll change it to a +2 later.",
+      "revId": "7b3a7a4ddff039b2a0699c55fb96fc09e6658d7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
