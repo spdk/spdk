@@ -643,15 +643,16 @@ if __name__ == "__main__":
         '-n', '--num', help='the number of commands you want to fail', type=int, default=1)
     p.set_defaults(func=bdev_error_inject_error)
 
-    def apply_firmware(args):
-        print_dict(rpc.bdev.apply_firmware(args.client,
-                                           bdev_name=args.bdev_name,
-                                           filename=args.filename))
+    def bdev_nvme_apply_firmware(args):
+        print_dict(rpc.bdev.bdev_nvme_apply_firmware(args.client,
+                                                     bdev_name=args.bdev_name,
+                                                     filename=args.filename))
 
-    p = subparsers.add_parser('apply_firmware', help='Download and commit firmware to NVMe device')
+    p = subparsers.add_parser('apply_firmware', aliases=['apply_firmware'],
+                              help='Download and commit firmware to NVMe device')
     p.add_argument('filename', help='filename of the firmware to download')
     p.add_argument('bdev_name', help='name of the NVMe device')
-    p.set_defaults(func=apply_firmware)
+    p.set_defaults(func=bdev_nvme_apply_firmware)
 
     # iSCSI
     def set_iscsi_options(args):

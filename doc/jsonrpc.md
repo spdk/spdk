@@ -291,7 +291,7 @@ Example response:
     "bdev_error_delete",
     "bdev_error_create",
     "construct_passthru_bdev",
-    "apply_nvme_firmware",
+    "bdev_nvme_apply_firmware",
     "delete_nvme_controller",
     "construct_nvme_bdev",
     "construct_null_bdev",

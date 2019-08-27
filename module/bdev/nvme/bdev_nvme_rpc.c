@@ -599,8 +599,8 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 }
 
 static void
-spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
-			     const struct spdk_json_val *params)
+spdk_rpc_bdev_nvme_apply_firmware(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
 {
 	int					rc;
 	int					fd = -1;
@@ -780,4 +780,5 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 		return;
 	}
 }
-SPDK_RPC_REGISTER("apply_nvme_firmware", spdk_rpc_apply_nvme_firmware, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_nvme_apply_firmware", spdk_rpc_bdev_nvme_apply_firmware, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_apply_firmware, apply_nvme_firmware)
