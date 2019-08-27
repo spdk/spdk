@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f6452551_10d6a211",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1565,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-27T09:01:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "58cbed5d_da705b21",
+      "range": {
+        "startLine": 1563,
+        "startChar": 0,
+        "endLine": 1565,
+        "endChar": 0
+      },
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae80acf2_bd40ecf2",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ff2d3d1_1eec40c6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1581,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-27T09:01:27Z",
+      "side": 1,
+      "message": "Thanks, good suggestion",
+      "parentUuid": "ae80acf2_bd40ecf2",
+      "range": {
+        "startLine": 1575,
+        "startChar": 0,
+        "endLine": 1581,
+        "endChar": 0
+      },
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -106,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "3a31f422_5ec4fc94",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1614,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-27T09:01:27Z",
+      "side": 1,
+      "message": "This condition has been added to catch the case when rtransport-\u003etransport.opts.io_unit_size \u003d\u003d data_block_size, so we allocate 2 io_buffer - the 1st holds data block and the 2nd holds metadata (only 8 bytes). In that case remaining_io_buffer_length might already be 0 as it was decremented on line 1604",
+      "parentUuid": "e25ba96a_27451181",
+      "range": {
+        "startLine": 1612,
+        "startChar": 4,
+        "endLine": 1614,
+        "endChar": 5
+      },
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "34fecaab_b454f1a6",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
@@ -120,6 +192,24 @@
       "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36ee83bd_567fb1be",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2145,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-27T09:01:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34fecaab_b454f1a6",
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
