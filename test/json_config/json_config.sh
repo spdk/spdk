@@ -385,11 +385,7 @@ function json_config_test_fini() {
 	local ret=0
 
 	if [[ -n "${app_pid[initiator]}" ]]; then
-		if ! json_config_test_shutdown_app initiator; then
-			kill -9 ${app_pid[initiator]}
-			app_pid[initiator]=
-			ret=1
-		fi
+		killprocess ${app_pid[initiator]}
 	fi
 
 	if [[ -n "${app_pid[target]}" ]]; then
@@ -398,12 +394,7 @@ function json_config_test_fini() {
 		cleanup_bdev_subsystem_config
 
 		# SPDK_TEST_NVMF: Should we clear something?
-
-		if ! json_config_test_shutdown_app target; then
-			kill -9 ${app_pid[target]}
-			app_pid[target]=
-			ret=1
-		fi
+		killprocess ${app_pid[target]}
 	fi
 
 	rm -f "${configs_path[@]}"
