@@ -27,5 +27,6 @@
     "write": $(S),
     "write_zeroes": $(S)
   },
-  "uuid": "$(S)"
+  "uuid": "$(S)",
+  "zoned": false
 }
