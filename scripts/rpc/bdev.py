@@ -803,7 +803,8 @@ def set_bdev_qos_limit(
     return client.call('set_bdev_qos_limit', params)
 
 
-def apply_firmware(client, bdev_name, filename):
+@deprecated_alias('apply_firmware')
+def bdev_nvme_apply_firmware(client, bdev_name, filename):
     """Download and commit firmware to NVMe device.
 
     Args:
@@ -814,4 +815,4 @@ def apply_firmware(client, bdev_name, filename):
         'filename': filename,
         'bdev_name': bdev_name,
     }
-    return client.call('apply_nvme_firmware', params)
+    return client.call('bdev_nvme_apply_firmware', params)
