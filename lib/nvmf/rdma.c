@@ -451,18 +451,19 @@ struct spdk_nvmf_rdma_poll_group_stat {
 
 struct spdk_nvmf_rdma_poll_group {
 	struct spdk_nvmf_transport_poll_group		group;
-
-	/* Requests that are waiting to obtain a data buffer */
-
-	TAILQ_HEAD(, spdk_nvmf_rdma_poller)		pollers;
-
 	struct spdk_nvmf_rdma_poll_group_stat		stat;
-
+	TAILQ_HEAD(, spdk_nvmf_rdma_poller)		pollers;
+	TAILQ_ENTRY(spdk_nvmf_rdma_poll_group)		link;
 	/*
 	 * buffers which are split across multiple RDMA
 	 * memory regions cannot be used by this transport.
 	 */
 	STAILQ_HEAD(, spdk_nvmf_transport_pg_cache_buf)	retired_bufs;
+};
+
+struct spdk_nvmf_rdma_conn_sched {
+	struct spdk_nvmf_rdma_poll_group *admin_pg;
+	struct spdk_nvmf_rdma_poll_group *io_pg;
 };
 
 /* Assuming rdma_cm uses just one protection domain per ibv_context. */
@@ -489,6 +490,8 @@ struct spdk_nvmf_rdma_port {
 struct spdk_nvmf_rdma_transport {
 	struct spdk_nvmf_transport	transport;
 
+	struct spdk_nvmf_rdma_conn_sched conn_sched;
+
 	struct rdma_event_channel	*event_channel;
 
 	struct spdk_mempool		*data_wr_pool;
@@ -501,6 +504,7 @@ struct spdk_nvmf_rdma_transport {
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_device)	devices;
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
+	TAILQ_HEAD(, spdk_nvmf_rdma_poll_group)	poll_groups;
 };
 
 static inline int
@@ -2117,20 +2121,38 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	uint32_t			sge_count;
 	uint32_t			min_shared_buffers;
 	int				max_device_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
+	pthread_mutexattr_t		attr;
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
 		return NULL;
 	}
 
-	if (pthread_mutex_init(&rtransport->lock, NULL)) {
-		SPDK_ERRLOG("pthread_mutex_init() failed\n");
+	if (pthread_mutexattr_init(&attr)) {
+		SPDK_ERRLOG("pthread_mutexattr_init() failed\n");
 		free(rtransport);
 		return NULL;
 	}
 
+	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE)) {
+		SPDK_ERRLOG("pthread_mutexattr_settype() failed\n");
+		pthread_mutexattr_destroy(&attr);
+		free(rtransport);
+		return NULL;
+	}
+
+	if (pthread_mutex_init(&rtransport->lock, &attr)) {
+		SPDK_ERRLOG("pthread_mutex_init() failed\n");
+		pthread_mutexattr_destroy(&attr);
+		free(rtransport);
+		return NULL;
+	}
+
+	pthread_mutexattr_destroy(&attr);
+
 	TAILQ_INIT(&rtransport->devices);
 	TAILQ_INIT(&rtransport->ports);
+	TAILQ_INIT(&rtransport->poll_groups);
 
 	rtransport->transport.ops = &spdk_nvmf_transport_rdma;
 
@@ -2376,6 +2398,7 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 	}
 
 	spdk_mempool_free(rtransport->data_wr_pool);
+
 	pthread_mutex_destroy(&rtransport->lock);
 	free(rtransport);
 
@@ -3046,6 +3069,12 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		poller->num_cqe = num_cqe;
 	}
 
+	TAILQ_INSERT_TAIL(&rtransport->poll_groups, rgroup, link);
+	if (rtransport->conn_sched.admin_pg == NULL) {
+		rtransport->conn_sched.admin_pg = rgroup;
+		rtransport->conn_sched.io_pg = rgroup;
+	}
+
 	pthread_mutex_unlock(&rtransport->lock);
 	return &rgroup->group;
 }
@@ -3053,12 +3082,14 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 static void
 spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
-	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_poll_group	*rgroup, *next_rgroup;
 	struct spdk_nvmf_rdma_poller		*poller, *tmp;
 	struct spdk_nvmf_rdma_qpair		*qpair, *tmp_qpair;
 	struct spdk_nvmf_transport_pg_cache_buf	*buf, *tmp_buf;
+	struct spdk_nvmf_rdma_transport		*rtransport;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
+	rtransport = SPDK_CONTAINEROF(rgroup->group.transport, struct spdk_nvmf_rdma_transport, transport);
 
 	if (!rgroup) {
 		return;
@@ -3089,6 +3120,20 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 		free(poller);
 	}
+
+	pthread_mutex_lock(&rtransport->lock);
+	next_rgroup = TAILQ_NEXT(rgroup, link);
+	TAILQ_REMOVE(&rtransport->poll_groups, rgroup, link);
+	if (next_rgroup == NULL) {
+		next_rgroup = TAILQ_FIRST(&rtransport->poll_groups);
+	}
+	if (rtransport->conn_sched.admin_pg == rgroup) {
+		rtransport->conn_sched.admin_pg = next_rgroup;
+	}
+	if (rtransport->conn_sched.io_pg == rgroup) {
+		rtransport->conn_sched.io_pg = next_rgroup;
+	}
+	pthread_mutex_unlock(&rtransport->lock);
 
 	free(rgroup);
 }
