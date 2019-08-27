@@ -610,6 +610,7 @@ Example response:
       "block_size": 512,
       "num_blocks": 20480,
       "claimed": false,
+      "zoned": false,
       "supported_io_types": {
         "read": true,
         "write": true,
