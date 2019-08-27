@@ -30,6 +30,15 @@ of logical blocks for write operation.
 
 Added zdev field to `spdk_bdev_io` structure.
 
+New zone-related fields were added to the result of the `get_bdevs` RPC call:
+ - `zoned`: indicates whether the device is zoned or a regular
+   block device
+ - `zone_size`: number of blocks in a single zone
+ - `max_open_zones`: maximum number of open zones
+ - `optimal_open_zones`: optimal number of open zones
+The `zoned` field is a boolean and is always present, while the rest is only available for zoned
+bdevs.
+
 ### nvmf
 
 The `spdk_nvmf_tgt_create` function now accepts an object of type `spdk_nvmf_target_opts`

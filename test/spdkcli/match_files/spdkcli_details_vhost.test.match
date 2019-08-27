@@ -28,4 +28,5 @@
     "write_zeroes": $(S)
   },
   "uuid": "$(S)"
+  "zoned": false,
 }
