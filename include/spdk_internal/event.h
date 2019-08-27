@@ -36,6 +36,10 @@
 
 #include "spdk/stdinc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "spdk/event.h"
 #include "spdk/json.h"
 #include "spdk/thread.h"
@@ -127,5 +131,9 @@ void spdk_rpc_finish(void);
 	{											\
 		spdk_add_subsystem_depend(&__subsystem_ ## _name ## _depend_on ## _depends_on); \
 	}
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_INTERNAL_EVENT_H */
