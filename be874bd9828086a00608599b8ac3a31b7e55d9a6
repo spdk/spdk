@@ -202,6 +202,30 @@
     },
     {
       "key": {
+        "uuid": "db5a495e_54d3062b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1614,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-27T12:49:28Z",
+      "side": 1,
+      "message": "Thanks you Shuhei, now I understand what the problem is. I fixed it as you suggested and added a new unit test to cover this case.",
+      "parentUuid": "02fd3032_f7af2526",
+      "range": {
+        "startLine": 1612,
+        "startChar": 4,
+        "endLine": 1614,
+        "endChar": 5
+      },
+      "revId": "be874bd9828086a00608599b8ac3a31b7e55d9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34fecaab_b454f1a6",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
