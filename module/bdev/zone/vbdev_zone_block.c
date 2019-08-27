@@ -381,6 +381,27 @@ vbdev_block_close_zone(struct vbdev_block *bdev_node, struct vbdev_zone *zone)
 }
 
 static int
+vbdev_block_finish_zone(struct vbdev_block *bdev_node, struct vbdev_zone *zone)
+{
+	switch (zone->zone_info.state) {
+	case SPDK_BDEV_ZONE_STATE_OFFLINE:
+	case SPDK_BDEV_ZONE_STATE_READ_ONLY:
+		return -EINVAL;
+	case SPDK_BDEV_ZONE_STATE_FULL:
+		return 0;
+	default:
+		break;
+	}
+
+	zone->zone_info.write_pointer = zone->zone_info.zone_id + zone->zone_info.capacity;
+	if (zone->zone_info.state == SPDK_BDEV_ZONE_STATE_OPEN) {
+		__atomic_sub_fetch(&bdev_node->open_zones, 1, __ATOMIC_SEQ_CST);
+	}
+	zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL;
+	return 0;
+}
+
+static int
 vbdev_block_zone_management(struct vbdev_block *bdev_node, struct vbdev_io_channel *ch,
 			    struct spdk_bdev_io *bdev_io, bool *passed_request)
 {
@@ -402,6 +423,7 @@ vbdev_block_zone_management(struct vbdev_block *bdev_node, struct vbdev_io_chann
 	case SPDK_BDEV_ZONE_CLOSE:
 		return vbdev_block_close_zone(bdev_node, zone);
 	case SPDK_BDEV_ZONE_FINISH:
+		return vbdev_block_finish_zone(bdev_node, zone);
 	default:
 		return -EINVAL;
 	}
