@@ -5638,6 +5638,47 @@ Example response:
 }
 ~~~
 
+# Blobfs {#jsonrpc_components_blobfs}
+
+## bdev_blobfs_check {#rpc_bdev_blobfs_check}
+
+Check whether a blobfs exists on bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | Block device name to check blobfs
+
+### Response
+
+True for existence or False for inexistence.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_blobfs_check",
+  "params": {
+    "bdev_name": "Malloc0"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "true"
+}
+~~~
+
 # Miscellaneous RPC commands
 
 ## send_nvme_cmd {#rpc_send_nvme_cmd}
