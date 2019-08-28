@@ -36,6 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = posix
 DIRS-$(CONFIG_VPP) += vpp
+DIRS-$(CONFIG_SEASTAR) += seastar
 
 .PHONY: all clean $(DIRS-y)
 
