@@ -1,0 +1,28 @@
+commit 20a3e60646b76ec5ae51e6d66476502d83c2e836
+Author: Jim Harris <james.r.harris@intel.com>
+Date:   Thu Aug 15 11:50:14 2019 -0700
+
+    Fix cmake on my Ubuntu 19 platform.
+
+    Signed-off-by: Jim Harris <james.r.harris@intel.com>
+    Change-Id: I53ecc5710f2686f1bd502162c82355e79d34e554
+
+diff --git a/cmake/FindStdFilesystem.cmake b/cmake/FindStdFilesystem.cmake
+index 05e8add0..c3278372 100644
+--- a/cmake/FindStdFilesystem.cmake
++++ b/cmake/FindStdFilesystem.cmake
+@@ -46,7 +46,13 @@ endmacro ()
+ _stdfilesystem_check_compiles (StdFilesystem_NO_EXPLICIT_LINK)
+
+ if (StdFilesystem_NO_EXPLICIT_LINK)
+-  set (StdFilesystem_FOUND yes)
++  set (StdFilesystem_LIBRARY_NAME stdc++fs)
++    set (StdFilesystem_LIBRARIES -l${StdFilesystem_LIBRARY_NAME})
++  include (FindPackageHandleStandardArgs)
++
++  find_package_handle_standard_args (StdFilesystem
++    REQUIRED_VARS StdFilesystem_LIBRARY_NAME)
++  #  set (StdFilesystem_FOUND yes)
+ else ()
+   _stdfilesystem_check_compiles (StdFilesystem_STDCXXFS_LIBRARY
+     stdc++fs)
