@@ -22,6 +22,30 @@
       "revId": "3015b4701483869432f50fb20f624563e1faeba4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99c13ddf_c8ce3b8f",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-28T12:34:59Z",
+      "side": 1,
+      "message": "As discussed offline, calling this function in \u0027if\u0027 condition within json_config_test_fini() does not seem to trigger the trap.\nkillprocess looks like a good replacement for json_config_test_shutdown_app() function.",
+      "parentUuid": "a18bc315_3c65bd31",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 134,
+        "endChar": 22
+      },
+      "revId": "3015b4701483869432f50fb20f624563e1faeba4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
