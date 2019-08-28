@@ -97,6 +97,9 @@ BDEV_DEPS_CONF_THREAD = $(BDEV_DEPS) conf thread
 # module/blob
 DEPDIRS-blob_bdev := log thread bdev
 
+# module/blobfs
+DEPDIRS-blobfs_bdev := $(BDEV_DEPS_THREAD) blob_bdev blobfs
+
 # module/copy
 DEPDIRS-copy_ioat := log ioat conf thread $(JSON_LIBS) copy
 
