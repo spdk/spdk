@@ -214,21 +214,21 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=bdev_ocf_delete)
 
-    def get_ocf_stats(args):
-        print_dict(rpc.bdev.get_ocf_stats(args.client,
+    def bdev_ocf_get_stats(args):
+        print_dict(rpc.bdev.bdev_ocf_get_stats(args.client,
                                           name=args.name))
-    p = subparsers.add_parser('get_ocf_stats',
+    p = subparsers.add_parser('bdev_ocf_get_stats', aliases=['get_ocf_stats'],
                               help='Get statistics of chosen OCF block device')
     p.add_argument('name', help='Name of OCF bdev')
-    p.set_defaults(func=get_ocf_stats)
+    p.set_defaults(func=bdev_ocf_get_stats)
 
-    def get_ocf_bdevs(args):
-        print_dict(rpc.bdev.get_ocf_bdevs(args.client,
-                                          name=args.name))
-    p = subparsers.add_parser('get_ocf_bdevs',
+    def bdev_ocf_get_bdevs(args):
+        print_dict(rpc.bdev.bdev_ocf_get_bdevs(args.client,
+                                               name=args.name))
+    p = subparsers.add_parser('bdev_ocf_get_bdevs', aliases=['get_ocf_bdevs'],
                               help='Get list of OCF devices including unregistered ones')
     p.add_argument('name', nargs='?', default=None, help='name of OCF vbdev or name of cache device or name of core device (optional)')
-    p.set_defaults(func=get_ocf_bdevs)
+    p.set_defaults(func=bdev_ocf_get_bdevs)
 
     def bdev_malloc_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
