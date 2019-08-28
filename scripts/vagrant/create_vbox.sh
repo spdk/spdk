@@ -28,6 +28,7 @@ display_help() {
 	echo "                                  (test VM qcow image, fio binary, ssh keys)"
 	echo "  --vhost-vm-dir=<path>           directory where to put vhost dependencies in VM"
 	echo "  --qemu-emulator=<path>          directory path with emulator, default: ${SPDK_QEMU_EMULATOR}"
+	echo "  --nvme-disks-number=<number>    nubmer of emulated nvme disk default: ${NVME_DISKS_NUMBER}"
 	echo "  -r dry-run"
 	echo "  -l use a local copy of spdk, don't try to rsync from the host."
 	echo "  -d deploy a test vm by provisioning all prerequisites for spdk autotest"
@@ -58,6 +59,7 @@ SPDK_VAGRANT_VMRAM=4096
 SPDK_VAGRANT_PROVIDER="virtualbox"
 SPDK_QEMU_EMULATOR=""
 OPTIND=1
+NVME_DISKS_NUMBER=1
 NVME_FILE="nvme_disk.img"
 
 while getopts ":b:n:s:x:p:vrldh-:" opt; do
@@ -67,6 +69,7 @@ while getopts ":b:n:s:x:p:vrldh-:" opt; do
 			vhost-host-dir=*) VHOST_HOST_DIR="${OPTARG#*=}" ;;
 			vhost-vm-dir=*) VHOST_VM_DIR="${OPTARG#*=}" ;;
 			qemu-emulator=*) SPDK_QEMU_EMULATOR="${OPTARG#*=}" ;;
+			nvme-disks-number=*) NVME_DISKS_NUMBER="${OPTARG#*=}" ;;
 			*) echo "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -168,6 +171,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
 	echo VHOST_VM_DIR=$VHOST_VM_DIR
 	echo SPDK_QEMU_EMULATOR=$SPDK_QEMU_EMULATOR
+	echo NVME_DISKS_NUMBER=$NVME_DISKS_NUMBER
 	echo
 fi
 
@@ -177,6 +181,7 @@ export SPDK_VAGRANT_VMRAM
 export SPDK_DIR
 export COPY_SPDK_DIR
 export DEPLOY_TEST_VM
+export NVME_DISKS_NUMBER
 export NVME_FILE
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
@@ -207,6 +212,7 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv SPDK_VAGRANT_PROVIDER
 	printenv SPDK_VAGRANT_HTTP_PROXY
 	printenv SPDK_QEMU_EMULATOR
+	printenv NVME_DISKS_NUMBER
 	printenv SPDK_DIR
 fi
 

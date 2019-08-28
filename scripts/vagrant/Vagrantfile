@@ -98,6 +98,7 @@ Vagrant.configure(2) do |config|
   vhost_host_dir=(ENV['VHOST_HOST_DIR'] || "none")
   vhost_vm_dir=(ENV['VHOST_VM_DIR'] || "none")
   vmemulator=(ENV['SPDK_QEMU_EMULATOR'] || "")
+  disks=(ENV['NVME_DISKS_NUMBER'] || 1)
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
@@ -131,20 +132,22 @@ Vagrant.configure(2) do |config|
 
     # we put nvme_disk inside default pool to eliminate libvirt/SELinux Permissions Problems
     # and to be able to run vagrant from user $HOME directory
-    if ENV['NVME_FILE']
-      nvme_disk="/var/lib/libvirt/images/" + ENV['NVME_FILE']
-    else
-      nvme_disk="/var/lib/libvirt/images/nvme_disk.img"
-    end
+    for i in 1.."#{disks}".to_i
+      if ENV['NVME_FILE']
+        nvme_disk="/var/lib/libvirt/images/" + ENV['NVME_FILE'] + "-#{i}"
+      else
+        nvme_disk="/var/lib/libvirt/images/nvme_disk.img"
+      end
 
-    unless File.exist? (nvme_disk)
-      puts "If run with libvirt provider please execute create_nvme_img.sh"
-    end
+      unless File.exist? (nvme_disk)
+        puts "If run with libvirt provider please execute create_nvme_img.sh"
+      end
 
-    libvirt.qemuargs :value => "-drive"
-    libvirt.qemuargs :value => "file=#{nvme_disk},if=none,id=D22"
-    libvirt.qemuargs :value => "-device"
-    libvirt.qemuargs :value => "nvme,drive=D22,serial=1234"
+      libvirt.qemuargs :value => "-drive"
+      libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=nvmedisk#{i}"
+      libvirt.qemuargs :value => "-device"
+      libvirt.qemuargs :value => "nvme,drive=nvmedisk#{i},serial=1234"
+    end
     libvirt.driver = "kvm"
     libvirt.graphics_type = "vnc"
     libvirt.memory = "#{vmram}"
