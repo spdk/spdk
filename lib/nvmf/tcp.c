@@ -2784,9 +2784,15 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	}
 
 	STAILQ_FOREACH_SAFE(req, &group->pending_buf_queue, buf_link, req_tmp) {
+		struct spdk_nvmf_tcp_qpair		*tqpair;
+
 		tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
+		tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
 		if (spdk_nvmf_tcp_req_process(ttransport, tcp_req) == false) {
 			break;
+		} else if (tcp_req->state == TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER &&
+			   tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD) {
+			spdk_nvmf_tcp_sock_process(tqpair);
 		}
 	}
 

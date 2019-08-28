@@ -31,15 +31,13 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev blob ioat nvme sock vmd
-DIRS-$(CONFIG_SEASTAR) += seastar
+CXX = g++
+CXXFLAGS = $(shell pkg-config --cflags $(CONFIG_SEASTAR_DIR)/seastar.pc)
 
-.PHONY: all clean $(DIRS-y)
+LIBNAME = sock_seastar
+CXX_SRCS = seastar.cpp
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

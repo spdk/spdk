@@ -156,3 +156,12 @@ CONFIG_URING_PATH=
 
 # Build with FUSE support
 CONFIG_FUSE=n
+
+# Build Seastar modules and applications
+CONFIG_SEASTAR=n
+
+# Specified Seastar build directory
+CONFIG_SEASTAR_DIR=
+
+# Seastar build directory built with DPDK native network stack
+CONFIG_SEASTAR_DPDK=n
