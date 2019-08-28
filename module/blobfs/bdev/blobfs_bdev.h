@@ -55,4 +55,14 @@ typedef void (*spdk_blobfs_bdev_op_complete)(void *cb_arg, int fserrno);
 int spdk_blobfs_bdev_detect(const char *bdev_name,
 			    spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Create a blobfs on the given device.
+ *
+ * \param bdev_name Name of block device.
+ * \param cb_fn Called when the creation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+int spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
+			    spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
+
 #endif /* SPDK_BLOBFS_BDEV_H */
