@@ -1,0 +1,58 @@
+SPDK with Seastar framework
+===========================
+
+This directory contains an "spdk_tgt" which is a fully functional SPDK
+target application.  module/sock/seastar also includes a sock implementation
+for the native Seastar DPDK-based networking stack.
+
+With this target application, I have done I/O testing with NVMe-oF/TCP and iSCSI.
+
+(A lot more details will be added here for how to run, todo items, etc.)
+
+Instructions to build Seastar on Ubuntu 19.04:
+
+# Clone seastar so it is a peer of spdk
+git clone https://github.com/scylladb/seastar.git
+cd seastar
+git submodule update --init --recursive
+
+# There are some fixes needed to enable building and linking
+# Seastar with the native DPDK stack and with SPDK.  Some of
+# these are specific to Ubuntu.  Apply this patch to get the
+# fixes.  (Some of these will eventually be upstreamed if
+# we move forward with Seastar.)
+patch -p1 < ../spdk/examples/seastar/seastar.patch
+
+sudo ./install-dependencies.sh
+
+# It's not clear why we have to "cook" fmt ourselves, but
+# the Seastar documentation clearly spells it out as a common
+# thing you have to do.
+export http_proxy=http://proxy-chain.intel.com:911
+export https_proxy=http://proxy-chain.intel.com:911
+./configure.py --mode=release --cook fmt --enable-dpdk
+ninja -C build/release -j64
+
+cd ../spdk
+./configure --with-seastar=../seastar/build/release --with-seastar-dpdk
+make -j64
+
+sudo modprobe vfio-pci
+sudo ifconfig <nic if, i.e. enp0s6> down
+sudo dpdk/usertools/dpdk-devbind.py --bind=vfio-pci <nic if, i.e. enp0s6>
+
+sudo LSAN_OPTIONS=suppressions=suppressions.txt examples/seastar/spdk_tgt -c1 \
+  --network-stack native --dpdk-pmd --host-ipv4-addr 192.168.0.2 \
+  --netmask-ipv4-addr 255.255.255.0 --hugepages /dev/hugepages -m 2G
+
+Note that the -c1 option means how many cores to use (-c1 means 1 core).
+Multiple cores is not supported yet.
+
+You can then create NVMe/TCP subsystems or iSCSI target nodes via RPC and
+connect via the specified IP address.
+
+Note: for debug Seastar builds, please use the suppressions.txt file to
+suppress an LSAN leak notification from the ltdl library used by Seastar.
+For example:
+
+LSAN_OPTIONS=suppressions=suppressions.txt ./spdk_tgt -c1
