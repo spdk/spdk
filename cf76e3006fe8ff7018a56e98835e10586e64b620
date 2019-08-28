@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "926fd862_a8ab51ed",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:42:36Z",
+      "side": 1,
+      "message": "We will feel comfortable md/metadtata and buffer/buf are consistent with md_buffer_size and metadata_buf_pool.\nCandidates will be md_buf_size/md_buf_pool, md_buffer_size/md_buffer_pool, metadata_buf_size/metadata_buf_pool, or metadata_buffer_size/metadata_buffer_pool :-)",
+      "range": {
+        "startLine": 499,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 0
+      },
+      "revId": "cf76e3006fe8ff7018a56e98835e10586e64b620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36bd0dfe_851fc3ae",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1906,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:42:36Z",
+      "side": 1,
+      "message": "Please insert a line between 1906 and 1907.",
+      "revId": "cf76e3006fe8ff7018a56e98835e10586e64b620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff0bf407_d3478b04",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1937,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:42:36Z",
+      "side": 1,
+      "message": "data?",
+      "range": {
+        "startLine": 1937,
+        "startChar": 28,
+        "endLine": 1937,
+        "endChar": 35
+      },
+      "revId": "cf76e3006fe8ff7018a56e98835e10586e64b620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f63fb190_caf4d012",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2468,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:42:36Z",
+      "side": 1,
+      "message": "Maybe \"the max metadata size to the min data block size\"",
+      "range": {
+        "startLine": 2468,
+        "startChar": 20,
+        "endLine": 2468,
+        "endChar": 57
+      },
+      "revId": "cf76e3006fe8ff7018a56e98835e10586e64b620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1be62cfd_f5ceba1b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2469,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:42:36Z",
+      "side": 1,
+      "message": "Please insert a line between 2469 and 2470",
+      "revId": "cf76e3006fe8ff7018a56e98835e10586e64b620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
