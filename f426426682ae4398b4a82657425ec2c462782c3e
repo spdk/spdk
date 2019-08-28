@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "369dde47_3905c77b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T07:17:48Z",
+      "side": 1,
+      "message": "Overall the whole commit message could be improved.\nTitle is OK, but in the message body I\u0027d expect some explanation what is the purpose, why do we do it, and what do we gain by enabling use of custom emulators.",
+      "range": {
+        "startLine": 7,
+        "startChar": 9,
+        "endLine": 7,
+        "endChar": 36
+      },
+      "revId": "f426426682ae4398b4a82657425ec2c462782c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "675d9a3c_d5c60363",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T07:17:48Z",
+      "side": 1,
+      "message": "I\u0027d change this to scripts/vagrant:",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 7
+      },
+      "revId": "f426426682ae4398b4a82657425ec2c462782c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e7570eb_c7c6e849",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T07:17:48Z",
+      "side": 1,
+      "message": "Nitpick: should be tab instead of a space.\nSorry:)",
+      "range": {
+        "startLine": 196,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 4
+      },
+      "revId": "f426426682ae4398b4a82657425ec2c462782c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
