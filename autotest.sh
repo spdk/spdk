@@ -203,6 +203,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 		run_test suite ./test/blobfs/rocksdb/rocksdb.sh
 		run_test suite ./test/blobstore/blobstore.sh
+		run_test suite ./test/blobfs/blobfs.sh
 	fi
 
 	if [ $SPDK_TEST_NVMF -eq 1 ]; then
