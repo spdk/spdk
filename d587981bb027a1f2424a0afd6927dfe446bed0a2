@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "33a95547_547c884d",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-08-28T08:14:15Z",
+      "side": 1,
+      "message": "Finish should fill up the zone (ie. the write pointer is changed to be at the zone capacity) and changed the state to full (so same as if you for example sent all 0s to the whole zone).\nClose just changes the state to closed - the spec mentions that there could be a limited amount of open zones for the whole device. This lets the user to keep writing to different non-full zones while juggling the states between open and close.",
+      "parentUuid": "eba974cc_7eac4983",
+      "revId": "d587981bb027a1f2424a0afd6927dfe446bed0a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a6bfac2c_fa800259",
         "filename": "lib/bdev/zdev.c",
         "patchSetId": 14
