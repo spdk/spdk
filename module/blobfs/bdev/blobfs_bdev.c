@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/blobfs.h"
 #include "spdk/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk/event.h"
 #include "spdk/blob_bdev.h"
 #include "spdk/blobfs_bdev.h"
@@ -43,6 +44,11 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
+
+/* Dummy bdev module used to to claim bdevs. */
+static struct spdk_bdev_module blobfs_bdev_module = {
+	.name	= "blobfs",
+};
 
 static void
 blobfs_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
@@ -131,6 +137,66 @@ spdk_blobfs_bdev_detect(const char *bdev_name,
 	}
 
 	spdk_fs_load(bs_dev, NULL, blobfs_bdev_load_cb_to_unload, ctx);
+
+	return 0;
+
+invalid:
+	free(ctx);
+
+	return rc;
+}
+
+int
+spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
+			spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg)
+{
+	struct blobfs_bdev_operation_ctx *ctx;
+	struct spdk_blobfs_opts blobfs_opt;
+	struct spdk_bs_dev *bs_dev;
+	struct spdk_bdev_desc *desc;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate ctx.\n");
+		return -ENOMEM;
+	}
+
+	ctx->bdev_name = bdev_name;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	/* Creation requires WRITE operation */
+	rc = spdk_bdev_open_ext(bdev_name, true, blobfs_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		SPDK_INFOLOG(SPDK_LOG_BLOBFS, "Failed to open bdev(%s): %s\n", ctx->bdev_name, spdk_strerror(rc));
+
+		goto invalid;
+	}
+
+	bs_dev = spdk_bdev_create_bs_dev_from_desc(desc);
+	if (bs_dev == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_BLOBFS,  "Failed to create a blobstore block device from bdev desc\n");
+		rc = -ENOMEM;
+		spdk_bdev_close(desc);
+
+		goto invalid;
+	}
+
+	rc = spdk_bs_bdev_claim(bs_dev, &blobfs_bdev_module);
+	if (rc) {
+		SPDK_INFOLOG(SPDK_LOG_BLOBFS, "Blobfs base bdev already claimed by another bdev\n");
+		bs_dev->destroy(bs_dev);
+
+		goto invalid;
+	}
+
+	spdk_fs_opts_init(&blobfs_opt);
+	if (cluster_sz) {
+		blobfs_opt.cluster_sz = cluster_sz;
+	}
+
+	spdk_fs_init(bs_dev, NULL, NULL, blobfs_bdev_load_cb_to_unload, ctx);
 
 	return 0;
 
