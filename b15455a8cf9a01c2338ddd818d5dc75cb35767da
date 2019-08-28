@@ -22,6 +22,30 @@
       "revId": "b15455a8cf9a01c2338ddd818d5dc75cb35767da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3fd4339_60c134d8",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-28T06:00:00Z",
+      "side": 1,
+      "message": "This is targeted for the following case:\n\nWe need to make sure that there is enough space to store a tcp_pdu header (at most 152 bytes). If there is not enough space, we should copy it. \nReason:, if the tcp header is 72 bytes, and the remaining is 60. We should copy it to the new location. Otherwise, we put the header in a wrong space, with partial data pointed.",
+      "parentUuid": "7334ba6c_f745c7aa",
+      "range": {
+        "startLine": 1264,
+        "startChar": 1,
+        "endLine": 1265,
+        "endChar": 27
+      },
+      "revId": "b15455a8cf9a01c2338ddd818d5dc75cb35767da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
