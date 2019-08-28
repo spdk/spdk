@@ -94,6 +94,11 @@ function usage()
 	echo "                           be searched."
 	echo " fuse                      Build FUSE components for mounting a blobfs filesystem."
 	echo "                           No path required."
+	echo " seastar                   Build Seastar modules and applications."
+	echo "                           Path to Seastar build directory required."
+	echo " seastar-dpdk              Use DPDK installation from Seastar build directory."
+	echo "                           Requires --with-seastar."
+	echo "                           No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -363,6 +368,21 @@ for i in "$@"; do
 		--without-fuse)
 			CONFIG[FUSE]=n
 			;;
+		--with-seastar=*)
+			check_dir "$i"
+			CONFIG[SEASTAR_DIR]=$(readlink -f ${i#*=})
+			CONFIG[SEASTAR]=y
+			;;
+		--without-seastar)
+			CONFIG[SEASTAR_DIR]=
+			CONFIG[SEASTAR]=n
+			;;
+		--with-seastar-dpdk)
+			CONFIG[SEASTAR_DPDK]=y
+			;;
+		--without-seastar-dpdk)
+			CONFIG[SEASTAR_DPDK]=n
+			;;
 		--)
 			break
 			;;
@@ -398,6 +418,10 @@ fi
 if [[ "${CONFIG[ISAL]}" = "n" ]] && [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 		echo "ERROR Conflicting options: --with-reduce is not compatible with --without-isal."
 		exit 1
+fi
+
+if [[ "${CONFIG[SEASTAR]}" = "y" ]] && [[ "${CONFIG[SEASTAR_DPDK]}" = "y" ]]; then
+	CONFIG[DPDK_DIR]="${CONFIG[SEASTAR_DIR]}/_cooking/ingredient/dpdk/build/x86_64-native-linuxapp-gcc"
 fi
 
 if [ -z "${CONFIG[ENV]}" ]; then

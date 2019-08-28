@@ -31,15 +31,53 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR = ../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += bdev blob ioat nvme sock vmd
-DIRS-$(CONFIG_SEASTAR) += seastar
+SEASTAR_FLAGS := $(shell pkg-config --libs --cflags --static $(CONFIG_SEASTAR_DIR)/seastar.pc)
 
-.PHONY: all clean $(DIRS-y)
+FLAGS = -g -O0 -I$(SPDK_ROOT_DIR)/include -Iinclude/
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SOCK_MODULES_LIST += sock_seastar
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+# Functions in SPDK virtio library conflict with DPDK virtio PMD
+BLOCKDEV_MODULES_LIST := $(filter-out bdev_virtio virtio,$(BLOCKDEV_MODULES_LIST))
+
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SPDK_LIB_LIST += event_bdev event_copy event_nvmf event_vmd event_iscsi event_net event_scsi
+SPDK_LIB_LIST += nvmf bdev_rpc bdev iscsi scsi net copy event util conf trace log
+SPDK_LIB_LIST += jsonrpc json rpc sock thread notify
+
+FLAGS += $(SPDK_LIB_LINKER_ARGS)
+
+ifeq ($(CONFIG_SEASTAR_DPDK),y)
+EXTRA_DPDK_LIBS = rte_ring rte_mempool_ring rte_pci rte_bus_pci
+EXTRA_DPDK_LIBS += rte_pmd_virtio rte_pmd_i40e rte_pmd_ixgbe rte_pmd_ice
+EXTRA_DPDK_LIBS += rte_bus_vdev rte_net
+FLAGS += $(call dpdk_env_linker_args,$(EXTRA_DPDK_LIBS))
+else
+FLAGS += $(ENV_LINKER_ARGS)
+endif
+FLAGS += $(SEASTAR_FLAGS)
+FLAGS += $(SYS_LIBS)
+
+.PHONY : nvme spdk_tgt sock clean
+
+all: nvme spdk_tgt sock
+
+nvme:
+	$(Q)echo Building and linking nvme example app...
+	$(Q)g++ nvme.cc $(FLAGS) -o nvme
+
+spdk_tgt:
+	$(Q)echo Building and linking spdk_tgt example app...
+	$(Q)g++ spdk_tgt.cc $(FLAGS) -o spdk_tgt
+
+sock:
+	$(Q)echo Building and linking sock example app...
+	$(Q)g++ sock.cc $(FLAGS) -o sock
+
+clean:
+	$(Q)rm nvme spdk_tgt sock

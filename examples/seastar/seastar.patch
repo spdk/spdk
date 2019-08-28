@@ -1,0 +1,119 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ecbf7bd2..5d388c99 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -630,26 +630,6 @@ if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "Sanitize"
+   endif ()
+ endif ()
+ 
+-target_link_libraries (seastar
+-  PUBLIC
+-    Boost::boost
+-    Boost::program_options
+-    Boost::thread
+-    c-ares::c-ares
+-    cryptopp::cryptopp
+-    fmt::fmt
+-    lz4::lz4
+-  PRIVATE
+-    ${CMAKE_DL_LIBS}
+-    Boost::filesystem
+-    GnuTLS::gnutls
+-    StdAtomic::atomic
+-    StdFilesystem::filesystem
+-    lksctp-tools::lksctp-tools
+-    protobuf::libprotobuf
+-    rt::rt
+-    yaml-cpp::yaml-cpp)
+-
+ if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "Sanitize"))
+   set (Seastar_Sanitizers_OPTIONS ${Sanitizers_COMPILER_OPTIONS})
+   target_link_libraries (seastar
+@@ -781,6 +761,26 @@ if (Seastar_DPDK)
+     PUBLIC -Wl,--whole-archive dpdk::dpdk -Wl,--no-whole-archive)
+ endif ()
+ 
++target_link_libraries (seastar
++  PUBLIC
++    Boost::boost
++    Boost::program_options
++    Boost::thread
++    c-ares::c-ares
++    cryptopp::cryptopp
++    fmt::fmt
++    lz4::lz4
++  PRIVATE
++    ${CMAKE_DL_LIBS}
++    Boost::filesystem
++    GnuTLS::gnutls
++    StdAtomic::atomic
++    StdFilesystem::filesystem
++    lksctp-tools::lksctp-tools
++    protobuf::libprotobuf
++    rt::rt
++    yaml-cpp::yaml-cpp)
++
+ if (Seastar_HWLOC)
+   if (NOT hwloc_FOUND)
+     message (FATAL_ERROR "`hwloc` support is enabled but it is not available!")
+diff --git a/cmake/FindStdFilesystem.cmake b/cmake/FindStdFilesystem.cmake
+index 05e8add0..54e91738 100644
+--- a/cmake/FindStdFilesystem.cmake
++++ b/cmake/FindStdFilesystem.cmake
+@@ -46,7 +46,12 @@ endmacro ()
+ _stdfilesystem_check_compiles (StdFilesystem_NO_EXPLICIT_LINK)
+ 
+ if (StdFilesystem_NO_EXPLICIT_LINK)
+-  set (StdFilesystem_FOUND yes)
++  set (StdFilesystem_LIBRARY_NAME stdc++fs)
++    set (StdFilesystem_LIBRARIES -l${StdFilesystem_LIBRARY_NAME})
++  include (FindPackageHandleStandardArgs)
++
++  find_package_handle_standard_args (StdFilesystem
++    REQUIRED_VARS StdFilesystem_LIBRARY_NAME)
+ else ()
+   _stdfilesystem_check_compiles (StdFilesystem_STDCXXFS_LIBRARY
+     stdc++fs)
+diff --git a/dpdk_config b/dpdk_config
+index 8b8c60db..09974b36 100644
+--- a/dpdk_config
++++ b/dpdk_config
+@@ -3,7 +3,7 @@ CONFIG_RTE_LIBRTE_PMD_SOFTNIC=n
+ CONFIG_RTE_APP_TEST=n
+ CONFIG_RTE_TEST_PMD=n
+ CONFIG_RTE_MBUF_REFCNT_ATOMIC=n
+-CONFIG_RTE_MAX_MEMSEG_LISTS=8192
++CONFIG_RTE_MAX_MEMSEG_LISTS=256
+ CONFIG_RTE_EAL_IGB_UIO=n
+ CONFIG_RTE_LIBRTE_KNI=n
+ CONFIG_RTE_KNI_KMOD=n
+diff --git a/install-dependencies.sh b/install-dependencies.sh
+index be2ae7b7..8354bc5d 100755
+--- a/install-dependencies.sh
++++ b/install-dependencies.sh
+@@ -44,6 +44,8 @@ debian_packages=(
+     libc-ares-dev
+     stow
+     g++
++    libunistring-dev
++    pkg-config
+ )
+ 
+ # seastar doesn't directly depend on these packages. They are
+diff --git a/src/core/reactor.cc b/src/core/reactor.cc
+index 3ad03926..dc7b22c6 100644
+--- a/src/core/reactor.cc
++++ b/src/core/reactor.cc
+@@ -4271,11 +4271,11 @@ reactor::insert_activating_task_queues() {
+ 
+ void
+ reactor::run_some_tasks() {
++    reset_preemption_monitor();
+     if (!have_more_tasks()) {
+         return;
+     }
+     sched_print("run_some_tasks: start");
+-    reset_preemption_monitor();
+ 
+     sched_clock::time_point t_run_completed = std::chrono::steady_clock::now();
+     STAP_PROBE(seastar, reactor_run_tasks_start);
