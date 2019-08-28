@@ -31,28 +31,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-APP = bdev_svc
+TEST_FILE = blobfs_bdev_ut.c
 
-C_SRCS := bdev_svc.c
-
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy event_vmd
-SPDK_LIB_LIST += nvmf event log trace conf thread util bdev copy rpc jsonrpc json sock blobfs_bdev
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc notify
-
-ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
-endif
-
-ifeq ($(CONFIG_FC),y)
-ifneq ($(strip $(CONFIG_FC_PATH)),)
-SYS_LIBS += -L$(CONFIG_FC_PATH)
-endif
-SYS_LIBS += -lufc
-endif
-
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
