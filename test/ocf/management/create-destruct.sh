@@ -27,10 +27,10 @@ $rpc_py bdev_malloc_create 101 512 -b Malloc1
 
 $rpc_py bdev_ocf_create PartCache wt Malloc0 NonExisting
 
-$rpc_py get_ocf_bdevs PartCache | jq -e \
+$rpc_py bdev_ocf_get_bdevs PartCache | jq -e \
 	'.[0] | .started == false and .cache.attached and .core.attached == false'
 
-$rpc_py get_ocf_bdevs NonExisting | jq -e \
+$rpc_py bdev_ocf_get_bdevs NonExisting | jq -e \
 	'.[0] | .name == "PartCache"'
 
 if ! bdev_check_claimed Malloc0; then
@@ -46,7 +46,7 @@ fi
 
 $rpc_py bdev_ocf_create FullCache wt Malloc0 Malloc1
 
-$rpc_py get_ocf_bdevs FullCache | jq -e \
+$rpc_py bdev_ocf_get_bdevs FullCache | jq -e \
 	'.[0] | .started and .cache.attached and .core.attached'
 
 if ! (bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1); then
