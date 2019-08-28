@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "067ddcc8_4d133817",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T03:29:56Z",
+      "side": 1,
+      "message": "This error log also should be removed or updated?",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 66
+      },
+      "revId": "e27d9900f83785382a0bceef3641fb1ca30da898",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eda15c46_41dc01e8",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T03:29:56Z",
+      "side": 1,
+      "message": "This sentence is meaningful only when rc is zero?",
+      "range": {
+        "startLine": 140,
+        "startChar": 20,
+        "endLine": 140,
+        "endChar": 44
+      },
+      "revId": "e27d9900f83785382a0bceef3641fb1ca30da898",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
