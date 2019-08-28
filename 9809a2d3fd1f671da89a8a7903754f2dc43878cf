@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30279d2b_4ca160ed",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "What does the value of status mean here? Certainly it can be a negated errno value on error, but on success does it indicate the length received?",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "642b282b_0849d199",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "Receive data from the given socket asynchronously.",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "057c1285_1998b599",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "Does this call return as soon as it has received any data, or only when it has the full amount of data specified by len? I think the right design is to call the callback as soon as any data is available and report how much it found.",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "720d8bf7_7b1bd1b9",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "This can\u0027t return the length received - it\u0027s asynchronous and doesn\u0027t know the amount of received until the operation is done.\n\nInstead, return an int with an error code or 0.",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec48afde_b6540526",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "Write data from the given iovec to the socket asynchronously",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b77bbd1_7bc3f3b7",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "Similar to the recv case, does this only call the callback when all data provided is written, or as soon as any data is written? I think this should behave differently than the read path and only call the callback when *all* data is written or any error occurs.",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26189fee_dca56926",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "This can\u0027t return the amount written because the call is asynchronous and that isn\u0027t known until later.",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14cd4127_09e7d874",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "Read data from the socket into the given iovec asynchronously",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44a9b493_6f4b3e0d",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "Can\u0027t return len - not known until callback is called.",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a876802f_c55e82e7",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "Let\u0027s allow implementations to not provide the recv_async pointer. Here, if it is null, just call sock-\u003enet_impl-\u003erecv and then manually call the callback.\n\nIt\u0027s important to make these functions work even if the backing implementation doesn\u0027t support them so that we can code the targets using the async functions and not have to check if they fail and fall back to the synchronous ones.",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53d4780b_0a5cbc60",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "See above about readv_async being optional",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4acaf04d_48d5a674",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T20:24:25Z",
+      "side": 1,
+      "message": "Emulating writev_async by using write might be tougher if we elect to not call the callback until the data has all been written. I\u0027ll have to think about what to do here.",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
