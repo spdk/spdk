@@ -14,5 +14,5 @@ $bdevperf -c $curdir/mallocs.conf -q 128 -o 4096 -t 4 -w write -r /var/tmp/spdk.
 bdev_perf_pid=$!
 waitforlisten $bdev_perf_pid
 sleep 1
-$rpc_py get_ocf_stats MalCache1
+$rpc_py bdev_ocf_get_stats MalCache1
 wait $bdev_perf_pid

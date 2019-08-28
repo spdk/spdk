@@ -131,7 +131,8 @@ def bdev_ocf_delete(client, name):
     return client.call('bdev_ocf_delete', params)
 
 
-def get_ocf_stats(client, name):
+@deprecated_alias('get_ocf_stats')
+def bdev_ocf_get_stats(client, name):
     """Get statistics of chosen OCF block device
 
     Args:
@@ -142,10 +143,11 @@ def get_ocf_stats(client, name):
     """
     params = {'name': name}
 
-    return client.call('get_ocf_stats', params)
+    return client.call('bdev_ocf_get_stats', params)
 
 
-def get_ocf_bdevs(client, name=None):
+@deprecated_alias('get_ocf_stats')
+def bdev_ocf_get_bdevs(client, name=None):
     """Get list of OCF devices including unregistered ones
 
     Args:
@@ -157,7 +159,7 @@ def get_ocf_bdevs(client, name=None):
     params = None
     if name:
         params = {'name': name}
-    return client.call('get_ocf_bdevs', params)
+    return client.call('bdev_ocf_get_bdevs', params)
 
 
 @deprecated_alias('construct_malloc_bdev')
