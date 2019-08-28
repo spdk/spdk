@@ -40,7 +40,7 @@ $rpc_py bdev_ocf_create ocfWB1 wb aio4 aio6
 
 # Sorting bdevs because we dont guarantee that they are going to be
 # in the same order after shutdown
-($rpc_py get_ocf_bdevs | jq '(.. | arrays) |= sort') > ./ocf_bdevs
+($rpc_py bdev_ocf_get_bdevs | jq '(.. | arrays) |= sort') > ./ocf_bdevs
 
 trap - SIGINT SIGTERM EXIT
 
@@ -56,7 +56,7 @@ waitforlisten $spdk_pid
 
 # OCF should be loaded now as well
 
-($rpc_py get_ocf_bdevs | jq '(.. | arrays) |= sort') > ./ocf_bdevs_verify
+($rpc_py bdev_ocf_get_bdevs | jq '(.. | arrays) |= sort') > ./ocf_bdevs_verify
 
 diff ocf_bdevs ocf_bdevs_verify
 
