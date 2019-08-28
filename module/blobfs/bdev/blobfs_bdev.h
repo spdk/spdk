@@ -47,7 +47,18 @@
 typedef void (*spdk_blobfs_bdev_op_with_bool_complete)(void *cb_arg, bool is_true,
 		int fserrno);
 
+/**
+ * blobfs on bdev operation completion callback.
+ *
+ * \param cb_arg Callback argument.
+ * \param fserrno 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_blobfs_bdev_op_complete)(void *cb_arg, int fserrno);
+
 int spdk_blobfs_bdev_detect(const char *bdev_name,
 			    spdk_blobfs_bdev_op_with_bool_complete cb_fn, void *cb_arg);
+
+int spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
+			    spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
 
 #endif /* SPDK_BLOBFS_BDEV_H */
