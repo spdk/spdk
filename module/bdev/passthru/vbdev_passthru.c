@@ -385,7 +385,7 @@ vbdev_passthru_config_json(struct spdk_json_write_ctx *w)
 
 	TAILQ_FOREACH(pt_node, &g_pt_nodes, link) {
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "construct_passthru_bdev");
+		spdk_json_write_named_string(w, "method", "bdev_passthru_create");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(pt_node->base_bdev));
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&pt_node->pt_bdev));

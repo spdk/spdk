@@ -61,7 +61,7 @@ static const struct spdk_json_object_decoder rpc_construct_passthru_decoders[] =
  * device. Error status returned in the failed cases.
  */
 static void
-spdk_rpc_construct_passthru_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_passthru_create(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
 	struct rpc_construct_passthru req = {NULL};
@@ -90,7 +90,8 @@ spdk_rpc_construct_passthru_bdev(struct spdk_jsonrpc_request *request,
 cleanup:
 	free_rpc_construct_passthru(&req);
 }
-SPDK_RPC_REGISTER("construct_passthru_bdev", spdk_rpc_construct_passthru_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_passthru_create", spdk_rpc_bdev_passthru_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_passthru_create, construct_passthru_bdev)
 
 struct rpc_delete_passthru {
 	char *name;
@@ -107,7 +108,7 @@ static const struct spdk_json_object_decoder rpc_delete_passthru_decoders[] = {
 };
 
 static void
-_spdk_rpc_delete_passthru_bdev_cb(void *cb_arg, int bdeverrno)
+_spdk_rpc_bdev_passthru_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
@@ -118,7 +119,7 @@ _spdk_rpc_delete_passthru_bdev_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_delete_passthru_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_passthru_delete(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct rpc_delete_passthru req = {NULL};
@@ -138,9 +139,10 @@ spdk_rpc_delete_passthru_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	delete_passthru_disk(bdev, _spdk_rpc_delete_passthru_bdev_cb, request);
+	delete_passthru_disk(bdev, _spdk_rpc_bdev_passthru_delete_cb, request);
 
 cleanup:
 	free_rpc_delete_passthru(&req);
 }
-SPDK_RPC_REGISTER("delete_passthru_bdev", spdk_rpc_delete_passthru_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_passthru_delete", spdk_rpc_bdev_passthru_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_passthru_delete, delete_passthru_bdev)
