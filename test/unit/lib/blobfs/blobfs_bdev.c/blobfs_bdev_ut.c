@@ -43,6 +43,7 @@ bool g_bdev_open_ext_fail = false;
 bool g_bdev_create_bs_dev_from_desc_fail = false;
 bool g_fs_load_fail = false;
 bool g_fs_unload_fail = false;
+bool g_bs_bdev_claim_fail = false;
 
 const char *g_bdev_name = "ut_bdev";
 
@@ -57,6 +58,11 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	return 0;
 }
 
+static  void
+bs_dev_destroy(struct spdk_bs_dev *dev)
+{
+}
+
 struct spdk_bs_dev *
 spdk_bdev_create_bs_dev_from_desc(struct spdk_bdev_desc *desc)
 {
@@ -66,6 +72,7 @@ spdk_bdev_create_bs_dev_from_desc(struct spdk_bdev_desc *desc)
 		return NULL;
 	}
 
+	bs_dev.destroy = bs_dev_destroy;
 	return &bs_dev;
 }
 
@@ -97,6 +104,31 @@ spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void *cb_a
 }
 
 void
+spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
+	     fs_send_request_fn send_request_fn,
+	     spdk_fs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	int rc = 0;
+
+	if (g_fs_load_fail) {
+		rc = -1;
+	}
+
+	cb_fn(cb_arg, NULL, rc);
+	return;
+}
+
+int
+spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module)
+{
+	if (g_bs_bdev_claim_fail == true) {
+		return -1;
+	}
+
+	return 0;
+}
+
+void
 spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
 }
@@ -119,6 +151,11 @@ const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
 	return g_bdev_name;
+}
+
+void
+spdk_fs_opts_init(struct spdk_blobfs_opts *opts)
+{
 }
 
 static void
@@ -163,6 +200,51 @@ spdk_blobfs_bdev_detect_test(void)
 	CU_ASSERT(g_fserrno == 0);
 }
 
+static void
+spdk_blobfs_bdev_create_test(void)
+{
+	uint32_t cluster_sz = 1024 * 1024;
+
+	/* spdk_bdev_open_ext() fails */
+	g_bdev_open_ext_fail = true;
+	spdk_blobfs_bdev_create(g_bdev_name, cluster_sz, blobfs_bdev_op_complete, NULL);
+	CU_ASSERT(g_fserrno != 0);
+
+	g_bdev_open_ext_fail = false;
+
+	/* spdk_bdev_create_bs_dev_from_desc() fails */
+	g_bdev_create_bs_dev_from_desc_fail = true;
+	spdk_blobfs_bdev_create(g_bdev_name, cluster_sz, blobfs_bdev_op_complete, NULL);
+	CU_ASSERT(g_fserrno != 0);
+
+	g_bdev_create_bs_dev_from_desc_fail = false;
+
+	/* spdk_bs_bdev_claim() fails */
+	g_bs_bdev_claim_fail = true;
+	spdk_blobfs_bdev_create(g_bdev_name, cluster_sz, blobfs_bdev_op_complete, NULL);
+	CU_ASSERT(g_fserrno != 0);
+
+	g_bs_bdev_claim_fail = false;
+
+	/* spdk_fs_init() fails */
+	g_fs_load_fail = true;
+	spdk_blobfs_bdev_create(g_bdev_name, cluster_sz, blobfs_bdev_op_complete, NULL);
+	CU_ASSERT(g_fserrno != 0);
+
+	g_fs_load_fail = false;
+
+	/* spdk_fs_unload() fails */
+	g_fs_unload_fail = true;
+	spdk_blobfs_bdev_create(g_bdev_name, cluster_sz, blobfs_bdev_op_complete, NULL);
+	CU_ASSERT(g_fserrno != 0);
+
+	g_fs_unload_fail = false;
+
+	/* no fail */
+	spdk_blobfs_bdev_create(g_bdev_name, cluster_sz, blobfs_bdev_op_complete, NULL);
+	CU_ASSERT(g_fserrno == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -178,7 +260,10 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	if (CU_add_test(suite, "spdk_blobfs_bdev_detect_test", spdk_blobfs_bdev_detect_test) == NULL) {
+	if (
+		CU_add_test(suite, "spdk_blobfs_bdev_detect_test", spdk_blobfs_bdev_detect_test) == NULL ||
+		CU_add_test(suite, "spdk_blobfs_bdev_create_test", spdk_blobfs_bdev_create_test) == NULL
+	) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
