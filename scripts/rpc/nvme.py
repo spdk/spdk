@@ -1,7 +1,8 @@
 from .helpers import deprecated_alias
 
 
-def send_nvme_cmd(client, name, cmd_type, data_direction, cmdbuf,
+@deprecated_alias('send_nvme_cmd')
+def bdev_nvme_send_cmd(client, name, cmd_type, data_direction, cmdbuf,
                   data=None, metadata=None,
                   data_len=None, metadata_len=None,
                   timeout_ms=None):
@@ -37,7 +38,7 @@ def send_nvme_cmd(client, name, cmd_type, data_direction, cmdbuf,
     if timeout_ms:
         params['timeout_ms'] = timeout_ms
 
-    return client.call('send_nvme_cmd', params)
+    return client.call('bdev_nvme_send_cmd', params)
 
 
 @deprecated_alias('get_nvme_controllers')
