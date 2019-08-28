@@ -1964,6 +1964,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'thread_get_stats', help='Display current statistics of all the threads')
     p.set_defaults(func=thread_get_stats)
 
+    # blobfs
+    def bdev_blobfs_check(args):
+        print(rpc.blobfs.bdev_blobfs_check(args.client,
+                                           bdev_name=args.bdev_name))
+
+    p = subparsers.add_parser('bdev_blobfs_check', help='Check whether a blobfs exists on bdev')
+    p.add_argument('bdev_name', help='Blockdev name to check blobfs. Example: Malloc0.')
+    p.set_defaults(func=bdev_blobfs_check)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

@@ -75,6 +75,8 @@ Added optional parameter '--md-size'to 'construct_null_bdev' RPC method.
 Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
 RPC method.
 
+Added `bdev_blobfs_check` RPC method to check whether a blobfs exists on given bdev.
+
 ## v19.07:
 
 ### ftl
