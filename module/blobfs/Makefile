@@ -31,28 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = bdev_svc
+DIRS-y = bdev
 
-C_SRCS := bdev_svc.c
+.PHONY: all clean $(DIRS-y)
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy event_vmd
-SPDK_LIB_LIST += nvmf event log trace conf thread util bdev copy rpc jsonrpc json sock blobfs_bdev
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc notify
+all: $(DIRS-y)
+clean: $(DIRS-y)
 
-ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
-endif
-
-ifeq ($(CONFIG_FC),y)
-ifneq ($(strip $(CONFIG_FC_PATH)),)
-SYS_LIBS += -L$(CONFIG_FC_PATH)
-endif
-SYS_LIBS += -lufc
-endif
-
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
