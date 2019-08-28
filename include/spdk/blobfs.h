@@ -333,7 +333,7 @@ const char *spdk_file_get_name(struct spdk_file *file);
 uint64_t spdk_file_get_length(struct spdk_file *file);
 
 /**
- * Write data to the given file.
+ * Sequential write data to the given file.
  *
  * \param file File to write.
  * \param ctx The thread context for this operation
@@ -345,6 +345,20 @@ uint64_t spdk_file_get_length(struct spdk_file *file);
  */
 int spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		    void *payload, uint64_t offset, uint64_t length);
+
+/**
+ * Random write data to the given file, no hold is permitted between valid ranges.
+ *
+ * \param file File to write.
+ * \param ctx The thread context for this operation
+ * \param payload The specified buffer which should contain the data to be transmitted.
+ * \param offset The beginning position to write data, data before offset must be valid.
+ * \param length The size in bytes of data to write.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_file_randomwrite(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
+			  void *payload, uint64_t offset, uint64_t length);
 
 /**
  * Read data to user buffer from the given file.
