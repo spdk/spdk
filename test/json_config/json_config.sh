@@ -169,7 +169,7 @@ function create_bdev_subsystem_config() {
 		tgt_rpc construct_split_vbdev $lvol_store_base_bdev 2
 		tgt_rpc construct_split_vbdev Malloc0 3
 		tgt_rpc bdev_malloc_create 8 4096 --name Malloc3
-		tgt_rpc construct_passthru_bdev -b Malloc3 -p PTBdevFromMalloc3
+		tgt_rpc bdev_passthru_create -b Malloc3 -p PTBdevFromMalloc3
 
 		tgt_rpc bdev_null_create Null0 32 512
 
