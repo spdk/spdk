@@ -898,7 +898,7 @@ Example response:
 }
 ~~~
 
-## get_ocf_stats {#rpc_get_ocf_stats}
+## bdev_ocf_get_stats {#rpc_bdev_ocf_get_stats}
 
 Get statistics of chosen OCF block device.
 
@@ -919,7 +919,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_ocf_stats",
+  "method": "bdev_ocf_get_stats",
   "id": 1
 }
 ~~~
@@ -1102,7 +1102,7 @@ Example response:
 }
 ~~~
 
-## get_ocf_bdevs {#rpc_get_ocf_bdevs}
+## bdev_ocf_get_bdevs {#rpc_bdev_ocf_get_bdevs}
 
 Get list of OCF devices including unregistered ones.
 
@@ -1123,7 +1123,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_ocf_bdevs",
+  "method": "bdev_ocf_get_bdevs",
   "id": 1
 }
 ~~~
