@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7334ba6c_f745c7aa",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-28T04:36:21Z",
+      "side": 1,
+      "message": "What\u0027s this condition target for ?",
+      "range": {
+        "startLine": 1264,
+        "startChar": 1,
+        "endLine": 1265,
+        "endChar": 27
+      },
+      "revId": "b15455a8cf9a01c2338ddd818d5dc75cb35767da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
