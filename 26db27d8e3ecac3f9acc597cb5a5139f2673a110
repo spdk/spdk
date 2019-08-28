@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b461e3fd_7e1d3374",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2437,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-08-28T13:58:06Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we set this to one block by default? Also, shouldn\u0027t each write command be checking this?",
+      "range": {
+        "startLine": 2437,
+        "startChar": 14,
+        "endLine": 2437,
+        "endChar": 29
+      },
+      "revId": "26db27d8e3ecac3f9acc597cb5a5139f2673a110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
