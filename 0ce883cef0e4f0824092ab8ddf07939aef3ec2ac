@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fb12415_b3035446",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1769,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:28:55Z",
+      "side": 0,
+      "message": "This removal of duplication is nice but maybe good to be done separately.",
+      "range": {
+        "startLine": 1769,
+        "startChar": 2,
+        "endLine": 1769,
+        "endChar": 51
+      },
+      "revId": "0ce883cef0e4f0824092ab8ddf07939aef3ec2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

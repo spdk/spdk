@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92d02743_c4dc67f2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1569,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:28:55Z",
+      "side": 1,
+      "message": "This empty line is removal?",
+      "revId": "eb41aac595c1c17fb42ce2035528dd5baa5f92ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1b834e9_48e69a66",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1581,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:28:55Z",
+      "side": 1,
+      "message": "This empty line is removal?",
+      "revId": "eb41aac595c1c17fb42ce2035528dd5baa5f92ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1b21d1d_66ea8546",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1620,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:28:55Z",
+      "side": 1,
+      "message": "This empty line is removal?",
+      "revId": "eb41aac595c1c17fb42ce2035528dd5baa5f92ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a558506_f816cecf",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2147,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-28T00:28:55Z",
+      "side": 1,
+      "message": "We can remove this space.",
+      "revId": "eb41aac595c1c17fb42ce2035528dd5baa5f92ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
