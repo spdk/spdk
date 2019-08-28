@@ -1119,7 +1119,7 @@ static int
 _spdk_vpp_app_attach(void)
 {
 	vl_api_application_attach_t *bmp;
-	u32 fifo_size = 16 << 20;
+	u32 fifo_size = 16 << 21;
 
 	bmp = vl_msg_api_alloc(sizeof(*bmp));
 	if (bmp == NULL) {
@@ -1139,7 +1139,7 @@ _spdk_vpp_app_attach(void)
 	bmp->options[APP_OPTIONS_TX_FIFO_SIZE] = fifo_size;
 	bmp->options[APP_OPTIONS_ADD_SEGMENT_SIZE] = 256 << 20;
 	bmp->options[APP_OPTIONS_SEGMENT_SIZE] = 512 << 20;
-	bmp->options[APP_OPTIONS_EVT_QUEUE_SIZE] = 256;
+	bmp->options[APP_OPTIONS_EVT_QUEUE_SIZE] = 1024 * 8;
 
 	vl_msg_api_send_shmem(g_svm.vl_input_queue, (u8 *)&bmp);
 
