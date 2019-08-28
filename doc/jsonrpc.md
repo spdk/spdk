@@ -5760,6 +5760,43 @@ Example response:
 }
 ~~~
 
+## blobfs_create {#rpc_blobfs_create}
+
+Build blobfs on bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | Block device name to create blobfs
+cluster_sz              | Optional | number      | Size of cluster in bytes. Must be multiple of 4KiB page size (Optional)
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "blobfs_create",
+  "params": {
+    "bdev_name": "Malloc0",
+    "cluster_sz": 1048576
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "true"
+}
+~~~
+
 # Miscellaneous RPC commands
 
 ## bdev_nvme_send_cmd {#rpc_bdev_nvme_send_cmd}

@@ -63,6 +63,17 @@ typedef void (*spdk_blobfs_bdev_op_complete)(void *cb_arg, int fserrno);
 void spdk_blobfs_bdev_detect(const char *bdev_name,
 			     spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Create a blobfs on the given device.
+ *
+ * \param bdev_name Name of block device.
+ * \param cluster_sz Size of cluster in bytes. Must be multiple of 4KiB page size.
+ * \param cb_fn Called when the creation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void spdk_blobfs_bdev_create(const char *bdev_name, uint32_t cluster_sz,
+			     spdk_blobfs_bdev_op_complete cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif
