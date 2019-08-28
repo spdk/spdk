@@ -58,6 +58,21 @@ function blobfs_detect_test() {
 	killprocess $blobfs_pid
 }
 
+function blobfs_create_test() {
+	blobfs_start_app
+
+	# Create blobfs on test bdev
+	$rpc_py blobfs_create ${bdevname}
+
+	# Detect out there is a blobfs on test bdev
+	result=$($rpc_py blobfs_detect ${bdevname})
+	if [ "${result}" != "True" ]; then
+		false
+	fi
+
+	killprocess $blobfs_pid
+}
+
 timing_enter blobfs
 
 trap 'on_error_exit;' ERR
@@ -68,6 +83,11 @@ echo "[AIO]" > ${conf_file}
 echo "AIO ${tmp_file} ${bdevname} 4096" >> ${conf_file}
 
 blobfs_detect_test
+
+# Clear blobfs on temp file
+dd if=/dev/zero of=${tmp_file} bs=4k count=1M
+
+blobfs_create_test
 
 rm -f $tmp_file
 report_test_completion "blobfs"

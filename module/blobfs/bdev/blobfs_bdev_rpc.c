@@ -44,6 +44,12 @@
 
 #include "spdk_internal/log.h"
 
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096
+#endif
+
+#define MIN_CLUSTER_SZ (1024 * 1024)
+
 struct rpc_blobfs_detect {
 	char *bdev_name;
 
@@ -115,3 +121,99 @@ spdk_rpc_blobfs_detect(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("blobfs_detect", spdk_rpc_blobfs_detect, SPDK_RPC_RUNTIME)
+
+struct rpc_blobfs_create {
+	char *bdev_name;
+	uint64_t cluster_sz;
+
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+free_rpc_blobfs_create(struct rpc_blobfs_create *req)
+{
+	free(req->bdev_name);
+	free(req);
+}
+
+static int
+rpc_decode_cluster_sz(const struct spdk_json_val *val, void *out)
+{
+	uint64_t *cluster_sz = out;
+	char *sz_str = NULL;
+	bool has_prefix;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &sz_str);
+	if (rc) {
+		SPDK_NOTICELOG("Invalid parameter value: cluster_sz\n");
+		return -EINVAL;
+	}
+
+	rc = spdk_parse_capacity(sz_str, cluster_sz, &has_prefix);
+	free(sz_str);
+
+	if (rc || *cluster_sz % PAGE_SIZE != 0 || *cluster_sz < MIN_CLUSTER_SZ) {
+		SPDK_NOTICELOG("Invalid parameter value: cluster_sz\n");
+		return -EINVAL;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "cluster_sz of blobfs: %ld\n", *cluster_sz);
+	return 0;
+}
+
+static const struct spdk_json_object_decoder rpc_blobfs_create_decoders[] = {
+	{"bdev_name", offsetof(struct rpc_blobfs_create, bdev_name), spdk_json_decode_string},
+	{"cluster_sz", offsetof(struct rpc_blobfs_create, cluster_sz), rpc_decode_cluster_sz, true},
+};
+
+static void
+_rpc_blobfs_create_done(void *cb_arg, int fserrno)
+{
+	struct rpc_blobfs_create *req = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (fserrno != 0) {
+		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_strerror(-fserrno));
+
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(req->request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(req->request, w);
+
+	free_rpc_blobfs_create(req);
+}
+
+static void
+spdk_rpc_blobfs_create(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+	struct rpc_blobfs_create *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("could not allocate rpc_blobfs_create request.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_blobfs_create_decoders,
+				    SPDK_COUNTOF(rpc_blobfs_create_decoders),
+				    req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+
+		free_rpc_blobfs_create(req);
+
+		return;
+	}
+
+	req->request = request;
+	spdk_blobfs_bdev_create(req->bdev_name, req->cluster_sz, _rpc_blobfs_create_done, req);
+}
+
+SPDK_RPC_REGISTER("blobfs_create", spdk_rpc_blobfs_create, SPDK_RPC_RUNTIME)
