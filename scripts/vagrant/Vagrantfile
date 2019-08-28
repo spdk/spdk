@@ -98,6 +98,7 @@ Vagrant.configure(2) do |config|
   vhost_host_dir=(ENV['VHOST_HOST_DIR'] || "none")
   vhost_vm_dir=(ENV['VHOST_VM_DIR'] || "none")
   vmemulator=(ENV['SPDK_QEMU_EMULATOR'] || "")
+  disk_type=(ENV['NVME_DISKS_TYPE'] || nvme)
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
@@ -131,20 +132,67 @@ Vagrant.configure(2) do |config|
 
     # we put nvme_disk inside default pool to eliminate libvirt/SELinux Permissions Problems
     # and to be able to run vagrant from user $HOME directory
-    if ENV['NVME_FILE']
-      nvme_disk="/var/lib/libvirt/images/" + ENV['NVME_FILE']
-    else
-      nvme_disk="/var/lib/libvirt/images/nvme_disk.img"
-    end
+    if disk_type == "nvme"
+      if ENV['NVME_FILE']
+        nvme_disk="/var/lib/libvirt/images/" + ENV['NVME_FILE']
+      else
+        nvme_disk="/var/lib/libvirt/images/nvme_disk.img"
+      end
 
-    unless File.exist? (nvme_disk)
-      puts "If run with libvirt provider please execute create_nvme_img.sh"
-    end
+      unless File.exist? (nvme_disk)
+        puts "If run with libvirt provider please execute create_nvme_img.sh"
+      end
 
-    libvirt.qemuargs :value => "-drive"
-    libvirt.qemuargs :value => "file=#{nvme_disk},if=none,id=D22"
-    libvirt.qemuargs :value => "-device"
-    libvirt.qemuargs :value => "nvme,drive=D22,serial=1234"
+      libvirt.qemuargs :value => "-drive"
+      libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=D22"
+      libvirt.qemuargs :value => "-device"
+      libvirt.qemuargs :value => "nvme,drive=D22,serial=1234"
+    elsif disk_type == "no_namespace_NVMe"
+      if ENV['NVME_FILE']
+        nvme_disk="/var/lib/libvirt/images/" + ENV['NVME_FILE']
+      else
+        nvme_disk="/var/lib/libvirt/images/no_namespace_nvme_disk.img"
+      end
+
+      unless File.exist? (nvme_disk)
+        puts "If run with libvirt provider please execute create_nvme_img.sh"
+      end
+
+      libvirt.qemuargs :value => "-drive"
+      libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=no_namespace_nvme"
+      libvirt.qemuargs :value => "-device"
+      libvirt.qemuargs :value => "nvme,drive=no_namespace_nvme,serial=1235,namespaces=0"
+    elsif disk_type == "multi_namespace_NVMe"
+      if ENV['NVME_FILE']
+        nvme_disk="/var/lib/libvirt/images/" + ENV['NVME_FILE']
+      else
+        nvme_disk="/var/lib/libvirt/images/multi_namespace_nvme_disk.img"
+      end
+
+      unless File.exist? (nvme_disk)
+        puts "If run with libvirt provider please execute create_nvme_img.sh"
+      end
+
+      libvirt.qemuargs :value => "-drive"
+      libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=multi_namespace_nvme"
+      libvirt.qemuargs :value => "-device"
+      libvirt.qemuargs :value => "nvme,drive=multi_namespace_nvme,serial=1236,namespaces=3"
+    elsif disk_type == "OCSSD_NVMe"
+      if ENV['NVME_FILE']
+        nvme_disk="/var/lib/libvirt/images/" + ENV['NVME_FILE']
+      else
+        nvme_disk="/var/lib/libvirt/images/ocssd_nvme_disk.img"
+      end
+
+      unless File.exist? (nvme_disk)
+        puts "If run with libvirt provider please execute create_nvme_img.sh"
+      end
+
+      libvirt.qemuargs :value => "-drive"
+      libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=ocssd_nvme"
+      libvirt.qemuargs :value => "-device"
+      libvirt.qemuargs :value => "nvme,drive=ocssd_nvme,serial=deadbeefoacs=0,namespaces=1,lver=2,lba_index=4,mdts=10,lnum_lun=8,lnum_pln=2,lpgs_per_blk=1536,lsecs_per_pg=2,lblks_per_pln=45,metadata=/var/lib/libvirt/images/ocssd_md,nsdatafile=/var/lib/libvirt/images/ocssd_blknvme.ns,laer_thread_sleep=3000,stride=4"
+    end
     libvirt.driver = "kvm"
     libvirt.graphics_type = "vnc"
     libvirt.memory = "#{vmram}"
