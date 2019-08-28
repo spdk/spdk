@@ -52,6 +52,24 @@
       "revId": "66cf8a447fc8b552f97f4e8395ac79ddc87ea079",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ddb9cd8_f356d508",
+        "filename": "test/nvmf/target/connect_disconnect.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T07:13:45Z",
+      "side": 1,
+      "message": "Sorry, but I don\u0027t understand.\n\n\u003e there are limited resources with softRoce driver that\u0027s why we should limit the number of queues sometimes\n\nThat\u0027s exactly what I do here - I limit the number of queues.\n\n\u003e for this case 200 iterations is really a huge number.\n\nIt\u0027s connected \u0026 disconnected 200 times, but it\u0027s still just a single connection all the time, NOT 200 connections. I think \nsoftRoce can handle one connection :)",
+      "parentUuid": "49e80f3f_9ab619bc",
+      "revId": "66cf8a447fc8b552f97f4e8395ac79ddc87ea079",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
