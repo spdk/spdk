@@ -47,7 +47,7 @@ enum spdk_nvme_rpc_type {
 	NVME_IO_CMD,
 };
 
-struct rpc_send_nvme_cmd_req {
+struct rpc_bdev_nvme_send_cmd_req {
 	char			*name;
 	int			cmd_type;
 	int			data_direction;
@@ -60,22 +60,22 @@ struct rpc_send_nvme_cmd_req {
 	char			*md;
 };
 
-struct rpc_send_nvme_cmd_resp {
+struct rpc_bdev_nvme_send_cmd_resp {
 	char	*cpl_text;
 	char	*data_text;
 	char	*md_text;
 };
 
-struct rpc_send_nvme_cmd_ctx {
+struct rpc_bdev_nvme_send_cmd_ctx {
 	struct spdk_jsonrpc_request	*jsonrpc_request;
-	struct rpc_send_nvme_cmd_req	req;
-	struct rpc_send_nvme_cmd_resp	resp;
+	struct rpc_bdev_nvme_send_cmd_req	req;
+	struct rpc_bdev_nvme_send_cmd_resp	resp;
 	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
 	struct spdk_io_channel		*ctrlr_io_ch;
 };
 
 static void
-free_rpc_send_nvme_cmd_ctx(struct rpc_send_nvme_cmd_ctx *ctx)
+free_rpc_bdev_nvme_send_cmd_ctx(struct rpc_bdev_nvme_send_cmd_ctx *ctx)
 {
 	assert(ctx != NULL);
 
@@ -90,9 +90,9 @@ free_rpc_send_nvme_cmd_ctx(struct rpc_send_nvme_cmd_ctx *ctx)
 }
 
 static int
-rpc_send_nvme_cmd_resp_construct(struct rpc_send_nvme_cmd_resp *resp,
-				 struct rpc_send_nvme_cmd_req *req,
-				 const struct spdk_nvme_cpl *cpl)
+rpc_bdev_nvme_send_cmd_resp_construct(struct rpc_bdev_nvme_send_cmd_resp *resp,
+				      struct rpc_bdev_nvme_send_cmd_req *req,
+				      const struct spdk_nvme_cpl *cpl)
 {
 	resp->cpl_text = malloc(spdk_base64_get_encoded_strlen(sizeof(*cpl)) + 1);
 	if (!resp->cpl_text) {
@@ -121,13 +121,14 @@ rpc_send_nvme_cmd_resp_construct(struct rpc_send_nvme_cmd_resp *resp,
 }
 
 static void
-spdk_rpc_send_nvme_cmd_complete(struct rpc_send_nvme_cmd_ctx *ctx, const struct spdk_nvme_cpl *cpl)
+spdk_rpc_bdev_nvme_send_cmd_complete(struct rpc_bdev_nvme_send_cmd_ctx *ctx,
+				     const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_jsonrpc_request *request = ctx->jsonrpc_request;
 	struct spdk_json_write_ctx *w;
 	int ret;
 
-	ret = rpc_send_nvme_cmd_resp_construct(&ctx->resp, &ctx->req, cpl);
+	ret = rpc_bdev_nvme_send_cmd_resp_construct(&ctx->resp, &ctx->req, cpl);
 	if (ret) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-ret));
@@ -150,25 +151,25 @@ spdk_rpc_send_nvme_cmd_complete(struct rpc_send_nvme_cmd_ctx *ctx, const struct 
 	spdk_jsonrpc_end_result(request, w);
 
 out:
-	free_rpc_send_nvme_cmd_ctx(ctx);
+	free_rpc_bdev_nvme_send_cmd_ctx(ctx);
 	return;
 }
 
 static void
 nvme_rpc_bdev_nvme_cb(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct rpc_send_nvme_cmd_ctx *ctx = (struct rpc_send_nvme_cmd_ctx *)ref;
+	struct rpc_bdev_nvme_send_cmd_ctx *ctx = (struct rpc_bdev_nvme_send_cmd_ctx *)ref;
 
 	if (ctx->ctrlr_io_ch) {
 		spdk_put_io_channel(ctx->ctrlr_io_ch);
 		ctx->ctrlr_io_ch = NULL;
 	}
 
-	spdk_rpc_send_nvme_cmd_complete(ctx, cpl);
+	spdk_rpc_bdev_nvme_send_cmd_complete(ctx, cpl);
 }
 
 static int
-nvme_rpc_admin_cmd_bdev_nvme(struct rpc_send_nvme_cmd_ctx *ctx, struct spdk_nvme_cmd *cmd,
+nvme_rpc_admin_cmd_bdev_nvme(struct rpc_bdev_nvme_send_cmd_ctx *ctx, struct spdk_nvme_cmd *cmd,
 			     void *buf, uint32_t nbytes, uint32_t timeout_ms)
 {
 	struct nvme_bdev_ctrlr *_nvme_ctrlr = ctx->nvme_bdev_ctrlr;
@@ -181,7 +182,7 @@ nvme_rpc_admin_cmd_bdev_nvme(struct rpc_send_nvme_cmd_ctx *ctx, struct spdk_nvme
 }
 
 static int
-nvme_rpc_io_cmd_bdev_nvme(struct rpc_send_nvme_cmd_ctx *ctx, struct spdk_nvme_cmd *cmd,
+nvme_rpc_io_cmd_bdev_nvme(struct rpc_bdev_nvme_send_cmd_ctx *ctx, struct spdk_nvme_cmd *cmd,
 			  void *buf, uint32_t nbytes, void *md_buf, uint32_t md_len,
 			  uint32_t timeout_ms)
 {
@@ -203,9 +204,9 @@ nvme_rpc_io_cmd_bdev_nvme(struct rpc_send_nvme_cmd_ctx *ctx, struct spdk_nvme_cm
 }
 
 static int
-rpc_send_nvme_cmd_exec(struct rpc_send_nvme_cmd_ctx *ctx)
+rpc_bdev_nvme_send_cmd_exec(struct rpc_bdev_nvme_send_cmd_ctx *ctx)
 {
-	struct rpc_send_nvme_cmd_req *req = &ctx->req;
+	struct rpc_bdev_nvme_send_cmd_req *req = &ctx->req;
 	int ret = -EINVAL;
 
 	switch (req->cmd_type) {
@@ -296,7 +297,7 @@ out:
 static int
 rpc_decode_data(const struct spdk_json_val *val, void *out)
 {
-	struct rpc_send_nvme_cmd_req *req = (struct rpc_send_nvme_cmd_req *)out;
+	struct rpc_bdev_nvme_send_cmd_req *req = (struct rpc_bdev_nvme_send_cmd_req *)out;
 	char *text = NULL;
 	size_t text_strlen;
 	int rc;
@@ -333,7 +334,7 @@ out:
 static int
 rpc_decode_data_len(const struct spdk_json_val *val, void *out)
 {
-	struct rpc_send_nvme_cmd_req *req = (struct rpc_send_nvme_cmd_req *)out;
+	struct rpc_bdev_nvme_send_cmd_req *req = (struct rpc_bdev_nvme_send_cmd_req *)out;
 	uint32_t data_len;
 	int rc;
 
@@ -362,7 +363,7 @@ rpc_decode_data_len(const struct spdk_json_val *val, void *out)
 static int
 rpc_decode_metadata(const struct spdk_json_val *val, void *out)
 {
-	struct rpc_send_nvme_cmd_req *req = (struct rpc_send_nvme_cmd_req *)out;
+	struct rpc_bdev_nvme_send_cmd_req *req = (struct rpc_bdev_nvme_send_cmd_req *)out;
 	char *text = NULL;
 	size_t text_strlen;
 	int rc;
@@ -399,7 +400,7 @@ out:
 static int
 rpc_decode_metadata_len(const struct spdk_json_val *val, void *out)
 {
-	struct rpc_send_nvme_cmd_req *req = (struct rpc_send_nvme_cmd_req *)out;
+	struct rpc_bdev_nvme_send_cmd_req *req = (struct rpc_bdev_nvme_send_cmd_req *)out;
 	uint32_t md_len;
 	int rc;
 
@@ -425,12 +426,12 @@ rpc_decode_metadata_len(const struct spdk_json_val *val, void *out)
 	return rc;
 }
 
-static const struct spdk_json_object_decoder rpc_send_nvme_cmd_req_decoders[] = {
-	{"name", offsetof(struct rpc_send_nvme_cmd_req, name), spdk_json_decode_string},
-	{"cmd_type", offsetof(struct rpc_send_nvme_cmd_req, cmd_type), rpc_decode_cmd_type},
-	{"data_direction", offsetof(struct rpc_send_nvme_cmd_req, data_direction), rpc_decode_data_direction},
-	{"cmdbuf", offsetof(struct rpc_send_nvme_cmd_req, cmdbuf), rpc_decode_cmdbuf},
-	{"timeout_ms", offsetof(struct rpc_send_nvme_cmd_req, timeout_ms), spdk_json_decode_uint32, true},
+static const struct spdk_json_object_decoder rpc_bdev_nvme_send_cmd_req_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_nvme_send_cmd_req, name), spdk_json_decode_string},
+	{"cmd_type", offsetof(struct rpc_bdev_nvme_send_cmd_req, cmd_type), rpc_decode_cmd_type},
+	{"data_direction", offsetof(struct rpc_bdev_nvme_send_cmd_req, data_direction), rpc_decode_data_direction},
+	{"cmdbuf", offsetof(struct rpc_bdev_nvme_send_cmd_req, cmdbuf), rpc_decode_cmdbuf},
+	{"timeout_ms", offsetof(struct rpc_bdev_nvme_send_cmd_req, timeout_ms), spdk_json_decode_uint32, true},
 	{"data_len", 0, rpc_decode_data_len, true},
 	{"metadata_len", 0, rpc_decode_metadata_len, true},
 	{"data", 0, rpc_decode_data, true},
@@ -438,10 +439,10 @@ static const struct spdk_json_object_decoder rpc_send_nvme_cmd_req_decoders[] = 
 };
 
 static void
-spdk_rpc_send_nvme_cmd(struct spdk_jsonrpc_request *request,
-		       const struct spdk_json_val *params)
+spdk_rpc_bdev_nvme_send_cmd(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
 {
-	struct rpc_send_nvme_cmd_ctx *ctx;
+	struct rpc_bdev_nvme_send_cmd_ctx *ctx;
 	int ret, error_code;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -452,8 +453,8 @@ spdk_rpc_send_nvme_cmd(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (spdk_json_decode_object(params, rpc_send_nvme_cmd_req_decoders,
-				    SPDK_COUNTOF(rpc_send_nvme_cmd_req_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_nvme_send_cmd_req_decoders,
+				    SPDK_COUNTOF(rpc_bdev_nvme_send_cmd_req_decoders),
 				    &ctx->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		error_code = SPDK_JSONRPC_ERROR_INVALID_PARAMS;
@@ -471,9 +472,9 @@ spdk_rpc_send_nvme_cmd(struct spdk_jsonrpc_request *request,
 
 	ctx->jsonrpc_request = request;
 
-	ret = rpc_send_nvme_cmd_exec(ctx);
+	ret = rpc_bdev_nvme_send_cmd_exec(ctx);
 	if (ret < 0) {
-		SPDK_NOTICELOG("Failed at rpc_send_nvme_cmd_exec\n");
+		SPDK_NOTICELOG("Failed at rpc_bdev_nvme_send_cmd_exec\n");
 		error_code = SPDK_JSONRPC_ERROR_INTERNAL_ERROR;
 		goto invalid;
 	}
@@ -482,7 +483,8 @@ spdk_rpc_send_nvme_cmd(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, error_code, spdk_strerror(-ret));
-	free_rpc_send_nvme_cmd_ctx(ctx);
+	free_rpc_bdev_nvme_send_cmd_ctx(ctx);
 	return;
 }
-SPDK_RPC_REGISTER("send_nvme_cmd", spdk_rpc_send_nvme_cmd, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_nvme_send_cmd", spdk_rpc_bdev_nvme_send_cmd, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_send_cmd, send_nvme_cmd)
