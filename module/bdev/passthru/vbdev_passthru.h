@@ -55,7 +55,7 @@ int create_passthru_disk(const char *bdev_name, const char *vbdev_name);
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_passthru_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
-			  void *cb_arg);
+void bdev_passthru_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
+			       void *cb_arg);
 
 #endif /* SPDK_VBDEV_PASSTHRU_H */
