@@ -84,7 +84,9 @@ if [ $SPDK_BUILD_SHARED_OBJECT -eq 1 ]; then
 fi
 
 fail=0
-./configure $config_params
+# We don't run scan-build on the test dierectory because our unit test macro
+# framework doesn't get along well with the tool.
+./configure $config_params --disable-tests
 time $scanbuild $MAKE $MAKEFLAGS || fail=1
 if [ $fail -eq 1 ]; then
 	if [ -d $out/scan-build-tmp ]; then
@@ -97,6 +99,9 @@ if [ $fail -eq 1 ]; then
 else
 	rm -rf $out/scan-build-tmp
 fi
+# Finish building the test repository.
+./configure $config_params --enable-tests
+$MAKE $MAKEFLAGS SKIP_DPDK_BUILD=1
 timing_exit "$make_timing_label"
 
 # Check for generated files that are not listed in .gitignore
