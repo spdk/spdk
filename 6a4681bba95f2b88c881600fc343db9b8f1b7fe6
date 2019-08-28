@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50529936_82ac4ab6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T18:10:14Z",
+      "side": 1,
+      "message": "dynamically",
+      "range": {
+        "startLine": 10,
+        "startChar": 89,
+        "endLine": 10,
+        "endChar": 98
+      },
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2311d8ed_3c88af4c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T18:10:14Z",
+      "side": 1,
+      "message": "statically",
+      "range": {
+        "startLine": 10,
+        "startChar": 27,
+        "endLine": 10,
+        "endChar": 37
+      },
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc51411d_4fe69fd4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T18:10:14Z",
+      "side": 1,
+      "message": "of",
+      "range": {
+        "startLine": 12,
+        "startChar": 62,
+        "endLine": 12,
+        "endChar": 66
+      },
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9592ade4_131581f9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T18:10:14Z",
+      "side": 1,
+      "message": "allows",
+      "range": {
+        "startLine": 12,
+        "startChar": 11,
+        "endLine": 12,
+        "endChar": 17
+      },
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f41a7e73_b0fc09d1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T18:10:14Z",
+      "side": 1,
+      "message": "One other thing: lines are bit too long and may be hard to read in some IDEs / terminal configurations.\n\nConsider breaking them into shorter lines. We do not use any specific maximum line length for commit messages (at least I am not aware if we use any), but take a look at \"git log\" output to get a feeling of how commit message should be structured.\n\nIt\u0027s a nitpick, I know, sorry about that.",
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
