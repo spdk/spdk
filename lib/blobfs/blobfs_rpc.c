@@ -43,6 +43,133 @@
 
 #include "spdk_internal/log.h"
 
+struct rpc_check_bdev_blobfs {
+	char *bdev_name;
+
+	/* Used to search one available nbd device */
+	struct spdk_filesystem *fs;
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+free_rpc_check_bdev_blobfs(struct rpc_check_bdev_blobfs *req)
+{
+	free(req->bdev_name);
+}
+
+static const struct spdk_json_object_decoder rpc_check_bdev_blobfs_decoders[] = {
+	{"bdev_name", offsetof(struct rpc_check_bdev_blobfs, bdev_name), spdk_json_decode_string},
+};
+
+static void
+_check_bdev_blobfs_unload_cb(void *ctx, int fserrno)
+{
+	struct rpc_check_bdev_blobfs *req = ctx;
+	struct spdk_jsonrpc_request *request = req->request;
+	struct spdk_json_write_ctx *w;
+
+	if (fserrno) {
+		SPDK_ERRLOG("Failed to unload blobfs on bdev %s: errno %d", req->bdev_name, fserrno);
+		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "blobfs unload failed");
+
+		free_rpc_check_bdev_blobfs(req);
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+	free_rpc_check_bdev_blobfs(req);
+}
+
+static void
+_check_bdev_blobfs_unload(void *arg1, void *arg2)
+{
+	struct rpc_check_bdev_blobfs *req = arg1;
+
+	spdk_fs_unload(req->fs, _check_bdev_blobfs_unload_cb, req);
+}
+
+static void
+_check_bdev_blobfs_load_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
+{
+	struct spdk_event *event;
+	struct rpc_check_bdev_blobfs *req = ctx;
+
+	if (fserrno == -EILSEQ) {
+		struct spdk_json_write_ctx *w;
+
+		w = spdk_jsonrpc_begin_result(req->request);
+		spdk_json_write_bool(w, false);
+		spdk_jsonrpc_end_result(req->request, w);
+
+		free_rpc_check_bdev_blobfs(req);
+		return;
+	} else if (fserrno) {
+		SPDK_ERRLOG("Failed to load blobfs on bdev %s: errno %d\n", req->bdev_name, fserrno);
+		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "blobfs load failed");
+
+		free_rpc_check_bdev_blobfs(req);
+		return;
+	}
+
+	req->fs = fs;
+
+	event = spdk_event_allocate(0, _check_bdev_blobfs_unload, req, NULL);
+	spdk_event_call(event);
+}
+
+static void
+spdk_rpc_check_bdev_blobfs(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_check_bdev_blobfs *req;
+	struct spdk_bdev *bdev;
+	struct spdk_bs_dev *bs_dev;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("could not allocate rpc_check_bdev_blobfs request.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_check_bdev_blobfs_decoders,
+				    SPDK_COUNTOF(rpc_check_bdev_blobfs_decoders),
+				    req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto invalid;
+	}
+
+	if (req->bdev_name == NULL) {
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req->bdev_name);
+	if (bdev == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_BLOBFS, "bdev %s not found\n", req->bdev_name);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Specified bdev doesn't exist");
+		goto invalid;
+	}
+
+	req->request = request;
+	bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
+	spdk_fs_load(bs_dev, NULL, _check_bdev_blobfs_load_cb, req);
+
+	return;
+
+invalid:
+	free_rpc_check_bdev_blobfs(req);
+}
+
+SPDK_RPC_REGISTER("check_bdev_blobfs", spdk_rpc_check_bdev_blobfs, SPDK_RPC_RUNTIME)
+
 struct rpc_make_bdev_blobfs {
 	char *bdev_name;
 	uint32_t	cluster_sz;

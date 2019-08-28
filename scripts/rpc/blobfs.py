@@ -13,3 +13,14 @@ def make_bdev_blobfs(client, bdev_name, cluster_sz=None, force=None):
     if force:
         params['force'] = force
     return client.call('make_bdev_blobfs', params)
+
+
+def check_bdev_blobfs(client, bdev_name):
+    """Check whether a blobfs is existed on bdev.
+    Args:
+    bdev_name: block device name to check blobfs
+    """
+    params = {
+        'bdev_name': bdev_name
+    }
+    return client.call('check_bdev_blobfs', params)
