@@ -5640,11 +5640,11 @@ Example response:
 
 # Miscellaneous RPC commands
 
-## send_nvme_cmd {#rpc_send_nvme_cmd}
+## bdev_nvme_send_cmd {#rpc_bdev_nvme_send_cmd}
 
 Send NVMe command directly to NVMe controller or namespace. Parameters and responses encoded by base64 urlsafe need further processing.
 
-Notice: send_nvme_cmd requires user to guarentee the correctness of NVMe command itself, and also optional parameters. Illegal command contents or mismatching buffer size may result in unpredictable behavior.
+Notice: bdev_nvme_send_cmd requires user to guarentee the correctness of NVMe command itself, and also optional parameters. Illegal command contents or mismatching buffer size may result in unpredictable behavior.
 
 ### Parameters
 
@@ -5675,7 +5675,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "send_nvme_cmd",
+  "method": "bdev_nvme_send_cmd",
   "id": 1,
   "params": {
     "name": "Nvme0",
