@@ -184,3 +184,141 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("bdev_blobfs_detect", spdk_rpc_bdev_blobfs_detect, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_blobfs_create {
+	char *bdev_name;
+	uint32_t cluster_sz;
+
+	struct spdk_filesystem *fs;
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+free_rpc_bdev_blobfs_create(struct rpc_bdev_blobfs_create *req)
+{
+	free(req->bdev_name);
+	free(req);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_blobfs_create_decoders[] = {
+	{"bdev_name", offsetof(struct rpc_bdev_blobfs_create, bdev_name), spdk_json_decode_string},
+	{"cluster_sz", offsetof(struct rpc_bdev_blobfs_create, cluster_sz), spdk_json_decode_uint32, true},
+};
+
+static void
+_bdev_blobfs_create_unload_cb(void *ctx, int fserrno)
+{
+	struct rpc_bdev_blobfs_create *req = ctx;
+	struct spdk_jsonrpc_request *request = req->request;
+	struct spdk_json_write_ctx *w;
+
+	if (fserrno) {
+		SPDK_ERRLOG("Failed to unload blobfs on bdev %s: errno %d\n", req->bdev_name, fserrno);
+		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "blobfs unload failed");
+
+		free_rpc_bdev_blobfs_create(req);
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+	free_rpc_bdev_blobfs_create(req);
+}
+
+static void
+_bdev_blobfs_create_unload(void *ctx)
+{
+	struct rpc_bdev_blobfs_create *req = ctx;
+
+	spdk_fs_unload(req->fs, _bdev_blobfs_create_unload_cb, req);
+}
+
+static void
+_bdev_blobfs_create_init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
+{
+	struct rpc_bdev_blobfs_create *req = ctx;
+
+	if (fserrno) {
+		SPDK_ERRLOG("Failed to init blobfs on bdev %s: errno %d", req->bdev_name, fserrno);
+		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "blobfs init failed");
+
+		free_rpc_bdev_blobfs_create(req);
+		return;
+	}
+
+	req->fs = fs;
+
+	spdk_thread_send_msg(spdk_get_thread(), _bdev_blobfs_create_unload, req);
+}
+
+static void
+spdk_rpc_bdev_blobfs_create(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_bdev_blobfs_create *req;
+	struct spdk_blobfs_opts blobfs_opt;
+	struct spdk_bs_dev *bs_dev;
+	struct spdk_bdev_desc *desc;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("could not allocate rpc_bdev_blobfs_create request.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_bdev_blobfs_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_blobfs_create_decoders),
+				    req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+		goto invalid;
+	}
+
+	rc = spdk_bdev_open_ext(req->bdev_name, true, _rpc_bdev_blobfs_event_cb, NULL, &desc);
+	if (rc != 0) {
+		if (rc == -EINVAL) {
+			SPDK_INFOLOG(SPDK_LOG_BLOBFS, "bdev %s not found\n", req->bdev_name);
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Specified bdev doesn't exist");
+		} else {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Failed to open bdev");
+		}
+
+		goto invalid;
+	}
+
+	bs_dev = spdk_bdev_create_bs_dev_from_desc(desc);
+	if (bs_dev == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to create a blobstore block device from bdev desc");
+
+		goto invalid;
+	}
+
+	spdk_fs_opts_init(&blobfs_opt);
+	if (req->cluster_sz) {
+		blobfs_opt.cluster_sz = req->cluster_sz;
+	}
+
+	req->request = request;
+	if (blobfs_opt.cluster_sz) {
+		spdk_fs_init(bs_dev, &blobfs_opt, NULL, _bdev_blobfs_create_init_cb, req);
+	} else {
+		spdk_fs_init(bs_dev, NULL, NULL, _bdev_blobfs_create_init_cb, req);
+	}
+
+	return;
+
+invalid:
+	free_rpc_bdev_blobfs_create(req);
+}
+
+SPDK_RPC_REGISTER("bdev_blobfs_create", spdk_rpc_bdev_blobfs_create, SPDK_RPC_RUNTIME)
