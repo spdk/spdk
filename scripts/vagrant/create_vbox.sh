@@ -19,7 +19,10 @@ display_help() {
 	echo
 	echo "  distro = <centos7 | ubuntu16 | ubuntu18 | fedora28 | fedora29 | fedora 30 | freebsd11> "
 	echo
-	echo "  -b <nvme-backing-file>          default: ${NVME_FILE}"
+	echo "  -b <nvme-backing-file>          nvme file path with name"
+	echo "                                  type of emulated nvme disk"
+	echo "                                  types available: ocssd, nvme, nvme <namespaces_number>"
+	echo "                                  if -b is no provided the default path is /var/lib/libvirt/images/nvme_disk.img"
 	echo "  -s <ram-size> in kb             default: ${SPDK_VAGRANT_VMRAM}"
 	echo "  -n <num-cpus> 1 to 4            default: ${SPDK_VAGRANT_VMCPU}"
 	echo "  -x <http-proxy>                 default: \"${SPDK_VAGRANT_HTTP_PROXY}\""
@@ -39,7 +42,10 @@ display_help() {
 	echo "  $0 -x http://user:password@host:port fedora28"
 	echo "  $0 -s 2048 -n 2 ubuntu16"
 	echo "  $0 -rv freebsd"
-	echo "  $0 fedora28 "
+	echo "  $0 fedora28"
+	echo "  $0 -b /var/lib/libvirt/images/nvme1.img,nvme,1"
+	echo "  $0 -b /var/lib/libvirt/images/ocssd.img,ocssd"
+	echo "  $0 -b /var/lib/libvirt/images/nvme5.img,nvme,5 -b /var/lib/libvirt/images/ocssd.img,ocssd"
 	echo
 }
 
@@ -58,7 +64,9 @@ SPDK_VAGRANT_VMRAM=4096
 SPDK_VAGRANT_PROVIDER="virtualbox"
 SPDK_QEMU_EMULATOR=""
 OPTIND=1
-NVME_FILE="nvme_disk.img"
+NVME_DISKS_TYPE=""
+NVME_DISKS_NAMESPACES=""
+NVME_FILE=""
 
 while getopts ":b:n:s:x:p:vrldh-:" opt; do
 	case "${opt}" in
@@ -101,7 +109,7 @@ while getopts ":b:n:s:x:p:vrldh-:" opt; do
 			DEPLOY_TEST_VM=1
 		;;
 		b)
-			NVME_FILE=$OPTARG
+			NVME_FILE+="${OPTARG#*=} "
 		;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
@@ -151,6 +159,30 @@ if ! echo "$SPDK_VAGRANT_DISTRO" | grep -q fedora && [ $DEPLOY_TEST_VM -eq 1 ]; 
 	echo "Warning: Test machine deployment is only available on fedora distros. Disabling it for this build"
 	DEPLOY_TEST_VM=0
 fi
+if [ -z "$NVME_FILE" ]
+then
+	TMP="/var/lib/libvirt/images/nvme_disk.img"
+else
+	TMP=""
+	for args in $NVME_FILE; do
+		while IFS=, read -r path type namespace; do
+			TMP+="$path,";
+			NVME_DISKS_TYPE+="$type,";
+			NVME_DISKS_NAMESPACES+="$namespace,";
+		done <<< $args
+	done
+fi
+NVME_FILE=$TMP
+
+if [ -z "$NVME_DISKS_TYPE" ] || [ $NVME_DISKS_TYPE == "," ]
+then
+	NVME_DISKS_TYPE="nvme"
+fi
+
+if [ -z "$NVME_DISKS_NAMESPACES" ] || [ $NVME_DISKS_NAMESPACES == "," ]
+then
+	NVME_DISKS_NAMESPACES="1"
+fi
 
 if [ ${VERBOSE} = 1 ]; then
 	echo
@@ -168,6 +200,8 @@ if [ ${VERBOSE} = 1 ]; then
 	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
 	echo VHOST_VM_DIR=$VHOST_VM_DIR
 	echo SPDK_QEMU_EMULATOR=$SPDK_QEMU_EMULATOR
+	echo NVME_DISKS_TYPE=$NVME_DISKS_TYPE
+	echo NVME_DISKS_NAMESPACES=$NVME_DISKS_NAMESPACES
 	echo
 fi
 
@@ -177,6 +211,8 @@ export SPDK_VAGRANT_VMRAM
 export SPDK_DIR
 export COPY_SPDK_DIR
 export DEPLOY_TEST_VM
+export NVME_DISKS_TYPE
+export NVME_DISKS_NAMESPACES
 export NVME_FILE
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
@@ -207,6 +243,8 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv SPDK_VAGRANT_PROVIDER
 	printenv SPDK_VAGRANT_HTTP_PROXY
 	printenv SPDK_QEMU_EMULATOR
+	printenv NVME_DISKS_TYPE
+	printenv NVME_DISKS_NAMESPACES
 	printenv SPDK_DIR
 fi
 
