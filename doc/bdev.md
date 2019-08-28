@@ -347,7 +347,7 @@ OCF bdev can be used to enable caching for any underlying bdev.
 
 Below is an example command for creating OCF bdev:
 
-`rpc.py construct_ocf_bdev Cache1 wt Malloc0 Nvme0n1`
+`rpc.py bdev_ocf_create Cache1 wt Malloc0 Nvme0n1`
 
 This command will create new OCF bdev `Cache1` having bdev `Malloc0` as caching-device
 and `Nvme0n1` as core-device and initial cache mode `Write-Through`.
@@ -358,7 +358,7 @@ and non-volatile metadata will be disabled.
 
 To remove `Cache1`:
 
-`rpc.py delete_ocf_bdev Cache1`
+`rpc.py bdev_ocf_delete Cache1`
 
 During removal OCF-cache will be stopped and all cached data will be written to the core device.
 
