@@ -42,7 +42,7 @@ function nbd_function_test() {
 		nbd_rpc_start_stop_verify $rpc_server "${bdev_list[*]}"
 		nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
 
-		$rpc_py -s $rpc_server delete_passthru_bdev TestPT
+		$rpc_py -s $rpc_server bdev_passthru_delete TestPT
 
 		killprocess $nbd_pid
 		trap - SIGINT SIGTERM EXIT
