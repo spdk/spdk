@@ -92,6 +92,30 @@
       "revId": "f426426682ae4398b4a82657425ec2c462782c3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1eeef3b_8f007d5b",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-28T07:56:10Z",
+      "side": 1,
+      "message": "Didn\u0027t notice. Nevermind then.",
+      "parentUuid": "aa0ff69d_bd231f59",
+      "range": {
+        "startLine": 196,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 4
+      },
+      "revId": "f426426682ae4398b4a82657425ec2c462782c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
