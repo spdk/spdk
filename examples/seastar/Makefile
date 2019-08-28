@@ -31,15 +31,41 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SEASTAR_FLAGS := $(shell pkg-config --libs --cflags --static ../../../seastar/build/debug/seastar.pc)
+
+SPDK_ROOT_DIR = ../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y = posix seastar
-DIRS-$(CONFIG_VPP) += vpp
+FLAGS = -g -O0 -I$(SPDK_ROOT_DIR)/include -Iinclude/
 
-.PHONY: all clean $(DIRS-y)
+SOCK_MODULES_LIST += sock_seastar
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+# Functions in SPDK virtio library conflict with DPDK virtio PMD
+BLOCKDEV_MODULES_LIST := $(filter-out bdev_virtio virtio,$(BLOCKDEV_MODULES_LIST))
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SPDK_LIB_LIST += event_bdev event_copy event_nvmf event_vmd event_iscsi event_net event_scsi
+SPDK_LIB_LIST += nvmf bdev_rpc bdev iscsi scsi net copy event util conf trace log
+SPDK_LIB_LIST += jsonrpc json rpc sock thread notify
+
+EXTRA_DPDK_LIBS = rte_ring rte_mempool_ring rte_pci rte_bus_pci rte_pmd_virtio rte_bus_vdev rte_net
+
+FLAGS += $(SPDK_LIB_LINKER_ARGS)
+FLAGS += $(SEASTAR_FLAGS)
+FLAGS += $(call dpdk_env_linker_args,$(EXTRA_DPDK_LIBS))
+FLAGS += $(SYS_LIBS)
+
+.PHONY : nvme spdk_tgt sock
+
+all: nvme spdk_tgt sock
+
+nvme:
+	g++ nvme.cc $(FLAGS) -o nvme
+
+spdk_tgt:
+	g++ spdk_tgt.cc $(FLAGS) -o spdk_tgt
+
+sock:
+	g++ sock.cc $(FLAGS) -o sock
