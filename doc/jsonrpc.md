@@ -816,7 +816,7 @@ Example response:
 }
 ~~~
 
-## construct_ocf_bdev {#rpc_construct_ocf_bdev}
+## bdev_ocf_create {#rpc_bdev_ocf_create}
 
 Construct new OCF bdev.
 Command accepts cache mode that is going to be used.
@@ -848,7 +848,7 @@ Example request:
     "core_bdev_name": "aio0"
   },
   "jsonrpc": "2.0",
-  "method": "construct_ocf_bdev",
+  "method": "bdev_ocf_create",
   "id": 1
 }
 ~~~
@@ -863,7 +863,7 @@ Example response:
 }
 ~~~
 
-## delete_ocf_bdev {#rpc_delete_ocf_bdev}
+## bdev_ocf_delete {#rpc_bdev_ocf_delete}
 
 Delete the OCF bdev
 
@@ -883,7 +883,7 @@ Example request:
     "name": "ocf0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_ocf_bdev",
+  "method": "bdev_ocf_delete",
   "id": 1
 }
 ~~~
