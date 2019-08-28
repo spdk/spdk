@@ -186,7 +186,7 @@ hello_sock_writev_poll(void *arg)
 	n = read(STDIN_FILENO, buf_out, sizeof(buf_out));
 	if (n == 0 || !g_is_running) {
 		/* EOF */
-		SPDK_NOTICELOG("Closing connection...\n");
+		SPDK_NOTICELOG("Closing connection... n=%d\n", n);
 		hello_sock_quit(ctx, 0);
 		return 0;
 	}

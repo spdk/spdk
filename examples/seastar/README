@@ -1,0 +1,65 @@
+SPDK with Seastar framework
+===========================
+
+This directory contains some examples for using SPDK libraries with the
+Seastar framework.
+
+Requires a debug build of Seastar to exist as a peer to the root of this
+spdk repository.
+
+"nvme" does a simple "Hello World" type flow with the SPDK nvme driver.
+
+"spdk_tgt" is a fully functional SPDK target application.  Currently only
+iSCSI is linked in but NVMe-oF and vhost will be added eventually.  I
+have been able to create target nodes, discover them and login with this
+target.
+
+"sock" is a simple echo server built on top of the spdk sock library.
+Currently it only uses the posix sock_impl but will be the basis for
+experimenting with the seastar TCP stack.
+
+Please use the suppressions.txt file to suppress an LSAN leak notification
+from the ltdl library used by Seastar.
+
+LSAN_OPTIONS=suppressions=suppressions.txt ./nvme -c1
+LSAN_OPTIONS=suppressions=suppressions.txt ./spdk_tgt -c4
+LSAN_OPTIONS=suppressions=suppressions.txt ./sock -c1
+
+Note that the -c4 option means how many cores to use (-c4 means 4 cores).
+
+(A lot more details will be added here for how to run, todo items, etc.)
+
+Instructions to build Seastar on Ubuntu 19.04:
+
+# Clone seastar so it is a peer of spdk
+git clone -b seastar-19.06.0 https://github.com/scylladb/seastar.git
+cd seastar
+sudo ./install-dependencies.sh
+
+# On Ubuntu 19.04, I had to install pkg-config seperately
+apt-get install pkg-config
+
+# It's not clear why we have to "cook" fmt ourselves, but
+# the Seastar documentation clearly spells it out as a common
+# thing you have to do.
+export http_proxy=http://proxy-chain.intel.com:911
+export https_proxy=http://proxy-chain.intel.com:911
+./configure.py --mode=debug --cook fmt
+
+# There's a stdc++fs cmake issue on Ubuntu 19.04.  I created
+# a patch to get it to work on my system.  If you're running
+# on a different distro, you may want to try building first
+# without this patch.
+patch -p1 < ../spdk/examples/seastar/seastar.patch
+
+ninja -C build/debug
+
+# pkg-config for seastar seems to get this wrong on
+# Ubuntu 19.04 at least
+pushd /usr/lib/x86_64-linux-gnu
+sudo ln -s libunistring.so.2 libunistring.so
+popd
+
+cd ../spdk/examples/seastar
+make
+sudo LSAN_OPTIONS=suppressions=suppressions.txt ./spdk_tgt -c1

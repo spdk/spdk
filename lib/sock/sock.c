@@ -516,7 +516,6 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 			SPDK_ERRLOG("group_impl_close for net(%s) failed\n",
 				    group_impl->net_impl->name);
 		}
-		free(group_impl);
 	}
 
 	spdk_sock_remove_sock_group_from_map_table(*group);
