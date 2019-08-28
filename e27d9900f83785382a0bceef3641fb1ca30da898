@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ca909c9d_e4d96501",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-28T08:35:17Z",
+      "side": 1,
+      "message": "You are right, this does not imply stopping SPDK app anymore. Considering the comment below, changed this line to report end of loading the config with reporting rc. Only when someone is running with app_config logs enabled.",
+      "parentUuid": "067ddcc8_4d133817",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 66
+      },
+      "revId": "e27d9900f83785382a0bceef3641fb1ca30da898",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eda15c46_41dc01e8",
         "filename": "lib/event/json_config.c",
         "patchSetId": 10
@@ -45,6 +69,30 @@
       "revId": "e27d9900f83785382a0bceef3641fb1ca30da898",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6964aad9_e429da2b",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-08-28T08:35:17Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "eda15c46_41dc01e8",
+      "range": {
+        "startLine": 140,
+        "startChar": 20,
+        "endLine": 140,
+        "endChar": 44
+      },
+      "revId": "e27d9900f83785382a0bceef3641fb1ca30da898",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
