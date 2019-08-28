@@ -33,10 +33,10 @@ waitforlisten $spdk_pid
 
 # Create ocf on persistent storage
 
-$rpc_py construct_ocf_bdev ocfWT  wt aio0 aio1
-$rpc_py construct_ocf_bdev ocfPT  pt aio2 aio3
-$rpc_py construct_ocf_bdev ocfWB0 wb aio4 aio5
-$rpc_py construct_ocf_bdev ocfWB1 wb aio4 aio6
+$rpc_py bdev_ocf_create ocfWT  wt aio0 aio1
+$rpc_py bdev_ocf_create ocfPT  pt aio2 aio3
+$rpc_py bdev_ocf_create ocfWB0 wb aio4 aio5
+$rpc_py bdev_ocf_create ocfWB1 wb aio4 aio6
 
 # Sorting bdevs because we dont guarantee that they are going to be
 # in the same order after shutdown

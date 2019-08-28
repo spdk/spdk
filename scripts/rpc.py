@@ -191,28 +191,28 @@ if __name__ == "__main__":
     p.add_argument('name', help='crypto bdev name')
     p.set_defaults(func=bdev_crypto_delete)
 
-    def construct_ocf_bdev(args):
-        print_json(rpc.bdev.construct_ocf_bdev(args.client,
-                                               name=args.name,
-                                               mode=args.mode,
-                                               cache_bdev_name=args.cache_bdev_name,
-                                               core_bdev_name=args.core_bdev_name))
-    p = subparsers.add_parser('construct_ocf_bdev',
+    def bdev_ocf_create(args):
+        print_json(rpc.bdev.bdev_ocf_create(args.client,
+                                            name=args.name,
+                                            mode=args.mode,
+                                            cache_bdev_name=args.cache_bdev_name,
+                                            core_bdev_name=args.core_bdev_name))
+    p = subparsers.add_parser('bdev_ocf_create', aliases=['construct_ocf_bdev'],
                               help='Add an OCF block device')
     p.add_argument('name', help='Name of resulting OCF bdev')
     p.add_argument('mode', help='OCF cache mode', choices=['wb', 'wt', 'pt'])
     p.add_argument('cache_bdev_name', help='Name of underlying cache bdev')
     p.add_argument('core_bdev_name', help='Name of unerlying core bdev')
-    p.set_defaults(func=construct_ocf_bdev)
+    p.set_defaults(func=bdev_ocf_create)
 
-    def delete_ocf_bdev(args):
-        rpc.bdev.delete_ocf_bdev(args.client,
+    def bdev_ocf_delete(args):
+        rpc.bdev.bdev_ocf_delete(args.client,
                                  name=args.name)
 
-    p = subparsers.add_parser('delete_ocf_bdev',
+    p = subparsers.add_parser('bdev_ocf_delete', aliases=['delete_ocf_bdev'],
                               help='Delete an OCF block device')
     p.add_argument('name', help='Name of OCF bdev')
-    p.set_defaults(func=delete_ocf_bdev)
+    p.set_defaults(func=bdev_ocf_delete)
 
     def get_ocf_stats(args):
         print_dict(rpc.bdev.get_ocf_stats(args.client,
