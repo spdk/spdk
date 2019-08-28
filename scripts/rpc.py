@@ -2049,6 +2049,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('bdev_name', help='Blockdev name to detect blobfs. Example: Malloc0.')
     p.set_defaults(func=blobfs_detect)
 
+    def blobfs_create(args):
+        print(rpc.blobfs.blobfs_create(args.client,
+                                       bdev_name=args.bdev_name,
+                                       cluster_sz=args.cluster_sz))
+
+    p = subparsers.add_parser('blobfs_create', help='Build a blobfs on bdev')
+    p.add_argument('bdev_name', help='Blockdev name to build blobfs. Example: Malloc0.')
+    p.add_argument('-c', '--cluster_sz',
+                   help="""Size of cluster in bytes. Must be multiple of 4KB page size (Optional). Example: 1048576""", type=int)
+    p.set_defaults(func=blobfs_create)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
