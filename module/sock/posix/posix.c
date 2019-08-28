@@ -639,8 +639,11 @@ static int
 spdk_posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
+	int rc;
 
-	return close(group->fd);
+	rc = close(group->fd);
+	free(group);
+	return rc;
 }
 
 static struct spdk_net_impl g_posix_net_impl = {
