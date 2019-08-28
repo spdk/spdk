@@ -100,7 +100,8 @@ def bdev_crypto_delete(client, name):
     return client.call('bdev_crypto_delete', params)
 
 
-def construct_ocf_bdev(client, name, mode, cache_bdev_name, core_bdev_name):
+@deprecated_alias('construct_ocf_bdev')
+def bdev_ocf_create(client, name, mode, cache_bdev_name, core_bdev_name):
     """Add an OCF block device
 
     Args:
@@ -114,10 +115,11 @@ def construct_ocf_bdev(client, name, mode, cache_bdev_name, core_bdev_name):
     """
     params = {'name': name, 'mode': mode, 'cache_bdev_name': cache_bdev_name, 'core_bdev_name': core_bdev_name}
 
-    return client.call('construct_ocf_bdev', params)
+    return client.call('bdev_ocf_create', params)
 
 
-def delete_ocf_bdev(client, name):
+@deprecated_alias('delete_ocf_bdev')
+def bdev_ocf_delete(client, name):
     """Delete an OCF device
 
     Args:
@@ -126,7 +128,7 @@ def delete_ocf_bdev(client, name):
     """
     params = {'name': name}
 
-    return client.call('delete_ocf_bdev', params)
+    return client.call('bdev_ocf_delete', params)
 
 
 def get_ocf_stats(client, name):
