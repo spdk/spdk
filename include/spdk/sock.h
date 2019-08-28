@@ -137,6 +137,50 @@ ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
  */
 ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
+typedef void (*spdk_sock_op_cb)(void *arg, int status);
+
+/**
+ * Receive a message from the given socket in async way.
+ *
+ * \param sock Socket to receive message.
+ * \param buf Pointer to a buffer to hold the data.
+ * \param len Length of the buffer.
+ * \param cb_fn Call back function provided by user.
+ * \param cb_arg Call back arg provided by user.
+ *
+ * \return the length of the received message on success, -1 on failure.
+ */
+ssize_t spdk_sock_recv_async(struct spdk_sock *sock, void *buf, size_t len, spdk_sock_op_cb cb_fn,
+			     void *cb_arg);
+
+/**
+ * Write message to the given socket from the I/O vector array in the async way.
+ *
+ * \param sock Socket to write to.
+ * \param iov I/O vector.
+ * \param iovcnt Number of I/O vectors in the array.
+ * \param cb_fn Call back function provided by user.
+ * \param cb_arg Call back arg provided by user.
+ *
+ * \return the length of written message on success, -1 on failure.
+ */
+ssize_t spdk_sock_writev_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
+			       spdk_sock_op_cb cb_fn, void *cb_arg);
+
+/**
+ * Read message from the given socket to the I/O vector array in the asyn way.
+ *
+ * \param sock Socket to receive message.
+ * \param iov I/O vector.
+ * \param iovcnt Number of I/O vectors in the array.
+ * \param cb_fn Call back function provided by user.
+ * \param cb_arg Call back arg provided by user.
+ *
+ * \return the length of the received message on success, -1 on failure.
+ */
+ssize_t spdk_sock_readv_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
+			      spdk_sock_op_cb cb_fn, void *cb_arg);
+
 /**
  * Set the value used to specify the low water mark (in bytes) for this socket.
  *
