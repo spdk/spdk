@@ -68,6 +68,30 @@
       "revId": "f426426682ae4398b4a82657425ec2c462782c3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa0ff69d_bd231f59",
+        "filename": "scripts/vagrant/create_vbox.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-08-28T07:51:04Z",
+      "side": 1,
+      "message": "Hmm, but in this file in above \"IF\" line are spaces. Should I fix them all ?",
+      "parentUuid": "9e7570eb_c7c6e849",
+      "range": {
+        "startLine": 196,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 4
+      },
+      "revId": "f426426682ae4398b4a82657425ec2c462782c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
