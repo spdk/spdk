@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb18801c_40d14f49",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T21:13:42Z",
+      "side": 1,
+      "message": "What\u0027s the plan for handling newer kernels that support IOCB_CMD_POLL? Are we going to add that here? The code is already getting fairly messy with #ifdefs, so adding run-time checks on top of that is going to be a real challenge to maintain.\n\nMaybe we need to look at adding a whole new socket implementation called \"libaio\" or \"linux\" that uses cutting edge stuff from the latest Linux kernel, and we test at start up time if that\u0027s supported and fall back to the standard POSIX implementation here if it isn\u0027t.",
+      "revId": "be48ced29080934683cf2763691ade8781b5b468",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa1d82b3_6fcef517",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-28T21:13:42Z",
+      "side": 1,
+      "message": "Right now spdk_posix_sock_allocate_iocb secretly also queues the iocb for future submission. I think it would make more sense to have a separate function call to queue it.",
+      "revId": "be48ced29080934683cf2763691ade8781b5b468",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
