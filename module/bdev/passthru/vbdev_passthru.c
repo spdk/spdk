@@ -385,7 +385,7 @@ vbdev_passthru_config_json(struct spdk_json_write_ctx *w)
 
 	TAILQ_FOREACH(pt_node, &g_pt_nodes, link) {
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "construct_passthru_bdev");
+		spdk_json_write_named_string(w, "method", "bdev_passthru_create");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "base_bdev_name", spdk_bdev_get_name(pt_node->base_bdev));
 		spdk_json_write_named_string(w, "name", spdk_bdev_get_name(&pt_node->pt_bdev));
@@ -687,7 +687,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 
 /* Create the passthru disk from the given bdev and vbdev name. */
 int
-create_passthru_disk(const char *bdev_name, const char *vbdev_name)
+bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name)
 {
 	struct spdk_bdev *bdev = NULL;
 	int rc = 0;
@@ -713,7 +713,7 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 }
 
 void
-delete_passthru_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+bdev_passthru_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_names *name;
 

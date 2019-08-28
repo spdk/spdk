@@ -290,7 +290,8 @@ Example response:
     "bdev_error_inject_error",
     "bdev_error_delete",
     "bdev_error_create",
-    "construct_passthru_bdev",
+    "bdev_passthru_create",
+    "bdev_passthru_delete"
     "bdev_nvme_apply_firmware",
     "delete_nvme_controller",
     "bdev_nvme_attach_controller",
@@ -2315,7 +2316,7 @@ Example response:
 }
 ~~~
 
-## construct_passthru_bdev {#rpc_construct_passthru_bdev}
+## bdev_passthru_create {#rpc_bdev_passthru_create}
 
 Create passthru bdev. This bdev type redirects all IO to it's base bdev. It has no other purpose than being an example
 and a starting point in development of new bdev type.
@@ -2342,7 +2343,7 @@ Example request:
     "name": "Passsthru0"
   },
   "jsonrpc": "2.0",
-  "method": "construct_passthru_bdev",
+  "method": "bdev_passthru_create",
   "id": 1
 }
 ~~~
@@ -2357,7 +2358,7 @@ Example response:
 }
 ~~~
 
-## delete_passthru_bdev {#rpc_delete_passthru_bdev}
+## bdev_passthru_delete {#rpc_bdev_passthru_delete}
 
 Delete passthru bdev.
 
@@ -2377,7 +2378,7 @@ Example request:
     "name": "Passsthru0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_passthru_bdev",
+  "method": "bdev_passthru_delete",
   "id": 1
 }
 

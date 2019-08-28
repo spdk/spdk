@@ -41,7 +41,7 @@ def get_bdev_delete_method(bdev):
                          'construct_virtio_dev': "remove_virtio_bdev",
                          'bdev_crypto_create': "bdev_crypto_delete",
                          'bdev_delay_create': "bdev_delay_delete",
-                         'construct_passthru_bdev': "delete_passthru_bdev",
+                         'bdev_passthru_create': "bdev_passthru_delete",
                          'bdev_compress_create': 'bdev_compress_delete',
                          }
     destroy_method = None

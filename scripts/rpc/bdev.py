@@ -611,7 +611,8 @@ def bdev_pmem_delete(client, name):
     return client.call('bdev_pmem_delete', params)
 
 
-def construct_passthru_bdev(client, base_bdev_name, name):
+@deprecated_alias('construct_passthru_bdev')
+def bdev_passthru_create(client, base_bdev_name, name):
     """Construct a pass-through block device.
 
     Args:
@@ -625,17 +626,18 @@ def construct_passthru_bdev(client, base_bdev_name, name):
         'base_bdev_name': base_bdev_name,
         'name': name,
     }
-    return client.call('construct_passthru_bdev', params)
+    return client.call('bdev_passthru_create', params)
 
 
-def delete_passthru_bdev(client, name):
+@deprecated_alias('delete_passthru_bdev')
+def bdev_passthru_delete(client, name):
     """Remove pass through bdev from the system.
 
     Args:
         name: name of pass through bdev to delete
     """
     params = {'name': name}
-    return client.call('delete_passthru_bdev', params)
+    return client.call('bdev_passthru_delete', params)
 
 
 def construct_split_vbdev(client, base_bdev, split_count, split_size_mb=None):

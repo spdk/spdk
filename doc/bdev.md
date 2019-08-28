@@ -497,9 +497,9 @@ and demonstrates some other basic features such as the use of per I/O context.
 
 Example commands
 
-`rpc.py construct_passthru_bdev -b aio -p pt`
+`rpc.py bdev_passthru_create -b aio -p pt`
 
-`rpc.py delete_passthru_bdev pt`
+`rpc.py bdev_passthru_delete pt`
 
 # Pmem {#bdev_config_pmem}
 
