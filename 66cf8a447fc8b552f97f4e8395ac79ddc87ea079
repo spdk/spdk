@@ -34,6 +34,24 @@
       "revId": "66cf8a447fc8b552f97f4e8395ac79ddc87ea079",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49e80f3f_9ab619bc",
+        "filename": "test/nvmf/target/connect_disconnect.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-28T02:05:35Z",
+      "side": 1,
+      "message": "I don\u0027t think so, there are limited resources with softRoce driver that\u0027s why we should limit the number of queues sometimes, for this case 200 iterations is really a huge number.",
+      "parentUuid": "857403a6_68dba877",
+      "revId": "66cf8a447fc8b552f97f4e8395ac79ddc87ea079",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
