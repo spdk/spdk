@@ -77,6 +77,8 @@ RPC method.
 
 Added `bdev_blobfs_check` RPC method to check whether a blobfs exists on given bdev.
 
+Added `bdev_blobfs_create` RPC method to build blobfs on given bdev.
+
 ## v19.07:
 
 ### ftl
