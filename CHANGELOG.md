@@ -155,6 +155,11 @@ Added `blobfs_mount` RPC method to mount blobfs on given bdev to a host path by 
 Then on the host path, user can directly do some file operations which will be mapped
 to blobfs.
 
+### sock
+
+Add the following three functions, i.e., spdk_sock_recv_async, spdk_sock_readv_async,
+spdk-sock_writev_async, which will be used later.
+
 ## v19.07:
 
 ### ftl
