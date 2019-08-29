@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87d7696c_f79d9b07",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-29T06:55:01Z",
+      "side": 1,
+      "message": "\u0027bdev_blobfs_create\u0027",
+      "revId": "bfd00f5b2d35233797b3d1b4439c8ed40e8edd70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
