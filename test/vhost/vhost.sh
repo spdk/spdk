@@ -16,7 +16,7 @@ CENTOS_VM_IMAGE="/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
 DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
 CENTOS_FIO_BIN="/home/sys_sgsw/fio_ubuntu_bak"
 
-: ${FIO_BIN="$DEFAULT_FIO_BIN"}
+: "${FIO_BIN=$DEFAULT_FIO_BIN}"
 
 if [[ ! -r "${VM_IMAGE}" ]]; then
 	echo ""

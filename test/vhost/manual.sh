@@ -37,7 +37,7 @@ if [[ $(uname -s) != Linux ]]; then
 	exit 0
 fi
 
-: ${FIO_BIN="$DEFAULT_FIO_BIN"}
+: "${FIO_BIN=$DEFAULT_FIO_BIN}"
 
 if [[ ! -r "${VM_IMAGE}" ]]; then
 	echo ""
