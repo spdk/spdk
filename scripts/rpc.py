@@ -1708,18 +1708,19 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=nvmf_get_stats)
 
     # pmem
-    def create_pmem_pool(args):
+    def bdev_pmem_create_pool(args):
         num_blocks = int((args.total_size * 1024 * 1024) / args.block_size)
-        rpc.pmem.create_pmem_pool(args.client,
-                                  pmem_file=args.pmem_file,
-                                  num_blocks=num_blocks,
-                                  block_size=args.block_size)
+        rpc.pmem.bdev_pmem_create_pool(args.client,
+                                       pmem_file=args.pmem_file,
+                                       num_blocks=num_blocks,
+                                       block_size=args.block_size)
 
-    p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
+    p = subparsers.add_parser('bdev_pmem_create_pool', aliases=['create_pmem_pool'],
+                              help='Create pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
     p.add_argument('total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
     p.add_argument('block_size', help='Block size for this pmem pool', type=int)
-    p.set_defaults(func=create_pmem_pool)
+    p.set_defaults(func=bdev_pmem_create_pool)
 
     def pmem_pool_info(args):
         print_dict(rpc.pmem.pmem_pool_info(args.client,

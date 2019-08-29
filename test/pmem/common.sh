@@ -37,7 +37,7 @@ function pmem_create_pool_file()
 
 	pmem_clean_pool_file $pool_file
 	echo "Creating new pool file"
-	if ! $rpc_py create_pmem_pool $pool_file $size $block_size; then
+	if ! $rpc_py bdev_pmem_create_pool $pool_file $size $block_size; then
 		error "Creating pool_file failed!"
 	fi
 

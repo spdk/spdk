@@ -143,35 +143,35 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_pmem_delete", spdk_rpc_bdev_pmem_delete, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_delete, delete_pmem_bdev)
 
-struct rpc_create_pmem_pool {
+struct rpc_bdev_pmem_create_pool {
 	char *pmem_file;
 	uint64_t num_blocks;
 	uint32_t block_size;
 };
 
-static const struct spdk_json_object_decoder rpc_create_pmem_pool_decoders[] = {
-	{"pmem_file", offsetof(struct rpc_create_pmem_pool, pmem_file), spdk_json_decode_string},
-	{"num_blocks", offsetof(struct rpc_create_pmem_pool, num_blocks), spdk_json_decode_uint64},
-	{"block_size", offsetof(struct rpc_create_pmem_pool, block_size), spdk_json_decode_uint32},
+static const struct spdk_json_object_decoder rpc_bdev_pmem_create_pool_decoders[] = {
+	{"pmem_file", offsetof(struct rpc_bdev_pmem_create_pool, pmem_file), spdk_json_decode_string},
+	{"num_blocks", offsetof(struct rpc_bdev_pmem_create_pool, num_blocks), spdk_json_decode_uint64},
+	{"block_size", offsetof(struct rpc_bdev_pmem_create_pool, block_size), spdk_json_decode_uint32},
 };
 
 static void
-free_rpc_create_pmem_pool(struct rpc_create_pmem_pool *req)
+free_rpc_bdev_pmem_create_pool(struct rpc_bdev_pmem_create_pool *req)
 {
 	free(req->pmem_file);
 }
 
 static void
-spdk_rpc_create_pmem_pool(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+spdk_rpc_bdev_pmem_create_pool(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
 {
-	struct rpc_create_pmem_pool req = {};
+	struct rpc_bdev_pmem_create_pool req = {};
 	struct spdk_json_write_ctx *w;
 	uint64_t pool_size;
 	PMEMblkpool *pbp;
 
-	if (spdk_json_decode_object(params, rpc_create_pmem_pool_decoders,
-				    SPDK_COUNTOF(rpc_create_pmem_pool_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_pmem_create_pool_decoders,
+				    SPDK_COUNTOF(rpc_bdev_pmem_create_pool_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -210,9 +210,10 @@ spdk_rpc_create_pmem_pool(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_create_pmem_pool(&req);
+	free_rpc_bdev_pmem_create_pool(&req);
 }
-SPDK_RPC_REGISTER("create_pmem_pool", spdk_rpc_create_pmem_pool, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_pmem_create_pool", spdk_rpc_bdev_pmem_create_pool, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_create_pool, create_pmem_pool)
 
 struct rpc_pmem_pool_info {
 	char *pmem_file;
