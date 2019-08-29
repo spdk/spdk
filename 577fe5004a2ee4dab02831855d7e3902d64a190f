@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfceefed_d7aa15b2",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-29T17:39:24Z",
+      "side": 1,
+      "message": "You need to describe in the comments the conditions under which the callback will be called. For recv, that\u0027s as soon as the low water mark is crossed. The low water mark is 1 byte by default and the user can change it with that recvlowat function.",
+      "revId": "577fe5004a2ee4dab02831855d7e3902d64a190f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

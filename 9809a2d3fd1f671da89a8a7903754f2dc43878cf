@@ -122,6 +122,24 @@
     },
     {
       "key": {
+        "uuid": "53fe5b59_f36d79b3",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-29T17:39:24Z",
+      "side": 1,
+      "message": "But any user of this API would then have to handle partial writes. Wouldn\u0027t it be much more convenient to hold off on completing this writev until the data is sent? We\u0027re going to have to use this to implement NVMe-oF TCP target, NVMe-oF TCP initiator, and the iSCSI target at a minimum. If we get other UDP-based protocols in the future, we\u0027ll again be using this. Instead of re-implementing handling for partial writes for each of these, I think we should do it in the sock layer once.",
+      "parentUuid": "e1d9c292_4293b674",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "26189fee_dca56926",
         "filename": "include/spdk/sock.h",
         "patchSetId": 15
