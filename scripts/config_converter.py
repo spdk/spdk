@@ -14,7 +14,7 @@ bdev_dict["construct_nvme_bdev"] = []
 bdev_dict["bdev_nvme_set_hotplug"] = []
 bdev_dict["bdev_malloc_create"] = []
 bdev_dict["bdev_aio_create"] = []
-bdev_dict["construct_pmem_bdev"] = []
+bdev_dict["bdev_pmem_create"] = []
 bdev_dict["construct_virtio_dev"] = []
 
 vhost_dict = OrderedDict()
@@ -258,7 +258,7 @@ def get_pmem_bdev_json(config, section):
                         "name": items[1],
                         "pmem_file": items[0]
                     },
-                    "method": "construct_pmem_bdev"
+                    "method": "bdev_pmem_create"
                 })
 
     return pmem_json

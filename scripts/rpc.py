@@ -529,15 +529,16 @@ if __name__ == "__main__":
     p.add_argument('name', help='iSCSI bdev name')
     p.set_defaults(func=bdev_iscsi_delete)
 
-    def construct_pmem_bdev(args):
-        print_json(rpc.bdev.construct_pmem_bdev(args.client,
-                                                pmem_file=args.pmem_file,
-                                                name=args.name))
+    def bdev_pmem_create(args):
+        print_json(rpc.bdev.bdev_pmem_create(args.client,
+                                             pmem_file=args.pmem_file,
+                                             name=args.name))
 
-    p = subparsers.add_parser('construct_pmem_bdev', help='Add a bdev with pmem backend')
+    p = subparsers.add_parser('bdev_pmem_create', aliases=['construct_pmem_bdev'],
+                              help='Add a bdev with pmem backend')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
     p.add_argument('-n', '--name', help='Block device name', required=True)
-    p.set_defaults(func=construct_pmem_bdev)
+    p.set_defaults(func=bdev_pmem_create)
 
     def delete_pmem_bdev(args):
         rpc.bdev.delete_pmem_bdev(args.client,

@@ -164,7 +164,7 @@
             "name": "Pmem0",
             "pmem_file": "/tmp/sample_pmem"
           },
-          "method": "construct_pmem_bdev"
+          "method": "bdev_pmem_create"
         }
       ]
     },
