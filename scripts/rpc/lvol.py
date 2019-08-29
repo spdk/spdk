@@ -144,7 +144,8 @@ def bdev_lvol_set_read_only(client, name):
     return client.call('bdev_lvol_set_read_only', params)
 
 
-def destroy_lvol_bdev(client, name):
+@deprecated_alias('destroy_lvol_bdev')
+def bdev_lvol_delete(client, name):
     """Destroy a logical volume.
 
     Args:
@@ -153,7 +154,7 @@ def destroy_lvol_bdev(client, name):
     params = {
         'name': name,
     }
-    return client.call('destroy_lvol_bdev', params)
+    return client.call('bdev_lvol_delete', params)
 
 
 @deprecated_alias('inflate_lvol_bdev')

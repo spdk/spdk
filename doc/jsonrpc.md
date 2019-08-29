@@ -300,7 +300,7 @@ Example response:
     "delete_ftl_bdev",
     "construct_ftl_bdev",
     "bdev_lvol_get_lvstores",
-    "destroy_lvol_bdev",
+    "bdev_lvol_delete",
     "bdev_lvol_resize",
     "bdev_lvol_set_read_only",
     "decouple_parent_lvol_bdev",
@@ -5180,7 +5180,7 @@ Example response:
 }
 ~~~
 
-## destroy_lvol_bdev {#rpc_destroy_lvol_bdev}
+## bdev_lvol_delete {#rpc_bdev_lvol_delete}
 
 Destroy a logical volume.
 
@@ -5197,7 +5197,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "destroy_lvol_bdev",
+  "method": "bdev_lvol_delete",
   "id": 1,
   "params": {
     "name": "51638754-ca16-43a7-9f8f-294a0805ab0a"

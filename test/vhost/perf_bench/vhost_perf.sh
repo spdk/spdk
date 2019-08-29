@@ -72,7 +72,7 @@ function cleanup_lvol_cfg()
 {
 	notice "Removing lvol bdevs"
 	for lvol_bdev in "${lvol_bdevs[@]}"; do
-		$rpc_py destroy_lvol_bdev $lvol_bdev
+		$rpc_py bdev_lvol_delete $lvol_bdev
 		notice "lvol bdev $lvol_bdev removed"
 	done
 
