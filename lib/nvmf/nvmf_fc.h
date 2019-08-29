@@ -284,7 +284,7 @@ struct spdk_nvmf_fc_hwqp {
 	uint32_t rq_size;    /* receive queue size */
 	spdk_nvmf_fc_lld_hwqp_t queues;    /* vendor HW queue set */
 	struct spdk_nvmf_fc_port *fc_port; /* HW port structure for these queues */
-	struct spdk_nvmf_fc_poll_group *fc_poll_group;
+	struct spdk_nvmf_fc_poll_group *fgroup;
 
 	/* qpair (fc_connection) list */
 	TAILQ_HEAD(, spdk_nvmf_fc_conn) connection_list;
