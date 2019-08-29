@@ -16,8 +16,8 @@ run_spdk_tgt
 timing_exit run_spdk_tgt
 
 timing_enter spdkcli_create_pmem_config
-$spdkcli_job "'/bdevs/pmemblk create_pmem_pool /tmp/sample_pmem0 32 512' '' True
-'/bdevs/pmemblk create_pmem_pool /tmp/sample_pmem1 32 512' '' True
+$spdkcli_job "'/bdevs/pmemblk bdev_pmem_create_pool /tmp/sample_pmem0 32 512' '' True
+'/bdevs/pmemblk bdev_pmem_create_pool /tmp/sample_pmem1 32 512' '' True
 "
 
 # Saving pmem pool info before they get claimed by /bdevs/pmemblk create

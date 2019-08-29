@@ -31,7 +31,7 @@ function usage()
 	echo "-h, --help                Print help and exit"
 	echo "-x                        set -x for script debug"
 	echo "    --info                Run test cases for pmem_pool_info"
-	echo "    --create              Run test cases for create_pmem_pool"
+	echo "    --create              Run test cases for bdev_pmem_create_pool"
 	echo "    --delete              Run test cases for delete_pmem_pool"
 	echo "    --construct_bdev      Run test cases for constructing pmem bdevs"
 	echo "    --delete_bdev         Run test cases for deleting pmem bdevs"
@@ -130,60 +130,60 @@ function pmem_pool_info_tc4()
 }
 
 #================================================
-# create_pmem_pool tests
+# bdev_pmem_create_pool tests
 #================================================
-function create_pmem_pool_tc1()
+function bdev_pmem_create_pool_tc1()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 
-	if $rpc_py create_pmem_pool 32 512; then
+	if $rpc_py bdev_pmem_create_pool 32 512; then
 		error "Mem pool file created w/out given path!"
 	fi
 
-	if $rpc_py create_pmem_pool $default_pool_file; then
+	if $rpc_py bdev_pmem_create_pool $default_pool_file; then
 		error "Mem pool file created w/out size & block size arguments!"
 	fi
 
 	if $rpc_py pmem_pool_info $default_pool_file; then
-		error "create_pmem_pool created invalid pool file!"
+		error "bdev_pmem_create_pool created invalid pool file!"
 	fi
 
-	if $rpc_py create_pmem_pool $default_pool_file 32; then
+	if $rpc_py bdev_pmem_create_pool $default_pool_file 32; then
 		error "Mem pool file created w/out block size argument!"
 	fi
 
 	if $rpc_py pmem_pool_info $default_pool_file; then
-		error "create_pmem_pool created invalid pool file!"
+		error "bdev_pmem_create_pool created invalid pool file!"
 	fi
 
 	pmem_clean_pool_file
 	return 0
 }
 
-function create_pmem_pool_tc2()
+function bdev_pmem_create_pool_tc2()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 
-	if  $rpc_py create_pmem_pool $rootdir/non/existing/path/non_existent_file 32 512; then
+	if  $rpc_py bdev_pmem_create_pool $rootdir/non/existing/path/non_existent_file 32 512; then
 		error "Mem pool file created with incorrect path!"
 	fi
 
 	if $rpc_py pmem_pool_info $rootdir/non/existing/path/non_existent_file; then
-		error "create_pmem_pool created invalid pool file!"
+		error "bdev_pmem_create_pool created invalid pool file!"
 	fi
 
 	pmem_clean_pool_file
 	return 0
 }
 
-function create_pmem_pool_tc3()
+function bdev_pmem_create_pool_tc3()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 
-	if ! $rpc_py create_pmem_pool $default_pool_file 256 512; then
+	if ! $rpc_py bdev_pmem_create_pool $default_pool_file 256 512; then
 		error "Failed to create pmem pool!"
 	fi
 
@@ -207,14 +207,14 @@ function create_pmem_pool_tc3()
 	return 0
 }
 
-function create_pmem_pool_tc4()
+function bdev_pmem_create_pool_tc4()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 
 	pmem_unmount_ramspace
 	mkdir $rootdir/test/pmem/ramspace
 	mount -t tmpfs -o size=300m tmpfs $rootdir/test/pmem/ramspace
-	if ! $rpc_py create_pmem_pool $rootdir/test/pmem/ramspace/pool_file 256 512; then
+	if ! $rpc_py bdev_pmem_create_pool $rootdir/test/pmem/ramspace/pool_file 256 512; then
 		pmem_unmount_ramspace
 		error "Failed to create pmem pool!"
 	fi
@@ -238,14 +238,14 @@ function create_pmem_pool_tc4()
 	return 0
 }
 
-function create_pmem_pool_tc5()
+function bdev_pmem_create_pool_tc5()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 	local pmem_block_size
 	local pmem_num_block
 
-	if ! $rpc_py create_pmem_pool $default_pool_file 256 512; then
+	if ! $rpc_py bdev_pmem_create_pool $default_pool_file 256 512; then
 		error "Failed to create pmem pool!"
 	fi
 
@@ -256,7 +256,7 @@ function create_pmem_pool_tc5()
 		error "Failed to get pmem info!"
 	fi
 
-	if $rpc_py create_pmem_pool $default_pool_file 512 4096; then
+	if $rpc_py bdev_pmem_create_pool $default_pool_file 512 4096; then
 		error "Pmem pool with already occupied path has been created!"
 	fi
 
@@ -280,7 +280,7 @@ function create_pmem_pool_tc5()
 	return 0
 }
 
-function create_pmem_pool_tc6()
+function bdev_pmem_create_pool_tc6()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
@@ -288,7 +288,7 @@ function create_pmem_pool_tc6()
 
 	for i in 511 512 1024 2048 4096 131072 262144
 	do
-		if ! $rpc_py create_pmem_pool $default_pool_file 256 $i; then
+		if ! $rpc_py bdev_pmem_create_pool $default_pool_file 256 $i; then
 			error "Failed to create pmem pool!"
 		fi
 
@@ -310,12 +310,12 @@ function create_pmem_pool_tc6()
 	return 0
 }
 
-function create_pmem_pool_tc7()
+function bdev_pmem_create_pool_tc7()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 
-	if $rpc_py create_pmem_pool $default_pool_file 15 512; then
+	if $rpc_py bdev_pmem_create_pool $default_pool_file 15 512; then
 		error "Created pmem pool with invalid size!"
 	fi
 
@@ -327,12 +327,12 @@ function create_pmem_pool_tc7()
 	return 0
 }
 
-function create_pmem_pool_tc8()
+function bdev_pmem_create_pool_tc8()
 {
-	pmem_print_tc_name "create_pmem_pool_tc8"
+	pmem_print_tc_name "bdev_pmem_create_pool_tc8"
 	pmem_clean_pool_file
 
-	if $rpc_py create_pmem_pool $default_pool_file 32 65536; then
+	if $rpc_py bdev_pmem_create_pool $default_pool_file 32 65536; then
 		error "Created pmem pool with invalid block number!"
 	fi
 
@@ -344,25 +344,25 @@ function create_pmem_pool_tc8()
 	return 0
 }
 
-function create_pmem_pool_tc9()
+function bdev_pmem_create_pool_tc9()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 
-	if $rpc_py create_pmem_pool $default_pool_file 256 -1; then
+	if $rpc_py bdev_pmem_create_pool $default_pool_file 256 -1; then
 		error "Created pmem pool with negative block size number!"
 	fi
 
 	if $rpc_py pmem_pool_info $default_pool_file; then
-		error "create_pmem_pool create invalid pool file!"
+		error "bdev_pmem_create_pool create invalid pool file!"
 	fi
 
-	if $rpc_py create_pmem_pool $default_pool_file -1 512; then
+	if $rpc_py bdev_pmem_create_pool $default_pool_file -1 512; then
 		error "Created pmem pool with negative size number!"
 	fi
 
 	if $rpc_py pmem_pool_info $default_pool_file; then
-		error "create_pmem_pool create invalid pool file!"
+		error "bdev_pmem_create_pool create invalid pool file!"
 	fi
 
 	pmem_clean_pool_file
@@ -664,15 +664,15 @@ if $test_info || $test_all; then
 fi
 
 if $test_create || $test_all; then
-	create_pmem_pool_tc1
-	create_pmem_pool_tc2
-	create_pmem_pool_tc3
-	create_pmem_pool_tc4
-	create_pmem_pool_tc5
-	create_pmem_pool_tc6
-	create_pmem_pool_tc7
-	create_pmem_pool_tc8
-	create_pmem_pool_tc9
+	bdev_pmem_create_pool_tc1
+	bdev_pmem_create_pool_tc2
+	bdev_pmem_create_pool_tc3
+	bdev_pmem_create_pool_tc4
+	bdev_pmem_create_pool_tc5
+	bdev_pmem_create_pool_tc6
+	bdev_pmem_create_pool_tc7
+	bdev_pmem_create_pool_tc8
+	bdev_pmem_create_pool_tc9
 fi
 
 if $test_delete || $test_all; then
