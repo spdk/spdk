@@ -2092,24 +2092,24 @@ spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_request *req,
 }
 
 static int
-spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
-			    struct spdk_nvmf_tcp_req *tcp_req, uint32_t length)
+spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_transport *transport,
+			    struct spdk_nvmf_request *req, uint32_t length)
 {
 	uint32_t				num_buffers;
 	struct spdk_nvmf_tcp_qpair		*tqpair;
 	struct spdk_nvmf_transport_poll_group	*group;
 
-	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	tqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
 
-	num_buffers = SPDK_CEIL_DIV(length, ttransport->transport.opts.io_unit_size);
+	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
 
-	if (spdk_nvmf_request_get_buffers(&tcp_req->req, group, &ttransport->transport, num_buffers)) {
-		tcp_req->req.iovcnt = 0;
+	if (spdk_nvmf_request_get_buffers(req, group, transport, num_buffers)) {
+		req->iovcnt = 0;
 		return -ENOMEM;
 	}
 
-	spdk_nvmf_tcp_req_fill_buffers(&tcp_req->req, &ttransport->transport, length);
+	spdk_nvmf_tcp_req_fill_buffers(req, transport, length);
 
 	return 0;
 }
@@ -2150,7 +2150,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 			tcp_req->elba_length = length;
 		}
 
-		if (spdk_nvmf_tcp_req_fill_iovs(ttransport, tcp_req, length) < 0) {
+		if (spdk_nvmf_tcp_req_fill_iovs(transport, req, length) < 0) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No available large data buffers. Queueing request %p\n",
 				      tcp_req);
