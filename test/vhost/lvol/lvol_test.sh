@@ -57,7 +57,7 @@ function clean_lvol_cfg()
 
     notice "Removing nested lvol stores"
     for lvol_store in "${nest_lvol_stores[@]}"; do
-        $rpc_py destroy_lvol_store -u $lvol_store
+        $rpc_py bdev_lvol_delete_lvstore -u $lvol_store
         notice "nested lvol store $lvol_store removed"
     done
 
@@ -69,7 +69,7 @@ function clean_lvol_cfg()
 
     notice "Removing lvol stores"
     for lvol_store in "${lvol_stores[@]}"; do
-        $rpc_py destroy_lvol_store -u $lvol_store
+        $rpc_py bdev_lvol_delete_lvstore -u $lvol_store
         notice "lvol store $lvol_store removed"
     done
 }

@@ -71,9 +71,9 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	sync
 	# Delete lvol_bdev and destroy lvol_store.
 	$rpc_py bdev_lvol_delete lvs_n_0/lbd_nest_0
-	$rpc_py destroy_lvol_store -l lvs_n_0
+	$rpc_py bdev_lvol_delete_lvstore -l lvs_n_0
 	$rpc_py bdev_lvol_delete lvs_0/lbd_0
-	$rpc_py destroy_lvol_store -l lvs_0
+	$rpc_py bdev_lvol_delete_lvstore -l lvs_0
 	$rpc_py delete_nvme_controller Nvme0
 fi
 

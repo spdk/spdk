@@ -20,7 +20,7 @@ function err_clean
 	$rpc_py remove_vhost_scsi_target naa.vhost_vm.$vm_no 0
 	$rpc_py remove_vhost_controller naa.vhost_vm.$vm_no
 	$rpc_py bdev_lvol_delete $lvb_u
-	$rpc_py destroy_lvol_store -u $lvs_u
+	$rpc_py bdev_lvol_delete_lvstore -u $lvs_u
 	vhost_kill 0
 	exit 1
 }
@@ -118,7 +118,7 @@ timing_enter clean_vhost
 $rpc_py remove_vhost_scsi_target naa.vhost_vm.$vm_no 0
 $rpc_py remove_vhost_controller naa.vhost_vm.$vm_no
 $rpc_py bdev_lvol_delete $lvb_u
-$rpc_py destroy_lvol_store -u $lvs_u
+$rpc_py bdev_lvol_delete_lvstore -u $lvs_u
 vhost_kill 0
 timing_exit clean_vhost
 

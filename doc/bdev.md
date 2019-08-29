@@ -450,13 +450,13 @@ Example response
 }
 ~~~
 
-To delete lvol store user should use `destroy_lvol_store` RPC command.
+To delete lvol store user should use `bdev_lvol_delete_lvstore` RPC command.
 
 Example commands
 
-`rpc.py destroy_lvol_store -u 330a6ab2-f468-11e7-983e-001e67edf35d`
+`rpc.py bdev_lvol_delete_lvstore -u 330a6ab2-f468-11e7-983e-001e67edf35d`
 
-`rpc.py destroy_lvol_store -l lvs`
+`rpc.py bdev_lvol_delete_lvstore -l lvs`
 
 ## Lvols {#bdev_ug_lvols}
 
