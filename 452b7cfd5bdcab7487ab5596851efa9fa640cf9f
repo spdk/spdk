@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38a8983b_64777794",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T18:19:35Z",
+      "side": 1,
+      "message": "create_lvol_store \u003d\u003e bdev_lvol_create_lvstore?",
+      "revId": "452b7cfd5bdcab7487ab5596851efa9fa640cf9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
