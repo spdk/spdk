@@ -2427,13 +2427,14 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			  struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct spdk_nvmf_tcp_qpair		*tqpair;
-	struct spdk_nvme_cpl			*rsp = &tcp_req->req.rsp->nvme_cpl;
+	struct spdk_nvmf_request		*req = &tcp_req->req;
+	struct spdk_nvme_cpl			*rsp = &req->rsp->nvme_cpl;
 	int					rc;
 	enum spdk_nvmf_tcp_req_state		prev_state;
 	bool					progress = false;
 	struct spdk_nvmf_transport_poll_group	*group;
 
-	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	tqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
 	assert(tcp_req->state != TCP_REQUEST_STATE_FREE);
 
@@ -2461,10 +2462,10 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			}
 
 			/* The next state transition depends on the data transfer needs of this request. */
-			tcp_req->req.xfer = spdk_nvmf_tcp_req_get_xfer(tcp_req);
+			req->xfer = spdk_nvmf_tcp_req_get_xfer(tcp_req);
 
 			/* If no data to transfer, ready to execute. */
-			if (tcp_req->req.xfer == SPDK_NVME_DATA_NONE) {
+			if (req->xfer == SPDK_NVME_DATA_NONE) {
 				/* Reset the tqpair receving pdu state */
 				spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 				spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
@@ -2483,7 +2484,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 		case TCP_REQUEST_STATE_NEED_BUFFER:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEED_BUFFER, 0, 0, (uintptr_t)tcp_req, 0);
 
-			assert(tcp_req->req.xfer != SPDK_NVME_DATA_NONE);
+			assert(req->xfer != SPDK_NVME_DATA_NONE);
 
 			if (tcp_req != STAILQ_FIRST(&tqpair->group->pending_data_buf_queue)) {
 				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
@@ -2504,7 +2505,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				break;
 			}
 
-			if (!tcp_req->req.data) {
+			if (!req->data) {
 				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No buffer allocated for tcp_req(%p) on tqpair(%p\n)",
 					      tcp_req, tqpair);
 				/* No buffers available. */
@@ -2514,7 +2515,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			STAILQ_REMOVE_HEAD(&tqpair->group->pending_data_buf_queue, link);
 
 			/* If data is transferring from host to controller, we need to do a transfer from the host. */
-			if (tcp_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+			if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 				spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 				spdk_nvmf_tcp_pdu_set_buf_from_req(tqpair, tcp_req);
 				break;
@@ -2532,12 +2533,12 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_READY_TO_EXECUTE, 0, 0, (uintptr_t)tcp_req, 0);
 
 			if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
-				assert(tcp_req->elba_length >= tcp_req->req.length);
-				tcp_req->req.length = tcp_req->elba_length;
+				assert(tcp_req->elba_length >= req->length);
+				req->length = tcp_req->elba_length;
 			}
 
 			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_EXECUTING);
-			spdk_nvmf_request_exec(&tcp_req->req);
+			spdk_nvmf_request_exec(req);
 			break;
 		case TCP_REQUEST_STATE_EXECUTING:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_EXECUTING, 0, 0, (uintptr_t)tcp_req, 0);
@@ -2548,14 +2549,14 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_EXECUTED, 0, 0, (uintptr_t)tcp_req, 0);
 
 			if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
-				tcp_req->req.length = tcp_req->orig_length;
+				req->length = tcp_req->orig_length;
 			}
 
 			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
 			break;
 		case TCP_REQUEST_STATE_READY_TO_COMPLETE:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_READY_TO_COMPLETE, 0, 0, (uintptr_t)tcp_req, 0);
-			rc = request_transfer_out(&tcp_req->req);
+			rc = request_transfer_out(req);
 			assert(rc == 0); /* No good way to handle this currently */
 			break;
 		case TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST:
@@ -2567,13 +2568,13 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			break;
 		case TCP_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, 0, 0, (uintptr_t)tcp_req, 0);
-			if (tcp_req->req.data_from_pool) {
-				spdk_nvmf_request_free_buffers(&tcp_req->req, group, &ttransport->transport,
-							       tcp_req->req.iovcnt);
+			if (req->data_from_pool) {
+				spdk_nvmf_request_free_buffers(req, group, &ttransport->transport,
+							       req->iovcnt);
 			}
-			tcp_req->req.length = 0;
-			tcp_req->req.iovcnt = 0;
-			tcp_req->req.data = NULL;
+			req->length = 0;
+			req->iovcnt = 0;
+			req->data = NULL;
 			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_FREE);
 			break;
 		case TCP_REQUEST_NUM_STATES:
