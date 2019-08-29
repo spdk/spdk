@@ -304,7 +304,7 @@ cleanup:
 }
 SPDK_RPC_REGISTER("destroy_lvol_store", spdk_rpc_destroy_lvol_store, SPDK_RPC_RUNTIME)
 
-struct rpc_construct_lvol_bdev {
+struct rpc_bdev_lvol_create {
 	char *uuid;
 	char *lvs_name;
 	char *lvol_name;
@@ -314,7 +314,7 @@ struct rpc_construct_lvol_bdev {
 };
 
 static void
-free_rpc_construct_lvol_bdev(struct rpc_construct_lvol_bdev *req)
+free_rpc_bdev_lvol_create(struct rpc_bdev_lvol_create *req)
 {
 	free(req->uuid);
 	free(req->lvs_name);
@@ -322,17 +322,17 @@ free_rpc_construct_lvol_bdev(struct rpc_construct_lvol_bdev *req)
 	free(req->clear_method);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_lvol_bdev_decoders[] = {
-	{"uuid", offsetof(struct rpc_construct_lvol_bdev, uuid), spdk_json_decode_string, true},
-	{"lvs_name", offsetof(struct rpc_construct_lvol_bdev, lvs_name), spdk_json_decode_string, true},
-	{"lvol_name", offsetof(struct rpc_construct_lvol_bdev, lvol_name), spdk_json_decode_string},
-	{"size", offsetof(struct rpc_construct_lvol_bdev, size), spdk_json_decode_uint64},
-	{"thin_provision", offsetof(struct rpc_construct_lvol_bdev, thin_provision), spdk_json_decode_bool, true},
-	{"clear_method", offsetof(struct rpc_construct_lvol_bdev, clear_method), spdk_json_decode_string, true},
+static const struct spdk_json_object_decoder rpc_bdev_lvol_create_decoders[] = {
+	{"uuid", offsetof(struct rpc_bdev_lvol_create, uuid), spdk_json_decode_string, true},
+	{"lvs_name", offsetof(struct rpc_bdev_lvol_create, lvs_name), spdk_json_decode_string, true},
+	{"lvol_name", offsetof(struct rpc_bdev_lvol_create, lvol_name), spdk_json_decode_string},
+	{"size", offsetof(struct rpc_bdev_lvol_create, size), spdk_json_decode_uint64},
+	{"thin_provision", offsetof(struct rpc_bdev_lvol_create, thin_provision), spdk_json_decode_bool, true},
+	{"clear_method", offsetof(struct rpc_bdev_lvol_create, clear_method), spdk_json_decode_string, true},
 };
 
 static void
-_spdk_rpc_construct_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+_spdk_rpc_bdev_lvol_create_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -352,18 +352,18 @@ invalid:
 }
 
 static void
-spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
-			     const struct spdk_json_val *params)
+spdk_rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
-	struct rpc_construct_lvol_bdev req = {};
+	struct rpc_bdev_lvol_create req = {};
 	enum lvol_clear_method clear_method;
 	int rc = 0;
 	struct spdk_lvol_store *lvs = NULL;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Creating blob\n");
 
-	if (spdk_json_decode_object(params, rpc_construct_lvol_bdev_decoders,
-				    SPDK_COUNTOF(rpc_construct_lvol_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_create_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_create_decoders),
 				    &req)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -393,17 +393,18 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = vbdev_lvol_create(lvs, req.lvol_name, req.size, req.thin_provision,
-			       clear_method, _spdk_rpc_construct_lvol_bdev_cb, request);
+			       clear_method, _spdk_rpc_bdev_lvol_create_cb, request);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
 	}
 
 cleanup:
-	free_rpc_construct_lvol_bdev(&req);
+	free_rpc_bdev_lvol_create(&req);
 }
 
-SPDK_RPC_REGISTER("construct_lvol_bdev", spdk_rpc_construct_lvol_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_create", spdk_rpc_bdev_lvol_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_create, construct_lvol_bdev)
 
 struct rpc_bdev_lvol_snapshot {
 	char *lvol_name;

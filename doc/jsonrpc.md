@@ -308,7 +308,7 @@ Example response:
     "bdev_lvol_rename",
     "bdev_lvol_clone",
     "bdev_lvol_snapshot",
-    "construct_lvol_bdev",
+    "bdev_lvol_create",
     "destroy_lvol_store",
     "rename_lvol_store",
     "construct_lvol_store"
@@ -4938,7 +4938,7 @@ Example response:
 }
 ~~~
 
-## construct_lvol_bdev {#rpc_construct_lvol_bdev}
+## bdev_lvol_create {#rpc_bdev_lvol_create}
 
 Create a logical volume on a logical volume store.
 
@@ -4967,7 +4967,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "construct_lvol_bdev",
+  "method": "bdev_lvol_create",
   "id": 1,
   "params": {
     "lvol_name": "LVOL0",
