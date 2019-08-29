@@ -41,6 +41,9 @@ later again to initialize the controller to the ready state.
 A controller flag `SPDK_NVME_CTRLR_WRR_SUPPORTED` was added to indicate the controller
 can support weighted round robin arbitration feature with submission queue.
 
+Added `arbitration_burst` option for arbitration feature, and added three
+`low/medium/high_priority_weight` options for weighted round robin arbitration.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
