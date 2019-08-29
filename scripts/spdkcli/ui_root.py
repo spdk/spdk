@@ -220,8 +220,8 @@ class UIRoot(UINode):
         return response
 
     @verbose
-    def create_pmem_bdev(self, **kwargs):
-        response = rpc.bdev.construct_pmem_bdev(self.client, **kwargs)
+    def bdev_pmem_create(self, **kwargs):
+        response = rpc.bdev.bdev_pmem_create(self.client, **kwargs)
         return response
 
     @verbose

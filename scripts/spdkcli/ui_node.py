@@ -442,7 +442,7 @@ class UIPmemBdev(UIBdev):
         self.shell.log.info(json.dumps(ret, indent=2))
 
     def ui_command_create(self, pmem_file, name):
-        ret_name = self.get_root().create_pmem_bdev(pmem_file=pmem_file,
+        ret_name = self.get_root().bdev_pmem_create(pmem_file=pmem_file,
                                                     name=name)
         self.shell.log.info(ret_name)
 
