@@ -1,5 +1,5 @@
-: ${SPDK_VHOST_VERBOSE=false}
-: ${VHOST_DIR="$HOME/vhost_test"}
+: "${SPDK_VHOST_VERBOSE=false}"
+: "${VHOST_DIR=$HOME/vhost_test}"
 
 TEST_DIR=$(readlink -f $rootdir/..)
 VM_DIR=$VHOST_DIR/vms

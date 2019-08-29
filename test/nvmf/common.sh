@@ -4,8 +4,8 @@ NVMF_IP_LEAST_ADDR=8
 NVMF_TCP_IP_ADDRESS="127.0.0.1"
 NVMF_TRANSPORT_OPTS=""
 
-: ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
-: ${NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"}; export NVMF_APP
+: "${NVMF_APP_SHM_ID=0}"; export NVMF_APP_SHM_ID
+: "${NVMF_APP=$(./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF)}"; export NVMF_APP
 
 have_pci_nics=0
 
