@@ -35,6 +35,10 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
+ifneq ($(DEFAULT_CC),)
+CC=$(DEFAULT_CC)
+endif
+
 C_SRCS = $(TEST_FILE)
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib

@@ -43,6 +43,8 @@ endif
 
 .PHONY: all clean $(DIRS-y)
 
+export REPLACE_CC = y
+
 all: $(DIRS-y)
 clean: $(DIRS-y)
 

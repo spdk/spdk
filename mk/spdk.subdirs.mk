@@ -41,7 +41,11 @@ $(1): | $(DEPDIRS-$(1))
 endef
 
 $(DIRS-y) :
+ifeq ($(REPLACE_CC),y)
+	$(Q)$(MAKE) -C $@ S=$S$(S:%=/)$@ CC="$(DEFAULT_CC)" $(MAKECMDGOALS)
+else
 	$(Q)$(MAKE) -C $@ S=$S$(S:%=/)$@ $(MAKECMDGOALS)
+endif
 
 $(foreach dir,$(ALL_DEPDIRS),$(eval $(call depdirs_rule,$(dir))))
 
