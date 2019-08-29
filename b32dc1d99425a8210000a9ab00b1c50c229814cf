@@ -16,6 +16,24 @@
       "revId": "b32dc1d99425a8210000a9ab00b1c50c229814cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "632ce0a0_b65d3084",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-29T18:18:33Z",
+      "side": 1,
+      "message": "Note in this case because you are doing a remove on the first element it works out fine - but I still think the while loop is clearer.",
+      "parentUuid": "5044ff96_70d1d848",
+      "revId": "b32dc1d99425a8210000a9ab00b1c50c229814cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
