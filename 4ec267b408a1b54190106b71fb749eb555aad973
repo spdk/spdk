@@ -16,6 +16,24 @@
       "revId": "4ec267b408a1b54190106b71fb749eb555aad973",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07408afd_9901177e",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-29T02:25:36Z",
+      "side": 1,
+      "message": "Thank you Changpeng. As you will see the next patch https://review.gerrithub.io/c/spdk/spdk/+/465875, I just followed nvmf_rdma_request_get_buffers(). Your suggestion is reasonable but may I take it by a separate patch?",
+      "parentUuid": "e0747ca2_cf61d21a",
+      "revId": "4ec267b408a1b54190106b71fb749eb555aad973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
