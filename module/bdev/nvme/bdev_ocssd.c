@@ -39,8 +39,14 @@
 #include "spdk/nvme_ocssd.h"
 #include "spdk/nvme_ocssd_spec.h"
 #include "spdk_internal/log.h"
+#include "spdk/nvme.h"
 #include "common.h"
 #include "bdev_ocssd.h"
+
+struct bdev_ocssd_io_channel {
+	struct spdk_nvme_qpair	*qpair;
+	struct spdk_poller	*poller;
+};
 
 struct ocssd_bdev {
 	struct nvme_bdev		nvme_bdev;
@@ -81,6 +87,46 @@ static struct spdk_bdev_module ocssd_if = {
 SPDK_BDEV_MODULE_REGISTER(ocssd, &ocssd_if);
 
 static int
+bdev_ocssd_poll_ioq(void *ctx)
+{
+	struct bdev_ocssd_io_channel *ioch = ctx;
+
+	return spdk_nvme_qpair_process_completions(ioch->qpair, 0);
+}
+
+static int
+bdev_ocssd_io_channel_create_cb(void *io_device, void *ctx_buf)
+{
+	struct ocssd_bdev *ocssd_bdev = io_device;
+	struct spdk_nvme_ctrlr *ctrlr = ocssd_bdev->nvme_bdev.nvme_bdev_ctrlr->ctrlr;
+	struct bdev_ocssd_io_channel *ioch = ctx_buf;
+
+	ioch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+	if (!ioch->qpair) {
+		SPDK_ERRLOG("Failed to alloc IO queue pair\n");
+		return -ENOMEM;
+	}
+
+	ioch->poller = spdk_poller_register(bdev_ocssd_poll_ioq, ioch, 0);
+	if (!ioch->poller) {
+		SPDK_ERRLOG("Failed to register IO queue poller\n");
+		spdk_nvme_ctrlr_free_io_qpair(ioch->qpair);
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+static void
+bdev_ocssd_io_channel_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct bdev_ocssd_io_channel *ioch = ctx_buf;
+
+	spdk_nvme_ctrlr_free_io_qpair(ioch->qpair);
+	spdk_poller_unregister(&ioch->poller);
+}
+
+static int
 bdev_ocssd_poll_adminq(void *ctx)
 {
 	struct nvme_bdev_ctrlr *ctrlr = ctx;
@@ -119,15 +165,14 @@ static void bdev_ocssd_free_bdev(struct ocssd_bdev *ocssd_bdev)
 	free(ocssd_bdev);
 }
 
-static int
-bdev_ocssd_destruct(void *ctx)
+static void
+bdev_ocssd_unregister_cb(void *io_device)
 {
-	struct ocssd_bdev *ocssd_bdev = ctx;
+	struct ocssd_bdev *ocssd_bdev = io_device;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = nvme_bdev->nvme_bdev_ctrlr;
 
 	TAILQ_REMOVE(&nvme_bdev_ctrlr->bdevs, nvme_bdev, tailq);
-	bdev_ocssd_free_bdev(ocssd_bdev);
 
 	assert(nvme_bdev_ctrlr->ref > 0);
 
@@ -135,12 +180,25 @@ bdev_ocssd_destruct(void *ctx)
 		bdev_ocssd_free_ctrlr(nvme_bdev_ctrlr);
 	}
 
-	return 0;
+	spdk_bdev_destruct_done(&nvme_bdev->disk, 0);
+	bdev_ocssd_free_bdev(ocssd_bdev);
+}
+
+static int
+bdev_ocssd_destruct(void *ctx)
+{
+	struct ocssd_bdev *ocssd_bdev = ctx;
+
+	spdk_io_device_unregister(ocssd_bdev, bdev_ocssd_unregister_cb);
+
+	/* Return one to indicate that the destruction is deferred */
+	return 1;
 }
 
 static void
 bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static bool
@@ -152,7 +210,7 @@ bdev_ocssd_io_type_supported(void *ctx, enum spdk_bdev_io_type type)
 static struct spdk_io_channel *
 bdev_ocssd_get_io_channel(void *ctx)
 {
-	return NULL;
+	return spdk_get_io_channel(ctx);
 }
 
 static struct spdk_bdev_fn_table ocssdlib_fn_table = {
@@ -200,9 +258,14 @@ bdev_ocssd_geometry_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 		nvme_bdev->disk.max_open_zones = geometry->maxocpu;
 	}
 
+	spdk_io_device_register(ocssd_bdev, bdev_ocssd_io_channel_create_cb,
+				bdev_ocssd_io_channel_destroy_cb,
+				sizeof(struct bdev_ocssd_io_channel), nvme_bdev->disk.name);
+
 	rc = spdk_bdev_register(&nvme_bdev->disk);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Failed to register bdev %s\n", nvme_bdev->disk.name);
+		spdk_io_device_unregister(ocssd_bdev, NULL);
 		bdev_ocssd_free_bdev(ocssd_bdev);
 	} else {
 		TAILQ_INSERT_TAIL(&nvme_bdev->nvme_bdev_ctrlr->bdevs, nvme_bdev, tailq);
