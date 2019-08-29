@@ -16,6 +16,24 @@
       "revId": "8b2809e8c6a05e8ca5a1a3e9eef16c0c9264bb1d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c2f65f9_53aae9cf",
+        "filename": "lib/blobfs/blobfs_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-08-29T07:08:01Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "54d57984_5f45becc",
+      "revId": "8b2809e8c6a05e8ca5a1a3e9eef16c0c9264bb1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
