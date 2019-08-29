@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5900331a_35cec53b",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 2040,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-29T02:51:30Z",
+      "side": 1,
+      "message": "I think it is simpler if we introduce an new function when dst is NULL.\n\nstatic uint32_t\nnvme_tcp_pdu_recv_buf_advance(struct nvme_tcp_pdu_recv_buf *pdu_recv_buf,\n\t\t\t      uint32_t expected_size)\n{\n\tuint32_t size;\n\n\tassert(pdu_recv_buf-\u003eremain_size \u003e 0);\n\tsize \u003d spdk_min(expected_size, pdu_recv_buf-\u003eremain_size);\n\n\tpdu_recv_buf-\u003eoff +\u003d size;\n\tpdu_recv_buf-\u003eremain_size -\u003d size;\n\n\treturn size;\n}",
+      "revId": "5ceedc5827c49d7d60d69e778cf03bc6bbf3dd93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
