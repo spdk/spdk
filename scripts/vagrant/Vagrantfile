@@ -50,6 +50,9 @@ Vagrant.configure(2) do |config|
       config.vm.provision "shell", inline: "sudo chown root:wheel /usr/local/etc/pkg.conf"
       config.vm.provision "shell", inline: "sudo chmod 644 /usr/local/etc/pkg.conf"
     end
+  when "arch-linux"
+    #See: https://app.vagrantup.com/generic/boxes/arch
+    config.vm.box = "generic/arch"
   else
     "Invalid argument #{distro}"
     abort("Invalid argument!")
