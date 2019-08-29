@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d58d293_f745db16",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T18:06:09Z",
+      "side": 1,
+      "message": "create_pmem_bdev -\u003e bdev_pmem_create?\n\nyou made similar changes here in some of the other bdev renaming functions above",
+      "revId": "b9f176dd06d6fdeaa09f785c6a6c1c622e86faaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
