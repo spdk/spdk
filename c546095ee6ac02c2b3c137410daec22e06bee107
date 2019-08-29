@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "70dc3239_02885314",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-08-29T07:23:15Z",
+      "side": 1,
+      "message": "All these zone management calls look the same. I think we could merge all of these zone management functions into a generic one with spdk_zdev_zone_action as parameter and then you could just do:\n\nint\nspdk_zdev_zone_close(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,\n\t\t     uint64_t start_lba, spdk_bdev_io_completion_cb cb, void *cb_arg) {\n    return zdev_zone_management(desc, ch, start_lba, SPDK_ZDEV_ZONE_CLOSE, cb, cb_arg);\n}\n\nint\nspdk_zdev_zone_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,\n\t\t     uint64_t start_lba, spdk_bdev_io_completion_cb cb, void *cb_arg) {\n    return zdev_zone_management(desc, ch, start_lba, SPDK_ZDEV_ZONE_RESET, cb, cb_arg);\n}\n\netc.",
+      "range": {
+        "startLine": 130,
+        "startChar": 0,
+        "endLine": 146,
+        "endChar": 10
+      },
+      "revId": "c546095ee6ac02c2b3c137410daec22e06bee107",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aa10a9c1_9efd9a17",
         "filename": "lib/bdev/zdev.c",
         "patchSetId": 10
