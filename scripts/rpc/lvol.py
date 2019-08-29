@@ -21,7 +21,8 @@ def construct_lvol_store(client, bdev_name, lvs_name, cluster_sz=None, clear_met
     return client.call('construct_lvol_store', params)
 
 
-def rename_lvol_store(client, old_name, new_name):
+@deprecated_alias('rename_lvol_store')
+def bdev_lvol_rename_lvstore(client, old_name, new_name):
     """Rename a logical volume store.
 
     Args:
@@ -32,7 +33,7 @@ def rename_lvol_store(client, old_name, new_name):
         'old_name': old_name,
         'new_name': new_name
     }
-    return client.call('rename_lvol_store', params)
+    return client.call('bdev_lvol_rename_lvstore', params)
 
 
 @deprecated_alias('construct_lvol_bdev')

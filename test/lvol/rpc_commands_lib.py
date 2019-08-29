@@ -204,9 +204,9 @@ class Commands_Rpc(object):
 
         return None
 
-    def rename_lvol_store(self, old_name, new_name):
+    def bdev_lvol_rename_lvstore(self, old_name, new_name):
         print("INFO: Renaming lvol store from {old} to {new}".format(old=old_name, new=new_name))
-        output, rc = self.rpc.rename_lvol_store(old_name, new_name)
+        output, rc = self.rpc.bdev_lvol_rename_lvstore(old_name, new_name)
         return rc
 
     def bdev_lvol_rename(self, old_name, new_name):

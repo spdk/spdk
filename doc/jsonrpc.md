@@ -310,7 +310,7 @@ Example response:
     "bdev_lvol_snapshot",
     "bdev_lvol_create",
     "bdev_lvol_delete_lvstore",
-    "rename_lvol_store",
+    "bdev_lvol_rename_lvstore",
     "construct_lvol_store"
   ]
 }
@@ -4901,7 +4901,7 @@ Example response:
 }
 ~~~
 
-## rename_lvol_store {#rpc_rename_lvol_store}
+## bdev_lvol_rename_lvstore {#rpc_bdev_lvol_rename_lvstore}
 
 Rename a logical volume store.
 
@@ -4919,7 +4919,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "rename_lvol_store",
+  "method": "bdev_lvol_rename_lvstore",
   "id": 1,
   "params": {
     "old_name": "LVS0",

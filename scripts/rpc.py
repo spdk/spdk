@@ -1167,15 +1167,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         Available: none, unmap, write_zeroes""", required=False)
     p.set_defaults(func=construct_lvol_store)
 
-    def rename_lvol_store(args):
-        rpc.lvol.rename_lvol_store(args.client,
-                                   old_name=args.old_name,
-                                   new_name=args.new_name)
+    def bdev_lvol_rename_lvstore(args):
+        rpc.lvol.bdev_lvol_rename_lvstore(args.client,
+                                          old_name=args.old_name,
+                                          new_name=args.new_name)
 
-    p = subparsers.add_parser('rename_lvol_store', help='Change logical volume store name')
+    p = subparsers.add_parser('bdev_lvol_rename_lvstore', aliases=['rename_lvol_store'],
+                              help='Change logical volume store name')
     p.add_argument('old_name', help='old name')
     p.add_argument('new_name', help='new name')
-    p.set_defaults(func=rename_lvol_store)
+    p.set_defaults(func=bdev_lvol_rename_lvstore)
 
     def bdev_lvol_create(args):
         print_json(rpc.lvol.bdev_lvol_create(args.client,
