@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "787665bc_6bb3ced1",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T17:58:58Z",
+      "side": 1,
+      "message": "let\u0027s not change old CHANGELOG entries - that keeps the entry accurate for the version of SPDK that it falls under",
+      "revId": "332b6f69511db814ce2e2906f532706c7e2b98be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
