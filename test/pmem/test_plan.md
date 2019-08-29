@@ -199,46 +199,46 @@ Steps & expected results:
 - call delete_pmem_pool on already deleted pmem pool
 - return code !=0 and error code = ENODEV
 
-### construct_pmem_bdev
+### bdev_pmem_create
 
-#### construct_pmem_bdev_tc1
+#### bdev_pmem_create_tc1
 Negative test for constructing new pmem bdev.
 Call create_pmem_bdev with missing argument.
 Steps & expected results:
-- Call construct_pmem_bdev with missing path argument.
+- Call bdev_pmem_create with missing path argument.
 - Check that return code != 0
 
-#### construct_pmem_bdev_tc2
+#### bdev_pmem_create_tc2
 Negative test for constructing new pmem bdev.
-Call construct_pmem_bdev with not existing path argument.
+Call bdev_pmem_create with not existing path argument.
 Steps & expected results:
-- call construct_pmem_bdev with incorrect (not existing) path
+- call bdev_pmem_create with incorrect (not existing) path
 - call return code != 0 and error code = ENODEV
 - using get_bdevs check that no pmem bdev was created
 
-#### construct_pmem_bdev_tc3
+#### bdev_pmem_create_tc3
 Negative test for constructing pmem bdevs with random file instead of pmemblk pool.
 Steps & expected results:
 - using a system tool (like dd) create a random file
-- call construct_pmem_bdev with path pointing to that file
+- call bdev_pmem_create with path pointing to that file
 - return code != 0, error code = ENOTBLK
 
-#### construct_pmem_bdev_tc4
+#### bdev_pmem_create_tc4
 Negative test for constructing pmem bdevs with pmemobj instead of pmemblk pool.
 Steps & expected results:
 - Using pmem utility tools create pool of OBJ type instead of BLK
 (if needed utility tools are not available - create random file in filesystem)
-- call construct_pmem_bdev with path pointing to that pool
+- call bdev_pmem_create with path pointing to that pool
 - return code != 0, error code = ENOTBLK
 
-#### construct_pmem_bdev_tc5
+#### bdev_pmem_create_tc5
 Positive test for constructing pmem bdev.
 Steps & expected results:
 - call create_pmem_pool with correct arguments
 - return code = 0, no errors
 - call pmem_pool_info and check if pmem files exists
 - return code = 0, no errors
-- call construct_pmem_bdev with with correct arguments to create a pmem bdev
+- call bdev_pmem_create with with correct arguments to create a pmem bdev
 - return code = 0, no errors
 - using get_bdevs check that pmem bdev was created
 - delete pmem bdev using delete_pmem_bdev
@@ -246,17 +246,17 @@ Steps & expected results:
 - delete previously created pmem pool
 - return code = 0, no error code
 
-#### construct_pmem_bdev_tc6
+#### bdev_pmem_create_tc6
 Negative test for constructing pmem bdevs twice on the same pmem.
 Steps & expected results:
 - call create_pmem_pool with correct arguments
 - return code = 0, no errors
 - call pmem_pool_info and check if pmem files exists
 - return code = 0, no errors
-- call construct_pmem_bdev with with correct arguments to create a pmem bdev
+- call bdev_pmem_create with with correct arguments to create a pmem bdev
 - return code = 0, no errors
 - using get_bdevs check that pmem bdev was created
-- call construct_pmem_bdev again on the same pmem file
+- call bdev_pmem_create again on the same pmem file
 - return code != 0, error code = EEXIST
 - delete pmem bdev using delete_pmem_bdev
 - return code = 0, no error code
@@ -275,7 +275,7 @@ block size=512, total size=256M
 - return code = 0, no errors
 - call pmem_pool_info and check if pmem file exists
 - return code = 0, no errors
-- call construct_pmem_bdev and create a pmem bdev
+- call bdev_pmem_create and create a pmem bdev
 - return code = 0, no errors
 - using get_bdevs check that pmem bdev was created
 - delete pmem bdev using delete_pmem_bdev
@@ -291,7 +291,7 @@ block size=512, total size=256M
 - return code = 0, no errors
 - call pmem_pool_info and check if pmem file exists
 - return code = 0, no errors
-- call construct_pmem_bdev and create a pmem bdev
+- call bdev_pmem_create and create a pmem bdev
 - return code = 0, no errors
 - using get_bdevs check that pmem bdev was created
 - delete pmem bdev using delete_pmem_bdev

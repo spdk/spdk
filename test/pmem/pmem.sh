@@ -440,46 +440,46 @@ function delete_pmem_pool_tc4()
 }
 
 #================================================
-# construct_pmem_bdev tests
+# bdev_pmem_create tests
 #================================================
-function construct_pmem_bdev_tc1()
+function bdev_pmem_create_tc1()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 
 	pmem_create_pool_file
-	if $rpc_py construct_pmem_bdev; then
-		error "construct_pmem_bdev passed with missing argument!"
+	if $rpc_py bdev_pmem_create; then
+		error "bdev_pmem_create passed with missing argument!"
 	fi
 
 	pmem_clean_pool_file
 	return 0
 }
 
-function construct_pmem_bdev_tc2()
+function bdev_pmem_create_tc2()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 
 	pmem_create_pool_file
-	if $rpc_py construct_pmem_bdev -n $bdev_name $rootdir/non/existing/path/non_existent_file; then
+	if $rpc_py bdev_pmem_create -n $bdev_name $rootdir/non/existing/path/non_existent_file; then
 		error "Created pmem bdev w/out valid pool file!"
 	fi
 
 	if $rpc_py get_bdevs | jq -r '.[] .name' | grep -qi pmem; then
-		error "construct_pmem_bdev passed with invalid argument!"
+		error "bdev_pmem_create passed with invalid argument!"
 	fi
 
 	pmem_clean_pool_file
 	return 0
 }
 
-function construct_pmem_bdev_tc3()
+function bdev_pmem_create_tc3()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 
 	truncate -s 32M $rootdir/test/pmem/random_file
-	if $rpc_py construct_pmem_bdev -n $bdev_name $rootdir/test/pmem/random_file; then
+	if $rpc_py bdev_pmem_create -n $bdev_name $rootdir/test/pmem/random_file; then
 		error "Created pmem bdev from random file!"
 	fi
 
@@ -491,7 +491,7 @@ function construct_pmem_bdev_tc3()
 	return 0
 }
 
-function construct_pmem_bdev_tc4()
+function bdev_pmem_create_tc4()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file $obj_pool_file
@@ -504,7 +504,7 @@ function construct_pmem_bdev_tc4()
 		truncate -s "32M" $obj_pool_file
 	fi
 
-	if $rpc_py construct_pmem_bdev -n $bdev_name $obj_pool_file; then
+	if $rpc_py bdev_pmem_create -n $bdev_name $obj_pool_file; then
 		pmem_clean_pool_file $obj_pool_file
 		error "Created pmem bdev from obj type pmem file!"
 	fi
@@ -513,7 +513,7 @@ function construct_pmem_bdev_tc4()
 	return 0
 }
 
-function construct_pmem_bdev_tc5()
+function bdev_pmem_create_tc5()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
@@ -524,7 +524,7 @@ function construct_pmem_bdev_tc5()
 		error "Failed to get pmem info!"
 	fi
 
-	pmem_bdev_name=$($rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file)
+	pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file)
 	if [ $? != 0 ]; then
 		error "Failed to create pmem bdev"
 	fi
@@ -545,7 +545,7 @@ function construct_pmem_bdev_tc5()
 	return 0
 }
 
-function construct_pmem_bdev_tc6()
+function bdev_pmem_create_tc6()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	local pmem_bdev_name
@@ -556,7 +556,7 @@ function construct_pmem_bdev_tc6()
 		error "Failed to get info on pmem pool file!"
 	fi
 
-	pmem_bdev_name=$($rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file)
+	pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file)
 	if [ $? != 0 ]; then
 		error "Failed to create pmem bdev!"
 	fi
@@ -565,7 +565,7 @@ function construct_pmem_bdev_tc6()
 		error "Pmem bdev not found!"
 	fi
 
-	if  $rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file; then
+	if  $rpc_py bdev_pmem_create -n $bdev_name $default_pool_file; then
 		error "Constructed pmem bdev with occupied path!"
 	fi
 
@@ -596,7 +596,7 @@ function delete_bdev_tc1()
 		error "Failed to get pmem info!"
 	fi
 
-	pmem_bdev_name=$($rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file)
+	pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file)
 	if [ $? != 0 ]; then
 		error "Failed to create pmem bdev!"
 	fi
@@ -629,7 +629,7 @@ function delete_bdev_tc2()
 		error "Failed to get pmem info!"
 	fi
 
-	pmem_bdev_name=$($rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file)
+	pmem_bdev_name=$($rpc_py bdev_pmem_create -n $bdev_name $default_pool_file)
 	if [ $? != 0 ]; then
 		error "Failed to create pmem bdev"
 	fi
@@ -683,12 +683,12 @@ if $test_delete || $test_all; then
 fi
 
 if $test_construct_bdev || $test_all; then
-	construct_pmem_bdev_tc1
-	construct_pmem_bdev_tc2
-	construct_pmem_bdev_tc3
-	construct_pmem_bdev_tc4
-	construct_pmem_bdev_tc5
-	construct_pmem_bdev_tc6
+	bdev_pmem_create_tc1
+	bdev_pmem_create_tc2
+	bdev_pmem_create_tc3
+	bdev_pmem_create_tc4
+	bdev_pmem_create_tc5
+	bdev_pmem_create_tc6
 fi
 
 if $test_delete_bdev || $test_all; then

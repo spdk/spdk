@@ -527,12 +527,12 @@ Example command
 
 `rpc.py delete_pmem_pool /path/to/pmem_pool`
 
-To create bdev based on pmemblk pool file user should use `construct_pmem_bdev ` RPC
+To create bdev based on pmemblk pool file user should use `bdev_pmem_create ` RPC
 command.
 
 Example command
 
-`rpc.py construct_pmem_bdev /path/to/pmem_pool -n pmem`
+`rpc.py bdev_pmem_create /path/to/pmem_pool -n pmem`
 
 To remove a block device representation use the delete_pmem_bdev command.
 
