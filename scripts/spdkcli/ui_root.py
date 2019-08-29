@@ -221,7 +221,7 @@ class UIRoot(UINode):
 
     @verbose
     def create_pmem_bdev(self, **kwargs):
-        response = rpc.bdev.construct_pmem_bdev(self.client, **kwargs)
+        response = rpc.bdev.bdev_pmem_create(self.client, **kwargs)
         return response
 
     @verbose
