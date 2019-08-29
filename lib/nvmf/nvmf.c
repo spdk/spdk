@@ -233,8 +233,6 @@ spdk_nvmf_tgt_create(uint32_t max_subsystems)
 	}
 
 	tgt->discovery_genctr = 0;
-	tgt->discovery_log_page = NULL;
-	tgt->discovery_log_page_size = 0;
 	TAILQ_INIT(&tgt->transports);
 
 	tgt->subsystems = calloc(tgt->max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
@@ -260,10 +258,6 @@ spdk_nvmf_tgt_destroy_cb(void *io_device)
 	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
 	void					*destroy_cb_arg;
 	uint32_t i;
-
-	if (tgt->discovery_log_page) {
-		free(tgt->discovery_log_page);
-	}
 
 	if (tgt->subsystems) {
 		for (i = 0; i < tgt->max_subsystems; i++) {
