@@ -2,6 +2,11 @@
 
 ## v20.01: (Upcoming Release)
 
+### sock
+
+Add the following three functions, i.e., spdk_sock_recv_async, spdk_sock_readv_async,
+spdk-sock_writev_async, which will be used later.
+
 ## v19.10:
 
 ### bdev
