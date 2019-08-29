@@ -137,6 +137,57 @@ ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
  */
 ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
+
+/**
+ * Call back funcion for spdk_sock_(recv/readv/writev)_async functions.
+ *
+ * \param cb_arg passed by the callderin spdk_sock_recv/readv/writev_async
+ * \param len A negated errno value or zero value on socket error; a postive value which means the real data length executed.
+ */
+typedef void (*spdk_sock_op_cb)(void *cb_arg, int len);
+
+/**
+ * Receive data from the given socket asynchronously.
+ *
+ * \param sock Socket to receive message.
+ * \param buf Pointer to a buffer to hold the data.
+ * \param len Length of the buffer.
+ * \param cb_fn Called after the async recv operation is executed. The recv result can be error, or paritial or requested data.
+ * \param cb_arg Call back arg provided by user.
+ *
+ * \return 0 on successfully submitting the async scok recv operation, -1 on failure.
+ */
+ssize_t spdk_sock_recv_async(struct spdk_sock *sock, void *buf, size_t len, spdk_sock_op_cb cb_fn,
+			     void *cb_arg);
+
+/**
+ * Write message to the given socket from the I/O vector array asynchronously.
+ *
+ * \param sock Socket to write to.
+ * \param iov I/O vector.
+ * \param iovcnt Number of I/O vectors in the array.
+ * \param cb_fn Called after the async writev operation is executed. The writev result can be error, or paritial or requested data.
+ * \param cb_arg Call back arg provided by user.
+ *
+ * \return 0 on successfully submitting the async sock writev operation, -1 on failure.
+ */
+ssize_t spdk_sock_writev_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
+			       spdk_sock_op_cb cb_fn, void *cb_arg);
+
+/**
+ * Read message from the given socket to the I/O vector array asynchronously.
+ *
+ * \param sock Socket to receive message.
+ * \param iov I/O vector.
+ * \param iovcnt Number of I/O vectors in the array.
+ * \param cb_fn Called after the async readv operation is executed. The write result can be error, or paritial or requested data.
+ * \param cb_arg Call back arg provided by user.
+ *
+ * \return 0 on successfully submitting the async sock readv operation, -1 on failure.
+ */
+ssize_t spdk_sock_readv_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt,
+			      spdk_sock_op_cb cb_fn, void *cb_arg);
+
 /**
  * Set the value used to specify the low water mark (in bytes) for this socket.
  *
