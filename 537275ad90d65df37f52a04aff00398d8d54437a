@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bc1f89f3_b34500be",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-29T23:45:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d5f9a05_fcb8d615",
+      "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e66df814_cf1a52dc",
         "filename": "configure",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "feb464b3_6ec687be",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-29T23:45:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e66df814_cf1a52dc",
+      "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "21c00ae6_04a29f97",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-29T23:45:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a70285c_afe2cf8d",
+      "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c40cc694_1441f543",
         "filename": "test/unit/Makefile",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2019-08-29T18:46:55Z",
       "side": 1,
       "message": "I think I\u0027d prefer something that could go in spdk.unittest.mk.  Then we don\u0027t have to pollute spdk.subdirs.mk with a check for it.  Is that feasible?",
+      "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c76609b3_e31d23d7",
+        "filename": "test/unit/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-29T23:45:24Z",
+      "side": 1,
+      "message": "Not 100% sure on this. I will have to do some testing around. As of right now, it looks like the CC I set in spdk.unittest.mk is getting overridden by the definitions from the main makefile.",
+      "parentUuid": "c40cc694_1441f543",
       "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
