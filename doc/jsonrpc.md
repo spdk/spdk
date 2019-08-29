@@ -2274,7 +2274,7 @@ Example response:
 }
 ~~~
 
-## delete_pmem_bdev {#rpc_delete_pmem_bdev}
+## bdev_pmem_delete {#rpc_bdev_pmem_delete}
 
 Delete @ref bdev_config_pmem bdev. This call will not remove backing pool files.
 
@@ -2300,7 +2300,7 @@ Example request:
     "name": "Pmem0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_pmem_bdev",
+  "method": "bdev_pmem_delete",
   "id": 1
 }
 ~~~

@@ -534,9 +534,9 @@ Example command
 
 `rpc.py bdev_pmem_create /path/to/pmem_pool -n pmem`
 
-To remove a block device representation use the delete_pmem_bdev command.
+To remove a block device representation use the bdev_pmem_delete command.
 
-`rpc.py delete_pmem_bdev pmem`
+`rpc.py bdev_pmem_delete pmem`
 
 # Virtio Block {#bdev_config_virtio_blk}
 

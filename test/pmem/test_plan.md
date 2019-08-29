@@ -241,7 +241,7 @@ Steps & expected results:
 - call bdev_pmem_create with with correct arguments to create a pmem bdev
 - return code = 0, no errors
 - using get_bdevs check that pmem bdev was created
-- delete pmem bdev using delete_pmem_bdev
+- delete pmem bdev using bdev_pmem_delete
 - return code = 0, no error code
 - delete previously created pmem pool
 - return code = 0, no error code
@@ -258,15 +258,15 @@ Steps & expected results:
 - using get_bdevs check that pmem bdev was created
 - call bdev_pmem_create again on the same pmem file
 - return code != 0, error code = EEXIST
-- delete pmem bdev using delete_pmem_bdev
+- delete pmem bdev using bdev_pmem_delete
 - return code = 0, no error code
 - delete previously created pmem pool
 - return code = 0, no error code
 
-### delete_pmem_bdev
+### bdev_pmem_delete
 
 #### delete_bdev_tc1
-Positive test for deleting pmem bdevs using delete_pmem_bdev call.
+Positive test for deleting pmem bdevs using bdev_pmem_delete call.
 Steps & expected results:
 - construct malloc and aio bdevs (also NVMe if possible)
 - all calls - return code = 0, no errors; bdevs created
@@ -278,12 +278,12 @@ block size=512, total size=256M
 - call bdev_pmem_create and create a pmem bdev
 - return code = 0, no errors
 - using get_bdevs check that pmem bdev was created
-- delete pmem bdev using delete_pmem_bdev
+- delete pmem bdev using bdev_pmem_delete
 - return code = 0, no errors
 - using get_bdevs confirm that pmem bdev was deleted and other bdevs
 were unaffected.
 
-#### delete_pmem_bdev_tc2
+#### bdev_pmem_delete_tc2
 Negative test for deleting pmem bdev twice.
 Steps & expected results:
 - call create_pmem_pool with correct path argument,
@@ -294,10 +294,10 @@ block size=512, total size=256M
 - call bdev_pmem_create and create a pmem bdev
 - return code = 0, no errors
 - using get_bdevs check that pmem bdev was created
-- delete pmem bdev using delete_pmem_bdev
+- delete pmem bdev using bdev_pmem_delete
 - return code = 0, no errors
 - using get_bdevs confirm that pmem bdev was deleted
-- delete pmem bdev using delete_pmem_bdev second time
+- delete pmem bdev using bdev_pmem_delete second time
 - return code != 0, error code = ENODEV
 
 

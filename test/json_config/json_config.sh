@@ -263,7 +263,7 @@ function cleanup_bdev_subsystem_config() {
 	fi
 
 	if [[ $SPDK_TEST_PMDK -eq 1 && -n "$pmem_pool_file" && -f "$pmem_pool_file" ]]; then
-		tgt_rpc delete_pmem_bdev pmem1
+		tgt_rpc bdev_pmem_delete pmem1
 		tgt_rpc delete_pmem_pool $pmem_pool_file
 		rm -f $pmem_pool_file
 	fi
