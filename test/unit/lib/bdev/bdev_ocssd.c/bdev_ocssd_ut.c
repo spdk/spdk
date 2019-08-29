@@ -47,6 +47,7 @@ DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module))
 DEFINE_STUB_V(spdk_bdev_io_complete_nvme_status, (struct spdk_bdev_io *bdev_io, int sct, int sc));
 DEFINE_STUB(spdk_nvme_ctrlr_is_ocssd_supported, bool, (struct spdk_nvme_ctrlr *ctrlr), true);
 DEFINE_STUB(spdk_nvme_ns_get_extended_sector_size, uint32_t, (struct spdk_nvme_ns *ns), 4096);
+DEFINE_STUB_V(spdk_bdev_destruct_done, (struct spdk_bdev *bdev, int bdeverrno));
 
 struct nvme_request {
 	spdk_nvme_cmd_cb cb_fn;
@@ -359,6 +360,7 @@ delete_nvme_bdev_controller(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		}
 	}
 
+	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
 	CU_ASSERT(TAILQ_EMPTY(&g_nvme_bdev_ctrlrs));
 }
 
