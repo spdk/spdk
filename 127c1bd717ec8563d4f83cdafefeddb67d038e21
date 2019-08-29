@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bc2bac3_8e886378",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1202,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T18:30:46Z",
+      "side": 1,
+      "message": "wrong alias",
+      "revId": "127c1bd717ec8563d4f83cdafefeddb67d038e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
