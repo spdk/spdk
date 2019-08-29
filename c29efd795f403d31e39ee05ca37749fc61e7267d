@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d97a775_a982e832",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T18:33:32Z",
+      "side": 1,
+      "message": "delete_lvol_store \u003d\u003e bdev_lvol_delete_lvstore?",
+      "revId": "c29efd795f403d31e39ee05ca37749fc61e7267d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
