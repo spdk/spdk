@@ -2096,7 +2096,7 @@ Example response:
 ~~~
 
 
-## create_pmem_pool {#rpc_create_pmem_pool}
+## bdev_pmem_create_pool {#rpc_bdev_pmem_create_pool}
 
 Create a @ref bdev_config_pmem blk pool file. It is equivalent of following `pmempool create` command:
 
@@ -2126,7 +2126,7 @@ Example request:
     "pmem_file": "/tmp/pmem_file"
   },
   "jsonrpc": "2.0",
-  "method": "create_pmem_pool",
+  "method": "bdev_pmem_create_pool",
   "id": 1
 }
 ~~~
