@@ -304,7 +304,7 @@ Example response:
     "bdev_lvol_resize",
     "bdev_lvol_set_read_only",
     "decouple_parent_lvol_bdev",
-    "inflate_lvol_bdev",
+    "bdev_lvol_inflate",
     "bdev_lvol_rename",
     "bdev_lvol_clone",
     "snapshot_lvol_bdev",
@@ -5215,7 +5215,7 @@ Example response:
 }
 ~~~
 
-## inflate_lvol_bdev {#rpc_inflate_lvol_bdev}
+## bdev_lvol_inflate {#rpc_bdev_lvol_inflate}
 
 Inflate a logical volume. All unallocated clusters are allocated and copied from the parent or zero filled if not allocated in the parent. Then all dependencies on the parent are removed.
 
@@ -5232,7 +5232,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "inflate_lvol_bdev",
+  "method": "bdev_lvol_inflate",
   "id": 1,
   "params": {
     "name": "8d87fccc-c278-49f0-9d4c-6237951aca09"

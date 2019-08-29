@@ -224,9 +224,9 @@ class Commands_Rpc(object):
         output, rc = self.rpc.bdev_lvol_clone(snapshot_name, clone_name)
         return rc
 
-    def inflate_lvol_bdev(self, clone_name):
-        print("INFO: RPC COMMAND inflate_lvol_bdev")
-        output, rc = self.rpc.inflate_lvol_bdev(clone_name)
+    def bdev_lvol_inflate(self, clone_name):
+        print("INFO: RPC COMMAND bdev_lvol_inflate")
+        output, rc = self.rpc.bdev_lvol_inflate(clone_name)
         return rc
 
     def decouple_parent_lvol_bdev(self, clone_name):

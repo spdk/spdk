@@ -155,7 +155,8 @@ def destroy_lvol_bdev(client, name):
     return client.call('destroy_lvol_bdev', params)
 
 
-def inflate_lvol_bdev(client, name):
+@deprecated_alias('inflate_lvol_bdev')
+def bdev_lvol_inflate(client, name):
     """Inflate a logical volume.
 
     Args:
@@ -164,7 +165,7 @@ def inflate_lvol_bdev(client, name):
     params = {
         'name': name,
     }
-    return client.call('inflate_lvol_bdev', params)
+    return client.call('bdev_lvol_inflate', params)
 
 
 def decouple_parent_lvol_bdev(client, name):
