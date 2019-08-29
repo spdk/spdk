@@ -2361,6 +2361,10 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 	ctrlr->cap = *cap;
 	ctrlr->vs = *vs;
 
+	if (ctrlr->cap.bits.ams & SPDK_NVME_CAP_AMS_WRR) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_WRR_SUPPORTED;
+	}
+
 	ctrlr->min_page_size = 1u << (12 + ctrlr->cap.bits.mpsmin);
 
 	/* For now, always select page_size == min_page_size. */
