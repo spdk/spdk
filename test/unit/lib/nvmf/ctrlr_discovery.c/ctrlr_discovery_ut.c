@@ -274,7 +274,6 @@ test_discovery_log(void)
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	spdk_nvmf_subsystem_destroy(subsystem);
 	free(tgt.subsystems);
-	free(tgt.discovery_log_page);
 }
 
 int main(int argc, char **argv)
