@@ -149,7 +149,7 @@ bdev_lvol_set_read_only [-h] name
     Mark lvol bdev as read only
     optional arguments:
     -h, --help  show help
-inflate_lvol_bdev [-h] name
+bdev_lvol_inflate [-h] name
     Inflate lvol bdev
     optional arguments:
     -h, --help  show help

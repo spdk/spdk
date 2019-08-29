@@ -2629,7 +2629,7 @@ class TestCases(object):
         self.c.stop_nbd_disk(nbd_name)
 
         # Do inflate
-        fail_count += self.c.inflate_lvol_bdev(lvol_clone['name'])
+        fail_count += self.c.bdev_lvol_inflate(lvol_clone['name'])
         lvol_clone = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + self.lbd_name)
         if lvol_clone['driver_specific']['lvol']['thin_provision'] is not False:
             fail_count += 1

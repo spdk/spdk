@@ -641,22 +641,22 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_lvol_rename", spdk_rpc_bdev_lvol_rename, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_rename, rename_lvol_bdev)
 
-struct rpc_inflate_lvol_bdev {
+struct rpc_bdev_lvol_inflate {
 	char *name;
 };
 
 static void
-free_rpc_inflate_lvol_bdev(struct rpc_inflate_lvol_bdev *req)
+free_rpc_bdev_lvol_inflate(struct rpc_bdev_lvol_inflate *req)
 {
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_inflate_lvol_bdev_decoders[] = {
-	{"name", offsetof(struct rpc_inflate_lvol_bdev, name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_lvol_inflate_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_lvol_inflate, name), spdk_json_decode_string},
 };
 
 static void
-_spdk_rpc_inflate_lvol_bdev_cb(void *cb_arg, int lvolerrno)
+_spdk_rpc_bdev_lvol_inflate_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -676,17 +676,17 @@ invalid:
 }
 
 static void
-spdk_rpc_inflate_lvol_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_lvol_inflate(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
-	struct rpc_inflate_lvol_bdev req = {};
+	struct rpc_bdev_lvol_inflate req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Inflating lvol\n");
 
-	if (spdk_json_decode_object(params, rpc_inflate_lvol_bdev_decoders,
-				    SPDK_COUNTOF(rpc_inflate_lvol_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_inflate_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_inflate_decoders),
 				    &req)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -708,26 +708,27 @@ spdk_rpc_inflate_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_lvol_inflate(lvol, _spdk_rpc_inflate_lvol_bdev_cb, request);
+	spdk_lvol_inflate(lvol, _spdk_rpc_bdev_lvol_inflate_cb, request);
 
 cleanup:
-	free_rpc_inflate_lvol_bdev(&req);
+	free_rpc_bdev_lvol_inflate(&req);
 }
 
-SPDK_RPC_REGISTER("inflate_lvol_bdev", spdk_rpc_inflate_lvol_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_inflate", spdk_rpc_bdev_lvol_inflate, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_inflate, inflate_lvol_bdev)
 
 static void
 spdk_rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
 				   const struct spdk_json_val *params)
 {
-	struct rpc_inflate_lvol_bdev req = {};
+	struct rpc_bdev_lvol_inflate req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Decoupling parent of lvol\n");
 
-	if (spdk_json_decode_object(params, rpc_inflate_lvol_bdev_decoders,
-				    SPDK_COUNTOF(rpc_inflate_lvol_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_inflate_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_inflate_decoders),
 				    &req)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -749,10 +750,10 @@ spdk_rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_lvol_decouple_parent(lvol, _spdk_rpc_inflate_lvol_bdev_cb, request);
+	spdk_lvol_decouple_parent(lvol, _spdk_rpc_bdev_lvol_inflate_cb, request);
 
 cleanup:
-	free_rpc_inflate_lvol_bdev(&req);
+	free_rpc_bdev_lvol_inflate(&req);
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_decouple_parent", spdk_rpc_bdev_lvol_decouple_parent, SPDK_RPC_RUNTIME)
