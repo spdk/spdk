@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0747ca2_cf61d21a",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-29T02:19:57Z",
+      "side": 1,
+      "message": "Is this an extra line, it\u0027s better just return or break here.",
+      "revId": "4ec267b408a1b54190106b71fb749eb555aad973",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
