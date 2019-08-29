@@ -372,9 +372,9 @@ online_fc_port_test(void)
 	if (err == 0) {
 		uint32_t i;
 		for (i = 0; i < fc_port->num_io_queues; i++) {
-			CU_ASSERT(fc_port->io_queues[i].fc_poll_group != 0);
-			CU_ASSERT(fc_port->io_queues[i].fc_poll_group != 0);
-			CU_ASSERT(fc_port->io_queues[i].fc_poll_group->hwqp_count != 0);
+			CU_ASSERT(fc_port->io_queues[i].fgroup != 0);
+			CU_ASSERT(fc_port->io_queues[i].fgroup != 0);
+			CU_ASSERT(fc_port->io_queues[i].fgroup->hwqp_count != 0);
 		}
 	}
 }
@@ -437,7 +437,7 @@ remove_hwqps_from_poll_groups_test(void)
 	for (i = 0; i < fc_port->num_io_queues; i++) {
 		spdk_nvmf_fc_poll_group_remove_hwqp(&fc_port->io_queues[i]);
 		poll_threads();
-		CU_ASSERT(fc_port->io_queues[i].fc_poll_group == 0);
+		CU_ASSERT(fc_port->io_queues[i].fgroup == 0);
 	}
 }
 

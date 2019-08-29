@@ -1597,7 +1597,7 @@ nvmf_fc_poller_api_add_hwqp(void *arg)
 	struct spdk_nvmf_fc_hwqp *hwqp = (struct spdk_nvmf_fc_hwqp *)arg;
 
 	hwqp->lcore_id = spdk_env_get_current_core(); /* for tracing purposes only */
-	TAILQ_INSERT_TAIL(&hwqp->fc_poll_group->hwqp_list, hwqp, link);
+	TAILQ_INSERT_TAIL(&hwqp->fgroup->hwqp_list, hwqp, link);
 	/* note: no callback from this api */
 }
 
@@ -1605,10 +1605,10 @@ static void
 nvmf_fc_poller_api_remove_hwqp(void *arg)
 {
 	struct spdk_nvmf_fc_hwqp *hwqp = (struct spdk_nvmf_fc_hwqp *)arg;
-	struct spdk_nvmf_fc_poll_group *fc_poll_group = hwqp->fc_poll_group;
+	struct spdk_nvmf_fc_poll_group *fgroup = hwqp->fgroup;
 
-	TAILQ_REMOVE(&fc_poll_group->hwqp_list, hwqp, link);
-	hwqp->fc_poll_group = NULL;
+	TAILQ_REMOVE(&fgroup->hwqp_list, hwqp, link);
+	hwqp->fgroup = NULL;
 	/* note: no callback from this api */
 }
 
