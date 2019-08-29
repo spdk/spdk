@@ -56,7 +56,7 @@ for i in $(seq 1 $NUM_LVS); do
 		# construct malloc bdev and put its name in $bdev
 		bdev=$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
 	fi
-	ls_guid=$($rpc_py construct_lvol_store $bdev lvs_$i -c 1048576)
+	ls_guid=$($rpc_py bdev_lvol_create_lvstore $bdev lvs_$i -c 1048576)
 	LUNs=""
 	for j in $(seq 1 $NUM_LVOL); do
 		lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_$j 10)

@@ -32,7 +32,7 @@ base_bdevs+=$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
 $rpc_py construct_raid_bdev -n raid0 -z 64 -r 0 -b "$base_bdevs"
 
 # Create the logical volume store on the RAID volume
-lvs=$($rpc_py construct_lvol_store raid0 lvs)
+lvs=$($rpc_py bdev_lvol_create_lvstore raid0 lvs)
 
 # Create a logical volume on the logical volume store
 lvol=$($rpc_py bdev_lvol_create -u $lvs lvol $LVOL_BDEV_INIT_SIZE)

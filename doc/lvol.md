@@ -80,7 +80,7 @@ There is no static configuration available for logical volumes. All configuratio
 RPC regarding lvolstore:
 
 ```
-construct_lvol_store [-h] [-c CLUSTER_SZ] bdev_name lvs_name
+bdev_lvol_create_lvstore [-h] [-c CLUSTER_SZ] bdev_name lvs_name
     Constructs lvolstore on specified bdev with specified name. During
     construction bdev is unmapped at initialization and all data is
     erased. Then original bdev is claimed by

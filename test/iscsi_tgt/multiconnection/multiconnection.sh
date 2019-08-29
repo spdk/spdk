@@ -52,7 +52,7 @@ $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 
 echo "Creating an iSCSI target node."
-ls_guid=$($rpc_py construct_lvol_store "Nvme0n1" "lvs0" -c 1048576)
+ls_guid=$($rpc_py bdev_lvol_create_lvstore "Nvme0n1" "lvs0" -c 1048576)
 
 # Assign even size for each lvol_bdev.
 get_lvs_free_mb $ls_guid
