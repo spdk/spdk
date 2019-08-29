@@ -1175,16 +1175,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('new_name', help='new name')
     p.set_defaults(func=rename_lvol_store)
 
-    def construct_lvol_bdev(args):
-        print_json(rpc.lvol.construct_lvol_bdev(args.client,
-                                                lvol_name=args.lvol_name,
-                                                size=args.size * 1024 * 1024,
-                                                thin_provision=args.thin_provision,
-                                                clear_method=args.clear_method,
-                                                uuid=args.uuid,
-                                                lvs_name=args.lvs_name))
+    def bdev_lvol_create(args):
+        print_json(rpc.lvol.bdev_lvol_create(args.client,
+                                             lvol_name=args.lvol_name,
+                                             size=args.size * 1024 * 1024,
+                                             thin_provision=args.thin_provision,
+                                             clear_method=args.clear_method,
+                                             uuid=args.uuid,
+                                             lvs_name=args.lvs_name))
 
-    p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
+    p = subparsers.add_parser('bdev_lvol_create', aliases=['construct_lvol_bdev'],
+                              help='Add a bdev with an logical volume backend')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
     p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.add_argument('-t', '--thin-provision', action='store_true', help='create lvol bdev as thin provisioned')
@@ -1192,7 +1193,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         Available: none, unmap, write_zeroes""", required=False)
     p.add_argument('lvol_name', help='name for this lvol')
     p.add_argument('size', help='size in MiB for this bdev', type=int)
-    p.set_defaults(func=construct_lvol_bdev)
+    p.set_defaults(func=bdev_lvol_create)
 
     def bdev_lvol_snapshot(args):
         print_json(rpc.lvol.bdev_lvol_snapshot(args.client,

@@ -112,7 +112,7 @@ rename_lvol_store [-h] old_name new_name
 RPC regarding lvol and spdk bdev:
 
 ```
-construct_lvol_bdev [-h] [-u UUID] [-l LVS_NAME] [-t] [-c CLEAR_METHOD] lvol_name size
+bdev_lvol_create [-h] [-u UUID] [-l LVS_NAME] [-t] [-c CLEAR_METHOD] lvol_name size
     Creates lvol with specified size and name on lvolstore specified by its uuid
     or name. Then constructs spdk bdev on top of that lvol and presents it as spdk bdev.
     User may use -t switch to create thin provisioned lvol.
@@ -126,7 +126,7 @@ get_bdevs [-h] [-b NAME]
     -h, --help  show help
     -b NAME, --name NAME  Name of the block device. Example: Nvme0n1
 bdev_lvol_delete [-h] bdev_name
-    Deletes a logical volume previously created by construct_lvol_bdev.
+    Deletes a logical volume previously created by bdev_lvol_create.
     optional arguments:
     -h, --help  show help
 bdev_lvol_snapshot [-h] lvol_name snapshot_name

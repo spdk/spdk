@@ -144,7 +144,7 @@ for (( i=0; i<$max_disks; i++ ));do
         size=$((free_mb / (vm_count+1) ))
 
         notice "Creating lvol bdev on lvol store: $ls_guid"
-        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_nest $size $thin)
+        lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_nest $size $thin)
 
         notice "Creating nested lvol store on lvol bdev: $lb_name"
         nest_ls_guid=$($rpc_py construct_lvol_store $lb_name lvs_n_$i -c 4194304)
@@ -154,7 +154,7 @@ for (( i=0; i<$max_disks; i++ ));do
             notice "Creating nested lvol bdev for VM $i on lvol store $nest_ls_guid"
             free_mb=$(get_lvs_free_mb "$nest_ls_guid")
             nest_size=$((free_mb / (vm_count-j) ))
-            lb_name=$($rpc_py construct_lvol_bdev -u $nest_ls_guid lbd_vm_$j $nest_size $thin)
+            lb_name=$($rpc_py bdev_lvol_create -u $nest_ls_guid lbd_vm_$j $nest_size $thin)
             nest_lvol_bdevs+=("$lb_name")
         done
     fi
@@ -164,7 +164,7 @@ for (( i=0; i<$max_disks; i++ ));do
         notice "Creating lvol bdev for VM $i on lvol store $ls_guid"
         free_mb=$(get_lvs_free_mb "$ls_guid")
         size=$((free_mb / (vm_count-j) ))
-        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_vm_$j $size $thin)
+        lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_vm_$j $size $thin)
         lvol_bdevs+=("$lb_name")
     done
 done

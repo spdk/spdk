@@ -154,7 +154,7 @@ class UIRoot(UINode):
 
     @verbose
     def create_lvol_bdev(self, **kwargs):
-        response = rpc.lvol.construct_lvol_bdev(self.client, **kwargs)
+        response = rpc.lvol.bdev_lvol_create(self.client, **kwargs)
         return response
 
     @verbose

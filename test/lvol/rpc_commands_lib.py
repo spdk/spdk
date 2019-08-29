@@ -126,8 +126,8 @@ class Commands_Rpc(object):
             output = self.rpc.construct_lvol_store(base_name, lvs_name)[0]
         return output.rstrip('\n')
 
-    def construct_lvol_bdev(self, uuid, lbd_name, size, thin=False):
-        print("INFO: RPC COMMAND construct_lvol_bdev")
+    def bdev_lvol_create(self, uuid, lbd_name, size, thin=False):
+        print("INFO: RPC COMMAND bdev_lvol_create")
         try:
             uuid_obj = UUID(uuid)
             name_opt = "-u"
@@ -136,7 +136,7 @@ class Commands_Rpc(object):
         thin_provisioned = ""
         if thin:
             thin_provisioned = "-t"
-        output = self.rpc.construct_lvol_bdev(name_opt, uuid, lbd_name, size, thin_provisioned)[0]
+        output = self.rpc.bdev_lvol_create(name_opt, uuid, lbd_name, size, thin_provisioned)[0]
         return output.rstrip('\n')
 
     def destroy_lvol_store(self, uuid):
