@@ -69,11 +69,11 @@ done
 
 OS=$(uname)
 
-: ${CC=cc}
-: ${CXX=c++}
-: ${LD=}
-: ${LTO=n}
-: ${CROSS_PREFIX=}
+: "${CC=cc}"
+: "${CXX=c++}"
+: "${LD=}"
+: "${LTO=n}"
+: "${CROSS_PREFIX=}"
 
 if [ -z "$LD" ]; then
 	if [ "$OS" = "Linux" ]; then
