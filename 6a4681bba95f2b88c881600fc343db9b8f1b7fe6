@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "7329fc2f_97a11a8e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-08-29T06:29:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2311d8ed_3c88af4c",
+      "range": {
+        "startLine": 10,
+        "startChar": 27,
+        "endLine": 10,
+        "endChar": 37
+      },
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9064ba39_bd456cd6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-08-29T06:29:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50529936_82ac4ab6",
+      "range": {
+        "startLine": 10,
+        "startChar": 89,
+        "endLine": 10,
+        "endChar": 98
+      },
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc51411d_4fe69fd4",
         "filename": "/COMMIT_MSG",
         "patchSetId": 5
@@ -94,6 +142,54 @@
     },
     {
       "key": {
+        "uuid": "03f234eb_1bb3ac01",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-08-29T06:29:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9592ade4_131581f9",
+      "range": {
+        "startLine": 12,
+        "startChar": 11,
+        "endLine": 12,
+        "endChar": 17
+      },
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51981f44_aed42266",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-08-29T06:29:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc51411d_4fe69fd4",
+      "range": {
+        "startLine": 12,
+        "startChar": 62,
+        "endLine": 12,
+        "endChar": 66
+      },
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f41a7e73_b0fc09d1",
         "filename": "/COMMIT_MSG",
         "patchSetId": 5
@@ -108,6 +204,24 @@
       "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95b5fc4f_74252ce5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-08-29T06:29:46Z",
+      "side": 1,
+      "message": "Good point, I don\u0027t think about line lenght in terminal. I will remember this and it\u0027s fixed now.",
+      "parentUuid": "f41a7e73_b0fc09d1",
+      "revId": "6a4681bba95f2b88c881600fc343db9b8f1b7fe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
