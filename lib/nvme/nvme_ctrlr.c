@@ -516,6 +516,49 @@ nvme_ctrlr_set_intel_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
+nvme_ctrlr_set_arbitration_feature(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t cdw11;
+	uint8_t ab;
+	struct nvme_completion_poll_status status;
+	int rc;
+
+	/* cdw11 bit 0-2 is a 0 based value */
+	if (ctrlr->opts.arbitration_burst < 2) {
+		return;
+	}
+
+	if (ctrlr->opts.arbitration_burst > 64) {
+		/* unlimted arbitration burst */
+		ab = 0x7;
+	} else {
+		ab = spdk_u32log2(ctrlr->opts.arbitration_burst);
+	}
+
+	cdw11 = ab & 0x7;
+
+	if (spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_WRR_SUPPORTED) {
+		cdw11 |= (uint32_t)ctrlr->opts.low_priority_weight << 8;
+		cdw11 |= (uint32_t)ctrlr->opts.medium_priority_weight << 16;
+		cdw11 |= (uint32_t)ctrlr->opts.high_priority_weight << 24;
+	}
+
+	rc = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_ARBITRATION,
+					     cdw11, 0, NULL, 0,
+					     nvme_completion_poll_cb, &status);
+	if (rc < 0) {
+		return;
+	}
+
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status,
+			ctrlr->opts.admin_timeout_ms / 1000)) {
+		return;
+	}
+
+	return;
+}
+
+static void
 nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 {
 	memset(ctrlr->feature_supported, 0, sizeof(ctrlr->feature_supported));
@@ -542,6 +585,8 @@ nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL) {
 		nvme_ctrlr_set_intel_supported_features(ctrlr);
 	}
+
+	nvme_ctrlr_set_arbitration_feature(ctrlr);
 }
 
 void
