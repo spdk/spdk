@@ -92,7 +92,7 @@ class UILvolStores(UINode):
         if name is None and uuid is None:
             self.shell.log.error("Please specify one of the identifiers: "
                                  "lvol store name or UUID")
-        self.get_root().delete_lvol_store(lvs_name=name, uuid=uuid)
+        self.get_root().bdev_lvol_delete_lvstore(lvs_name=name, uuid=uuid)
 
     def ui_command_create(self, name, bdev_name, cluster_size=None):
         """

@@ -255,7 +255,7 @@ function cleanup_bdev_subsystem_config() {
 		tgt_rpc bdev_lvol_delete     lvs_test/clone0
 		tgt_rpc bdev_lvol_delete     lvs_test/lvol0
 		tgt_rpc bdev_lvol_delete     lvs_test/snapshot0
-		tgt_rpc destroy_lvol_store -l lvs_test
+		tgt_rpc bdev_lvol_delete_lvstore -l lvs_test
 	fi
 
 	if [[ $(uname -s) = Linux ]]; then
