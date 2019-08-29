@@ -708,8 +708,7 @@ ls_tests_init(void)
 		TAILQ_INIT(&g_poll_group[i].tgroups);
 		TAILQ_INIT(&g_poll_group[i].qpairs);
 		g_fc_group[i].tp_poll_group.transport = &g_nvmf_transport;
-		g_fc_group[i].poll_group = &g_poll_group[i];
-		g_fc_group[i].nvmf_tgt = &g_nvmf_tgt;
+		g_fc_group[i].tp_poll_group.group = &g_poll_group[i];
 		hwqp->fc_group = &g_fc_group[i];
 	}
 

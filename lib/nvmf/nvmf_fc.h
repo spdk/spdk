@@ -264,7 +264,6 @@ struct spdk_nvmf_fc_xchg {
  */
 struct spdk_nvmf_fc_poll_group {
 	struct spdk_nvmf_transport_poll_group tp_poll_group;
-	struct spdk_nvmf_poll_group *poll_group;
 	struct spdk_nvmf_tgt *nvmf_tgt;
 	struct spdk_nvmf_fc_transport *fc_transport;
 	uint32_t hwqp_count; /* number of hwqp's assigned to this pg */
