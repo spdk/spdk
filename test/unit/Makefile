@@ -41,4 +41,6 @@ DIRS-y = include lib
 all: $(DIRS-y)
 clean: $(DIRS-y)
 
+export REPLACE_CC = y
+
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

@@ -181,6 +181,8 @@ set_default LD $LD
 echo "CCAR=$CCAR"
 echo "CC_TYPE=$CC_TYPE"
 echo "LD_TYPE=$LD_TYPE"
+echo "# represents either the default cc or the on specified by the user. For use in overriding scan-build."
+echo "USER_CC=$CC"
 
 if [ -n "$CROSS_PREFIX" ]; then
 	echo "CROSS_PREFIX=$CROSS_PREFIX"
