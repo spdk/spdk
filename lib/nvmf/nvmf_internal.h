@@ -81,8 +81,6 @@ struct spdk_nvmf_tgt {
 	/* Array of subsystem pointers of size max_subsystems indexed by sid */
 	struct spdk_nvmf_subsystem		**subsystems;
 
-	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
-	size_t					discovery_log_page_size;
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
 
 	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
