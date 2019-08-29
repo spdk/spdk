@@ -423,7 +423,7 @@ class UIPmemBdev(UIBdev):
         UIBdev.__init__(self, "pmemblk", parent)
 
     def delete(self, name):
-        self.get_root().delete_pmem_bdev(name=name)
+        self.get_root().bdev_pmem_delete(name=name)
 
     def ui_command_create_pmem_pool(self, pmem_file, total_size, block_size):
         total_size = self.ui_eval_param(total_size, "number", None)
