@@ -509,11 +509,11 @@ First, user needs to configure SPDK to include PMDK support:
 
 `configure --with-pmdk`
 
-To create pmemblk pool for use with SPDK user should use `create_pmem_pool` RPC command.
+To create pmemblk pool for use with SPDK user should use `bdev_pmem_create_pool` RPC command.
 
 Example command
 
-`rpc.py create_pmem_pool /path/to/pmem_pool 25 4096`
+`rpc.py bdev_pmem_create_pool /path/to/pmem_pool 25 4096`
 
 To get information on created pmem pool file user can use `pmem_pool_info` RPC command.
 

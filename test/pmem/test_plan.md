@@ -57,7 +57,7 @@ Steps & expected results:
 - Call pmem_pool_info with path argument that points to existing file.
 - Check that return code == 0
 
-### create_pmem_pool
+### bdev_pmem_create_pool
 From libpmemblk documentation:
 - PMEM block size has to be bigger than 512 internal blocks; if lower value
 is used then PMEM library will silently round it up to 512 which is defined
@@ -66,36 +66,36 @@ in pmem/libpmemblk.h file as PMEMBLK_MIN_BLK.
 pmem/libpmemblk.h file as PMEMBLK_MIN_POOL
 - Total number of segments in PMEP pool file cannot be less than 256
 
-#### create_pmem_pool_tc1
+#### bdev_pmem_create_pool_tc1
 Negative test case for creating a new pmem.
-Call create_pmem_pool with missing arguments.
+Call bdev_pmem_create_pool with missing arguments.
 Steps & expected results:
-- call create_pmem_pool without path argument
+- call bdev_pmem_create_pool without path argument
 - call return code != 0
 - call pmem_pool_info and check that pmem pool file was not created
 - call return code != 0
-- call create_pmem_pool with path but without size and block size arguments
+- call bdev_pmem_create_pool with path but without size and block size arguments
 - call return code != 0
 - call pmem_pool_info and check that pmem pool file was not created
 - call return code != 0
-- call create_pmem_pool with path and size but without block size arguments
+- call bdev_pmem_create_pool with path and size but without block size arguments
 - call return code != 0
 - call pmem_pool_info and check that pmem pool file was not created
 - call return code != 0
 
-#### create_pmem_pool_tc2
+#### bdev_pmem_create_pool_tc2
 Negative test case for creating a new pmem.
-Call create_pmem_pool with non existing path argument.
+Call bdev_pmem_create_pool with non existing path argument.
 Steps & expected results:
-- call create_pmem_pool with path that does not exist
+- call bdev_pmem_create_pool with path that does not exist
 - call return code != 0
 - call pmem_pool_info and check that pmem pool file was not created
 - call return code != 0
 
-#### create_pmem_pool_tc3
+#### bdev_pmem_create_pool_tc3
 Positive test case for creating a new pmem pool on disk space.
 Steps & expected results:
-- call create_pmem_pool with correct path argument,
+- call bdev_pmem_create_pool with correct path argument,
 blocksize=512 and total size=256MB
 - call return code = 0
 - call pmem_pool_info and check that pmem file was created
@@ -103,11 +103,11 @@ blocksize=512 and total size=256MB
 - call delete_pmem_pool on previously created pmem
 - return code = 0 and no error code
 
-#### create_pmem_pool_tc4
+#### bdev_pmem_create_pool_tc4
 Positive test case for creating a new pmem pool in RAM space.
 # TODO: Research test steps for creating a pool in RAM!!!
 Steps & expected results:
-- call create_pmem_pool with correct path argument,
+- call bdev_pmem_create_pool with correct path argument,
 blocksize=512 and total size=256MB
 - call return code = 0
 - call pmem_pool_info and check that pmem file was created
@@ -115,27 +115,27 @@ blocksize=512 and total size=256MB
 - call delete_pmem_pool on previously created pmem
 - return code = 0 and no error code
 
-#### create_pmem_pool_tc5
+#### bdev_pmem_create_pool_tc5
 Negative test case for creating two pmems with same path.
 Steps & expected results:
-- call create_pmem_pool with correct path argument,
+- call bdev_pmem_create_pool with correct path argument,
 blocksize=512 and total size=256MB
 - call return code = 0
 - call pmem_pool_info and check that pmem file was created
 - call return code = 0
-- call create_pmem_pool with the same path argument as before,
+- call bdev_pmem_create_pool with the same path argument as before,
 blocksize=4096 and total size=512MB
 - call return code != 0, error code = EEXIST
-- call create_pmem_pool and check that first pmem pool file is still
+- call bdev_pmem_create_pool and check that first pmem pool file is still
 available and not modified (block size and total size stay the same)
 - call return code = 0
 - call delete_pmem_pool on first created pmem pool
 - return code =0 and no error code
 
-#### create_pmem_pool_tc6
+#### bdev_pmem_create_pool_tc6
 Positive test case for creating pmem pool file with various block sizes.
 Steps & expected results:
-- call create_pmem_pool with correct path argument, total size=256MB
+- call bdev_pmem_create_pool with correct path argument, total size=256MB
 with different block size arguments - 1, 511, 512, 513, 1024, 4096, 128k and 256k
 - call pmem_pool_info on each of created pmem pool and check if it was created;
 For pool files created with block size <512 their block size should be rounded up
@@ -144,19 +144,19 @@ command
 - call return code = 0; block sizes as expected
 - call delete_pmem_pool on all created pool files
 
-#### create_pmem_pool_tc7
+#### bdev_pmem_create_pool_tc7
 Negative test case for creating pmem pool file with total size of less than 16MB.
 Steps & expected results:
-- call create_pmem_pool with correct path argument, block size=512 and
+- call bdev_pmem_create_pool with correct path argument, block size=512 and
 total size less than 16MB
 - return code !=0 and error code !=0
 - call pmem_pool_info to verify pmem pool file was not created
 - return code = 0
 
-#### create_pmem_pool_tc8
+#### bdev_pmem_create_pool_tc8
 Negative test case for creating pmem pool file with less than 256 blocks.
 Steps & expected results:
-- call create_pmem_pool with correct path argument, block size=128k and
+- call bdev_pmem_create_pool with correct path argument, block size=128k and
 total size=30MB
 - return code !=0 and error code !=0
 - call pmem_pool_info to verify pmem pool file was not created
@@ -183,7 +183,7 @@ Steps & expected results:
 #### delete_pmem_pool_tc3
 Positive test case for creating and deleting a pemem.
 Steps & expected results:
-- call create_pmem_pool with correct arguments
+- call bdev_pmem_create_pool with correct arguments
 - return code = 0 and no error code
 - using pmem_pool_info check that pmem was created
 - return code = 0 and no error code
@@ -234,7 +234,7 @@ Steps & expected results:
 #### bdev_pmem_create_tc5
 Positive test for constructing pmem bdev.
 Steps & expected results:
-- call create_pmem_pool with correct arguments
+- call bdev_pmem_create_pool with correct arguments
 - return code = 0, no errors
 - call pmem_pool_info and check if pmem files exists
 - return code = 0, no errors
@@ -249,7 +249,7 @@ Steps & expected results:
 #### bdev_pmem_create_tc6
 Negative test for constructing pmem bdevs twice on the same pmem.
 Steps & expected results:
-- call create_pmem_pool with correct arguments
+- call bdev_pmem_create_pool with correct arguments
 - return code = 0, no errors
 - call pmem_pool_info and check if pmem files exists
 - return code = 0, no errors
@@ -270,7 +270,7 @@ Positive test for deleting pmem bdevs using bdev_pmem_delete call.
 Steps & expected results:
 - construct malloc and aio bdevs (also NVMe if possible)
 - all calls - return code = 0, no errors; bdevs created
-- call create_pmem_pool with correct path argument,
+- call bdev_pmem_create_pool with correct path argument,
 block size=512, total size=256M
 - return code = 0, no errors
 - call pmem_pool_info and check if pmem file exists
@@ -286,7 +286,7 @@ were unaffected.
 #### bdev_pmem_delete_tc2
 Negative test for deleting pmem bdev twice.
 Steps & expected results:
-- call create_pmem_pool with correct path argument,
+- call bdev_pmem_create_pool with correct path argument,
 block size=512, total size=256M
 - return code = 0, no errors
 - call pmem_pool_info and check if pmem file exists
