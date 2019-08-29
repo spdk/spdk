@@ -272,6 +272,66 @@ spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return sock->net_impl->writev(sock, iov, iovcnt);
 }
 
+ssize_t
+spdk_sock_recv_async(struct spdk_sock *sock, void *buf, size_t len, spdk_sock_op_cb cb_fn,
+		     void *cb_arg)
+{
+	int rc;
+
+	if (sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	if (!sock->net_impl->recv_async) {
+		rc = spdk_sock_recv(sock, buf, len);
+		cb_fn(cb_arg, rc);
+		return 0;
+	} else {
+		return sock->net_impl->recv_async(sock, buf, len, cb_fn, cb_arg);
+	}
+}
+
+ssize_t
+spdk_sock_readv_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+		      void *cb_arg)
+{
+	int rc;
+
+	if (sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	if (!sock->net_impl->recv_async) {
+		rc = spdk_sock_readv(sock, iov, iovcnt);
+		cb_fn(cb_arg, rc);
+		return 0;
+	} else {
+		return sock->net_impl->readv_async(sock, iov, iovcnt, cb_fn, cb_arg);
+	}
+}
+
+ssize_t
+spdk_sock_writev_async(struct spdk_sock *sock, struct iovec *iov, int iovcnt, spdk_sock_op_cb cb_fn,
+		       void *cb_arg)
+{
+	int rc;
+
+	if (sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	if (!sock->net_impl->recv_async) {
+		rc = spdk_sock_writev(sock, iov, iovcnt);
+		cb_fn(cb_arg, rc);
+		return 0;
+	} else {
+		return sock->net_impl->writev_async(sock, iov, iovcnt, cb_fn, cb_arg);
+	}
+}
+
 int
 spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 {
