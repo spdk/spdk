@@ -39,6 +39,7 @@ disks_numa=$(get_numa_node $PLUGIN "$disk_names")
 cores=$(get_cores "$CPUS_ALLOWED")
 no_cores_array=($cores)
 no_cores=${#no_cores_array[@]}
+target_disk_names=$disk_names
 
 if $PRECONDITIONING; then
 	HUGEMEM=8192 $ROOT_DIR/scripts/setup.sh
@@ -96,6 +97,106 @@ elif [ $PLUGIN = "kernel-io-uring" ]; then
 	done
 fi
 
+disk_names=$(printf "%s\n" $disk_names | sort -V)
+if $USE_LVOL; then
+	echo "INFO: --use-lvol is set. Creating Logical Volumes on top of NVMe devices."
+	if [[ $PLUGIN =~ "kernel" ]]; then
+		kernel_pvs=()
+		kernel_vgs=()
+		kernel_lvs=()
+		target_disk_names=""
+		echo "INFO: Creating kernel Physical Volumes"
+		for disk in $disk_names; do
+			pvcreate -f /dev/$disk
+			kernel_pvs+=("/dev/$disk")
+		done
+
+		echo "INFO: Creating kernel Volume Groups"
+		i=0
+		for p in "${kernel_pvs[@]}"; do
+			vgcreate -f vg$i $p
+			kernel_vgs+=("vg$i")
+			i=$((i+1))
+		done
+
+		echo "INFO: Creating kernel Logical Volumes"
+		i=0
+		for v in "${kernel_vgs[@]}"; do
+			lvcreate -n lvol$i -l 100%FREE $v
+			kernel_lvs+=("lvol$i")
+			target_disk_names+="$v/lvol$i "
+			i=$((i+1))
+		done
+
+		if $USE_COMPRESS; then
+			echo "INFO: --use-compress is set. Creating VDO's on top of Logical Volumes."
+			kernel_vdos=()
+			target_disk_names=""
+			for (( i=0; i < ${#kernel_lvs[*]}; i++ )); do
+				vdo create --name=vdo$i --device=/dev/${kernel_vgs[$i]}/${kernel_lvs[$i]} --writePolicy=auto
+				kernel_vdos+=("vdo$i")
+				target_disk_names+="mapper/vdo$i "
+			done
+		fi
+	else
+		echo "INFO: Starting SPDK bdev_svc app..."
+		spdk_lvol_stores=()
+		spdk_lvol_bdevs=()
+		$ROOT_DIR/test/app/bdev_svc/bdev_svc -c $BASE_DIR/bdev.conf &
+		bdev_svc_pid=$!
+		trap 'killprocess $bdev_svc_pid; exit 1' SIGINT SIGTERM EXIT
+		# waitforlisten $bdev_svc_pid
+		sleep 15
+
+		echo "INFO: Creating SPDK Logical Volume Stores and Bdevs"
+		i=0
+		for d in $disk_names; do
+			lvol_store_uuid=$($rpc_py construct_lvol_store $d lvs_$i)
+			spdk_lvol_stores+=("lvs_$i")
+
+			free_mb=$(get_lvs_free_mb $lvol_store_uuid)
+			lvol_bdev_uuid=$($rpc_py construct_lvol_bdev lvol_0 $free_mb -l lvs_$i)
+			spdk_lvol_bdevs+=("lvs_$i/lvol_0")
+			i=$((i+1))
+		done
+		target_disk_names="${spdk_lvol_bdevs[*]}"
+
+		if $USE_COMPRESS; then
+			echo "INFO: --use-compress is set. Creating compress bdevs on top of Logical Volumes."
+			spdk_comp_bdevs=()
+			ndctl_namespaces=()
+			ndctl_bdevs=()
+			# Get total PMEM size available and split it for all lvol bdevs to use
+			# ndctl list reports 2 regions, use only region 0... at least for now.
+			pmem_avail_size=$(ndctl list --bus=all --region=all | jq -r ".[].regions[].available_size" | tail -n 1)
+			pmem_size=$((pmem_avail_size/${#spdk_lvol_bdevs[*]}))
+
+			for (( i=0; i < ${#spdk_lvol_bdevs[*]}; i++ )); do
+				ndctl_out=$(ndctl create-namespace --region=0 --mode=fsdax --map=mem --type=pmem --size=$pmem_size)
+				ndctl_ns=$(jq -r ".dev" <<< $ndctl_out)
+				ndctl_bdev=$(jq -r ".blockdev" <<< $ndctl_out)
+				mkfs.xfs -f /dev/$ndctl_bdev
+				mkdir -p /mnt/$ndctl_bdev
+				mount -o dax /dev/$ndctl_bdev /mnt/$ndctl_bdev
+				comp_bdev=$($rpc_py bdev_compress_create -b ${spdk_lvol_bdevs[$i]} -p /mnt/$ndctl_bdev)
+
+				spdk_comp_bdevs+=("$comp_bdev")
+				ndctl_namespaces+=("$ndctl_ns")
+				ndctl_bdevs+=("$ndctl_bdev")
+			done
+			target_disk_names="${spdk_comp_bdevs[*]}"
+		fi
+
+		$rpc_py get_bdevs
+
+		trap - SIGINT SIGTERM EXIT
+		killprocess $bdev_svc_pid
+	fi
+fi
+
+echo "Info: target bdevs for FIO filename= parameter:"
+echo $target_disk_names
+
 result_dir=perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}
 mkdir -p $BASE_DIR/results/$result_dir
 result_file=$BASE_DIR/results/$result_dir/perf_results_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}.csv
@@ -125,14 +226,14 @@ do
 			bw[$k]=$((${bw[$k]} + $(get_bdevperf_results bw_Kibs)))
 			cp $NVME_FIO_RESULTS $BASE_DIR/results/$result_dir/perf_results_${MIX}_${PLUGIN}_${no_cores}cpus_${date}_${k}_disks_${j}.output
 		else
-			create_fio_config $k $PLUGIN "$disk_names" "$disks_numa" "$cores"
+			create_fio_config $k $PLUGIN "$target_disk_names" "$disks_numa" "$cores"
 			desc="Running Test: Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH} io_plugin/driver=$PLUGIN"
 
 			if [ $PLUGIN = "nvme" ] || [ $PLUGIN = "bdev" ]; then
 				run_spdk_nvme_fio $PLUGIN "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
 				"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
 				"--numjobs=$NUMJOBS" "--description=$desc" "-log_avg_msec=250"\
-				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_$${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}_${k}disks_${j}"
+				"--write_lat_log=$BASE_DIR/results/$result_dir/perf_lat_${BLK_SIZE}BS_${IODEPTH}QD_${RW}_${MIX}MIX_${PLUGIN}_${date}_${k}disks_${j}"
 			else
 				run_nvme_fio $fio_ioengine_opt "--runtime=$RUNTIME" "--ramp_time=$RAMP_TIME" "--bs=$BLK_SIZE"\
 				"--rw=$RW" "--rwmixread=$MIX" "--iodepth=$qd" "--output=$NVME_FIO_RESULTS" "--time_based=1"\
@@ -192,6 +293,70 @@ do
 		break
 	fi
 done
+
+if $USE_LVOL; then
+	echo "INFO: --use-lvol is set. Removing Logical Volumes."
+	if [[ $PLUGIN =~ "kernel" ]]; then
+		if $USE_COMPRESS; then
+			echo "INFO: --use-compress is set. Removing VDO's."
+			for v in "${kernel_vdos[@]}"; do
+				vdo remove --force --name $v
+			done
+		fi
+
+		echo "INFO: Removing kernel Logical Volumes"
+		# We can use VG identifiers to remove all lvols associated with that VG
+		for v in "${kernel_vgs[@]}"; do
+			lvremove -f $v
+		done
+
+		echo "INFO: Removing kernel Volume Groups"
+		for v in "${kernel_vgs[@]}"; do
+			vgremove $v
+		done
+		echo "INFO: Removing kernel Physical Volumes"
+		for p in "${kernel_pvs[@]}"; do
+			pvremove $p
+		done
+	else
+		echo "INFO: Starting SPDK bdev_svc app..."
+		$ROOT_DIR/test/app/bdev_svc/bdev_svc -c $BASE_DIR/bdev.conf &
+		bdev_svc_pid=$!
+		trap 'killprocess $bdev_svc_pid; exit 1' SIGINT SIGTERM EXIT
+		# waitforlisten $bdev_svc_pid
+		sleep 15
+
+		if $USE_COMPRESS; then
+			echo "INFO: --use-compress is set. Removing Compress bdevs."
+			for b in "${spdk_comp_bdevs[@]}"; do
+				$rpc_py bdev_compress_delete $b
+			done
+
+			echo "INFO: Unmounting pmem bdevs."
+			for b in "${ndctl_bdevs[@]}"; do
+				umount /mnt/$b
+			done
+
+			echo "INFO: Destroying ndctl namespaces."
+			for n in "${ndctl_namespaces[@]}"; do
+				ndctl disable-namespace $n
+				ndctl destroy-namespace $n
+			done
+		fi
+
+		echo "INFO: Removing SPDK Logical Volume Bdevs"
+		for b in "${spdk_lvol_bdevs[@]}"; do
+			$rpc_py destroy_lvol_bdev $b
+		done
+
+		echo "INFO: Removing SPDK Logical Volume Stores"
+		for s in "${spdk_lvol_stores[@]}"; do
+			$rpc_py destroy_lvol_store -l $s
+		done
+		trap - SIGINT SIGTERM EXIT
+		killprocess $bdev_svc_pid
+	fi
+fi
 
 if [ $PLUGIN = "kernel-io-uring" ]; then
 	# Reload the nvme driver so that other test runs are not affected
