@@ -307,7 +307,7 @@ Example response:
     "bdev_lvol_inflate",
     "bdev_lvol_rename",
     "bdev_lvol_clone",
-    "snapshot_lvol_bdev",
+    "bdev_lvol_snapshot",
     "construct_lvol_bdev",
     "destroy_lvol_store",
     "rename_lvol_store",
@@ -4989,7 +4989,7 @@ Example response:
 }
 ~~~
 
-## snapshot_lvol_bdev {#rpc_snapshot_lvol_bdev}
+## bdev_lvol_snapshot {#rpc_bdev_lvol_snapshot}
 
 Capture a snapshot of the current state of a logical volume.
 
@@ -5011,7 +5011,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "snapshot_lvol_bdev",
+  "method": "bdev_lvol_snapshot",
   "id": 1,
   "params": {
     "lvol_name": "1b38702c-7f0c-411e-a962-92c6a5a8a602",

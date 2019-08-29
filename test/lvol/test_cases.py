@@ -1230,7 +1230,7 @@ class TestCases(object):
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
 
         # Create snapshot of thin provisioned lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         # Create clone of snapshot and check if it ends with success
@@ -1293,13 +1293,13 @@ class TestCases(object):
         uuid_bdev0 = self.c.construct_lvol_bdev(uuid_store, self.lbd_name, size, thin=True)
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
 
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         fail_count += self.c.bdev_lvol_clone(self.lvs_name + "/" + snapshot_name, clone_name)
         clone_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name)
 
-        fail_count += self.c.snapshot_lvol_bdev(clone_bdev['name'], snapshot_name2)
+        fail_count += self.c.bdev_lvol_snapshot(clone_bdev['name'], snapshot_name2)
         snapshot_bdev2 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name2)
 
         # Try to destroy snapshot with 2 clones and check if it fails
@@ -1354,13 +1354,13 @@ class TestCases(object):
         uuid_bdev0 = self.c.construct_lvol_bdev(uuid_store, self.lbd_name, size, thin=True)
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
 
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         fail_count += self.c.bdev_lvol_clone(self.lvs_name + "/" + snapshot_name, clone_name)
         clone_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name)
 
-        fail_count += self.c.snapshot_lvol_bdev(clone_bdev['name'], snapshot_name2)
+        fail_count += self.c.bdev_lvol_snapshot(clone_bdev['name'], snapshot_name2)
         snapshot_bdev2 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name2)
 
         # Delete malloc bdev
@@ -2148,7 +2148,7 @@ class TestCases(object):
                                                bdev_size)
         lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_name)
         # Create snapshot of lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         fail_count += self.c.start_nbd_disk(snapshot_bdev['name'], nbd_name0)
@@ -2214,8 +2214,8 @@ class TestCases(object):
         fail_count += self.run_fio_test(nbd_name[1], 0, fill_size, "write", "0xcc", 0)
 
         # Create snapshots of lvol bdevs
-        fail_count += self.c.snapshot_lvol_bdev(uuid_bdev0, snapshot_name0)
-        fail_count += self.c.snapshot_lvol_bdev(uuid_bdev1, snapshot_name1)
+        fail_count += self.c.bdev_lvol_snapshot(uuid_bdev0, snapshot_name0)
+        fail_count += self.c.bdev_lvol_snapshot(uuid_bdev1, snapshot_name1)
         fail_count += self.c.start_nbd_disk(self.lvs_name + "/" + snapshot_name0, nbd_name[2])
         fail_count += self.c.start_nbd_disk(self.lvs_name + "/" + snapshot_name1, nbd_name[3])
         # Compare every lvol bdev with corresponding snapshot
@@ -2285,7 +2285,7 @@ class TestCases(object):
         fail_count += is_process_alive(current_fio_pid)
         # During write operation create snapshot of created lvol bdev
         # and check that snapshot has been created successfully
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         fail_count += is_process_alive(current_fio_pid)
         thread.join()
         # Check that write operation ended with success
@@ -2330,10 +2330,10 @@ class TestCases(object):
 
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev)
         # Create snapshot of created lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name0)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name0)
         # Create snapshot of previously created snapshot
         # and check if operation will fail
-        if self.c.snapshot_lvol_bdev(snapshot_name0, snapshot_name1) == 0:
+        if self.c.bdev_lvol_snapshot(snapshot_name0, snapshot_name1) == 0:
             print("ERROR: Creating snapshot of snapshot should fail")
             fail_count += 1
         # Delete lvol bdev
@@ -2383,7 +2383,7 @@ class TestCases(object):
             print("ERROR: Creating clone of lvol bdev ended with unexpected success")
             fail_count += 1
         # Create snapshot of lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         # Create again clone of lvol bdev and check if it fails
         rv = self.c.bdev_lvol_clone(lvol_bdev['name'], clone_name)
         if rv == 0:
@@ -2446,7 +2446,7 @@ class TestCases(object):
         fail_count += self.run_fio_test(nbd_name[0], 0, fill_size, "write", "0xcc", 0)
 
         # Create snapshot of thick provisioned lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
         # Create two clones of created snapshot
         fail_count += self.c.bdev_lvol_clone(snapshot_bdev['name'], clone_name0)
@@ -2514,7 +2514,7 @@ class TestCases(object):
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev)
 
         # Create snapshot of thick provisioned lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         # Create clone of created snapshot
@@ -2610,7 +2610,7 @@ class TestCases(object):
         self.c.stop_nbd_disk(nbd_name)
 
         # Create snapshot of thick provisioned lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         # Create two clones of created snapshot
@@ -2702,7 +2702,7 @@ class TestCases(object):
             fail_count += 1
 
         # Create snapshot of thin provisioned lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         # Decouple parent lvol bdev
@@ -2774,7 +2774,7 @@ class TestCases(object):
                                         end_fill * MEGABYTE, "write", "0xdd", 0)
 
         # Create snapshot of thin provisioned lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         # Fill second and fourth cluster of clone with data of known pattern
@@ -2787,7 +2787,7 @@ class TestCases(object):
                                         fill_range * MEGABYTE, "write", "0xcc", 0)
 
         # Create second snapshot of thin provisioned lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name2)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name2)
         snapshot_bdev2 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name2)
 
         # Fill second cluster of clone with data of known pattern
@@ -2935,7 +2935,7 @@ class TestCases(object):
         fail_count += self.run_fio_test(nbd_name0, 0, size, "write", "0xcc")
 
         # Create snapshot of lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
         if snapshot_bdev['driver_specific']['lvol']['clone'] is not False\
                 or snapshot_bdev['driver_specific']['lvol']['snapshot'] is not True:
@@ -3015,7 +3015,7 @@ class TestCases(object):
         fail_count += self.run_fio_test(nbd_name0, 0, size-1, "write", "0xcc")
 
         # Create snapshot of lvol bdev
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
         lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_name)
         if lvol_bdev['driver_specific']['lvol']['base_snapshot'] != snapshot_name:
@@ -3032,7 +3032,7 @@ class TestCases(object):
 
         # Create second snapshot of lvol_bdev
         # First snapshot becomes snapshot of second snapshot
-        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name2)
+        fail_count += self.c.bdev_lvol_snapshot(lvol_bdev['name'], snapshot_name2)
         snapshot_bdev2 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name2)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
         if snapshot_bdev2['driver_specific']['lvol']['base_snapshot'] != snapshot_name:

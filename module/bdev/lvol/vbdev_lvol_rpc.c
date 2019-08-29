@@ -405,25 +405,25 @@ cleanup:
 
 SPDK_RPC_REGISTER("construct_lvol_bdev", spdk_rpc_construct_lvol_bdev, SPDK_RPC_RUNTIME)
 
-struct rpc_snapshot_lvol_bdev {
+struct rpc_bdev_lvol_snapshot {
 	char *lvol_name;
 	char *snapshot_name;
 };
 
 static void
-free_rpc_snapshot_lvol_bdev(struct rpc_snapshot_lvol_bdev *req)
+free_rpc_bdev_lvol_snapshot(struct rpc_bdev_lvol_snapshot *req)
 {
 	free(req->lvol_name);
 	free(req->snapshot_name);
 }
 
-static const struct spdk_json_object_decoder rpc_snapshot_lvol_bdev_decoders[] = {
-	{"lvol_name", offsetof(struct rpc_snapshot_lvol_bdev, lvol_name), spdk_json_decode_string},
-	{"snapshot_name", offsetof(struct rpc_snapshot_lvol_bdev, snapshot_name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_lvol_snapshot_decoders[] = {
+	{"lvol_name", offsetof(struct rpc_bdev_lvol_snapshot, lvol_name), spdk_json_decode_string},
+	{"snapshot_name", offsetof(struct rpc_bdev_lvol_snapshot, snapshot_name), spdk_json_decode_string},
 };
 
 static void
-_spdk_rpc_snapshot_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+_spdk_rpc_bdev_lvol_snapshot_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -443,17 +443,17 @@ invalid:
 }
 
 static void
-spdk_rpc_snapshot_lvol_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_lvol_snapshot(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_snapshot_lvol_bdev req = {};
+	struct rpc_bdev_lvol_snapshot req = {};
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Snapshotting blob\n");
 
-	if (spdk_json_decode_object(params, rpc_snapshot_lvol_bdev_decoders,
-				    SPDK_COUNTOF(rpc_snapshot_lvol_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_snapshot_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_snapshot_decoders),
 				    &req)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -475,13 +475,14 @@ spdk_rpc_snapshot_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvol_create_snapshot(lvol, req.snapshot_name, _spdk_rpc_snapshot_lvol_bdev_cb, request);
+	vbdev_lvol_create_snapshot(lvol, req.snapshot_name, _spdk_rpc_bdev_lvol_snapshot_cb, request);
 
 cleanup:
-	free_rpc_snapshot_lvol_bdev(&req);
+	free_rpc_bdev_lvol_snapshot(&req);
 }
 
-SPDK_RPC_REGISTER("snapshot_lvol_bdev", spdk_rpc_snapshot_lvol_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_snapshot", spdk_rpc_bdev_lvol_snapshot, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_snapshot, snapshot_lvol_bdev)
 
 struct rpc_bdev_lvol_clone {
 	char *snapshot_name;
