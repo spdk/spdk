@@ -118,7 +118,7 @@ for vm_conf in ${vms[@]}; do
 				if [[ $disk == "RaidBdev2" ]]; then
 					ls_guid=$($rpc_py construct_lvol_store RaidBdev2 lvs_0 -c 4194304)
 					free_mb=$(get_lvs_free_mb "$ls_guid")
-					based_disk=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_0 $free_mb)
+					based_disk=$($rpc_py bdev_lvol_create -u $ls_guid lbd_0 $free_mb)
 				else
 					based_disk="$disk"
 				fi

@@ -59,7 +59,7 @@ for i in $(seq 1 $NUM_LVS); do
 	ls_guid=$($rpc_py construct_lvol_store $bdev lvs_$i -c 1048576)
 	LUNs=""
 	for j in $(seq 1 $NUM_LVOL); do
-		lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j 10)
+		lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_$j 10)
 		LUNs+="$lb_name:$((j - 1)) "
 	done
 	$rpc_py construct_target_node Target$i Target${i}_alias "$LUNs" "1:$INITIATOR_TAG" 256 -d

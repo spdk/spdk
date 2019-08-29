@@ -75,7 +75,7 @@ if [[ $nvme_bdev_bs != 512 ]]; then
 fi
 
 lvs_u=$($rpc_py construct_lvol_store Nvme0n1 lvs0)
-lvb_u=$($rpc_py construct_lvol_bdev -u $lvs_u lvb0 20000)
+lvb_u=$($rpc_py bdev_lvol_create -u $lvs_u lvb0 20000)
 timing_exit create_lvol
 
 timing_enter convert_vm_image
