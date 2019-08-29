@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "17ed1a06_72934be3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-08-29T07:11:15Z",
+      "side": 1,
+      "message": "Applied,\nDone",
+      "parentUuid": "5cb6b2da_59f93a5b",
+      "revId": "256b41975b78c8c10c637fb4eb5e8b5d3e54e72b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "127d9a45_b33d0cd0",
         "filename": "lib/blobfs/blobfs_rpc.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-29T06:53:58Z",
       "side": 1,
       "message": "ERRLOG",
+      "revId": "256b41975b78c8c10c637fb4eb5e8b5d3e54e72b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2cf23a3_10f341c9",
+        "filename": "lib/blobfs/blobfs_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-08-29T07:11:15Z",
+      "side": 1,
+      "message": "Just think it is a not one error caused by SPDK code.\nIt can be treated as one wrong parameter was assigned to RPC request. So using INFOLOG should be more proper",
+      "parentUuid": "127d9a45_b33d0cd0",
       "revId": "256b41975b78c8c10c637fb4eb5e8b5d3e54e72b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
