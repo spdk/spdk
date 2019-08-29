@@ -839,6 +839,13 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	pctrlr->claim_fd = claim_fd;
 	memcpy(&pctrlr->ctrlr.trid, trid, sizeof(pctrlr->ctrlr.trid));
 
+	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
+	if (rc != 0) {
+		close(claim_fd);
+		spdk_free(pctrlr);
+		return NULL;
+	}
+
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {
 		close(claim_fd);
@@ -870,12 +877,6 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
 	pctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
-
-	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
-	if (rc != 0) {
-		nvme_ctrlr_destruct(&pctrlr->ctrlr);
-		return NULL;
-	}
 
 	pci_id = spdk_pci_device_get_id(pci_dev);
 	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
