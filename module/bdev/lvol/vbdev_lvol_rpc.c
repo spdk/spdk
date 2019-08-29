@@ -170,25 +170,25 @@ cleanup:
 }
 SPDK_RPC_REGISTER("construct_lvol_store", spdk_rpc_construct_lvol_store, SPDK_RPC_RUNTIME)
 
-struct rpc_rename_lvol_store {
+struct rpc_bdev_lvol_rename_lvstore {
 	char *old_name;
 	char *new_name;
 };
 
 static void
-free_rpc_rename_lvol_store(struct rpc_rename_lvol_store *req)
+free_rpc_bdev_lvol_rename_lvstore(struct rpc_bdev_lvol_rename_lvstore *req)
 {
 	free(req->old_name);
 	free(req->new_name);
 }
 
-static const struct spdk_json_object_decoder rpc_rename_lvol_store_decoders[] = {
-	{"old_name", offsetof(struct rpc_rename_lvol_store, old_name), spdk_json_decode_string},
-	{"new_name", offsetof(struct rpc_rename_lvol_store, new_name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_lvol_rename_lvstore_decoders[] = {
+	{"old_name", offsetof(struct rpc_bdev_lvol_rename_lvstore, old_name), spdk_json_decode_string},
+	{"new_name", offsetof(struct rpc_bdev_lvol_rename_lvstore, new_name), spdk_json_decode_string},
 };
 
 static void
-_spdk_rpc_rename_lvol_store_cb(void *cb_arg, int lvserrno)
+_spdk_rpc_bdev_lvol_rename_lvstore_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -208,14 +208,14 @@ invalid:
 }
 
 static void
-spdk_rpc_rename_lvol_store(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+spdk_rpc_bdev_lvol_rename_lvstore(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
 {
-	struct rpc_rename_lvol_store req = {};
+	struct rpc_bdev_lvol_rename_lvstore req = {};
 	struct spdk_lvol_store *lvs;
 
-	if (spdk_json_decode_object(params, rpc_rename_lvol_store_decoders,
-				    SPDK_COUNTOF(rpc_rename_lvol_store_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_rename_lvstore_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_rename_lvstore_decoders),
 				    &req)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -230,12 +230,13 @@ spdk_rpc_rename_lvol_store(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev_lvs_rename(lvs, req.new_name, _spdk_rpc_rename_lvol_store_cb, request);
+	vbdev_lvs_rename(lvs, req.new_name, _spdk_rpc_bdev_lvol_rename_lvstore_cb, request);
 
 cleanup:
-	free_rpc_rename_lvol_store(&req);
+	free_rpc_bdev_lvol_rename_lvstore(&req);
 }
-SPDK_RPC_REGISTER("rename_lvol_store", spdk_rpc_rename_lvol_store, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_lvol_rename_lvstore", spdk_rpc_bdev_lvol_rename_lvstore, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_rename_lvstore, rename_lvol_store)
 
 struct rpc_bdev_lvol_delete_lvstore {
 	char *uuid;

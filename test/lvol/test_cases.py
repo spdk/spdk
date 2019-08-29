@@ -3140,7 +3140,7 @@ class TestCases(object):
         new_lvs_name = "lvs_new"
         bdev_aliases = [alias.replace(self.lvs_name, new_lvs_name) for alias in bdev_aliases]
 
-        fail_count += self.c.rename_lvol_store(self.lvs_name, new_lvs_name)
+        fail_count += self.c.bdev_lvol_rename_lvstore(self.lvs_name, new_lvs_name)
 
         fail_count += self.c.check_bdev_lvol_get_lvstores(base_name,
                                                           lvs_uuid,
@@ -3195,12 +3195,12 @@ class TestCases(object):
         Check that error is returned when trying to rename not existing lvol store.
         """
         fail_count = 0
-        # Call rename_lvol_store with name pointing to not existing lvol store
-        if self.c.rename_lvol_store("NOTEXIST", "WHATEVER") == 0:
+        # Call bdev_lvol_rename_lvstore with name pointing to not existing lvol store
+        if self.c.bdev_lvol_rename_lvstore("NOTEXIST", "WHATEVER") == 0:
             fail_count += 1
 
         # Expected results:
-        # - rename_lvol_store return code != 0
+        # - bdev_lvol_rename_lvstore return code != 0
         # - no other operation fails
         return fail_count
 
@@ -3266,9 +3266,9 @@ class TestCases(object):
                                                          alias)
             bdev_uuids_2.append(uuid)
 
-        # Call rename_lvol_store on first lvol store and try to change its name to
+        # Call bdev_lvol_rename_lvstore on first lvol store and try to change its name to
         # the same name as used by second lvol store
-        if self.c.rename_lvol_store(lvs_name_1, lvs_name_2) == 0:
+        if self.c.bdev_lvol_rename_lvstore(lvs_name_1, lvs_name_2) == 0:
             fail_count += 1
 
         # Verify that names of lvol stores and lvol bdevs did not change
@@ -3300,7 +3300,7 @@ class TestCases(object):
         fail_count += self.c.delete_malloc_bdev(base_bdev_2)
 
         # Expected results:
-        # - rename_lvol_store return code != 0; not possible to rename to already
+        # - bdev_lvol_rename_lvstore return code != 0; not possible to rename to already
         #   used name
         # - no other operation fails
 

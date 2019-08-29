@@ -103,7 +103,7 @@ bdev_lvol_get_lvstores [-h] [-u UUID] [-l LVS_NAME]
     -h, --help  show help
     -u UUID, --uuid UUID  show details of specified lvol store
     -l LVS_NAME, --lvs_name LVS_NAME  show details of specified lvol store
-rename_lvol_store [-h] old_name new_name
+bdev_lvol_rename_lvstore [-h] old_name new_name
     Change logical volume store name
     optional arguments:
     -h, --help  show this help message and exit
