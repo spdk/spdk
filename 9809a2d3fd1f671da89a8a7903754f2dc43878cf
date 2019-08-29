@@ -104,6 +104,24 @@
     },
     {
       "key": {
+        "uuid": "e1d9c292_4293b674",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-29T03:16:24Z",
+      "side": 1,
+      "message": "Yes, the data can be partially written, but we do not need to mention here. Since for sync recv, we will also have partial write.",
+      "parentUuid": "0b77bbd1_7bc3f3b7",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "26189fee_dca56926",
         "filename": "include/spdk/sock.h",
         "patchSetId": 15
@@ -200,6 +218,24 @@
       "writtenOn": "2019-08-28T20:24:25Z",
       "side": 1,
       "message": "Emulating writev_async by using write might be tougher if we elect to not call the callback until the data has all been written. I\u0027ll have to think about what to do here.",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9479f6f0_1c438cc8",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-29T03:16:24Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nIt is unncessary. For the sync readv/writev, it will also return the partial data.",
+      "parentUuid": "4acaf04d_48d5a674",
       "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
