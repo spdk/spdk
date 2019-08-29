@@ -9,8 +9,11 @@ BDEVPERF_DIR=$ROOT_DIR/test/bdev/bdevperf
 . $ROOT_DIR/scripts/common.sh || exit 1
 . $ROOT_DIR/test/common/autotest_common.sh
 NVME_FIO_RESULTS=$BASE_DIR/result.json
+rpc_py="$ROOT_DIR/scripts/rpc.py"
 
 PRECONDITIONING=true
+USE_LVOL=false
+USE_COMPRESS=false
 FIO_BIN="/usr/src/fio/fio"
 RUNTIME=600
 PLUGIN="nvme"
@@ -334,6 +337,15 @@ function usage()
 	echo "    --numjobs=INT         Create the specified number of clones of this job. [default=$NUMJOBS]"
 	echo "    --no-preconditioning  Skip preconditioning"
 	echo "    --no-io-scaling       Do not scale iodepth for each device in SPDK fio plugin. [default=$NOIOSCALING]"
+	echo "    --use-lvol            Create logical volumes on top of each NVMe block device and use them in test."
+	echo "                          For SPDK this option only works with fio bdev plugin or bdevperf. This will create a lvol store"
+	echo "                          and a lvol bdev on top of each NVMe bdev."
+	echo "                          For kernel modes this will create a Physical Volume, Volume Group and finally a Logical Volume"
+	echo "                          on top of each Nvme drive."
+	echo "    --use-compress        Only works with --use-lvol. This will enable compression for test."
+	echo "                          For SPDK there must be PMEM modules installed in test platform (/dev/pmem*)."
+	echo "                          Additional compress bdevs will be created on top of lvol bdevs with PMEM as compression part."
+	echo "                          For kernel modes this will create VDO volumes on top of each Logical Volume."
 	set -x
 }
 
@@ -357,6 +369,8 @@ while getopts 'h-:' optchar; do
 			cpu-allowed=*) CPUS_ALLOWED="${OPTARG#*=}" ;;
 			numjobs=*) NUMJOBS="${OPTARG#*=}" ;;
 			repeat-no=*) REPEAT_NO="${OPTARG#*=}" ;;
+			use-lvol) USE_LVOL=true ;;
+			use-compress) USE_COMPRESS=true ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'"; exit 1 ;;
 		esac
 		;;
@@ -378,4 +392,15 @@ if [[ $DISKNO == "ALL" ]] || [[ $DISKNO == "all" ]]; then
 elif [[ $DISKNO -gt ${#disks[@]} ]] || [[ ! $DISKNO =~ ^[0-9]+$ ]]; then
 	echo "error: Required devices number ($DISKNO) is not a valid number or it's larger than the number of devices found (${#disks[@]})"
 	exit 1
+fi
+
+if $USE_COMPRESS; then
+	if ! $USE_LVOL; then
+		echo "error: --use-compress is being used without --use-lvol!"
+		exit 1
+	fi
+	if [[ $PLUGIN == "bdevperf" ]]; then
+		echo "error: --use-compress supported only for kernel and fio_plugin bdev modes!"
+		exit 1
+	fi
 fi
