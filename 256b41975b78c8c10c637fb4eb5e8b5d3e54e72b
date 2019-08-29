@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cb6b2da_59f93a5b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-29T06:53:58Z",
+      "side": 1,
+      "message": "\u0027bdev_blobfs_check\u0027",
+      "revId": "256b41975b78c8c10c637fb4eb5e8b5d3e54e72b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "127d9a45_b33d0cd0",
+        "filename": "lib/blobfs/blobfs_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-29T06:53:58Z",
+      "side": 1,
+      "message": "ERRLOG",
+      "revId": "256b41975b78c8c10c637fb4eb5e8b5d3e54e72b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
