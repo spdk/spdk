@@ -423,7 +423,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	tqpair.qpair.transport = &ttransport.transport;
 	TAILQ_INIT(&tqpair.free_queue);
 	TAILQ_INIT(&tqpair.send_queue);
-	TAILQ_INIT(&tqpair.queued_c2h_data_tcp_req);
+	STAILQ_INIT(&tqpair.queued_c2h_data_tcp_req);
 
 	/* Set qpair state to make unrelated operations NOP */
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
@@ -445,7 +445,7 @@ test_nvmf_tcp_send_c2h_data(void)
 
 	CU_ASSERT(spdk_nvmf_tcp_calc_c2h_data_pdu_num(&tcp_req) == 3);
 
-	TAILQ_INSERT_TAIL(&tqpair.queued_c2h_data_tcp_req, &tcp_req, link);
+	STAILQ_INSERT_TAIL(&tqpair.queued_c2h_data_tcp_req, &tcp_req, link);
 
 	tcp_req.c2h_data_offset = NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2;
 
@@ -470,7 +470,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	CU_ASSERT(pdu.data_iov[1].iov_len == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
 
 	CU_ASSERT(tcp_req.c2h_data_offset == (NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2) * 3);
-	CU_ASSERT(TAILQ_FIRST(&tqpair.queued_c2h_data_tcp_req) == &tcp_req);
+	CU_ASSERT(STAILQ_FIRST(&tqpair.queued_c2h_data_tcp_req) == &tcp_req);
 
 	/* 2nd C2H */
 	spdk_nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
@@ -493,7 +493,7 @@ test_nvmf_tcp_send_c2h_data(void)
 	CU_ASSERT(pdu.data_iov[1].iov_len == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2);
 
 	CU_ASSERT(tcp_req.c2h_data_offset == (NVMF_TCP_PDU_MAX_C2H_DATA_SIZE / 2) * 5);
-	CU_ASSERT(TAILQ_FIRST(&tqpair.queued_c2h_data_tcp_req) == &tcp_req);
+	CU_ASSERT(STAILQ_FIRST(&tqpair.queued_c2h_data_tcp_req) == &tcp_req);
 
 	/* 3rd C2H */
 	spdk_nvmf_tcp_send_c2h_data(&tqpair, &tcp_req);
@@ -514,7 +514,7 @@ test_nvmf_tcp_send_c2h_data(void)
 
 	CU_ASSERT(tcp_req.c2h_data_offset == NVMF_TCP_PDU_MAX_C2H_DATA_SIZE * 3);
 	CU_ASSERT(tqpair.c2h_data_pdu_cnt == 3);
-	CU_ASSERT(TAILQ_EMPTY(&tqpair.queued_c2h_data_tcp_req));
+	CU_ASSERT(STAILQ_EMPTY(&tqpair.queued_c2h_data_tcp_req));
 
 	spdk_poller_unregister(&tqpair.flush_poller);
 
