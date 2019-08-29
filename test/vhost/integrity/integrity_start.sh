@@ -28,7 +28,7 @@ function usage()
 function clean_lvol_cfg()
 {
 	notice "Removing lvol bdev and lvol store"
-	$rpc_py destroy_lvol_bdev lvol_store/lvol_bdev
+	$rpc_py bdev_lvol_delete lvol_store/lvol_bdev
 	$rpc_py destroy_lvol_store -l lvol_store
 }
 
