@@ -227,7 +227,7 @@ struct spdk_nvmf_fc_conn {
 	uint16_t cur_fc_rw_depth;
 
 	/* requests that are waiting to obtain xchg/buffer */
-	TAILQ_HEAD(, spdk_nvmf_fc_request) pending_queue;
+	TAILQ_HEAD(, spdk_nvmf_fc_request) pending_data_buf_queue;
 
 	struct spdk_nvmf_fc_association *fc_assoc;
 
