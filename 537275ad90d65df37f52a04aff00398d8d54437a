@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d5f9a05_fcb8d615",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T18:46:55Z",
+      "side": 1,
+      "message": "I don\u0027t think you meant to commit this.",
+      "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e66df814_cf1a52dc",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T18:46:55Z",
+      "side": 1,
+      "message": "see comment later - if you use DEFAULT_CC, then you can just grep for DEFAULT_CC here instead of needing the grep -v\n\nas an aside, I think just grepping for USER_CC would have worked here too, or grep \"^CC\u003d\" to match only at the beginning of the line",
+      "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a70285c_afe2cf8d",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T18:46:55Z",
+      "side": 1,
+      "message": "or the one specified\n\nmaybe clarify what is meant by \"the one specified by the user\"?\n\nmaybe this would be more clear if you add something to set_default() like this:\n\necho \"DEFAULT_$1\u003d$2\"\n\nI think \"DEFAULT\" is more clear than user, and putting it near the origin/default check will further clarify what it\u0027s for",
+      "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c40cc694_1441f543",
+        "filename": "test/unit/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T18:46:55Z",
+      "side": 1,
+      "message": "I think I\u0027d prefer something that could go in spdk.unittest.mk.  Then we don\u0027t have to pollute spdk.subdirs.mk with a check for it.  Is that feasible?",
+      "revId": "537275ad90d65df37f52a04aff00398d8d54437a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
