@@ -51,9 +51,9 @@ ls_guid=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
 free_mb=$(get_lvs_free_mb "$ls_guid")
 # Using maximum 2048MiB to reduce the test time
 if [ $free_mb -gt 2048 ]; then
-	$rpc_py construct_lvol_bdev -u $ls_guid lbd_0 2048
+	$rpc_py bdev_lvol_create -u $ls_guid lbd_0 2048
 else
-	$rpc_py construct_lvol_bdev -u $ls_guid lbd_0 $free_mb
+	$rpc_py bdev_lvol_create -u $ls_guid lbd_0 $free_mb
 fi
 # "lvs_0/lbd_0:0" ==> use lvs_0/lbd_0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2

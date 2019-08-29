@@ -460,14 +460,14 @@ Example commands
 
 ## Lvols {#bdev_ug_lvols}
 
-To create lvols on existing lvol store user should use `construct_lvol_bdev` RPC command.
+To create lvols on existing lvol store user should use `bdev_lvol_create` RPC command.
 Each created lvol will be represented by new bdev.
 
 Example commands
 
-`rpc.py construct_lvol_bdev lvol1 25 -l lvs`
+`rpc.py bdev_lvol_create lvol1 25 -l lvs`
 
-`rpc.py construct_lvol_bdev lvol2 25 -u 330a6ab2-f468-11e7-983e-001e67edf35d`
+`rpc.py bdev_lvol_create lvol2 25 -u 330a6ab2-f468-11e7-983e-001e67edf35d`
 
 # RAID {#bdev_ug_raid}
 

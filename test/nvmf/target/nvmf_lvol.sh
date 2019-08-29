@@ -35,7 +35,7 @@ $rpc_py construct_raid_bdev -n raid0 -z 64 -r 0 -b "$base_bdevs"
 lvs=$($rpc_py construct_lvol_store raid0 lvs)
 
 # Create a logical volume on the logical volume store
-lvol=$($rpc_py construct_lvol_bdev -u $lvs lvol $LVOL_BDEV_INIT_SIZE)
+lvol=$($rpc_py bdev_lvol_create -u $lvs lvol $LVOL_BDEV_INIT_SIZE)
 
 # Create an NVMe-oF subsystem and add the logical volume as a namespace
 $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode0 -a -s SPDK0

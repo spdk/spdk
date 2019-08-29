@@ -25,7 +25,7 @@ waitforlisten $bdev_svc_pid
 bdf=$(iter_pci_class_code 01 08 02 | head -1)
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
 lvs_u=$($rpc_py construct_lvol_store Nvme0n1 lvs0)
-$rpc_py construct_lvol_bdev -t -u $lvs_u lv0 100
+$rpc_py bdev_lvol_create -t -u $lvs_u lv0 100
 # this will force isal_pmd as some of the CI systems need a qat driver update
 $rpc_py set_compress_pmd -p 2
 compress_bdev=$($rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp)

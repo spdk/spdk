@@ -35,7 +35,8 @@ def rename_lvol_store(client, old_name, new_name):
     return client.call('rename_lvol_store', params)
 
 
-def construct_lvol_bdev(client, lvol_name, size, thin_provision=False, uuid=None, lvs_name=None, clear_method=None):
+@deprecated_alias('construct_lvol_bdev')
+def bdev_lvol_create(client, lvol_name, size, thin_provision=False, uuid=None, lvs_name=None, clear_method=None):
     """Create a logical volume on a logical volume store.
 
     Args:
@@ -62,7 +63,7 @@ def construct_lvol_bdev(client, lvol_name, size, thin_provision=False, uuid=None
         params['lvs_name'] = lvs_name
     if clear_method:
         params['clear_method'] = clear_method
-    return client.call('construct_lvol_bdev', params)
+    return client.call('bdev_lvol_create', params)
 
 
 @deprecated_alias('snapshot_lvol_bdev')

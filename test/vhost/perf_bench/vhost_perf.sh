@@ -268,7 +268,7 @@ else
 			for (( j=0; j<${splits[$i]}; j++)); do
 				free_mb=$(get_lvs_free_mb "$ls_guid")
 				size=$((free_mb / (${splits[$i]}-j) ))
-				lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j $size --clear-method none)
+				lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_$j $size --clear-method none)
 				lvol_bdevs+=("$lb_name")
 			done
 		done
