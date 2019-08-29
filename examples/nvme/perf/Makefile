@@ -35,6 +35,11 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
 APP = perf
 
+ifeq ($(OS),Linux)
+SYS_LIBS += -laio
+CFLAGS += -DHAVE_LIBAIO
+endif
+
 install: $(APP)
 	$(INSTALL_EXAMPLE)
 

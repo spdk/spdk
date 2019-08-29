@@ -86,6 +86,11 @@ timing_enter perf
 #enable no shutdown notification option
 $rootdir/examples/nvme/perf/perf -q 128 -w read -o 12288 -t 1 -LL -i 0 -N
 $rootdir/examples/nvme/perf/perf -q 128 -w write -o 12288 -t 1 -LL -i 0
+if [ -b /dev/ram0 ]; then
+	# Test perf with AIO device
+	$rootdir/examples/nvme/perf/perf /dev/ram0 -q 128 -w read -o 12288 -t 1 -LL -i 0
+	report_test_completion "nvme_perf"
+fi
 timing_exit perf
 
 timing_enter reserve
