@@ -141,6 +141,11 @@ Added `blobfs_detect` RPC method to detect whether a blobfs exists on given bdev
 
 Added `blobfs_create` RPC method to build blobfs on given bdev.
 
+### sock
+
+Add the following three functions, i.e., spdk_sock_recv_async, spdk_sock_readv_async,
+spdk-sock_writev_async, which will be used later.
+
 ## v19.07:
 
 ### ftl
