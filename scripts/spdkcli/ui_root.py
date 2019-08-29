@@ -197,8 +197,8 @@ class UIRoot(UINode):
                 yield LvolStore(lvs)
 
     @verbose
-    def create_lvol_store(self, **kwargs):
-        response = rpc.lvol.construct_lvol_store(self.client, **kwargs)
+    def bdev_lvol_create_lvstore(self, **kwargs):
+        response = rpc.lvol.bdev_lvol_create_lvstore(self.client, **kwargs)
         return response
 
     @verbose

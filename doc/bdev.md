@@ -423,11 +423,11 @@ please refer to @ref lvol.
 Before creating any logical volumes (lvols), an lvol store has to be created first on
 selected block device. Lvol store is lvols vessel responsible for managing underlying
 bdev space assignment to lvol bdevs and storing metadata. To create lvol store user
-should use using `construct_lvol_store` RPC command.
+should use using `bdev_lvol_create_lvstore` RPC command.
 
 Example command
 
-`rpc.py construct_lvol_store Malloc2 lvs -c 4096`
+`rpc.py bdev_lvol_create_lvstore Malloc2 lvs -c 4096`
 
 This will create lvol store named `lvs` with cluster size 4096, build on top of
 `Malloc2` bdev. In response user will be provided with uuid which is unique lvol store

@@ -136,7 +136,7 @@ for (( i=0; i<$max_disks; i++ ));do
 
     # Create base lvol store on NVMe
     notice "Creating lvol store on device Nvme${i}n1"
-    ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i -c 4194304)
+    ls_guid=$($rpc_py bdev_lvol_create_lvstore Nvme${i}n1 lvs_$i -c 4194304)
     lvol_stores+=("$ls_guid")
 
     if $nested_lvol; then
@@ -147,7 +147,7 @@ for (( i=0; i<$max_disks; i++ ));do
         lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_nest $size $thin)
 
         notice "Creating nested lvol store on lvol bdev: $lb_name"
-        nest_ls_guid=$($rpc_py construct_lvol_store $lb_name lvs_n_$i -c 4194304)
+        nest_ls_guid=$($rpc_py bdev_lvol_create_lvstore $lb_name lvs_n_$i -c 4194304)
         nest_lvol_stores+=("$nest_ls_guid")
 
         for (( j=0; j<$vm_count; j++)); do

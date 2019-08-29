@@ -44,7 +44,7 @@ $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Configure nvme devices with nvmf lvol_bdev backend
 	if [ -n "$local_nvme_trid" ]; then
-		ls_guid=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
+		ls_guid=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs_0)
 		get_lvs_free_mb $ls_guid
 		# We don't need to create an lvol larger than 20G for this test.
 		# decreasing the size of the nested lvol allows us to take less time setting up
@@ -55,7 +55,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		lb_guid=$($rpc_py bdev_lvol_create -u $ls_guid lbd_0 $free_mb)
 
 		# Create lvol bdev for nested lvol stores
-		ls_nested_guid=$($rpc_py construct_lvol_store $lb_guid lvs_n_0)
+		ls_nested_guid=$($rpc_py bdev_lvol_create_lvstore $lb_guid lvs_n_0)
 		get_lvs_free_mb $ls_nested_guid
 		if [ $free_mb -gt 20480 ]; then
 			free_mb=20480
