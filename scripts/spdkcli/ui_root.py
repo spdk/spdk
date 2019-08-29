@@ -203,7 +203,7 @@ class UIRoot(UINode):
 
     @verbose
     def delete_lvol_store(self, **kwargs):
-        rpc.lvol.destroy_lvol_store(self.client, **kwargs)
+        rpc.lvol.bdev_lvol_delete_lvstore(self.client, **kwargs)
 
     @verbose
     def create_pmem_pool(self, **kwargs):

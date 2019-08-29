@@ -309,7 +309,7 @@ Example response:
     "bdev_lvol_clone",
     "bdev_lvol_snapshot",
     "bdev_lvol_create",
-    "destroy_lvol_store",
+    "bdev_lvol_delete_lvstore",
     "rename_lvol_store",
     "construct_lvol_store"
   ]
@@ -4814,7 +4814,7 @@ Example response:
 }
 ~~~
 
-## destroy_lvol_store {#rpc_destroy_lvol_store}
+## bdev_lvol_delete_lvstore {#rpc_bdev_lvol_delete_lvstore}
 
 Destroy a logical volume store.
 
@@ -4834,7 +4834,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "destroy_lvol_store",
+  "method": "bdev_lvol_delete_lvstore",
   "id": 1
   "params": {
     "uuid": "a9959197-b5e2-4f2d-8095-251ffb6985a5"

@@ -78,9 +78,9 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		# Delete subsystems, lvol_bdev and destroy lvol_store.
 		$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 		$rpc_py bdev_lvol_delete "$lb_nested_guid"
-		$rpc_py destroy_lvol_store -l lvs_n_0
+		$rpc_py bdev_lvol_delete_lvstore -l lvs_n_0
 		$rpc_py bdev_lvol_delete "$lb_guid"
-		$rpc_py destroy_lvol_store -l lvs_0
+		$rpc_py bdev_lvol_delete_lvstore -l lvs_0
 	fi
 fi
 
