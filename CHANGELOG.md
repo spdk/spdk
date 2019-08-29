@@ -31,6 +31,9 @@ it for NVMe controllers.  When the option is enabled, the controller will not do
 shutdown process and just disable the controller, users can start their application
 later again to initialize the controller to the ready state.
 
+A controller flag `SPDK_NVME_CTRLR_WRR_SUPPORTED` was added to indicate the controller
+can support weighted round robin arbitration feature with submission queue.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
