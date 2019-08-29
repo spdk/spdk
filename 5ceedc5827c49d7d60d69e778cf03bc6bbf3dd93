@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "71271bd9_aaf55c5d",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 2011,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-29T02:53:52Z",
+      "side": 1,
+      "message": "Then we may be able to do:\n\nif (pdu-\u003ehdr-\u003ecommon.pdu_type !\u003d SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ)\n  size +\u003d nvme_tcp_read_data_from_pdu_recv_buf(pdu_recv_buf, iov[i].iov_len, iov[i].iov_base);\nelse\n  size +\u003d nvme_tcp_pdu_recv_buf_advance(pdu_recv_buf, iov[i].iov_len);",
+      "range": {
+        "startLine": 2006,
+        "startChar": 0,
+        "endLine": 2011,
+        "endChar": 0
+      },
+      "revId": "5ceedc5827c49d7d60d69e778cf03bc6bbf3dd93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5900331a_35cec53b",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 23
