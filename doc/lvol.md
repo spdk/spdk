@@ -129,7 +129,7 @@ destroy_lvol_bdev [-h] bdev_name
     Deletes a logical volume previously created by construct_lvol_bdev.
     optional arguments:
     -h, --help  show help
-snapshot_lvol_bdev [-h] lvol_name snapshot_name
+bdev_lvol_snapshot [-h] lvol_name snapshot_name
     Create a snapshot with snapshot_name of a given lvol bdev.
     optional arguments:
     -h, --help  show help
