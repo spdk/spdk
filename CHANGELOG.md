@@ -18,6 +18,11 @@ Added boolean return value for function spdk_fs_set_cache_size to indicate its o
 
 Added `blobfs_set_cache_size` RPC method to set cache size for blobstore filesystem.
 
+### sock
+
+Add the following three functions, i.e., spdk_sock_recv_async, spdk_sock_readv_async,
+spdk-sock_writev_async, which will be used later.
+
 ## v19.10:
 
 ### rpc
