@@ -54,6 +54,14 @@
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
+struct nvme_bdev {
+	struct spdk_bdev	disk;
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+	uint32_t		id;
+	bool			active;
+	struct spdk_nvme_ns	*ns;
+};
+
 struct nvme_io_channel {
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_poller	*poller;
