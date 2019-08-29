@@ -1247,7 +1247,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	}
 	printf("\n");
 
-	if (features[SPDK_NVME_FEAT_ARBITRATION].valid && (cap.bits.ams & SPDK_NVME_CAP_AMS_WRR)) {
+	if (features[SPDK_NVME_FEAT_ARBITRATION].valid) {
 		uint32_t arb = features[SPDK_NVME_FEAT_ARBITRATION].result;
 		unsigned ab, lpw, mpw, hpw;
 
@@ -1264,9 +1264,12 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		} else {
 			printf("%u\n", 1u << ab);
 		}
-		printf("Low Priority Weight:         %u\n", lpw);
-		printf("Medium Priority Weight:      %u\n", mpw);
-		printf("High Priority Weight:        %u\n", hpw);
+
+		if (cap.bits.ams & SPDK_NVME_CAP_AMS_WRR) {
+			printf("Low Priority Weight:         %u\n", lpw);
+			printf("Medium Priority Weight:      %u\n", mpw);
+			printf("High Priority Weight:        %u\n", hpw);
+		}
 		printf("\n");
 	}
 
