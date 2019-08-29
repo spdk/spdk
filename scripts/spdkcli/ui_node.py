@@ -238,7 +238,7 @@ class UILvolBdev(UIBdev):
         UIBdev.__init__(self, "logical_volume", parent)
 
     def delete(self, name):
-        self.get_root().destroy_lvol_bdev(name=name)
+        self.get_root().bdev_lvol_delete(name=name)
 
     def ui_command_create(self, name, size, lvs, thin_provision=None):
         """

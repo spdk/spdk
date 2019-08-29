@@ -16,7 +16,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 # Remove lvol bdevs and stores.
 function remove_backends() {
 	echo "INFO: Removing lvol bdev"
-	$rpc_py destroy_lvol_bdev "lvs_0/lbd_0"
+	$rpc_py bdev_lvol_delete "lvs_0/lbd_0"
 
 	echo "INFO: Removing lvol stores"
 	$rpc_py destroy_lvol_store -l lvs_0
