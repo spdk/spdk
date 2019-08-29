@@ -203,7 +203,7 @@ function create_bdev_subsystem_config() {
 		tgt_rpc construct_lvol_store -c 1048576 ${lvol_store_base_bdev}p0 lvs_test
 		tgt_rpc construct_lvol_bdev -l lvs_test lvol0 32
 		tgt_rpc construct_lvol_bdev -l lvs_test -t lvol1 32
-		tgt_rpc snapshot_lvol_bdev     lvs_test/lvol0 snapshot0
+		tgt_rpc bdev_lvol_snapshot     lvs_test/lvol0 snapshot0
 		tgt_rpc bdev_lvol_clone        lvs_test/snapshot0 clone0
 
 		expected_notifications+=(

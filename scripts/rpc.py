@@ -1194,15 +1194,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('size', help='size in MiB for this bdev', type=int)
     p.set_defaults(func=construct_lvol_bdev)
 
-    def snapshot_lvol_bdev(args):
-        print_json(rpc.lvol.snapshot_lvol_bdev(args.client,
+    def bdev_lvol_snapshot(args):
+        print_json(rpc.lvol.bdev_lvol_snapshot(args.client,
                                                lvol_name=args.lvol_name,
                                                snapshot_name=args.snapshot_name))
 
-    p = subparsers.add_parser('snapshot_lvol_bdev', help='Create a snapshot of an lvol bdev')
+    p = subparsers.add_parser('bdev_lvol_snapshot', aliases=['inflate_lvol_bdev'],
+                              help='Create a snapshot of an lvol bdev')
     p.add_argument('lvol_name', help='lvol bdev name')
     p.add_argument('snapshot_name', help='lvol snapshot name')
-    p.set_defaults(func=snapshot_lvol_bdev)
+    p.set_defaults(func=bdev_lvol_snapshot)
 
     def bdev_lvol_clone(args):
         print_json(rpc.lvol.bdev_lvol_clone(args.client,

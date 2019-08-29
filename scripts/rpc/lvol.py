@@ -65,7 +65,8 @@ def construct_lvol_bdev(client, lvol_name, size, thin_provision=False, uuid=None
     return client.call('construct_lvol_bdev', params)
 
 
-def snapshot_lvol_bdev(client, lvol_name, snapshot_name):
+@deprecated_alias('snapshot_lvol_bdev')
+def bdev_lvol_snapshot(client, lvol_name, snapshot_name):
     """Capture a snapshot of the current state of a logical volume.
 
     Args:
@@ -79,7 +80,7 @@ def snapshot_lvol_bdev(client, lvol_name, snapshot_name):
         'lvol_name': lvol_name,
         'snapshot_name': snapshot_name
     }
-    return client.call('snapshot_lvol_bdev', params)
+    return client.call('bdev_lvol_snapshot', params)
 
 
 @deprecated_alias('clone_lvol_bdev')
