@@ -59,22 +59,8 @@ static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
-	const struct spdk_nvme_ctrlr_data *cdata;
-
-	/*
-	 * spdk_nvme_ctrlr is the logical abstraction in SPDK for an NVMe
-	 *  controller.  During initialization, the IDENTIFY data for the
-	 *  controller is read using an NVMe admin command, and that data
-	 *  can be retrieved using spdk_nvme_ctrlr_get_data() to get
-	 *  detailed information on the controller.  Refer to the NVMe
-	 *  specification for more details on IDENTIFY for NVMe controllers.
-	 */
-	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	if (!spdk_nvme_ns_is_active(ns)) {
-		printf("Controller %-20.20s (%-20.20s): Skipping inactive NS %u\n",
-		       cdata->mn, cdata->sn,
-		       spdk_nvme_ns_get_id(ns));
 		return;
 	}
 
@@ -292,7 +278,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	int nsid, num_ns;
 	struct ctrlr_entry *entry;
 	struct spdk_nvme_ns *ns;
-	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+	const struct spdk_nvme_ctrlr_data *cdata;
 
 	entry = malloc(sizeof(struct ctrlr_entry));
 	if (entry == NULL) {
@@ -301,6 +287,16 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	printf("Attached to %s\n", trid->traddr);
+
+	/*
+	 * spdk_nvme_ctrlr is the logical abstraction in SPDK for an NVMe
+	 *  controller.  During initialization, the IDENTIFY data for the
+	 *  controller is read using an NVMe admin command, and that data
+	 *  can be retrieved using spdk_nvme_ctrlr_get_data() to get
+	 *  detailed information on the controller.  Refer to the NVMe
+	 *  specification for more details on IDENTIFY for NVMe controllers.
+	 */
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
