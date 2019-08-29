@@ -168,6 +168,7 @@ if [ -n "$CROSS_PREFIX" ]; then
 fi
 
 function set_default() {
+	echo "DEFAULT_$1=$2"
 	echo "ifeq (\$(origin $1),default)"
 	echo "$1=$2"
 	echo "endif"
