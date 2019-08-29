@@ -2231,7 +2231,7 @@ Example response:
 }
 ~~~
 
-## construct_pmem_bdev {#rpc_construct_pmem_bdev}
+## bdev_pmem_create {#rpc_bdev_pmem_create}
 
 Construct @ref bdev_config_pmem bdev.
 
@@ -2259,7 +2259,7 @@ Example request:
     "name": "Pmem0"
   },
   "jsonrpc": "2.0",
-  "method": "construct_pmem_bdev",
+  "method": "bdev_pmem_create",
   "id": 1
 }
 ~~~

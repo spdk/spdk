@@ -572,7 +572,8 @@ def bdev_iscsi_delete(client, name):
     return client.call('bdev_iscsi_delete', params)
 
 
-def construct_pmem_bdev(client, pmem_file, name):
+@deprecated_alias('construct_pmem_bdev')
+def bdev_pmem_create(client, pmem_file, name):
     """Construct a libpmemblk block device.
 
     Args:
@@ -586,7 +587,7 @@ def construct_pmem_bdev(client, pmem_file, name):
         'pmem_file': pmem_file,
         'name': name
     }
-    return client.call('construct_pmem_bdev', params)
+    return client.call('bdev_pmem_create', params)
 
 
 def delete_pmem_bdev(client, name):

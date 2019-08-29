@@ -45,7 +45,7 @@ struct rpc_construct_pmem {
 };
 
 static void
-free_rpc_construct_pmem_bdev(struct rpc_construct_pmem *req)
+free_rpc_bdev_pmem_create(struct rpc_construct_pmem *req)
 {
 	free(req->pmem_file);
 	free(req->name);
@@ -57,7 +57,7 @@ static const struct spdk_json_object_decoder rpc_construct_pmem_decoders[] = {
 };
 
 static void
-spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_pmem_create(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_construct_pmem req = {};
@@ -84,9 +84,10 @@ spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_construct_pmem_bdev(&req);
+	free_rpc_bdev_pmem_create(&req);
 }
-SPDK_RPC_REGISTER("construct_pmem_bdev", spdk_rpc_construct_pmem_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_pmem_create", spdk_rpc_bdev_pmem_create, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_create, construct_pmem_bdev)
 
 struct rpc_delete_pmem {
 	char *name;
