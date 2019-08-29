@@ -140,6 +140,24 @@
     },
     {
       "key": {
+        "uuid": "3ce31cd1_bdffe953",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-29T23:30:50Z",
+      "side": 1,
+      "message": "Itis true. Currently users should log this info. And they need to decide to submit a new writev/readv if needed. For example, if the users to sumbit a recv with 4096 bytes, and they only get 2048 bytes, and the users will need to determine submit the new I/O. I do not think that you can make a full async write(read), and since you need to submit it again.",
+      "parentUuid": "53fe5b59_f36d79b3",
+      "revId": "9809a2d3fd1f671da89a8a7903754f2dc43878cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "26189fee_dca56926",
         "filename": "include/spdk/sock.h",
         "patchSetId": 15
