@@ -70,6 +70,24 @@
       "revId": "66cf8a447fc8b552f97f4e8395ac79ddc87ea079",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4e9c465_0666c6d7",
+        "filename": "test/nvmf/target/connect_disconnect.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-08-29T14:35:24Z",
+      "side": 1,
+      "message": "Hi Changpeng, one reason we want to perform connect_disconnect a lot of times is to make sure that qpair resources are being freed back to the system or NIC. In the context of how many resources might be consumed by defunct connections, there is a big difference between 10 and 200.",
+      "parentUuid": "3ddb9cd8_f356d508",
+      "revId": "66cf8a447fc8b552f97f4e8395ac79ddc87ea079",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
