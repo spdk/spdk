@@ -533,7 +533,7 @@ function bdev_pmem_create_tc5()
 		error "Pmem bdev not found!"
 	fi
 
-	if ! $rpc_py delete_pmem_bdev $pmem_bdev_name; then
+	if ! $rpc_py bdev_pmem_delete $pmem_bdev_name; then
 		error "Failed to delete pmem bdev!"
 	fi
 
@@ -569,7 +569,7 @@ function bdev_pmem_create_tc6()
 		error "Constructed pmem bdev with occupied path!"
 	fi
 
-	if ! $rpc_py delete_pmem_bdev $pmem_bdev_name; then
+	if ! $rpc_py bdev_pmem_delete $pmem_bdev_name; then
 		error "Failed to delete pmem bdev!"
 	fi
 
@@ -582,7 +582,7 @@ function bdev_pmem_create_tc6()
 }
 
 #================================================
-# delete_pmem_bdev tests
+# bdev_pmem_delete tests
 #================================================
 function delete_bdev_tc1()
 {
@@ -605,7 +605,7 @@ function delete_bdev_tc1()
 		error "$pmem_bdev_name bdev not found!"
 	fi
 
-	if ! $rpc_py delete_pmem_bdev $pmem_bdev_name; then
+	if ! $rpc_py bdev_pmem_delete $pmem_bdev_name; then
 		error "Failed to delete $pmem_bdev_name bdev!"
 	fi
 
@@ -638,12 +638,12 @@ function delete_bdev_tc2()
 		error "Pmem bdev not found!"
 	fi
 
-	if ! $rpc_py delete_pmem_bdev $pmem_bdev_name; then
+	if ! $rpc_py bdev_pmem_delete $pmem_bdev_name; then
 		error "Failed to delete pmem bdev!"
 	fi
 
-	if $rpc_py delete_pmem_bdev $pmem_bdev_name; then
-		error "delete_pmem_bdev deleted pmem bdev for second time!"
+	if $rpc_py bdev_pmem_delete $pmem_bdev_name; then
+		error "bdev_pmem_delete deleted pmem bdev for second time!"
 	fi
 
 	pmem_clean_pool_file

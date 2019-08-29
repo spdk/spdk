@@ -225,8 +225,8 @@ class UIRoot(UINode):
         return response
 
     @verbose
-    def delete_pmem_bdev(self, **kwargs):
-        response = rpc.bdev.delete_pmem_bdev(self.client, **kwargs)
+    def bdev_pmem_delete(self, **kwargs):
+        response = rpc.bdev.bdev_pmem_delete(self.client, **kwargs)
         return response
 
     @verbose

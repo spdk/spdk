@@ -590,14 +590,15 @@ def bdev_pmem_create(client, pmem_file, name):
     return client.call('bdev_pmem_create', params)
 
 
-def delete_pmem_bdev(client, name):
+@deprecated_alias('delete_pmem_bdev')
+def bdev_pmem_delete(client, name):
     """Remove pmem bdev from the system.
 
     Args:
         name: name of pmem bdev to delete
     """
     params = {'name': name}
-    return client.call('delete_pmem_bdev', params)
+    return client.call('bdev_pmem_delete', params)
 
 
 def construct_passthru_bdev(client, base_bdev_name, name):

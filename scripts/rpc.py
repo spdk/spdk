@@ -540,13 +540,14 @@ if __name__ == "__main__":
     p.add_argument('-n', '--name', help='Block device name', required=True)
     p.set_defaults(func=bdev_pmem_create)
 
-    def delete_pmem_bdev(args):
-        rpc.bdev.delete_pmem_bdev(args.client,
+    def bdev_pmem_delete(args):
+        rpc.bdev.bdev_pmem_delete(args.client,
                                   name=args.name)
 
-    p = subparsers.add_parser('delete_pmem_bdev', help='Delete a pmem bdev')
+    p = subparsers.add_parser('bdev_pmem_delete', aliases=['delete_pmem_bdev'],
+                              help='Delete a pmem bdev')
     p.add_argument('name', help='pmem bdev name')
-    p.set_defaults(func=delete_pmem_bdev)
+    p.set_defaults(func=bdev_pmem_delete)
 
     def construct_passthru_bdev(args):
         print_json(rpc.bdev.construct_passthru_bdev(args.client,
