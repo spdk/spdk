@@ -311,7 +311,7 @@ Example response:
     "bdev_lvol_create",
     "bdev_lvol_delete_lvstore",
     "bdev_lvol_rename_lvstore",
-    "construct_lvol_store"
+    "bdev_lvol_create_lvstore"
   ]
 }
 ~~~
@@ -4770,7 +4770,7 @@ The alias of the logical volume takes the format _lvs_name/lvol_name_ where:
 * _lvs_name_ is the name of the logical volume store.
 * _lvol_name_ is specified on creation and can be renamed.
 
-## construct_lvol_store {#rpc_construct_lvol_store}
+## bdev_lvol_create_lvstore {#rpc_bdev_lvol_create_lvstore}
 
 Construct a logical volume store.
 
@@ -4795,7 +4795,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "construct_lvol_store",
+  "method": "bdev_lvol_create_lvstore",
   "params": {
     "lvs_name": "LVS0",
     "bdev_name": "Malloc0"

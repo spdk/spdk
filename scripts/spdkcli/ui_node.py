@@ -105,7 +105,7 @@ class UILvolStores(UINode):
         """
 
         cluster_size = self.ui_eval_param(cluster_size, "number", None)
-        self.get_root().create_lvol_store(lvs_name=name, bdev_name=bdev_name, cluster_sz=cluster_size)
+        self.get_root().bdev_lvol_create_lvstore(lvs_name=name, bdev_name=bdev_name, cluster_sz=cluster_size)
 
     def ui_command_delete(self, name=None, uuid=None):
         """
