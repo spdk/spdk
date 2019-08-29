@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d11c139_4247ac2f",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T19:14:10Z",
+      "side": 1,
+      "message": "you could have a helper function to make a lot of this prettier:\n\nstatic void\nget_mbuf_array(mbuf_array, mbuf_head, mbuf_count)\n{\n  int i;\n\n  for (i \u003d 0; i \u003c mbuf_count; i++) {\n    mbuf_array[i] \u003d mbuf_head;\n    mbuf_head \u003d mbuf_head-\u003enext;\n  }\n}\n\nThen these all just become something like:\n\nget_mbuf_array(op_mbuf, op-\u003em_src, SPDK_COUNTOF(op_mbuf));",
+      "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cdff77f_ae350d6a",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T19:14:10Z",
+      "side": 1,
+      "message": "I\u0027m not following this.  num_src_mbufs is 3.  Why don\u0027t we check the 4th one?\n\noh - I think op_mbuf[3] and exp_mbuf[3] are NULL - is that correct?  if so we should assert that",
+      "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf714d55_a03429fe",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T19:14:10Z",
+      "side": 1,
+      "message": "there are a lot of magic \"3\" and \"4\" values, and more getting added in this patch - maybe a prep patch before this one that uses some kind of #define or const int?",
+      "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d339ad2d_02fdbf6a",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T19:14:10Z",
+      "side": 1,
+      "message": "this function goes from about 70 lines to about 200 lines in this patch - should we break some of this out into separate unit test functions?",
+      "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
