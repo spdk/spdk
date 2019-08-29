@@ -39,8 +39,14 @@
 #include "spdk/nvme_ocssd.h"
 #include "spdk/nvme_ocssd_spec.h"
 #include "spdk_internal/log.h"
+#include "spdk/nvme.h"
 #include "common.h"
 #include "bdev_ocssd.h"
+
+struct bdev_ocssd_io_channel {
+	struct spdk_nvme_qpair	*qpair;
+	struct spdk_poller	*poller;
+};
 
 struct nvme_bdev {
 	struct spdk_bdev		disk;
@@ -81,6 +87,45 @@ static struct spdk_bdev_module ocssd_if = {
 };
 
 SPDK_BDEV_MODULE_REGISTER(ocssd, &ocssd_if);
+
+static int
+bdev_ocssd_poll_ioq(void *ctx)
+{
+	struct bdev_ocssd_io_channel *ioch = ctx;
+
+	return spdk_nvme_qpair_process_completions(ioch->qpair, 0);
+}
+
+static int
+bdev_ocssd_io_channel_create_cb(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvme_ctrlr *ctrlr = io_device;
+	struct bdev_ocssd_io_channel *ioch = ctx_buf;
+
+	ioch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+	if (!ioch->qpair) {
+		SPDK_ERRLOG("Failed to alloc IO queue pair\n");
+		return -ENOMEM;
+	}
+
+	ioch->poller = spdk_poller_register(bdev_ocssd_poll_ioq, ioch, 0);
+	if (!ioch->poller) {
+		SPDK_ERRLOG("Failed to register IO queue poller\n");
+		spdk_nvme_ctrlr_free_io_qpair(ioch->qpair);
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+static void
+bdev_ocssd_io_channel_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct bdev_ocssd_io_channel *ioch = ctx_buf;
+
+	spdk_nvme_ctrlr_free_io_qpair(ioch->qpair);
+	spdk_poller_unregister(&ioch->poller);
+}
 
 static int
 bdev_ocssd_poll_adminq(void *ctx)
@@ -157,6 +202,11 @@ bdev_ocssd_create_ctrlr(const struct spdk_nvme_transport_id *trid, const char *n
 		return -ENOMEM;
 	}
 
+	spdk_io_device_register(ctrlr->ctrlr, bdev_ocssd_io_channel_create_cb,
+				bdev_ocssd_io_channel_destroy_cb,
+				sizeof(struct bdev_ocssd_io_channel),
+				name);
+
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_INSERT_HEAD(&g_nvme_bdev_ctrlrs, ctrlr, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -167,12 +217,20 @@ bdev_ocssd_create_ctrlr(const struct spdk_nvme_transport_id *trid, const char *n
 }
 
 static void
+bdev_ocssd_unregister_cb(void *io_device)
+{
+	struct spdk_nvme_ctrlr *ctrlr = io_device;
+
+	spdk_nvme_detach(ctrlr);
+}
+
+static void
 bdev_ocssd_free_ctrlr(struct nvme_bdev_ctrlr *ctrlr)
 {
 	assert(ctrlr->ref == 0);
 
+	spdk_io_device_unregister(ctrlr->ctrlr, bdev_ocssd_unregister_cb);
 	spdk_poller_unregister(&ctrlr->adminq_timer_poller);
-	spdk_nvme_detach(ctrlr->ctrlr);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, ctrlr, tailq);
@@ -208,6 +266,7 @@ bdev_ocssd_destruct(void *ctx)
 static void
 bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static bool
@@ -219,7 +278,9 @@ bdev_ocssd_io_type_supported(void *ctx, enum spdk_bdev_io_type type)
 static struct spdk_io_channel *
 bdev_ocssd_get_io_channel(void *ctx)
 {
-	return NULL;
+	struct nvme_bdev *bdev = ctx;
+
+	return spdk_get_io_channel(bdev->ctrlr->ctrlr);
 }
 
 static struct spdk_bdev_fn_table ocssdlib_fn_table = {
