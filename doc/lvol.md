@@ -90,7 +90,7 @@ construct_lvol_store [-h] [-c CLUSTER_SZ] bdev_name lvs_name
     -h  show help
     -c  CLUSTER_SZ Specifies the size of cluster. By default its 4MiB.
     --clear-method specify data region clear method "none", "unmap" (default), "write_zeroes"
-destroy_lvol_store [-h] [-u UUID] [-l LVS_NAME]
+bdev_lvol_delete_lvstore [-h] [-u UUID] [-l LVS_NAME]
     Destroy lvolstore on specified bdev. Removes lvolstore along with lvols on
     it. User can identify lvol store by UUID or its name. Note that destroying
     lvolstore requires using this call, while deleting single lvol requires

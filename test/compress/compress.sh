@@ -65,7 +65,7 @@ $rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
 
 # now cleanup the vols, deleting the compression vol also deletes the pmem file
 $rpc_py bdev_compress_delete COMP_lvs0/lv0
-$rpc_py destroy_lvol_store -l lvs0
+$rpc_py bdev_lvol_delete_lvstore -l lvs0
 
 trap - SIGINT SIGTERM EXIT
 killprocess $bdevperf_pid

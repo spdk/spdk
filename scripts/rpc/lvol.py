@@ -184,7 +184,8 @@ def bdev_lvol_decouple_parent(client, name):
     return client.call('bdev_lvol_decouple_parent', params)
 
 
-def destroy_lvol_store(client, uuid=None, lvs_name=None):
+@deprecated_alias('destroy_lvol_store')
+def bdev_lvol_delete_lvstore(client, uuid=None, lvs_name=None):
     """Destroy a logical volume store.
 
     Args:
@@ -201,7 +202,7 @@ def destroy_lvol_store(client, uuid=None, lvs_name=None):
         params['uuid'] = uuid
     if lvs_name:
         params['lvs_name'] = lvs_name
-    return client.call('destroy_lvol_store', params)
+    return client.call('bdev_lvol_delete_lvstore', params)
 
 
 @deprecated_alias('get_lvol_stores')

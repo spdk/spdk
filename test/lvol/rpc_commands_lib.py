@@ -139,14 +139,14 @@ class Commands_Rpc(object):
         output = self.rpc.bdev_lvol_create(name_opt, uuid, lbd_name, size, thin_provisioned)[0]
         return output.rstrip('\n')
 
-    def destroy_lvol_store(self, uuid):
-        print("INFO: RPC COMMAND destroy_lvol_store")
+    def bdev_lvol_delete_lvstore(self, uuid):
+        print("INFO: RPC COMMAND bdev_lvol_delete_lvstore")
         try:
             uuid_obj = UUID(uuid)
             name_opt = "-u"
         except ValueError:
             name_opt = "-l"
-        output, rc = self.rpc.destroy_lvol_store(name_opt, uuid)
+        output, rc = self.rpc.bdev_lvol_delete_lvstore(name_opt, uuid)
         return rc
 
     def delete_malloc_bdev(self, base_name):

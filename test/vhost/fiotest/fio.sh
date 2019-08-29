@@ -246,7 +246,7 @@ if ! $no_shutdown; then
 					if [[ $disk == "RaidBdev2" ]]; then
 						notice "Removing lvol bdev and lvol store"
 						$rpc_py bdev_lvol_delete lvs_0/lbd_0
-						$rpc_py destroy_lvol_store -l lvs_0
+						$rpc_py bdev_lvol_delete_lvstore -l lvs_0
 					fi
 				done
 			done <<< "${conf[2]}"
