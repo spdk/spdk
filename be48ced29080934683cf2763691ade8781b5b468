@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b2ae3a9f_d423a3e5",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-08-29T04:07:20Z",
+      "side": 1,
+      "message": "I think that we should add it later. Currently, for other functions are still same. It is not make sense to use a seperate libaio module.",
+      "parentUuid": "eb18801c_40d14f49",
+      "revId": "be48ced29080934683cf2763691ade8781b5b468",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aa1d82b3_6fcef517",
         "filename": "module/sock/posix/posix.c",
         "patchSetId": 18
