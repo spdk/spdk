@@ -158,8 +158,8 @@ class UIRoot(UINode):
         return response
 
     @verbose
-    def destroy_lvol_bdev(self, **kwargs):
-        response = rpc.lvol.destroy_lvol_bdev(self.client, **kwargs)
+    def bdev_lvol_delete(self, **kwargs):
+        response = rpc.lvol.bdev_lvol_delete(self.client, **kwargs)
         return response
 
     @verbose

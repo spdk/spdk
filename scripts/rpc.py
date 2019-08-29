@@ -1267,13 +1267,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='lvol bdev name')
     p.set_defaults(func=bdev_lvol_set_read_only)
 
-    def destroy_lvol_bdev(args):
-        rpc.lvol.destroy_lvol_bdev(args.client,
-                                   name=args.name)
+    def bdev_lvol_delete(args):
+        rpc.lvol.bdev_lvol_delete(args.client,
+                                  name=args.name)
 
-    p = subparsers.add_parser('destroy_lvol_bdev', help='Destroy a logical volume')
+    p = subparsers.add_parser('bdev_lvol_delete', aliases=['destroy_lvol_bdev'],
+                              help='Destroy a logical volume')
     p.add_argument('name', help='lvol bdev name')
-    p.set_defaults(func=destroy_lvol_bdev)
+    p.set_defaults(func=bdev_lvol_delete)
 
     def destroy_lvol_store(args):
         rpc.lvol.destroy_lvol_store(args.client,
