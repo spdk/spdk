@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd81c77a_7a43e997",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-29T18:28:36Z",
+      "side": 1,
+      "message": "python formatting error here (caught by unit tests) - needs to be indented",
+      "revId": "ef9c292db0341feb6cea030c0e4087caef234047",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
