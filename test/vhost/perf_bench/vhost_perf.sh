@@ -263,7 +263,7 @@ else
 		notice "Using logical volumes"
 		trap 'cleanup_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
 		for (( i=0; i<$max_disks; i++ ));do
-			ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i --clear-method none)
+			ls_guid=$($rpc_py bdev_lvol_create_lvstore Nvme${i}n1 lvs_$i --clear-method none)
 			lvol_stores+=("$ls_guid")
 			for (( j=0; j<${splits[$i]}; j++)); do
 				free_mb=$(get_lvs_free_mb "$ls_guid")

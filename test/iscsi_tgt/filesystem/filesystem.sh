@@ -47,7 +47,7 @@ $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
 
-ls_guid=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
+ls_guid=$($rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs_0)
 free_mb=$(get_lvs_free_mb "$ls_guid")
 # Using maximum 2048MiB to reduce the test time
 if [ $free_mb -gt 2048 ]; then
