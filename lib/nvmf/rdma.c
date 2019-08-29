@@ -1337,6 +1337,9 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	rqpair->cm_id = event->id;
 	rqpair->listen_id = event->listen_id;
 	rqpair->qpair.transport = transport;
+	/* use qid from the private data to determine the qpair type
+	   qid will be set to the appropriate value when the controller is created */
+	rqpair->qpair.qid = private_data->qid;
 
 	event->id->context = &rqpair->qpair;
 
@@ -3270,6 +3273,42 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 	return &rgroup->group;
 }
 
+static struct spdk_nvmf_transport_poll_group *
+spdk_nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_rdma_poll_group **pg;
+	struct spdk_nvmf_transport_poll_group *result;
+
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
+
+	pthread_mutex_lock(&rtransport->lock);
+
+	if (TAILQ_EMPTY(&rtransport->poll_groups)) {
+		pthread_mutex_unlock(&rtransport->lock);
+		return NULL;
+	}
+
+	if (qpair->qid == 0) {
+		pg = &rtransport->conn_sched.next_admin_pg;
+	} else {
+		pg = &rtransport->conn_sched.next_io_pg;
+	}
+
+	assert(*pg != NULL);
+
+	result = &(*pg)->group;
+
+	*pg = TAILQ_NEXT(*pg, link);
+	if (*pg == NULL) {
+		*pg = TAILQ_FIRST(&rtransport->poll_groups);
+	}
+
+	pthread_mutex_unlock(&rtransport->lock);
+
+	return result;
+}
+
 static void
 spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
@@ -3988,6 +4027,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.listener_discover = spdk_nvmf_rdma_discover,
 
 	.poll_group_create = spdk_nvmf_rdma_poll_group_create,
+	.get_optimal_poll_group = spdk_nvmf_rdma_get_optimal_poll_group,
 	.poll_group_destroy = spdk_nvmf_rdma_poll_group_destroy,
 	.poll_group_add = spdk_nvmf_rdma_poll_group_add,
 	.poll_group_poll = spdk_nvmf_rdma_poll_group_poll,
