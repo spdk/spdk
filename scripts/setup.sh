@@ -680,9 +680,9 @@ if [ -z "$mode" ]; then
 	mode="config"
 fi
 
-: ${HUGEMEM:=2048}
-: ${PCI_WHITELIST:=""}
-: ${PCI_BLACKLIST:=""}
+: "${HUGEMEM:=2048}"
+: "${PCI_WHITELIST:=}"
+: "${PCI_BLACKLIST:=}"
 
 if [ -n "$NVME_WHITELIST" ]; then
 	PCI_WHITELIST="$PCI_WHITELIST $NVME_WHITELIST"
@@ -702,7 +702,7 @@ fi
 if [ $(uname) = Linux ]; then
 	HUGEPGSZ=$(( $(grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9') ))
 	HUGEPGSZ_MB=$(( $HUGEPGSZ / 1024 ))
-	: ${NRHUGE=$(( (HUGEMEM + HUGEPGSZ_MB - 1) / HUGEPGSZ_MB ))}
+	: "${NRHUGE=$(( (HUGEMEM + HUGEPGSZ_MB - 1) / HUGEPGSZ_MB ))}"
 
 	if [ "$mode" == "config" ]; then
 		configure_linux

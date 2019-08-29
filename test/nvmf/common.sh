@@ -13,8 +13,8 @@ function build_nvmf_app_args()
 	fi
 }
 
-: ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
-: ${NVMF_APP="$(build_nvmf_app_args)"}; export NVMF_APP
+: "${NVMF_APP_SHM_ID=0}"; export NVMF_APP_SHM_ID
+: "${NVMF_APP=$(build_nvmf_app_args)}"; export NVMF_APP
 
 have_pci_nics=0
 
