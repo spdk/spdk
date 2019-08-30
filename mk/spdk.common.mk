@@ -223,6 +223,7 @@ CXXFLAGS += $(COMMON_CFLAGS) -std=c++0x
 SYS_LIBS += -lrt
 SYS_LIBS += -luuid
 SYS_LIBS += -lcrypto
+SYS_LIBS += -lfuse
 ifeq ($(CONFIG_LOG_BACKTRACE),y)
 SYS_LIBS += -lunwind
 endif
