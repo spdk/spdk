@@ -43,14 +43,27 @@
 #include "common.h"
 #include "bdev_ocssd.h"
 
+struct bdev_ocssd_lba_offsets {
+	uint32_t	grp;
+	uint32_t	pu;
+	uint32_t	chk;
+	uint32_t	lbk;
+};
+
 struct bdev_ocssd_io_channel {
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_poller	*poller;
 };
 
+struct bdev_ocssd_io {
+	size_t	iov_pos;
+	size_t	iov_off;
+};
+
 struct ocssd_bdev {
 	struct nvme_bdev		nvme_bdev;
 	struct spdk_ocssd_geometry_data	geometry;
+	struct bdev_ocssd_lba_offsets	lba_offsets;
 };
 
 static int
@@ -73,7 +86,7 @@ bdev_ocssd_config_json(struct spdk_json_write_ctx *w)
 static int
 bdev_ocssd_get_ctx_size(void)
 {
-	return 0;
+	return sizeof(struct bdev_ocssd_io);
 }
 
 static struct spdk_bdev_module ocssd_if = {
@@ -195,16 +208,215 @@ bdev_ocssd_destruct(void *ctx)
 	return 1;
 }
 
+static uint64_t
+bdev_ocssd_to_disk_lba(struct ocssd_bdev *ocssd_bdev, uint64_t lba)
+{
+	const struct spdk_ocssd_geometry_data *geo = &ocssd_bdev->geometry;
+	const struct bdev_ocssd_lba_offsets *offsets = &ocssd_bdev->lba_offsets;
+	uint64_t addr_shift, lbk, chk, pu, grp;
+
+	/* To achieve best performance, we need to make sure that adjacent zones can be accessed
+	 * in parallel.  We accomplish this by having the following addressing scheme:
+	 *
+	 * [            zone id              ][  zone offset  ] User's LBA
+	 * [ chunk ][ parallel unit ][ group ][ logical block ] Open Channel's LBA
+	 *
+	 * which means that neighbouring zones are placed in a different group and parallel unit.
+	 */
+	lbk = lba % geo->clba;
+	addr_shift = geo->clba;
+
+	grp = (lba / addr_shift) % geo->num_grp;
+	addr_shift *= geo->num_grp;
+
+	pu = (lba / addr_shift) % geo->num_pu;
+	addr_shift *= geo->num_pu;
+
+	chk = (lba / addr_shift) % geo->num_chk;
+
+	return (lbk << offsets->lbk) |
+	       (chk << offsets->chk) |
+	       (pu  << offsets->pu)  |
+	       (grp << offsets->grp);
+}
+
+static void
+bdev_ocssd_reset_sgl(void *cb_arg, uint32_t offset)
+{
+	struct spdk_bdev_io *bdev_io = cb_arg;
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct iovec *iov;
+
+	ocdev_io->iov_pos = 0;
+	ocdev_io->iov_off = 0;
+
+	for (; ocdev_io->iov_pos < (size_t)bdev_io->u.bdev.iovcnt; ++ocdev_io->iov_pos) {
+		iov = &bdev_io->u.bdev.iovs[ocdev_io->iov_pos];
+		if (offset < iov->iov_len) {
+			ocdev_io->iov_off = offset;
+			return;
+		}
+
+		offset -= iov->iov_len;
+	}
+
+	assert(false && "Invalid offset length");
+}
+
+static int
+bdev_ocssd_next_sge(void *cb_arg, void **address, uint32_t *length)
+{
+	struct spdk_bdev_io *bdev_io = cb_arg;
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	struct iovec *iov;
+
+	assert(ocdev_io->iov_pos < (size_t)bdev_io->u.bdev.iovcnt);
+	iov = &bdev_io->u.bdev.iovs[ocdev_io->iov_pos];
+
+	*address = iov->iov_base;
+	*length = iov->iov_len;
+
+	if (ocdev_io->iov_off != 0) {
+		assert(ocdev_io->iov_off < iov->iov_len);
+		*address = (char *)*address + ocdev_io->iov_off;
+		*length -= ocdev_io->iov_off;
+	}
+
+	assert(ocdev_io->iov_off + *length == iov->iov_len);
+	ocdev_io->iov_off = 0;
+	ocdev_io->iov_pos++;
+
+	return 0;
+}
+
+static void
+bdev_ocssd_read_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
+}
+
+static int
+bdev_ocssd_read(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct bdev_ocssd_io_channel *ocdev_ioch = spdk_io_channel_get_ctx(ioch);
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	const size_t zone_size = nvme_bdev->disk.zone_size;
+	uint64_t lba;
+
+	if ((bdev_io->u.bdev.offset_blocks % zone_size) + bdev_io->u.bdev.num_blocks > zone_size) {
+		SPDK_ERRLOG("Tried to cross zone boundary during read command\n");
+		return -EINVAL;
+	}
+
+	ocdev_io->iov_pos = 0;
+	ocdev_io->iov_off = 0;
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
+
+	return spdk_nvme_ns_cmd_readv_with_md(nvme_bdev->ns, ocdev_ioch->qpair, lba,
+					      bdev_io->u.bdev.num_blocks, bdev_ocssd_read_cb,
+					      bdev_io, 0, bdev_ocssd_reset_sgl,
+					      bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
+}
+
+static void
+bdev_ocssd_write_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
+}
+
+static int
+bdev_ocssd_write(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct bdev_ocssd_io_channel *ocdev_ioch = spdk_io_channel_get_ctx(ioch);
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	const size_t zone_size = nvme_bdev->disk.zone_size;
+	uint64_t lba;
+
+	if ((bdev_io->u.bdev.offset_blocks % zone_size) + bdev_io->u.bdev.num_blocks > zone_size) {
+		SPDK_ERRLOG("Tried to cross zone boundary during write commnad\n");
+		return -EINVAL;
+	}
+
+	ocdev_io->iov_pos = 0;
+	ocdev_io->iov_off = 0;
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev_io->u.bdev.offset_blocks);
+
+	return spdk_nvme_ns_cmd_writev_with_md(nvme_bdev->ns, ocdev_ioch->qpair, lba,
+					       bdev_io->u.bdev.num_blocks, bdev_ocssd_write_cb,
+					       bdev_io, 0, bdev_ocssd_reset_sgl,
+					       bdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
+}
+
+static void
+bdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io, bool success)
+{
+	int rc;
+
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		return;
+	}
+
+	rc = bdev_ocssd_read(ioch, bdev_io);
+	if (spdk_likely(rc != 0)) {
+		if (rc == -ENOMEM) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+}
+
 static void
 bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	int rc = 0;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_get_buf(bdev_io, bdev_ocssd_io_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		break;
+
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		rc = bdev_ocssd_write(ioch, bdev_io);
+		break;
+
+	default:
+		rc = -EINVAL;
+		break;
+	}
+
+	if (spdk_unlikely(rc != 0)) {
+		if (rc == -ENOMEM) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
 }
 
 static bool
 bdev_ocssd_io_type_supported(void *ctx, enum spdk_bdev_io_type type)
 {
-	return false;
+	switch (type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		return true;
+
+	default:
+		return false;
+	}
 }
 
 static struct spdk_io_channel *
@@ -242,6 +454,14 @@ bdev_ocssd_geometry_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 		rc = -EIO;
 		goto out;
 	}
+
+	ocssd_bdev->lba_offsets.lbk = 0;
+	ocssd_bdev->lba_offsets.chk = ocssd_bdev->lba_offsets.lbk +
+				      geometry->lbaf.lbk_len;
+	ocssd_bdev->lba_offsets.pu  = ocssd_bdev->lba_offsets.chk +
+				      geometry->lbaf.chk_len;
+	ocssd_bdev->lba_offsets.grp = ocssd_bdev->lba_offsets.pu +
+				      geometry->lbaf.pu_len;
 
 	nvme_bdev->disk.blockcnt = geometry->num_grp * geometry->num_pu *
 				   geometry->num_chk * geometry->clba;
