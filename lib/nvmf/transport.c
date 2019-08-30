@@ -365,11 +365,11 @@ spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
 	}
 }
 
-void
-spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
-			       struct spdk_nvmf_transport_poll_group *group,
-			       struct spdk_nvmf_transport *transport,
-			       uint32_t num_buffers)
+static void
+nvmf_request_free_buffers(struct spdk_nvmf_request *req,
+			  struct spdk_nvmf_transport_poll_group *group,
+			  struct spdk_nvmf_transport *transport,
+			  uint32_t num_buffers)
 {
 	uint32_t i;
 
@@ -389,12 +389,21 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 	req->data_from_pool = false;
 }
 
-int
-spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
-			      struct spdk_nvmf_transport_poll_group *group,
-			      struct spdk_nvmf_transport *transport,
-			      uint32_t num_buffers)
+void
+spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
+			       struct spdk_nvmf_transport_poll_group *group,
+			       struct spdk_nvmf_transport *transport)
 {
+	nvmf_request_free_buffers(req, group, transport, req->num_buffers);
+	req->num_buffers = 0;
+}
+
+static int
+nvmf_request_get_buffers(struct spdk_nvmf_request *req,
+			 struct spdk_nvmf_transport_poll_group *group,
+			 struct spdk_nvmf_transport *transport)
+{
+	uint32_t num_buffers = req->num_buffers;
 	uint32_t i = 0;
 
 	while (i < num_buffers) {
@@ -416,6 +425,18 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	return 0;
 
 err_exit:
-	spdk_nvmf_request_free_buffers(req, group, transport, i);
+	nvmf_request_free_buffers(req, group, transport, i);
+	req->num_buffers = 0;
 	return -ENOMEM;
+}
+
+int
+spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
+			      struct spdk_nvmf_transport_poll_group *group,
+			      struct spdk_nvmf_transport *transport,
+			      uint32_t num_buffers)
+{
+	req->num_buffers = num_buffers;
+
+	return nvmf_request_get_buffers(req, group, transport);
 }
