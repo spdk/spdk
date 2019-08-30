@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e35e2c89_f2dcc66c",
+        "filename": "module/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-30T02:23:04Z",
+      "side": 1,
+      "message": "rpc_bdev_ftl_create?",
+      "range": {
+        "startLine": 42,
+        "startChar": 7,
+        "endLine": 42,
+        "endChar": 25
+      },
+      "revId": "472270c03131cbd5a0afcc743e229bb6ad64f29d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3a7f718_9057a792",
+        "filename": "module/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-30T02:23:04Z",
+      "side": 1,
+      "message": "free_rpc_bdev_ftl_create?",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 22
+      },
+      "revId": "472270c03131cbd5a0afcc743e229bb6ad64f29d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e65f81c_22699984",
+        "filename": "module/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-30T02:23:04Z",
+      "side": 1,
+      "message": "rpc_bdev_ftl_create_decoders?",
+      "range": {
+        "startLine": 63,
+        "startChar": 45,
+        "endLine": 63,
+        "endChar": 71
+      },
+      "revId": "472270c03131cbd5a0afcc743e229bb6ad64f29d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
