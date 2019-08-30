@@ -37,9 +37,9 @@ timing_exit spdkcli_check_match
 
 timing_enter spdkcli_clear_pmem_config
 $spdkcli_job "'/bdevs/pmemblk delete pmem_bdev0' 'pmem_bdev0'
-'/bdevs/pmemblk delete_pmem_pool /tmp/sample_pmem0' ''
+'/bdevs/pmemblk bdev_pmem_delete_pool /tmp/sample_pmem0' ''
 '/bdevs/pmemblk delete_all' 'pmem_bdev1'
-'/bdevs/pmemblk delete_pmem_pool /tmp/sample_pmem1' ''
+'/bdevs/pmemblk bdev_pmem_delete_pool /tmp/sample_pmem1' ''
 "
 rm -f /tmp/sample_pmem
 rm -f $testdir/match_files/spdkcli_pmem_info.test
