@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bae5e4c_5ff03bfe",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-30T02:16:23Z",
+      "side": 1,
+      "message": "rpc_bdev_nvme_attach_controller?",
+      "range": {
+        "startLine": 159,
+        "startChar": 7,
+        "endLine": 159,
+        "endChar": 26
+      },
+      "revId": "57f4b50f4637d6c7ec18637dd4f78232a46e296a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7cf5419_623954af",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-30T02:16:23Z",
+      "side": 1,
+      "message": "free_rpc_bdev_nvme_attach_controller?",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 174,
+        "endChar": 23
+      },
+      "revId": "57f4b50f4637d6c7ec18637dd4f78232a46e296a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8092bcbc_9aed8c12",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-30T02:16:23Z",
+      "side": 1,
+      "message": "rpc_bdev_nvme_attach_controller_decoders?",
+      "range": {
+        "startLine": 187,
+        "startChar": 45,
+        "endLine": 187,
+        "endChar": 72
+      },
+      "revId": "57f4b50f4637d6c7ec18637dd4f78232a46e296a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df316f89_a9919b78",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-08-30T02:16:23Z",
+      "side": 1,
+      "message": "rpc_bdev_nvme_attach_controller_ctx ?",
+      "range": {
+        "startLine": 205,
+        "startChar": 7,
+        "endLine": 205,
+        "endChar": 32
+      },
+      "revId": "57f4b50f4637d6c7ec18637dd4f78232a46e296a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
