@@ -22,6 +22,30 @@
       "revId": "0ce883cef0e4f0824092ab8ddf07939aef3ec2ac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3d4120d_5daa7ac0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1769,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-08-30T09:00:38Z",
+      "side": 0,
+      "message": "This change is not just a duplication removal, in the case of enabled DIF we estimate num_sge and iovcnt in spdk_nvmf_rdma_request_fill_iovs and we can\u0027t do this assignment here since we may overwrite the actual value.",
+      "parentUuid": "1fb12415_b3035446",
+      "range": {
+        "startLine": 1769,
+        "startChar": 2,
+        "endLine": 1769,
+        "endChar": 51
+      },
+      "revId": "0ce883cef0e4f0824092ab8ddf07939aef3ec2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
