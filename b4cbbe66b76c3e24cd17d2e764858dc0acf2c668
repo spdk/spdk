@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d472616e_7676be87",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-08-30T01:40:49Z",
+      "side": 1,
+      "message": "I think we should say \"Max Number of Namespaces\" here, the spec says \"This field indicates the maximum value of a valid NSID for the NVM subsystem.\"",
+      "revId": "b4cbbe66b76c3e24cd17d2e764858dc0acf2c668",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
