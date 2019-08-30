@@ -187,6 +187,13 @@ struct spdk_nvme_ctrlr_opts {
 	 * Defaults to 'false' (errors are logged).
 	 */
 	bool disable_error_logging;
+
+	/**
+	 * Enable NVMe character devices.
+	 *
+	 * Defaults to 'false' (NVMe character devices are disabled).
+	 */
+	bool enable_cuse_devices;
 };
 
 /**

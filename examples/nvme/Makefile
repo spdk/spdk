@@ -38,6 +38,7 @@ DIRS-y += hello_world identify perf reserve nvme_manage arbitration \
 	hotplug cmb_copy
 
 DIRS-$(CONFIG_FIO_PLUGIN) += fio_plugin
+DIRS-$(CONFIG_CUSE) += cuse
 
 .PHONY: all clean $(DIRS-y)
 
