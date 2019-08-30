@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88f846cb_47cc920d",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-30T11:29:45Z",
+      "side": 1,
+      "message": "On one hand - I\u0027d very like SC1087 to be checked with ShellCheck to avoid situations where people refer to arrays with $array[0] instead of ${array[0]}.\n\nOn the other hand - the line which was just fixed is a false negative. line_nr is not an array, and shellcheck does not recognize that we just use a grep pattern here.\nI\u0027m okay with this change, but I guess others should give their opinion as well.",
+      "range": {
+        "startLine": 552,
+        "startChar": 26,
+        "endLine": 552,
+        "endChar": 60
+      },
+      "revId": "d7c1cc28eb1f7c6ecc8ab70c77e211012c7203b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
