@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "171040f8_2c300438",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-30T11:33:25Z",
+      "side": 1,
+      "message": "Please add SC error description in the commit message, so that reviewers do not need to look up the definition every time.",
+      "revId": "18dd842ef56aa5fc47af318fc445a0766541d312",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

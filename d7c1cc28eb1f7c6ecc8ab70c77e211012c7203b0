@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b52c59b_c9b1aade",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-30T11:33:25Z",
+      "side": 0,
+      "message": "You removed it from exclusion list, but there are no .sf files fixed?\nDid you forget to add them or is the issue not present at all?",
+      "range": {
+        "startLine": 244,
+        "startChar": 63,
+        "endLine": 244,
+        "endChar": 69
+      },
+      "revId": "d7c1cc28eb1f7c6ecc8ab70c77e211012c7203b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
