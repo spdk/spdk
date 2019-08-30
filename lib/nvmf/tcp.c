@@ -2237,6 +2237,8 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 		      tcp_req,
 		      tcp_req->req.iovcnt, tcp_req->req.data);
 
+	STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
+	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_ALLOCATED_BUFFER);
 	return 0;
 }
 
@@ -2248,6 +2250,11 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
 	uint32_t				length;
+	struct spdk_nvmf_tcp_qpair		*tqpair;
+	struct spdk_nvmf_transport_poll_group	*group;
+
+	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	group = &tqpair->group->group;
 
 	cmd = &tcp_req->req.cmd->nvme_cmd;
 	rsp = &tcp_req->req.rsp->nvme_cpl;
@@ -2319,6 +2326,8 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		tcp_req->req.iov[0].iov_len = length;
 		tcp_req->req.iovcnt = 1;
 
+		STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
+		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_ALLOCATED_BUFFER);
 		return 0;
 	}
 
@@ -2616,18 +2625,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				/* Reset the tqpair receving pdu state */
 				spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 				spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
-				break;
 			}
-
-			if (!tcp_req->req.data) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No buffer allocated for tcp_req(%p) on tqpair(%p\n)",
-					      tcp_req, tqpair);
-				/* No buffers available. */
-				break;
-			}
-
-			STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
-			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_ALLOCATED_BUFFER);
 			break;
 		case TCP_REQUEST_STATE_ALLOCATED_BUFFER:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_ALLOCATED_BUFFER, 0, 0, (uintptr_t)tcp_req, 0);
