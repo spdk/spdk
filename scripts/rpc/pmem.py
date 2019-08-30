@@ -15,13 +15,14 @@ def bdev_pmem_create_pool(client, pmem_file, num_blocks, block_size):
     return client.call('bdev_pmem_create_pool', params)
 
 
-def pmem_pool_info(client, pmem_file):
+@deprecated_alias('pmem_pool_info')
+def bdev_pmem_get_pool_info(client, pmem_file):
     """Get details about pmem pool.
     Args:
         pmem_file: path to pmem pool
     """
     params = {'pmem_file': pmem_file}
-    return client.call('pmem_pool_info', params)
+    return client.call('bdev_pmem_get_pool_info', params)
 
 
 def delete_pmem_pool(client, pmem_file):

@@ -1722,13 +1722,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('block_size', help='Block size for this pmem pool', type=int)
     p.set_defaults(func=bdev_pmem_create_pool)
 
-    def pmem_pool_info(args):
-        print_dict(rpc.pmem.pmem_pool_info(args.client,
-                                           pmem_file=args.pmem_file))
+    def bdev_pmem_get_pool_info(args):
+        print_dict(rpc.pmem.bdev_pmem_get_pool_info(args.client,
+                                                    pmem_file=args.pmem_file))
 
-    p = subparsers.add_parser('pmem_pool_info', help='Display pmem pool info and check consistency')
+    p = subparsers.add_parser('bdev_pmem_get_pool_info', aliases=['pmem_pool_info'],
+                              help='Display pmem pool info and check consistency')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
-    p.set_defaults(func=pmem_pool_info)
+    p.set_defaults(func=bdev_pmem_get_pool_info)
 
     def delete_pmem_pool(args):
         rpc.pmem.delete_pmem_pool(args.client,
