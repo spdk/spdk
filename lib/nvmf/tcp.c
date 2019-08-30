@@ -2201,6 +2201,15 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 
 	spdk_nvmf_tcp_req_fill_buffers(&tcp_req->req, &ttransport->transport, tcp_req->req.length);
 
+	/* backward compatible */
+	tcp_req->req.data = tcp_req->req.iov[0].iov_base;
+
+	tcp_req->req.length = tcp_req->orig_length;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p took %d buffer/s from central pool, and data=%p\n",
+		      tcp_req,
+		      tcp_req->req.iovcnt, tcp_req->req.data);
+
 	return 0;
 }
 
@@ -2244,18 +2253,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No available large data buffers. Queueing request %p\n",
 				      tcp_req);
-			return 0;
 		}
-
-		/* backward compatible */
-		tcp_req->req.data = tcp_req->req.iov[0].iov_base;
-
-		tcp_req->req.length = tcp_req->orig_length;
-
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p took %d buffer/s from central pool, and data=%p\n",
-			      tcp_req,
-			      tcp_req->req.iovcnt, tcp_req->req.data);
-
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
