@@ -176,7 +176,7 @@ function start_vpp() {
 	ip addr show $INITIATOR_INTERFACE
 	ip netns exec $TARGET_NAMESPACE ip addr show $TARGET_INTERFACE
 	sleep 3
-	ping -c 1 $TARGET_IP -s $(( $MTU - 28 )) -M do
+	ping -c 1 $TARGET_IP -M do -s $(( $MTU - 28 ))
 	vppctl ping $INITIATOR_IP repeat 1 size $(( $MTU - (28 + 8) )) verbose
 }
 
