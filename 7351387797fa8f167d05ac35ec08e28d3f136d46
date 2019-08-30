@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aae7a10a_25005c42",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-30T11:42:02Z",
+      "side": 1,
+      "message": "Please add SC error description in the commit message, so that reviewers do not need to look up the definition every time.",
+      "revId": "7351387797fa8f167d05ac35ec08e28d3f136d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26744344_8baf7431",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-08-30T11:42:02Z",
+      "side": 1,
+      "message": "This will probably not work correctly. The process names we are looking for look like this:\n[vhost-12345]\n[vhost-54312]\n[vhost-11111]\netc.\n\nSo matching with ^ will not work, because pid name starts with [, not with vhost.\n\nI\u0027d grep for what is in the original grep - [vhost-\\d+]",
+      "range": {
+        "startLine": 315,
+        "startChar": 28,
+        "endLine": 315,
+        "endChar": 34
+      },
+      "revId": "7351387797fa8f167d05ac35ec08e28d3f136d46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
