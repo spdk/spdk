@@ -2114,6 +2114,12 @@ ftl_process_anm_event(struct ftl_anm_event *event)
 	struct ftl_band *band;
 	size_t lbkoff;
 
+	/* Drop any ANM requests until the device is initialized */
+	if (!dev->initialized) {
+		ftl_anm_event_complete(event);
+		return;
+	}
+
 	if (!ftl_check_core_thread(dev)) {
 		spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_process_anm_event, event);
 		return;
