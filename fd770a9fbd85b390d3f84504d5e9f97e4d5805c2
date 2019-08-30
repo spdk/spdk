@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd2c4d81_9da2e0e7",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-30T16:17:49Z",
+      "side": 1,
+      "message": "\"is existed\" \u003d\u003e \"exists\"",
+      "revId": "fd770a9fbd85b390d3f84504d5e9f97e4d5805c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7880ef94_5336c0bf",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 5655,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-30T16:17:49Z",
+      "side": 1,
+      "message": "Let\u0027s just say:\n\nTrue if a blobfs exists on the bdev, False otherwise",
+      "revId": "fd770a9fbd85b390d3f84504d5e9f97e4d5805c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "633d5d44_53863d36",
+        "filename": "lib/blobfs/blobfs_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-30T16:17:49Z",
+      "side": 1,
+      "message": "nbd device?  I don\u0027t think nbd applies to this RPC",
+      "revId": "fd770a9fbd85b390d3f84504d5e9f97e4d5805c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2ad4513_f43e4eaa",
+        "filename": "lib/blobfs/blobfs_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-30T16:17:49Z",
+      "side": 1,
+      "message": "oh - seeing this code reminds me of some changes we need to make to spdk_bdev_create_bs_dev\n\nWe recently added spdk_bdev_open_ext().  This new open call does two new things:\n\n1) allows for different types of asynchronous event; spdk_bdev_open() only handled hotplug\n2) user provides bdev name, not the bdev itself; this avoids case where bdev is deleted after spdk_bdev_get_by_name but before spdk_bdev_create_bs_dev is called\n\nwe have another problem here though; Seth has been working hard on dependencies between libraries in SPDK; we recently created the \"module\" top level directory; nothing in \"lib\" should depend on anything in \"module\" - but this code is in lib, and spdk_bdev_create_bs_dev is in module; I\u0027m going to ask Seth to take a look and make a recommendation for how to rectify.  we may need to put these RPCs in some new module directory",
+      "revId": "fd770a9fbd85b390d3f84504d5e9f97e4d5805c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
