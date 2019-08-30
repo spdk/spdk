@@ -226,9 +226,6 @@ struct spdk_nvmf_fc_conn {
 	/* number of read/write requests that are outstanding */
 	uint16_t cur_fc_rw_depth;
 
-	/* requests that are waiting to obtain xchg/buffer */
-	STAILQ_HEAD(, spdk_nvmf_fc_request) pending_data_buf_queue;
-
 	struct spdk_nvmf_fc_association *fc_assoc;
 
 	uint16_t rpi;
@@ -268,6 +265,8 @@ struct spdk_nvmf_fc_poll_group {
 	struct spdk_nvmf_fc_transport *fc_transport;
 	uint32_t hwqp_count; /* number of hwqp's assigned to this pg */
 	TAILQ_HEAD(, spdk_nvmf_fc_hwqp) hwqp_list;
+	/* requests that are waiting to obtain xchg/buffer */
+	STAILQ_HEAD(, spdk_nvmf_fc_request) pending_data_buf_queue;
 
 	TAILQ_ENTRY(spdk_nvmf_fc_poll_group) link;
 };
