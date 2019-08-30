@@ -2141,7 +2141,7 @@ Example response:
 }
 ~~~
 
-## pmem_pool_info {#rpc_pmem_pool_info}
+## bdev_pmem_get_pool_info {#rpc_bdev_pmem_get_pool_info}
 
 Retrieve basic information about PMDK memory pool.
 
@@ -2173,7 +2173,7 @@ request:
     "pmem_file": "/tmp/pmem_file"
   },
   "jsonrpc": "2.0",
-  "method": "pmem_pool_info",
+  "method": "bdev_pmem_get_pool_info",
   "id": 1
 }
 ~~~
