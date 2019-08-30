@@ -1647,6 +1647,11 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	rdma_req->num_outstanding_data_wr = num_sgl_descriptors;
 	req->data_from_pool = true;
 
+	/* backward compatible */
+	rdma_req->req.data = rdma_req->req.iov[0].iov_base;
+
+	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
+		      rdma_req->req.iovcnt);
 	return 0;
 
 err_exit:
@@ -1764,12 +1769,6 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			SPDK_ERRLOG("Multi SGL element request length exceeds the max I/O size\n");
 			return -1;
 		}
-
-		/* backward compatible */
-		rdma_req->req.data = rdma_req->req.iov[0].iov_base;
-
-		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
-			      rdma_req->req.iovcnt);
 
 		return 0;
 	}
