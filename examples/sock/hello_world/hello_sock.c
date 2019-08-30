@@ -116,13 +116,6 @@ static int hello_sock_parse_arg(int ch, char *arg)
 	return 0;
 }
 
-static void
-hello_sock_net_fini_cb(void *cb_arg)
-{
-	struct hello_context_t *ctx = cb_arg;
-	spdk_app_stop(ctx->rc);
-}
-
 static int
 hello_sock_close_timeout_poll(void *arg)
 {
@@ -134,7 +127,7 @@ hello_sock_close_timeout_poll(void *arg)
 	spdk_sock_close(&ctx->sock);
 	spdk_sock_group_close(&ctx->group);
 
-	spdk_net_framework_fini(hello_sock_net_fini_cb, arg);
+	spdk_app_stop(ctx->rc);
 	return 0;
 }
 
@@ -382,15 +375,10 @@ hello_sock_shutdown_cb(void)
  * Our initial event that kicks off everything from main().
  */
 static void
-hello_start(void *arg1, int rc)
+hello_start(void *arg1)
 {
 	struct hello_context_t *ctx = arg1;
-
-	if (rc) {
-		SPDK_ERRLOG("ERROR starting application\n");
-		spdk_app_stop(-1);
-		return;
-	}
+	int rc;
 
 	SPDK_NOTICELOG("Successfully started the application\n");
 
@@ -404,12 +392,6 @@ hello_start(void *arg1, int rc)
 		spdk_app_stop(-1);
 		return;
 	}
-}
-
-static void
-start_net_framework(void *arg1)
-{
-	spdk_net_framework_start(hello_start, arg1);
 }
 
 int
@@ -433,7 +415,7 @@ main(int argc, char **argv)
 	hello_context.port = g_port;
 	hello_context.verbose = g_verbose;
 
-	rc = spdk_app_start(&opts, start_net_framework, &hello_context);
+	rc = spdk_app_start(&opts, hello_start, &hello_context);
 	if (rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}
