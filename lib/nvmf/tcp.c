@@ -2183,7 +2183,7 @@ spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_request *req,
 
 static int
 spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
-			    struct spdk_nvmf_tcp_req *tcp_req, uint32_t length)
+			    struct spdk_nvmf_tcp_req *tcp_req)
 {
 	uint32_t				num_buffers;
 	struct spdk_nvmf_tcp_qpair		*tqpair;
@@ -2192,14 +2192,14 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
 
-	num_buffers = SPDK_CEIL_DIV(length, ttransport->transport.opts.io_unit_size);
+	num_buffers = SPDK_CEIL_DIV(tcp_req->req.length, ttransport->transport.opts.io_unit_size);
 
 	if (spdk_nvmf_request_get_buffers(&tcp_req->req, group, &ttransport->transport, num_buffers)) {
 		tcp_req->req.iovcnt = 0;
 		return -ENOMEM;
 	}
 
-	spdk_nvmf_tcp_req_fill_buffers(&tcp_req->req, &ttransport->transport, length);
+	spdk_nvmf_tcp_req_fill_buffers(&tcp_req->req, &ttransport->transport, tcp_req->req.length);
 
 	return 0;
 }
@@ -2229,7 +2229,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		}
 
 		/* fill request length and populate iovs */
-		tcp_req->req.length = length;
+		tcp_req->orig_length = length;
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Data requested length= 0x%x\n", length);
 
@@ -2238,7 +2238,9 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 			tcp_req->elba_length = length;
 		}
 
-		if (spdk_nvmf_tcp_req_fill_iovs(ttransport, tcp_req, length) < 0) {
+		tcp_req->req.length = length;
+
+		if (spdk_nvmf_tcp_req_fill_iovs(ttransport, tcp_req) < 0) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "No available large data buffers. Queueing request %p\n",
 				      tcp_req);
@@ -2247,6 +2249,8 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 
 		/* backward compatible */
 		tcp_req->req.data = tcp_req->req.iov[0].iov_base;
+
+		tcp_req->req.length = tcp_req->orig_length;
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p took %d buffer/s from central pool, and data=%p\n",
 			      tcp_req,
@@ -2279,6 +2283,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 		tcp_req->req.data = tcp_req->buf + offset;
 		tcp_req->req.data_from_pool = false;
 		tcp_req->req.length = length;
+		tcp_req->orig_length = length;
 
 		if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
 			length = spdk_dif_get_length_with_md(length, &tcp_req->dif_ctx);
@@ -2621,7 +2626,6 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			if (spdk_unlikely(tcp_req->dif_insert_or_strip)) {
 				assert(tcp_req->elba_length >= tcp_req->req.length);
-				tcp_req->orig_length = tcp_req->req.length;
 				tcp_req->req.length = tcp_req->elba_length;
 			}
 
