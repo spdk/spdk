@@ -41,10 +41,12 @@
 
 #include "spdk/log.h"
 #include "spdk/sock.h"
+#include "spdk/string.h"
 #include "spdk_internal/sock.h"
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
+#define SO_RCVBUF_SIZE (2 * 1024 * 1024)
 
 struct spdk_posix_sock {
 	struct spdk_sock	base;
@@ -317,9 +319,10 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 	struct spdk_posix_sock		*sock = __posix_sock(_sock);
 	struct sockaddr_storage		sa;
 	socklen_t			salen;
-	int				rc;
+	int				rc, fd;
 	struct spdk_posix_sock		*new_sock;
 	int				flag;
+	size_t				sz;
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
@@ -332,21 +335,38 @@ spdk_posix_sock_accept(struct spdk_sock *_sock)
 		return NULL;
 	}
 
-	flag = fcntl(rc, F_GETFL);
-	if ((!(flag & O_NONBLOCK)) && (fcntl(rc, F_SETFL, flag | O_NONBLOCK) < 0)) {
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", rc, errno);
-		close(rc);
+	fd = rc;
+
+	flag = fcntl(fd, F_GETFL);
+	if ((!(flag & O_NONBLOCK)) && (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0)) {
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", fd, errno);
+		close(fd);
 		return NULL;
+	}
+
+	rc = getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &sz, &salen);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to get recvbuf size for socket fd %d (%s)\n", fd, spdk_strerror(errno));
+		close(fd);
+		return NULL;
+	}
+
+	if (sz < SO_RCVBUF_SIZE) {
+		sz = SO_RCVBUF_SIZE;
+		rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
+		if (rc < 0) {
+			SPDK_WARNLOG("Unable to increase size of rcvbuf for socket fd %d (%s)", fd, spdk_strerror(errno));
+		}
 	}
 
 	new_sock = calloc(1, sizeof(*sock));
 	if (new_sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
-		close(rc);
+		close(fd);
 		return NULL;
 	}
 
-	new_sock->fd = rc;
+	new_sock->fd = fd;
 	return &new_sock->base;
 }
 
