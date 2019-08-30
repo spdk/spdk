@@ -368,6 +368,12 @@ struct spdk_nvme_qpair {
 	void				*req_buf;
 };
 
+struct spdk_nvme_cuse_device {
+	uint32_t			idx;
+	pthread_t			tid;
+	struct fuse_session		*session;
+};
+
 struct spdk_nvme_ns {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	uint32_t			sector_size;
@@ -388,6 +394,8 @@ struct spdk_nvme_ns {
 
 	/* Namespace Identification Descriptor List (CNS = 03h) */
 	uint8_t				id_desc_list[4096];
+
+	struct spdk_nvme_cuse_device	cuse_device;
 };
 
 /**
@@ -693,6 +701,10 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
+
+#ifdef SPDK_CONFIG_CUSE
+	struct spdk_nvme_cuse_device	cuse_device;
+#endif
 };
 
 struct spdk_nvme_probe_ctx {
