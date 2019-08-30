@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "nvme_internal.h"
+#include "nvme_cuse.h"
 
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -2353,6 +2354,12 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_qpair *qpair, *tmp;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Prepare to destruct SSD: %s\n", ctrlr->trid.traddr);
+
+#ifdef SPDK_CONFIG_CUSE
+	if (ctrlr->opts.enable_cuse_devices) {
+		spdk_nvme_cuse_stop(ctrlr);
+	}
+#endif
 
 	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
 

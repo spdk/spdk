@@ -75,6 +75,9 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 	return NULL;
 }
 
+DEFINE_STUB(spdk_nvme_cuse_start, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+DEFINE_STUB(spdk_nvme_cuse_stop, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+
 int
 nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
