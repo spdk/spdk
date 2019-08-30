@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3acf87da_1f1ad251",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-30T16:04:18Z",
+      "side": 1,
+      "message": "maybe this is a nit, but the vast majority of people will run this from the spdk rootdir\n\nso before this would say:\n\nCreating mk/config.mk...\n\nbut now will say:\n\nCreating /home/jrharri1/git/spdk/mk/config.mk...\n\nI think you can just stick with the shorter echo for these messages.",
+      "revId": "498bd662a5060370acc967c281678ffe9db9775f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9471ce24_cb622c09",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-30T16:04:18Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "498bd662a5060370acc967c281678ffe9db9775f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
