@@ -319,6 +319,8 @@ if hash dnf &>/dev/null; then
     PACKAGEMNG=dnf
 elif hash apt-get &>/dev/null; then
     PACKAGEMNG=apt-get
+elif hash pacman &>/dev/null; then
+    PACKAGEMNG=pacman
 else
     echo 'Supported package manager not found. Script supports "dnf" and "apt-get".'
 fi
@@ -390,7 +392,11 @@ if $UPGRADE; then
 fi
 
 if $INSTALL; then
-    sudo $PACKAGEMNG install -y git
+    if [ $PACKAGEMNG == 'pacman' ]; then
+        sudo $PACKAGEMNG -Sy --needed --noconfirm git
+    else
+        sudo $PACKAGEMNG install -y git
+    fi
 fi
 
 mkdir -p spdk_repo/output
@@ -525,6 +531,51 @@ if $INSTALL; then
 
         # rpm-build is not used
         # iptables installed by default
+
+    elif [ $PACKAGEMNG == 'pacman' ]; then
+        sudo pacman -Sy --noconfirm --needed valgrind \
+            jq \
+            nvme-cli \
+            ceph \
+            gdb \
+            fio \
+            linux-headers \
+            gflags \
+            autoconf \
+            automake \
+            libtool \
+            libutil-linux \
+            libiscsi \
+            open-isns \
+            glib2 \
+            pixman \
+            flex \
+            bison \
+            elfutils \
+            libelf \
+            astyle \
+            gptfdisk \
+            socat \
+            sshfs \
+            sshpass \
+            python-pandas \
+            btrfs-progs \
+            iptables \
+            clang \
+            bc \
+            perl-switch
+
+        # TODO:
+        # These are either missing or require some other installation methon
+        # than pacman
+
+        # librbd-devel
+        # pmempool
+        # perl-open
+        # targetcli
+        # librdmacm-utils
+        # libibverbs-utils
+        # rpm-build
 
     else
         echo "Package manager is undefined, skipping INSTALL step"
