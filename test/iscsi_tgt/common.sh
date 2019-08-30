@@ -176,6 +176,8 @@ function start_vpp() {
 	ip addr show $INITIATOR_INTERFACE
 	ip netns exec $TARGET_NAMESPACE ip addr show $TARGET_INTERFACE
 	sleep 3
+	# SC1010: ping -M do - in this case do is an option not bash special word
+	# shellcheck disable=SC1010
 	ping -c 1 $TARGET_IP -s $(( $MTU - 28 )) -M do
 	vppctl ping $INITIATOR_IP repeat 1 size $(( $MTU - (28 + 8) )) verbose
 }
