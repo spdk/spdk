@@ -40,7 +40,9 @@
 #endif
 
 #include "spdk/log.h"
+#include "spdk/pipe.h"
 #include "spdk/sock.h"
+#include "spdk/util.h"
 #include "spdk_internal/sock.h"
 
 #define MAX_TMPBUF 1024
@@ -52,11 +54,18 @@
 struct spdk_posix_sock {
 	struct spdk_sock	base;
 	int			fd;
+
+	struct spdk_pipe	*recv_pipe;
+	void			*recv_buf;
+	int			recv_buf_sz;
+
+	TAILQ_ENTRY(spdk_posix_sock)	link;
 };
 
 struct spdk_posix_sock_group_impl {
 	struct spdk_sock_group_impl	base;
 	int				fd;
+	TAILQ_HEAD(, spdk_posix_sock)	pending_recv;
 };
 
 static int
@@ -168,20 +177,78 @@ enum spdk_posix_sock_create_type {
 };
 
 static int
+spdk_posix_sock_alloc_pipe(struct spdk_posix_sock *sock, int sz)
+{
+	uint8_t *new_buf;
+	struct spdk_pipe *new_pipe;
+	struct iovec siov[2];
+	struct iovec diov[2];
+	int sbytes;
+	ssize_t bytes;
+
+	if (sock->recv_buf_sz == sz) {
+		return 0;
+	}
+
+	/* Round up to next 64 byte multiple */
+	new_buf = calloc(((sz + 1) >> 6) << 6, sizeof(uint8_t));
+	if (!new_buf) {
+		SPDK_ERRLOG("socket recv buf allocation failed\n");
+		return -ENOMEM;
+	}
+
+	new_pipe = spdk_pipe_create(new_buf, sz + 1);
+	if (new_pipe == NULL) {
+		SPDK_ERRLOG("socket pipe allocation failed\n");
+		free(new_buf);
+		return -ENOMEM;
+	}
+
+	if (sock->recv_pipe != NULL) {
+		/* Pull all of the data out of the old pipe */
+		sbytes = spdk_pipe_reader_get_buffer(sock->recv_pipe, sock->recv_buf_sz, siov);
+		if (sbytes > sz) {
+			/* Too much data to fit into the new pipe size */
+			spdk_pipe_destroy(new_pipe);
+			free(new_buf);
+			return -EINVAL;
+		}
+
+		sbytes = spdk_pipe_writer_get_buffer(new_pipe, sz, diov);
+		assert(sbytes == sz);
+
+		bytes = spdk_iovcpy(siov, 2, diov, 2);
+		spdk_pipe_writer_advance(new_pipe, bytes);
+
+		spdk_pipe_destroy(sock->recv_pipe);
+		free(sock->recv_buf);
+	}
+
+	sock->recv_buf_sz = sz;
+	sock->recv_buf = new_buf;
+	sock->recv_pipe = new_pipe;
+
+	return 0;
+}
+
+static int
 spdk_posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
-	int rc;
+	int rc, rcvbuf;
 
 	assert(sock != NULL);
 
-	if (sz < SO_RCVBUF_SIZE) {
-		sz = SO_RCVBUF_SIZE;
-	}
-
-	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
+	rc = spdk_posix_sock_alloc_pipe(sock, sz);
 	if (rc < 0) {
 		return rc;
+	}
+
+	rcvbuf = SO_RCVBUF_SIZE;
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf));
+	if (rc < 0) {
+		SPDK_WARNLOG("Unable to set socket SO_RCVBUF to desired value\n");
+		/* Not fatal */
 	}
 
 	return 0;
@@ -211,7 +278,7 @@ static struct spdk_posix_sock *
 _spdk_posix_sock_alloc(int fd)
 {
 	struct spdk_posix_sock *sock;
-	int rc;
+	int rc, pipe_size;
 
 	sock = calloc(1, sizeof(*sock));
 	if (sock == NULL) {
@@ -221,9 +288,20 @@ _spdk_posix_sock_alloc(int fd)
 
 	sock->fd = fd;
 
-	rc = spdk_posix_sock_set_recvbuf(&sock->base, SO_RCVBUF_SIZE);
+
+#ifdef __aarch64__
+	/* On ARM systems, this buffering does not help. Disable it. */
+	pipe_size = 0;
+#else
+	/* This value is purely derived from benchmarks. It seems to work well. */
+	pipe_size = 8192;
+#endif
+
+	rc = spdk_posix_sock_set_recvbuf(&sock->base, pipe_size);
 	if (rc) {
-		/* Not fatal */
+		SPDK_ERRLOG("unable to allocate sufficient recvbuf\n");
+		free(sock);
+		return NULL;
 	}
 
 	rc = spdk_posix_sock_set_sendbuf(&sock->base, SO_SNDBUF_SIZE);
@@ -429,6 +507,8 @@ spdk_posix_sock_close(struct spdk_sock *_sock)
 	 * memory. */
 	close(sock->fd);
 
+	spdk_pipe_destroy(sock->recv_pipe);
+	free(sock->recv_buf);
 	free(sock);
 
 	return 0;
@@ -546,19 +626,116 @@ _sock_flush(struct spdk_sock *sock)
 }
 
 static ssize_t
+spdk_posix_sock_recv_from_pipe(struct spdk_posix_sock *sock, struct iovec *diov, int diovcnt)
+{
+	struct iovec siov[2];
+	int sbytes;
+	ssize_t bytes;
+	struct spdk_posix_sock_group_impl *group;
+
+	sbytes = spdk_pipe_reader_get_buffer(sock->recv_pipe, sock->recv_buf_sz, siov);
+	if (sbytes < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (sbytes == 0) {
+		errno = EAGAIN;
+		return -1;
+	}
+
+	bytes = spdk_iovcpy(siov, 2, diov, diovcnt);
+
+	spdk_pipe_reader_advance(sock->recv_pipe, bytes);
+
+	if (bytes == 0) {
+		/* The only way this happens is if diov is 0 length */
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* If we drained the pipe, take it off the level-triggered list */
+	if (sock->base.group_impl && spdk_pipe_reader_bytes_available(sock->recv_pipe) == 0) {
+		group = __posix_group_impl(sock->base.group_impl);
+		TAILQ_REMOVE(&group->pending_recv, sock, link);
+	}
+
+	return bytes;
+}
+
+static inline ssize_t
+_spdk_posix_sock_read(struct spdk_posix_sock *sock)
+{
+	struct iovec iov[2];
+	int bytes;
+	struct spdk_posix_sock_group_impl *group;
+
+	bytes = spdk_pipe_writer_get_buffer(sock->recv_pipe, sock->recv_buf_sz, iov);
+
+	if (bytes > 0) {
+		bytes = readv(sock->fd, iov, 2);
+		if (bytes > 0) {
+			spdk_pipe_writer_advance(sock->recv_pipe, bytes);
+			if (sock->base.group_impl) {
+				group = __posix_group_impl(sock->base.group_impl);
+				TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+			}
+		}
+	}
+
+	return bytes;
+}
+
+static ssize_t
 spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 {
+	struct iovec iov[1];
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
 
-	return recv(sock->fd, buf, len, MSG_DONTWAIT);
+	if (sock->recv_pipe == NULL) {
+		return recv(sock->fd, buf, len, MSG_DONTWAIT);
+	}
+
+	if (spdk_pipe_reader_bytes_available(sock->recv_pipe) == 0) {
+		/* If the user is receiving a sufficiently large amount of data,
+		 * receive directly to their buffer. */
+		if (len >= 1024) {
+			rc = recv(sock->fd, buf, len, 0);
+			return rc;
+		}
+
+		/* Otherwise, do a big read into our pipe */
+		rc = _spdk_posix_sock_read(sock);
+		if (rc <= 0) {
+			return rc;
+		}
+	}
+
+	iov[0].iov_base = buf;
+	iov[0].iov_len = len;
+
+	return spdk_posix_sock_recv_from_pipe(sock, iov, 1);
 }
 
 static ssize_t
 spdk_posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int rc;
 
-	return readv(sock->fd, iov, iovcnt);
+	if (sock->recv_pipe == NULL) {
+		return readv(sock->fd, iov, iovcnt);
+	}
+
+	if (spdk_pipe_reader_bytes_available(sock->recv_pipe) == 0) {
+		rc = _spdk_posix_sock_read(sock);
+		if (rc <= 0) {
+			return rc;
+		}
+	}
+
+	return spdk_posix_sock_recv_from_pipe(sock, iov, iovcnt);
 }
 
 static ssize_t
@@ -743,6 +920,7 @@ spdk_posix_sock_group_impl_create(void)
 	}
 
 	group_impl->fd = fd;
+	TAILQ_INIT(&group_impl->pending_recv);
 
 	return &group_impl->base;
 }
@@ -783,6 +961,12 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 #if defined(__linux__)
 	struct epoll_event event;
 
+	if (sock->recv_pipe != NULL) {
+		if (spdk_pipe_reader_bytes_available(sock->recv_pipe) > 0) {
+			TAILQ_REMOVE(&group->pending_recv, sock, link);
+		}
+	}
+
 	/* Event parameter is ignored but some old kernel version still require it. */
 	rc = epoll_ctl(group->fd, EPOLL_CTL_DEL, sock->fd, &event);
 #elif defined(__FreeBSD__)
@@ -810,6 +994,8 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	struct spdk_sock *sock, *tmp;
 	int num_events, i, rc;
+	struct spdk_posix_sock *psock, *ptmp;
+
 #if defined(__linux__)
 	struct epoll_event events[MAX_EVENTS_PER_POLL];
 #elif defined(__FreeBSD__)
@@ -843,6 +1029,23 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 #elif defined(__FreeBSD__)
 		socks[i] = events[i].udata;
 #endif
+	}
+
+	/* Need to add these socks to the array, but no duplicates. */
+	TAILQ_FOREACH_SAFE(psock, &group->pending_recv, link, ptmp) {
+		if (num_events == MAX_EVENTS_PER_POLL) {
+			break;
+		}
+
+		for (i = 0; i < num_events; i++) {
+			if (&psock->base == socks[i]) {
+				break;
+			}
+		}
+
+		if (i == num_events) {
+			socks[num_events++] = &psock->base;
+		}
 	}
 
 	return num_events;
