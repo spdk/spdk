@@ -38,6 +38,6 @@ APP = hello_sock
 C_SRCS := hello_sock.c
 
 SPDK_LIB_LIST = $(SOCK_MODULES_LIST)
-SPDK_LIB_LIST += event thread util conf trace log jsonrpc json rpc sock notify
+SPDK_LIB_LIST += event_net net event thread util conf trace log jsonrpc json rpc sock notify
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
