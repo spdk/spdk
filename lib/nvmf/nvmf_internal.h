@@ -113,6 +113,8 @@ struct spdk_nvmf_transport_pg_cache_buf {
 
 struct spdk_nvmf_transport_poll_group {
 	struct spdk_nvmf_transport					*transport;
+	/* Requests that are waiting to obtain a data buffer */
+	STAILQ_HEAD(, spdk_nvmf_request)				pending_buf_queue;
 	STAILQ_HEAD(, spdk_nvmf_transport_pg_cache_buf)			buf_cache;
 	uint32_t							buf_cache_count;
 	uint32_t							buf_cache_size;
@@ -218,6 +220,7 @@ struct spdk_nvmf_request {
 	bool				data_from_pool;
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 
+	STAILQ_ENTRY(spdk_nvmf_request)	slink;
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
 

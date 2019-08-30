@@ -196,6 +196,7 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 	group->transport = transport;
 
+	STAILQ_INIT(&group->pending_buf_queue);
 	STAILQ_INIT(&group->buf_cache);
 
 	if (transport->opts.buf_cache_size) {
@@ -229,6 +230,10 @@ void
 spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_transport_pg_cache_buf *buf, *tmp;
+
+	if (!STAILQ_EMPTY(&group->pending_buf_queue)) {
+		SPDK_ERRLOG("Pending I/O list wasn't empty on poll group destruction\n");
+	}
 
 	STAILQ_FOREACH_SAFE(buf, &group->buf_cache, link, tmp) {
 		STAILQ_REMOVE(&group->buf_cache, buf, spdk_nvmf_transport_pg_cache_buf, link);
