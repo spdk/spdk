@@ -41,12 +41,25 @@
 #include "spdk/nvme_ocssd_spec.h"
 #include "spdk_internal/log.h"
 #include "spdk/nvme.h"
+#include "spdk_internal/log.h"
 #include "common.h"
 #include "zdev_ocssd.h"
+
+struct zdev_ocssd_lba_offsets {
+	uint32_t	grp;
+	uint32_t	pu;
+	uint32_t	chk;
+	uint32_t	lbk;
+};
 
 struct zdev_ocssd_io_channel {
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_poller	*poller;
+};
+
+struct zdev_ocssd_io {
+	size_t	iov_pos;
+	size_t	iov_off;
 };
 
 struct nvme_bdev {
@@ -54,6 +67,7 @@ struct nvme_bdev {
 	struct spdk_nvme_ns		*ns;
 	struct nvme_bdev_ctrlr		*ctrlr;
 	struct spdk_ocssd_geometry_data	geometry;
+	struct zdev_ocssd_lba_offsets	lba_offsets;
 };
 
 static int
@@ -76,7 +90,7 @@ zdev_ocssd_config_json(struct spdk_json_write_ctx *w)
 static int
 zdev_ocssd_get_ctx_size(void)
 {
-	return 0;
+	return sizeof(struct zdev_ocssd_io);
 }
 
 static struct spdk_bdev_module ocssd_if = {
@@ -264,16 +278,175 @@ zdev_ocssd_destruct(void *ctx)
 	return 0;
 }
 
+static uint64_t
+zdev_ocssd_to_disk_lba(struct nvme_bdev *bdev, uint64_t lba)
+{
+	const struct spdk_ocssd_geometry_data *geo = &bdev->geometry;
+	const struct zdev_ocssd_lba_offsets *offsets = &bdev->lba_offsets;
+	uint64_t addr_shift, lbk, chk, pu, grp;
+
+	/* To achieve best performance, we need to make sure that adjacent zones can be accessed
+	 * in parallel.  We accomplish this by having the following addressing scheme:
+	 *
+	 * [            zone id              ][  zone offset  ] User's LBA
+	 * [ chunk ][ parallel unit ][ group ][ logical block ] Open Channel's LBA
+	 *
+	 * which means that neighbouring zones are placed in a different group and parallel unit.
+	 */
+	lbk = lba % geo->clba;
+	addr_shift = geo->clba;
+
+	grp = (lba / addr_shift) % geo->num_grp;
+	addr_shift *= geo->num_grp;
+
+	pu = (lba / addr_shift) % geo->num_pu;
+	addr_shift *= geo->num_pu;
+
+	chk = (lba / addr_shift) % geo->num_chk;
+
+	return (lbk << offsets->lbk) |
+	       (chk << offsets->chk) |
+	       (pu  << offsets->pu)  |
+	       (grp << offsets->grp);
+}
+
+static void
+zdev_ocssd_reset_sgl(void *cb_arg, uint32_t offset)
+{
+	struct spdk_bdev_io *bdev_io = cb_arg;
+	struct zdev_ocssd_io *zdev_io = (struct zdev_ocssd_io *)bdev_io->driver_ctx;
+	struct iovec *iov;
+
+	zdev_io->iov_pos = 0;
+	zdev_io->iov_off = 0;
+
+	for (; zdev_io->iov_pos < (size_t)bdev_io->u.bdev.iovcnt; ++zdev_io->iov_pos) {
+		iov = &bdev_io->u.bdev.iovs[zdev_io->iov_pos];
+		if (offset < iov->iov_len) {
+			zdev_io->iov_off = offset;
+			return;
+		}
+
+		offset -= iov->iov_len;
+	}
+
+	assert(false && "Invalid offset length");
+}
+
+static int
+zdev_ocssd_next_sge(void *cb_arg, void **address, uint32_t *length)
+{
+	struct spdk_bdev_io *bdev_io = cb_arg;
+	struct zdev_ocssd_io *zdev_io = (struct zdev_ocssd_io *)bdev_io->driver_ctx;
+	struct iovec *iov;
+
+	assert(zdev_io->iov_pos < (size_t)bdev_io->u.bdev.iovcnt);
+	iov = &bdev_io->u.bdev.iovs[zdev_io->iov_pos];
+
+	*address = iov->iov_base;
+	*length = iov->iov_len;
+
+	if (zdev_io->iov_off != 0) {
+		assert(zdev_io->iov_off < iov->iov_len);
+		*address = (char *)*address + zdev_io->iov_off;
+		*length -= zdev_io->iov_off;
+	}
+
+	assert(zdev_io->iov_off + *length == iov->iov_len);
+	zdev_io->iov_off = 0;
+	zdev_io->iov_pos++;
+
+	return 0;
+}
+
+static void
+zdev_ocssd_read_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
+}
+
+static int
+zdev_ocssd_read(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	struct nvme_bdev *bdev = bdev_io->bdev->ctxt;
+	struct zdev_ocssd_io_channel *zdev_ioch = spdk_io_channel_get_ctx(ioch);
+	struct zdev_ocssd_io *zdev_io = (struct zdev_ocssd_io *)bdev_io->driver_ctx;
+	const size_t zone_size = bdev->disk.info.zone_size;
+	uint64_t lba;
+
+	if ((bdev_io->u.bdev.offset_blocks % zone_size) + bdev_io->u.bdev.num_blocks > zone_size) {
+		SPDK_ERRLOG("Zone boundary crossed during read\n");
+		return -EINVAL;
+	}
+
+	zdev_io->iov_pos = 0;
+	zdev_io->iov_off = 0;
+
+	lba = zdev_ocssd_to_disk_lba(bdev, bdev_io->u.bdev.offset_blocks);
+
+	return spdk_nvme_ns_cmd_readv_with_md(bdev->ns, zdev_ioch->qpair, lba,
+					      bdev_io->u.bdev.num_blocks, zdev_ocssd_read_cb,
+					      bdev_io, 0, zdev_ocssd_reset_sgl,
+					      zdev_ocssd_next_sge, bdev_io->u.bdev.md_buf, 0, 0);
+}
+
+static void
+zdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io, bool success)
+{
+	int rc;
+
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		return;
+	}
+
+	rc = zdev_ocssd_read(ioch, bdev_io);
+	if (spdk_likely(rc != 0)) {
+		if (rc == -ENOMEM) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+}
+
 static void
 zdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	int rc = 0;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_get_buf(bdev_io, zdev_ocssd_io_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		break;
+
+	default:
+		rc = -EINVAL;
+		break;
+	}
+
+	if (spdk_unlikely(rc != 0)) {
+		if (rc == -ENOMEM) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
 }
 
 static bool
 zdev_ocssd_io_type_supported(void *ctx, enum spdk_bdev_io_type type)
 {
-	return false;
+	switch (type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		return true;
+
+	default:
+		return false;
+	}
 }
 
 static struct spdk_io_channel *
@@ -319,6 +492,14 @@ zdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 		SPDK_ERRLOG("Failed to retrieve controller's geometry\n");
 		zdev_ocssd_free_bdev(nvme_bdev);
 	} else {
+		nvme_bdev->lba_offsets.lbk = 0;
+		nvme_bdev->lba_offsets.chk = nvme_bdev->lba_offsets.lbk +
+					     nvme_bdev->geometry.lbaf.lbk_len;
+		nvme_bdev->lba_offsets.pu  = nvme_bdev->lba_offsets.chk +
+					     nvme_bdev->geometry.lbaf.chk_len;
+		nvme_bdev->lba_offsets.grp = nvme_bdev->lba_offsets.pu +
+					     nvme_bdev->geometry.lbaf.pu_len;
+
 		zdev->bdev.blockcnt = nvme_bdev->geometry.num_grp *
 				      nvme_bdev->geometry.num_pu *
 				      nvme_bdev->geometry.num_chk *
