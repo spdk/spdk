@@ -276,7 +276,7 @@ void	ftl_apply_limits(struct spdk_ftl_dev *dev);
 void	ftl_io_read(struct ftl_io *io);
 void	ftl_io_write(struct ftl_io *io);
 int	ftl_io_erase(struct ftl_io *io);
-int	ftl_io_flush(struct ftl_io *io);
+int	ftl_flush_rwb(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
 int	ftl_current_limit(const struct spdk_ftl_dev *dev);
 int	ftl_invalidate_addr(struct spdk_ftl_dev *dev, struct ftl_ppa ppa);
 int	ftl_task_core(void *ctx);
