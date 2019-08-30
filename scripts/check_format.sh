@@ -239,7 +239,7 @@ if hash shellcheck 2>/dev/null; then
 	# For more information about the topic and a list of human-friendly error descripions
 	# go to: https://trello.com/c/29Z90j1W
 	# Error descriptions can also be found at: https://github.com/koalaman/shellcheck/wiki
-	SHCK_EXCLUDE="SC1001,SC1003,SC1004,SC1010,\
+	SHCK_EXCLUDE="SC1001,SC1003,SC1004,\
 SC1083,SC1090,SC1091,SC1113,SC2001,SC2002,SC2003,SC2004,SC2005,\
 SC2009,SC2010,SC2012,SC2013,SC2015,SC2016,SC2018,SC2019,SC2022,SC2026,\
 SC2027,SC2030,SC2031,SC2034,SC2035,SC2039,SC2043,SC2044,SC2045,SC2046,SC2048,\
