@@ -21,8 +21,8 @@ $spdkcli_job "'/bdevs/pmemblk bdev_pmem_create_pool /tmp/sample_pmem0 32 512' ''
 "
 
 # Saving pmem pool info before they get claimed by /bdevs/pmemblk create
-$rootdir/scripts/spdkcli.py /bdevs/pmemblk pmem_pool_info /tmp/sample_pmem0 >> $testdir/match_files/spdkcli_pmem_info.test
-$rootdir/scripts/spdkcli.py /bdevs/pmemblk pmem_pool_info /tmp/sample_pmem1 >> $testdir/match_files/spdkcli_pmem_info.test
+$rootdir/scripts/spdkcli.py /bdevs/pmemblk bdev_pmem_get_pool_info /tmp/sample_pmem0 >> $testdir/match_files/spdkcli_pmem_info.test
+$rootdir/scripts/spdkcli.py /bdevs/pmemblk bdev_pmem_get_pool_info /tmp/sample_pmem1 >> $testdir/match_files/spdkcli_pmem_info.test
 
 $spdkcli_job "'/bdevs/pmemblk create /tmp/sample_pmem0 pmem_bdev0' 'pmem_bdev0' True
 '/bdevs/pmemblk create /tmp/sample_pmem1 pmem_bdev1' 'pmem_bdev1' True
