@@ -312,7 +312,7 @@ if [[ -n "$kernel_cpus" ]]; then
 	echo "$kernel_mask" >> /sys/fs/cgroup/cpuset/spdk/cpuset.cpus
 	echo "0-1" >> /sys/fs/cgroup/cpuset/spdk/cpuset.mems
 
-	kernel_vhost_pids=$(ps aux | grep -Po "^root\s+\K(\d+)(?=.*\[vhost-\d+\])")
+	kernel_vhost_pids=$(pgrep "vhost" -U root)
 	for kpid in $kernel_vhost_pids; do
 		echo "Limiting kernel vhost pid ${kpid}"
 		echo "${kpid}" >> /sys/fs/cgroup/cpuset/spdk/tasks
