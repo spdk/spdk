@@ -45,7 +45,7 @@ timing_enter hotplug_hw_test
 
 $rootdir/examples/nvme/hotplug/hotplug -i 0 -t 100 -n 2 -r 2 2>&1 | tee -a log.txt &
 example_pid=$!
-trap "killprocess $example_pid; exit 1" SIGINT SIGTERM EXIT
+trap 'killprocess $example_pid; exit 1' SIGINT SIGTERM EXIT
 
 i=0
 while ! grep "Starting I/O" log.txt; do
