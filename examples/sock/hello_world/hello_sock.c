@@ -422,7 +422,6 @@ main(int argc, char **argv)
 	/* Set default values in opts structure. */
 	spdk_app_opts_init(&opts);
 	opts.name = "hello_sock";
-	opts.config_file = "sock.conf";
 	opts.shutdown_cb = hello_sock_shutdown_cb;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "H:P:SV", NULL, hello_sock_parse_arg,
