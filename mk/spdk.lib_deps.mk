@@ -107,7 +107,7 @@ DEPDIRS-copy_ioat := log ioat conf thread $(JSON_LIBS) copy
 DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)
 
 # module/sock
-DEPDIRS-sock_posix := log sock
+DEPDIRS-sock_posix := log sock util
 DEPDIRS-sock_vpp := log sock util thread
 
 # module/bdev
