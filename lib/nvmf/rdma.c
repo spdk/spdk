@@ -1519,6 +1519,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_request		*req = &rdma_req->req;
 	uint32_t				num_buffers;
+	struct spdk_nvme_cmd			*cmd;
+	struct spdk_nvme_sgl_descriptor		*sgl;
 	uint32_t				i = 0;
 	int					rc = 0;
 
@@ -1545,6 +1547,31 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	req->data_from_pool = true;
 
+	/* backward compatible */
+	rdma_req->req.data = rdma_req->req.iov[0].iov_base;
+
+	cmd = &rdma_req->req.cmd->nvme_cmd;
+	sgl = &cmd->dptr.sgl1;
+
+	/* rdma wr specifics */
+	rdma_req->data.wr.num_sge = rdma_req->req.iovcnt;
+	rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
+	rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
+	if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
+		rdma_req->data.wr.next = &rdma_req->rsp.wr;
+		rdma_req->data.wr.send_flags &= ~IBV_SEND_SIGNALED;
+	} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
+		rdma_req->data.wr.next = NULL;
+		rdma_req->data.wr.send_flags |= IBV_SEND_SIGNALED;
+	}
+
+	/* set the number of outstanding data WRs for this request. */
+	rdma_req->num_outstanding_data_wr = 1;
+
+	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
+		      rdma_req->req.iovcnt);
 	return rc;
 
 err_exit:
@@ -1698,32 +1725,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		if (spdk_nvmf_rdma_request_fill_iovs(rtransport, device, rdma_req) < 0) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
-			return 0;
 		}
-
-		/* backward compatible */
-		rdma_req->req.data = rdma_req->req.iov[0].iov_base;
-
-		/* rdma wr specifics */
-		rdma_req->data.wr.num_sge = rdma_req->req.iovcnt;
-		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
-		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
-		if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-			rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
-			rdma_req->data.wr.next = &rdma_req->rsp.wr;
-			rdma_req->data.wr.send_flags &= ~IBV_SEND_SIGNALED;
-		} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
-			rdma_req->data.wr.next = NULL;
-			rdma_req->data.wr.send_flags |= IBV_SEND_SIGNALED;
-		}
-
-		/* set the number of outstanding data WRs for this request. */
-		rdma_req->num_outstanding_data_wr = 1;
-
-		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
-			      rdma_req->req.iovcnt);
-
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
