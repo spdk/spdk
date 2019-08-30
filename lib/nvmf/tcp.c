@@ -1078,15 +1078,8 @@ spdk_nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 	int rc;
 	int buf_size;
 
-	/* set recv buffer size */
-	buf_size = 2 * 1024 * 1024;
-	rc = spdk_sock_set_recvbuf(tqpair->sock, buf_size);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_recvbuf failed\n");
-		return rc;
-	}
-
 	/* set send buffer size */
+	buf_size = 2 * 1024 * 1024;
 	rc = spdk_sock_set_sendbuf(tqpair->sock, buf_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_sock_set_sendbuf failed\n");
