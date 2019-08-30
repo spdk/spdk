@@ -336,6 +336,22 @@ spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	return 0;
 }
 
+int
+spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				uint64_t lba, uint32_t lba_count,
+				spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+				spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+				spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
+				uint16_t apptag_mask, uint16_t apptag)
+{
+	struct nvme_request *req;
+
+	req = alloc_request(cb_fn, cb_arg);
+	TAILQ_INSERT_TAIL(&qpair->requests, req, tailq);
+
+	return 0;
+}
+
 static void
 create_bdev_cb(struct spdk_bdev *bdev, int status, void *_ctx)
 {}
@@ -485,6 +501,134 @@ test_device_geometry(void)
 	free_controller(ctrlr);
 }
 
+static uint64_t
+generate_lba(const struct spdk_ocssd_geometry_data *geo, uint64_t lbk,
+	     uint64_t chk, uint64_t pu, uint64_t grp)
+{
+	uint64_t lba, len;
+
+	lba = lbk;
+	len = geo->lbaf.lbk_len;
+	CU_ASSERT(lbk < (1ull << geo->lbaf.lbk_len));
+
+	lba |= chk << len;
+	len += geo->lbaf.chk_len;
+	CU_ASSERT(chk < (1ull << geo->lbaf.chk_len));
+
+	lba |= pu << len;
+	len += geo->lbaf.pu_len;
+	CU_ASSERT(pu < (1ull << geo->lbaf.pu_len));
+
+	lba |= grp << len;
+
+	return lba;
+}
+
+static void
+test_lba_translation(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct spdk_nvme_transport_id trid = { .traddr = "00:00:00" };
+	const char *controller_name = "nvme0";
+	const char *bdev_name = "nvme0n1";
+	struct spdk_ocssd_geometry_data geometry = {};
+	struct ocssd_bdev *ocssd_bdev;
+	struct spdk_bdev *bdev;
+	uint64_t lba;
+	int rc;
+
+	geometry = (struct spdk_ocssd_geometry_data) {
+		.clba = 512,
+		.num_chk = 64,
+		.num_pu = 8,
+		.num_grp = 4,
+		.lbaf = {
+			.lbk_len = 9,
+			.chk_len = 6,
+			.pu_len = 3,
+			.grp_len = 2,
+		}
+	};
+
+	ctrlr = create_controller(&trid, 1, &geometry);
+	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+
+	rc = spdk_bdev_ocssd_create_ctrlr(&trid);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+	ocssd_bdev = SPDK_CONTAINEROF(bdev, struct ocssd_bdev, nvme_bdev.disk);
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, 0);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 0, 0));
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev->zone_size - 1);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, bdev->zone_size - 1, 0, 0, 0));
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev->zone_size);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 0, 1));
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev->zone_size * geometry.num_grp);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 1, 0));
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev->zone_size * geometry.num_grp + 68);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 68, 0, 1, 0));
+
+	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+	free_controller(ctrlr);
+
+	geometry = (struct spdk_ocssd_geometry_data) {
+		.clba = 5120,
+		.num_chk = 501,
+		.num_pu = 8,
+		.num_grp = 1,
+		.lbaf = {
+			.lbk_len = 13,
+			.chk_len = 9,
+			.pu_len = 3,
+			.grp_len = 1,
+		}
+	};
+
+	ctrlr = create_controller(&trid, 1, &geometry);
+	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+
+	rc = spdk_bdev_ocssd_create_ctrlr(&trid);
+	CU_ASSERT_EQUAL(rc, 0);
+	rc = spdk_bdev_ocssd_create_bdev(controller_name, bdev_name, 1, create_bdev_cb, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+	ocssd_bdev = SPDK_CONTAINEROF(bdev, struct ocssd_bdev, nvme_bdev.disk);
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, 0);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 0, 0));
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev->zone_size - 1);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, bdev->zone_size - 1, 0, 0, 0));
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev->zone_size);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, 1, 0));
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev->zone_size * (geometry.num_pu - 1));
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 0, geometry.num_pu - 1, 0));
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev->zone_size * (geometry.num_pu));
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 0, 1, 0, 0));
+
+	lba = bdev_ocssd_to_disk_lba(ocssd_bdev, bdev->zone_size * (geometry.num_pu) + 68);
+	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 68, 1, 0, 0));
+
+	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+
+	free_controller(ctrlr);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -503,7 +647,8 @@ main(int argc, const char **argv)
 
 	if (
 		CU_add_test(suite, "test_create_controller", test_create_controller) == NULL ||
-		CU_add_test(suite, "test_device_geometry", test_device_geometry) == NULL
+		CU_add_test(suite, "test_device_geometry", test_device_geometry) == NULL ||
+		CU_add_test(suite, "test_lba_translation", test_lba_translation) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
