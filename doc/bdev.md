@@ -515,11 +515,11 @@ Example command
 
 `rpc.py bdev_pmem_create_pool /path/to/pmem_pool 25 4096`
 
-To get information on created pmem pool file user can use `pmem_pool_info` RPC command.
+To get information on created pmem pool file user can use `bdev_pmem_get_pool_info` RPC command.
 
 Example command
 
-`rpc.py pmem_pool_info /path/to/pmem_pool`
+`rpc.py bdev_pmem_get_pool_info /path/to/pmem_pool`
 
 To remove pmem pool file user can use `delete_pmem_pool` RPC command.
 
