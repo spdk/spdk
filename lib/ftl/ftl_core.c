@@ -2080,13 +2080,9 @@ _ftl_flush(void *ctx)
 }
 
 int
-spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
+ftl_flush_rwb(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
 {
 	struct ftl_flush *flush;
-
-	if (!dev->initialized) {
-		return -EBUSY;
-	}
 
 	flush = ftl_flush_init(dev, cb_fn, cb_arg);
 	if (!flush) {
@@ -2095,6 +2091,16 @@ spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
 
 	spdk_thread_send_msg(ftl_get_core_thread(dev), _ftl_flush, flush);
 	return 0;
+}
+
+int
+spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	if (!dev->initialized) {
+		return -EBUSY;
+	}
+
+	return ftl_flush_rwb(dev, cb_fn, cb_arg);
 }
 
 static void
