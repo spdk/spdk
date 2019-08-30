@@ -16,6 +16,24 @@
       "revId": "c29efd795f403d31e39ee05ca37749fc61e7267d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "536d3e03_30b703e0",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-08-30T05:39:35Z",
+      "side": 1,
+      "message": "destroy_lvol_store was change to bdev_lvol_delete_lvstore\nshould I revert this ?",
+      "parentUuid": "6d97a775_a982e832",
+      "revId": "c29efd795f403d31e39ee05ca37749fc61e7267d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
