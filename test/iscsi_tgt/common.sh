@@ -1,3 +1,6 @@
+# SC1010: ping -M do - in this case do is an option not bash special word
+# shellcheck disable=SC1010
+
 # Network configuration
 TARGET_INTERFACE="spdk_tgt_int"
 INITIATOR_INTERFACE="spdk_init_int"
