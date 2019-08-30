@@ -263,12 +263,6 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 		goto error_return;
 	}
 
-	bufsize = 2 * 1024 * 1024;
-	rc = spdk_sock_set_recvbuf(conn->sock, bufsize);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_recvbuf failed\n");
-	}
-
 	bufsize = 32 * 1024 * 1024 / g_spdk_iscsi.MaxConnections;
 	if (bufsize > 2 * 1024 * 1024) {
 		bufsize = 2 * 1024 * 1024;
