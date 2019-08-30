@@ -284,30 +284,30 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_pmem_get_pool_info", spdk_rpc_bdev_pmem_get_pool_info, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_get_pool_info, pmem_pool_info)
 
-struct rpc_delete_pmem_pool {
+struct rpc_bdev_pmem_delete_pool {
 	char *pmem_file;
 };
 
-static const struct spdk_json_object_decoder rpc_delete_pmem_pool_decoders[] = {
-	{"pmem_file", offsetof(struct rpc_delete_pmem_pool, pmem_file), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_pmem_delete_pool_decoders[] = {
+	{"pmem_file", offsetof(struct rpc_bdev_pmem_delete_pool, pmem_file), spdk_json_decode_string},
 };
 
 static void
-free_rpc_delete_pmem_pool(struct rpc_delete_pmem_pool *req)
+free_rpc_bdev_pmem_delete_pool(struct rpc_bdev_pmem_delete_pool *req)
 {
 	free(req->pmem_file);
 }
 
 static void
-spdk_rpc_delete_pmem_pool(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+spdk_rpc_bdev_pmem_delete_pool(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
 {
-	struct rpc_delete_pmem_pool req = {};
+	struct rpc_bdev_pmem_delete_pool req = {};
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_delete_pmem_pool_decoders,
-				    SPDK_COUNTOF(rpc_delete_pmem_pool_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_pmem_delete_pool_decoders,
+				    SPDK_COUNTOF(rpc_bdev_pmem_delete_pool_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -331,6 +331,7 @@ spdk_rpc_delete_pmem_pool(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_delete_pmem_pool(&req);
+	free_rpc_bdev_pmem_delete_pool(&req);
 }
-SPDK_RPC_REGISTER("delete_pmem_pool", spdk_rpc_delete_pmem_pool, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_pmem_delete_pool", spdk_rpc_bdev_pmem_delete_pool, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_delete_pool, delete_pmem_pool)

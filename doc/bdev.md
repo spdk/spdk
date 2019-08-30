@@ -521,11 +521,11 @@ Example command
 
 `rpc.py bdev_pmem_get_pool_info /path/to/pmem_pool`
 
-To remove pmem pool file user can use `delete_pmem_pool` RPC command.
+To remove pmem pool file user can use `bdev_pmem_delete_pool` RPC command.
 
 Example command
 
-`rpc.py delete_pmem_pool /path/to/pmem_pool`
+`rpc.py bdev_pmem_delete_pool /path/to/pmem_pool`
 
 To create bdev based on pmemblk pool file user should use `bdev_pmem_create ` RPC
 command.

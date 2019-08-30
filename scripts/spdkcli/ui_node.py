@@ -47,7 +47,7 @@ class UINode(ConfigNode):
                 command in ["create", "delete", "delete_all", "add_initiator",
                             "allow_any_host", "split_bdev", "add_lun",
                             "add_pg_ig_maps", "remove_target", "add_secret",
-                            "destruct_split_bdev", "delete_pmem_pool",
+                            "destruct_split_bdev", "bdev_pmem_delete_pool",
                             "bdev_pmem_create_pool", "delete_secret_all",
                             "delete_initiator", "set_auth", "delete_secret",
                             "delete_pg_ig_maps", "load_config",
@@ -434,8 +434,8 @@ class UIPmemBdev(UIBdev):
                                               num_blocks=num_blocks,
                                               block_size=block_size)
 
-    def ui_command_delete_pmem_pool(self, pmem_file):
-        self.get_root().delete_pmem_pool(pmem_file=pmem_file)
+    def ui_command_bdev_pmem_delete_pool(self, pmem_file):
+        self.get_root().bdev_pmem_delete_pool(pmem_file=pmem_file)
 
     def ui_command_bdev_pmem_get_pool_info(self, pmem_file):
         ret = self.get_root().bdev_pmem_get_pool_info(pmem_file=pmem_file)

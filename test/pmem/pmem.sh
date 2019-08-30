@@ -32,7 +32,7 @@ function usage()
 	echo "-x                        set -x for script debug"
 	echo "    --info                Run test cases for bdev_pmem_get_pool_info"
 	echo "    --create              Run test cases for bdev_pmem_create_pool"
-	echo "    --delete              Run test cases for delete_pmem_pool"
+	echo "    --delete              Run test cases for bdev_pmem_delete_pool"
 	echo "    --construct_bdev      Run test cases for constructing pmem bdevs"
 	echo "    --delete_bdev         Run test cases for deleting pmem bdevs"
 	echo "    --all                 Run all test cases (default)"
@@ -191,7 +191,7 @@ function bdev_pmem_create_pool_tc3()
 		error "Failed to get pmem info"
 	fi
 
-	if ! $rpc_py delete_pmem_pool $default_pool_file; then
+	if ! $rpc_py bdev_pmem_delete_pool $default_pool_file; then
 		error "Failed to delete pool file!"
 	fi
 
@@ -224,7 +224,7 @@ function bdev_pmem_create_pool_tc4()
 		error "Failed to get pmem info"
 	fi
 
-	if ! $rpc_py delete_pmem_pool $rootdir/test/pmem/ramspace/pool_file; then
+	if ! $rpc_py bdev_pmem_delete_pool $rootdir/test/pmem/ramspace/pool_file; then
 		pmem_unmount_ramspace
 		error "Failed to delete pool file!"
 	fi
@@ -272,7 +272,7 @@ function bdev_pmem_create_pool_tc5()
 		error "Failed to get pmem info!"
 	fi
 
-	if ! $rpc_py delete_pmem_pool $default_pool_file; then
+	if ! $rpc_py bdev_pmem_delete_pool $default_pool_file; then
 		error "Failed to delete pmem file!"
 	fi
 
@@ -301,7 +301,7 @@ function bdev_pmem_create_pool_tc6()
 			error "Invalid block size of pmem pool!"
 		fi
 
-		if ! $rpc_py delete_pmem_pool $default_pool_file; then
+		if ! $rpc_py bdev_pmem_delete_pool $default_pool_file; then
 			error "Failed to delete pmem file!"
 		fi
 	done
@@ -370,23 +370,23 @@ function bdev_pmem_create_pool_tc9()
 }
 
 #================================================
-# delete_pmem_pool tests
+# bdev_pmem_delete_pool tests
 #================================================
-function delete_pmem_pool_tc1()
+function bdev_pmem_delete_pool_tc1()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
 
-	if $rpc_py delete_pmem_pool $default_pool_file; then
-		error "delete_pmem_pool deleted inexistant pool file!"
+	if $rpc_py bdev_pmem_delete_pool $default_pool_file; then
+		error "bdev_pmem_delete_pool deleted inexistant pool file!"
 	fi
 
 	return 0
 }
 
-function delete_pmem_pool_tc2()
+function bdev_pmem_delete_pool_tc2()
 {
-	pmem_print_tc_name "delete_pmem_pool_tc2"
+	pmem_print_tc_name "bdev_pmem_delete_pool_tc2"
 	pmem_clean_pool_file $obj_pool_file
 
 	echo "Creating new type OBJ pool file"
@@ -397,16 +397,16 @@ function delete_pmem_pool_tc2()
 		truncate -s "32M" $obj_pool_file
 	fi
 
-	if $rpc_py delete_pmem_pool $obj_pool_file; then
+	if $rpc_py bdev_pmem_delete_pool $obj_pool_file; then
 		pmem_clean_pool_file $obj_pool_file
-		error "delete_pmem_pool deleted invalid pmem pool type!"
+		error "bdev_pmem_delete_pool deleted invalid pmem pool type!"
 	fi
 
 	pmem_clean_pool_file $obj_pool_file
 	return 0
 }
 
-function delete_pmem_pool_tc3()
+function bdev_pmem_delete_pool_tc3()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 	pmem_clean_pool_file
@@ -416,7 +416,7 @@ function delete_pmem_pool_tc3()
 		error "Failed to get info on pmem pool file!"
 	fi
 
-	if ! $rpc_py delete_pmem_pool $default_pool_file; then
+	if ! $rpc_py bdev_pmem_delete_pool $default_pool_file; then
 		error "Failed to delete pmem pool file!"
 	fi
 
@@ -427,12 +427,12 @@ function delete_pmem_pool_tc3()
 	return 0
 }
 
-function delete_pmem_pool_tc4()
+function bdev_pmem_delete_pool_tc4()
 {
 	pmem_print_tc_name ${FUNCNAME[0]}
 
-	delete_pmem_pool_tc3
-	if $rpc_py delete_pmem_pool $default_pool_file; then
+	bdev_pmem_delete_pool_tc3
+	if $rpc_py bdev_pmem_delete_pool $default_pool_file; then
 		error "Deleted pmem pool file that shouldn't exist!"
 	fi
 
@@ -537,7 +537,7 @@ function bdev_pmem_create_tc5()
 		error "Failed to delete pmem bdev!"
 	fi
 
-	if ! $rpc_py delete_pmem_pool $default_pool_file; then
+	if ! $rpc_py bdev_pmem_delete_pool $default_pool_file; then
 		error "Failed to delete pmem pool file!"
 	fi
 
@@ -573,7 +573,7 @@ function bdev_pmem_create_tc6()
 		error "Failed to delete pmem bdev!"
 	fi
 
-	if ! $rpc_py delete_pmem_pool $default_pool_file; then
+	if ! $rpc_py bdev_pmem_delete_pool $default_pool_file; then
 		error "Failed to delete pmem pool file!"
 	fi
 
@@ -676,10 +676,10 @@ if $test_create || $test_all; then
 fi
 
 if $test_delete || $test_all; then
-	delete_pmem_pool_tc1
-	delete_pmem_pool_tc2
-	delete_pmem_pool_tc3
-	delete_pmem_pool_tc4
+	bdev_pmem_delete_pool_tc1
+	bdev_pmem_delete_pool_tc2
+	bdev_pmem_delete_pool_tc3
+	bdev_pmem_delete_pool_tc4
 fi
 
 if $test_construct_bdev || $test_all; then

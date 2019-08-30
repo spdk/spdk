@@ -1731,13 +1731,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
     p.set_defaults(func=bdev_pmem_get_pool_info)
 
-    def delete_pmem_pool(args):
-        rpc.pmem.delete_pmem_pool(args.client,
-                                  pmem_file=args.pmem_file)
+    def bdev_pmem_delete_pool(args):
+        rpc.pmem.bdev_pmem_delete_pool(args.client,
+                                       pmem_file=args.pmem_file)
 
-    p = subparsers.add_parser('delete_pmem_pool', help='Delete pmem pool')
+    p = subparsers.add_parser('bdev_pmem_delete_pool', aliases=['delete_pmem_pool'],
+                              help='Delete pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
-    p.set_defaults(func=delete_pmem_pool)
+    p.set_defaults(func=bdev_pmem_delete_pool)
 
     # subsystem
     def get_subsystems(args):

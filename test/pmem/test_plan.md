@@ -100,7 +100,7 @@ blocksize=512 and total size=256MB
 - call return code = 0
 - call bdev_pmem_get_pool_info and check that pmem file was created
 - call return code = 0
-- call delete_pmem_pool on previously created pmem
+- call bdev_pmem_delete_pool on previously created pmem
 - return code = 0 and no error code
 
 #### bdev_pmem_create_pool_tc4
@@ -112,7 +112,7 @@ blocksize=512 and total size=256MB
 - call return code = 0
 - call bdev_pmem_get_pool_info and check that pmem file was created
 - call return code = 0
-- call delete_pmem_pool on previously created pmem
+- call bdev_pmem_delete_pool on previously created pmem
 - return code = 0 and no error code
 
 #### bdev_pmem_create_pool_tc5
@@ -129,7 +129,7 @@ blocksize=4096 and total size=512MB
 - call bdev_pmem_create_pool and check that first pmem pool file is still
 available and not modified (block size and total size stay the same)
 - call return code = 0
-- call delete_pmem_pool on first created pmem pool
+- call bdev_pmem_delete_pool on first created pmem pool
 - return code =0 and no error code
 
 #### bdev_pmem_create_pool_tc6
@@ -142,7 +142,7 @@ For pool files created with block size <512 their block size should be rounded u
 to 512; other pool files should have the same block size as specified in create
 command
 - call return code = 0; block sizes as expected
-- call delete_pmem_pool on all created pool files
+- call bdev_pmem_delete_pool on all created pool files
 
 #### bdev_pmem_create_pool_tc7
 Negative test case for creating pmem pool file with total size of less than 16MB.
@@ -162,41 +162,41 @@ total size=30MB
 - call bdev_pmem_get_pool_info to verify pmem pool file was not created
 - return code = 0
 
-### delete_pmem_pool
+### bdev_pmem_delete_pool
 
-#### delete_pmem_pool_tc1
+#### bdev_pmem_delete_pool_tc1
 Negative test case for deleting a pmem.
-Call delete_pmem_pool on non-exisiting pmem.
+Call bdev_pmem_delete_pool on non-exisiting pmem.
 Steps & expected results:
-- call delete_pmem_pool on non-existing pmem.
+- call bdev_pmem_delete_pool on non-existing pmem.
 - return code !=0 and error code = ENOENT
 
-#### delete_pmem_pool_tc2
+#### bdev_pmem_delete_pool_tc2
 Negative test case for deleting a pmem.
-Call delete_pmem_pool on a file of wrong type
+Call bdev_pmem_delete_pool on a file of wrong type
 Steps & expected results:
 - Using pmem utility tools create pool of OBJ type instead of BLK
 (if needed utility tools are not available - create random file in filesystem)
-- Call delete_pmem_pool and point to file created in previous step.
+- Call bdev_pmem_delete_pool and point to file created in previous step.
 - return code !=0 and error code = ENOTBLK
 
-#### delete_pmem_pool_tc3
+#### bdev_pmem_delete_pool_tc3
 Positive test case for creating and deleting a pemem.
 Steps & expected results:
 - call bdev_pmem_create_pool with correct arguments
 - return code = 0 and no error code
 - using bdev_pmem_get_pool_info check that pmem was created
 - return code = 0 and no error code
-- call delete_pmem_pool on previously created pmem
+- call bdev_pmem_delete_pool on previously created pmem
 - return code = 0 and no error code
 - using bdev_pmem_get_pool_info check that pmem no longer exists
 - return code !=0 and error code = ENODEV
 
-#### delete_pmem_pool_tc4
+#### bdev_pmem_delete_pool_tc4
 Negative test case for creating and deleting a pemem.
 Steps & expected results:
 - run scenario from test case 3
-- call delete_pmem_pool on already deleted pmem pool
+- call bdev_pmem_delete_pool on already deleted pmem pool
 - return code !=0 and error code = ENODEV
 
 ### bdev_pmem_create
