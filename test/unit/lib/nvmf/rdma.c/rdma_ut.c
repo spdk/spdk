@@ -586,7 +586,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	bool progress;
 
 	STAILQ_INIT(&group.group.buf_cache);
-	STAILQ_INIT(&group.pending_data_buf_queue);
+	STAILQ_INIT(&group.group.pending_buf_queue);
 	group.group.buf_cache_size = 0;
 	group.group.buf_cache_count = 0;
 	port.device = &device;
