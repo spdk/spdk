@@ -549,7 +549,7 @@ function print_backtrace() {
 		local src="${BASH_SOURCE[$i]}"
 		echo "in $src:$line_nr -> $func()"
 		echo "     ..."
-		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^$line_nr[^0-9]" | \
+		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^${line_nr}[^0-9]" | \
 			sed "s/^/   /g" | sed "s/^   $line_nr /=> $line_nr /g"
 		echo "     ..."
 	done
