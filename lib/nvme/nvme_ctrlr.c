@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "nvme_internal.h"
+#include "nvme_cuse.h"
 
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -171,6 +172,12 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	if (FIELD_OK(disable_error_logging)) {
 		opts->disable_error_logging = false;
 	}
+
+	/* FIXIT! Cuse - turned on for testing. It should be false by default. */
+	if (FIELD_OK(enable_cuse_devices)) {
+		opts->enable_cuse_devices = true;
+	}
+
 #undef FIELD_OK
 }
 
@@ -2353,6 +2360,12 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_qpair *qpair, *tmp;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Prepare to destruct SSD: %s\n", ctrlr->trid.traddr);
+
+#ifdef SPDK_CONFIG_CUSE
+	if (ctrlr->opts.enable_cuse_devices) {
+		spdk_nvme_cuse_stop(ctrlr);
+	}
+#endif
 
 	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
 
