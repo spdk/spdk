@@ -2193,7 +2193,7 @@ Example response:
 }
 ~~~
 
-## delete_pmem_pool {#rpc_delete_pmem_pool}
+## bdev_pmem_delete_pool {#rpc_bdev_pmem_delete_pool}
 
 Delete pmem pool by removing file `pmem_file`. This method will fail if `pmem_file` is not a
 valid pmem pool file.
@@ -2216,7 +2216,7 @@ Example request:
     "pmem_file": "/tmp/pmem_file"
   },
   "jsonrpc": "2.0",
-  "method": "delete_pmem_pool",
+  "method": "bdev_pmem_delete_pool",
   "id": 1
 }
 ~~~
