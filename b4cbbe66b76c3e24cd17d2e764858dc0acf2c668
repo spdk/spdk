@@ -34,6 +34,24 @@
       "revId": "b4cbbe66b76c3e24cd17d2e764858dc0acf2c668",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0dcd7f5a_8ac007eb",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-08-30T16:00:50Z",
+      "side": 1,
+      "message": "Haha - this was rev 2.  I meant fixed in rev 3.  :)",
+      "parentUuid": "3a7fbabb_e288bf9f",
+      "revId": "b4cbbe66b76c3e24cd17d2e764858dc0acf2c668",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
