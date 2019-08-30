@@ -150,6 +150,14 @@ function install_fio()
     if echo $CONF | grep -q fio; then
         # This version of fio is installed in /usr/src/fio to enable
         # building the spdk fio plugin.
+        local fio_version="fio-3.3"
+
+        # Change version on Arch Linux, 3.3 does not compile
+        # with gcc 9
+        if [ $PACKAGEMNG == 'pacman' ]; then
+            fio_version="fio-3.15"
+        fi
+
         if [ ! -d /usr/src/fio ]; then
             if [ ! -d fio ]; then
                 git clone "${GIT_REPO_FIO}"
@@ -160,7 +168,7 @@ function install_fio()
             (
                 git -C /usr/src/fio checkout master &&
                 git -C /usr/src/fio pull &&
-                git -C /usr/src/fio checkout fio-3.3 &&
+                git -C /usr/src/fio checkout $fio_version &&
                 make -C /usr/src/fio -j${jobs} &&
                 sudo make -C /usr/src/fio install
             )
@@ -196,6 +204,8 @@ function install_qemu()
                 sudo dnf install -y qemu-system-x86 qemu-img
         elif [ "$PACKAGEMNG" = "apt-get" ]; then
                 sudo apt-get install -y qemu-system-x86 qemu-img
+        elif [ "$PACKAGEMNG" = "pacman" ]; then
+                sudo pacman -Sy --needed --noconfirm qemu
         fi
 
         # Forked QEMU
@@ -208,6 +218,11 @@ function install_qemu()
         fi
 
         declare -a opt_params=("--prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH")
+        if [ "$PACKAGEMNG" = "pacman" ]; then
+            # GCC 9 on ArchLinux fails to compile Qemu due to some old warnings which were not detected by older versions.
+            opt_params+=("--extra-cflags='-Wno-error=stringop-truncation -Wno-error=deprecated-declarations -Wno-error=incompatible-pointer-types -Wno-error=format-truncation'")
+            opt_params+=("--disable-glusterfs")
+        fi
 
         # Most tsocks proxies rely on a configuration file in /etc/tsocks.conf.
         # If using tsocks, please make sure to complete this config before trying to build qemu.
@@ -319,6 +334,8 @@ if hash dnf &>/dev/null; then
     PACKAGEMNG=dnf
 elif hash apt-get &>/dev/null; then
     PACKAGEMNG=apt-get
+elif hash pacman &>/dev/null; then
+    PACKAGEMNG=pacman
 else
     echo 'Supported package manager not found. Script supports "dnf" and "apt-get".'
 fi
@@ -383,14 +400,22 @@ cd ~
 jobs=$(($(nproc)*2))
 
 if $UPGRADE; then
-    if [ $PACKAGEMNG == 'apt-get' ]; then
+    if [ $PACKAGEMNG == 'dnf' ]; then
+        sudo $PACKAGEMNG upgrade -y
+    elif [ $PACKAGEMNG == 'apt-get' ]; then
         sudo $PACKAGEMNG update
+        sudo $PACKAGEMNG upgrade -y
+    elif [ $PACKAGEMNG == 'pacman' ]; then
+        sudo $PACKAGEMNG -Syu --noconfirm --needed
     fi
-    sudo $PACKAGEMNG upgrade -y
 fi
 
 if $INSTALL; then
-    sudo $PACKAGEMNG install -y git
+    if [ $PACKAGEMNG == 'pacman' ]; then
+        sudo $PACKAGEMNG -Sy --needed --noconfirm git
+    else
+        sudo $PACKAGEMNG install -y git
+    fi
 fi
 
 mkdir -p spdk_repo/output
@@ -525,6 +550,52 @@ if $INSTALL; then
 
         # rpm-build is not used
         # iptables installed by default
+
+    elif [ $PACKAGEMNG == 'pacman' ]; then
+        if echo $CONF | grep -q tsocks; then
+            sudo pacman -Sy --noconfirm --needed tsocks
+        fi
+
+        sudo pacman -Sy --noconfirm --needed valgrind \
+            jq \
+            nvme-cli \
+            ceph \
+            gdb \
+            fio \
+            linux-headers \
+            gflags \
+            autoconf \
+            automake \
+            libtool \
+            libutil-linux \
+            libiscsi \
+            open-isns \
+            glib2 \
+            pixman \
+            flex \
+            bison \
+            elfutils \
+            libelf \
+            astyle \
+            gptfdisk \
+            socat \
+            sshfs \
+            sshpass \
+            python-pandas \
+            btrfs-progs \
+            iptables \
+            clang \
+            bc \
+            perl-switch \
+            open-iscsi
+
+        # TODO:
+        # These are either missing or require some other installation method
+        # than pacman:
+
+        # librbd-devel
+        # perl-open
+        # targetcli
 
     else
         echo "Package manager is undefined, skipping INSTALL step"
