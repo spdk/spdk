@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00d4d3ca_778e5c33",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-08-30T17:15:52Z",
+      "side": 1,
+      "message": "You should rename this function to something like nvmf_generate_discovery_log",
+      "revId": "b185e3ce662d452c11a8932ef9d2508a07e52ba4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
