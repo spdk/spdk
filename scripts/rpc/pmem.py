@@ -25,10 +25,11 @@ def bdev_pmem_get_pool_info(client, pmem_file):
     return client.call('bdev_pmem_get_pool_info', params)
 
 
-def delete_pmem_pool(client, pmem_file):
+@deprecated_alias('delete_pmem_pool')
+def bdev_pmem_delete_pool(client, pmem_file):
     """Delete pmem pool.
     Args:
         pmem_file: path to pmem pool
     """
     params = {'pmem_file': pmem_file}
-    return client.call('delete_pmem_pool', params)
+    return client.call('bdev_pmem_delete_pool', params)

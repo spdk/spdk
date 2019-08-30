@@ -211,8 +211,8 @@ class UIRoot(UINode):
         return response
 
     @verbose
-    def delete_pmem_pool(self, **kwargs):
-        rpc.pmem.delete_pmem_pool(self.client, **kwargs)
+    def bdev_pmem_delete_pool(self, **kwargs):
+        rpc.pmem.bdev_pmem_delete_pool(self.client, **kwargs)
 
     @verbose
     def bdev_pmem_get_pool_info(self, **kwargs):

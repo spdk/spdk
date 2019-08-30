@@ -65,7 +65,7 @@ done
 
 for i in $(seq 1 $TGT_NR); do
 	for c in $(seq 1 $PMEM_PER_TGT); do
-		$rpc_py delete_pmem_pool /tmp/pool_file${i}_${c}
+		$rpc_py bdev_pmem_delete_pool /tmp/pool_file${i}_${c}
 	done
 done
 
