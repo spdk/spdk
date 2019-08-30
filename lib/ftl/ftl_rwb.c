@@ -83,6 +83,8 @@ struct ftl_rwb {
 
 	/* Number of acquired entries */
 	unsigned int				num_acquired[FTL_RWB_TYPE_MAX];
+	/* Number of acquired but not yet submitted entries */
+	unsigned int				num_pending;
 	/* User/internal limits */
 	size_t					limits[FTL_RWB_TYPE_MAX];
 
@@ -302,7 +304,7 @@ ftl_rwb_batch_release(struct ftl_rwb_batch *batch)
 		num_acquired = __atomic_fetch_sub(&rwb->num_acquired[ftl_rwb_entry_type(entry)], 1,
 						  __ATOMIC_SEQ_CST);
 		entry->band = NULL;
-		assert(num_acquired  > 0);
+		assert(num_acquired > 0);
 	}
 
 	pthread_spin_lock(&rwb->lock);
@@ -371,6 +373,14 @@ ftl_rwb_batch_revert(struct ftl_rwb_batch *batch)
 	if (spdk_ring_enqueue(rwb->prio_queue, (void **)&batch, 1, NULL) != 1) {
 		assert(0 && "Should never happen");
 	}
+
+	__atomic_fetch_add(&rwb->num_pending, rwb->xfer_size, __ATOMIC_SEQ_CST);
+}
+
+unsigned int
+ftl_rwb_num_pending(struct ftl_rwb *rwb)
+{
+	return __atomic_load_n(&rwb->num_pending, __ATOMIC_SEQ_CST);
 }
 
 void
@@ -457,6 +467,7 @@ ftl_rwb_acquire(struct ftl_rwb *rwb, enum ftl_rwb_entry_type type)
 
 	pthread_spin_unlock(&rwb->lock);
 	__atomic_fetch_add(&rwb->num_acquired[type], 1, __ATOMIC_SEQ_CST);
+	__atomic_fetch_add(&rwb->num_pending, 1, __ATOMIC_SEQ_CST);
 	return entry;
 error:
 	pthread_spin_unlock(&rwb->lock);
@@ -491,12 +502,19 @@ struct ftl_rwb_batch *
 ftl_rwb_pop(struct ftl_rwb *rwb)
 {
 	struct ftl_rwb_batch *batch = NULL;
+	unsigned int num_pending __attribute__((unused));
 
 	if (spdk_ring_dequeue(rwb->prio_queue, (void **)&batch, 1) == 1) {
+		num_pending = __atomic_fetch_sub(&rwb->num_pending, rwb->xfer_size,
+						 __ATOMIC_SEQ_CST);
+		assert(num_pending > 0);
 		return batch;
 	}
 
 	if (spdk_ring_dequeue(rwb->submit_queue, (void **)&batch, 1) == 1) {
+		num_pending = __atomic_fetch_sub(&rwb->num_pending, rwb->xfer_size,
+						 __ATOMIC_SEQ_CST);
+		assert(num_pending > 0);
 		return batch;
 	}
 
