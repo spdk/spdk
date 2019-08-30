@@ -753,8 +753,7 @@ static void
 ftl_wptr_pad_band(struct ftl_wptr *wptr)
 {
 	struct spdk_ftl_dev *dev = wptr->dev;
-	size_t size = ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_INTERNAL) +
-		      ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_USER);
+	size_t size = ftl_rwb_num_pending(dev->rwb);
 	size_t blocks_left, rwb_size, pad_size;
 
 	blocks_left = ftl_wptr_user_lbks_left(wptr);
@@ -771,8 +770,7 @@ static void
 ftl_wptr_process_shutdown(struct ftl_wptr *wptr)
 {
 	struct spdk_ftl_dev *dev = wptr->dev;
-	size_t size = ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_INTERNAL) +
-		      ftl_rwb_num_acquired(dev->rwb, FTL_RWB_TYPE_USER);
+	size_t size = ftl_rwb_num_pending(dev->rwb);
 	size_t num_active = dev->xfer_size * ftl_rwb_get_active_batches(dev->rwb);
 
 	num_active = num_active ? num_active : dev->xfer_size;

@@ -118,6 +118,7 @@ struct ftl_rwb_entry *ftl_rwb_batch_first_entry(struct ftl_rwb_batch *batch);
 void	*ftl_rwb_batch_get_data(struct ftl_rwb_batch *batch);
 void	*ftl_rwb_batch_get_md(struct ftl_rwb_batch *batch);
 void	ftl_rwb_disable_interleaving(struct ftl_rwb *rwb);
+unsigned int ftl_rwb_num_pending(struct ftl_rwb *rwb);
 
 static inline void
 _ftl_rwb_entry_set_valid(struct ftl_rwb_entry *entry, bool valid)
