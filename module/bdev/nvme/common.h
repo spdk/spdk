@@ -78,6 +78,20 @@ struct nvme_bdev {
 	struct spdk_nvme_ns	*ns;
 };
 
+struct rpc_construct_nvme {
+	char *name;
+	char *trtype;
+	char *adrfam;
+	char *traddr;
+	char *trsvcid;
+	char *subnqn;
+	char *hostnqn;
+	char *hostaddr;
+	char *hostsvcid;
+	bool prchk_reftag;
+	bool prchk_guard;
+};
+
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
 struct nvme_bdev_ctrlr *nvme_bdev_first_ctrlr(void);
