@@ -262,9 +262,7 @@ struct spdk_blob_md_descriptor_extent {
 	uint8_t		type;
 	uint32_t	length;
 
-	struct {
-		uint32_t        cluster_idx;
-	} extents[0];
+	uint32_t        cluster_idx[0];
 };
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
