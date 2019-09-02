@@ -342,6 +342,7 @@ spdk_pci_device_init(struct rte_pci_driver *_drv,
 	dev->detach = spdk_detach_rte;
 
 	dev->internal.driver = driver;
+	dev->internal.claim_fd = -1;
 
 	if (driver->cb_fn != NULL) {
 		rc = driver->cb_fn(driver->cb_arg, dev);
@@ -387,6 +388,11 @@ void
 spdk_pci_device_detach(struct spdk_pci_device *dev)
 {
 	assert(dev->internal.attached);
+
+	if (dev->internal.claim_fd >= 0) {
+		spdk_pci_device_unclaim(dev);
+	}
+
 	dev->internal.attached = false;
 	dev->detach(dev);
 
@@ -728,7 +734,7 @@ spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr
 
 #ifdef __linux__
 int
-spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
+spdk_pci_device_claim(struct spdk_pci_device *dev)
 {
 	int dev_fd;
 	char dev_name[64];
@@ -741,20 +747,19 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 		.l_len = 0,
 	};
 
-	snprintf(dev_name, sizeof(dev_name), "/tmp/spdk_pci_lock_%04x:%02x:%02x.%x", pci_addr->domain,
-		 pci_addr->bus,
-		 pci_addr->dev, pci_addr->func);
+	snprintf(dev_name, sizeof(dev_name), "/tmp/spdk_pci_lock_%04x:%02x:%02x.%x",
+		 dev->addr.domain, dev->addr.bus, dev->addr.dev, dev->addr.func);
 
 	dev_fd = open(dev_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (dev_fd == -1) {
 		fprintf(stderr, "could not open %s\n", dev_name);
-		return -1;
+		return -errno;
 	}
 
 	if (ftruncate(dev_fd, sizeof(int)) != 0) {
 		fprintf(stderr, "could not truncate %s\n", dev_name);
 		close(dev_fd);
-		return -1;
+		return -errno;
 	}
 
 	dev_map = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE,
@@ -762,7 +767,7 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 	if (dev_map == MAP_FAILED) {
 		fprintf(stderr, "could not mmap dev %s (%d)\n", dev_name, errno);
 		close(dev_fd);
-		return -1;
+		return -errno;
 	}
 
 	if (fcntl(dev_fd, F_SETLK, &pcidev_lock) != 0) {
@@ -771,22 +776,43 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 			" process %d has claimed it\n", dev_name, pid);
 		munmap(dev_map, sizeof(int));
 		close(dev_fd);
-		return -1;
+		/* F_SETLK returns unspecified errnos, normalize them */
+		return -EACCES;
 	}
 
 	*(int *)dev_map = (int)getpid();
 	munmap(dev_map, sizeof(int));
+	dev->internal.claim_fd = dev_fd;
 	/* Keep dev_fd open to maintain the lock. */
-	return dev_fd;
+	return 0;
+}
+
+void
+spdk_pci_device_unclaim(struct spdk_pci_device *dev)
+{
+	char dev_name[64];
+
+	snprintf(dev_name, sizeof(dev_name), "/tmp/spdk_pci_lock_%04x:%02x:%02x.%x",
+		 dev->addr.domain, dev->addr.bus, dev->addr.dev, dev->addr.func);
+
+	close(dev->internal.claim_fd);
+	dev->internal.claim_fd = -1;
+	unlink(dev_name);
 }
 #endif /* __linux__ */
 
 #ifdef __FreeBSD__
 int
-spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
+spdk_pci_device_claim(struct spdk_pci_device *dev)
 {
 	/* TODO */
 	return 0;
+}
+
+void
+spdk_pci_device_unclaim(struct spdk_pci_device *dev)
+{
+	/* TODO */
 }
 #endif /* __FreeBSD__ */
 
