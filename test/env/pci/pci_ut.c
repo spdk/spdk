@@ -38,25 +38,19 @@
 #include "env_dpdk/pci.c"
 
 static void
-pci_claim_test(void)
+pci_claim_test(struct spdk_pci_device *dev)
 {
 	int rc = 0;
 	pid_t childPid;
 	int status, ret;
-	struct spdk_pci_addr pci_addr;
 
-	pci_addr.domain = 0x0;
-	pci_addr.bus = 0x5;
-	pci_addr.dev = 0x4;
-	pci_addr.func = 1;
-
-	rc = spdk_pci_device_claim(&pci_addr);
+	rc = spdk_pci_device_claim(dev);
 	CU_ASSERT(rc >= 0);
 
 	childPid = fork();
 	CU_ASSERT(childPid >= 0);
 	if (childPid == 0) {
-		ret = spdk_pci_device_claim(&pci_addr);
+		ret = spdk_pci_device_claim(dev);
 		CU_ASSERT(ret == -1);
 		exit(0);
 	} else {
@@ -206,6 +200,9 @@ pci_hook_test(void)
 	rc = spdk_pci_device_map_bar(&ut_dev.pci, 1, &bar0_vaddr, &bar0_paddr, &bar0_size);
 	CU_ASSERT(rc != 0);
 
+	/* test spdk_pci_device_claim() */
+	pci_claim_test(&ut_dev.pci);
+
 	/* detach and verify our callback was called */
 	spdk_pci_device_detach(&ut_dev.pci);
 	CU_ASSERT(!ut_dev.attached);
@@ -235,7 +232,6 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "pci_claim", pci_claim_test) == NULL ||
 		CU_add_test(suite, "pci_hook", pci_hook_test) == NULL
 	) {
 		CU_cleanup_registry();

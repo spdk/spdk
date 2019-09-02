@@ -39,6 +39,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
 #include "spdk/likely.h"
+#include "spdk/string.h"
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
 
@@ -100,9 +101,6 @@ struct nvme_pcie_ctrlr {
 
 	/* Opaque handle to associated PCI device. */
 	struct spdk_pci_device *devhandle;
-
-	/* File descriptor returned from spdk_pci_device_claim().  Closed when ctrlr is detached. */
-	int claim_fd;
 
 	/* Flag to indicate the MMIO register has been remapped */
 	bool is_remapped;
@@ -808,25 +806,20 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	union spdk_nvme_cap_register cap;
 	union spdk_nvme_vs_register vs;
 	uint32_t cmd_reg;
-	int rc, claim_fd;
+	int rc;
 	struct spdk_pci_id pci_id;
-	struct spdk_pci_addr pci_addr;
 
-	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
-		SPDK_ERRLOG("could not parse pci address\n");
-		return NULL;
-	}
-
-	claim_fd = spdk_pci_device_claim(&pci_addr);
-	if (claim_fd < 0) {
-		SPDK_ERRLOG("could not claim device %s\n", trid->traddr);
+	rc = spdk_pci_device_claim(pci_dev);
+	if (rc < 0) {
+		SPDK_ERRLOG("could not claim device %s (%s)\n",
+			    trid->traddr, spdk_strerror(-rc));
 		return NULL;
 	}
 
 	pctrlr = spdk_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL,
 			      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (pctrlr == NULL) {
-		close(claim_fd);
+		spdk_pci_device_unclaim(pci_dev);
 		SPDK_ERRLOG("could not allocate ctrlr\n");
 		return NULL;
 	}
@@ -836,19 +829,18 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	pctrlr->ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	pctrlr->devhandle = devhandle;
 	pctrlr->ctrlr.opts = *opts;
-	pctrlr->claim_fd = claim_fd;
 	memcpy(&pctrlr->ctrlr.trid, trid, sizeof(pctrlr->ctrlr.trid));
 
 	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
 	if (rc != 0) {
-		close(claim_fd);
+		spdk_pci_device_unclaim(pci_dev);
 		spdk_free(pctrlr);
 		return NULL;
 	}
 
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {
-		close(claim_fd);
+		spdk_pci_device_unclaim(pci_dev);
 		spdk_free(pctrlr);
 		return NULL;
 	}
@@ -860,14 +852,14 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
 		SPDK_ERRLOG("get_cap() failed\n");
-		close(claim_fd);
+		spdk_pci_device_unclaim(pci_dev);
 		spdk_free(pctrlr);
 		return NULL;
 	}
 
 	if (nvme_ctrlr_get_vs(&pctrlr->ctrlr, &vs)) {
 		SPDK_ERRLOG("get_vs() failed\n");
-		close(claim_fd);
+		spdk_pci_device_unclaim(pci_dev);
 		spdk_free(pctrlr);
 		return NULL;
 	}
@@ -938,8 +930,6 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	struct spdk_pci_device *devhandle = nvme_ctrlr_proc_get_devhandle(ctrlr);
 
-	close(pctrlr->claim_fd);
-
 	if (ctrlr->adminq) {
 		nvme_pcie_qpair_destroy(ctrlr->adminq);
 	}
@@ -951,6 +941,7 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_pcie_ctrlr_free_bars(pctrlr);
 
 	if (devhandle) {
+		spdk_pci_device_unclaim(devhandle);
 		spdk_pci_device_detach(devhandle);
 	}
 
