@@ -188,35 +188,83 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"prchk_guard", offsetof(struct rpc_construct_nvme, prchk_guard), spdk_json_decode_bool, true}
 };
 
-#define NVME_MAX_BDEVS_PER_RPC 128
-
 struct rpc_create_nvme_bdev_ctx {
-	struct rpc_construct_nvme req;
-	size_t count;
 	const char *names[NVME_MAX_BDEVS_PER_RPC];
-	struct spdk_jsonrpc_request *request;
+	size_t count;
+	spdk_rpc_construct_bdev_cb_fn cb_fn;
+	void *cb_arg;
 };
 
 static void
 spdk_rpc_construct_nvme_bdev_done(void *cb_ctx, int rc)
 {
 	struct rpc_create_nvme_bdev_ctx *ctx = cb_ctx;
-	struct spdk_jsonrpc_request *request = ctx->request;
+	struct nvme_bdev_info bdev_info = {};
+
+	bdev_info.count = ctx->count;
+	memcpy(bdev_info.names, ctx->names, sizeof(char *)*NVME_MAX_BDEVS_PER_RPC);
+
+	ctx->cb_fn(&bdev_info, ctx->cb_arg, rc);
+
+	free(ctx);
+}
+
+static void
+spdk_rpc_construct_standard_nvme_bdev(struct nvme_bdev_construct_opts *opts,
+				      spdk_rpc_construct_bdev_cb_fn cb_fn, void *cb_arg)
+{
+	struct rpc_create_nvme_bdev_ctx *ctx;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		rc = -ENOMEM;
+		goto invalid;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	ctx->count = NVME_MAX_BDEVS_PER_RPC;
+	rc = spdk_bdev_nvme_create(&opts->trid, &opts->hostid, opts->name, ctx->names,
+				   &ctx->count, opts->hostnqn, opts->prchk_flags, spdk_rpc_construct_nvme_bdev_done, ctx);
+	if (rc) {
+		goto invalid;
+	}
+
+	return;
+
+invalid:
+	cb_fn(NULL, cb_arg, rc);
+	free(ctx);
+}
+
+struct rpc_construct_nvme_bdev_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct rpc_construct_nvme req;
+};
+
+static void
+spdk_rpc_construct_nvme_bdev_cb(struct nvme_bdev_info *bdev_info, void *cb_ctx, int rc)
+{
+	struct rpc_construct_nvme_bdev_ctx *ctx = cb_ctx;
 	struct spdk_json_write_ctx *w;
 	size_t i;
 
-	if (rc < 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	if (rc) {
+		spdk_jsonrpc_send_error_response_fmt(ctx->request, rc,
+						     "Failed to create nvme bdev(s): %s",
+						     spdk_strerror(-rc));
 		goto exit;
 	}
 
-	w = spdk_jsonrpc_begin_result(request);
+	w = spdk_jsonrpc_begin_result(ctx->request);
 	spdk_json_write_array_begin(w);
-	for (i = 0; i < ctx->count; i++) {
-		spdk_json_write_string(w, ctx->names[i]);
+	for (i = 0; i < bdev_info->count; i++) {
+		spdk_json_write_string(w, bdev_info->names[i]);
 	}
 	spdk_json_write_array_end(w);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_jsonrpc_end_result(ctx->request, w);
 
 exit:
 	free_rpc_construct_nvme(&ctx->req);
@@ -274,11 +322,12 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct nvme_bdev_construct_opts opts = {};
-	struct rpc_create_nvme_bdev_ctx *ctx;
+	struct rpc_construct_nvme_bdev_ctx *ctx;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
+		SPDK_ERRLOG("Failed to allocate memory\n");
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		return;
 	}
@@ -310,14 +359,9 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	opts.name = ctx->req.name;
 	ctx->request = request;
-	ctx->count = NVME_MAX_BDEVS_PER_RPC;
-	rc = spdk_bdev_nvme_create(&opts.trid, &opts.hostid, ctx->req.name, ctx->names, &ctx->count,
-				   ctx->req.hostnqn, opts.prchk_flags, spdk_rpc_construct_nvme_bdev_done, ctx);
-	if (rc) {
-		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		goto cleanup;
-	}
+	spdk_rpc_construct_standard_nvme_bdev(&opts, spdk_rpc_construct_nvme_bdev_cb, ctx);
 
 	return;
 

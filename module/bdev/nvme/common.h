@@ -78,6 +78,13 @@ struct nvme_bdev {
 	struct spdk_nvme_ns	*ns;
 };
 
+#define NVME_MAX_BDEVS_PER_RPC 128
+
+struct nvme_bdev_info {
+	const char *names[NVME_MAX_BDEVS_PER_RPC];
+	size_t count;
+};
+
 struct nvme_bdev_construct_opts {
 	/* NVMe controller's transport ID */
 	struct spdk_nvme_transport_id		trid;
@@ -104,6 +111,8 @@ struct rpc_construct_nvme {
 	bool prchk_guard;
 };
 
+typedef void (*spdk_rpc_construct_bdev_cb_fn)(struct nvme_bdev_info *bdev_info, void *ctx,
+		int status);
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
 struct nvme_bdev_ctrlr *nvme_bdev_first_ctrlr(void);
