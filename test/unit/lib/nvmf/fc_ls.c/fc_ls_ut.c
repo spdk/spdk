@@ -707,8 +707,8 @@ ls_tests_init(void)
 		bzero(&g_fgroup[i], sizeof(struct spdk_nvmf_fc_poll_group));
 		TAILQ_INIT(&g_poll_group[i].tgroups);
 		TAILQ_INIT(&g_poll_group[i].qpairs);
-		g_fgroup[i].tp_poll_group.transport = &g_nvmf_transport;
-		g_fgroup[i].tp_poll_group.group = &g_poll_group[i];
+		g_fgroup[i].group.transport = &g_nvmf_transport;
+		g_fgroup[i].group.group = &g_poll_group[i];
 		hwqp->fgroup = &g_fgroup[i];
 	}
 
