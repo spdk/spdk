@@ -46,6 +46,30 @@
       "revId": "3015b4701483869432f50fb20f624563e1faeba4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b742751c_76b108cf",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-02T12:31:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99c13ddf_c8ce3b8f",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 134,
+        "endChar": 22
+      },
+      "revId": "3015b4701483869432f50fb20f624563e1faeba4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
