@@ -445,7 +445,7 @@ class UIInitiatorGroups(UINode):
 
     def refresh(self):
         self._children = set([])
-        self.igs = list(self.get_root().get_initiator_groups())
+        self.igs = list(self.get_root().iscsi_get_initiator_groups())
         for ig in self.igs:
             UIInitiatorGroup(ig, self)
 

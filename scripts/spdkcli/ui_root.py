@@ -399,9 +399,9 @@ class UIRoot(UINode):
 
     @verbose
     @is_method_available
-    def get_initiator_groups(self):
+    def iscsi_get_initiator_groups(self):
         if self.is_init:
-            for ig in rpc.iscsi.get_initiator_groups(self.client):
+            for ig in rpc.iscsi.iscsi_get_initiator_groups(self.client):
                 yield ScsiObj(ig)
 
     @verbose

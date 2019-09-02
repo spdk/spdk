@@ -45,14 +45,14 @@
 #include "spdk_internal/log.h"
 
 static void
-spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+spdk_rpc_iscsi_get_initiator_groups(struct spdk_jsonrpc_request *request,
+				    const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_initiator_groups requires no parameters");
+						 "iscsi_get_initiator_groups requires no parameters");
 		return;
 	}
 
@@ -63,7 +63,9 @@ spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_initiator_groups", spdk_rpc_get_initiator_groups, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_get_initiator_groups", spdk_rpc_iscsi_get_initiator_groups,
+		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_initiator_groups, get_initiator_groups)
 
 struct rpc_initiator_list {
 	size_t num_initiators;
