@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e3ee1709_105a1119",
+        "filename": "test/nvmf/target/discovery.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-02T08:24:43Z",
+      "side": 1,
+      "message": "I think we should use 5 subsystems here",
+      "revId": "4aa1e7df6c55753be79c326fe24a6b4a562e5777",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e07be87_909cdc7d",
         "filename": "test/nvmf/target/discovery.sh",
         "patchSetId": 1
@@ -13,6 +30,23 @@
       "writtenOn": "2019-09-02T08:12:06Z",
       "side": 1,
       "message": "we should remove the 4 subsystems here, should we move this line after bdev removal?",
+      "revId": "4aa1e7df6c55753be79c326fe24a6b4a562e5777",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb1f3bce_e686f29b",
+        "filename": "test/nvmf/target/discovery.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-02T08:24:43Z",
+      "side": 1,
+      "message": "I think we should move this line after get_bdevs call.",
       "revId": "4aa1e7df6c55753be79c326fe24a6b4a562e5777",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
