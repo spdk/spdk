@@ -513,7 +513,7 @@ spdk_nvmf_fc_poll_group_add_hwqp(struct spdk_nvmf_fc_hwqp *hwqp)
 		return;
 	}
 
-	hwqp->thread = fgroup->poll_group->thread;
+	hwqp->thread = fgroup->tp_poll_group.group->thread;
 	hwqp->fgroup = fgroup;
 	fgroup->hwqp_count++;
 	spdk_nvmf_fc_poller_api_func(hwqp, SPDK_NVMF_FC_POLLER_API_ADD_HWQP, NULL);
@@ -1992,7 +1992,6 @@ static struct spdk_nvmf_transport_poll_group *
 nvmf_fc_poll_group_create(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_fc_poll_group *fgroup;
-	struct spdk_io_channel *ch;
 	struct spdk_nvmf_fc_transport *fc_transport =
 		SPDK_CONTAINEROF(transport, struct spdk_nvmf_fc_transport, transport);
 
@@ -2009,12 +2008,6 @@ nvmf_fc_poll_group_create(struct spdk_nvmf_transport *transport)
 	TAILQ_INSERT_TAIL(&g_nvmf_fgroups, fgroup, link);
 	g_nvmf_fgroup_count++;
 	pthread_mutex_unlock(&fc_transport->lock);
-
-	ch = spdk_get_io_channel(g_nvmf_fc_transport->transport.tgt);
-	if (ch) {
-		fgroup->poll_group = spdk_io_channel_get_ctx(ch);
-		spdk_put_io_channel(ch);
-	}
 
 	return &fgroup->tp_poll_group;
 }
