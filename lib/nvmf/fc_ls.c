@@ -357,7 +357,6 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 	 */
 	spdk_nvmf_fc_create_trid(&fc_conn->trid, tgtport->fc_nodename.u.wwn,
 				 tgtport->fc_portname.u.wwn);
-	STAILQ_INIT(&fc_conn->pending_data_buf_queue);
 
 	return fc_conn;
 }
