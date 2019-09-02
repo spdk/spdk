@@ -243,18 +243,18 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
 
 def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
-    output = rpc.get_initiator_groups()
+    output = rpc.iscsi_get_initiator_groups()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
-           "get_initiator_groups returned {}, expected empty".format(jsonvalues))
+           "iscsi_get_initiator_groups returned {}, expected empty".format(jsonvalues))
     for idx, value in enumerate(rpc_param['netmask']):
         # The initiator group tag must start at 1
         tag = idx + 1
         rpc.add_initiator_group(tag, rpc_param['initiator_name'], value)
-        output = rpc.get_initiator_groups()
+        output = rpc.iscsi_get_initiator_groups()
         jsonvalues = json.loads(output)
         verify(len(jsonvalues) == tag, 1,
-               "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
+               "iscsi_get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
 
     tag_list = []
     for idx, value in enumerate(jsonvalues):
@@ -270,10 +270,10 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
         tag = idx + 1
         rpc.iscsi_initiator_group_remove_initiators(tag, '-n', rpc_param['initiator_name'], '-m', value)
 
-    output = rpc.get_initiator_groups()
+    output = rpc.iscsi_get_initiator_groups()
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == tag, 1,
-           "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
+           "iscsi_get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
 
     for idx, value in enumerate(jsonvalues):
         verify(value['tag'] == idx + 1, 1,
@@ -288,10 +288,10 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
     for idx, value in enumerate(rpc_param['netmask']):
         tag = idx + 1
         rpc.iscsi_initiator_group_add_initiators(tag, '-n', rpc_param['initiator_name'], '-m', value)
-    output = rpc.get_initiator_groups()
+    output = rpc.iscsi_get_initiator_groups()
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == tag, 1,
-           "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
+           "iscsi_get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
 
     tag_list = []
     for idx, value in enumerate(jsonvalues):
@@ -305,10 +305,10 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
 
     for idx, value in enumerate(tag_list):
         rpc.delete_initiator_group(value)
-        output = rpc.get_initiator_groups()
+        output = rpc.iscsi_get_initiator_groups()
         jsonvalues = json.loads(output)
         verify(len(jsonvalues) == (len(tag_list) - (idx + 1)), 1,
-               "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), (len(tag_list) - (idx + 1))))
+               "iscsi_get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), (len(tag_list) - (idx + 1))))
         if not jsonvalues:
             break
         for jidx, jvalue in enumerate(jsonvalues):

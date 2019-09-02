@@ -269,7 +269,7 @@ Example response:
     "iscsi_initiator_group_remove_initiators",
     "iscsi_initiator_group_add_initiators",
     "add_initiator_group",
-    "get_initiator_groups",
+    "iscsi_get_initiator_groups",
     "set_iscsi_options",
     "set_bdev_options",
     "set_bdev_qos_limit",
@@ -2914,7 +2914,7 @@ Example response:
 }
 ~~~
 
-## get_initiator_groups method {#rpc_get_initiator_groups}
+## iscsi_get_initiator_groups method {#rpc_iscsi_get_initiator_groups}
 
 Show information about all available initiator groups.
 
@@ -2939,7 +2939,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_initiator_groups",
+  "method": "iscsi_get_initiator_groups",
   "id": 1
 }
 ~~~

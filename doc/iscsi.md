@@ -95,7 +95,7 @@ In addition to the configuration file, the iSCSI target may also be configured v
  - add_initiator_group -- Add an initiator group.
  - delete_initiator_group -- Delete an existing initiator group.
  - iscsi_initiator_group_add_initiators -- Add initiators to an existing initiator group.
- - get_initiator_groups -- Show information about all available initiator groups.
+ - iscsi_get_initiator_groups -- Show information about all available initiator groups.
 
 ~~~
 /path/to/spdk/scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
