@@ -241,7 +241,7 @@ struct spdk_nvmf_fc_transport {
 	pthread_mutex_t lock;
 };
 
-static struct spdk_nvmf_fc_transport *g_nvmf_fc_transport;
+static struct spdk_nvmf_fc_transport *g_nvmf_ftransport;
 
 static TAILQ_HEAD(, spdk_nvmf_fc_port) g_spdk_nvmf_fc_port_list =
 	TAILQ_HEAD_INITIALIZER(g_spdk_nvmf_fc_port_list);
@@ -1301,7 +1301,7 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 	uint32_t num_buffers;
 	struct spdk_nvmf_fc_poll_group *fgroup = fc_req->hwqp->fgroup;
 	struct spdk_nvmf_transport_poll_group *group = &fgroup->group;
-	struct spdk_nvmf_transport *transport = &fgroup->fc_transport->transport;
+	struct spdk_nvmf_transport *transport = &fgroup->ftransport->transport;
 
 	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
 
@@ -1422,7 +1422,7 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 
 	/* Make sure xfer len is according to mdts */
 	if (from_be32(&cmd_iu->data_len) >
-	    hwqp->fgroup->fc_transport->transport.opts.max_io_size) {
+	    hwqp->fgroup->ftransport->transport.opts.max_io_size) {
 		SPDK_ERRLOG("IO length requested is greater than MDTS\n");
 		return -EINVAL;
 	}
@@ -1470,7 +1470,7 @@ spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 	struct spdk_nvmf_fc_hwqp *hwqp = fc_req->hwqp;
 	struct spdk_nvmf_fc_poll_group *fgroup = hwqp->fgroup;
 	struct spdk_nvmf_transport_poll_group *group = &fgroup->group;
-	struct spdk_nvmf_transport *transport = &fgroup->fc_transport->transport;
+	struct spdk_nvmf_transport *transport = &fgroup->ftransport->transport;
 
 	if (!fc_req) {
 		return;
@@ -1597,7 +1597,7 @@ spdk_nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 		ls_rqst->d_id = d_id;
 		ls_rqst->nport = nport;
 		ls_rqst->rport = rport;
-		ls_rqst->nvmf_tgt = g_nvmf_fc_transport->transport.tgt;
+		ls_rqst->nvmf_tgt = g_nvmf_ftransport->transport.tgt;
 
 		ls_rqst->xchg = nvmf_fc_get_xri(hwqp);
 		if (ls_rqst->xchg) {
@@ -1828,8 +1828,8 @@ nvmf_fc_request_complete(struct spdk_nvmf_request *req)
 struct spdk_nvmf_tgt *
 spdk_nvmf_fc_get_tgt(void)
 {
-	if (g_nvmf_fc_transport) {
-		return g_nvmf_fc_transport->transport.tgt;
+	if (g_nvmf_ftransport) {
+		return g_nvmf_ftransport->transport.tgt;
 	}
 	return NULL;
 }
@@ -1875,7 +1875,7 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 		     opts->io_unit_size,
 		     opts->max_aq_depth);
 
-	if (g_nvmf_fc_transport) {
+	if (g_nvmf_ftransport) {
 		SPDK_ERRLOG("Duplicate NVMF-FC transport create request!\n");
 		return NULL;
 	}
@@ -1894,36 +1894,36 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 
 	g_nvmf_fc_master_thread = spdk_get_thread();
 	g_nvmf_fgroup_count = 0;
-	g_nvmf_fc_transport = calloc(1, sizeof(*g_nvmf_fc_transport));
+	g_nvmf_ftransport = calloc(1, sizeof(*g_nvmf_ftransport));
 
-	if (!g_nvmf_fc_transport) {
+	if (!g_nvmf_ftransport) {
 		SPDK_ERRLOG("Failed to allocate NVMF-FC transport\n");
 		return NULL;
 	}
 
-	if (pthread_mutex_init(&g_nvmf_fc_transport->lock, NULL)) {
+	if (pthread_mutex_init(&g_nvmf_ftransport->lock, NULL)) {
 		SPDK_ERRLOG("pthread_mutex_init() failed\n");
-		free(g_nvmf_fc_transport);
-		g_nvmf_fc_transport = NULL;
+		free(g_nvmf_ftransport);
+		g_nvmf_ftransport = NULL;
 		return NULL;
 	}
 
 	/* initialize the low level FC driver */
 	nvmf_fc_lld_init();
 
-	return &g_nvmf_fc_transport->transport;
+	return &g_nvmf_ftransport->transport;
 }
 
 static int
 nvmf_fc_destroy(struct spdk_nvmf_transport *transport)
 {
 	if (transport) {
-		struct spdk_nvmf_fc_transport *fc_transport;
+		struct spdk_nvmf_fc_transport *ftransport;
 		struct spdk_nvmf_fc_poll_group *fgroup, *pg_tmp;
 
-		fc_transport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_fc_transport, transport);
+		ftransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_fc_transport, transport);
 
-		free(fc_transport);
+		free(ftransport);
 
 		/* clean up any FC poll groups still around */
 		TAILQ_FOREACH_SAFE(fgroup, &g_nvmf_fgroups, link, pg_tmp) {
@@ -1992,7 +1992,7 @@ static struct spdk_nvmf_transport_poll_group *
 nvmf_fc_poll_group_create(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_fc_poll_group *fgroup;
-	struct spdk_nvmf_fc_transport *fc_transport =
+	struct spdk_nvmf_fc_transport *ftransport =
 		SPDK_CONTAINEROF(transport, struct spdk_nvmf_fc_transport, transport);
 
 	fgroup = calloc(1, sizeof(struct spdk_nvmf_fc_poll_group));
@@ -2002,12 +2002,12 @@ nvmf_fc_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 
 	TAILQ_INIT(&fgroup->hwqp_list);
-	fgroup->fc_transport = fc_transport;
+	fgroup->ftransport = ftransport;
 
-	pthread_mutex_lock(&fc_transport->lock);
+	pthread_mutex_lock(&ftransport->lock);
 	TAILQ_INSERT_TAIL(&g_nvmf_fgroups, fgroup, link);
 	g_nvmf_fgroup_count++;
-	pthread_mutex_unlock(&fc_transport->lock);
+	pthread_mutex_unlock(&ftransport->lock);
 
 	return &fgroup->group;
 }
@@ -2018,10 +2018,10 @@ nvmf_fc_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_fc_poll_group *fgroup;
 
 	fgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_fc_poll_group, group);
-	pthread_mutex_lock(&fgroup->fc_transport->lock);
+	pthread_mutex_lock(&fgroup->ftransport->lock);
 	TAILQ_REMOVE(&g_nvmf_fgroups, fgroup, link);
 	g_nvmf_fgroup_count--;
-	pthread_mutex_unlock(&fgroup->fc_transport->lock);
+	pthread_mutex_unlock(&fgroup->ftransport->lock);
 
 	free(fgroup);
 }
