@@ -369,9 +369,19 @@ def bdev_nvme_set_hotplug(client, enable, period_us=None):
     return client.call('bdev_nvme_set_hotplug', params)
 
 
-def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
-                        subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None,
-                        prchk_reftag=None, prchk_guard=None):
+def construct_nvme_bdev(
+        client,
+        name,
+        trtype,
+        traddr,
+        adrfam=None,
+        trsvcid=None,
+        subnqn=None,
+        hostnqn=None,
+        hostaddr=None,
+        hostsvcid=None,
+        prchk_reftag=None,
+        prchk_guard=None):
     """Construct NVMe namespace block devices.
 
     Args:
