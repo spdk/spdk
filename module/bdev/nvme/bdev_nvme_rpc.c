@@ -158,20 +158,6 @@ invalid:
 SPDK_RPC_REGISTER("bdev_nvme_set_hotplug", spdk_rpc_bdev_nvme_set_hotplug, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_set_hotplug, set_bdev_nvme_hotplug)
 
-struct rpc_construct_nvme {
-	char *name;
-	char *trtype;
-	char *adrfam;
-	char *traddr;
-	char *trsvcid;
-	char *subnqn;
-	char *hostnqn;
-	char *hostaddr;
-	char *hostsvcid;
-	bool prchk_reftag;
-	bool prchk_guard;
-};
-
 static void
 free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 {
