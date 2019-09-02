@@ -1301,7 +1301,7 @@ nvmf_fc_request_alloc_buffers(struct spdk_nvmf_fc_request *fc_req)
 	uint32_t num_buffers;
 	struct spdk_nvmf_fc_poll_group *fgroup = fc_req->hwqp->fgroup;
 	struct spdk_nvmf_transport_poll_group *group = &fgroup->group;
-	struct spdk_nvmf_transport *transport = &fgroup->ftransport->transport;
+	struct spdk_nvmf_transport *transport = group->transport;
 
 	num_buffers = SPDK_CEIL_DIV(length, transport->opts.io_unit_size);
 
@@ -1422,7 +1422,7 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 
 	/* Make sure xfer len is according to mdts */
 	if (from_be32(&cmd_iu->data_len) >
-	    hwqp->fgroup->ftransport->transport.opts.max_io_size) {
+	    hwqp->fgroup->group.transport->opts.max_io_size) {
 		SPDK_ERRLOG("IO length requested is greater than MDTS\n");
 		return -EINVAL;
 	}
@@ -1470,7 +1470,7 @@ spdk_nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 	struct spdk_nvmf_fc_hwqp *hwqp = fc_req->hwqp;
 	struct spdk_nvmf_fc_poll_group *fgroup = hwqp->fgroup;
 	struct spdk_nvmf_transport_poll_group *group = &fgroup->group;
-	struct spdk_nvmf_transport *transport = &fgroup->ftransport->transport;
+	struct spdk_nvmf_transport *transport = group->transport;
 
 	if (!fc_req) {
 		return;
@@ -2002,7 +2002,6 @@ nvmf_fc_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 
 	TAILQ_INIT(&fgroup->hwqp_list);
-	fgroup->ftransport = ftransport;
 
 	pthread_mutex_lock(&ftransport->lock);
 	TAILQ_INSERT_TAIL(&g_nvmf_fgroups, fgroup, link);
@@ -2016,12 +2015,14 @@ static void
 nvmf_fc_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_fc_poll_group *fgroup;
+	struct spdk_nvmf_fc_transport *ftransport =
+		SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_fc_transport, transport);
 
 	fgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_fc_poll_group, group);
-	pthread_mutex_lock(&fgroup->ftransport->lock);
+	pthread_mutex_lock(&ftransport->lock);
 	TAILQ_REMOVE(&g_nvmf_fgroups, fgroup, link);
 	g_nvmf_fgroup_count--;
-	pthread_mutex_unlock(&fgroup->ftransport->lock);
+	pthread_mutex_unlock(&ftransport->lock);
 
 	free(fgroup);
 }
