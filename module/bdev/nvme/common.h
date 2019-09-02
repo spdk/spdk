@@ -78,6 +78,18 @@ struct nvme_bdev {
 	struct spdk_nvme_ns	*ns;
 };
 
+struct nvme_bdev_construct_opts {
+	/* NVMe controller's transport ID */
+	struct spdk_nvme_transport_id		trid;
+	/* Bdev's name */
+	const char				*name;
+	/* Transport address to be used by the host when connecting to the NVMe-oF endpoint */
+	struct spdk_nvme_host_id		hostid;
+	/* Host NQN */
+	const char				*hostnqn;
+	uint32_t				prchk_flags;
+};
+
 struct rpc_construct_nvme {
 	char *name;
 	char *trtype;
