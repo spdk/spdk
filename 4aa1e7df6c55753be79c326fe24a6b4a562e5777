@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2f9a2f24_d9a9a112",
+        "filename": "test/nvmf/target/discovery.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-02T08:36:10Z",
+      "side": 1,
+      "message": "OK, I forgot the discovery controller itself, 4 subsystems is OK.",
+      "parentUuid": "e3ee1709_105a1119",
+      "revId": "4aa1e7df6c55753be79c326fe24a6b4a562e5777",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e07be87_909cdc7d",
         "filename": "test/nvmf/target/discovery.sh",
         "patchSetId": 1
@@ -47,6 +65,24 @@
       "writtenOn": "2019-09-02T08:24:43Z",
       "side": 1,
       "message": "I think we should move this line after get_bdevs call.",
+      "revId": "4aa1e7df6c55753be79c326fe24a6b4a562e5777",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99b67180_abbf1b35",
+        "filename": "test/nvmf/target/discovery.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-02T08:36:10Z",
+      "side": 1,
+      "message": "Oh~, just realized that check_bdevs is expecting 0 block device, then it\u0027s fine to me.",
+      "parentUuid": "cb1f3bce_e686f29b",
       "revId": "4aa1e7df6c55753be79c326fe24a6b4a562e5777",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
