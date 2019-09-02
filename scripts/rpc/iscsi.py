@@ -134,13 +134,14 @@ def iscsi_get_portal_groups(client):
     return client.call('iscsi_get_portal_groups')
 
 
-def get_initiator_groups(client):
+@deprecated_alias('get_initiator_groups')
+def iscsi_get_initiator_groups(client):
     """Display current initiator group configuration.
 
     Returns:
         List of current initiator group configuration.
     """
-    return client.call('get_initiator_groups')
+    return client.call('iscsi_get_initiator_groups')
 
 
 @deprecated_alias('get_target_nodes')
