@@ -1084,8 +1084,6 @@ struct spdk_blob_persist_ctx {
 
 	struct spdk_blob_md_page	*pages;
 
-	uint64_t			idx;
-
 	spdk_bs_sequence_t		*seq;
 	spdk_bs_sequence_cpl		cb_fn;
 	void				*cb_arg;
@@ -1427,7 +1425,6 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 		/* This is the signal that the blob should be deleted.
 		 * Immediately jump to the clean up routine. */
 		assert(blob->clean.num_pages > 0);
-		ctx->idx = blob->clean.num_pages - 1;
 		blob->state = SPDK_BLOB_STATE_CLEAN;
 		_spdk_blob_persist_zero_pages(seq, ctx, 0);
 		return;
@@ -1479,7 +1476,6 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 	}
 	ctx->pages[i - 1].crc = _spdk_blob_md_page_calc_crc(&ctx->pages[i - 1]);
 	/* Start writing the metadata from last page to first */
-	ctx->idx = blob->active.num_pages - 1;
 	blob->state = SPDK_BLOB_STATE_CLEAN;
 	_spdk_blob_persist_write_page_chain(seq, ctx, 0);
 }
