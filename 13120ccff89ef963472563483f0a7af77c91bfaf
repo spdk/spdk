@@ -46,6 +46,23 @@
       "revId": "13120ccff89ef963472563483f0a7af77c91bfaf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2dd4461_840e5da7",
+        "filename": "lib/util/base64_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-09-02T05:46:01Z",
+      "side": 1,
+      "message": "could we just bail with #error if we\u0027re not on arm? It\u0027ll make it clear that the file is only an arm optimization.\n\n#ifndef __aarch64__\n#error Unsupported hardware\n#endif\n\nThen we could include the file only under an __aarch64__ ifdef.",
+      "revId": "13120ccff89ef963472563483f0a7af77c91bfaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
