@@ -256,7 +256,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	}
 
 	/* Claim the device in case conflict with other process */
-	if (spdk_pci_device_claim(&pci_addr) < 0) {
+	if (spdk_pci_device_claim(pci_dev) < 0) {
 		return false;
 	}
 
