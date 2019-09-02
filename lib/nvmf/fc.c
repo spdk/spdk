@@ -1135,10 +1135,10 @@ nvmf_fc_req_in_bdev(struct spdk_nvmf_fc_request *fc_req)
 static inline bool
 nvmf_fc_req_in_pending(struct spdk_nvmf_fc_request *fc_req)
 {
-	struct spdk_nvmf_fc_request *tmp = NULL;
+	struct spdk_nvmf_request *tmp = NULL;
 
-	STAILQ_FOREACH(tmp, &fc_req->hwqp->fgroup->pending_data_buf_queue, pending_link) {
-		if (tmp == fc_req) {
+	STAILQ_FOREACH(tmp, &fc_req->hwqp->fgroup->group.pending_buf_queue, buf_link) {
+		if (tmp == &fc_req->req) {
 			return true;
 		}
 	}
@@ -1258,8 +1258,8 @@ spdk_nvmf_fc_request_abort(struct spdk_nvmf_fc_request *fc_req, bool send_abts,
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_FC, "Abort req when getting buffers.\n");
 	} else if (nvmf_fc_req_in_pending(fc_req)) {
 		/* Remove from pending */
-		STAILQ_REMOVE(&fc_req->hwqp->fgroup->pending_data_buf_queue, fc_req,
-			      spdk_nvmf_fc_request, pending_link);
+		STAILQ_REMOVE(&fc_req->hwqp->fgroup->group.pending_buf_queue, &fc_req->req,
+			      spdk_nvmf_request, buf_link);
 		goto complete;
 	} else {
 		/* Should never happen */
@@ -1454,7 +1454,7 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 
 	nvmf_fc_record_req_trace_point(fc_req, SPDK_NVMF_FC_REQ_INIT);
 	if (nvmf_fc_request_execute(fc_req)) {
-		STAILQ_INSERT_TAIL(&hwqp->fgroup->pending_data_buf_queue, fc_req, pending_link);
+		STAILQ_INSERT_TAIL(&hwqp->fgroup->group.pending_buf_queue, &fc_req->req, buf_link);
 	}
 
 	return 0;
@@ -1626,13 +1626,15 @@ spdk_nvmf_fc_hwqp_process_frame(struct spdk_nvmf_fc_hwqp *hwqp,
 void
 spdk_nvmf_fc_hwqp_process_pending_reqs(struct spdk_nvmf_fc_hwqp *hwqp)
 {
-	struct spdk_nvmf_fc_request *fc_req = NULL, *tmp;
+	struct spdk_nvmf_request *req = NULL, *tmp;
+	struct spdk_nvmf_fc_request *fc_req;
 	int budget = 64;
 
-	STAILQ_FOREACH_SAFE(fc_req, &hwqp->fgroup->pending_data_buf_queue, pending_link, tmp) {
+	STAILQ_FOREACH_SAFE(req, &hwqp->fgroup->group.pending_buf_queue, buf_link, tmp) {
+		fc_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_fc_request, req);
 		if (!nvmf_fc_request_execute(fc_req)) {
 			/* Succesfuly posted, Delete from pending. */
-			STAILQ_REMOVE_HEAD(&hwqp->fgroup->pending_data_buf_queue, pending_link);
+			STAILQ_REMOVE_HEAD(&hwqp->fgroup->group.pending_buf_queue, buf_link);
 		}
 
 		if (budget) {
@@ -1999,7 +2001,6 @@ nvmf_fc_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 
 	TAILQ_INIT(&fgroup->hwqp_list);
-	STAILQ_INIT(&fgroup->pending_data_buf_queue);
 
 	pthread_mutex_lock(&ftransport->lock);
 	TAILQ_INSERT_TAIL(&g_nvmf_fgroups, fgroup, link);

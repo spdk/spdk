@@ -273,9 +273,6 @@ struct spdk_nvmf_tcp_poll_group {
 	struct spdk_nvmf_transport_poll_group	group;
 	struct spdk_sock_group			*sock_group;
 
-	/* Requests that are waiting to obtain a data buffer */
-	STAILQ_HEAD(, spdk_nvmf_tcp_req)	pending_data_buf_queue;
-
 	TAILQ_HEAD(, spdk_nvmf_tcp_qpair)	qpairs;
 };
 
@@ -442,7 +439,8 @@ spdk_nvmf_tcp_cleanup_all_states(struct spdk_nvmf_tcp_qpair *tqpair)
 	/* Wipe the requests waiting for buffer from the global list */
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_NEED_BUFFER], state_link,
 			   req_tmp) {
-		STAILQ_REMOVE(&tqpair->group->pending_data_buf_queue, tcp_req, spdk_nvmf_tcp_req, link);
+		STAILQ_REMOVE(&tqpair->group->group.pending_buf_queue, &tcp_req->req,
+			      spdk_nvmf_request, buf_link);
 	}
 
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEED_BUFFER);
@@ -1211,7 +1209,6 @@ spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 
 	TAILQ_INIT(&tgroup->qpairs);
-	STAILQ_INIT(&tgroup->pending_data_buf_queue);
 
 	return &tgroup->group;
 
@@ -1243,10 +1240,6 @@ spdk_nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 	spdk_sock_group_close(&tgroup->sock_group);
-
-	if (!STAILQ_EMPTY(&tgroup->pending_data_buf_queue)) {
-		SPDK_ERRLOG("Pending I/O list wasn't empty on poll group destruction\n");
-	}
 
 	free(tgroup);
 }
@@ -2590,14 +2583,14 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			}
 
 			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_NEED_BUFFER);
-			STAILQ_INSERT_TAIL(&tqpair->group->pending_data_buf_queue, tcp_req, link);
+			STAILQ_INSERT_TAIL(&group->pending_buf_queue, &tcp_req->req, buf_link);
 			break;
 		case TCP_REQUEST_STATE_NEED_BUFFER:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEED_BUFFER, 0, 0, (uintptr_t)tcp_req, 0);
 
 			assert(tcp_req->req.xfer != SPDK_NVME_DATA_NONE);
 
-			if (tcp_req != STAILQ_FIRST(&tqpair->group->pending_data_buf_queue)) {
+			if (&tcp_req->req != STAILQ_FIRST(&group->pending_buf_queue)) {
 				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP,
 					      "Not the first element to wait for the buf for tcp_req(%p) on tqpair=%p\n",
 					      tcp_req, tqpair);
@@ -2608,7 +2601,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			/* Try to get a data buffer */
 			rc = spdk_nvmf_tcp_req_parse_sgl(ttransport, tcp_req);
 			if (rc < 0) {
-				STAILQ_REMOVE_HEAD(&tqpair->group->pending_data_buf_queue, link);
+				STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
 				rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 				/* Reset the tqpair receving pdu state */
 				spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
@@ -2623,7 +2616,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				break;
 			}
 
-			STAILQ_REMOVE_HEAD(&tqpair->group->pending_data_buf_queue, link);
+			STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
 
 			/* If data is transferring from host to controller, we need to do a transfer from the host. */
 			if (tcp_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
@@ -2825,7 +2818,8 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 	int rc;
-	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
+	struct spdk_nvmf_request *req, *req_tmp;
+	struct spdk_nvmf_tcp_req *tcp_req;
 	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(group->transport,
 			struct spdk_nvmf_tcp_transport, transport);
 
@@ -2835,7 +2829,8 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 		return 0;
 	}
 
-	STAILQ_FOREACH_SAFE(tcp_req, &tgroup->pending_data_buf_queue, link, req_tmp) {
+	STAILQ_FOREACH_SAFE(req, &group->pending_buf_queue, buf_link, req_tmp) {
+		tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
 		if (spdk_nvmf_tcp_req_process(ttransport, tcp_req) == false) {
 			break;
 		}
