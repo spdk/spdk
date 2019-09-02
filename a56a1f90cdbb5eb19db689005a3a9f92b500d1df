@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16238eda_711fe0fb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1858,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-02T06:43:19Z",
+      "side": 1,
+      "message": "I like the reverse ordering.\n\nif (spdk_likely(!rdma_req-\u003edif_insert_or_strip)) {\n  (snip)\n} else {\n  (snip)\n}",
+      "revId": "a56a1f90cdbb5eb19db689005a3a9f92b500d1df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
