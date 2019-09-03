@@ -287,7 +287,7 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
 
     for idx, value in enumerate(rpc_param['netmask']):
         tag = idx + 1
-        rpc.add_initiators_to_initiator_group(tag, '-n', rpc_param['initiator_name'], '-m', value)
+        rpc.iscsi_initiator_group_add_initiators(tag, '-n', rpc_param['initiator_name'], '-m', value)
     output = rpc.get_initiator_groups()
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == tag, 1,

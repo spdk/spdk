@@ -390,7 +390,8 @@ def add_initiator_group(client, tag, initiators, netmasks):
     return client.call('add_initiator_group', params)
 
 
-def add_initiators_to_initiator_group(
+@deprecated_alias('add_initiators_to_initiator_group')
+def iscsi_initiator_group_add_initiators(
         client,
         tag,
         initiators=None,
@@ -411,7 +412,7 @@ def add_initiators_to_initiator_group(
         params['initiators'] = initiators
     if netmasks:
         params['netmasks'] = netmasks
-    return client.call('add_initiators_to_initiator_group', params)
+    return client.call('iscsi_initiator_group_add_initiators', params)
 
 
 def delete_initiators_from_initiator_group(

@@ -267,7 +267,7 @@ Example response:
     "iscsi_get_target_nodes",
     "delete_initiator_group",
     "delete_initiators_from_initiator_group",
-    "add_initiators_to_initiator_group",
+    "iscsi_initiator_group_add_initiators",
     "add_initiator_group",
     "get_initiator_groups",
     "set_iscsi_options",
@@ -3045,7 +3045,7 @@ Example response:
 }
 ~~~
 
-## add_initiators_to_initiator_group method {#rpc_add_initiators_to_initiator_group}
+## iscsi_initiator_group_add_initiators method {#rpc_iscsi_initiator_group_add_initiators}
 
 Add initiators to an existing initiator group.
 
@@ -3074,7 +3074,7 @@ request:
     ]
   },
   "jsonrpc": "2.0",
-  "method": "add_initiators_to_initiator_group",
+  "method": "iscsi_initiator_group_add_initiators",
   "id": 1
 }
 ~~~

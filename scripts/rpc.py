@@ -978,7 +978,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=add_initiator_group)
 
-    def add_initiators_to_initiator_group(args):
+    def iscsi_initiator_group_add_initiators(args):
         initiators = None
         netmasks = None
         if args.initiator_list:
@@ -989,13 +989,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             netmasks = []
             for n in args.netmask_list.strip().split(' '):
                 netmasks.append(n)
-        rpc.iscsi.add_initiators_to_initiator_group(
+        rpc.iscsi.iscsi_initiator_group_add_initiators(
             args.client,
             tag=args.tag,
             initiators=initiators,
             netmasks=netmasks)
 
-    p = subparsers.add_parser('add_initiators_to_initiator_group',
+    p = subparsers.add_parser('iscsi_initiator_group_add_initiators',
+                              aliases=['add_initiators_to_initiator_group'],
                               help='Add initiators to an existing initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
@@ -1003,7 +1004,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or '127.0.0.1 192.168.200.100'""", required=False)
     p.add_argument('-m', dest='netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
     This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
-    p.set_defaults(func=add_initiators_to_initiator_group)
+    p.set_defaults(func=iscsi_initiator_group_add_initiators)
 
     def delete_initiators_from_initiator_group(args):
         initiators = None
