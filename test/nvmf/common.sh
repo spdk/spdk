@@ -100,13 +100,13 @@ function detect_rdma_nics()
 
 function allocate_nic_ips()
 {
-	let count=$NVMF_IP_LEAST_ADDR
+	(( count=$NVMF_IP_LEAST_ADDR ))
 	for nic_name in $(get_rdma_if_list); do
 		ip="$(get_ip_address $nic_name)"
 		if [ -z $ip ]; then
 			ip addr add $NVMF_IP_PREFIX.$count/24 dev $nic_name
 			ip link set $nic_name up
-			let count=$count+1
+			(( count=$count+1 ))
 		fi
 		# dump configuration for debug log
 		ip addr show $nic_name
