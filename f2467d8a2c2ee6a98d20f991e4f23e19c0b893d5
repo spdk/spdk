@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "016ffceb_bcb00e11",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-03T08:49:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aa3f2774_eb84ce7f",
+      "revId": "f2467d8a2c2ee6a98d20f991e4f23e19c0b893d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e77450e_7f922275",
         "filename": "CHANGELOG.md",
         "patchSetId": 12
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e37d4087_c92ac70a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-03T08:49:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3e77450e_7f922275",
+      "revId": "f2467d8a2c2ee6a98d20f991e4f23e19c0b893d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b97e15c2_722746e7",
         "filename": "include/spdk/zdev.h",
         "patchSetId": 12
@@ -50,6 +86,24 @@
       "revId": "f2467d8a2c2ee6a98d20f991e4f23e19c0b893d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24601b88_d615f264",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-03T08:49:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b97e15c2_722746e7",
+      "revId": "f2467d8a2c2ee6a98d20f991e4f23e19c0b893d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
