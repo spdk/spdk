@@ -2190,12 +2190,14 @@ static void
 spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_request *req,
 			       struct spdk_nvmf_transport *transport)
 {
+	struct spdk_nvmf_tcp_transport		*ttransport;
 	struct spdk_nvmf_tcp_req		*tcp_req;
 	struct spdk_nvmf_tcp_qpair		*tqpair;
 	struct spdk_nvmf_transport_poll_group	*group;
 	uint32_t length = req->length;
 	uint32_t i = 0;
 
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
 	tqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
@@ -2223,6 +2225,7 @@ spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_request *req,
 
 	STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
 	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_ALLOCATED_BUFFER);
+	spdk_nvmf_tcp_req_process(ttransport, tcp_req);
 }
 
 static int
@@ -2836,10 +2839,10 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 	int rc;
 	struct spdk_nvmf_request *req, *req_tmp;
-	struct spdk_nvmf_tcp_req *tcp_req;
-	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(group->transport,
-			struct spdk_nvmf_tcp_transport, transport);
+	struct spdk_nvmf_transport *transport;
+	uint32_t num_buffers;
 
+	transport = group->transport;
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 
 	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs))) {
@@ -2847,10 +2850,13 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	}
 
 	STAILQ_FOREACH_SAFE(req, &group->pending_buf_queue, buf_link, req_tmp) {
-		tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
-		if (spdk_nvmf_tcp_req_process(ttransport, tcp_req) == false) {
+		num_buffers = SPDK_CEIL_DIV(req->length, transport->opts.io_unit_size);
+
+		rc = spdk_nvmf_request_get_buffers(req, group, transport, num_buffers);
+		if (rc != 0) {
 			break;
 		}
+		spdk_nvmf_tcp_req_fill_buffers(req, transport);
 	}
 
 	rc = spdk_sock_group_poll(tgroup->sock_group);
