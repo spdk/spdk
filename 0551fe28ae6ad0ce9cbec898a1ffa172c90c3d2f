@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdc517be_6f73a919",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-03T09:44:57Z",
+      "side": 1,
+      "message": "on",
+      "range": {
+        "startLine": 906,
+        "startChar": 21,
+        "endLine": 906,
+        "endChar": 23
+      },
+      "revId": "0551fe28ae6ad0ce9cbec898a1ffa172c90c3d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f1f9666_30c2c3ca",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-03T09:44:57Z",
+      "side": 1,
+      "message": "unclaim",
+      "range": {
+        "startLine": 914,
+        "startChar": 28,
+        "endLine": 914,
+        "endChar": 33
+      },
+      "revId": "0551fe28ae6ad0ce9cbec898a1ffa172c90c3d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5acfadff_4302b2c7",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-03T09:44:57Z",
+      "side": 1,
+      "message": "We should probably check the return code of this call.",
+      "range": {
+        "startLine": 784,
+        "startChar": 1,
+        "endLine": 784,
+        "endChar": 7
+      },
+      "revId": "0551fe28ae6ad0ce9cbec898a1ffa172c90c3d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82edf388_72c02ba6",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 943,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-03T09:44:57Z",
+      "side": 1,
+      "message": "We can end up with device unclaimed and file descriptor not closed. I not sure if this is the best way to do this. What will happen if we will try to claim it again?",
+      "range": {
+        "startLine": 941,
+        "startChar": 0,
+        "endLine": 943,
+        "endChar": 37
+      },
+      "revId": "0551fe28ae6ad0ce9cbec898a1ffa172c90c3d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5999e980_80330be1",
+        "filename": "module/copy/ioat/copy_engine_ioat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-03T09:44:57Z",
+      "side": 1,
+      "message": "!\u003d",
+      "range": {
+        "startLine": 259,
+        "startChar": 36,
+        "endLine": 259,
+        "endChar": 37
+      },
+      "revId": "0551fe28ae6ad0ce9cbec898a1ffa172c90c3d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
