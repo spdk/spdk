@@ -93,7 +93,7 @@ In addition to the configuration file, the iSCSI target may also be configured v
 ### Initiator groups
 
  - iscsi_create_initiator_group -- Add an initiator group.
- - delete_initiator_group -- Delete an existing initiator group.
+ - iscsi_delete_initiator_group -- Delete an existing initiator group.
  - iscsi_initiator_group_add_initiators -- Add initiators to an existing initiator group.
  - iscsi_get_initiator_groups -- Show information about all available initiator groups.
 
