@@ -39,7 +39,7 @@ echo "iscsi_tgt is listening. Running tests..."
 timing_exit start_iscsi_tgt
 
 $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 rbd_bdev="$($rpc_py bdev_rbd_create $RBD_POOL $RBD_NAME 4096)"
 $rpc_py bdev_get_bdevs
 # "Ceph0:0" ==> use Ceph0 blockdev for LUN0
