@@ -2416,6 +2416,9 @@ struct spdk_nvme_rdma_hooks {
  */
 void spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
 
+void bdev_nvme_print_log(struct spdk_nvme_ctrlr *ctrlr);
+
+
 #ifdef __cplusplus
 }
 #endif
