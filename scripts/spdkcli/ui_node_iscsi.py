@@ -422,7 +422,7 @@ class UIInitiatorGroups(UINode):
                      e.g. 255.255.0.0 255.248.0.0
         """
         tag = self.ui_eval_param(tag, "number", None)
-        self.get_root().add_initiators_to_initiator_group(
+        self.get_root().iscsi_initiator_group_add_initiators(
             tag=tag, initiators=initiators.split(" "),
             netmasks=netmasks.split(" "))
 

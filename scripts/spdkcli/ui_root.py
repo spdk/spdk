@@ -428,8 +428,8 @@ class UIRoot(UINode):
                 yield ic
 
     @verbose
-    def add_initiators_to_initiator_group(self, **kwargs):
-        rpc.iscsi.add_initiators_to_initiator_group(self.client, **kwargs)
+    def iscsi_initiator_group_add_initiators(self, **kwargs):
+        rpc.iscsi.iscsi_initiator_group_add_initiators(self.client, **kwargs)
 
     @verbose
     def delete_initiators_from_initiator_group(self, **kwargs):
