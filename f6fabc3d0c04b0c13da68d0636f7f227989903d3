@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "db66952e_4211a0a3",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-03T17:47:05Z",
+      "side": 1,
+      "message": "OK, I think it\u0027s easier to read as it is (to see exactly what the 4 are pointing too) but I can make the change",
+      "parentUuid": "2d11c139_4247ac2f",
+      "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5cdff77f_ae350d6a",
         "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-08-29T19:14:10Z",
       "side": 1,
       "message": "I\u0027m not following this.  num_src_mbufs is 3.  Why don\u0027t we check the 4th one?\n\noh - I think op_mbuf[3] and exp_mbuf[3] are NULL - is that correct?  if so we should assert that",
+      "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "298b0b20_e6cb3cac",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-03T17:47:05Z",
+      "side": 1,
+      "message": "Look at line 442, we only check for 4 if we crossed a boundary.  I could add a conditional assert but it doesn\u0027t add much value in terms of code coverage.",
+      "parentUuid": "5cdff77f_ae350d6a",
       "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "097f1f4f_889682d8",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-03T17:47:05Z",
+      "side": 1,
+      "message": "sure",
+      "parentUuid": "bf714d55_a03429fe",
+      "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d339ad2d_02fdbf6a",
         "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2019-08-29T19:14:10Z",
       "side": 1,
       "message": "this function goes from about 70 lines to about 200 lines in this patch - should we break some of this out into separate unit test functions?",
+      "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51f0370a_45100d5a",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-03T17:47:05Z",
+      "side": 1,
+      "message": "I was kinda taught that UT code should not be DRY, it should be written to be easier to read but I can make a test_compress_success and test_compress_failure that would keep the readability but shorten the functions, does that sound good?",
+      "parentUuid": "d339ad2d_02fdbf6a",
       "revId": "f6fabc3d0c04b0c13da68d0636f7f227989903d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
