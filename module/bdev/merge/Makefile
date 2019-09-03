@@ -33,19 +33,9 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = bdevperf
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
+C_SRCS = bdev_merge.c
+LIBNAME = bdev_merge
 
-C_SRCS := bdevperf.c
-
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy event_vmd
-SPDK_LIB_LIST += bdev copy event trace log conf thread util sock notify
-SPDK_LIB_LIST += rpc jsonrpc json app_rpc log_rpc bdev_rpc bdev_merge
-
-ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
-endif
-
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
