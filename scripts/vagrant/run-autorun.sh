@@ -84,6 +84,11 @@ while getopts "d:qhn" opt; do
 		h)  display_help >&2
 			exit 0
 		;;
+		*) echo "Invalid option"
+			echo ""
+			display_help >&2
+			exit 1
+		;;
 	esac
 done
 
