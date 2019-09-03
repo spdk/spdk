@@ -324,6 +324,10 @@ if __name__ == "__main__":
                                        action_on_timeout=args.action_on_timeout,
                                        timeout_us=args.timeout_us,
                                        retry_count=args.retry_count,
+                                       arbitration_burst=args.arbitration_burst,
+                                       low_priority_weight=args.low_priority_weight,
+                                       medium_priority_weight=args.medium_priority_weight,
+                                       high_priority_weight=args.high_priority_weight,
                                        nvme_adminq_poll_period_us=args.nvme_adminq_poll_period_us,
                                        nvme_ioq_poll_period_us=args.nvme_ioq_poll_period_us,
                                        io_queue_requests=args.io_queue_requests)
@@ -336,6 +340,14 @@ if __name__ == "__main__":
                    help="Timeout for each command, in microseconds. If 0, don't track timeouts.", type=int)
     p.add_argument('-n', '--retry-count',
                    help='the number of attempts per I/O when an I/O fails', type=int)
+    p.add_argument('--arbitration-burst',
+                   help='the value is expressed as a power of two', type=int)
+    p.add_argument('--low-priority-weight',
+                   help='the maximum number of commands that the controller may launch at one time from a low priority queue', type=int)
+    p.add_argument('--medium-priority-weight',
+                   help='the maximum number of commands that the controller may launch at one time from a medium priority queue', type=int)
+    p.add_argument('--high-priority-weight',
+                   help='the maximum number of commands that the controller may launch at one time from a high priority queue', type=int)
     p.add_argument('-p', '--nvme-adminq-poll-period-us',
                    help='How often the admin queue is polled for asynchronous events', type=int)
     p.add_argument('-i', '--nvme-ioq-poll-period-us',
