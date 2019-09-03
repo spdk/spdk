@@ -758,7 +758,7 @@ iscsi_init_grp_config_json(struct spdk_iscsi_init_grp *ig,
 {
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "add_initiator_group");
+	spdk_json_write_named_string(w, "method", "iscsi_create_initiator_group");
 
 	spdk_json_write_name(w, "params");
 	iscsi_init_grp_info_json(ig, w);
