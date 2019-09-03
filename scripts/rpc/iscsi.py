@@ -465,7 +465,8 @@ def delete_portal_group(client, tag):
     return client.call('delete_portal_group', params)
 
 
-def delete_initiator_group(client, tag):
+@deprecated_alias('delete_initiator_group')
+def iscsi_delete_initiator_group(client, tag):
     """Delete an initiator group.
 
     Args:
@@ -475,7 +476,7 @@ def delete_initiator_group(client, tag):
         True or False
     """
     params = {'tag': tag}
-    return client.call('delete_initiator_group', params)
+    return client.call('iscsi_delete_initiator_group', params)
 
 
 def get_iscsi_connections(client):
