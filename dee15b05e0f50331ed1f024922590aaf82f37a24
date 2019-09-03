@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38808e02_ec360387",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1822,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-03T17:48:24Z",
+      "side": 1,
+      "message": "The EINVAL code returned from nvmf_rdma_fill_buffers doesn\u0027t mean that the sgl length exceeded the max I/O size (which is the case in the multi-sgl version of that function), it means that one of the buffers in the shared buffer list has been split over multiple NIC memory regions. As far as I am aware, that error can only be hit when using versions of DPDK older than 19.05 with modern SPDK.\n\nI don\u0027t think that returning -1 is the right thing to do in response to that error, because it will cause the request to fail when there is nothing wrong with that specific request. I think that you should leave the return value the same between those two cases.",
+      "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
