@@ -135,8 +135,8 @@ static const struct spdk_json_object_decoder rpc_initiator_group_decoders[] = {
 };
 
 static void
-spdk_rpc_add_initiator_group(struct spdk_jsonrpc_request *request,
-			     const struct spdk_json_val *params)
+spdk_rpc_iscsi_create_initiator_group(struct spdk_jsonrpc_request *request,
+				      const struct spdk_json_val *params)
 {
 	struct rpc_initiator_group req = {};
 	struct spdk_json_write_ctx *w;
@@ -172,7 +172,9 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_initiator_group(&req);
 }
-SPDK_RPC_REGISTER("add_initiator_group", spdk_rpc_add_initiator_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_create_initiator_group", spdk_rpc_iscsi_create_initiator_group,
+		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_initiator_group, add_initiator_group)
 
 static const struct spdk_json_object_decoder rpc_add_or_delete_initiators_decoders[] = {
 	{"tag", offsetof(struct rpc_initiator_group, tag), spdk_json_decode_int32},
