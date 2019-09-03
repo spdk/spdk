@@ -782,7 +782,7 @@ spdk_nvmf_tcp_qpair_flush_pdus_internal(struct spdk_nvmf_tcp_qpair *tqpair)
 	int iovcnt = 0;
 	int bytes = 0;
 	int total_length = 0;
-	uint32_t mapped_length;
+	uint32_t mapped_length = 0;
 	struct nvme_tcp_pdu *pdu;
 	int pdu_length;
 	TAILQ_HEAD(, nvme_tcp_pdu) completed_pdus_list;
@@ -797,7 +797,7 @@ spdk_nvmf_tcp_qpair_flush_pdus_internal(struct spdk_nvmf_tcp_qpair *tqpair)
 	 * Build up a list of iovecs for the first few PDUs in the
 	 *  tqpair 's send_queue.
 	 */
-	while (pdu != NULL && ((array_size - iovcnt) >= 3)) {
+	while (pdu != NULL && ((array_size - iovcnt) >= (2 + (int)pdu->data_iovcnt))) {
 		iovcnt += nvme_tcp_build_iovs(&iovs[iovcnt],
 					      array_size - iovcnt,
 					      pdu,
