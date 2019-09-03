@@ -34,7 +34,7 @@ timing_enter setup
 $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 for i in $(seq 1 $TGT_NR); do
 	INITIATOR_TAG=$((i + 1))
-	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 
 	luns=""
 	for j in $(seq 1 $PMEM_PER_TGT); do

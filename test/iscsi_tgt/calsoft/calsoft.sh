@@ -46,7 +46,7 @@ timing_exit start_iscsi_tgt
 $rpc_py iscsi_create_auth_group 1 -c 'user:root secret:tester'
 $rpc_py iscsi_set_discovery_auth -g 1
 $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py bdev_malloc_create -b MyBdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "MyBdev:0" ==> use MyBdev blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
