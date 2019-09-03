@@ -1,0 +1,40 @@
+[global]
+ioengine=spdk_bdev
+spdk_conf=./merge.conf.in
+
+thread=1
+group_reporting=1
+direct=1
+verify=0
+norandommap=1
+cpumask=1
+; Overwrite the default list of percentiles for completion 
+; latencies and the block error histogram.
+percentile_list=50:99:99.9:99.99:99.999
+
+[merge_test]
+filename=merge
+; description of the task
+description="Test for merge bdev with 4 Kb in master and 1Mb in slave"
+; The block size in bytes used for I/O units
+bs=4k
+; read and write type, rw means sequentially read or write(5 : 5)
+rw=rw
+; Percentage of a mixed workload that should be reads. Default: 50.
+rwmixread=50
+; Percentage of a mixed workload that should be writes. Default: 50.
+; both rwmixread and rwmixwrite should add up to 100, otherwise it 
+; use the latter to overwrite the first.
+rwmixwrite=50
+
+iodepth=32
+; toltal time for running the job
+runtime=10m
+; If set, fio will run for the duration of the runtime specified even 
+; if the file(s) are completely read or written.
+time_based=1
+; If set, fio will run the specified workload for this amount of time 
+; before logging any performance numbers
+ramp_time=0
+
+numjobs=1
