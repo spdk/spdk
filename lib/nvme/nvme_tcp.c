@@ -402,7 +402,7 @@ nvme_tcp_qpair_process_send_queue(struct nvme_tcp_qpair *tqpair)
 	 * Build up a list of iovecs for the first few PDUs in the
 	 *  tqpair 's send_queue.
 	 */
-	while (pdu != NULL && ((array_size - iovcnt) >= 3)) {
+	while (pdu != NULL && ((array_size - iovcnt) >= (2 + (int)pdu->data_iovcnt))) {
 		iovcnt += nvme_tcp_build_iovs(&iovs[iovcnt], array_size - iovcnt,
 					      pdu, tqpair->host_hdgst_enable,
 					      tqpair->host_ddgst_enable, &mapped_length);
