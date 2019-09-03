@@ -454,7 +454,7 @@
               "127.0.0.1/32"
             ]
           },
-          "method": "add_initiator_group"
+          "method": "iscsi_create_initiator_group"
         },
         {
           "params": {
