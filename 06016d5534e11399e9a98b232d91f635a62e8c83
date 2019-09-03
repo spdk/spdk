@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f81effa5_4573a9b2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-09-03T12:54:14Z",
+      "side": 0,
+      "message": "So now we are not doing this reschedule if g_vhost_mutex is locked, right? Should we?",
+      "range": {
+        "startLine": 962,
+        "startChar": 1,
+        "endLine": 965,
+        "endChar": 2
+      },
+      "revId": "06016d5534e11399e9a98b232d91f635a62e8c83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
