@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45fa4aec_d746d565",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1084,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-03T22:46:08Z",
+      "side": 1,
+      "message": "same here? Use SO_RCVBUF_SIZE?",
+      "revId": "23c8f52c275130aa6d68cbf24f342da612268f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
