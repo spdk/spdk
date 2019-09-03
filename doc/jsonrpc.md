@@ -265,7 +265,7 @@ Example response:
     "iscsi_target_node_add_pg_ig_maps",
     "iscsi_create_target_node",
     "iscsi_get_target_nodes",
-    "delete_initiator_group",
+    "iscsi_delete_initiator_group",
     "iscsi_initiator_group_remove_initiators",
     "iscsi_initiator_group_add_initiators",
     "iscsi_create_initiator_group",
@@ -3019,7 +3019,7 @@ response:
 }
 ~~~
 
-## delete_initiator_group method {#rpc_delete_initiator_group}
+## iscsi_delete_initiator_group method {#rpc_iscsi_delete_initiator_group}
 
 Delete an existing initiator group.
 
@@ -3039,7 +3039,7 @@ Example request:
     "tag": 1
   },
   "jsonrpc": "2.0",
-  "method": "delete_initiator_group",
+  "method": "iscsi_delete_initiator_group",
   "id": 1
 }
 ~~~

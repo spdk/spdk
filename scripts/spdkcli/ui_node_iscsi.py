@@ -374,7 +374,7 @@ class UIInitiatorGroups(UINode):
         self.refresh()
 
     def delete(self, tag):
-        self.get_root().delete_initiator_group(tag=tag)
+        self.get_root().iscsi_delete_initiator_group(tag=tag)
 
     def ui_command_create(self, tag, initiator_list, netmask_list):
         """Add an initiator group.
