@@ -92,13 +92,13 @@ In addition to the configuration file, the iSCSI target may also be configured v
 
 ### Initiator groups
 
- - add_initiator_group -- Add an initiator group.
+ - iscsi_create_initiator_group -- Add an initiator group.
  - delete_initiator_group -- Delete an existing initiator group.
  - iscsi_initiator_group_add_initiators -- Add initiators to an existing initiator group.
  - iscsi_get_initiator_groups -- Show information about all available initiator groups.
 
 ~~~
-/path/to/spdk/scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
+/path/to/spdk/scripts/rpc.py iscsi_create_initiator_group 2 ANY 10.0.0.2/32
 ~~~
 
 ### Target nodes
@@ -246,7 +246,7 @@ $ ./scripts/rpc.py iscsi_create_portal_group 1 10.0.0.1:3260
 Create one initiator group with id 2 to accept any connection from 10.0.0.2/32:
 
 ```
-$ ./scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
+$ ./scripts/rpc.py iscsi_create_initiator_group 2 ANY 10.0.0.2/32
 ```
 
 Finally construct one target using previously created bdevs as LUN0 (Malloc0) and LUN1 (Malloc1)

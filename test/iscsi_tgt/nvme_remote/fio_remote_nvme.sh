@@ -41,7 +41,7 @@ function run_nvme_remote() {
 
 	echo "Creating an iSCSI target node."
 	$rpc_py -s "$iscsi_rpc_addr" iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-	$rpc_py -s "$iscsi_rpc_addr" add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	$rpc_py -s "$iscsi_rpc_addr" iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 	if [ "$1" = "local" ]; then
 		$rpc_py -s "$iscsi_rpc_addr" bdev_nvme_attach_controller -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
 	fi

@@ -385,7 +385,8 @@ def iscsi_create_portal_group(client, portals, tag):
     return client.call('iscsi_create_portal_group', params)
 
 
-def add_initiator_group(client, tag, initiators, netmasks):
+@deprecated_alias('add_initiator_group')
+def iscsi_create_initiator_group(client, tag, initiators, netmasks):
     """Add an initiator group.
 
     Args:
@@ -397,7 +398,7 @@ def add_initiator_group(client, tag, initiators, netmasks):
         True or False
     """
     params = {'tag': tag, 'initiators': initiators, 'netmasks': netmasks}
-    return client.call('add_initiator_group', params)
+    return client.call('iscsi_create_initiator_group', params)
 
 
 @deprecated_alias('add_initiators_to_initiator_group')

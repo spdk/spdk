@@ -25,7 +25,7 @@ vhost_dict["construct_vhost_nvme_controller"] = []
 iscsi_dict = OrderedDict()
 iscsi_dict["iscsi_set_options"] = []
 iscsi_dict["iscsi_create_portal_group"] = []
-iscsi_dict["add_initiator_group"] = []
+iscsi_dict["iscsi_create_initiator_group"] = []
 iscsi_dict["iscsi_create_target_node"] = []
 
 nvmf_dict = OrderedDict()
@@ -559,7 +559,7 @@ def get_iscsi_initiator_group_json(config, name):
             "tag": int(re.findall(r'\d+', name)[0]),
             "netmasks": netmasks
         },
-        "method": "add_initiator_group"
+        "method": "iscsi_create_initiator_group"
     }
 
     return [initiator_group_json]

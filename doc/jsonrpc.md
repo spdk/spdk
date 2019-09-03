@@ -268,7 +268,7 @@ Example response:
     "delete_initiator_group",
     "iscsi_initiator_group_remove_initiators",
     "iscsi_initiator_group_add_initiators",
-    "add_initiator_group",
+    "iscsi_create_initiator_group",
     "iscsi_get_initiator_groups",
     "iscsi_set_options",
     "set_bdev_options",
@@ -2974,7 +2974,7 @@ Example response:
 }
 ~~~
 
-## add_initiator_group method {#rpc_add_initiator_group}
+## iscsi_create_initiator_group method {#rpc_iscsi_create_initiator_group}
 
 Add an initiator group.
 
@@ -3003,7 +3003,7 @@ Example request:
     ]
   },
   "jsonrpc": "2.0",
-  "method": "add_initiator_group",
+  "method": "iscsi_create_initiator_group",
   "id": 1
 }
 ~~~

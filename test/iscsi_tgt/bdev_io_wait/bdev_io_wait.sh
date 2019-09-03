@@ -30,7 +30,7 @@ echo "iscsi_tgt is listening. Running tests..."
 timing_exit start_iscsi_tgt
 
 $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "Malloc0:0" ==> use Malloc0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
