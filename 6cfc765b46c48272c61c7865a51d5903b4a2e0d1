@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40a2eb16_cbfd3fe4",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-03T18:22:17Z",
+      "side": 1,
+      "message": "With the new atomic, let\u0027s get rid of actual_old_state and expected_old_state and just name it old_state.\n\n\tenum spdk_nvmf_subsystem_state old_state;\n\tbool exchanged;\n\n\tswitch (state) {\n\tcase SPDK_NVMF_SUBSYSTEM_INACTIVE:\n\t\told_state \u003d SPDK_NVMF_SUBSYSTEM_DEACTIVATING;\n\t\tbreak;\n        etc...\n\t}\n\n\texchanged \u003d __atomic_compare_exchange_n(\u0026subsystem-\u003estate, \u0026old_state, state, false,\n\t\t\t\t\t\t__ATOMIC_RELAXED, __ATOMIC_RELAXED);\n\tif (spdk_unlikely(exchanged \u003d\u003d false)) {\n\t\tif (old_state \u003d\u003d SPDK_NVMF_SUBSYSTEM_RESUMING \u0026\u0026\n\t\t    state \u003d\u003d SPDK_NVMF_SUBSYSTEM_ACTIVE) {\n\t\t\told_state \u003d SPDK_NVMF_SUBSYSTEM_RESUMING;\n\t\t}\n\t\t/* This is for the case when activating the subsystem fails. */\n\t\tif (old_state \u003d\u003d SPDK_NVMF_SUBSYSTEM_ACTIVATING \u0026\u0026\n\t\t    state \u003d\u003d SPDK_NVMF_SUBSYSTEM_DEACTIVATING) {\n\t\t\told_state \u003d SPDK_NVMF_SUBSYSTEM_ACTIVATING;\n\t\t}\n\t\texchanged \u003d __atomic_compare_exchange_n(\u0026subsystem-\u003estate, \u0026old_state, state, false,\n\t\t\t\t\t    __ATOMIC_RELAXED, __ATOMIC_RELAXED);\n\t}\n\n\tassert(exchanged \u003d\u003d true);\n        return exchanged ? 0 : -1;",
+      "revId": "6cfc765b46c48272c61c7865a51d5903b4a2e0d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
