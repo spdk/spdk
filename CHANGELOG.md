@@ -73,7 +73,10 @@ initialization.
 
 ### rpc
 
-Added optional parameter '--md-size'to 'construct_null_bdev' RPC method.
+Added optional parameters '--arbitration-burst' and '--low/medium/high-priority-weight' to
+'bdev_nvme_set_options' RPC method.
+
+Added optional parameter '--md-size' to 'construct_null_bdev' RPC method.
 
 Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
 RPC method.
