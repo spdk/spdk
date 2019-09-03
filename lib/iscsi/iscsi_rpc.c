@@ -253,24 +253,24 @@ invalid:
 SPDK_RPC_REGISTER("delete_initiators_from_initiator_group",
 		  spdk_rpc_delete_initiators_from_initiator_group, SPDK_RPC_RUNTIME)
 
-struct rpc_delete_initiator_group {
+struct rpc_iscsi_delete_initiator_group {
 	int32_t tag;
 };
 
-static const struct spdk_json_object_decoder rpc_delete_initiator_group_decoders[] = {
-	{"tag", offsetof(struct rpc_delete_initiator_group, tag), spdk_json_decode_int32},
+static const struct spdk_json_object_decoder rpc_iscsi_delete_initiator_group_decoders[] = {
+	{"tag", offsetof(struct rpc_iscsi_delete_initiator_group, tag), spdk_json_decode_int32},
 };
 
 static void
-spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_request *request,
+spdk_rpc_iscsi_delete_initiator_group(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
-	struct rpc_delete_initiator_group req = {};
+	struct rpc_iscsi_delete_initiator_group req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_init_grp *ig;
 
-	if (spdk_json_decode_object(params, rpc_delete_initiator_group_decoders,
-				    SPDK_COUNTOF(rpc_delete_initiator_group_decoders),
+	if (spdk_json_decode_object(params, rpc_iscsi_delete_initiator_group_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_delete_initiator_group_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
@@ -291,7 +291,8 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
-SPDK_RPC_REGISTER("delete_initiator_group", spdk_rpc_delete_initiator_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_delete_initiator_group", spdk_rpc_iscsi_delete_initiator_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_initiator_group, delete_initiator_group)
 
 static void
 spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,

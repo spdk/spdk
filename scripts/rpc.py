@@ -56,7 +56,7 @@ if __name__ == "__main__":
                                        current=args.current,
                                        include_aliases=args.include_aliases))
 
-ww    p = subparsers.add_parser('rpc_get_methods', help='Get list of supported RPC methods', aliases=['get_rpc_methods'])
+    p = subparsers.add_parser('rpc_get_methods', help='Get list of supported RPC methods', aliases=['get_rpc_methods'])
     p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
     p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
     p.set_defaults(func=rpc_get_methods)
@@ -1050,14 +1050,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=delete_portal_group)
 
-    def delete_initiator_group(args):
-        rpc.iscsi.delete_initiator_group(args.client, tag=args.tag)
+    def iscsi_delete_initiator_group(args):
+        rpc.iscsi.iscsi_delete_initiator_group(args.client, tag=args.tag)
 
-    p = subparsers.add_parser('delete_initiator_group',
+    p = subparsers.add_parser('iscsi_delete_initiator_group',
+                              aliases=['delete_initiator_group'],
                               help='Delete an initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
-    p.set_defaults(func=delete_initiator_group)
+    p.set_defaults(func=iscsi_delete_initiator_group)
 
     def get_iscsi_connections(args):
         print_dict(rpc.iscsi.get_iscsi_connections(args.client))
