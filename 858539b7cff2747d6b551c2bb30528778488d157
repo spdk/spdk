@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aac07acb_fde18342",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-03T22:44:47Z",
+      "side": 1,
+      "message": "Shouldn\u0027t 267 and 268 use SO_RCVBUF_SIZE if yo move it to sock.h?",
+      "revId": "858539b7cff2747d6b551c2bb30528778488d157",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
