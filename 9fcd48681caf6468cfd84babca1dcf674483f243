@@ -22,6 +22,30 @@
       "revId": "9fcd48681caf6468cfd84babca1dcf674483f243",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5101d440_746f7e0f",
+        "filename": "include/spdk/zdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-03T11:58:47Z",
+      "side": 1,
+      "message": "Such pattern is used in every spdk_bdev_read_ spdk_bdev_write_ function - I want to be consistent with it.",
+      "parentUuid": "f65ab13b_84c7bc2d",
+      "range": {
+        "startLine": 112,
+        "startChar": 0,
+        "endLine": 115,
+        "endChar": 56
+      },
+      "revId": "9fcd48681caf6468cfd84babca1dcf674483f243",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
