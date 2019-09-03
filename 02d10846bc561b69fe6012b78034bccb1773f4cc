@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d6898a31_d85e595f",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-03T08:49:33Z",
+      "side": 1,
+      "message": "I\u0027ve got comment from Paul to add every API change to CHANGELOG.",
+      "parentUuid": "ebd4aefe_bb7a23e4",
+      "revId": "02d10846bc561b69fe6012b78034bccb1773f4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fbb51401_e0ec5413",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 13
@@ -59,6 +77,24 @@
     },
     {
       "key": {
+        "uuid": "a37fcc11_a5ff4912",
+        "filename": "lib/bdev/bdev_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-03T08:49:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3613048f_0e4fd3bf",
+      "revId": "02d10846bc561b69fe6012b78034bccb1773f4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c0fbbf6_7dc8cd14",
         "filename": "lib/bdev/zdev.c",
         "patchSetId": 13
@@ -96,6 +132,48 @@
       "revId": "02d10846bc561b69fe6012b78034bccb1773f4cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4b51718_ac5b5572",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-03T08:49:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "03a49ce6_0c194253",
+      "range": {
+        "startLine": 49,
+        "startChar": 69,
+        "endLine": 49,
+        "endChar": 73
+      },
+      "revId": "02d10846bc561b69fe6012b78034bccb1773f4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fc26256_d104b7d4",
+        "filename": "lib/bdev/zdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-09-03T08:49:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0c0fbbf6_7dc8cd14",
+      "revId": "02d10846bc561b69fe6012b78034bccb1773f4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
