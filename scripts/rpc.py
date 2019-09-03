@@ -1084,14 +1084,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_delete_portal_group)
 
-    def delete_initiator_group(args):
-        rpc.iscsi.delete_initiator_group(args.client, tag=args.tag)
+    def iscsi_delete_initiator_group(args):
+        rpc.iscsi.iscsi_delete_initiator_group(args.client, tag=args.tag)
 
-    p = subparsers.add_parser('delete_initiator_group',
+    p = subparsers.add_parser('iscsi_delete_initiator_group',
+                              aliases=['delete_initiator_group'],
                               help='Delete an initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
-    p.set_defaults(func=delete_initiator_group)
+    p.set_defaults(func=iscsi_delete_initiator_group)
 
     def iscsi_get_connections(args):
         print_dict(rpc.iscsi.iscsi_get_connections(args.client))

@@ -125,7 +125,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
 
     check_output('iscsiadm -m node --logout', shell=True)
     check_output('iscsiadm -m node -o delete', shell=True)
-    rpc.delete_initiator_group(initiator_tag)
+    rpc.iscsi_delete_initiator_group(initiator_tag)
     rpc.iscsi_delete_portal_group(portal_tag)
     rpc.delete_target_node(name)
     output = rpc.iscsi_get_connections()
@@ -166,7 +166,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
 
     check_output('iscsiadm -m node --logout', shell=True)
     check_output('iscsiadm -m node -o delete', shell=True)
-    rpc.delete_initiator_group(initiator_tag)
+    rpc.iscsi_delete_initiator_group(initiator_tag)
     rpc.iscsi_delete_portal_group(portal_tag)
     rpc.delete_target_node(name)
     output = rpc.get_scsi_devices()
@@ -304,7 +304,7 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
                "netmasks value is {}, expected {}".format(value['netmasks'][0], rpc_param['netmask'][idx]))
 
     for idx, value in enumerate(tag_list):
-        rpc.delete_initiator_group(value)
+        rpc.iscsi_delete_initiator_group(value)
         output = rpc.iscsi_get_initiator_groups()
         jsonvalues = json.loads(output)
         verify(len(jsonvalues) == (len(tag_list) - (idx + 1)), 1,
@@ -391,7 +391,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
                                  net_mapping, rpc_param['queue_depth'], '-d')
 
     rpc.iscsi_delete_portal_group(portal_tag)
-    rpc.delete_initiator_group(initiator_tag)
+    rpc.iscsi_delete_initiator_group(initiator_tag)
     rpc.delete_target_node(name)
     output = rpc.iscsi_get_target_nodes()
     jsonvalues = json.loads(output)
