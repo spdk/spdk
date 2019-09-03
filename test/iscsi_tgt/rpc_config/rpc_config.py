@@ -103,7 +103,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
 
     rpc.bdev_malloc_create(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
-    rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
+    rpc.iscsi_create_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
 
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
@@ -144,7 +144,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
 
     rpc.bdev_malloc_create(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
-    rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
+    rpc.iscsi_create_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
 
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
@@ -248,7 +248,7 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
     for idx, value in enumerate(rpc_param['netmask']):
         # The initiator group tag must start at 1
         tag = idx + 1
-        rpc.add_initiator_group(tag, rpc_param['initiator_name'], value)
+        rpc.iscsi_create_initiator_group(tag, rpc_param['initiator_name'], value)
         output = rpc.iscsi_get_initiator_groups()
         jsonvalues = json.loads(output)
         verify(len(jsonvalues) == tag, 1,
@@ -332,7 +332,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
 
     rpc.bdev_malloc_create(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
-    rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
+    rpc.iscsi_create_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
 
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
