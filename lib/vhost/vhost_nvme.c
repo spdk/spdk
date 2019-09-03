@@ -1082,13 +1082,16 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 	struct spdk_vhost_nvme_ns *ns_dev;
 	uint32_t i;
+	int rc = 0;
 
 	if (nvme == NULL) {
-		return -1;
+		rc = -1;
+		goto out;
 	}
 
-	if (alloc_task_pool(nvme)) {
-		return -1;
+	rc = alloc_task_pool(nvme);
+	if (rc) {
+		goto out;
 	}
 
 	SPDK_NOTICELOG("Start Device %u, Path %s, lcore %d\n", vsession->vid,
@@ -1098,7 +1101,8 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 		ns_dev = &nvme->ns[i];
 		ns_dev->bdev_io_channel = spdk_bdev_get_io_channel(ns_dev->bdev_desc);
 		if (!ns_dev->bdev_io_channel) {
-			return -1;
+			rc = -1;
+			goto out;
 		}
 	}
 
@@ -1106,8 +1110,9 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 	/* Start the NVMe Poller */
 	nvme->requestq_poller = spdk_poller_register(nvme_worker, nvme, 0);
 
-	vhost_session_start_done(vsession, 0);
-	return 0;
+out:
+	vhost_session_start_done(vsession, rc);
+	return rc;
 }
 
 static int
