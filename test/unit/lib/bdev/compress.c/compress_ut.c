@@ -41,6 +41,12 @@
 
 #include <rte_compressdev.h>
 
+/* There will be one if the data perfectly matches the chunk size,
+ * or there could be an offset into the data and a remainder after
+ * the data or both for a max of 3.
+ */
+#define UT_MBUFS_PER_OP 3
+
 struct spdk_bdev_io *g_bdev_io;
 struct spdk_io_channel *g_io_ch;
 struct rte_comp_op g_comp_op[2];
@@ -48,10 +54,10 @@ struct vbdev_compress g_comp_bdev;
 struct comp_device_qp g_device_qp;
 struct compress_dev g_device;
 struct rte_compressdev_capabilities g_cdev_cap;
-static struct rte_mbuf *g_src_mbufs[3];
-static struct rte_mbuf *g_dst_mbufs[3];
-static struct rte_mbuf g_expected_src_mbufs[3];
-static struct rte_mbuf g_expected_dst_mbufs[3];
+static struct rte_mbuf *g_src_mbufs[UT_MBUFS_PER_OP];
+static struct rte_mbuf *g_dst_mbufs[UT_MBUFS_PER_OP];
+static struct rte_mbuf g_expected_src_mbufs[UT_MBUFS_PER_OP];
+static struct rte_mbuf g_expected_dst_mbufs[UT_MBUFS_PER_OP];
 struct comp_bdev_io *g_io_ctx;
 struct comp_io_channel *g_comp_ch;
 struct rte_config *g_test_config;
@@ -186,19 +192,21 @@ int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbuf
 	/* This mocked function only supports the alloc of up to 3 src and 3 dst. */
 	ut_rte_pktmbuf_alloc_bulk += count;
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < UT_MBUFS_PER_OP; i++) {
 		g_src_mbufs[i]->next = NULL;
 		g_dst_mbufs[i]->next = NULL;
 	}
 
-	if (ut_rte_pktmbuf_alloc_bulk == 3) {
-		*mbufs++ = g_src_mbufs[0];
-		*mbufs++ = g_src_mbufs[1];
-		*mbufs = g_src_mbufs[2];
-	} else if (ut_rte_pktmbuf_alloc_bulk == 6) {
-		*mbufs++ = g_dst_mbufs[0];
-		*mbufs++ = g_dst_mbufs[1];
-		*mbufs = g_dst_mbufs[2];
+	if (ut_rte_pktmbuf_alloc_bulk == UT_MBUFS_PER_OP) {
+		/* first test allocation */
+		for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+			*mbufs++ = g_src_mbufs[i];
+		}
+	} else if (ut_rte_pktmbuf_alloc_bulk == UT_MBUFS_PER_OP * 2) {
+		/* second test allocation */
+		for (i = 0; i < UT_MBUFS_PER_OP; i++) {
+			*mbufs++ = g_dst_mbufs[i];
+		}
 		ut_rte_pktmbuf_alloc_bulk = 0;
 	} else {
 		return -1;
@@ -630,7 +638,7 @@ test_poller(void)
 {
 	int rc;
 	struct spdk_reduce_vol_cb_args *cb_args;
-	struct rte_mbuf mbuf[4];
+	struct rte_mbuf mbuf[4]; /* one src, one dst, 2 ops */
 	struct vbdev_comp_op *op_to_queue;
 	struct iovec src_iovs[3] = {};
 	struct iovec dst_iovs[3] = {};
