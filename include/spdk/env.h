@@ -89,6 +89,12 @@ struct spdk_env_opts {
 	void			*env_context;
 };
 
+
+
+void *
+spdk_memcpy(void *dst, const void *src, size_t n);
+
+
 /**
  * Allocate dma/sharable memory based on a given dma_flg. It is a memory buffer
  * with the given size, alignment and socket id.

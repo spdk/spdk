@@ -105,6 +105,7 @@ Added `no_shn_notification` to NVMe controller initialization options, users can
 it for NVMe controllers.  When the option is enabled, the controller will not do the
 shutdown process and just disable the controller, users can start their application
 later again to initialize the controller to the ready state.
+- add bdev_nvme_print_log to print out smart log
 
 A controller flag `SPDK_NVME_CTRLR_WRR_SUPPORTED` was added to indicate the controller
 can support weighted round robin arbitration feature with submission queue.
@@ -172,6 +173,10 @@ Along with update, new cache mode 'write only' was added.
 New cache modes added to use via RPC, wi - write invalidate and wa - write around.
 
 New version of OCF provides fully asynchronous management API.
+
+### env
+
+Add spdk_memcpy
 
 ## v19.07:
 
