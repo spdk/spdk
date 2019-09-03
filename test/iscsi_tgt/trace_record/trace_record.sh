@@ -59,7 +59,7 @@ echo "Trace record pid: $record_pid"
 
 RPCS=
 RPCS+="iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT\n"
-RPCS+="add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK\n"
+RPCS+="iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK\n"
 
 echo "Create bdevs and target nodes"
 CONNECTION_NUMBER=15

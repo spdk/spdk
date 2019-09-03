@@ -45,7 +45,7 @@ $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 # Create remaining LVSs from a malloc bdev, respectively
 for i in $(seq 1 $NUM_LVS); do
 	INITIATOR_TAG=$((i + 2))
-	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	$rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 	if [ $i -eq 1 ]; then
 		# construct RAID bdev and put its name in $bdev
 		malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
