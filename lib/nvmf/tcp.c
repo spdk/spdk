@@ -2190,8 +2190,15 @@ static void
 spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_request *req,
 			       struct spdk_nvmf_transport *transport)
 {
+	struct spdk_nvmf_tcp_req		*tcp_req;
+	struct spdk_nvmf_tcp_qpair		*tqpair;
+	struct spdk_nvmf_transport_poll_group	*group;
 	uint32_t length = req->length;
 	uint32_t i = 0;
+
+	tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
+	tqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_tcp_qpair, qpair);
+	group = &tqpair->group->group;
 
 	req->iovcnt = 0;
 	while (length) {
@@ -2206,18 +2213,26 @@ spdk_nvmf_tcp_req_fill_buffers(struct spdk_nvmf_request *req,
 
 	assert(req->iovcnt <= SPDK_NVMF_MAX_SGL_ENTRIES);
 	req->data_from_pool = true;
+
+	/* backward compatible */
+	req->data = req->iov[0].iov_base;
+	req->length = tcp_req->orig_length;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p took %d buffer/s from central pool, and data=%p\n",
+		      tcp_req, req->iovcnt, req->data);
+
+	STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
+	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_ALLOCATED_BUFFER);
 }
 
 static int
 spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_transport *transport,
 			    struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_tcp_req		*tcp_req;
 	uint32_t				num_buffers;
 	struct spdk_nvmf_tcp_qpair		*tqpair;
 	struct spdk_nvmf_transport_poll_group	*group;
 
-	tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
 	tqpair = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	group = &tqpair->group->group;
 
@@ -2229,16 +2244,6 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_transport *transport,
 	}
 
 	spdk_nvmf_tcp_req_fill_buffers(req, transport);
-
-	/* backward compatible */
-	req->data = req->iov[0].iov_base;
-	req->length = tcp_req->orig_length;
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Request %p took %d buffer/s from central pool, and data=%p\n",
-		      tcp_req, req->iovcnt, req->data);
-
-	STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
-	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_ALLOCATED_BUFFER);
 	return 0;
 }
 
