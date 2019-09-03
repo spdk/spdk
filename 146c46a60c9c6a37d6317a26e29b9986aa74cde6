@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fe5cb70_8b22b31d",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-03T12:18:40Z",
+      "side": 1,
+      "message": "This alias is incorrect, this RPC was called \"construct_nvme_bdev\" before.",
+      "range": {
+        "startLine": 331,
+        "startChar": 64,
+        "endLine": 331,
+        "endChar": 96
+      },
+      "revId": "146c46a60c9c6a37d6317a26e29b9986aa74cde6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9545b23_bb2836a3",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-03T12:18:40Z",
+      "side": 1,
+      "message": "Singular - \"a block device\", since single bdev per NVMe namespace is always created.",
+      "range": {
+        "startLine": 375,
+        "startChar": 17,
+        "endLine": 375,
+        "endChar": 30
+      },
+      "revId": "146c46a60c9c6a37d6317a26e29b9986aa74cde6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
