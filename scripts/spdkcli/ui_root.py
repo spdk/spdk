@@ -417,8 +417,8 @@ class UIRoot(UINode):
         rpc.iscsi.iscsi_create_initiator_group(self.client, **kwargs)
 
     @verbose
-    def delete_initiator_group(self, **kwargs):
-        rpc.iscsi.delete_initiator_group(self.client, **kwargs)
+    def iscsi_delete_initiator_group(self, **kwargs):
+        rpc.iscsi.iscsi_delete_initiator_group(self.client, **kwargs)
 
     @verbose
     @is_method_available
