@@ -30,6 +30,7 @@ Added `no_shn_notification` to NVMe controller initialization options, users can
 it for NVMe controllers.  When the option is enabled, the controller will not do the
 shutdown process and just disable the controller, users can start their application
 later again to initialize the controller to the ready state.
+- add bdev_nvme_print_log to print out smart log
 
 ### iSCSI
 
@@ -64,6 +65,9 @@ Added optional parameter '--md-size'to 'construct_null_bdev' RPC method.
 
 Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
 RPC method.
+
+### env
+Add spdk_memcpy
 
 ## v19.07:
 

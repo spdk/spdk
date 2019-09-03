@@ -2455,15 +2455,27 @@ nvme_ctrlr_keep_alive(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->next_keep_alive_tick = now + ctrlr->keep_alive_interval_ticks;
 }
 
+static uint64_t smart_log_trick_cuu = 600000;
+
 int32_t
 spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int32_t num_completions;
+	uint64_t now;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
 	if (ctrlr->keep_alive_interval_ticks) {
 		nvme_ctrlr_keep_alive(ctrlr);
 	}
+
+	now = spdk_get_ticks();
+	if (ctrlr->next_smart_log_trick < now) {
+		ctrlr->next_smart_log_trick = now + ((smart_log_trick_cuu * spdk_get_ticks_hz()) / UINT64_C(1000));
+		bdev_nvme_print_log(ctrlr);
+	}
+
+
 	num_completions = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
