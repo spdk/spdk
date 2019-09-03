@@ -2332,6 +2332,38 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 	return -1;
 }
 
+static void
+spdk_nvmf_tcp_req_free_buffers(struct spdk_nvmf_request *req,
+			       struct spdk_nvmf_transport_poll_group *group,
+			       struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_request *tmp;
+	struct spdk_nvmf_tcp_req *tcp_req;
+	uint32_t num_buffers;
+	int rc;
+
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+
+	spdk_nvmf_request_free_buffers(req, group, transport, req->iovcnt);
+
+	while (!STAILQ_EMPTY(&group->pending_buf_queue)) {
+		tmp = STAILQ_FIRST(&group->pending_buf_queue);
+
+		tcp_req = SPDK_CONTAINEROF(tmp, struct spdk_nvmf_tcp_req, req);
+		num_buffers = SPDK_CEIL_DIV(tmp->length, transport->opts.io_unit_size);
+
+		rc = spdk_nvmf_request_get_buffers(tmp, group, transport, num_buffers);
+		if (rc != 0) {
+			break;
+		}
+		STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
+
+		spdk_nvmf_tcp_req_fill_buffers(tmp, transport);
+		spdk_nvmf_tcp_req_process(ttransport, tcp_req);
+	}
+}
+
 static int
 nvmf_tcp_pdu_verify_dif(struct nvme_tcp_pdu *pdu,
 			const struct spdk_dif_ctx *dif_ctx)
@@ -2670,8 +2702,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 		case TCP_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, 0, 0, (uintptr_t)tcp_req, 0);
 			if (tcp_req->req.data_from_pool) {
-				spdk_nvmf_request_free_buffers(&tcp_req->req, group, &ttransport->transport,
-							       tcp_req->req.iovcnt);
+				spdk_nvmf_tcp_req_free_buffers(&tcp_req->req, group, &ttransport->transport);
 			}
 			tcp_req->req.length = 0;
 			tcp_req->req.iovcnt = 0;
@@ -2814,30 +2845,11 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_tcp_poll_group *tgroup;
 	int rc;
-	struct spdk_nvmf_request *req, *req_tmp;
-	struct spdk_nvmf_tcp_req *tcp_req;
-	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(group->transport,
-			struct spdk_nvmf_tcp_transport, transport);
-	uint32_t num_buffers;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 
 	if (spdk_unlikely(TAILQ_EMPTY(&tgroup->qpairs))) {
 		return 0;
-	}
-
-	STAILQ_FOREACH_SAFE(req, &group->pending_buf_queue, buf_link, req_tmp) {
-		tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
-		num_buffers = SPDK_CEIL_DIV(req->length, ttransport->transport.opts.io_unit_size);
-
-		rc = spdk_nvmf_request_get_buffers(req, group, &ttransport->transport, num_buffers);
-		if (rc != 0) {
-			break;
-		}
-		STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
-
-		spdk_nvmf_tcp_req_fill_buffers(req, &ttransport->transport);
-		spdk_nvmf_tcp_req_process(ttransport, tcp_req);
 	}
 
 	rc = spdk_sock_group_poll(tgroup->sock_group);
