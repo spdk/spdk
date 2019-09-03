@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "715489f3_3bfc3520",
+        "filename": "module/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-03T12:07:58Z",
+      "side": 1,
+      "message": "rpc_delete_passthru -\u003e rpc_bdev_passthru_delete",
+      "range": {
+        "startLine": 96,
+        "startChar": 7,
+        "endLine": 96,
+        "endChar": 27
+      },
+      "revId": "9896b72a5443608ff1a78599c3b5c75933b81818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "317a524b_2d9551cb",
+        "filename": "module/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-03T12:07:58Z",
+      "side": 1,
+      "message": "free_rpc_delete_passthru -\u003e free_rpc_bdev_passthru_delete",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 24
+      },
+      "revId": "9896b72a5443608ff1a78599c3b5c75933b81818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9c0de9a_fb03aa50",
+        "filename": "module/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-03T12:07:58Z",
+      "side": 1,
+      "message": "rpc_delete_passthru_decoders -\u003e rpc_bdev_passthru_delete_decoders",
+      "range": {
+        "startLine": 106,
+        "startChar": 45,
+        "endLine": 106,
+        "endChar": 73
+      },
+      "revId": "9896b72a5443608ff1a78599c3b5c75933b81818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
