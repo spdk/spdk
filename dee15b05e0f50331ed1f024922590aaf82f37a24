@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "b2b4646e_81053f84",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1529,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-03T17:56:44Z",
+      "side": 1,
+      "message": "This gives one meaning to EINVAL that shouldn\u0027t result in us failing the request.",
+      "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02335243_60b1fd66",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1555,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-03T17:56:44Z",
+      "side": 1,
+      "message": "This gives another meaning that should result in us failing the request.",
+      "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d27ab872_2eb02eeb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1598,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-03T17:56:44Z",
+      "side": 1,
+      "message": "Again, we should avoid failing the request because we hit this case.",
+      "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "38808e02_ec360387",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 8
