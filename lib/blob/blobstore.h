@@ -279,6 +279,7 @@ struct spdk_blob_md_descriptor_extent {
 	uint8_t		type;
 	uint32_t	length;
 
+	uint32_t	starting_idx;
 	uint32_t        cluster_idx[0];
 };
 
