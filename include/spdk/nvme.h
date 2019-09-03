@@ -2699,6 +2699,8 @@ int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr);
  *
  */
 void spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
+void bdev_nvme_print_log(struct spdk_nvme_ctrlr *ctrlr);
+
 
 #ifdef __cplusplus
 }

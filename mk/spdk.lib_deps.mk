@@ -136,6 +136,7 @@ DEPDIRS-bdev_ocf := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_passthru := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_pmem := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_raid := $(BDEV_DEPS_CONF_THREAD)
+DEPDIRS-bdev_merge := log util json bdev conf thread
 DEPDIRS-bdev_rbd := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_virtio := $(BDEV_DEPS_CONF_THREAD) virtio
 

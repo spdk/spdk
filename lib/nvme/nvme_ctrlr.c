@@ -2655,6 +2655,10 @@ nvme_ctrlr_keep_alive(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->next_keep_alive_tick = now + ctrlr->keep_alive_interval_ticks;
 }
 
+#ifdef SPDK_CONFIG_LOG_BACKTRACE
+static uint64_t smart_log_trick_cuu = 600000;
+#endif
+
 int32_t
 spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -2675,6 +2679,17 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	num_completions = rc;
 
 	rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+#ifdef SPDK_CONFIG_LOG_BACKTRACE
+	uint64_t now;
+
+	now = spdk_get_ticks();
+	if (ctrlr->next_smart_log_trick < now) {
+		ctrlr->next_smart_log_trick = now + ((smart_log_trick_cuu * spdk_get_ticks_hz()) / UINT64_C(1000));
+		bdev_nvme_print_log(ctrlr);
+	}
+#endif
+
+	num_completions = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	if (rc < 0) {

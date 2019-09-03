@@ -236,6 +236,22 @@ Option to build FUSE components into blobfs_bdev module for mounting a blobfs fi
 It requires the installation of libfuse3. By default, it is disabled. And it will be
 enabled if run `./configure` with `--with-fuse` option.
 
+### nvme
+
+Added `no_shn_notification` to NVMe controller initialization options, users can enable
+it for NVMe controllers.  When the option is enabled, the controller will not do the
+shutdown process and just disable the controller, users can start their application
+later again to initialize the controller to the ready state.
+- add bdev_nvme_print_log to print out smart log
+
+A controller flag `SPDK_NVME_CTRLR_WRR_SUPPORTED` was added to indicate the controller
+can support weighted round robin arbitration feature with submission queue.
+
+Added `arbitration_burst` option for arbitration feature, and added three
+`low/medium/high_priority_weight` options for weighted round robin arbitration.
+
+Added `spdk_nvme_ns_cmd_write_uncorrectable`.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
@@ -272,6 +288,10 @@ Along with update, new cache mode 'write only' was added.
 New cache modes added to use via RPC, wi - write invalidate and wa - write around.
 
 New version of OCF provides fully asynchronous management API.
+
+### env
+
+Add spdk_memcpy
 
 ## v19.07:
 
