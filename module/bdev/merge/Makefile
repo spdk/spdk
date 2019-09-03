@@ -2,7 +2,6 @@
 #  BSD LICENSE
 #
 #  Copyright (c) Intel Corporation.
-#  Copyright (c) 2015-2016, Micron Technology, Inc.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -34,16 +33,9 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP := fio_plugin
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
+C_SRCS = bdev_merge.c
+LIBNAME = bdev_merge
 
-C_SRCS = fio_plugin.c
-CFLAGS += -I$(CONFIG_FIO_SOURCE_DIR)
-LDFLAGS += -shared -rdynamic -Wl,-z,nodelete
-
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += thread util bdev conf copy rpc jsonrpc json log sock trace notify
-SPDK_LIB_LIST += event event_bdev event_copy event_vmd bdev_merge
-
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

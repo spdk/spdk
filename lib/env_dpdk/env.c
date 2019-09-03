@@ -41,6 +41,7 @@
 #include <rte_malloc.h>
 #include <rte_mempool.h>
 #include <rte_memzone.h>
+#include <rte_memcpy.h>
 #include <rte_version.h>
 
 static uint64_t
@@ -55,6 +56,16 @@ virt_to_phys(void *vaddr)
 
 	return spdk_vtophys(vaddr, NULL);
 }
+
+
+
+
+void *
+spdk_memcpy(void *dst,const void *src, size_t n)
+{
+	return rte_memcpy(dst, src, n);
+}
+
 
 void *
 spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
