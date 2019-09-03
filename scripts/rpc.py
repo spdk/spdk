@@ -56,7 +56,7 @@ if __name__ == "__main__":
                                        current=args.current,
                                        include_aliases=args.include_aliases))
 
-    p = subparsers.add_parser('rpc_get_methods', help='Get list of supported RPC methods', aliases=['get_rpc_methods'])
+ww    p = subparsers.add_parser('rpc_get_methods', help='Get list of supported RPC methods', aliases=['get_rpc_methods'])
     p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
     p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
     p.set_defaults(func=rpc_get_methods)
@@ -954,20 +954,20 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262""")
     p.set_defaults(func=add_portal_group)
 
-    def add_initiator_group(args):
+    def iscsi_create_initiator_group(args):
         initiators = []
         netmasks = []
         for i in args.initiator_list.strip().split(' '):
             initiators.append(i)
         for n in args.netmask_list.strip().split(' '):
             netmasks.append(n)
-        rpc.iscsi.add_initiator_group(
+        rpc.iscsi.iscsi_create_initiator_group(
             args.client,
             tag=args.tag,
             initiators=initiators,
             netmasks=netmasks)
 
-    p = subparsers.add_parser('add_initiator_group',
+    p = subparsers.add_parser('iscsi_create_initiator_group', aliases=['add_initiator_group'],
                               help='Add an initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
@@ -975,7 +975,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     enclosed in quotes.  Example: 'ANY' or '127.0.0.1 192.168.200.100'""")
     p.add_argument('netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
     Example: '255.255.0.0 255.248.0.0' etc""")
-    p.set_defaults(func=add_initiator_group)
+    p.set_defaults(func=iscsi_create_initiator_group)
 
     def add_initiators_to_initiator_group(args):
         initiators = None
