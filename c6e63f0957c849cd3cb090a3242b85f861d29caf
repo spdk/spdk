@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e596e4e_83ab263f",
+        "filename": "module/sock/posix/posix.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-03T22:47:03Z",
+      "side": 1,
+      "message": "See next 2 patches about moving this to sock.h and using elsewhere",
+      "revId": "c6e63f0957c849cd3cb090a3242b85f861d29caf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
