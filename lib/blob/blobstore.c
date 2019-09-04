@@ -1095,6 +1095,17 @@ static void
 spdk_bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, uint64_t lba,
 			uint32_t lba_count)
 {
+	int				rc;
+	const enum blob_clear_method	*clear_method;
+	size_t				value_len;
+
+	rc = spdk_blob_get_xattr_value(ctx->blob, "clear_method", (const void **)&clear_method, &value_len);
+	if (rc == 0) {
+		ctx->blob->clear_method = *clear_method;
+	} else {
+		SPDK_ERRLOG("Unable to retrieve xattr clear_method, using default\n");
+	}
+
 	if (ctx->blob->clear_method == BLOB_CLEAR_WITH_DEFAULT ||
 	    ctx->blob->clear_method == BLOB_CLEAR_WITH_UNMAP) {
 		spdk_bs_batch_unmap_dev(batch, lba, lba_count);
@@ -1260,7 +1271,6 @@ _spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	 */
 	for (i = 1; i < blob->clean.num_pages; i++) {
 		lba = _spdk_bs_page_to_lba(bs, bs->md_start + blob->clean.pages[i]);
-
 		spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
 	}
 
