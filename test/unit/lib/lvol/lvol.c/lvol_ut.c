@@ -330,6 +330,16 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	cb_fn(cb_arg, g_remove_rc);
 }
 
+enum blob_clear_method g_expected_clear_method = LVOL_CLEAR_WITH_DEFAULT;
+void
+spdk_bs_delete_blob_ext(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			struct spdk_blob_open_opts *opts,
+			spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	CU_ASSERT(g_expected_clear_method == opts->clear_method);
+	spdk_bs_delete_blob(bs, blobid, cb_fn, cb_arg);
+}
+
 spdk_blob_id
 spdk_blob_get_id(struct spdk_blob *blob)
 {
@@ -583,7 +593,11 @@ lvs_init_destroy_success(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, false, LVOL_CLEAR_WITH_DEFAULT,
+	/* On destroy, make sure a non-default expected clear method is passed though to
+	 * our stubbed spdk_bs_delete_blob_ext() function.
+	 * */
+	g_expected_clear_method = LVOL_CLEAR_WITH_NONE;
+	spdk_lvol_create(g_lvol_store, "lvol", 10, false, g_expected_clear_method,
 			 lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
@@ -595,6 +609,17 @@ lvs_init_destroy_success(void)
 	CU_ASSERT(g_lvserrno == -EBUSY);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
+	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	spdk_lvol_destroy(g_lvol, destroy_cb, NULL);
+
+	/* Make sure a different clear method is passed through as well. */
+	g_expected_clear_method = LVOL_CLEAR_WITH_DEFAULT;
+	spdk_lvol_create(g_lvol_store, "lvol", 10, false, g_expected_clear_method,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	spdk_lvol_close(g_lvol, close_cb, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
