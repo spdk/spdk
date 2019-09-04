@@ -782,12 +782,6 @@ test_initdrivers(void)
 	/* This is not an error condition, we already have one */
 	CU_ASSERT(rc == 0);
 
-	/* success */
-	MOCK_SET(rte_vdev_init, 0);
-	rc = vbdev_init_compress_drivers();
-	CU_ASSERT(rc == 0);
-	spdk_mempool_free((struct spdk_mempool *)g_mbuf_mp);
-
 	/* error */
 	MOCK_SET(rte_vdev_init, -2);
 	rc = vbdev_init_compress_drivers();
@@ -848,11 +842,11 @@ test_initdrivers(void)
 	rc = vbdev_init_compress_drivers();
 	CU_ASSERT(rc == -2);
 
-	/* rte_compressdev_private_xform_create()succeeds */
-	ut_rte_compressdev_start = 0;
+	/* success */
 	ut_rte_compressdev_private_xform_create = 0;
 	rc = vbdev_init_compress_drivers();
 	CU_ASSERT(rc == 0);
+	spdk_mempool_free((struct spdk_mempool *)g_mbuf_mp);
 }
 
 static void
