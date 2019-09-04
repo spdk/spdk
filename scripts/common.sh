@@ -46,8 +46,8 @@ function iter_all_pci_class_code() {
 				'{if (cc ~ $2) print $1}' | tr -d '"'
 		fi
 	elif hash pciconf &>/dev/null; then
-		local addr=($(pciconf -l | grep -i "class=0x${class}${subclass}${progif}" | \
-			cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
+		mapfile -t local addr < <(pciconf -l | grep -i "class=0x${class}${subclass}${progif}" | \
+                        cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' ')
 		printf "%04x:%02x:%02x:%x\n" ${addr[0]} ${addr[1]} ${addr[2]} ${addr[3]}
 	else
 		echo "Missing PCI enumeration utility"
@@ -64,8 +64,8 @@ function iter_all_pci_dev_id() {
 		lspci -mm -n -D | awk -v ven="\"$ven_id\"" -v dev="\"${dev_id}\"" -F " " \
 			'{if (ven ~ $3 && dev ~ $4) print $1}' | tr -d '"'
 	elif hash pciconf &>/dev/null; then
-		local addr=($(pciconf -l | grep -i "chip=0x${dev_id}${ven_id}" | \
-			cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' '))
+		mapfile -t local addr < <(pciconf -l | grep -i "chip=0x${dev_id}${ven_id}" | \
+                        cut -d$'\t' -f1 | sed -e 's/^[a-zA-Z0-9_]*@pci//g' | tr ':' ' ')
 		printf "%04x:%02x:%02x:%x\n" ${addr[0]} ${addr[1]} ${addr[2]} ${addr[3]}
 	else
 		echo "Missing PCI enumeration utility"
