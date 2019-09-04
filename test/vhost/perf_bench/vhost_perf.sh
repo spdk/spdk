@@ -152,7 +152,7 @@ fi
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
 notice "Get NVMe disks:"
-nvmes=($(iter_pci_class_code 01 08 02))
+mapfile -t nvmes< <(iter_pci_class_code 01 08 02)
 
 if [[ -z $max_disks ]]; then
 	max_disks=${#nvmes[@]}
