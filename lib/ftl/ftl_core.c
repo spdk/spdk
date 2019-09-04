@@ -74,8 +74,8 @@ struct ftl_wptr {
 	/* Current logical block's offset */
 	uint64_t			offset;
 
-	/* Current erase block */
-	struct ftl_chunk		*chunk;
+	/* Current zone */
+	struct ftl_zone			*zone;
 
 	/* Pending IO queue */
 	TAILQ_HEAD(, ftl_io)		pending_queue;
@@ -295,7 +295,7 @@ ftl_ppa_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa)
 	assert(!ftl_ppa_invalid(*ppa));
 
 	/* Metadata has to be read in the way it's written (jumping across */
-	/* the chunks in xfer_size increments) */
+	/* the zones in xfer_size increments) */
 	if (io->flags & FTL_IO_MD) {
 		max_lbks = dev->xfer_size - (ppa->lbk % dev->xfer_size);
 		lbk_cnt = spdk_min(ftl_io_iovec_len_left(io), max_lbks);
@@ -322,7 +322,7 @@ ftl_wptr_open_band(struct ftl_wptr *wptr)
 {
 	struct ftl_band *band = wptr->band;
 
-	assert(ftl_band_chunk_is_first(band, wptr->chunk));
+	assert(ftl_band_zone_is_first(band, wptr->zone));
 	assert(band->lba_map.num_vld == 0);
 
 	ftl_band_clear_lba_map(band);
@@ -339,17 +339,16 @@ ftl_submit_erase(struct ftl_io *io)
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_band *band = io->band;
 	struct ftl_ppa ppa = io->ppa;
-	struct ftl_chunk *chunk;
+	struct ftl_zone *zone;
 	uint64_t ppa_packed;
 	int rc = 0;
 	size_t i;
 
 	for (i = 0; i < io->lbk_cnt; ++i) {
 		if (i != 0) {
-			chunk = ftl_band_next_chunk(band, ftl_band_chunk_from_ppa(band, ppa));
-			assert(chunk->state == FTL_CHUNK_STATE_CLOSED ||
-			       chunk->state == FTL_CHUNK_STATE_VACANT);
-			ppa = chunk->start_ppa;
+			zone = ftl_band_next_zone(band, ftl_band_zone_from_ppa(band, ppa));
+			assert(zone->state == SPDK_BDEV_ZONE_STATE_CLOSED);
+			ppa = zone->start_ppa;
 		}
 
 		assert(ppa.lbk == 0);
@@ -474,8 +473,8 @@ ftl_wptr_init(struct ftl_band *band)
 
 	wptr->dev = dev;
 	wptr->band = band;
-	wptr->chunk = CIRCLEQ_FIRST(&band->chunks);
-	wptr->ppa = wptr->chunk->start_ppa;
+	wptr->zone = CIRCLEQ_FIRST(&band->zones);
+	wptr->ppa = wptr->zone->start_ppa;
 	TAILQ_INIT(&wptr->pending_queue);
 
 	return wptr;
@@ -580,13 +579,13 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 		ftl_band_set_state(band, FTL_BAND_STATE_FULL);
 	}
 
-	wptr->chunk->busy = true;
+	wptr->zone->busy = true;
 	wptr->ppa = ftl_band_next_xfer_ppa(band, wptr->ppa, xfer_size);
-	wptr->chunk = ftl_band_next_operational_chunk(band, wptr->chunk);
+	wptr->zone = ftl_band_next_operational_zone(band, wptr->zone);
 
 	assert(!ftl_ppa_invalid(wptr->ppa));
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: grp:%d, pu:%d chunk:%d, lbk:%u\n",
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: grp:%d, pu:%d zone:%d, lbk:%u\n",
 		      wptr->ppa.grp, wptr->ppa.pu, wptr->ppa.chk, wptr->ppa.lbk);
 
 	if (wptr->offset >= next_thld && !dev->next_band) {
@@ -607,9 +606,9 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 
 	/* TODO: add handling of empty bands */
 
-	if (spdk_unlikely(!ftl_chunk_is_writable(wptr->chunk))) {
+	if (spdk_unlikely(!ftl_zone_is_writable(wptr->zone))) {
 		/* Erasing band may fail after it was assigned to wptr. */
-		if (spdk_unlikely(wptr->chunk->state == FTL_CHUNK_STATE_BAD)) {
+		if (spdk_unlikely(wptr->zone->state == SPDK_BDEV_ZONE_STATE_OFFLINE)) {
 			ftl_wptr_advance(wptr, wptr->dev->xfer_size);
 		}
 		return 0;
@@ -1477,14 +1476,14 @@ ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
 static void
 ftl_io_child_write_cb(struct ftl_io *io, void *ctx, int status)
 {
-	struct ftl_chunk *chunk;
+	struct ftl_zone *zone;
 	struct ftl_wptr *wptr;
 
-	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
+	zone = ftl_band_zone_from_ppa(io->band, io->ppa);
 	wptr = ftl_wptr_from_band(io->band);
 
-	chunk->busy = false;
-	chunk->write_offset += io->lbk_cnt;
+	zone->busy = false;
+	zone->write_offset += io->lbk_cnt;
 
 	/* If some other write on the same band failed the write pointer would already be freed */
 	if (spdk_likely(wptr)) {
@@ -1508,7 +1507,7 @@ ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
 		ppa = io->ppa;
 	}
 
-	/* Split IO to child requests and release chunk immediately after child is completed */
+	/* Split IO to child requests and release zone immediately after child is completed */
 	child = ftl_io_init_child_write(io, ppa, ftl_io_iovec_addr(io),
 					ftl_io_get_md(io), ftl_io_child_write_cb);
 	if (!child) {
@@ -1545,8 +1544,8 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 
 	while (io->iov_pos < io->iov_cnt) {
 		/* There are no guarantees of the order of completion of NVMe IO submission queue */
-		/* so wait until chunk is not busy before submitting another write */
-		if (wptr->chunk->busy) {
+		/* so wait until zone is not busy before submitting another write */
+		if (wptr->zone->busy) {
 			TAILQ_INSERT_TAIL(&wptr->pending_queue, io, retry_entry);
 			rc = -EAGAIN;
 			break;
@@ -1888,8 +1887,8 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->lbk_size = FTL_BLOCK_SIZE;
 	attrs->range = dev->range;
 	attrs->cache_bdev_desc = dev->nv_cache.bdev_desc;
-	attrs->num_chunks = dev->geo.num_chk;
-	attrs->chunk_size = dev->geo.clba;
+	attrs->num_zones = dev->geo.num_chk;
+	attrs->zone_size = dev->geo.clba;
 	attrs->conf = dev->conf;
 }
 
@@ -2150,9 +2149,9 @@ ftl_process_anm_event(struct ftl_anm_event *event)
 bool
 ftl_ppa_is_written(struct ftl_band *band, struct ftl_ppa ppa)
 {
-	struct ftl_chunk *chunk = ftl_band_chunk_from_ppa(band, ppa);
+	struct ftl_zone *zone = ftl_band_zone_from_ppa(band, ppa);
 
-	return ppa.lbk < chunk->write_offset;
+	return ppa.lbk < zone->write_offset;
 }
 
 static void
