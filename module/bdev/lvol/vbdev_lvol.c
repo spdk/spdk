@@ -171,7 +171,7 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 
 	if (lvserrno != 0) {
 		assert(lvs == NULL);
-		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Cannot create lvol store bdev\n");
+		SPDK_ERRLOG("Cannot create lvol store bdev\n");
 		goto end;
 	}
 
