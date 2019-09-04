@@ -16,6 +16,24 @@
       "revId": "ed5c9b4de6f38a2bbafa095dd62c18d8c1ee1271",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd9bd7b8_bb66e6f1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1476,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-04T21:21:47Z",
+      "side": 1,
+      "message": "The only reason I kept iovcnt and sge_count instead of using wr-\u003enum_sge and req-\u003eiovcnt is that they are slightly shorter. But you might be right. It would be clearer to just use those variables directly.",
+      "parentUuid": "d923511d_749b0f2e",
+      "revId": "ed5c9b4de6f38a2bbafa095dd62c18d8c1ee1271",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
