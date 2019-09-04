@@ -556,7 +556,7 @@ _spdk_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol store initialized\n");
+	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol store initialized, now create super blob\n");
 
 	/* create super blob */
 	spdk_bs_create_blob(lvs->blobstore, _spdk_super_blob_create_cb, lvs_req);
@@ -1384,7 +1384,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	req->lvol = lvol;
 	bs = lvol->lvol_store->blobstore;
 
-	spdk_bs_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
+	spdk_bs_delete_blob_ext(bs, lvol->blob_id, lvol->clear_method, _spdk_lvol_delete_blob_cb, req);
 }
 
 void
