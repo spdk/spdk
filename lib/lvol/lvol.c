@@ -487,6 +487,12 @@ _spdk_super_blob_init_cb(void *cb_arg, int lvolerrno)
 }
 
 static void
+_spdk_remove_bs_on_error_cb(void *cb_arg, int bserrno)
+{
+	return;
+}
+
+static void
 _spdk_super_blob_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 {
 	struct spdk_lvs_with_handle_req *req = cb_arg;
@@ -495,6 +501,7 @@ _spdk_super_blob_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvoler
 	if (lvolerrno < 0) {
 		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		SPDK_ERRLOG("Lvol store init failed: could not open super blob\n");
+		spdk_bs_destroy(lvs->blobstore, _spdk_remove_bs_on_error_cb, NULL);
 		_spdk_lvs_free(lvs);
 		free(req);
 		return;
