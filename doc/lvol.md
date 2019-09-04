@@ -124,10 +124,13 @@ bdev_get_bdevs [-h] [-b NAME]
     optional arguments:
     -h, --help  show help
     -b NAME, --name NAME  Name of the block device. Example: Nvme0n1
-bdev_lvol_delete [-h] bdev_name
-    Deletes a logical volume previously created by bdev_lvol_create.
+bdev_lvol_delete [-h] [-c CLEAR_METHOD] bdev_name
+    Deletes a logical volume previously created by bdev_lvol_create. By default when
+    deleting an lvol, the data region is unmapped. Optional --clear-method parameter can
+    be passed to change that behavior to writing zeroes or performing no operation.
     optional arguments:
     -h, --help  show help
+    --clear-method specify data region clear method "none", "unmap" (default), "write_zeroes"
 bdev_lvol_snapshot [-h] lvol_name snapshot_name
     Create a snapshot with snapshot_name of a given lvol bdev.
     optional arguments:
