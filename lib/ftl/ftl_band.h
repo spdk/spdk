@@ -37,6 +37,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/bit_array.h"
 #include "spdk/queue.h"
+#include "spdk/bdev_zone.h"
 
 #include "ftl_io.h"
 #include "ftl_ppa.h"
@@ -48,17 +49,9 @@
 struct spdk_ftl_dev;
 struct ftl_lba_map_request;
 
-enum ftl_chunk_state {
-	FTL_CHUNK_STATE_FREE,
-	FTL_CHUNK_STATE_OPEN,
-	FTL_CHUNK_STATE_CLOSED,
-	FTL_CHUNK_STATE_BAD,
-	FTL_CHUNK_STATE_VACANT,
-};
-
-struct ftl_chunk {
-	/* Block state */
-	enum ftl_chunk_state			state;
+struct ftl_zone {
+	/* Zone state */
+	enum spdk_bdev_zone_state		state;
 
 	/* Indicates that there is inflight write */
 	bool					busy;
@@ -72,10 +65,10 @@ struct ftl_chunk {
 	/* Pointer to parallel unit */
 	struct ftl_punit			*punit;
 
-	/* Position in band's chunk_buf */
+	/* Position in band's zone_buf */
 	uint32_t				pos;
 
-	CIRCLEQ_ENTRY(ftl_chunk)		circleq;
+	CIRCLEQ_ENTRY(ftl_zone)			circleq;
 };
 
 enum ftl_md_status {
@@ -154,14 +147,14 @@ struct ftl_band {
 	/* Device this band belongs to */
 	struct spdk_ftl_dev			*dev;
 
-	/* Number of operational chunks */
-	size_t					num_chunks;
+	/* Number of operational zones */
+	size_t					num_zones;
 
-	/* Array of chunks */
-	struct ftl_chunk			*chunk_buf;
+	/* Array of zones */
+	struct ftl_zone				*zone_buf;
 
-	/* List of operational chunks */
-	CIRCLEQ_HEAD(, ftl_chunk)		chunks;
+	/* List of operational zones */
+	CIRCLEQ_HEAD(, ftl_zone)		zones;
 
 	/* LBA map */
 	struct ftl_lba_map			lba_map;
@@ -223,7 +216,7 @@ size_t		ftl_band_user_lbks(const struct ftl_band *band);
 void		ftl_band_set_addr(struct ftl_band *band, uint64_t lba,
 				  struct ftl_ppa ppa);
 struct ftl_band *ftl_band_from_ppa(struct spdk_ftl_dev *dev, struct ftl_ppa ppa);
-struct ftl_chunk *ftl_band_chunk_from_ppa(struct ftl_band *band, struct ftl_ppa);
+struct ftl_zone *ftl_band_zone_from_ppa(struct ftl_band *band, struct ftl_ppa);
 void		ftl_band_md_clear(struct ftl_band *band);
 int		ftl_band_read_tail_md(struct ftl_band *band, struct ftl_ppa,
 				      ftl_io_fn cb_fn, void *cb_ctx);
@@ -236,8 +229,8 @@ void		ftl_band_write_failed(struct ftl_band *band);
 int		ftl_band_full(struct ftl_band *band, size_t offset);
 int		ftl_band_erase(struct ftl_band *band);
 int		ftl_band_write_prep(struct ftl_band *band);
-struct ftl_chunk *ftl_band_next_operational_chunk(struct ftl_band *band,
-		struct ftl_chunk *chunk);
+struct ftl_zone *ftl_band_next_operational_zone(struct ftl_band *band,
+		struct ftl_zone *zone);
 size_t		ftl_lba_map_pool_elem_size(struct spdk_ftl_dev *dev);
 
 static inline int
@@ -246,11 +239,11 @@ ftl_band_empty(const struct ftl_band *band)
 	return band->lba_map.num_vld == 0;
 }
 
-static inline struct ftl_chunk *
-ftl_band_next_chunk(struct ftl_band *band, struct ftl_chunk *chunk)
+static inline struct ftl_zone *
+ftl_band_next_zone(struct ftl_band *band, struct ftl_zone *zone)
 {
-	assert(chunk->state != FTL_CHUNK_STATE_BAD);
-	return CIRCLEQ_LOOP_NEXT(&band->chunks, chunk, circleq);
+	assert(zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE);
+	return CIRCLEQ_LOOP_NEXT(&band->zones, zone, circleq);
 }
 
 static inline void
@@ -282,23 +275,23 @@ ftl_band_lbkoff_valid(struct ftl_band *band, size_t lbkoff)
 }
 
 static inline int
-ftl_band_chunk_is_last(struct ftl_band *band, struct ftl_chunk *chunk)
+ftl_band_zone_is_last(struct ftl_band *band, struct ftl_zone *zone)
 {
-	return chunk == CIRCLEQ_LAST(&band->chunks);
+	return zone == CIRCLEQ_LAST(&band->zones);
 }
 
 static inline int
-ftl_band_chunk_is_first(struct ftl_band *band, struct ftl_chunk *chunk)
+ftl_band_zone_is_first(struct ftl_band *band, struct ftl_zone *zone)
 {
-	return chunk == CIRCLEQ_FIRST(&band->chunks);
+	return zone == CIRCLEQ_FIRST(&band->zones);
 }
 
 static inline int
-ftl_chunk_is_writable(const struct ftl_chunk *chunk)
+ftl_zone_is_writable(const struct ftl_zone *zone)
 {
-	return (chunk->state == FTL_CHUNK_STATE_OPEN ||
-		chunk->state == FTL_CHUNK_STATE_FREE) &&
-	       !chunk->busy;
+	return (zone->state == SPDK_BDEV_ZONE_STATE_OPEN ||
+		zone->state == SPDK_BDEV_ZONE_STATE_EMPTY) &&
+	       !zone->busy;
 }
 
 #endif /* FTL_BAND_H */

@@ -137,7 +137,7 @@ struct ftl_restore {
 static int
 ftl_restore_tail_md(struct ftl_restore_band *rband);
 static void
-ftl_pad_chunk_cb(struct ftl_io *io, void *arg, int status);
+ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status);
 static void
 ftl_restore_pad_band(struct ftl_restore_band *rband);
 
@@ -341,7 +341,7 @@ ftl_restore_head_md(void *ctx)
 		lba_map->dma_buf = restore->md_buf + i * ftl_head_md_num_lbks(dev) * FTL_BLOCK_SIZE;
 
 		if (ftl_band_read_head_md(rband->band, ftl_restore_head_cb, rband)) {
-			if (spdk_likely(rband->band->num_chunks)) {
+			if (spdk_likely(rband->band->num_zones)) {
 				SPDK_ERRLOG("Failed to read metadata on band %zu\n", i);
 
 				rband->md_status = FTL_MD_INVALID_CRC;
@@ -419,7 +419,7 @@ ftl_restore_next_band(struct ftl_restore *restore)
 	for (; restore->current < ftl_dev_num_bands(restore->dev); ++restore->current) {
 		rband = &restore->bands[restore->current];
 
-		if (spdk_likely(rband->band->num_chunks) &&
+		if (spdk_likely(rband->band->num_zones) &&
 		    rband->md_status == FTL_MD_SUCCESS) {
 			restore->current++;
 			return rband;
@@ -1068,11 +1068,11 @@ ftl_restore_nv_cache(struct ftl_restore *restore, ftl_restore_fn cb)
 }
 
 static bool
-ftl_pad_chunk_pad_finish(struct ftl_restore_band *rband, bool direct_access)
+ftl_pad_zone_pad_finish(struct ftl_restore_band *rband, bool direct_access)
 {
 	struct ftl_restore *restore = rband->parent;
 	struct ftl_restore_band *next_band;
-	size_t i, num_pad_chunks = 0;
+	size_t i, num_pad_zones = 0;
 
 	if (spdk_unlikely(restore->pad_status && !restore->num_ios)) {
 		if (direct_access) {
@@ -1086,14 +1086,14 @@ ftl_pad_chunk_pad_finish(struct ftl_restore_band *rband, bool direct_access)
 		return true;
 	}
 
-	for (i = 0; i < rband->band->num_chunks; ++i) {
-		if (rband->band->chunk_buf[i].state != FTL_CHUNK_STATE_CLOSED) {
-			num_pad_chunks++;
+	for (i = 0; i < rband->band->num_zones; ++i) {
+		if (rband->band->zone_buf[i].state != SPDK_BDEV_ZONE_STATE_CLOSED) {
+			num_pad_zones++;
 		}
 	}
 
-	/* Finished all chunks in a band, check if all bands are done */
-	if (num_pad_chunks == 0) {
+	/* Finished all zones in a band, check if all bands are done */
+	if (num_pad_zones == 0) {
 		if (direct_access) {
 			rband->band->state = FTL_BAND_STATE_CLOSED;
 			ftl_band_set_direct_access(rband->band, false);
@@ -1130,7 +1130,7 @@ ftl_restore_init_pad_io(struct ftl_restore_band *rband, void *buffer,
 		.flags		= flags,
 		.type		= FTL_IO_WRITE,
 		.lbk_cnt	= dev->xfer_size,
-		.cb_fn		= ftl_pad_chunk_cb,
+		.cb_fn		= ftl_pad_zone_cb,
 		.cb_ctx		= rband,
 		.data		= buffer,
 		.parent		= NULL,
@@ -1149,12 +1149,12 @@ ftl_restore_init_pad_io(struct ftl_restore_band *rband, void *buffer,
 }
 
 static void
-ftl_pad_chunk_cb(struct ftl_io *io, void *arg, int status)
+ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status)
 {
 	struct ftl_restore_band *rband = arg;
 	struct ftl_restore *restore = rband->parent;
 	struct ftl_band *band = io->band;
-	struct ftl_chunk *chunk;
+	struct ftl_zone *zone;
 	struct ftl_io *new_io;
 
 	restore->num_ios--;
@@ -1165,8 +1165,8 @@ ftl_pad_chunk_cb(struct ftl_io *io, void *arg, int status)
 	}
 
 	if (io->ppa.lbk + io->lbk_cnt == band->dev->geo.clba) {
-		chunk = ftl_band_chunk_from_ppa(band, io->ppa);
-		chunk->state = FTL_CHUNK_STATE_CLOSED;
+		zone = ftl_band_zone_from_ppa(band, io->ppa);
+		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
 	} else {
 		struct ftl_ppa ppa = io->ppa;
 		ppa.lbk += io->lbk_cnt;
@@ -1182,7 +1182,7 @@ ftl_pad_chunk_cb(struct ftl_io *io, void *arg, int status)
 
 end:
 	spdk_dma_free(io->iov[0].iov_base);
-	ftl_pad_chunk_pad_finish(rband, true);
+	ftl_pad_zone_pad_finish(rband, true);
 }
 
 static void
@@ -1198,8 +1198,8 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 	size_t i;
 	int rc = 0;
 
-	/* Check if some chunks are not closed */
-	if (ftl_pad_chunk_pad_finish(rband, false)) {
+	/* Check if some zones are not closed */
+	if (ftl_pad_zone_pad_finish(rband, false)) {
 		/*
 		 * If we're here, end meta wasn't recognized, but the whole band is written
 		 * Assume the band was padded and ignore it
@@ -1214,16 +1214,16 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 		return;
 	}
 
-	for (i = 0; i < band->num_chunks; ++i) {
-		if (band->chunk_buf[i].state == FTL_CHUNK_STATE_CLOSED) {
+	for (i = 0; i < band->num_zones; ++i) {
+		if (band->zone_buf[i].state == SPDK_BDEV_ZONE_STATE_CLOSED) {
 			continue;
 		}
 
-		rc = ftl_retrieve_chunk_info(dev, band->chunk_buf[i].start_ppa, &info, 1);
+		rc = ftl_retrieve_chunk_info(dev, band->zone_buf[i].start_ppa, &info, 1);
 		if (spdk_unlikely(rc)) {
 			goto error;
 		}
-		ppa = band->chunk_buf[i].start_ppa;
+		ppa = band->zone_buf[i].start_ppa;
 		ppa.lbk = info.wp;
 
 		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, 0, NULL);
@@ -1246,7 +1246,7 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 
 error:
 	restore->pad_status = rc;
-	ftl_pad_chunk_pad_finish(rband, true);
+	ftl_pad_zone_pad_finish(rband, true);
 }
 
 static void

@@ -147,7 +147,7 @@ test_wptr(void)
 	struct ftl_band *band;
 	struct ftl_io io = { 0 };
 	size_t xfer_size;
-	size_t chunk, lbk, offset, i;
+	size_t zone, lbk, offset, i;
 	int rc;
 
 	setup_wptr_test(&dev, &g_geo, &g_range);
@@ -162,8 +162,8 @@ test_wptr(void)
 		io.band = band;
 		io.dev = dev;
 
-		for (lbk = 0, offset = 0; lbk < ftl_dev_lbks_in_chunk(dev) / xfer_size; ++lbk) {
-			for (chunk = 0; chunk < band->num_chunks; ++chunk) {
+		for (lbk = 0, offset = 0; lbk < ftl_dev_lbks_in_zone(dev) / xfer_size; ++lbk) {
+			for (zone = 0; zone < band->num_zones; ++zone) {
 				CU_ASSERT_EQUAL(wptr->ppa.lbk, (lbk * xfer_size));
 				CU_ASSERT_EQUAL(wptr->offset, offset);
 				ftl_wptr_advance(wptr, xfer_size);
@@ -172,7 +172,7 @@ test_wptr(void)
 		}
 
 		CU_ASSERT_EQUAL(band->state, FTL_BAND_STATE_FULL);
-		CU_ASSERT_EQUAL(wptr->ppa.lbk, ftl_dev_lbks_in_chunk(dev));
+		CU_ASSERT_EQUAL(wptr->ppa.lbk, ftl_dev_lbks_in_zone(dev));
 
 		ftl_band_set_state(band, FTL_BAND_STATE_CLOSING);
 
