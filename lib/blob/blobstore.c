@@ -1095,6 +1095,8 @@ static void
 spdk_bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, uint64_t lba,
 			uint32_t lba_count)
 {
+	SPDK_NOTICELOG("clear method : %d\n", ctx->blob->clear_method);
+
 	if (ctx->blob->clear_method == BLOB_CLEAR_WITH_DEFAULT ||
 	    ctx->blob->clear_method == BLOB_CLEAR_WITH_UNMAP) {
 		spdk_bs_batch_unmap_dev(batch, lba, lba_count);
@@ -1260,7 +1262,6 @@ _spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	 */
 	for (i = 1; i < blob->clean.num_pages; i++) {
 		lba = _spdk_bs_page_to_lba(bs, bs->md_start + blob->clean.pages[i]);
-
 		spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
 	}
 
@@ -1943,7 +1944,7 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 	}
 	case SPDK_BLOB_UNMAP: {
 		spdk_bs_batch_t *batch;
-
+		SPDK_NOTICELOG("\n");
 		batch = spdk_bs_batch_open(_ch, &cpl);
 		if (!batch) {
 			cb_fn(cb_arg, -ENOMEM);
@@ -3867,14 +3868,19 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	batch = spdk_bs_sequence_to_batch(seq, _spdk_bs_init_trim_cpl, ctx);
 
 	/* Clear metadata space */
+	SPDK_NOTICELOG("WZ to metadata\n");
 	spdk_bs_batch_write_zeroes_dev(batch, 0, num_md_lba);
 
 	if (opts.clear_method == BS_CLEAR_WITH_UNMAP) {
 		/* Trim data clusters */
+		SPDK_NOTICELOG("UNMAP data CM %d\n", opts.clear_method );
 		spdk_bs_batch_unmap_dev(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
 	} else if (opts.clear_method == BS_CLEAR_WITH_WRITE_ZEROES) {
 		/* Write_zeroes to data clusters */
+		SPDK_NOTICELOG("WZ data CM %d\n", opts.clear_method );
 		spdk_bs_batch_write_zeroes_dev(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
+	} else {
+		SPDK_NOTICELOG("Do nothing CM %d\n", opts.clear_method);
 	}
 
 	spdk_bs_batch_close(batch);
@@ -3911,7 +3917,7 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
 	struct spdk_bs_init_ctx *ctx;
-
+	SPDK_NOTICELOG("\n");
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Destroying blobstore\n");
 
 	if (!TAILQ_EMPTY(&bs->blobs)) {
@@ -5645,6 +5651,35 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	}
 
 	spdk_bs_open_blob(bs, blobid, _spdk_bs_delete_open_cpl, seq);
+}
+
+void
+spdk_bs_delete_blob_ext(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			enum blob_clear_method clear_method,
+			spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_bs_cpl	cpl;
+	spdk_bs_sequence_t	*seq;
+	struct spdk_blob_open_opts opts;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Deleting blob %lu\n", blobid);
+
+	assert(spdk_get_thread() == bs->md_thread);
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = cb_fn;
+	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
+	if (!seq) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	spdk_blob_open_opts_init(&opts);
+	opts.clear_method = clear_method;
+
+	spdk_bs_open_blob_ext(bs, blobid, &opts, _spdk_bs_delete_open_cpl, seq);
 }
 
 /* END spdk_bs_delete_blob */

@@ -837,7 +837,7 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 {
 	struct spdk_lvs_destroy_req *lvs_req;
 	struct spdk_lvol *iter_lvol, *tmp;
-
+	SPDK_NOTICELOG("\n");
 	if (lvs == NULL) {
 		SPDK_ERRLOG("Lvol store is NULL\n");
 		return -ENODEV;
@@ -1384,7 +1384,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	req->lvol = lvol;
 	bs = lvol->lvol_store->blobstore;
 
-	spdk_bs_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
+	spdk_bs_delete_blob_ext(bs, lvol->blob_id, lvol->clear_method, _spdk_lvol_delete_blob_cb, req);
 }
 
 void
