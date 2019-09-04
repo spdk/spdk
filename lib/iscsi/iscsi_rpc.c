@@ -291,14 +291,14 @@ invalid:
 SPDK_RPC_REGISTER("delete_initiator_group", spdk_rpc_delete_initiator_group, SPDK_RPC_RUNTIME)
 
 static void
-spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+spdk_rpc_iscsi_get_target_nodes(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_target_nodes requires no parameters");
+						 "iscsi_get_target_nodes requires no parameters");
 		return;
 	}
 
@@ -309,7 +309,8 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_target_nodes", spdk_rpc_get_target_nodes, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_get_target_nodes", spdk_rpc_iscsi_get_target_nodes, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_target_nodes, get_target_nodes)
 
 struct rpc_pg_ig_map {
 	int32_t pg_tag;
