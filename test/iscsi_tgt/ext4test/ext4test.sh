@@ -108,7 +108,7 @@ for dev in $devs; do
 	umount /mnt/${dev}dir
 	rm -rf /mnt/${dev}dir
 
-	stats=($(cat /sys/block/$dev/stat))
+	mapfile -t stats < <(cat /sys/block/$dev/stat)
 	echo ""
 	echo "$dev stats"
 	printf "READ  IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
