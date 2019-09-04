@@ -37,6 +37,7 @@
 #include "nvmf/rdma.c"
 
 uint64_t g_mr_size;
+uint64_t g_mr_next_size;
 struct ibv_mr g_rdma_mr;
 
 #define RDMA_UT_UNITS_IN_MAX_IO 16
@@ -135,6 +136,9 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 {
 	if (g_mr_size != 0) {
 		*(uint32_t *)size = g_mr_size;
+		if (g_mr_next_size != 0) {
+			g_mr_size = g_mr_next_size;
+		}
 	}
 
 	return (uint64_t)&g_rdma_mr;
@@ -177,12 +181,16 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	struct spdk_nvmf_transport_pg_cache_buf bufs[4];
 	struct spdk_nvme_sgl_descriptor sgl_desc[SPDK_NVMF_MAX_SGL_ENTRIES] = {{0}};
 	struct spdk_nvmf_rdma_request_data data;
+	struct spdk_nvmf_transport_pg_cache_buf	buffer;
+	struct spdk_nvmf_transport_pg_cache_buf	*buffer_ptr;
 	int rc, i;
 
 	data.wr.sg_list = data.sgl;
 	STAILQ_INIT(&group.group.buf_cache);
 	group.group.buf_cache_size = 0;
 	group.group.buf_cache_count = 0;
+	group.group.transport = &rtransport.transport;
+	STAILQ_INIT(&group.retired_bufs);
 	poller.group = &group;
 	rqpair.poller = &poller;
 	rqpair.max_send_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
@@ -267,7 +275,6 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	CU_ASSERT(rdma_req.data.wr.sg_list[0].addr == 0);
 	CU_ASSERT(rdma_req.data.wr.sg_list[0].length == 0);
 	CU_ASSERT(rdma_req.data.wr.sg_list[0].lkey == 0);
-
 
 	rdma_req.recv->buf = (void *)0xDDDD;
 	/* Test 2: sgl type: keyed data block subtype: offset (in capsule data) */
@@ -408,7 +415,6 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	}
 
 	/* part 1: use the four buffers from the pg cache */
-
 	group.group.buf_cache_size = 4;
 	group.group.buf_cache_count = 4;
 	MOCK_SET(spdk_mempool_get, (void *)0x2000);
@@ -432,8 +438,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 				~NVMF_DATA_BUFFER_MASK));
 		CU_ASSERT(rdma_req.data.wr.sg_list[i].length == rtransport.transport.opts.io_unit_size);
 	}
-	/* part 2: now that we have used the buffers from the cache, try again. We should get mempool buffers. */
 
+	/* part 2: now that we have used the buffers from the cache, try again. We should get mempool buffers. */
 	reset_nvmf_rdma_request(&rdma_req);
 	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
@@ -482,6 +488,36 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 		CU_ASSERT(rdma_req.data.wr.sg_list[i].addr == 0x2000);
 		CU_ASSERT(rdma_req.data.wr.sg_list[i].length == rtransport.transport.opts.io_unit_size);
 	}
+
+	reset_nvmf_rdma_request(&rdma_req);
+	/* Test 5 dealing with a buffer split over two Memory Regions */
+	MOCK_SET(spdk_mempool_get, (void *)&buffer);
+	sgl->generic.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+	sgl->keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+	sgl->keyed.length = rtransport.transport.opts.io_unit_size / 2;
+	g_mr_size = rtransport.transport.opts.io_unit_size / 4;
+	g_mr_next_size = rtransport.transport.opts.io_unit_size / 2;
+
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(rdma_req.req.data_from_pool == true);
+	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size / 2);
+	CU_ASSERT((uint64_t)rdma_req.req.data == (((uint64_t)&buffer + NVMF_DATA_BUFFER_MASK) &
+			~NVMF_DATA_BUFFER_MASK));
+	CU_ASSERT(rdma_req.data.wr.num_sge == 1);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0xEEEE);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0xFFFF);
+	CU_ASSERT(rdma_req.req.buffers[0] == &buffer);
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].addr == (((uint64_t)&buffer + NVMF_DATA_BUFFER_MASK) &
+			~NVMF_DATA_BUFFER_MASK));
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].length == rtransport.transport.opts.io_unit_size / 2);
+	CU_ASSERT(rdma_req.data.wr.sg_list[0].lkey == g_rdma_mr.lkey);
+	buffer_ptr = STAILQ_FIRST(&group.retired_bufs);
+	CU_ASSERT(buffer_ptr == &buffer);
+	STAILQ_REMOVE(&group.retired_bufs, buffer_ptr, spdk_nvmf_transport_pg_cache_buf, link);
+	CU_ASSERT(STAILQ_EMPTY(&group.retired_bufs));
+
+	reset_nvmf_rdma_request(&rdma_req);
 }
 
 static struct spdk_nvmf_rdma_recv *
