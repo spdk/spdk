@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8796b4e8_09be8701",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1529,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-04T07:59:12Z",
+      "side": 1,
+      "message": "Changed return code to EFAULT for that case",
+      "parentUuid": "b2b4646e_81053f84",
+      "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "02335243_60b1fd66",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 8
@@ -33,6 +51,24 @@
       "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c0f3c24_b686b2ab",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1555,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-04T07:59:12Z",
+      "side": 1,
+      "message": "I changed return value for the case when a buffer is split over multiple MRs",
+      "parentUuid": "02335243_60b1fd66",
+      "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d067f110_e05ac370",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1598,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-04T07:59:12Z",
+      "side": 1,
+      "message": "Changed return code to EFAULT for that case",
+      "parentUuid": "d27ab872_2eb02eeb",
+      "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38808e02_ec360387",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 8
@@ -64,6 +118,24 @@
       "writtenOn": "2019-09-03T17:48:24Z",
       "side": 1,
       "message": "The EINVAL code returned from nvmf_rdma_fill_buffers doesn\u0027t mean that the sgl length exceeded the max I/O size (which is the case in the multi-sgl version of that function), it means that one of the buffers in the shared buffer list has been split over multiple NIC memory regions. As far as I am aware, that error can only be hit when using versions of DPDK older than 19.05 with modern SPDK.\n\nI don\u0027t think that returning -1 is the right thing to do in response to that error, because it will cause the request to fail when there is nothing wrong with that specific request. I think that you should leave the return value the same between those two cases.",
+      "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d0cf60c_7bce63e1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1822,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-04T07:59:12Z",
+      "side": 1,
+      "message": "Hi Seth,\n\nWith this change the EINVAL code might be returned in 2 cases (as you already mentioned)\n1. sgl length exceeded the max I/O size\n2. one of the buffers in the shared buffer list has been split over multiple NIC memory regions\nI think we need to distinguish these two cases and change return value for the 1st case. Returning the EFAULT code for the 2nd cases seems right to me.\nI agree with your comment that we need a long term solution for the 2nd case, but I think that should be done separately from these changes. I\u0027ll leave a todo comment for that.\nI\u0027ll make the listed changes and will wait for your comments.",
+      "parentUuid": "38808e02_ec360387",
       "revId": "dee15b05e0f50331ed1f024922590aaf82f37a24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
