@@ -383,7 +383,7 @@ spdk_bs_batch_unmap_dev(spdk_bs_batch_t *batch,
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Unmapping %" PRIu32 " blocks at LBA %" PRIu64 "\n", lba_count,
+	SPDK_NOTICELOG( "Unmapping %" PRIu32 " blocks at LBA %" PRIu64 "\n", lba_count,
 		      lba);
 
 	set->u.batch.outstanding_ops++;
@@ -397,7 +397,7 @@ spdk_bs_batch_write_zeroes_dev(spdk_bs_batch_t *batch,
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
-
+	SPDK_NOTICELOG("\n");
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Zeroing %" PRIu32 " blocks at LBA %" PRIu64 "\n", lba_count, lba);
 
 	set->u.batch.outstanding_ops++;
