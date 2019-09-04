@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf08e985_460b52ae",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1016870
+      },
+      "writtenOn": "2019-09-04T12:58:16Z",
+      "side": 1,
+      "message": "should update \"exchanged\" here\n\nexchanged \u003d __atomic_compare_...",
+      "revId": "e454b1c92c4bf3c4847aa1d85abb2488f0d0c51b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
