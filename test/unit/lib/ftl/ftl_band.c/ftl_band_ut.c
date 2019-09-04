@@ -100,7 +100,7 @@ test_band_lbkoff_from_ppa_base(void)
 		ppa.chk = TEST_BAND_IDX;
 
 		offset = ftl_band_lbkoff_from_ppa(g_band, ppa);
-		CU_ASSERT_EQUAL(offset, flat_lun * ftl_dev_lbks_in_chunk(g_dev));
+		CU_ASSERT_EQUAL(offset, flat_lun * ftl_dev_lbks_in_zone(g_dev));
 		flat_lun++;
 	}
 	cleanup_band();
@@ -234,7 +234,7 @@ test_next_xfer_ppa(void)
 	result = ftl_band_next_xfer_ppa(g_band, ppa, 1);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
-	/* Verify jumping between chunks */
+	/* Verify jumping between zones */
 	expect = ppa_from_punit(g_range.begin + 1);
 	expect.chk = TEST_BAND_IDX;
 	result = ftl_band_next_xfer_ppa(g_band, ppa, g_dev->xfer_size);
@@ -247,7 +247,7 @@ test_next_xfer_ppa(void)
 	result = ftl_band_next_xfer_ppa(g_band, ppa, g_dev->xfer_size + 3);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
-	/* Verify jumping from last chunk to the first one */
+	/* Verify jumping from last zone to the first one */
 	expect = ppa_from_punit(g_range.begin);
 	expect.chk = TEST_BAND_IDX;
 	expect.lbk = g_dev->xfer_size;
@@ -256,7 +256,7 @@ test_next_xfer_ppa(void)
 	result = ftl_band_next_xfer_ppa(g_band, ppa, g_dev->xfer_size);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
-	/* Verify jumping from last chunk to the first one with unaligned offset */
+	/* Verify jumping from last zone to the first one with unaligned offset */
 	expect = ppa_from_punit(g_range.begin);
 	expect.chk = TEST_BAND_IDX;
 	expect.lbk = g_dev->xfer_size + 2;
@@ -276,10 +276,10 @@ test_next_xfer_ppa(void)
 					ftl_dev_num_punits(g_dev) + 3);
 	CU_ASSERT_EQUAL(result.ppa, expect.ppa);
 
-	/* Remove one chunk and verify it's skipped properly */
-	g_band->chunk_buf[1].state = FTL_CHUNK_STATE_BAD;
-	CIRCLEQ_REMOVE(&g_band->chunks, &g_band->chunk_buf[1], circleq);
-	g_band->num_chunks--;
+	/* Remove one zone and verify it's skipped properly */
+	g_band->zone_buf[1].state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+	CIRCLEQ_REMOVE(&g_band->zones, &g_band->zone_buf[1], circleq);
+	g_band->num_zones--;
 	expect = ppa_from_punit(g_range.begin + 2);
 	expect.chk = TEST_BAND_IDX;
 	expect.lbk = g_dev->xfer_size * 5 + 4;
