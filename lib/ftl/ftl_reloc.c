@@ -92,10 +92,10 @@ struct ftl_band_reloc {
 
 	/* Reloc map iterator */
 	struct {
-		/* Array of chunk offsets */
+		/* Array of zone offsets */
 		size_t				*chk_offset;
 
-		/* Currently chunk */
+		/* Currently zone */
 		size_t				chk_current;
 	} iter;
 
@@ -154,15 +154,15 @@ ftl_reloc_is_defrag_active(const struct ftl_reloc *reloc)
 static size_t
 ftl_reloc_iter_chk_offset(struct ftl_band_reloc *breloc)
 {
-	size_t chunk = breloc->iter.chk_current;
+	size_t zone = breloc->iter.chk_current;
 
-	return breloc->iter.chk_offset[chunk];
+	return breloc->iter.chk_offset[zone];
 }
 
 static size_t
 ftl_reloc_iter_chk_done(struct ftl_band_reloc *breloc)
 {
-	size_t num_lbks = ftl_dev_lbks_in_chunk(breloc->parent->dev);
+	size_t num_lbks = ftl_dev_lbks_in_zone(breloc->parent->dev);
 
 	return ftl_reloc_iter_chk_offset(breloc) == num_lbks;
 }
@@ -297,7 +297,7 @@ ftl_reloc_iter_reset(struct ftl_band_reloc *breloc)
 static size_t
 ftl_reloc_iter_lbkoff(struct ftl_band_reloc *breloc)
 {
-	size_t chk_offset = breloc->iter.chk_current * ftl_dev_lbks_in_chunk(breloc->parent->dev);
+	size_t chk_offset = breloc->iter.chk_current * ftl_dev_lbks_in_zone(breloc->parent->dev);
 
 	return breloc->iter.chk_offset[breloc->iter.chk_current] + chk_offset;
 }
@@ -323,7 +323,7 @@ ftl_reloc_lbk_valid(struct ftl_band_reloc *breloc, size_t lbkoff)
 static int
 ftl_reloc_iter_next(struct ftl_band_reloc *breloc, size_t *lbkoff)
 {
-	size_t chunk = breloc->iter.chk_current;
+	size_t zone = breloc->iter.chk_current;
 
 	*lbkoff = ftl_reloc_iter_lbkoff(breloc);
 
@@ -331,7 +331,7 @@ ftl_reloc_iter_next(struct ftl_band_reloc *breloc, size_t *lbkoff)
 		return 0;
 	}
 
-	breloc->iter.chk_offset[chunk]++;
+	breloc->iter.chk_offset[zone]++;
 
 	if (!ftl_reloc_lbk_valid(breloc, *lbkoff)) {
 		ftl_reloc_clr_lbk(breloc, *lbkoff);
@@ -344,7 +344,7 @@ ftl_reloc_iter_next(struct ftl_band_reloc *breloc, size_t *lbkoff)
 static int
 ftl_reloc_first_valid_lbk(struct ftl_band_reloc *breloc, size_t *lbkoff)
 {
-	size_t i, num_lbks = ftl_dev_lbks_in_chunk(breloc->parent->dev);
+	size_t i, num_lbks = ftl_dev_lbks_in_zone(breloc->parent->dev);
 
 	for (i = ftl_reloc_iter_chk_offset(breloc); i < num_lbks; ++i) {
 		if (ftl_reloc_iter_next(breloc, lbkoff)) {
@@ -360,7 +360,7 @@ ftl_reloc_iter_done(struct ftl_band_reloc *breloc)
 {
 	size_t i;
 	size_t num_chks = ftl_dev_num_punits(breloc->band->dev);
-	size_t num_lbks = ftl_dev_lbks_in_chunk(breloc->parent->dev);
+	size_t num_lbks = ftl_dev_lbks_in_zone(breloc->parent->dev);
 
 	for (i = 0; i < num_chks; ++i) {
 		if (breloc->iter.chk_offset[i] != num_lbks) {
