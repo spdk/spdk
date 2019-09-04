@@ -68,6 +68,11 @@ Added optional parameter '--md-size'to 'construct_null_bdev' RPC method.
 Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_null_bdev'
 RPC method.
 
+### blob
+
+`spdk_bs_delete_blob_ext` was added to allow users to specify the open options used when
+deleting a blob.
+
 ## v19.07:
 
 ### ftl

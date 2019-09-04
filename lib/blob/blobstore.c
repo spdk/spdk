@@ -5647,6 +5647,31 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	spdk_bs_open_blob(bs, blobid, _spdk_bs_delete_open_cpl, seq);
 }
 
+void
+spdk_bs_delete_blob_ext(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			struct spdk_blob_open_opts *opts,
+			spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_bs_cpl	cpl;
+	spdk_bs_sequence_t	*seq;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Deleting blob %lu\n", blobid);
+
+	assert(spdk_get_thread() == bs->md_thread);
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = cb_fn;
+	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
+	if (!seq) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	spdk_bs_open_blob_ext(bs, blobid, opts, _spdk_bs_delete_open_cpl, seq);
+}
+
 /* END spdk_bs_delete_blob */
 
 /* START spdk_bs_open_blob */

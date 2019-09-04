@@ -593,6 +593,19 @@ struct spdk_blob_open_opts {
 };
 
 /**
+ * Delete an existing blob from the given blobstore, extended version.
+ *
+ * \param bs blobstore.
+ * \param blobid The id of the blob to delete.
+ * \param opts The structure which contains the option values for the blob.
+ * \param cb_fn Called when the operation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void spdk_bs_delete_blob_ext(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			     struct spdk_blob_open_opts *opts,
+			     spdk_blob_op_complete cb_fn, void *cb_arg);
+
+/**
  * Initialize a spdk_blob_open_opts structure to the default blob option values.
  *
  * \param opts spdk_blob_open_opts structure to initialize.
