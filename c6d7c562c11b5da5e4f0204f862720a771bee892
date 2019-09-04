@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84f17927_85cba992",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-04T18:44:46Z",
+      "side": 1,
+      "message": "Don\u0027t retro-actively update an old changelog entry.",
+      "revId": "c6d7c562c11b5da5e4f0204f862720a771bee892",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
