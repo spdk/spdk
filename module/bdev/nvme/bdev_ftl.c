@@ -474,8 +474,8 @@ bdev_ftl_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_object_begin(w, "ftl");
 
 	_bdev_ftl_write_config_info(ftl_bdev, w);
-	spdk_json_write_named_string_fmt(w, "num_chunks", "%zu", attrs.num_chunks);
-	spdk_json_write_named_string_fmt(w, "chunk_size", "%zu", attrs.chunk_size);
+	spdk_json_write_named_string_fmt(w, "num_zones", "%zu", attrs.num_zones);
+	spdk_json_write_named_string_fmt(w, "zone_size", "%zu", attrs.zone_size);
 
 	/* ftl */
 	spdk_json_write_object_end(w);
