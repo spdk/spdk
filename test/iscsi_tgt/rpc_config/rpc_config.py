@@ -110,7 +110,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
     check_output('iscsiadm -m discovery -t st -p {}'.format(rpc_param['target_ip']), shell=True)
     check_output('iscsiadm -m node --login', shell=True)
-    name = json.loads(rpc.get_target_nodes())[0]['name']
+    name = json.loads(rpc.iscsi_get_target_nodes())[0]['name']
     output = rpc.get_iscsi_connections()
     jsonvalues = json.loads(output)
     verify(jsonvalues[0]['target_node_name'] == rpc_param['target_name'], 1,
@@ -151,7 +151,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
     check_output('iscsiadm -m discovery -t st -p {}'.format(rpc_param['target_ip']), shell=True)
     check_output('iscsiadm -m node --login', shell=True)
-    name = json.loads(rpc.get_target_nodes())[0]['name']
+    name = json.loads(rpc.iscsi_get_target_nodes())[0]['name']
     output = rpc.get_iscsi_global_params()
     jsonvalues = json.loads(output)
     nodebase = jsonvalues['node_base']
@@ -325,10 +325,10 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     output = rpc.get_iscsi_global_params()
     jsonvalues = json.loads(output)
     nodebase = jsonvalues['node_base']
-    output = rpc.get_target_nodes()
+    output = rpc.iscsi_get_target_nodes()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
-           "get_target_nodes returned {}, expected empty".format(jsonvalues))
+           "iscsi_get_target_nodes returned {}, expected empty".format(jsonvalues))
 
     rpc.bdev_malloc_create(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
@@ -337,10 +337,10 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
-    output = rpc.get_target_nodes()
+    output = rpc.iscsi_get_target_nodes()
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == 1, 1,
-           "get_target_nodes returned {} nodes, expected 1".format(len(jsonvalues)))
+           "iscsi_get_target_nodes returned {} nodes, expected 1".format(len(jsonvalues)))
     bdev_name = jsonvalues[0]['luns'][0]['bdev_name']
     verify(bdev_name == "Malloc" + str(rpc_param['lun_total']), 1,
            "bdev_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['bdev_name'], str(rpc_param['lun_total'])))
@@ -371,7 +371,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
            "data digest value is {}, expected {}".format(jsonvalues[0]['data_digest'], rpc_param['data_digest']))
     lun_id = '1'
     rpc.target_node_add_lun(name, bdev_name, "-i", lun_id)
-    output = rpc.get_target_nodes()
+    output = rpc.iscsi_get_target_nodes()
     jsonvalues = json.loads(output)
     verify(jsonvalues[0]['luns'][1]['bdev_name'] == "Malloc" + str(rpc_param['lun_total']), 1,
            "bdev_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['bdev_name'], str(rpc_param['lun_total'])))
@@ -379,17 +379,17 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
            "lun id value is {}, expected 1".format(jsonvalues[0]['luns'][1]['lun_id']))
 
     rpc.delete_target_node(name)
-    output = rpc.get_target_nodes()
+    output = rpc.iscsi_get_target_nodes()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
-           "get_target_nodes returned {}, expected empty".format(jsonvalues))
+           "iscsi_get_target_nodes returned {}, expected empty".format(jsonvalues))
 
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
 
     rpc.delete_portal_group(portal_tag)
     rpc.delete_initiator_group(initiator_tag)
     rpc.delete_target_node(name)
-    output = rpc.get_target_nodes()
+    output = rpc.iscsi_get_target_nodes()
     jsonvalues = json.loads(output)
     if not jsonvalues:
         print("This issue will be fixed later.")

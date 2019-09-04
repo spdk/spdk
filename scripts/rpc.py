@@ -796,11 +796,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Display current initiator group configuration')
     p.set_defaults(func=get_initiator_groups)
 
-    def get_target_nodes(args):
-        print_dict(rpc.iscsi.get_target_nodes(args.client))
+    def iscsi_get_target_nodes(args):
+        print_dict(rpc.iscsi.iscsi_get_target_nodes(args.client))
 
-    p = subparsers.add_parser('get_target_nodes', help='Display target nodes')
-    p.set_defaults(func=get_target_nodes)
+    p = subparsers.add_parser('iscsi_get_target_nodes', aliases=['get_target_nodes'],
+                              help='Display target nodes')
+    p.set_defaults(func=iscsi_get_target_nodes)
 
     def construct_target_node(args):
         luns = []

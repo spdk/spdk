@@ -264,7 +264,7 @@ Example response:
     "delete_pg_ig_maps",
     "add_pg_ig_maps",
     "construct_target_node",
-    "get_target_nodes",
+    "iscsi_get_target_nodes",
     "delete_initiator_group",
     "delete_initiators_from_initiator_group",
     "add_initiators_to_initiator_group",
@@ -3090,7 +3090,7 @@ response:
 }
 ~~~
 
-## get_target_nodes method {#rpc_get_target_nodes}
+## iscsi_get_target_nodes method {#rpc_iscsi_get_target_nodes}
 
 Show information about all available iSCSI target nodes.
 
@@ -3123,7 +3123,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_target_nodes",
+  "method": "iscsi_get_target_nodes",
   "id": 1
 }
 ~~~

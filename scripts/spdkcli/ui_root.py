@@ -377,9 +377,9 @@ class UIRoot(UINode):
 
     @verbose
     @is_method_available
-    def get_target_nodes(self):
+    def iscsi_get_target_nodes(self):
         if self.is_init:
-            for tg in rpc.iscsi.get_target_nodes(self.client):
+            for tg in rpc.iscsi.iscsi_get_target_nodes(self.client):
                 yield tg
 
     @verbose

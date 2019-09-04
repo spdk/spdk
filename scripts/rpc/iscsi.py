@@ -1,3 +1,4 @@
+from .helpers import deprecated_alias
 
 
 def set_iscsi_options(
@@ -141,13 +142,14 @@ def get_initiator_groups(client):
     return client.call('get_initiator_groups')
 
 
-def get_target_nodes(client):
+@deprecated_alias('get_target_nodes')
+def iscsi_get_target_nodes(client):
     """Display target nodes.
 
     Returns:
         List of ISCSI target node objects.
     """
-    return client.call('get_target_nodes')
+    return client.call('iscsi_get_target_nodes')
 
 
 def construct_target_node(
