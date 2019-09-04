@@ -52,7 +52,7 @@
 
 struct spdk_ftl_dev;
 struct ftl_band;
-struct ftl_chunk;
+struct ftl_zone;
 struct ftl_io;
 struct ftl_restore;
 struct ftl_wptr;
@@ -484,7 +484,7 @@ ftl_dev_num_bands(const struct spdk_ftl_dev *dev)
 }
 
 static inline size_t
-ftl_dev_lbks_in_chunk(const struct spdk_ftl_dev *dev)
+ftl_dev_lbks_in_zone(const struct spdk_ftl_dev *dev)
 {
 	return dev->geo.clba;
 }
@@ -498,7 +498,7 @@ ftl_dev_num_punits(const struct spdk_ftl_dev *dev)
 static inline uint64_t
 ftl_num_band_lbks(const struct spdk_ftl_dev *dev)
 {
-	return ftl_dev_num_punits(dev) * ftl_dev_lbks_in_chunk(dev);
+	return ftl_dev_num_punits(dev) * ftl_dev_lbks_in_zone(dev);
 }
 
 static inline size_t
