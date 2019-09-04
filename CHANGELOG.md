@@ -116,6 +116,12 @@ Added optional parameters '--dif-type' and '--dif-is-head-of-md' to 'construct_n
 RPC method.
 
 The `--clear-method` option was removed from RPC `bdev_lvol_create`.
+TODO: add new parm on delete RPC
+
+### blob
+
+`spdk_bs_delete_blob_ext` was added to allow users to specify the open options used when
+deleting a blob.
 
 ## v19.07:
 
