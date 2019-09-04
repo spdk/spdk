@@ -16,6 +16,24 @@
       "revId": "858539b7cff2747d6b551c2bb30528778488d157",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "810e139c_b3d517ad",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-04T16:14:09Z",
+      "side": 1,
+      "message": "Not necessarily. These values both happen to be 2MB, but this value is for the send buffer size, not the receive buffer size. They don\u0027t necessarily have anything to do with one another.",
+      "parentUuid": "aac07acb_fde18342",
+      "revId": "858539b7cff2747d6b551c2bb30528778488d157",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
