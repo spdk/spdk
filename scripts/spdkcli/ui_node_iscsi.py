@@ -62,7 +62,7 @@ class UIISCSIDevices(UINode):
 
     def refresh(self):
         self._children = set([])
-        self.target_nodes = list(self.get_root().get_target_nodes())
+        self.target_nodes = list(self.get_root().iscsi_get_target_nodes())
         self.scsi_devices = list(self.get_root().get_scsi_devices())
         for device in self.scsi_devices:
             for node in self.target_nodes:
