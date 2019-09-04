@@ -41,6 +41,7 @@
 #include "spdk/ftl.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
+#include "spdk/bdev_zone.h"
 
 #include "ftl_core.h"
 #include "ftl_anm.h"
@@ -260,26 +261,26 @@ ftl_retrieve_punit_chunk_info(struct spdk_ftl_dev *dev, const struct ftl_punit *
 }
 
 static unsigned char
-ftl_get_chunk_state(const struct spdk_ocssd_chunk_information_entry *info)
+ftl_get_zone_state(const struct spdk_ocssd_chunk_information_entry *info)
 {
 	if (info->cs.free) {
-		return FTL_CHUNK_STATE_FREE;
+		return SPDK_BDEV_ZONE_STATE_EMPTY;
 	}
 
 	if (info->cs.open) {
-		return FTL_CHUNK_STATE_OPEN;
+		return SPDK_BDEV_ZONE_STATE_OPEN;
 	}
 
 	if (info->cs.closed) {
-		return FTL_CHUNK_STATE_CLOSED;
+		return SPDK_BDEV_ZONE_STATE_CLOSED;
 	}
 
 	if (info->cs.offline) {
-		return FTL_CHUNK_STATE_BAD;
+		return SPDK_BDEV_ZONE_STATE_OFFLINE;
 	}
 
 	assert(0 && "Invalid block state");
-	return FTL_CHUNK_STATE_BAD;
+	return SPDK_BDEV_ZONE_STATE_OFFLINE;
 }
 
 static void
@@ -290,7 +291,7 @@ ftl_remove_empty_bands(struct spdk_ftl_dev *dev)
 	/* Remove band from shut_bands list to prevent further processing */
 	/* if all blocks on this band are bad */
 	LIST_FOREACH_SAFE(band, &dev->shut_bands, list_entry, temp_band) {
-		if (!band->num_chunks) {
+		if (!band->num_zones) {
 			dev->num_bands--;
 			LIST_REMOVE(band, list_entry);
 		}
@@ -303,7 +304,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 	struct spdk_ocssd_chunk_information_entry	*info;
 	struct ftl_band					*band, *pband;
 	struct ftl_punit				*punit;
-	struct ftl_chunk				*chunk;
+	struct ftl_zone					*zone;
 	unsigned int					i, j;
 	char						buf[128];
 	int						rc = 0;
@@ -336,9 +337,9 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 		}
 		pband = band;
 
-		CIRCLEQ_INIT(&band->chunks);
-		band->chunk_buf = calloc(ftl_dev_num_punits(dev), sizeof(*band->chunk_buf));
-		if (!band->chunk_buf) {
+		CIRCLEQ_INIT(&band->zones);
+		band->zone_buf = calloc(ftl_dev_num_punits(dev), sizeof(*band->zone_buf));
+		if (!band->zone_buf) {
 			SPDK_ERRLOG("Failed to allocate block state table for band: [%u]\n", i);
 			rc = -1;
 			goto out;
@@ -370,17 +371,17 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 
 		for (j = 0; j < ftl_dev_num_bands(dev); ++j) {
 			band = &dev->bands[j];
-			chunk = &band->chunk_buf[i];
-			chunk->pos = i;
-			chunk->state = ftl_get_chunk_state(&info[j]);
-			chunk->punit = punit;
-			chunk->start_ppa = punit->start_ppa;
-			chunk->start_ppa.chk = band->id;
-			chunk->write_offset = ftl_dev_lbks_in_chunk(dev);
+			zone = &band->zone_buf[i];
+			zone->pos = i;
+			zone->state = ftl_get_zone_state(&info[j]);
+			zone->punit = punit;
+			zone->start_ppa = punit->start_ppa;
+			zone->start_ppa.chk = band->id;
+			zone->write_offset = ftl_dev_lbks_in_zone(dev);
 
-			if (chunk->state != FTL_CHUNK_STATE_BAD) {
-				band->num_chunks++;
-				CIRCLEQ_INSERT_TAIL(&band->chunks, chunk, circleq);
+			if (zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
+				band->num_zones++;
+				CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
 			}
 		}
 	}
@@ -694,7 +695,7 @@ ftl_init_num_free_bands(struct spdk_ftl_dev *dev)
 	int cnt = 0;
 
 	LIST_FOREACH(band, &dev->shut_bands, list_entry) {
-		if (band->num_chunks && !band->lba_map.num_vld) {
+		if (band->num_zones && !band->lba_map.num_vld) {
 			cnt++;
 		}
 	}
@@ -1247,7 +1248,7 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 
 	if (dev->bands) {
 		for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
-			free(dev->bands[i].chunk_buf);
+			free(dev->bands[i].zone_buf);
 			spdk_bit_array_free(&dev->bands[i].lba_map.vld);
 			spdk_bit_array_free(&dev->bands[i].reloc_bitmap);
 		}
