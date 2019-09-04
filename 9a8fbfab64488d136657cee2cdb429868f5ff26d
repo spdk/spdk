@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d62cee4_33234d8d",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-04T08:19:19Z",
+      "side": 1,
+      "message": "help does not take arguments, \":\" is redundant, and in case you call gen_ftl.sh -h -\u003e results in exit 1, because you didn\u0027t specify an arugment",
+      "range": {
+        "startLine": 50,
+        "startChar": 28,
+        "endLine": 50,
+        "endChar": 30
+      },
+      "revId": "9a8fbfab64488d136657cee2cdb429868f5ff26d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
