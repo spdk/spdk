@@ -347,7 +347,7 @@ function json_config_test_init()
 	# Load nvme configuration. The load_config will issue start_subsystem_init automatically
 	(
 		echo '{"subsystems": [';
-		$rootdir/scripts/gen_nvme.sh --json
+		$rootdir/scripts/gen_nvme.sh --json | jq -r "del(.config[] | select(.params.name!=\"Nvme0\"))"
 		echo ']}'
 	) | tgt_rpc load_config
 
