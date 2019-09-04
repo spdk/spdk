@@ -148,15 +148,18 @@ def bdev_lvol_set_read_only(client, name):
 
 
 @deprecated_alias('destroy_lvol_bdev')
-def bdev_lvol_delete(client, name):
+def bdev_lvol_delete(client, name, clear_method=None):
     """Destroy a logical volume.
 
     Args:
         name: name of logical volume to destroy
+        clear_method: Change clear method for data region. Available: none, unmap, write_zeroes (optional)
     """
     params = {
         'name': name,
     }
+    if clear_method:
+        params['clear_method'] = clear_method
     return client.call('bdev_lvol_delete', params)
 
 

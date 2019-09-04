@@ -915,16 +915,19 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_set_read_only, set_read_only_lvol_b
 
 struct rpc_bdev_lvol_delete {
 	char *name;
+	char *clear_method;
 };
 
 static void
 free_rpc_bdev_lvol_delete(struct rpc_bdev_lvol_delete *req)
 {
 	free(req->name);
+	free(req->clear_method);
 }
 
 static const struct spdk_json_object_decoder rpc_bdev_lvol_delete_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_lvol_delete, name), spdk_json_decode_string},
+	{"clear_method", offsetof(struct rpc_bdev_lvol_delete, clear_method), spdk_json_decode_string, true},
 };
 
 static void
@@ -975,6 +978,21 @@ spdk_rpc_bdev_lvol_delete(struct spdk_jsonrpc_request *request,
 	if (lvol == NULL) {
 		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 		goto cleanup;
+	}
+
+	if (req.clear_method != NULL) {
+		if (!strcasecmp(req.clear_method, "none")) {
+			lvol->clear_method = BLOB_CLEAR_WITH_NONE;
+		} else if (!strcasecmp(req.clear_method, "unmap")) {
+			lvol->clear_method = BLOB_CLEAR_WITH_UNMAP;
+		} else if (!strcasecmp(req.clear_method, "write_zeroes")) {
+			lvol->clear_method = BLOB_CLEAR_WITH_WRITE_ZEROES;
+		} else {
+			spdk_jsonrpc_send_error_response(request, -EINVAL, "Invalid clear_method parameter");
+			goto cleanup;
+		}
+	} else {
+		lvol->clear_method = BLOB_CLEAR_WITH_UNMAP;
 	}
 
 	vbdev_lvol_destroy(lvol, _spdk_rpc_bdev_lvol_delete_cb, request);
