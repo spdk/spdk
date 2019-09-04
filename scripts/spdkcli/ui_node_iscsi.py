@@ -439,7 +439,7 @@ class UIInitiatorGroups(UINode):
             initiators = initiators.split(" ")
         if netmasks:
             netmasks = netmasks.split(" ")
-        self.get_root().delete_initiators_from_initiator_group(
+        self.get_root().iscsi_initiator_group_remove_initiators(
             tag=tag, initiators=initiators,
             netmasks=netmasks)
 

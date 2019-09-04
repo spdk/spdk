@@ -266,7 +266,7 @@ Example response:
     "iscsi_create_target_node",
     "iscsi_get_target_nodes",
     "delete_initiator_group",
-    "delete_initiators_from_initiator_group",
+    "iscsi_initiator_group_remove_initiators",
     "iscsi_initiator_group_add_initiators",
     "add_initiator_group",
     "get_initiator_groups",

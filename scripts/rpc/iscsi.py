@@ -415,7 +415,8 @@ def iscsi_initiator_group_add_initiators(
     return client.call('iscsi_initiator_group_add_initiators', params)
 
 
-def delete_initiators_from_initiator_group(
+@deprecated_alias('delete_initiators_from_initiator_group')
+def iscsi_initiator_group_remove_initiators(
         client, tag, initiators=None, netmasks=None):
     """Delete initiators from an existing initiator group.
 
@@ -433,7 +434,7 @@ def delete_initiators_from_initiator_group(
         params['initiators'] = initiators
     if netmasks:
         params['netmasks'] = netmasks
-    return client.call('delete_initiators_from_initiator_group', params)
+    return client.call('iscsi_initiator_group_remove_initiators', params)
 
 
 def delete_target_node(client, target_node_name):

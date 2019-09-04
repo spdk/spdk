@@ -217,7 +217,7 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_initiator_group_add_initiators,
 				   add_initiators_to_initiator_group)
 
 static void
-spdk_rpc_delete_initiators_from_initiator_group(struct spdk_jsonrpc_request *request,
+spdk_rpc_iscsi_initiator_group_remove_initiators(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
 	struct rpc_initiator_group req = {};
@@ -249,8 +249,10 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_initiator_group(&req);
 }
-SPDK_RPC_REGISTER("delete_initiators_from_initiator_group",
-		  spdk_rpc_delete_initiators_from_initiator_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_initiator_group_remove_initiators",
+		  spdk_rpc_iscsi_initiator_group_remove_initiators, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_initiator_group_remove_initiators,
+				   delete_initiators_from_initiator_group)
 
 struct rpc_delete_initiator_group {
 	int32_t tag;
