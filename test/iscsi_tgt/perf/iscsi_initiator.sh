@@ -22,7 +22,7 @@ iscsiadm -m discovery -t sendtargets -p $IP_T:$ISCSI_PORT
 iscsiadm -m node --login -p $IP_T:$ISCSI_PORT
 waitforiscsidevices 1
 
-disks=($(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}'))
+mapfile -t disks < <(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 for (( i=0; i < ${#disks[@]}; i++ ))
 do
 	filename+=$(printf /dev/%s: "${disks[i]}")

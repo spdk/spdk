@@ -27,8 +27,8 @@ function replace_defined_variables() {
 		fi
 	done
 	for dep in "${bad_values[@]}"; do
-		dep_def_arr=($(cat $libdeps_file | grep -v "#" | grep "${dep}" | cut -d "=" -f 2 | xargs))
-		new_values=($(replace_defined_variables "${dep_def_arr[@]}"))
+		mapfile -t dep_def_arr < <(cat $libdeps_file | grep -v "#" | grep "${dep}" | cut -d "=" -f 2 | xargs)
+		mapfile -t new_values < <(replace_defined_variables "${dep_def_arr[@]}")
 		good_values=( "${good_values[@]}" "${new_values[@]}" )
 	done
 	echo ${good_values[*]}
@@ -42,8 +42,8 @@ function confirm_deps() {
 
 	#keep the space here to differentiate bdev and bdev_*
 	lib_shortname=$(basename $lib | sed 's,libspdk_,,g' | sed 's,\.so, ,g')
-	lib_make_deps=($(cat $libdeps_file | grep "DEPDIRS-${lib_shortname}" | cut -d "=" -f 2 | xargs))
-	lib_make_deps=($(replace_defined_variables "${lib_make_deps[@]}"))
+	mapfile -t lib_make_deps < <(cat $libdeps_file | grep "DEPDIRS-${lib_shortname}" | cut -d "=" -f 2 | xargs)
+	mapfile -t lib_make_deps < <(replace_defined_variables "${lib_make_deps[@]}")
 
 	for ign_dep in "${IGNORED_LIBS[@]}"; do
 		for i in "${!lib_make_deps[@]}"; do
@@ -73,9 +73,9 @@ function confirm_deps() {
 	done
 	IFS=$'\n'
 	# Ignore any event_* dependencies. Those are based on the subsystem configuration and not readelf.
-	lib_make_deps=( $(printf "%s\n" ${lib_make_deps[@]} | sort | grep -v "event_") )
+	mapfile -t lib_make_deps < <(printf "%s\n" ${lib_make_deps[@]} | sort | grep -v "event_")
 	# Ignore the env_dpdk readelf dependency. We don't want people explicitly linking against it.
-	dep_names=( $(printf "%s\n" ${dep_names[@]} | sort | uniq | grep -v "env_dpdk") )
+	mapfile -t dep_names < <(printf "%s\n" ${dep_names[@]} | sort | uniq | grep -v "env_dpdk")
 	unset IFS
 	diff=$(echo ${dep_names[@]} ${lib_make_deps[@]} | tr ' ' '\n' | sort | uniq -u)
 	if [ "$diff" != "" ]; then
