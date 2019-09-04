@@ -116,9 +116,9 @@ ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 	struct spdk_ftl_dev *dev = band->dev;
 	uint64_t punit;
 
-	punit = lbkoff / ftl_dev_lbks_in_chunk(dev) + dev->range.begin;
+	punit = lbkoff / ftl_dev_lbks_in_zone(dev) + dev->range.begin;
 
-	ppa.lbk = lbkoff % ftl_dev_lbks_in_chunk(dev);
+	ppa.lbk = lbkoff % ftl_dev_lbks_in_zone(dev);
 	ppa.chk = band->id;
 	ppa.pu = punit / dev->geo.num_grp;
 	ppa.grp = punit % dev->geo.num_grp;
@@ -275,7 +275,7 @@ test_reloc_iter_full(void)
 	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_num_band_lbks(dev));
 
 	num_iters = ftl_dev_num_punits(dev) *
-		    (ftl_dev_lbks_in_chunk(dev) / reloc->xfer_size);
+		    (ftl_dev_lbks_in_zone(dev) / reloc->xfer_size);
 
 	for (i = 0; i < num_iters; i++) {
 		num_lbks = ftl_reloc_next_lbks(breloc, &ppa);
@@ -285,10 +285,10 @@ test_reloc_iter_full(void)
 	num_iters = ftl_dev_num_punits(dev);
 
 	/* ftl_reloc_next_lbks is searching for maximum xfer_size */
-	/* contiguous valid logic blocks in chunk, so we can end up */
-	/* with some reminder if number of logical blocks in chunk */
+	/* contiguous valid logic blocks in zone, so we can end up */
+	/* with some reminder if number of logical blocks in zone */
 	/* is not divisible by xfer_size */
-	reminder = ftl_dev_lbks_in_chunk(dev) % reloc->xfer_size;
+	reminder = ftl_dev_lbks_in_zone(dev) % reloc->xfer_size;
 	for (i = 0; i < num_iters; i++) {
 		num_lbks = ftl_reloc_next_lbks(breloc, &ppa);
 		CU_ASSERT_EQUAL(reminder, num_lbks);
@@ -401,7 +401,7 @@ test_reloc_scatter_band(void)
 }
 
 static void
-test_reloc_chunk(void)
+test_reloc_zone(void)
 {
 	struct spdk_ftl_dev *dev;
 	struct ftl_reloc *reloc;
@@ -417,24 +417,24 @@ test_reloc_chunk(void)
 	band->high_prio = 1;
 	ftl_band_alloc_lba_map(band);
 	num_io = MAX_RELOC_QDEPTH * reloc->xfer_size;
-	num_iters = ftl_dev_lbks_in_chunk(dev) / num_io;
+	num_iters = ftl_dev_lbks_in_zone(dev) / num_io;
 
 	set_band_valid_map(band, 0, ftl_num_band_lbks(dev));
 
-	ftl_reloc_add(reloc, band, ftl_dev_lbks_in_chunk(dev) * 3,
-		      ftl_dev_lbks_in_chunk(dev), 1, false);
+	ftl_reloc_add(reloc, band, ftl_dev_lbks_in_zone(dev) * 3,
+		      ftl_dev_lbks_in_zone(dev), 1, false);
 	ftl_reloc_add_active_queue(breloc);
 
-	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_dev_lbks_in_chunk(dev));
+	CU_ASSERT_EQUAL(breloc->num_lbks, ftl_dev_lbks_in_zone(dev));
 
 	for (i = 1; i <= num_iters ; ++i) {
 		single_reloc_move(breloc);
-		num_lbk = ftl_dev_lbks_in_chunk(dev) - (i * num_io);
+		num_lbk = ftl_dev_lbks_in_zone(dev) - (i * num_io);
 
 		CU_ASSERT_EQUAL(breloc->num_lbks, num_lbk);
 	}
 
-	/* In case num_lbks_in_chunk % num_io != 0 one extra iteration is needed  */
+	/* In case num_lbks_in_zone % num_io != 0 one extra iteration is needed  */
 	single_reloc_move(breloc);
 	/*  Drain move queue */
 	ftl_reloc_process_moves(breloc);
@@ -504,8 +504,8 @@ main(int argc, char **argv)
 			       test_reloc_full_band) == NULL
 		|| CU_add_test(suite, "test_reloc_scatter_band",
 			       test_reloc_scatter_band) == NULL
-		|| CU_add_test(suite, "test_reloc_chunk",
-			       test_reloc_chunk) == NULL
+		|| CU_add_test(suite, "test_reloc_zone",
+			       test_reloc_zone) == NULL
 		|| CU_add_test(suite, "test_reloc_single_lbk",
 			       test_reloc_single_lbk) == NULL
 	) {
