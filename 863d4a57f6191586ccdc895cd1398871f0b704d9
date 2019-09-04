@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa9b43a5_a71b95b5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1515,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-04T17:32:08Z",
+      "side": 1,
+      "message": "I am not sure how this works in the nvmf_hooks case, but at least in the generic case, we should be getting back the same value for lkey each iteration through as long as we are working with the same buffer. It would probably be a time saver (especially on 512B blocks and/or when I/O unit size is set to something large than 4k) to cache this value for each data buffer and reuse it instead of making up to 16 function calls per buffer.",
+      "revId": "863d4a57f6191586ccdc895cd1398871f0b704d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fbb54ab_5923b3d0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1536,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-04T17:32:08Z",
+      "side": 1,
+      "message": "I think a comment here would be good. Just say any metadata bytes that don\u0027t fit will be included in the next buffer.",
+      "revId": "863d4a57f6191586ccdc895cd1398871f0b704d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c14a6135_c8436761",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-04T17:32:08Z",
+      "side": 1,
+      "message": "This comment is a bit confusing to me.\nIt looks like what you are doing is increasing offset until you reach the end of the buffer, then subtracting the size of the buffer when you reach the end, and any leftover metadata bytes will be included in the offset of the next buffer. Maybe something like - \"By subtracting the size of the last IOV from the offset, we ensure that we skip the remaining metadata bits at the beginning of the next buffer\".",
+      "revId": "863d4a57f6191586ccdc895cd1398871f0b704d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fe71913_7458ef16",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1549,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-04T17:32:08Z",
+      "side": 1,
+      "message": "It seems like you could figure this out preemptively before doing all of the work\n\nIt seems to me that if length is \u003e than dif_ctx-\u003eblock_size * 16 then you will know that the request is too long. Is there another question that you can\u0027t answer before you actually do the calculations? I am just thinking you could preempt a lot of work by doing the math quickly before hand but I could be missing something.",
+      "revId": "863d4a57f6191586ccdc895cd1398871f0b704d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
