@@ -107,17 +107,17 @@ ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
 			continue;
 		}
 
-		if (!dev->bands[i].num_chunks) {
-			ftl_debug(" Band %3zu: all chunks are offline\n", i + 1);
+		if (!dev->bands[i].num_zones) {
+			ftl_debug(" Band %3zu: all zones are offline\n", i + 1);
 			continue;
 		}
 
 		total += dev->bands[i].lba_map.num_vld;
-		ftl_debug(" Band %3zu: %8zu / %zu \tnum_chunks: %zu \twr_cnt: %"PRIu64"\tmerit:"
+		ftl_debug(" Band %3zu: %8zu / %zu \tnum_zones: %zu \twr_cnt: %"PRIu64"\tmerit:"
 			  "%10.3f\tstate: %s\n",
 			  i + 1, dev->bands[i].lba_map.num_vld,
 			  ftl_band_user_lbks(&dev->bands[i]),
-			  dev->bands[i].num_chunks,
+			  dev->bands[i].num_zones,
 			  dev->bands[i].wr_cnt,
 			  dev->bands[i].merit,
 			  ftl_band_state_str[dev->bands[i].state]);

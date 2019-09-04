@@ -137,7 +137,7 @@ ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 		break;
 	case FTL_ANM_RANGE_CHK:
 	case FTL_ANM_RANGE_PU:
-		event->num_lbks = ftl_dev_lbks_in_chunk(dev);
+		event->num_lbks = ftl_dev_lbks_in_zone(dev);
 		break;
 	default:
 		assert(false);
@@ -160,9 +160,9 @@ ftl_anm_process_log(struct ftl_anm_poller *poller,
 	num_bands = range != FTL_ANM_RANGE_PU ? 1 : ftl_dev_num_bands(dev);
 
 	for (i = 0; i < num_bands; ++i) {
-		struct ftl_chunk *chk = ftl_band_chunk_from_ppa(&dev->bands[i], ppa);
+		struct ftl_zone *zone = ftl_band_zone_from_ppa(&dev->bands[i], ppa);
 
-		if (chk->state == FTL_CHUNK_STATE_BAD) {
+		if (zone->state == SPDK_BDEV_ZONE_STATE_OFFLINE) {
 			continue;
 		}
 
