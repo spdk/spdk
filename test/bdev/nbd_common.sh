@@ -110,8 +110,8 @@ function nbd_rpc_start_stop_verify() {
 
 	nbd_start_disks_without_nbd_idx $rpc_server "${bdev_list[*]}"
 
-	nbd_disks_json=$($rootdir/scripts/rpc.py -s $rpc_server nbd_get_disks)
-	nbd_disks_name=($(echo "${nbd_disks_json}" | jq -r '.[] | .nbd_device'))
+	mapfile -t nbd_disks_json < <($rootdir/scripts/rpc.py -s $rpc_server nbd_get_disks)
+	mapfile -t nbd_disks_name < <(echo "${nbd_disks_json}" | jq -r '.[] | .nbd_device')
 	nbd_stop_disks $rpc_server "${nbd_disks_name[*]}"
 
 	count=$(nbd_get_count $rpc_server)

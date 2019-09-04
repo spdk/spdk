@@ -122,8 +122,9 @@ function create_fio_config(){
 	local total_disks=${#disks[@]}
 	local no_cores=${#cores[@]}
 	local filename=""
+	local cores_numa
 
-	local cores_numa=($(get_cores_numa_node "$5"))
+	mapfile -t cores_numa < <(get_cores_numa_node "$5")
 	local disks_per_core=$(($disk_no/$no_cores))
 	local disks_per_core_mod=$(($disk_no%$no_cores))
 
@@ -363,7 +364,7 @@ if [[ $PLUGIN == "bdev" ]] || [[ $PLUGIN == "bdevperf" ]]; then
 	$ROOT_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev.conf
 fi
 
-disks=($(get_disks $PLUGIN))
+mapfile -t disks < <(get_disks $PLUGIN)
 if [[ $DISKNO == "ALL" ]] || [[ $DISKNO == "all" ]]; then
 	DISKNO=${#disks[@]}
 elif [[ $DISKNO -gt ${#disks[@]} ]] || [[ ! $DISKNO =~ ^[0-9]+$ ]]; then
