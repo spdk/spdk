@@ -1465,40 +1465,35 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 		       uint32_t length)
 {
 	uint64_t	translation_len;
-	uint32_t	remaining_length = length;
-	uint32_t	iovcnt;
-	uint32_t	i = 0;
 
-
-	while (remaining_length) {
-		iovcnt = req->iovcnt;
-		req->iov[iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[iovcnt] +
-						     NVMF_DATA_BUFFER_MASK) &
-						     ~NVMF_DATA_BUFFER_MASK);
-		req->iov[iovcnt].iov_len  = spdk_min(remaining_length,
-						     rtransport->transport.opts.io_unit_size);
-		req->iovcnt++;
-		wr->sg_list[i].addr = (uintptr_t)(req->iov[iovcnt].iov_base);
-		wr->sg_list[i].length = req->iov[iovcnt].iov_len;
-		translation_len = req->iov[iovcnt].iov_len;
+	wr->num_sge = 0;
+	while (length) {
+		req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(req->buffers[req->iovcnt] +
+						 NVMF_DATA_BUFFER_MASK) &
+						 ~NVMF_DATA_BUFFER_MASK);
+		req->iov[req->iovcnt].iov_len  = spdk_min(length,
+						 rtransport->transport.opts.io_unit_size);
+		translation_len = req->iov[req->iovcnt].iov_len;
 
 		if (!g_nvmf_hooks.get_rkey) {
-			wr->sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-					       (uint64_t)req->iov[iovcnt].iov_base, &translation_len))->lkey;
+			wr->sg_list[wr->num_sge].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+							 (uint64_t)req->iov[req->iovcnt].iov_base, &translation_len))->lkey;
 		} else {
-			wr->sg_list[i].lkey = spdk_mem_map_translate(device->map,
-					      (uint64_t)req->iov[iovcnt].iov_base, &translation_len);
+			wr->sg_list[wr->num_sge].lkey = spdk_mem_map_translate(device->map,
+							(uint64_t)req->iov[req->iovcnt].iov_base, &translation_len);
 		}
 
-		remaining_length -= req->iov[iovcnt].iov_len;
-
-		if (translation_len < req->iov[iovcnt].iov_len) {
+		if (translation_len < req->iov[req->iovcnt].iov_len) {
 			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
 			return -EINVAL;
 		}
-		i++;
+
+		length -= req->iov[req->iovcnt].iov_len;
+		wr->sg_list[wr->num_sge].addr = (uintptr_t)(req->iov[req->iovcnt].iov_base);
+		wr->sg_list[wr->num_sge].length = req->iov[req->iovcnt].iov_len;
+		req->iovcnt++;
+		wr->num_sge++;
 	}
-	wr->num_sge = i;
 
 	return 0;
 }
