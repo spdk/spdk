@@ -468,6 +468,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 static void
 bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	//SPDK_NOTICELOG("%d\n", bdev_io->type);
+	//if (bdev_io->type == 3 || bdev_io->type == 9) raise(SIGINT);
 	int rc = _bdev_nvme_submit_request(ch, bdev_io);
 
 	if (spdk_unlikely(rc != 0)) {
@@ -1873,7 +1875,7 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 	uint64_t num_ranges_u64;
 	uint16_t num_ranges;
 	int rc;
-
+	SPDK_NOTICELOG("offset %lu blocks %lu\n", offset_blocks, num_blocks);
 	num_ranges_u64 = (num_blocks + SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS - 1) /
 			 SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS;
 	if (num_ranges_u64 > SPDK_COUNTOF(dsm_ranges)) {

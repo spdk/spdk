@@ -556,7 +556,7 @@ _spdk_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol store initialized\n");
+	SPDK_NOTICELOG( "Lvol store initialized, now create super blob\n");
 
 	/* create super blob */
 	spdk_bs_create_blob(lvs->blobstore, _spdk_super_blob_create_cb, lvs_req);
@@ -642,7 +642,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Initializing lvol store\n");
+	SPDK_NOTICELOG("Initializing lvol store\n");
 	spdk_bs_init(bs_dev, &opts, _spdk_lvs_init_cb, lvs_req);
 
 	return 0;
@@ -837,7 +837,7 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 {
 	struct spdk_lvs_destroy_req *lvs_req;
 	struct spdk_lvol *iter_lvol, *tmp;
-
+	SPDK_NOTICELOG("\n");
 	if (lvs == NULL) {
 		SPDK_ERRLOG("Lvol store is NULL\n");
 		return -ENODEV;
@@ -1383,8 +1383,9 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
 	bs = lvol->lvol_store->blobstore;
+	SPDK_NOTICELOG("Because of this patch, calling spdk_bs_delete_blob_ext() with clear_method %d\n", lvol->clear_method);
 
-	spdk_bs_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
+	spdk_bs_delete_blob_ext(bs, lvol->blob_id, lvol->clear_method, _spdk_lvol_delete_blob_cb, req);
 }
 
 void
