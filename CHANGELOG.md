@@ -143,6 +143,13 @@ Added `blobfs_create` RPC method to build blobfs on given bdev.
 
 The `--clear-method` option was removed from RPC `bdev_lvol_create`.
 
+The `--clear-method` option was added to the RPC `bdev_lvol_delete`.
+
+### blob
+
+`spdk_bs_delete_blob_ext` was added to allow users to specify the open options used when
+deleting a blob.
+
 ## v19.07:
 
 ### ftl
