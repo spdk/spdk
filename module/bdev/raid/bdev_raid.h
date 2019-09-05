@@ -81,6 +81,24 @@ struct raid_base_bdev_info {
 };
 
 /*
+ * raid_bdev_io is the context part of bdev_io. It contains the information
+ * related to bdev_io for a raid bdev
+ */
+struct raid_bdev_io {
+	/* WaitQ entry, used only in waitq logic */
+	struct spdk_bdev_io_wait_entry	waitq_entry;
+
+	/* Original channel for this IO, used in queuing logic */
+	struct spdk_io_channel		*ch;
+
+	/* Used for tracking progress on io requests sent to member disks. */
+	uint8_t				base_bdev_io_submitted;
+	uint8_t				base_bdev_io_completed;
+	uint8_t				base_bdev_io_expected;
+	uint8_t				base_bdev_io_status;
+};
+
+/*
  * raid_bdev is the single entity structure which contains SPDK block device
  * and the information related to any raid bdev either configured or
  * in configuring list. io device is created on this.
@@ -130,24 +148,6 @@ struct raid_bdev {
 
 	/* Set to true if destroy of this raid bdev is started. */
 	bool				destroy_started;
-};
-
-/*
- * raid_bdev_io is the context part of bdev_io. It contains the information
- * related to bdev_io for a raid bdev
- */
-struct raid_bdev_io {
-	/* WaitQ entry, used only in waitq logic */
-	struct spdk_bdev_io_wait_entry	waitq_entry;
-
-	/* Original channel for this IO, used in queuing logic */
-	struct spdk_io_channel		*ch;
-
-	/* Used for tracking progress on io requests sent to member disks. */
-	uint8_t				base_bdev_io_submitted;
-	uint8_t				base_bdev_io_completed;
-	uint8_t				base_bdev_io_expected;
-	uint8_t				base_bdev_io_status;
 };
 
 /*
