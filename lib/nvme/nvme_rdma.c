@@ -292,6 +292,74 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 	return rc;
 }
 
+static bool
+nvme_rdma_cm_event_notify(struct rdma_cm_event *event, bool queued)
+{
+	struct nvme_rdma_qpair		*event_qpair;
+	struct nvme_rdma_cm_event_entry	*event_entry;
+	struct nvme_rdma_ctrlr		*rctrlr;
+
+	event_qpair = nvme_rdma_qpair(event->id->context);
+	if (event_qpair->event_ctx.have_event == false) {
+		event_qpair->event_ctx.evt = event;
+		event_qpair->event_ctx.have_event = true;
+		return true;
+	} else if (!queued) {
+		rctrlr = nvme_rdma_ctrlr(event_qpair->qpair.ctrlr);
+		assert(rctrlr != NULL);
+		event_entry = calloc(1, sizeof(*event_entry));
+		/* TODO: avoid memory allocation here. Failing that is not something we can clean up from. */
+		if (event_entry == NULL) {
+			return false;
+		}
+		event_entry->evt = event;
+		STAILQ_INSERT_TAIL(&rctrlr->pending_cm_events, event_entry, link);
+		return true;
+	}
+	return false;
+}
+
+static void
+nvme_rdma_ctrlr_flush_events(struct nvme_rdma_ctrlr *rctrlr)
+{
+	struct nvme_rdma_cm_event_entry	*entry, *tmp;
+
+	STAILQ_FOREACH_SAFE(entry, &rctrlr->pending_cm_events, link, tmp) {
+		if (nvme_rdma_cm_event_notify(entry->evt, true)) {
+			STAILQ_REMOVE(&rctrlr->pending_cm_events, entry, nvme_rdma_cm_event_entry, link);
+			free(entry);
+		}
+	}
+}
+
+static int
+nvme_rdma_poll_events(struct rdma_event_channel *channel)
+{
+	struct rdma_cm_event		*event;
+	struct pollfd			poll_fd;
+	int				rc;
+
+	poll_fd.fd = channel->fd;
+	poll_fd.events = POLLIN;
+
+	rc = poll(&poll_fd, 1, 0);
+
+	if (rc > 0) {
+		rc = rdma_get_cm_event(channel, &event);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to get event from CM event channel. Error %d (%s)\n",
+				    errno, spdk_strerror(errno));
+			return rc;
+		}
+
+		if (!nvme_rdma_cm_event_notify(event, false)) {
+			return -ENOMEM;
+		}
+	}
+
+	return 0;
+}
+
 /*
  * This function must be called under the nvme controller's lock
  * because it touches global controller variables.
@@ -301,44 +369,20 @@ nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 			struct rdma_event_channel *channel,
 			enum rdma_cm_event_type evt)
 {
-	struct nvme_rdma_qpair		*event_qpair;
-	struct nvme_rdma_ctrlr		*rctrlr;
-	struct nvme_rdma_cm_event_entry	*event_entry;
-	struct pollfd			poll_fd;
-	int				rc;
+	int	rc = 0;
 
-	poll_fd.fd = channel->fd;
-	poll_fd.events = POLLIN;
-
-	while (poll(&poll_fd, 1, 0) <= 0) {
-		continue;
+	if (rqpair->event_ctx.have_event) {
+		rc = nvme_rdma_qpair_process_cm_event(rqpair);
+		if (rc) {
+			return rc;
+		}
 	}
 
-	rc = rdma_get_cm_event(channel, &rqpair->event_ctx.evt);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to get event from CM event channel. Error %d (%s)\n",
-			    errno, spdk_strerror(errno));
-		return rc;
-	} else if (&rqpair->qpair != rqpair->event_ctx.evt->id->context) {
-		event_qpair = nvme_rdma_qpair(rqpair->event_ctx.evt->id->context);
-		if (event_qpair->event_ctx.have_event == false) {
-			event_qpair->event_ctx.evt = rqpair->event_ctx.evt;
-			event_qpair->event_ctx.have_event = true;
-		} else {
-			rctrlr = nvme_rdma_ctrlr(event_qpair->qpair.ctrlr);
-			assert(rctrlr != NULL);
-			event_entry = calloc(1, sizeof(*event_entry));
-			/* TODO: avoid memory allocation here. Failing that is not something we can clean up from. */
-			if (event_entry == NULL) {
-				return -ENOMEM;
-			}
-			event_entry->evt = rqpair->event_ctx.evt;
-			STAILQ_INSERT_TAIL(&rctrlr->pending_cm_events, event_entry, link);
-		}
+	while (!rqpair->event_ctx.have_event) {
+		nvme_rdma_poll_events(channel);
+	}
 
-		/* recurse until we either get the event we want or we fail. */
-		return nvme_rdma_process_event(rqpair, channel, evt);
-	} else if (rqpair->event_ctx.evt->event != evt) {
+	if (rqpair->event_ctx.evt->event != evt) {
 		SPDK_ERRLOG("Expected %s but received %s (%d) from CM event channel (status = %d)\n",
 			    nvme_rdma_cm_event_str_get(evt),
 			    nvme_rdma_cm_event_str_get(rqpair->event_ctx.evt->event), rqpair->event_ctx.evt->event,
@@ -1840,11 +1884,19 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	uint32_t			reaped;
 	struct ibv_cq			*cq;
 	struct spdk_nvme_rdma_req	*rdma_req;
+	struct nvme_rdma_ctrlr		*rctrlr;
 
 	if (max_completions == 0) {
 		max_completions = rqpair->num_entries;
 	} else {
 		max_completions = spdk_min(max_completions, rqpair->num_entries);
+	}
+
+	nvme_rdma_qpair_process_cm_event(rqpair);
+	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
+		rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
+		nvme_rdma_ctrlr_flush_events(rctrlr);
+		nvme_rdma_poll_events(rctrlr->cm_channel);
 	}
 
 	cq = rqpair->cq;
