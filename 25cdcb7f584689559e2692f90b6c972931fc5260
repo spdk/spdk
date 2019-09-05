@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b56289ef_3f28c721",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-05T16:10:37Z",
+      "side": 1,
+      "message": "This step failed for me because autoconf is not available. After installing autoconf, everything worked well.",
+      "revId": "25cdcb7f584689559e2692f90b6c972931fc5260",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea801b60_2c6d2fa5",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-05T16:10:37Z",
+      "side": 1,
+      "message": "Maybe just move this line above the pmdk install and that part should be fixed.",
+      "revId": "25cdcb7f584689559e2692f90b6c972931fc5260",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
