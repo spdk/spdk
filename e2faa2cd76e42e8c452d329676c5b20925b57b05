@@ -22,6 +22,30 @@
       "revId": "e2faa2cd76e42e8c452d329676c5b20925b57b05",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a9d4b58_2dd612bc",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-05T07:34:52Z",
+      "side": 1,
+      "message": "Option 2 is more descriptive. I\u0027ll use that.",
+      "parentUuid": "d3e110d1_47fe24d5",
+      "range": {
+        "startLine": 350,
+        "startChar": 40,
+        "endLine": 350,
+        "endChar": 73
+      },
+      "revId": "e2faa2cd76e42e8c452d329676c5b20925b57b05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
