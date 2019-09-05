@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "194c5635_fcd3bfff",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-09-05T10:18:45Z",
+      "side": 1,
+      "message": "We require to run this script as a privileged user (see line 2), so why do we need su here?",
+      "range": {
+        "startLine": 129,
+        "startChar": 1,
+        "endLine": 129,
+        "endChar": 16
+      },
+      "revId": "4fff09704ad3d35d7ecbc28e94989fb3a8e3d545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
