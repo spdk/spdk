@@ -284,7 +284,7 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 /*
  * brief:
- * raid_bdev_submit_rw_request function is used to submit I/O to the correct
+ * raid0_submit_rw_request function is used to submit I/O to the correct
  * member disk
  * params:
  * bdev_io - parent bdev io
@@ -294,7 +294,7 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
  * non zero - failure
  */
 static int
-raid_bdev_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
+raid0_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 {
 	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct raid_bdev_io_channel	*raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
@@ -366,7 +366,7 @@ get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_
 
 /*
  * brief:
- * raid_bdev_io_submit_fail_process function processes the IO which failed to submit.
+ * raid0_io_submit_fail_process function processes the IO which failed to submit.
  * It will try to queue the IOs after storing the context to bdev wait queue logic.
  * params:
  * bdev_io - pointer to bdev_io
@@ -376,8 +376,8 @@ get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_
  * none
  */
 static void
-raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_io *bdev_io,
-				 struct raid_bdev_io *raid_io, int ret)
+raid0_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_io *bdev_io,
+			     struct raid_bdev_io *raid_io, int ret)
 {
 	struct raid_bdev_io_channel	*raid_ch;
 	uint8_t				pd_idx;
@@ -434,7 +434,7 @@ raid_bdev_waitq_io_process(void *ctx)
 
 /*
  * brief:
- * raid_bdev_start_rw_request function is the submit_request function for
+ * raid0_start_rw_request function is the submit_request function for
  * read/write requests
  * params:
  * ch - pointer to raid bdev io channel
@@ -443,7 +443,7 @@ raid_bdev_waitq_io_process(void *ctx)
  * none
  */
 static void
-raid_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct raid_bdev_io		*raid_io;
 	struct raid_bdev		*raid_bdev;
@@ -1567,10 +1567,10 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 
 	switch (raid_bdev->raid_level) {
 	case 0:
-		raid_bdev->read = raid_bdev_start_rw_request;
-		raid_bdev->write = raid_bdev_start_rw_request;
-		raid_bdev->submit = raid_bdev_submit_rw_request;
-		raid_bdev->submit_fail = raid_bdev_io_submit_fail_process;
+		raid_bdev->read = raid0_start_rw_request;
+		raid_bdev->write = raid0_start_rw_request;
+		raid_bdev->submit = raid0_submit_rw_request;
+		raid_bdev->submit_fail = raid0_io_submit_fail_process;
 		break;
 	default:
 		SPDK_ERRLOG("invalid raid level %u\n", raid_bdev->raid_level);
