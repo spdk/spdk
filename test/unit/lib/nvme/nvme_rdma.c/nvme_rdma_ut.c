@@ -44,6 +44,12 @@ DEFINE_STUB(spdk_mem_map_set_translation, int, (struct spdk_mem_map *map, uint64
 DEFINE_STUB(spdk_mem_map_clear_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size), 0);
 
+void
+nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
+{
+	abort();
+}
+
 /* used to mock out having to split an SGL over a memory region */
 uint64_t g_mr_size;
 struct ibv_mr g_nvme_rdma_mr;
