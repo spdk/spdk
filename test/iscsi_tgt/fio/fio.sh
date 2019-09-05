@@ -142,7 +142,7 @@ else
 fi
 
 iscsicleanup
-$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
+$rpc_py iscsi_delete_target_node 'iqn.2016-06.io.spdk:Target3'
 
 delete_tmp_files
 

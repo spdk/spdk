@@ -435,7 +435,8 @@ def delete_initiators_from_initiator_group(
     return client.call('delete_initiators_from_initiator_group', params)
 
 
-def delete_target_node(client, target_node_name):
+@deprecated_alias('delete_target_node')
+def iscsi_delete_target_node(client, target_node_name):
     """Delete a target node.
 
     Args:
@@ -445,7 +446,7 @@ def delete_target_node(client, target_node_name):
         True or False
     """
     params = {'name': target_node_name}
-    return client.call('delete_target_node', params)
+    return client.call('iscsi_delete_target_node', params)
 
 
 def delete_portal_group(client, tag):

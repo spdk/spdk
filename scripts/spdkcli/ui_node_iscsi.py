@@ -71,7 +71,7 @@ class UIISCSIDevices(UINode):
                     UIISCSIDevice(device, node, self)
 
     def delete(self, name):
-        self.get_root().delete_target_node(target_node_name=name)
+        self.get_root().iscsi_delete_target_node(target_node_name=name)
 
     def ui_command_create(self, name, alias_name, bdev_name_id_pairs,
                           pg_ig_mappings, queue_depth, g=None, d=None, r=None,
