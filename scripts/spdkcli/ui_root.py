@@ -387,8 +387,8 @@ class UIRoot(UINode):
         rpc.iscsi.iscsi_create_target_node(self.client, **kwargs)
 
     @verbose
-    def delete_target_node(self, **kwargs):
-        rpc.iscsi.delete_target_node(self.client, **kwargs)
+    def iscsi_delete_target_node(self, **kwargs):
+        rpc.iscsi.iscsi_delete_target_node(self.client, **kwargs)
 
     @verbose
     @is_method_available

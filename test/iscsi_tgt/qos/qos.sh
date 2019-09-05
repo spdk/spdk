@@ -133,7 +133,7 @@ verify_qos_limits $BANDWIDTH_RESULT $READ_BANDWIDTH_LIMIT
 echo "I/O bandwidth limiting tests successful"
 
 iscsicleanup
-$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target1'
+$rpc_py iscsi_delete_target_node 'iqn.2016-06.io.spdk:Target1'
 
 rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
