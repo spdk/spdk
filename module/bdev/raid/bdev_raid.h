@@ -130,6 +130,13 @@ struct raid_bdev {
 
 	/* Set to true if destroy of this raid bdev is started. */
 	bool				destroy_started;
+
+	/* function pointers for RAID operations */
+	void (*read)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+	void (*write)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+	int (*submit)(struct spdk_bdev_io *bdev_io, uint64_t start_strip);
+	void (*submit_fail)(struct raid_bdev *raid_bdev, struct spdk_bdev_io *bdev_io,
+			    struct raid_bdev_io *raid_io, int ret);
 };
 
 /*

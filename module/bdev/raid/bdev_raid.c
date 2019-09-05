@@ -426,9 +426,9 @@ raid_bdev_waitq_io_process(void *ctx)
 	 */
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	ret = raid_bdev_submit_rw_request(bdev_io, start_strip);
+	ret = raid_bdev->submit(bdev_io, start_strip);
 	if (ret != 0) {
-		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
+		raid_bdev->submit_fail(raid_bdev, bdev_io, raid_io, ret);
 	}
 }
 
@@ -463,9 +463,9 @@ raid_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
-	ret = raid_bdev_submit_rw_request(bdev_io, start_strip);
+	ret = raid_bdev->submit(bdev_io, start_strip);
 	if (ret != 0) {
-		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
+		raid_bdev->submit_fail(raid_bdev, bdev_io, raid_io, ret);
 	}
 }
 
@@ -809,12 +809,16 @@ static void
 raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		     bool success)
 {
+	struct raid_bdev		*raid_bdev;
+
+	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	raid_bdev_start_rw_request(ch, bdev_io);
+	raid_bdev->read(ch, bdev_io);
 }
 
 /*
@@ -831,6 +835,10 @@ raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 static void
 raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	struct raid_bdev		*raid_bdev;
+
+	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.bdev.iovs == NULL || bdev_io->u.bdev.iovs[0].iov_base == NULL) {
@@ -842,7 +850,7 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		raid_bdev_start_rw_request(ch, bdev_io);
+		raid_bdev->write(ch, bdev_io);
 		break;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -1560,6 +1568,21 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	raid_bdev->strip_size_kb = raid_cfg->strip_size;
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->config = raid_cfg;
+	raid_bdev->raid_level = raid_cfg->raid_level;
+
+	switch (raid_bdev->raid_level) {
+	case 0:
+		raid_bdev->read = raid_bdev_start_rw_request;
+		raid_bdev->write = raid_bdev_start_rw_request;
+		raid_bdev->submit = raid_bdev_submit_rw_request;
+		raid_bdev->submit_fail = raid_bdev_io_submit_fail_process;
+		break;
+	default:
+		SPDK_ERRLOG("invalid raid level %u\n", raid_bdev->raid_level);
+		free(raid_bdev);
+		return -ENOMEM;
+		break;
+	}
 
 	raid_bdev_gen = &raid_bdev->bdev;
 
