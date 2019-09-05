@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dfe4338_eb3678ba",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 14
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-05T08:01:40Z",
+      "side": 1,
+      "message": "Update commit message with new API",
+      "revId": "fd4e2476419f609942e1abd16821eb6dd9680b06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "380a0c42_0f8fce0c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 14
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-05T08:01:40Z",
+      "side": 1,
+      "message": "Single*",
+      "revId": "fd4e2476419f609942e1abd16821eb6dd9680b06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33f15850_e7d2e3e0",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-05T08:01:40Z",
+      "side": 1,
+      "message": "Update these API changes",
+      "revId": "fd4e2476419f609942e1abd16821eb6dd9680b06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
