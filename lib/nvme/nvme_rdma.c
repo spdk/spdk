@@ -90,6 +90,11 @@ struct nvme_rdma_ctrlr {
 	uint16_t				max_sge;
 };
 
+struct nvme_rdma_qpair_shared_ctx {
+	struct rdma_cm_event	*evt;
+	bool			have_event;
+};
+
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
 struct nvme_rdma_qpair {
 	struct spdk_nvme_qpair			qpair;
@@ -131,6 +136,8 @@ struct nvme_rdma_qpair {
 
 	/* Placed at the end of the struct since it is not used frequently */
 	struct rdma_event_channel		*cm_channel;
+
+	struct nvme_rdma_qpair_shared_ctx	event_ctx;
 };
 
 struct spdk_nvme_rdma_req {
@@ -225,11 +232,63 @@ nvme_rdma_cm_event_str_get(uint32_t event)
 	}
 }
 
-static struct rdma_cm_event *
-nvme_rdma_get_event(struct rdma_event_channel *channel,
-		    enum rdma_cm_event_type evt)
+static int nvme_rdma_connection_established(struct nvme_rdma_qpair *rqpair);
+
+static int
+nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 {
-	struct rdma_cm_event	*event;
+	struct rdma_cm_event *event;
+	int rc = 0;
+
+	if (rqpair->event_ctx.have_event) {
+		event = rqpair->event_ctx.evt;
+		assert(event != NULL);
+
+		switch (rqpair->event_ctx.evt->event) {
+		case RDMA_CM_EVENT_ADDR_RESOLVED:
+		case RDMA_CM_EVENT_ADDR_ERROR:
+		case RDMA_CM_EVENT_ROUTE_RESOLVED:
+		case RDMA_CM_EVENT_ROUTE_ERROR:
+			break;
+		case RDMA_CM_EVENT_CONNECT_REQUEST:
+			break;
+		case RDMA_CM_EVENT_CONNECT_RESPONSE:
+			break;
+		case RDMA_CM_EVENT_CONNECT_ERROR:
+			break;
+		case RDMA_CM_EVENT_UNREACHABLE:
+		case RDMA_CM_EVENT_REJECTED:
+			break;
+		case RDMA_CM_EVENT_ESTABLISHED:
+			rc = nvme_rdma_connection_established(rqpair);
+			break;
+		case RDMA_CM_EVENT_DISCONNECTED:
+		case RDMA_CM_EVENT_DEVICE_REMOVAL:
+			break;
+		case RDMA_CM_EVENT_MULTICAST_JOIN:
+		case RDMA_CM_EVENT_MULTICAST_ERROR:
+			break;
+		case RDMA_CM_EVENT_ADDR_CHANGE:
+			break;
+		case RDMA_CM_EVENT_TIMEWAIT_EXIT:
+			break;
+		default:
+			SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
+			break;
+		}
+		rqpair->event_ctx.evt = NULL;
+		rqpair->event_ctx.have_event = false;
+		rdma_ack_cm_event(event);
+	}
+
+	return rc;
+}
+
+static int
+nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
+			struct rdma_event_channel *channel,
+			enum rdma_cm_event_type evt)
+{
 	int			rc;
 	struct pollfd		poll_fd;
 
@@ -240,22 +299,22 @@ nvme_rdma_get_event(struct rdma_event_channel *channel,
 		continue;
 	}
 
-	rc = rdma_get_cm_event(channel, &event);
+	rc = rdma_get_cm_event(channel, &rqpair->event_ctx.evt);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to get event from CM event channel. Error %d (%s)\n",
 			    errno, spdk_strerror(errno));
-		return NULL;
-	}
-
-	if (event->event != evt) {
+		return rc;
+	} else if (rqpair->event_ctx.evt->event != evt) {
 		SPDK_ERRLOG("Expected %s but received %s (%d) from CM event channel (status = %d)\n",
 			    nvme_rdma_cm_event_str_get(evt),
-			    nvme_rdma_cm_event_str_get(event->event), event->event, event->status);
-		rdma_ack_cm_event(event);
-		return NULL;
+			    nvme_rdma_cm_event_str_get(rqpair->event_ctx.evt->event), rqpair->event_ctx.evt->event,
+			    rqpair->event_ctx.evt->status);
+		rc = -EBADMSG;
 	}
 
-	return event;
+	rqpair->event_ctx.have_event = true;
+	rc |= nvme_rdma_qpair_process_cm_event(rqpair);
+	return rc;
 }
 
 static int
@@ -556,7 +615,6 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		       struct rdma_event_channel *cm_channel)
 {
 	int ret;
-	struct rdma_cm_event *event;
 
 	ret = rdma_resolve_addr(rqpair->cm_id, src_addr, dst_addr,
 				NVME_RDMA_TIME_OUT_IN_MS);
@@ -565,12 +623,11 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		return ret;
 	}
 
-	event = nvme_rdma_get_event(cm_channel, RDMA_CM_EVENT_ADDR_RESOLVED);
-	if (event == NULL) {
+	ret = nvme_rdma_process_event(rqpair, cm_channel, RDMA_CM_EVENT_ADDR_RESOLVED);
+	if (ret) {
 		SPDK_ERRLOG("RDMA address resolution error\n");
 		return -1;
 	}
-	rdma_ack_cm_event(event);
 
 	ret = rdma_resolve_route(rqpair->cm_id, NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
@@ -578,13 +635,30 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		return ret;
 	}
 
-	event = nvme_rdma_get_event(cm_channel, RDMA_CM_EVENT_ROUTE_RESOLVED);
-	if (event == NULL) {
+	ret = nvme_rdma_process_event(rqpair, cm_channel, RDMA_CM_EVENT_ROUTE_RESOLVED);
+	if (ret) {
 		SPDK_ERRLOG("RDMA route resolution error\n");
 		return -1;
 	}
-	rdma_ack_cm_event(event);
 
+	return 0;
+}
+
+static int
+nvme_rdma_connection_established(struct nvme_rdma_qpair *rqpair)
+{
+	struct spdk_nvmf_rdma_accept_private_data	*accept_data;
+	struct rdma_cm_event				*event = rqpair->event_ctx.evt;
+
+	accept_data = (struct spdk_nvmf_rdma_accept_private_data *)event->param.conn.private_data;
+	if (accept_data == NULL) {
+		return -1;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Requested queue depth %d. Actually got queue depth %d.\n",
+		      rqpair->num_entries, accept_data->crqsize);
+
+	rqpair->num_entries = spdk_min(rqpair->num_entries, accept_data->crqsize);
 	return 0;
 }
 
@@ -593,10 +667,8 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 {
 	struct rdma_conn_param				param = {};
 	struct spdk_nvmf_rdma_request_private_data	request_data = {};
-	struct spdk_nvmf_rdma_accept_private_data	*accept_data;
 	struct ibv_device_attr				attr;
 	int						ret;
-	struct rdma_cm_event				*event;
 	struct spdk_nvme_ctrlr				*ctrlr;
 
 	ret = ibv_query_device(rqpair->cm_id->verbs, &attr);
@@ -628,25 +700,11 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	event = nvme_rdma_get_event(rqpair->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
-	if (event == NULL) {
+	ret = nvme_rdma_process_event(rqpair, rqpair->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
+	if (ret) {
 		SPDK_ERRLOG("RDMA connect error\n");
 		return -1;
 	}
-
-	accept_data = (struct spdk_nvmf_rdma_accept_private_data *)event->param.conn.private_data;
-	if (accept_data == NULL) {
-		rdma_ack_cm_event(event);
-		SPDK_ERRLOG("NVMe-oF target did not return accept data\n");
-		return -1;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Requested queue depth %d. Actually got queue depth %d.\n",
-		      rqpair->num_entries, accept_data->crqsize);
-
-	rqpair->num_entries = spdk_min(rqpair->num_entries, accept_data->crqsize);
-
-	rdma_ack_cm_event(event);
 
 	return 0;
 }
