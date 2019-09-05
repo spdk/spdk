@@ -260,7 +260,7 @@ Example response:
     "iscsi_delete_portal_group",
     "iscsi_create_portal_group",
     "iscsi_get_portal_groups",
-    "delete_target_node",
+    "iscsi_delete_target_node",
     "iscsi_target_node_remove_pg_ig_maps",
     "iscsi_target_node_add_pg_ig_maps",
     "iscsi_create_target_node",
@@ -3398,7 +3398,7 @@ Example response:
 }
 ~~~
 
-## delete_target_node method {#rpc_delete_target_node}
+## iscsi_delete_target_node method {#rpc_iscsi_delete_target_node}
 
 Delete a iSCSI target node.
 
@@ -3418,7 +3418,7 @@ Example request:
     "name": "iqn.2016-06.io.spdk:target1"
   },
   "jsonrpc": "2.0",
-  "method": "delete_target_node",
+  "method": "iscsi_delete_target_node",
   "id": 1
 }
 ~~~
