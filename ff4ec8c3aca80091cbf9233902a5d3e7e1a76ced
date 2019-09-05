@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e7697ed_7caa456c",
+        "filename": "include/spdk/bdev_zone.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2019-09-05T13:37:47Z",
+      "side": 1,
+      "message": "There should be a mention where the written lba is going to be returned to",
+      "revId": "ff4ec8c3aca80091cbf9233902a5d3e7e1a76ced",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
