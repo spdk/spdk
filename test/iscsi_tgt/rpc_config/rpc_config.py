@@ -127,7 +127,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     check_output('iscsiadm -m node -o delete', shell=True)
     rpc.delete_initiator_group(initiator_tag)
     rpc.iscsi_delete_portal_group(portal_tag)
-    rpc.delete_target_node(name)
+    rpc.iscsi_delete_target_node(name)
     output = rpc.iscsi_get_connections()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
@@ -168,7 +168,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     check_output('iscsiadm -m node -o delete', shell=True)
     rpc.delete_initiator_group(initiator_tag)
     rpc.iscsi_delete_portal_group(portal_tag)
-    rpc.delete_target_node(name)
+    rpc.iscsi_delete_target_node(name)
     output = rpc.get_scsi_devices()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
@@ -381,7 +381,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     verify(jsonvalues[0]['luns'][1]['lun_id'] == 1, 1,
            "lun id value is {}, expected 1".format(jsonvalues[0]['luns'][1]['lun_id']))
 
-    rpc.delete_target_node(name)
+    rpc.iscsi_delete_target_node(name)
     output = rpc.iscsi_get_target_nodes()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
@@ -392,7 +392,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
 
     rpc.iscsi_delete_portal_group(portal_tag)
     rpc.delete_initiator_group(initiator_tag)
-    rpc.delete_target_node(name)
+    rpc.iscsi_delete_target_node(name)
     output = rpc.iscsi_get_target_nodes()
     jsonvalues = json.loads(output)
     if not jsonvalues:

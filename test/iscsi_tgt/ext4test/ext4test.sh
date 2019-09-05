@@ -67,7 +67,7 @@ set -e
 
 iscsicleanup
 $rpc_py bdev_error_inject_error EE_Malloc0 'clear' 'failure'
-$rpc_py delete_target_node $node_base:Target0
+$rpc_py iscsi_delete_target_node $node_base:Target0
 echo "Error injection test done"
 
 if [ -z "$NO_NVME" ]; then

@@ -1064,15 +1064,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
     p.set_defaults(func=iscsi_initiator_group_remove_initiators)
 
-    def delete_target_node(args):
-        rpc.iscsi.delete_target_node(
+    def iscsi_delete_target_node(args):
+        rpc.iscsi.iscsi_delete_target_node(
             args.client, target_node_name=args.target_node_name)
 
-    p = subparsers.add_parser('delete_target_node',
+    p = subparsers.add_parser('iscsi_delete_target_node', aliases=['delete_target_node'],
                               help='Delete a target node')
     p.add_argument('target_node_name',
                    help='Target node name to be deleted. Example: iqn.2016-06.io.spdk:disk1.')
-    p.set_defaults(func=delete_target_node)
+    p.set_defaults(func=iscsi_delete_target_node)
 
     def iscsi_delete_portal_group(args):
         rpc.iscsi.iscsi_delete_portal_group(args.client, tag=args.tag)
