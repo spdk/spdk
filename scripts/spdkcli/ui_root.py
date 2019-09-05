@@ -383,8 +383,8 @@ class UIRoot(UINode):
                 yield tg
 
     @verbose
-    def construct_target_node(self, **kwargs):
-        rpc.iscsi.construct_target_node(self.client, **kwargs)
+    def iscsi_create_target_node(self, **kwargs):
+        rpc.iscsi.iscsi_create_target_node(self.client, **kwargs)
 
     @verbose
     def delete_target_node(self, **kwargs):

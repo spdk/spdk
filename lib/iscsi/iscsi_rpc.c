@@ -347,7 +347,7 @@ decode_rpc_pg_ig_maps(const struct spdk_json_val *val, void *out)
 				      sizeof(struct rpc_pg_ig_map));
 }
 
-#define RPC_CONSTRUCT_TARGET_NODE_MAX_LUN	64
+#define RPC_ISCSI_CREATE_TARGET_NODE_MAX_LUN	64
 
 struct rpc_lun {
 	char *bdev_name;
@@ -370,7 +370,7 @@ decode_rpc_lun(const struct spdk_json_val *val, void *out)
 
 struct rpc_luns {
 	size_t num_luns;
-	struct rpc_lun luns[RPC_CONSTRUCT_TARGET_NODE_MAX_LUN];
+	struct rpc_lun luns[RPC_ISCSI_CREATE_TARGET_NODE_MAX_LUN];
 };
 
 static int
@@ -379,7 +379,7 @@ decode_rpc_luns(const struct spdk_json_val *val, void *out)
 	struct rpc_luns *luns = out;
 
 	return spdk_json_decode_array(val, decode_rpc_lun, luns->luns,
-				      RPC_CONSTRUCT_TARGET_NODE_MAX_LUN,
+				      RPC_ISCSI_CREATE_TARGET_NODE_MAX_LUN,
 				      &luns->num_luns, sizeof(struct rpc_lun));
 }
 
@@ -433,15 +433,15 @@ static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
 };
 
 static void
-spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
-			       const struct spdk_json_val *params)
+spdk_rpc_iscsi_create_target_node(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
 {
 	struct rpc_target_node req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
 	int32_t pg_tags[MAX_TARGET_MAP] = {0}, ig_tags[MAX_TARGET_MAP] = {0};
-	char *bdev_names[RPC_CONSTRUCT_TARGET_NODE_MAX_LUN] = {0};
-	int32_t lun_ids[RPC_CONSTRUCT_TARGET_NODE_MAX_LUN] = {0};
+	char *bdev_names[RPC_ISCSI_CREATE_TARGET_NODE_MAX_LUN] = {0};
+	int32_t lun_ids[RPC_ISCSI_CREATE_TARGET_NODE_MAX_LUN] = {0};
 	size_t i;
 
 	if (spdk_json_decode_object(params, rpc_target_node_decoders,
@@ -496,7 +496,8 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_target_node(&req);
 }
-SPDK_RPC_REGISTER("construct_target_node", spdk_rpc_construct_target_node, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_create_target_node", spdk_rpc_iscsi_create_target_node, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_target_node, construct_target_node)
 
 struct rpc_tgt_node_pg_ig_maps {
 	char *name;

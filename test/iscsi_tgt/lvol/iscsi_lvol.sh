@@ -62,7 +62,7 @@ for i in $(seq 1 $NUM_LVS); do
 		lb_name=$($rpc_py bdev_lvol_create -u $ls_guid lbd_$j 10)
 		LUNs+="$lb_name:$((j - 1)) "
 	done
-	$rpc_py construct_target_node Target$i Target${i}_alias "$LUNs" "1:$INITIATOR_TAG" 256 -d
+	$rpc_py iscsi_create_target_node Target$i Target${i}_alias "$LUNs" "1:$INITIATOR_TAG" 256 -d
 done
 timing_exit setup
 

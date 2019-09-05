@@ -1580,7 +1580,7 @@ iscsi_tgt_node_config_json(struct spdk_iscsi_tgt_node *target,
 {
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "construct_target_node");
+	spdk_json_write_named_string(w, "method", "iscsi_create_target_node");
 
 	spdk_json_write_name(w, "params");
 	iscsi_tgt_node_info_json(target, w);

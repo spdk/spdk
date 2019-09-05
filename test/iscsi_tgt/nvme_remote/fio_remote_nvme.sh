@@ -45,7 +45,7 @@ function run_nvme_remote() {
 	if [ "$1" = "local" ]; then
 		$rpc_py -s "$iscsi_rpc_addr" construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
 	fi
-	$rpc_py -s "$iscsi_rpc_addr" construct_target_node Target1 Target1_alias 'Nvme0n1:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+	$rpc_py -s "$iscsi_rpc_addr" iscsi_create_target_node Target1 Target1_alias 'Nvme0n1:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
 	sleep 1
 
 	echo "Logging in to iSCSI target."

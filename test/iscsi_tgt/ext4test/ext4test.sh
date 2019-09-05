@@ -37,7 +37,7 @@ $rpc_py bdev_error_create 'Malloc0'
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
-$rpc_py construct_target_node Target0 Target0_alias EE_Malloc0:0 1:2 64 -d
+$rpc_py iscsi_create_target_node Target0 Target0_alias EE_Malloc0:0 1:2 64 -d
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
@@ -77,7 +77,7 @@ if [ -z "$NO_NVME" ]; then
 		split_size=10000
 	fi
 	$rpc_py construct_split_vbdev Nvme0n1 2 -s $split_size
-	$rpc_py construct_target_node Target1 Target1_alias Nvme0n1p0:0 1:2 64 -d
+	$rpc_py iscsi_create_target_node Target1 Target1_alias Nvme0n1p0:0 1:2 64 -d
 fi
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT

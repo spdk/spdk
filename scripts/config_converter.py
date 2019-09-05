@@ -26,7 +26,7 @@ iscsi_dict = OrderedDict()
 iscsi_dict["set_iscsi_options"] = []
 iscsi_dict["add_portal_group"] = []
 iscsi_dict["add_initiator_group"] = []
-iscsi_dict["construct_target_node"] = []
+iscsi_dict["iscsi_create_target_node"] = []
 
 nvmf_dict = OrderedDict()
 nvmf_dict["set_nvmf_target_config"] = []
@@ -639,7 +639,7 @@ def get_iscsi_target_node_json(config, section):
 
     target_json = {
         "params": params,
-        "method": "construct_target_node"
+        "method": "iscsi_create_target_node"
     }
 
     return [target_json]

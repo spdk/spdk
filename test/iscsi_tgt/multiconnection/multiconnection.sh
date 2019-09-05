@@ -63,7 +63,7 @@ done
 
 for i in $(seq 1 $CONNECTION_NUMBER); do
 	lun="lvs0/lbd_$i:0"
-	$rpc_py construct_target_node Target$i Target${i}_alias "$lun" $PORTAL_TAG:$INITIATOR_TAG 256 -d
+	$rpc_py iscsi_create_target_node Target$i Target${i}_alias "$lun" $PORTAL_TAG:$INITIATOR_TAG 256 -d
 done
 sleep 1
 
