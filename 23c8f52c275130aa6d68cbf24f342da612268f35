@@ -34,6 +34,24 @@
       "revId": "23c8f52c275130aa6d68cbf24f342da612268f35",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a561c235_1801c8f4",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1084,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-05T01:59:34Z",
+      "side": 1,
+      "message": "Ahhhh... I did not know that, thanks! Maybe a future patch adding a send buffer define next to the rcv might be a good readability thing.  Thanks Ben",
+      "parentUuid": "0eb3f607_bc8c516f",
+      "revId": "23c8f52c275130aa6d68cbf24f342da612268f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
