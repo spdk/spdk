@@ -165,8 +165,8 @@ struct raid_bdev {
 	void (*read)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 	void (*write)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 	int (*submit)(struct spdk_bdev_io *bdev_io, uint64_t start_strip);
-	void (*waitq_io)(void *ctx);
 	uint8_t (*get_base_index)(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_io);
+	void (*waitq_io)(void *ctx);
 	void (*get_io_range)(struct raid_bdev_io_range *io_range,
 			     uint8_t num_base_bdevs, uint64_t strip_size, uint64_t strip_size_shift,
 			     uint64_t offset_blocks, uint64_t num_blocks);
