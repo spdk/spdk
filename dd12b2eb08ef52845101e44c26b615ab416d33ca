@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86a9f006_9e12a75a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1102,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-09-05T12:13:26Z",
+      "side": 1,
+      "message": "Blobstore code should not access the \u0027external\u0027 xattrs, since they are set by the user of blob API. Only one accessed should be the \u0027internal\u0027 xattrs (via _spdk_blob_get_xattr_value(..., true)).\n\nClear method is parameter passed by blob opts during spdk_bs_open_blob_ext(). It is not persisted by blobstore itself.\nIt is lvol layer that persists clear_method as its own xattr and use it in spdk_bs_open_blob_ext().\n\nI\u0027m still looking at the #944, but don\u0027t think this is the right way to fix it.",
+      "range": {
+        "startLine": 1102,
+        "startChar": 1,
+        "endLine": 1102,
+        "endChar": 101
+      },
+      "revId": "dd12b2eb08ef52845101e44c26b615ab416d33ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
