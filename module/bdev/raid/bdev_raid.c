@@ -69,7 +69,7 @@ struct raid_offline_tailq	g_raid_bdev_offline_list = TAILQ_HEAD_INITIALIZER(
 /* Function declarations */
 static void	raid_bdev_examine(struct spdk_bdev *bdev);
 static int	raid_bdev_init(void);
-static void	raid_bdev_waitq_io_process(void *ctx);
+static void	raid0_waitq_io_process(void *ctx);
 static void	raid_bdev_deconfigure(struct raid_bdev *raid_bdev,
 				      raid_bdev_destruct_cb cb_fn, void *cb_arg);
 static void	raid_bdev_remove_base_bdev(void *ctx);
@@ -284,8 +284,8 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 /*
  * brief:
- * raid_bdev_submit_rw_request function is used to submit I/O to the correct
- * member disk
+ * raid0_submit_rw_request function is used to submit I/O to the correct
+ * member disk for raid0 bdevs.
  * params:
  * bdev_io - parent bdev io
  * start_strip - start strip number of this io
@@ -294,7 +294,7 @@ raid_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
  * non zero - failure
  */
 static int
-raid_bdev_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
+raid0_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 {
 	struct raid_bdev_io		*raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	struct raid_bdev_io_channel	*raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
@@ -345,7 +345,8 @@ raid_bdev_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
 
 /*
  * brief:
- * get_curr_base_bdev_index function calculates the base bdev index
+ * raid0_get_curr_base_bdev_index function calculates the base bdev index
+ * for raid0 bdevs.
  * params:
  * raid_bdev - pointer to raid bdev
  * raid_io - pointer to parent io context
@@ -353,7 +354,7 @@ raid_bdev_submit_rw_request(struct spdk_bdev_io *bdev_io, uint64_t start_strip)
  * base bdev index
  */
 static uint8_t
-get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_io)
+raid0_get_curr_base_bdev_index(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_io)
 {
 	struct spdk_bdev_io	*bdev_io;
 	uint64_t		start_strip;
@@ -403,15 +404,16 @@ raid_bdev_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_i
 
 /*
  * brief:
- * raid_bdev_waitq_io_process function is the callback function
- * registered by raid bdev module to bdev when bdev_io was unavailable.
+ * raid0_waitq_io_process function is the callback function
+ * registered by raid bdev module to bdev when bdev_io was unavailable
+ * for raid0 bdevs.
  * params:
  * ctx - pointer to raid_bdev_io
  * returns:
  * none
  */
 static void
-raid_bdev_waitq_io_process(void *ctx)
+raid0_waitq_io_process(void *ctx)
 {
 	struct raid_bdev_io	*raid_io = ctx;
 	struct spdk_bdev_io	*bdev_io;
@@ -426,7 +428,7 @@ raid_bdev_waitq_io_process(void *ctx)
 	 */
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
-	ret = raid_bdev_submit_rw_request(bdev_io, start_strip);
+	ret = raid0_submit_rw_request(bdev_io, start_strip);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
@@ -434,8 +436,8 @@ raid_bdev_waitq_io_process(void *ctx)
 
 /*
  * brief:
- * raid_bdev_start_rw_request function is the submit_request function for
- * read/write requests
+ * raid0_start_rw_request function is the submit_request function for
+ * read/write requests for raid0 bdevs.
  * params:
  * ch - pointer to raid bdev io channel
  * bdev_io - pointer to parent bdev_io on raid bdev device
@@ -443,7 +445,7 @@ raid_bdev_waitq_io_process(void *ctx)
  * none
  */
 static void
-raid_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+raid0_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct raid_bdev_io		*raid_io;
 	struct raid_bdev		*raid_bdev;
@@ -463,7 +465,7 @@ raid_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
-	ret = raid_bdev_submit_rw_request(bdev_io, start_strip);
+	ret = raid0_submit_rw_request(bdev_io, start_strip);
 	if (ret != 0) {
 		raid_bdev_io_submit_fail_process(raid_bdev, bdev_io, raid_io, ret);
 	}
@@ -600,9 +602,9 @@ _raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io 
 }
 
 static inline void
-_raid_bdev_get_io_range(struct raid_bdev_io_range *io_range,
-			uint8_t num_base_bdevs, uint64_t strip_size, uint64_t strip_size_shift,
-			uint64_t offset_blocks, uint64_t num_blocks)
+_raid0_get_io_range(struct raid_bdev_io_range *io_range,
+		    uint8_t num_base_bdevs, uint64_t strip_size, uint64_t strip_size_shift,
+		    uint64_t offset_blocks, uint64_t num_blocks)
 {
 	uint64_t	start_strip;
 	uint64_t	end_strip;
@@ -634,8 +636,8 @@ _raid_bdev_get_io_range(struct raid_bdev_io_range *io_range,
 }
 
 static inline void
-_raid_bdev_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
-			  uint64_t *_offset_in_disk, uint64_t *_nblocks_in_disk)
+_raid0_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
+		      uint64_t *_offset_in_disk, uint64_t *_nblocks_in_disk)
 {
 	uint64_t n_strips_in_disk;
 	uint64_t start_offset_in_disk;
@@ -1514,12 +1516,12 @@ raid_bdev_init(void)
 }
 
 static const struct raid_fn_table g_raid0_fn_table = {
-	.start_read_request	= raid_bdev_start_rw_request,
-	.start_write_request	= raid_bdev_start_rw_request,
-	.get_curr_base_index	= get_curr_base_bdev_index,
-	.waitq_io_process	= raid_bdev_waitq_io_process,
-	.get_io_range		= _raid_bdev_get_io_range,
-	.split_io_range		= _raid_bdev_split_io_range,
+	.start_read_request	= raid0_start_rw_request,
+	.start_write_request	= raid0_start_rw_request,
+	.get_curr_base_index	= raid0_get_curr_base_bdev_index,
+	.waitq_io_process	= raid0_waitq_io_process,
+	.get_io_range		= _raid0_get_io_range,
+	.split_io_range		= _raid0_split_io_range,
 };
 
 /*
