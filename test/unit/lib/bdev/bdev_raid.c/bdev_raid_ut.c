@@ -131,6 +131,8 @@ DEFINE_STUB(spdk_json_write_named_array_begin, int, (struct spdk_json_write_ctx 
 DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
 DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_strerror, const char *, (int errnum), NULL);
+DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		struct spdk_bdev_io_wait_entry *entry), 0);
 
 static void
 set_test_opts(void)
@@ -1003,43 +1005,6 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 	}
 }
 
-int
-spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-			struct spdk_bdev_io_wait_entry *entry)
-{
-	CU_ASSERT(bdev == entry->bdev);
-	CU_ASSERT(entry->cb_fn != NULL);
-	CU_ASSERT(entry->cb_arg != NULL);
-	TAILQ_INSERT_TAIL(&g_io_waitq, entry, link);
-	return 0;
-}
-
-
-static uint32_t
-get_num_elts_in_waitq(void)
-{
-	struct spdk_bdev_io_wait_entry *ele;
-	uint32_t count = 0;
-
-	TAILQ_FOREACH(ele, &g_io_waitq, link) {
-		count++;
-	}
-
-	return count;
-}
-
-static void
-process_io_waitq(void)
-{
-	struct spdk_bdev_io_wait_entry *ele;
-	struct spdk_bdev_io_wait_entry *next_ele;
-
-	TAILQ_FOREACH_SAFE(ele, &g_io_waitq, link, next_ele) {
-		TAILQ_REMOVE(&g_io_waitq, ele, link);
-		ele->cb_fn(ele->cb_arg);
-	}
-}
-
 static void
 verify_get_raids(struct rpc_construct_raid_bdev *construct_req,
 		 uint8_t g_max_raids,
@@ -1859,89 +1824,6 @@ test_reset_io(void)
 	reset_globals();
 }
 
-/* Test waitq logic */
-static void
-test_io_waitq(void)
-{
-	struct rpc_construct_raid_bdev req;
-	struct rpc_destroy_raid_bdev destroy_req;
-	struct raid_bdev *pbdev;
-	struct spdk_io_channel *ch;
-	struct raid_bdev_io_channel *ch_ctx;
-	uint8_t i;
-	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_io *bdev_io_next;
-	uint32_t count;
-	uint64_t lba;
-	TAILQ_HEAD(, spdk_bdev_io) head_io;
-
-	set_globals();
-	CU_ASSERT(raid_bdev_init() == 0);
-
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-	create_construct_req(&req, "raid1", 0, true, 0);
-	spdk_rpc_construct_raid_bdev(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_config(&req, true);
-	verify_raid_bdev(&req, true, RAID_BDEV_STATE_ONLINE);
-	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
-		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
-			break;
-		}
-	}
-	SPDK_CU_ASSERT_FATAL(pbdev != NULL);
-	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct raid_bdev_io_channel));
-	SPDK_CU_ASSERT_FATAL(ch != NULL);
-	ch_ctx = spdk_io_channel_get_ctx(ch);
-	SPDK_CU_ASSERT_FATAL(ch_ctx != NULL);
-
-	CU_ASSERT(raid_bdev_create_cb(pbdev, ch_ctx) == 0);
-	SPDK_CU_ASSERT_FATAL(ch_ctx->base_channel != NULL);
-	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		CU_ASSERT(ch_ctx->base_channel[i] == (void *)0x1);
-	}
-	free_test_req(&req);
-
-	lba = 0;
-	TAILQ_INIT(&head_io);
-	for (count = 0; count < 128; count++) {
-		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
-		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-		TAILQ_INSERT_TAIL(&head_io, bdev_io, module_link);
-		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, 8, SPDK_BDEV_IO_TYPE_WRITE);
-		g_bdev_io_submit_status = -ENOMEM;
-		lba += g_strip_size;
-		raid_bdev_submit_request(ch, bdev_io);
-	}
-
-	g_ignore_io_output = 1;
-
-	count = get_num_elts_in_waitq();
-	CU_ASSERT(count == 128);
-	g_bdev_io_submit_status = 0;
-	process_io_waitq();
-	CU_ASSERT(TAILQ_EMPTY(&g_io_waitq));
-
-	TAILQ_FOREACH_SAFE(bdev_io, &head_io, module_link, bdev_io_next) {
-		bdev_io_cleanup(bdev_io);
-	}
-
-	raid_bdev_destroy_cb(pbdev, ch_ctx);
-	CU_ASSERT(ch_ctx->base_channel == NULL);
-	g_ignore_io_output = 0;
-	free(ch);
-	create_destroy_req(&destroy_req, "raid1", 0);
-	spdk_rpc_destroy_raid_bdev(NULL, NULL);
-	CU_ASSERT(g_rpc_err == 0);
-	verify_raid_config_present("raid1", false);
-	verify_raid_bdev_present("raid1", false);
-
-	raid_bdev_exit();
-	base_bdevs_cleanup();
-	reset_globals();
-}
-
 /* Create multiple raids, destroy raids without IO, get_raids related tests */
 static void
 test_multi_raid_no_io(void)
@@ -2318,7 +2200,6 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test_read_io", test_read_io) == NULL     ||
 		CU_add_test(suite, "test_unmap_io", test_unmap_io) == NULL     ||
 		CU_add_test(suite, "test_io_failure", test_io_failure) == NULL ||
-		CU_add_test(suite, "test_io_waitq", test_io_waitq) == NULL ||
 		CU_add_test(suite, "test_multi_raid_no_io", test_multi_raid_no_io) == NULL ||
 		CU_add_test(suite, "test_multi_raid_with_io", test_multi_raid_with_io) == NULL ||
 		CU_add_test(suite, "test_io_type_supported", test_io_type_supported) == NULL ||
