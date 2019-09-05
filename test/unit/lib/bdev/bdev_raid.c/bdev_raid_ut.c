@@ -44,6 +44,10 @@
 #define MAX_TEST_IO_RANGE (3 * 3 * 3 * (MAX_BASE_DRIVES + 5))
 #define BLOCK_CNT (1024ul * 1024ul * 1024ul * 1024ul)
 
+struct spdk_bdev_channel {
+	struct spdk_io_channel *channel;
+};
+
 /* Data structure to capture the output of IO for verification */
 struct io_output {
 	struct spdk_bdev_desc       *desc;
@@ -238,7 +242,7 @@ void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb,
 		     uint64_t len)
 {
-	CU_ASSERT(false);
+	cb(bdev_io->internal.ch->channel, bdev_io, true);
 }
 
 /* Store the IO completion status in global variable to verify by various tests */
@@ -622,9 +626,11 @@ bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
 }
 
 static void
-bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev,
+bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_io_channel *ch, struct spdk_bdev *bdev,
 		   uint64_t lba, uint64_t blocks, int16_t iotype)
 {
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
 	bdev_io->bdev = bdev;
 	bdev_io->u.bdev.offset_blocks = lba;
 	bdev_io->u.bdev.num_blocks = blocks;
@@ -640,6 +646,7 @@ bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev,
 	bdev_io->u.bdev.iovs->iov_base = calloc(1, bdev_io->u.bdev.num_blocks * g_block_len);
 	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs->iov_base != NULL);
 	bdev_io->u.bdev.iovs->iov_len = bdev_io->u.bdev.num_blocks * g_block_len;
+	bdev_io->internal.ch = channel;
 }
 
 static void
@@ -1393,6 +1400,8 @@ test_write_io(void)
 	struct spdk_bdev_io *bdev_io;
 	uint64_t io_len;
 	uint64_t lba = 0;
+	struct spdk_io_channel *ch_b;
+	struct spdk_bdev_channel *ch_b_ctx;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -1412,6 +1421,12 @@ test_write_io(void)
 	CU_ASSERT(pbdev != NULL);
 	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct raid_bdev_io_channel));
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	ch_b = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct spdk_bdev_channel));
+	SPDK_CU_ASSERT_FATAL(ch_b != NULL);
+	ch_b_ctx = spdk_io_channel_get_ctx(ch_b);
+	ch_b_ctx->channel = ch;
+
 	ch_ctx = spdk_io_channel_get_ctx(ch);
 	SPDK_CU_ASSERT_FATAL(ch_ctx != NULL);
 
@@ -1425,7 +1440,7 @@ test_write_io(void)
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 		io_len = (g_strip_size / 2) << i;
-		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
+		bdev_io_initialize(bdev_io, ch_b,  &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
 		lba += g_strip_size;
 		memset(g_io_output, 0, ((g_max_io_size / g_strip_size) + 1) * sizeof(struct io_output));
 		g_io_output_index = 0;
@@ -1439,6 +1454,7 @@ test_write_io(void)
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
 	CU_ASSERT(ch_ctx->base_channel == NULL);
 	free(ch);
+	free(ch_b);
 	create_destroy_req(&destroy_req, "raid1", 0);
 	spdk_rpc_destroy_raid_bdev(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
@@ -1462,6 +1478,8 @@ test_read_io(void)
 	struct spdk_bdev_io *bdev_io;
 	uint64_t io_len;
 	uint64_t lba;
+	struct spdk_io_channel *ch_b;
+	struct spdk_bdev_channel *ch_b_ctx;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -1481,6 +1499,12 @@ test_read_io(void)
 	CU_ASSERT(pbdev != NULL);
 	ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct raid_bdev_io_channel));
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	ch_b = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct spdk_bdev_channel));
+	SPDK_CU_ASSERT_FATAL(ch_b != NULL);
+	ch_b_ctx = spdk_io_channel_get_ctx(ch_b);
+	ch_b_ctx->channel = ch;
+
 	ch_ctx = spdk_io_channel_get_ctx(ch);
 	SPDK_CU_ASSERT_FATAL(ch_ctx != NULL);
 
@@ -1496,7 +1520,7 @@ test_read_io(void)
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 		io_len = (g_strip_size / 2) << i;
-		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_READ);
+		bdev_io_initialize(bdev_io, ch_b,  &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_READ);
 		lba += g_strip_size;
 		memset(g_io_output, 0, ((g_max_io_size / g_strip_size) + 1) * sizeof(struct io_output));
 		g_io_output_index = 0;
@@ -1509,6 +1533,7 @@ test_read_io(void)
 	raid_bdev_destroy_cb(pbdev, ch_ctx);
 	CU_ASSERT(ch_ctx->base_channel == NULL);
 	free(ch);
+	free(ch_b);
 	create_destroy_req(&destroy_req, "raid1", 0);
 	spdk_rpc_destroy_raid_bdev(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
@@ -1644,7 +1669,7 @@ test_unmap_io(void)
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 		io_len = g_io_ranges[count].nblocks;
 		lba = g_io_ranges[count].lba;
-		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_UNMAP);
+		bdev_io_initialize(bdev_io, ch,  &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_UNMAP);
 		memset(g_io_output, 0, g_max_base_drives * sizeof(struct io_output));
 		g_io_output_index = 0;
 		raid_bdev_submit_request(ch, bdev_io);
@@ -1715,7 +1740,7 @@ test_io_failure(void)
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 		io_len = (g_strip_size / 2) << count;
-		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_INVALID);
+		bdev_io_initialize(bdev_io, ch,  &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_INVALID);
 		lba += g_strip_size;
 		memset(g_io_output, 0, ((g_max_io_size / g_strip_size) + 1) * sizeof(struct io_output));
 		g_io_output_index = 0;
@@ -1732,7 +1757,7 @@ test_io_failure(void)
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 		io_len = (g_strip_size / 2) << count;
-		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
+		bdev_io_initialize(bdev_io, ch,  &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
 		lba += g_strip_size;
 		memset(g_io_output, 0, ((g_max_io_size / g_strip_size) + 1) * sizeof(struct io_output));
 		g_io_output_index = 0;
@@ -1802,7 +1827,7 @@ test_reset_io(void)
 
 	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-	bdev_io_initialize(bdev_io, &pbdev->bdev, 0, 1, SPDK_BDEV_IO_TYPE_RESET);
+	bdev_io_initialize(bdev_io, ch, &pbdev->bdev, 0, 1, SPDK_BDEV_IO_TYPE_RESET);
 	memset(g_io_output, 0, g_max_base_drives * sizeof(struct io_output));
 	g_io_output_index = 0;
 	raid_bdev_submit_request(ch, bdev_io);
@@ -1930,6 +1955,8 @@ test_multi_raid_with_io(void)
 	uint64_t io_len;
 	uint64_t lba = 0;
 	int16_t iotype;
+	struct spdk_io_channel *ch_b;
+	struct spdk_bdev_channel *ch_b_ctx;
 
 	set_globals();
 	construct_req = calloc(g_max_raids, sizeof(struct rpc_construct_raid_bdev));
@@ -1937,6 +1964,12 @@ test_multi_raid_with_io(void)
 	CU_ASSERT(raid_bdev_init() == 0);
 	ch = calloc(g_max_raids, sizeof(struct spdk_io_channel) + sizeof(struct raid_bdev_io_channel));
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	ch_b = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct spdk_bdev_channel));
+	SPDK_CU_ASSERT_FATAL(ch_b != NULL);
+	ch_b_ctx = spdk_io_channel_get_ctx(ch_b);
+	ch_b_ctx->channel = ch;
+
 	for (i = 0; i < g_max_raids; i++) {
 		snprintf(name, 16, "%s%u", "raid", i);
 		verify_raid_config_present(name, false);
@@ -1978,7 +2011,7 @@ test_multi_raid_with_io(void)
 				break;
 			}
 		}
-		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, iotype);
+		bdev_io_initialize(bdev_io, ch_b,  &pbdev->bdev, lba, io_len, iotype);
 		CU_ASSERT(pbdev != NULL);
 		raid_bdev_submit_request(ch, bdev_io);
 		verify_io(bdev_io, g_max_base_drives, ch_ctx, pbdev,
@@ -2010,6 +2043,7 @@ test_multi_raid_with_io(void)
 	}
 	free(construct_req);
 	free(ch);
+	free(ch_b);
 	base_bdevs_cleanup();
 	reset_globals();
 }
