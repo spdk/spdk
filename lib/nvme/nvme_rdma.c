@@ -230,10 +230,12 @@ nvme_rdma_get_event(struct rdma_event_channel *channel,
 		    enum rdma_cm_event_type evt)
 {
 	struct rdma_cm_event	*event;
-	int			rc;
 
-	rc = rdma_get_cm_event(channel, &event);
-	if (rc < 0) {
+	while (rdma_get_cm_event(channel, &event) != 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			continue;
+		}
+
 		SPDK_ERRLOG("Failed to get event from CM event channel. Error %d (%s)\n",
 			    errno, spdk_strerror(errno));
 		return NULL;
@@ -803,10 +805,17 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
 	int family;
+	int flag;
 
 	rqpair->cm_channel = rdma_create_event_channel();
 	if (rqpair->cm_channel == NULL) {
 		SPDK_ERRLOG("rdma_create_event_channel() failed\n");
+		return -1;
+	}
+
+	flag = fcntl(rqpair->cm_channel->fd, F_GETFL);
+	if (fcntl(rqpair->cm_channel->fd, F_SETFL, flag | O_NONBLOCK) < 0) {
+		SPDK_ERRLOG("Cannot set event channel to non blocking\n");
 		return -1;
 	}
 
