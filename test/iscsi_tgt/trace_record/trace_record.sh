@@ -85,7 +85,7 @@ iscsicleanup
 RPCS=
 # Delete Malloc blockdevs and targets
 for i in $(seq 0 $CONNECTION_NUMBER); do
-	RPCS+="delete_target_node iqn.2016-06.io.spdk:Target$i\n"
+	RPCS+="iscsi_delete_target_node iqn.2016-06.io.spdk:Target$i\n"
 	RPCS+="bdev_malloc_delete Malloc$i\n"
 done
 echo -e $RPCS | $rpc_py
