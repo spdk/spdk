@@ -109,7 +109,7 @@ class UIISCSIDevices(UINode):
         mutual_chap = self.ui_eval_param(m, "bool", None)
         header_digest = self.ui_eval_param(h, "bool", None)
         data_digest = self.ui_eval_param(t, "bool", None)
-        self.get_root().construct_target_node(
+        self.get_root().iscsi_create_target_node(
             name=name, alias_name=alias_name, luns=luns,
             pg_ig_maps=pg_ig_maps, queue_depth=queue_depth,
             chap_group=chap_group, disable_chap=disable_chap,

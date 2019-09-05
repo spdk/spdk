@@ -65,7 +65,7 @@ echo "Create bdevs and target nodes"
 CONNECTION_NUMBER=15
 for i in $(seq 0 $CONNECTION_NUMBER); do
 	RPCS+="bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i\n"
-	RPCS+="construct_target_node Target$i Target${i}_alias "Malloc$i:0" $PORTAL_TAG:$INITIATOR_TAG 256 -d\n"
+	RPCS+="iscsi_create_target_node Target$i Target${i}_alias "Malloc$i:0" $PORTAL_TAG:$INITIATOR_TAG 256 -d\n"
 done
 echo -e $RPCS | $rpc_py
 

@@ -102,7 +102,7 @@ $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 
 for (( i=0; i < $DISKNO; i++ ))
 do
-	$rpc_py construct_target_node Target${i} Target${i}_alias "${bdevs[i]}:0" "$PORTAL_TAG:$INITIATOR_TAG" 64 -d
+	$rpc_py iscsi_create_target_node Target${i} Target${i}_alias "${bdevs[i]}:0" "$PORTAL_TAG:$INITIATOR_TAG" 64 -d
 done
 
 cat $testdir/perf.job | ssh_initiator "cat > perf.job"

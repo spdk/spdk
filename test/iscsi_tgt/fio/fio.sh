@@ -89,7 +89,7 @@ bdev=$( $rpc_py bdev_malloc_create 1024 512 )
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
-$rpc_py construct_target_node Target3 Target3_alias "raid0:0 ${bdev}:1" $PORTAL_TAG:$INITIATOR_TAG 64 -d
+$rpc_py iscsi_create_target_node Target3 Target3_alias "raid0:0 ${bdev}:1" $PORTAL_TAG:$INITIATOR_TAG 64 -d
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT

@@ -263,7 +263,7 @@ Example response:
     "delete_target_node",
     "delete_pg_ig_maps",
     "add_pg_ig_maps",
-    "construct_target_node",
+    "iscsi_create_target_node",
     "iscsi_get_target_nodes",
     "delete_initiator_group",
     "delete_initiators_from_initiator_group",
@@ -3162,7 +3162,7 @@ Example response:
 }
 ~~~
 
-## construct_target_node method {#rpc_construct_target_node}
+## iscsi_create_target_node method {#rpc_iscsi_create_target_node}
 
 Add a iSCSI target node.
 
@@ -3216,7 +3216,7 @@ Example request:
     "queue_depth": 24
   },
   "jsonrpc": "2.0",
-  "method": "construct_target_node",
+  "method": "iscsi_create_target_node",
   "id": 1
 }
 ~~~

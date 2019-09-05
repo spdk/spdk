@@ -103,13 +103,13 @@ In addition to the configuration file, the iSCSI target may also be configured v
 
 ### Target nodes
 
- - construct_target_node -- Add a iSCSI target node.
+ - iscsi_create_target_node -- Add a iSCSI target node.
  - delete_target_node -- Delete a iSCSI target node.
  - target_node_add_lun -- Add an LUN to an existing iSCSI target node.
  - iscsi_get_target_nodes -- Show information about all available iSCSI target nodes.
 
 ~~~
-/path/to/spdk/scripts/rpc.py construct_target_node Target3 Target3_alias MyBdev:0 1:2 64 -d
+/path/to/spdk/scripts/rpc.py iscsi_create_target_node Target3 Target3_alias MyBdev:0 1:2 64 -d
 ~~~
 
 ## Configuring iSCSI Initiator {#iscsi_initiator}
@@ -253,7 +253,7 @@ Finally construct one target using previously created bdevs as LUN0 (Malloc0) an
 with a name "disk1" and alias "Data Disk1" using portal group 1 and initiator group 2.
 
 ```
-$ ./scripts/rpc.py construct_target_node disk1 "Data Disk1" "Malloc0:0 Malloc1:1" 1:2 64 -d
+$ ./scripts/rpc.py iscsi_create_target_node disk1 "Data Disk1" "Malloc0:0 Malloc1:1" 1:2 64 -d
 ```
 
 #### Configure initiator

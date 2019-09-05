@@ -152,7 +152,8 @@ def iscsi_get_target_nodes(client):
     return client.call('iscsi_get_target_nodes')
 
 
-def construct_target_node(
+@deprecated_alias('construct_target_node')
+def iscsi_create_target_node(
         client,
         luns,
         pg_ig_maps,
@@ -203,7 +204,7 @@ def construct_target_node(
         params['header_digest'] = header_digest
     if data_digest:
         params['data_digest'] = data_digest
-    return client.call('construct_target_node', params)
+    return client.call('iscsi_create_target_node', params)
 
 
 def target_node_add_lun(client, name, bdev_name, lun_id=None):

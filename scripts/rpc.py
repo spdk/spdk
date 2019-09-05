@@ -803,7 +803,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Display target nodes')
     p.set_defaults(func=iscsi_get_target_nodes)
 
-    def construct_target_node(args):
+    def iscsi_create_target_node(args):
         luns = []
         for u in args.bdev_name_id_pairs.strip().split(" "):
             bdev_name, lun_id = u.split(":")
@@ -814,7 +814,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             pg, ig = u.split(":")
             pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
 
-        rpc.iscsi.construct_target_node(
+        rpc.iscsi.iscsi_create_target_node(
             args.client,
             luns=luns,
             pg_ig_maps=pg_ig_maps,
@@ -828,7 +828,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             header_digest=args.header_digest,
             data_digest=args.data_digest)
 
-    p = subparsers.add_parser('construct_target_node',
+    p = subparsers.add_parser('iscsi_create_target_node', aliases=['construct_target_node'],
                               help='Add a target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('alias_name', help='Target node alias name (ASCII)')
@@ -856,7 +856,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help='Header Digest should be required for this target node.', action='store_true')
     p.add_argument('-D', '--data-digest',
                    help='Data Digest should be required for this target node.', action='store_true')
-    p.set_defaults(func=construct_target_node)
+    p.set_defaults(func=iscsi_create_target_node)
 
     def target_node_add_lun(args):
         rpc.iscsi.target_node_add_lun(

@@ -88,7 +88,7 @@ def clear_nvmf_subsystem(args, nvmf_config):
 def get_iscsi_destroy_method(iscsi):
     destroy_method_map = {'add_portal_group': "delete_portal_group",
                           'add_initiator_group': "delete_initiator_group",
-                          'construct_target_node': "delete_target_node",
+                          'iscsi_create_target_node': "delete_target_node",
                           'set_iscsi_options': None
                           }
     return destroy_method_map[iscsi['method']]
@@ -102,7 +102,7 @@ def get_iscsi_name(iscsi):
 
 
 def get_iscsi_name_key(iscsi):
-    if iscsi['method'] == 'construct_target_node':
+    if iscsi['method'] == 'iscsi_create_target_node':
         return "name"
     else:
         return 'tag'

@@ -492,7 +492,7 @@
             "header_digest": false,
             "queue_depth": 64
           },
-          "method": "construct_target_node"
+          "method": "iscsi_create_target_node"
         },
         {
           "params": {
@@ -518,7 +518,7 @@
             "header_digest": false,
             "queue_depth": 32
           },
-          "method": "construct_target_node"
+          "method": "iscsi_create_target_node"
         }
       ]
     }
