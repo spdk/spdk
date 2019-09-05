@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3e110d1_47fe24d5",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-05T07:06:19Z",
+      "side": 1,
+      "message": "This is OK, but I\u0027d modify it a bit to make things more clear;\n\nOption 1:\n[.][0] is not needed, you can just go with \"del(.config[1:])\"\n\nOption 2:\nI think this one is more clear in what we\u0027re doing here (\"dont use anything else than Nvme0\"), but a bit more complicated:\njq -r \"del(.config[] | select(.params.name!\u003d\\\"Nvme0\\\"))\"",
+      "range": {
+        "startLine": 350,
+        "startChar": 40,
+        "endLine": 350,
+        "endChar": 73
+      },
+      "revId": "e2faa2cd76e42e8c452d329676c5b20925b57b05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
