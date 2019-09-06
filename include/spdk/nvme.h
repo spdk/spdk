@@ -1814,6 +1814,7 @@ enum spdk_nvme_ns_flags {
 	SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED	= 0x20, /**< The extended lba format is supported,
 							      metadata is transferred as a contiguous
 							      part of the logical block that it is associated with */
+	SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED	= 0x40, /**< The write uncorrectable command is supported */
 };
 
 /**
@@ -1986,6 +1987,27 @@ int spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
 				  uint64_t lba, uint32_t lba_count,
 				  spdk_nvme_cmd_cb cb_fn, void *cb_arg,
 				  uint32_t io_flags);
+
+/**
+ * Submit a write uncorrectable I/O to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ns NVMe namespace to submit the write uncorrectable I/O.
+ * \param qpair I/O queue pair to submit the request.
+ * \param lba Starting LBA for this command.
+ * \param lba_count Length (in sectors) for the write uncorrectable operation.
+ * \param cb_fn Callback function to invoke when the I/O is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, negated errno if an nvme_request structure
+ * cannot be allocated for the I/O request.
+ */
+int spdk_nvme_ns_cmd_write_uncorrectable(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+		uint64_t lba, uint32_t lba_count,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
  * \brief Submits a read I/O to the specified NVMe namespace.

@@ -91,6 +91,10 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 		ns->flags |= SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED;
 	}
 
+	if (ns->ctrlr->cdata.oncs.write_unc) {
+		ns->flags |= SPDK_NVME_NS_WRITE_UNCORRECTABLE_SUPPORTED;
+	}
+
 	if (nsdata->nsrescap.raw) {
 		ns->flags |= SPDK_NVME_NS_RESERVATION_SUPPORTED;
 	}

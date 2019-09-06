@@ -49,6 +49,8 @@ can support weighted round robin arbitration feature with submission queue.
 Added `arbitration_burst` option for arbitration feature, and added three
 `low/medium/high_priority_weight` options for weighted round robin arbitration.
 
+Added `spdk_nvme_ns_cmd_write_uncorrectable`.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
