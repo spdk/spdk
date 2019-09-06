@@ -331,7 +331,8 @@ def delete_secret_from_iscsi_auth_group(client, tag, user):
     return client.call('delete_secret_from_iscsi_auth_group', params)
 
 
-def delete_pg_ig_maps(client, pg_ig_maps, name):
+@deprecated_alias('delete_pg_ig_maps')
+def iscsi_target_node_remove_pg_ig_maps(client, pg_ig_maps, name):
     """Delete PG-IG maps from the target node.
 
     Args:
@@ -345,7 +346,7 @@ def delete_pg_ig_maps(client, pg_ig_maps, name):
         'name': name,
         'pg_ig_maps': pg_ig_maps,
     }
-    return client.call('delete_pg_ig_maps', params)
+    return client.call('iscsi_target_node_remove_pg_ig_maps', params)
 
 
 @deprecated_alias('add_pg_ig_maps')

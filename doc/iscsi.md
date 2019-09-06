@@ -83,7 +83,7 @@ In addition to the configuration file, the iSCSI target may also be configured v
  - iscsi_create_portal_group -- Add a portal group.
  - iscsi_delete_portal_group -- Delete an existing portal group.
  - iscsi_target_node_add_pg_ig_maps -- Add initiator group to portal group mappings to an existing iSCSI target node.
- - delete_pg_ig_maps -- Delete initiator group to portal group mappings from an existing iSCSI target node.
+ - iscsi_target_node_remove_pg_ig_maps -- Delete initiator group to portal group mappings from an existing iSCSI target node.
  - iscsi_get_portal_groups -- Show information about all available portal groups.
 
 ~~~

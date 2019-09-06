@@ -815,8 +815,8 @@ invalid:
 }
 
 int
-spdk_iscsi_tgt_node_delete_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
-				      int *pg_tag_list, int *ig_tag_list, uint16_t num_maps)
+spdk_iscsi_target_node_remove_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
+		int *pg_tag_list, int *ig_tag_list, uint16_t num_maps)
 {
 	uint16_t i;
 	int rc;
