@@ -371,7 +371,7 @@ $rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --l
 CC=$(cat $rootdir/mk/cc.mk | grep "CC=" | cut -d "=" -f 2)
 CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
 
-BUILD_CMD="$CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS"
+BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
 
 # Detect architecture and force no ISA-L if non-x86 archtecture
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then
@@ -418,7 +418,7 @@ if [ -z "${CONFIG[ENV]}" ]; then
 			# program, just compile it
 			if ! echo -e '#include <rte_vhost.h>\n' \
 				'int main(void) { return rte_vhost_extern_callback_register(0, NULL, NULL); }\n' \
-				| $BUILD_CMD -c -Wno-deprecated-declarations -Werror \
+				| ${BUILD_CMD[@]} -c -Wno-deprecated-declarations -Werror \
 				-I"${CONFIG[DPDK_DIR]}/include" - &>/dev/null; then
 				echo "Notice: DPDK's rte_vhost not found or version < 19.05, using internal," \
 				     "legacy rte_vhost library."
@@ -487,7 +487,7 @@ fi
 if [ "${CONFIG[RDMA]}" = "y" ]; then
 	if ! echo -e '#include <infiniband/verbs.h>\n#include <rdma/rdma_verbs.h>\n' \
 		'int main(void) { return 0; }\n' \
-		| $BUILD_CMD -libverbs -lrdmacm - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -libverbs -lrdmacm - 2>/dev/null; then
 		echo --with-rdma requires libverbs and librdmacm.
 		echo Please install then re-run this script.
 		exit 1
@@ -495,7 +495,7 @@ if [ "${CONFIG[RDMA]}" = "y" ]; then
 
 	if echo -e '#include <infiniband/verbs.h>\n' \
 		'int main(void) { return !!IBV_WR_SEND_WITH_INV; }\n' \
-		| $BUILD_CMD -c - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -c - 2>/dev/null; then
 		CONFIG[RDMA_SEND_WITH_INVAL]="y"
 	else
 		CONFIG[RDMA_SEND_WITH_INVAL]="n"
@@ -566,7 +566,7 @@ fi
 
 if [[ "${CONFIG[PMDK]}" = "y" ]]; then
 	if ! echo -e '#include <libpmemblk.h>\nint main(void) { return 0; }\n' \
-		| $BUILD_CMD -lpmemblk - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -lpmemblk - 2>/dev/null; then
 		echo --with-pmdk requires libpmemblk.
 		echo Please install then re-run this script.
 		exit 1
@@ -575,7 +575,7 @@ fi
 
 if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 	if ! echo -e '#include <libpmem.h>\nint main(void) { return 0; }\n' \
-		| $BUILD_CMD -lpmem - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -lpmem - 2>/dev/null; then
 		echo --with-reduce requires libpmem.
 		echo Please install then re-run this script.
 		exit 1
@@ -587,7 +587,7 @@ if [[ "${CONFIG[VPP]}" = "y" ]]; then
 		VPP_CFLAGS="-L${CONFIG[VPP_DIR]}/lib -I${CONFIG[VPP_DIR]}/include"
 	fi
 	if ! echo -e '#include <vnet/session/application_interface.h>\nint main(void) { return 0; }\n' \
-		| $BUILD_CMD ${VPP_CFLAGS} -lvppinfra -lsvm -lvlibmemoryclient - 2>/dev/null; then
+		| ${BUILD_CMD[@]} ${VPP_CFLAGS} -lvppinfra -lsvm -lvlibmemoryclient - 2>/dev/null; then
 		echo --with-vpp requires installed vpp.
 		echo Please install then re-run this script.
 		exit 1
@@ -597,7 +597,7 @@ fi
 if [[ "${CONFIG[RBD]}" = "y" ]]; then
 	if ! echo -e '#include <rbd/librbd.h>\n#include <rados/librados.h>\n' \
 		'int main(void) { return 0; }\n' \
-		| $BUILD_CMD -lrados -lrbd - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -lrados -lrbd - 2>/dev/null; then
 		echo --with-rbd requires librados and librbd.
 		echo Please install then re-run this script.
 		exit 1
@@ -611,7 +611,7 @@ if [[ "${CONFIG[ISCSI_INITIATOR]}" = "y" ]]; then
 		'#error\n' \
 		'#endif\n' \
 		'int main(void) { return 0; }\n' \
-		| $BUILD_CMD -L/usr/lib64/iscsi -liscsi - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -L/usr/lib64/iscsi -liscsi - 2>/dev/null; then
 		echo --with-iscsi-initiator requires libiscsi with
 		echo 'LIBISCSI_API_VERSION >= 20150621.'
 		echo Please install then re-run this script.
@@ -621,7 +621,7 @@ fi
 
 if [[ "${CONFIG[LOG_BACKTRACE]}" = "y" ]]; then
 	if ! echo -e '#include <libunwind.h>\nint main(void) { return 0; }\n' \
-		| $BUILD_CMD -lunwind - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -lunwind - 2>/dev/null; then
 		echo --enable-log-bt requires libunwind.
 		echo Please install then re-run this script.
 		exit 1
@@ -630,7 +630,7 @@ fi
 
 if [[ "${CONFIG[ASAN]}" = "y" ]]; then
 	if ! echo -e 'int main(void) { return 0; }\n' \
-		| $BUILD_CMD -fsanitize=address - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -fsanitize=address - 2>/dev/null; then
 		echo --enable-asan requires libasan.
 		echo Please install then re-run this script.
 		exit 1
@@ -639,7 +639,7 @@ fi
 
 if [[ "${CONFIG[UBSAN]}" = "y" ]]; then
 	if ! echo -e 'int main(void) { return 0; }\n' \
-		| $BUILD_CMD -fsanitize=undefined - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -fsanitize=undefined - 2>/dev/null; then
 		echo --enable-ubsan requires libubsan.
 		echo Please install then re-run this script.
 		exit 1
@@ -648,7 +648,7 @@ fi
 
 if [[ "${CONFIG[TSAN]}" = "y" ]]; then
 	if ! echo -e 'int main(void) { return 0; }\n' \
-		| $BUILD_CMD -fsanitize=thread - 2>/dev/null; then
+		| ${BUILD_CMD[@]} -fsanitize=thread - 2>/dev/null; then
 		echo --enable-tsan requires libtsan.
 		echo Please install then re-run this script.
 		exit 1
