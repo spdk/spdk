@@ -184,7 +184,7 @@ class UIISCSIDevice(UINode):
             disable_chap=disable_chap,
             require_chap=require_chap, mutual_chap=mutual_chap)
 
-    def ui_command_add_pg_ig_maps(self, pg_ig_mappings):
+    def ui_command_iscsi_target_node_add_pg_ig_maps(self, pg_ig_mappings):
         """Add PG-IG maps to the target node.
 
         Args:
@@ -194,7 +194,7 @@ class UIISCSIDevice(UINode):
         for u in pg_ig_mappings.strip().split(" "):
             pg, ig = u.split(":")
             pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
-        self.get_root().add_pg_ig_maps(
+        self.get_root().iscsi_target_node_add_pg_ig_maps(
             pg_ig_maps=pg_ig_maps, name=self.device.device_name)
 
     def ui_command_delete_pg_ig_maps(self, pg_ig_mappings):

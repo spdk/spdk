@@ -436,8 +436,8 @@ class UIRoot(UINode):
         rpc.iscsi.delete_initiators_from_initiator_group(self.client, **kwargs)
 
     @verbose
-    def add_pg_ig_maps(self, **kwargs):
-        rpc.iscsi.add_pg_ig_maps(self.client, **kwargs)
+    def iscsi_target_node_add_pg_ig_maps(self, **kwargs):
+        rpc.iscsi.iscsi_target_node_add_pg_ig_maps(self.client, **kwargs)
 
     @verbose
     def delete_pg_ig_maps(self, **kwargs):
