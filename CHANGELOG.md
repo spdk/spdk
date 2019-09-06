@@ -31,6 +31,8 @@ it for NVMe controllers.  When the option is enabled, the controller will not do
 shutdown process and just disable the controller, users can start their application
 later again to initialize the controller to the ready state.
 
+Added `spdk_nvme_ns_cmd_write_uncorrectable`.
+
 ### iSCSI
 
 Portals may no longer be associated with a cpumask. The scheduling of
