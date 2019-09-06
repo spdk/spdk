@@ -210,7 +210,9 @@ ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 {
 	volatile struct ftl_admin_cmpl cmpl = {};
 	uint32_t nsid = spdk_nvme_ns_get_id(dev->ns);
-	uint64_t offset = (ppa.grp * dev->geo.num_pu + ppa.pu) *
+	unsigned int grp = ppa.pu % dev->geo.num_grp;
+	unsigned int punit = ppa.pu / dev->geo.num_grp;
+	uint64_t offset = (grp * dev->geo.num_pu + punit) *
 			  dev->geo.num_chk + ppa.chk;
 	int rc;
 
@@ -412,8 +414,7 @@ ftl_dev_init_punits(struct spdk_ftl_dev *dev)
 		punit = dev->range.begin + i;
 
 		dev->punits[i].start_ppa.ppa = 0;
-		dev->punits[i].start_ppa.grp = punit % dev->geo.num_grp;
-		dev->punits[i].start_ppa.pu = punit / dev->geo.num_grp;
+		dev->punits[i].start_ppa.pu = punit;
 	}
 
 	return 0;
