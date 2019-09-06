@@ -204,7 +204,7 @@ function get_traddr() {
     local nvme="$( $rootdir/scripts/gen_nvme.sh )"
     while read -r line; do
         if [[ $line == *"TransportID"* ]] && [[ $line == *$nvme_name* ]]; then
-            local word_array=($line)
+            local word_array=("$line")
             for word in "${word_array[@]}"; do
                 if [[ $word == *"traddr"* ]]; then
                     traddr=$( echo $word | sed 's/traddr://' | sed 's/"//' )
