@@ -51,6 +51,7 @@ test_alloc_dev(size_t size)
 
 	dev->num_lbas = L2P_TABLE_SIZE;
 	dev->l2p = calloc(L2P_TABLE_SIZE, size);
+	dev->geo.num_grp = 1;
 
 	return dev;
 }
@@ -120,7 +121,6 @@ test_ppa_pack32(void)
 	orig.lbk = 4;
 	orig.chk = 3;
 	orig.pu = 2;
-	orig.grp = 1;
 	ppa = ftl_ppa_to_packed(g_dev, orig);
 	CU_ASSERT_TRUE(ppa.ppa <= UINT32_MAX);
 	CU_ASSERT_FALSE(ppa.pack.cached);
@@ -156,7 +156,6 @@ test_ppa_pack64(void)
 	orig.lbk = 4;
 	orig.chk = 3;
 	orig.pu = 2;
-	orig.grp = 1;
 
 	/* Check valid address transformation */
 	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
@@ -167,7 +166,6 @@ test_ppa_pack64(void)
 	orig.lbk = 0x7ea0be0f;
 	orig.chk = 0x6;
 	orig.pu = 0x4;
-	orig.grp = 0x2;
 
 	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
 	ppa = ftl_ppa_addr_unpack(g_dev, ppa.ppa);
@@ -178,7 +176,6 @@ test_ppa_pack64(void)
 	orig.lbk = 0x7fffffff;
 	orig.chk = 0xf;
 	orig.pu = 0x7;
-	orig.grp = 0x3;
 
 	ppa.ppa = ftl_ppa_addr_pack(g_dev, orig);
 	ppa = ftl_ppa_addr_unpack(g_dev, ppa.ppa);
@@ -197,7 +194,6 @@ test_ppa_trans(void)
 		ppa.lbk = i % (g_dev->ppaf.lbk_mask + 1);
 		ppa.chk = i % (g_dev->ppaf.chk_mask + 1);
 		ppa.pu = i % (g_dev->ppaf.pu_mask + 1);
-		ppa.grp = i % (g_dev->ppaf.grp_mask + 1);
 		ftl_l2p_set(g_dev, i, ppa);
 	}
 
@@ -205,7 +201,6 @@ test_ppa_trans(void)
 		orig.lbk = i % (g_dev->ppaf.lbk_mask + 1);
 		orig.chk = i % (g_dev->ppaf.chk_mask + 1);
 		orig.pu = i % (g_dev->ppaf.pu_mask + 1);
-		orig.grp = i % (g_dev->ppaf.grp_mask + 1);
 		ppa = ftl_l2p_get(g_dev, i);
 		CU_ASSERT_EQUAL(ppa.ppa, orig.ppa);
 	}

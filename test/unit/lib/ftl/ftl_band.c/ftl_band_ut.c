@@ -83,8 +83,7 @@ ppa_from_punit(uint64_t punit)
 {
 	struct ftl_ppa ppa = {};
 
-	ppa.grp = punit % g_geo.num_grp;
-	ppa.pu = punit / g_geo.num_grp;
+	ppa.pu = punit;
 	return ppa;
 }
 
