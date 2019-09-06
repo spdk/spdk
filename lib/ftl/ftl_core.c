@@ -585,8 +585,8 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 
 	assert(!ftl_ppa_invalid(wptr->ppa));
 
-	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: grp:%d, pu:%d zone:%d, lbk:%u\n",
-		      wptr->ppa.grp, wptr->ppa.pu, wptr->ppa.chk, wptr->ppa.lbk);
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: pu:%d zone:%d, lbk:%u\n",
+		      wptr->ppa.pu, wptr->ppa.chk, wptr->ppa.lbk);
 
 	if (wptr->offset >= next_thld && !dev->next_band) {
 		dev->next_band = ftl_next_write_band(dev);
