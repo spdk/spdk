@@ -3164,7 +3164,7 @@ Example response:
 
 ## iscsi_create_target_node method {#rpc_iscsi_create_target_node}
 
-Add a iSCSI target node.
+Add an iSCSI target node.
 
 ### Parameters
 
@@ -3391,7 +3391,7 @@ Example response:
 
 ## iscsi_delete_target_node method {#rpc_iscsi_delete_target_node}
 
-Delete a iSCSI target node.
+Delete an iSCSI target node.
 
 ### Parameters
 

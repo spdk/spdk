@@ -103,9 +103,9 @@ In addition to the configuration file, the iSCSI target may also be configured v
 
 ### Target nodes
 
- - iscsi_create_target_node -- Add a iSCSI target node.
- - iscsi_delete_target_node -- Delete a iSCSI target node.
- - target_node_add_lun -- Add an LUN to an existing iSCSI target node.
+ - iscsi_create_target_node -- Add an iSCSI target node.
+ - iscsi_delete_target_node -- Delete an iSCSI target node.
+ - target_node_add_lun -- Add a LUN to an existing iSCSI target node.
  - iscsi_get_target_nodes -- Show information about all available iSCSI target nodes.
 
 ~~~
