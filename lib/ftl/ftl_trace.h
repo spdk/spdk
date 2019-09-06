@@ -34,7 +34,7 @@
 #ifndef FTL_TRACE_H
 #define FTL_TRACE_H
 
-#include "ftl_ppa.h"
+#include "ftl_addr.h"
 
 #define FTL_TRACE_INVALID_ID ((uint64_t) -1)
 
@@ -63,7 +63,7 @@ void ftl_trace_rwb_fill(struct spdk_ftl_dev *dev, const struct ftl_io *io);
 void ftl_trace_rwb_pop(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry);
 void ftl_trace_submission(struct spdk_ftl_dev *dev,
 			  const struct ftl_io *io,
-			  struct ftl_ppa ppa, size_t ppa_cnt);
+			  struct ftl_addr addr, size_t addr_cnt);
 void ftl_trace_completion(struct spdk_ftl_dev *dev,
 			  const struct ftl_io *io,
 			  enum ftl_trace_completion type);

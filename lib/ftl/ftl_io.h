@@ -38,7 +38,7 @@
 #include "spdk/nvme.h"
 #include "spdk/ftl.h"
 
-#include "ftl_ppa.h"
+#include "ftl_addr.h"
 #include "ftl_trace.h"
 
 struct spdk_ftl_dev;
@@ -62,15 +62,15 @@ enum ftl_io_flags {
 	FTL_IO_PAD		= (1 << 3),
 	/* The IO operates on metadata */
 	FTL_IO_MD		= (1 << 4),
-	/* Using PPA instead of LBA */
-	FTL_IO_PPA_MODE		= (1 << 5),
+	/* Using physical instead of logical address */
+	FTL_IO_PHYSICAL_MODE	= (1 << 5),
 	/* Indicates that IO contains noncontiguous LBAs */
 	FTL_IO_VECTOR_LBA	= (1 << 6),
 	/* Indicates that IO is being retried */
 	FTL_IO_RETRY		= (1 << 7),
 	/* The IO is directed to non-volatile cache */
 	FTL_IO_CACHE		= (1 << 8),
-	/* Indicates that PPA should be taken from IO struct, */
+	/* Indicates that physical address should be taken from IO struct, */
 	/* not assigned by wptr, only works if wptr is also in direct mode */
 	FTL_IO_DIRECT_ACCESS	= (1 << 9),
 	/* Bypass the non-volatile cache */
@@ -150,8 +150,8 @@ struct ftl_io {
 		uint64_t			single;
 	} lba;
 
-	/* First PPA */
-	struct ftl_ppa				ppa;
+	/* First block address */
+	struct ftl_addr				addr;
 
 	/* Number of processed lbks */
 	size_t					pos;
@@ -235,15 +235,15 @@ struct ftl_md_io {
 };
 
 static inline bool
-ftl_io_mode_ppa(const struct ftl_io *io)
+ftl_io_mode_physical(const struct ftl_io *io)
 {
-	return io->flags & FTL_IO_PPA_MODE;
+	return io->flags & FTL_IO_PHYSICAL_MODE;
 }
 
 static inline bool
-ftl_io_mode_lba(const struct ftl_io *io)
+ftl_io_mode_logical(const struct ftl_io *io)
 {
-	return !ftl_io_mode_ppa(io);
+	return !ftl_io_mode_physical(io);
 }
 
 static inline bool
