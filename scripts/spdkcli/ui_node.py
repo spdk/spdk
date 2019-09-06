@@ -46,7 +46,7 @@ class UINode(ConfigNode):
             if self.shell.interactive and\
                 command in ["create", "delete", "delete_all", "add_initiator",
                             "allow_any_host", "split_bdev", "add_lun",
-                            "add_pg_ig_maps", "remove_target", "add_secret",
+                            "iscsi_target_node_add_pg_ig_maps", "remove_target", "add_secret",
                             "destruct_split_bdev", "bdev_pmem_delete_pool",
                             "bdev_pmem_create_pool", "delete_secret_all",
                             "delete_initiator", "set_auth", "delete_secret",
