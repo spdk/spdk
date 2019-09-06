@@ -24,9 +24,9 @@ function nbd_function_test() {
 		local conf=$1
 		local nbd_num=6
 		mapfile -t local nbd_all < <(ls /dev/nbd* | grep -v p)
-		local bdev_all=($bdevs_name)
-		local nbd_list=(${nbd_all[@]:0:$nbd_num})
-		local bdev_list=(${bdev_all[@]:0:$nbd_num})
+		local bdev_all=("$bdevs_name")
+		mapfile -t local nbd_list <<< ${nbd_all[@]:0:$nbd_num}
+		mapfile -t local bdev_list <<< ${bdev_all[@]:0:$nbd_num}
 
 		if [ ! -e $conf ]; then
 			return 1

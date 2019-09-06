@@ -853,7 +853,7 @@ function get_nvme_name_from_bdf {
 		fi
 		bdf=$(basename "$link_name")
 		if [ "$bdf" = "$1" ]; then
-			blkname+=($dev)
+			blkname+=("$dev")
 		fi
 	done
 

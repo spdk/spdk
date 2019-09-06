@@ -37,7 +37,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 disk_names=$(get_disks $PLUGIN)
 disks_numa=$(get_numa_node $PLUGIN "$disk_names")
 cores=$(get_cores "$CPUS_ALLOWED")
-no_cores=($cores)
+no_cores=("$cores")
 no_cores=${#no_cores[@]}
 
 if $PRECONDITIONING; then

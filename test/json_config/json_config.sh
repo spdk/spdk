@@ -177,9 +177,9 @@ function create_bdev_subsystem_config() {
 		tgt_rpc bdev_malloc_create 16 4096 --name Malloc1
 
 		expected_notifications+=(
-			bdev_register:${lvol_store_base_bdev}
-			bdev_register:${lvol_store_base_bdev}p0
-			bdev_register:${lvol_store_base_bdev}p1
+			bdev_register:"${lvol_store_base_bdev}"
+			bdev_register:"${lvol_store_base_bdev}"p0
+			bdev_register:"${lvol_store_base_bdev}"p1
 			bdev_register:Malloc3
 			bdev_register:PTBdevFromMalloc3
 			bdev_register:Null0
