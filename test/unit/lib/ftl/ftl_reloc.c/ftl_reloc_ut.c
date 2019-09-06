@@ -120,8 +120,7 @@ ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 
 	ppa.lbk = lbkoff % ftl_dev_lbks_in_zone(dev);
 	ppa.chk = band->id;
-	ppa.pu = punit / dev->geo.num_grp;
-	ppa.grp = punit % dev->geo.num_grp;
+	ppa.pu = punit;
 
 	return ppa;
 }
