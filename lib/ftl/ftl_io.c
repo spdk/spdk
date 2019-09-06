@@ -263,7 +263,7 @@ ftl_io_init(struct ftl_io *io, struct spdk_ftl_dev *dev,
 	io->type = type;
 	io->dev = dev;
 	io->lba.single = FTL_LBA_INVALID;
-	io->ppa.ppa = FTL_PPA_INVALID;
+	io->addr.addr = FTL_ADDR_INVALID;
 	io->cb_fn = fn;
 	io->cb_ctx = ctx;
 	io->trace = ftl_trace_alloc_id(dev);
@@ -489,7 +489,7 @@ ftl_io_alloc_child(struct ftl_io *parent)
 void
 ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status)
 {
-	char ppa_buf[128];
+	char addr_buf[128];
 
 	/* TODO: add error handling for specifc cases */
 	if (status->status.sct == SPDK_NVME_SCT_MEDIA_ERROR &&
@@ -497,8 +497,8 @@ ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status)
 		return;
 	}
 
-	SPDK_ERRLOG("Status code type 0x%x, status code 0x%x for IO type %u @ppa: %s, lba 0x%lx, cnt %lu\n",
-		    status->status.sct, status->status.sc, io->type, ftl_ppa2str(io->ppa, ppa_buf, sizeof(ppa_buf)),
+	SPDK_ERRLOG("Status code type 0x%x, status code 0x%x for IO type %u @addr: %s, lba 0x%lx, cnt %lu\n",
+		    status->status.sct, status->status.sc, io->type, ftl_addr2str(io->addr, addr_buf, sizeof(addr_buf)),
 		    ftl_io_get_lba(io, 0), io->lbk_cnt);
 
 	io->status = -EIO;
