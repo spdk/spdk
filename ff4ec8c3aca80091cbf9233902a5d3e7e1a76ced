@@ -16,6 +16,29 @@
       "revId": "ff4ec8c3aca80091cbf9233902a5d3e7e1a76ced",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45be99c8_57a91686",
+        "filename": "lib/bdev/bdev_zone.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-06T07:22:48Z",
+      "side": 1,
+      "message": "Since there\u0027s alread a static function that supports appends with separate metadata buffers, you should also implement the variant with separate md_buf (spdk_bdev_zone_append_with_md).",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 169,
+        "endChar": 21
+      },
+      "revId": "ff4ec8c3aca80091cbf9233902a5d3e7e1a76ced",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
