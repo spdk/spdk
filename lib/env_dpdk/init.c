@@ -298,6 +298,8 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	/* The following log-level options are not understood by older DPDKs */
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
 	/* Lower default EAL loglevel to RTE_LOG_NOTICE - normal, but significant messages.
 	 * This can be overridden by specifying the same option in opts->env_context
 	 */
@@ -323,6 +325,7 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	if (args == NULL) {
 		return -1;
 	}
+#endif
 
 	if (opts->env_context) {
 		args = spdk_push_arg(args, &argcount, strdup(opts->env_context));
