@@ -549,7 +549,7 @@ def bdev_error_delete(client, name):
 
 @deprecated_alias('construct_iscsi_bdev')
 def bdev_iscsi_create(client, name, url, initiator_iqn):
-    """Construct a iSCSI block device.
+    """Construct an iSCSI block device.
 
     Args:
         name: name of block device
