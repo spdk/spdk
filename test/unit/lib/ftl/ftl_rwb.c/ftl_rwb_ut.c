@@ -306,15 +306,15 @@ static void
 test_rwb_entry_from_offset(void)
 {
 	struct ftl_rwb_entry *entry;
-	struct ftl_ppa ppa = { .cached = 1 };
+	struct ftl_addr addr = { .cached = 1 };
 	size_t i;
 
 	setup_rwb();
 	for (i = 0; i < g_ut.max_allocable_entries; ++i) {
-		ppa.offset = i;
+		addr.cache_offset = i;
 
 		entry = ftl_rwb_entry_from_offset(g_rwb, i);
-		CU_ASSERT_EQUAL(ppa.offset, entry->pos);
+		CU_ASSERT_EQUAL(addr.cache_offset, entry->pos);
 	}
 	cleanup_rwb();
 }
