@@ -599,18 +599,6 @@ _raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io 
 	_raid_bdev_submit_reset_request_next(bdev_io);
 }
 
-/* raid0 IO range */
-struct raid_bdev_io_range {
-	uint64_t	strip_size;
-	uint64_t	start_strip_in_disk;
-	uint64_t	end_strip_in_disk;
-	uint64_t	start_offset_in_strip;
-	uint64_t	end_offset_in_strip;
-	uint8_t		start_disk;
-	uint8_t		end_disk;
-	uint8_t		n_disks_involved;
-};
-
 static inline void
 _raid_bdev_get_io_range(struct raid_bdev_io_range *io_range,
 			uint8_t num_base_bdevs, uint64_t strip_size, uint64_t strip_size_shift,

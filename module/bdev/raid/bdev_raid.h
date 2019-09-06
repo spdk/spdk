@@ -98,6 +98,18 @@ struct raid_bdev_io {
 	uint8_t				base_bdev_io_status;
 };
 
+/* raid0 IO range */
+struct raid_bdev_io_range {
+	uint64_t	strip_size;
+	uint64_t	start_strip_in_disk;
+	uint64_t	end_strip_in_disk;
+	uint64_t	start_offset_in_strip;
+	uint64_t	end_offset_in_strip;
+	uint8_t		start_disk;
+	uint8_t		end_disk;
+	uint8_t		n_disks_involved;
+};
+
 /*
  * raid_bdev is the single entity structure which contains SPDK block device
  * and the information related to any raid bdev either configured or
