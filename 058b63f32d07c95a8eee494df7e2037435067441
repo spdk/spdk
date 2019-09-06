@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b077cfa8_d9e49d44",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-09-06T07:19:28Z",
+      "side": 1,
+      "message": "Perhaps all these zone_management patches could be squashed into one patch? The code is pretty much the same for all of those and there\u0027ll be only one change needed in the changelog :-)",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 56
+      },
+      "revId": "058b63f32d07c95a8eee494df7e2037435067441",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
