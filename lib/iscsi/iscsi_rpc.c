@@ -516,8 +516,8 @@ static const struct spdk_json_object_decoder rpc_tgt_node_pg_ig_maps_decoders[] 
 };
 
 static void
-spdk_rpc_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
-			const struct spdk_json_val *params)
+spdk_rpc_iscsi_target_node_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
 {
 	struct rpc_tgt_node_pg_ig_maps req = {};
 	struct spdk_json_write_ctx *w;
@@ -544,8 +544,8 @@ spdk_rpc_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
 		ig_tags[i] = req.pg_ig_maps.maps[i].ig_tag;
 	}
 
-	rc = spdk_iscsi_tgt_node_add_pg_ig_maps(target, pg_tags, ig_tags,
-						req.pg_ig_maps.num_maps);
+	rc = spdk_iscsi_target_node_add_pg_ig_maps(target, pg_tags, ig_tags,
+			req.pg_ig_maps.num_maps);
 	if (rc < 0) {
 		SPDK_ERRLOG("add pg-ig maps failed\n");
 		goto invalid;
@@ -563,7 +563,9 @@ invalid:
 					 "Invalid parameters");
 	free(req.name);
 }
-SPDK_RPC_REGISTER("add_pg_ig_maps", spdk_rpc_add_pg_ig_maps, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_target_node_add_pg_ig_maps",
+		  spdk_rpc_iscsi_target_node_add_pg_ig_maps, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_add_pg_ig_maps, add_pg_ig_maps)
 
 static void
 spdk_rpc_delete_pg_ig_maps(struct spdk_jsonrpc_request *request,

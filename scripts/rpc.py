@@ -903,24 +903,26 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true')
     p.set_defaults(func=iscsi_target_node_set_auth)
 
-    def add_pg_ig_maps(args):
+    def iscsi_target_node_add_pg_ig_maps(args):
         pg_ig_maps = []
         for u in args.pg_ig_mappings.strip().split(" "):
             pg, ig = u.split(":")
             pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
-        rpc.iscsi.add_pg_ig_maps(
+        rpc.iscsi.iscsi_target_node_add_pg_ig_maps(
             args.client,
             pg_ig_maps=pg_ig_maps,
             name=args.name)
 
-    p = subparsers.add_parser('add_pg_ig_maps', help='Add PG-IG maps to the target node')
+    p = subparsers.add_parser('iscsi_target_node_add_pg_ig_maps',
+                              aliases=['add_pg_ig_maps'],
+                              help='Add PG-IG maps to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
     Whitespace separated, quoted, mapping defined with colon
     separated list of "tags" (int > 0)
     Example: '1:1 2:2 2:1'
     *** The Portal/Initiator Groups must be precreated ***""")
-    p.set_defaults(func=add_pg_ig_maps)
+    p.set_defaults(func=iscsi_target_node_add_pg_ig_maps)
 
     def delete_pg_ig_maps(args):
         pg_ig_maps = []

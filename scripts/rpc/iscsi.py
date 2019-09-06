@@ -348,7 +348,8 @@ def delete_pg_ig_maps(client, pg_ig_maps, name):
     return client.call('delete_pg_ig_maps', params)
 
 
-def add_pg_ig_maps(client, pg_ig_maps, name):
+@deprecated_alias('add_pg_ig_maps')
+def iscsi_target_node_add_pg_ig_maps(client, pg_ig_maps, name):
     """Add PG-IG maps to the target node.
 
     Args:
@@ -362,7 +363,7 @@ def add_pg_ig_maps(client, pg_ig_maps, name):
         'name': name,
         'pg_ig_maps': pg_ig_maps,
     }
-    return client.call('add_pg_ig_maps', params)
+    return client.call('iscsi_target_node_add_pg_ig_maps', params)
 
 
 @deprecated_alias('add_portal_group')

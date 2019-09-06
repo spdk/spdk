@@ -787,8 +787,8 @@ failed:
 }
 
 int
-spdk_iscsi_tgt_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
-				   int *pg_tag_list, int *ig_tag_list, uint16_t num_maps)
+spdk_iscsi_target_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
+				      int *pg_tag_list, int *ig_tag_list, uint16_t num_maps)
 {
 	uint16_t i;
 	int rc;
@@ -993,7 +993,8 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	}
 
 	TAILQ_INIT(&target->pg_map_head);
-	rc = spdk_iscsi_tgt_node_add_pg_ig_maps(target, pg_tag_list, ig_tag_list, num_maps);
+	rc = spdk_iscsi_target_node_add_pg_ig_maps(target, pg_tag_list,
+			ig_tag_list, num_maps);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not add map to target\n");
 		iscsi_tgt_node_destruct(target, NULL, NULL);
