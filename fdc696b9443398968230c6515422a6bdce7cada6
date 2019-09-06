@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "864a3cdf_010405a2",
+        "filename": "module/bdev/raid/bdev_raid.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-06T17:37:20Z",
+      "side": 1,
+      "message": "FYI not a copy n paste mistake, I wanted to put these in the same order that they\u0027re assigned",
+      "revId": "fdc696b9443398968230c6515422a6bdce7cada6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
