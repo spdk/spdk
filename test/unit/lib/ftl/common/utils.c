@@ -73,8 +73,7 @@ test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
 	for (size_t i = 0; i < ftl_dev_num_punits(dev); ++i) {
 		punit = range->begin + i;
 		dev->punits[i].dev = dev;
-		dev->punits[i].start_ppa.grp = punit % geo->num_grp;
-		dev->punits[i].start_ppa.pu = punit / geo->num_grp;
+		dev->punits[i].start_ppa.pu = punit;
 	}
 
 	LIST_INIT(&dev->free_bands);
