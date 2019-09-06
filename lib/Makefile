@@ -49,6 +49,7 @@ endif
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
 DIRS-$(CONFIG_REDUCE) += reduce
+DIRS-$(CONFIG_VHOST_INTERNAL_LIB) += rte_vhost
 
 # If CONFIG_ENV is pointing at a directory in lib, build it.
 # Out-of-tree env implementations must be built separately by the user.

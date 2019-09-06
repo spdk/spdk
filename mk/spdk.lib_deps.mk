@@ -42,6 +42,7 @@ JSON_LIBS := json jsonrpc rpc
 
 DEPDIRS-env_ocf :=
 DEPDIRS-log :=
+DEPDIRS-rte_vhost :=
 
 DEPDIRS-ioat := log
 DEPDIRS-sock := log
@@ -77,7 +78,10 @@ DEPDIRS-nvmf := log sock util json nvme thread  trace bdev
 DEPDIRS-scsi := log util thread $(JSON_LIBS) trace bdev
 
 DEPDIRS-iscsi := log sock util conf thread $(JSON_LIBS) trace event scsi
-DEPDIRS-vhost := log util conf thread $(JSON_LIBS) bdev event scsi
+DEPDIRS-vhost = log util conf thread $(JSON_LIBS) bdev event scsi
+ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
+DEPDIRS-vhost += rte_vhost
+endif
 
 # ------------------------------------------------------------------------
 # Start module/ directory - This section extends the organizational pattern from

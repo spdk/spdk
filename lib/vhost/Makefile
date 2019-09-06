@@ -41,8 +41,7 @@ C_SRCS = vhost.c vhost_rpc.c vhost_scsi.c vhost_blk.c rte_vhost_compat.c
 
 ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
 C_SRCS += vhost_nvme.c
-DIRS-y += rte_vhost
-CFLAGS := -Irte_vhost $(CFLAGS)
+CFLAGS := -I../rte_vhost $(CFLAGS)
 endif
 
 LIBNAME = vhost
