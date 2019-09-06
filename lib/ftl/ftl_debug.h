@@ -53,8 +53,8 @@
 static inline const char *
 ftl_ppa2str(struct ftl_ppa ppa, char *buf, size_t size)
 {
-	snprintf(buf, size, "(grp: %u, pu: %u, chk: %u, lbk: %u)",
-		 ppa.grp, ppa.pu, ppa.chk, ppa.lbk);
+	snprintf(buf, size, "(pu: %u, chk: %u, lbk: %u)",
+		 ppa.pu, ppa.chk, ppa.lbk);
 	return buf;
 }
 
