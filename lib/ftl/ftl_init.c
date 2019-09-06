@@ -204,16 +204,16 @@ out:
 }
 
 int
-ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
+ftl_retrieve_chunk_info(struct spdk_ftl_dev *dev, struct ftl_addr addr,
 			struct spdk_ocssd_chunk_information_entry *info,
 			unsigned int num_entries)
 {
 	volatile struct ftl_admin_cmpl cmpl = {};
 	uint32_t nsid = spdk_nvme_ns_get_id(dev->ns);
-	unsigned int grp = ppa.pu % dev->geo.num_grp;
-	unsigned int punit = ppa.pu / dev->geo.num_grp;
+	unsigned int grp = addr.pu % dev->geo.num_grp;
+	unsigned int punit = addr.pu / dev->geo.num_grp;
 	uint64_t offset = (grp * dev->geo.num_pu + punit) *
-			  dev->geo.num_chk + ppa.chk;
+			  dev->geo.num_chk + addr.zone_id;
 	int rc;
 
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_OCSSD_LOG_CHUNK_INFO, nsid,
@@ -244,17 +244,17 @@ ftl_retrieve_punit_chunk_info(struct spdk_ftl_dev *dev, const struct ftl_punit *
 {
 	uint32_t i = 0;
 	unsigned int num_entries = FTL_BLOCK_SIZE / sizeof(*info);
-	struct ftl_ppa chunk_ppa = punit->start_ppa;
-	char ppa_buf[128];
+	struct ftl_addr chunk_addr = punit->start_addr;
+	char addr_buf[128];
 
-	for (i = 0; i < dev->geo.num_chk; i += num_entries, chunk_ppa.chk += num_entries) {
+	for (i = 0; i < dev->geo.num_chk; i += num_entries, chunk_addr.zone_id += num_entries) {
 		if (num_entries > dev->geo.num_chk - i) {
 			num_entries = dev->geo.num_chk - i;
 		}
 
-		if (ftl_retrieve_chunk_info(dev, chunk_ppa, &info[i], num_entries)) {
-			SPDK_ERRLOG("Failed to retrieve chunk information @ppa: %s\n",
-				    ftl_ppa2str(chunk_ppa, ppa_buf, sizeof(ppa_buf)));
+		if (ftl_retrieve_chunk_info(dev, chunk_addr, &info[i], num_entries)) {
+			SPDK_ERRLOG("Failed to retrieve chunk information @addr: %s\n",
+				    ftl_addr2str(chunk_addr, addr_buf, sizeof(addr_buf)));
 			return -1;
 		}
 	}
@@ -365,9 +365,9 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 
 		rc = ftl_retrieve_punit_chunk_info(dev, punit, info);
 		if (rc) {
-			SPDK_ERRLOG("Failed to retrieve bbt for @ppa: %s [%lu]\n",
-				    ftl_ppa2str(punit->start_ppa, buf, sizeof(buf)),
-				    ftl_ppa_addr_pack(dev, punit->start_ppa));
+			SPDK_ERRLOG("Failed to retrieve bbt for @addr: %s [%lu]\n",
+				    ftl_addr2str(punit->start_addr, buf, sizeof(buf)),
+				    ftl_addr_addr_pack(dev, punit->start_addr));
 			goto out;
 		}
 
@@ -377,8 +377,8 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 			zone->pos = i;
 			zone->state = ftl_get_zone_state(&info[j]);
 			zone->punit = punit;
-			zone->start_ppa = punit->start_ppa;
-			zone->start_ppa.chk = band->id;
+			zone->start_addr = punit->start_addr;
+			zone->start_addr.zone_id = band->id;
 			zone->write_offset = ftl_dev_lbks_in_zone(dev);
 
 			if (zone->state != SPDK_BDEV_ZONE_STATE_OFFLINE) {
@@ -390,7 +390,7 @@ ftl_dev_init_bands(struct spdk_ftl_dev *dev)
 
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 		band = &dev->bands[i];
-		band->tail_md_ppa = ftl_band_tail_md_ppa(band);
+		band->tail_md_addr = ftl_band_tail_md_addr(band);
 	}
 
 	ftl_remove_empty_bands(dev);
@@ -413,8 +413,8 @@ ftl_dev_init_punits(struct spdk_ftl_dev *dev)
 		dev->punits[i].dev = dev;
 		punit = dev->range.begin + i;
 
-		dev->punits[i].start_ppa.ppa = 0;
-		dev->punits[i].start_ppa.pu = punit;
+		dev->punits[i].start_addr.addr = 0;
+		dev->punits[i].start_addr.pu = punit;
 	}
 
 	return 0;
@@ -444,10 +444,10 @@ ftl_dev_retrieve_geo(struct spdk_ftl_dev *dev)
 	}
 
 	/* TODO: add sanity checks for the geo */
-	dev->ppa_len = dev->geo.lbaf.grp_len +
-		       dev->geo.lbaf.pu_len +
-		       dev->geo.lbaf.chk_len +
-		       dev->geo.lbaf.lbk_len;
+	dev->addr_len = dev->geo.lbaf.grp_len +
+			dev->geo.lbaf.pu_len +
+			dev->geo.lbaf.chk_len +
+			dev->geo.lbaf.lbk_len;
 
 	dev->ppaf.lbk_offset = 0;
 	dev->ppaf.lbk_mask   = (1 << dev->geo.lbaf.lbk_len) - 1;
@@ -805,7 +805,7 @@ ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 		return -1;
 	}
 
-	addr_size = dev->ppa_len >= 32 ? 8 : 4;
+	addr_size = dev->addr_len >= 32 ? 8 : 4;
 	dev->l2p = malloc(dev->num_lbas * addr_size);
 	if (!dev->l2p) {
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_INIT, "Failed to allocate l2p table\n");
@@ -813,7 +813,7 @@ ftl_dev_l2p_alloc(struct spdk_ftl_dev *dev)
 	}
 
 	for (i = 0; i < dev->num_lbas; ++i) {
-		ftl_l2p_set(dev, i, ftl_to_ppa(FTL_PPA_INVALID));
+		ftl_l2p_set(dev, i, ftl_to_addr(FTL_ADDR_INVALID));
 	}
 
 	return 0;

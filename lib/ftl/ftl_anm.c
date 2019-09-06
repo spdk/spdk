@@ -118,7 +118,7 @@ ftl_anm_log_range(struct spdk_ocssd_chunk_notification_entry *log)
 }
 
 static struct ftl_anm_event *
-ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
+ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_addr addr,
 		    enum ftl_anm_range range, size_t num_lbks)
 {
 	struct ftl_anm_event *event;
@@ -129,7 +129,7 @@ ftl_anm_event_alloc(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 	}
 
 	event->dev = dev;
-	event->ppa = ppa;
+	event->addr = addr;
 
 	switch (range) {
 	case FTL_ANM_RANGE_LBK:
@@ -152,7 +152,7 @@ ftl_anm_process_log(struct ftl_anm_poller *poller,
 		    struct spdk_ocssd_chunk_notification_entry *log)
 {
 	struct ftl_anm_event *event;
-	struct ftl_ppa ppa = ftl_ppa_addr_unpack(poller->dev, log->lba);
+	struct ftl_addr addr = ftl_addr_addr_unpack(poller->dev, log->lba);
 	struct spdk_ftl_dev *dev = poller->dev;
 	enum ftl_anm_range range = ftl_anm_log_range(log);
 	int i, num_bands = 1;
@@ -160,19 +160,19 @@ ftl_anm_process_log(struct ftl_anm_poller *poller,
 	num_bands = range != FTL_ANM_RANGE_PU ? 1 : ftl_dev_num_bands(dev);
 
 	for (i = 0; i < num_bands; ++i) {
-		struct ftl_zone *zone = ftl_band_zone_from_ppa(&dev->bands[i], ppa);
+		struct ftl_zone *zone = ftl_band_zone_from_addr(&dev->bands[i], addr);
 
 		if (zone->state == SPDK_BDEV_ZONE_STATE_OFFLINE) {
 			continue;
 		}
 
-		event = ftl_anm_event_alloc(dev, ppa, range, log->nlb);
+		event = ftl_anm_event_alloc(dev, addr, range, log->nlb);
 		if (!event) {
 			return -ENOMEM;
 		}
 
 		poller->fn(event);
-		ppa.chk++;
+		addr.zone_id++;
 	}
 
 	return 0;
@@ -183,16 +183,16 @@ ftl_anm_in_poller_range(struct ftl_anm_poller *poller,
 			struct spdk_ocssd_chunk_notification_entry *log)
 {
 	struct spdk_ftl_dev *dev = poller->dev;
-	struct ftl_ppa ppa = ftl_ppa_addr_unpack(dev, log->lba);
+	struct ftl_addr addr = ftl_addr_addr_unpack(dev, log->lba);
 	char buf[128];
 
-	if (ppa.chk >= ftl_dev_num_bands(dev)) {
-		SPDK_ERRLOG("ANM log contains invalid @ppa: %s\n",
-			    ftl_ppa2str(ppa, buf, sizeof(buf)));
+	if (addr.zone_id >= ftl_dev_num_bands(dev)) {
+		SPDK_ERRLOG("ANM log contains invalid @addr: %s\n",
+			    ftl_addr2str(addr, buf, sizeof(buf)));
 		return false;
 	}
 
-	if (!ftl_ppa_in_range(dev, ppa)) {
+	if (!ftl_addr_in_range(dev, addr)) {
 		return false;
 	}
 

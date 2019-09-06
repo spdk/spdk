@@ -55,7 +55,7 @@ ftl_band_validate_md(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_lba_map *lba_map = &band->lba_map;
-	struct ftl_ppa ppa_md, ppa_l2p;
+	struct ftl_addr addr_md, addr_l2p;
 	size_t i, size, seg_off;
 	bool valid = true;
 
@@ -72,14 +72,14 @@ ftl_band_validate_md(struct ftl_band *band)
 			continue;
 		}
 
-		ppa_md = ftl_band_ppa_from_lbkoff(band, i);
-		ppa_l2p = ftl_l2p_get(dev, lba_map->map[i]);
+		addr_md = ftl_band_addr_from_lbkoff(band, i);
+		addr_l2p = ftl_l2p_get(dev, lba_map->map[i]);
 
-		if (ppa_l2p.cached) {
+		if (addr_l2p.cached) {
 			continue;
 		}
 
-		if (ppa_l2p.ppa != ppa_md.ppa) {
+		if (addr_l2p.addr != addr_md.addr) {
 			valid = false;
 			break;
 		}

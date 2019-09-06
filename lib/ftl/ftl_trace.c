@@ -101,20 +101,20 @@ SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
 
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_read_sched");
 		spdk_trace_register_description(descbuf, FTL_TRACE_MD_READ_SCHEDULE(i),
-						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
+						OWNER_FTL, OBJECT_NONE, 0, 0, "addr: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_read_submit");
 		spdk_trace_register_description(descbuf, FTL_TRACE_MD_READ_SUBMISSION(i),
-						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
+						OWNER_FTL, OBJECT_NONE, 0, 0, "addr: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_read_cmpl");
 		spdk_trace_register_description(descbuf, FTL_TRACE_MD_READ_COMPLETION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_write_sched");
 		spdk_trace_register_description(descbuf, FTL_TRACE_MD_WRITE_SCHEDULE(i),
-						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
+						OWNER_FTL, OBJECT_NONE, 0, 0, "addr: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_write_submit");
 		spdk_trace_register_description(descbuf, FTL_TRACE_MD_WRITE_SUBMISSION(i),
-						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
+						OWNER_FTL, OBJECT_NONE, 0, 0, "addr: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "md_write_cmpl");
 		spdk_trace_register_description(descbuf, FTL_TRACE_MD_WRITE_COMPLETION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
@@ -124,7 +124,7 @@ SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "read_submit");
 		spdk_trace_register_description(descbuf, FTL_TRACE_READ_SUBMISSION(i),
-						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
+						OWNER_FTL, OBJECT_NONE, 0, 0, "addr: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "read_cmpl_invld");
 		spdk_trace_register_description(descbuf, FTL_TRACE_READ_COMPLETION_INVALID(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
@@ -143,17 +143,17 @@ SPDK_TRACE_REGISTER_FN(ftl_trace_func, "ftl", TRACE_GROUP_FTL)
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "write_submit");
 		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_SUBMISSION(i),
-						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
+						OWNER_FTL, OBJECT_NONE, 0, 0, "addr: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "write_cmpl");
 		spdk_trace_register_description(descbuf, FTL_TRACE_WRITE_COMPLETION(i),
 						OWNER_FTL, OBJECT_NONE, 0, 0, "lba: ");
 
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "erase_submit");
 		spdk_trace_register_description(descbuf, FTL_TRACE_ERASE_SUBMISSION(i),
-						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
+						OWNER_FTL, OBJECT_NONE, 0, 0, "addr: ");
 		snprintf(descbuf, sizeof(descbuf), "%c %s", source[i], "erase_cmpl");
 		spdk_trace_register_description(descbuf, FTL_TRACE_ERASE_COMPLETION(i),
-						OWNER_FTL, OBJECT_NONE, 0, 0, "ppa: ");
+						OWNER_FTL, OBJECT_NONE, 0, 0, "addr: ");
 	}
 }
 
@@ -249,7 +249,7 @@ ftl_trace_rwb_pop(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry)
 		tpoint_id = FTL_TRACE_RWB_POP(FTL_TRACE_SOURCE_USER);
 	}
 
-	spdk_trace_record(tpoint_id, entry->trace, 0, entry->ppa.ppa, entry->lba);
+	spdk_trace_record(tpoint_id, entry->trace, 0, entry->addr.addr, entry->lba);
 }
 
 void
@@ -302,8 +302,8 @@ ftl_trace_completion(struct spdk_ftl_dev *dev, const struct ftl_io *io,
 }
 
 void
-ftl_trace_submission(struct spdk_ftl_dev *dev, const struct ftl_io *io, struct ftl_ppa ppa,
-		     size_t ppa_cnt)
+ftl_trace_submission(struct spdk_ftl_dev *dev, const struct ftl_io *io, struct ftl_addr addr,
+		     size_t addr_cnt)
 {
 	uint16_t tpoint_id = 0, source;
 
@@ -337,7 +337,7 @@ ftl_trace_submission(struct spdk_ftl_dev *dev, const struct ftl_io *io, struct f
 		}
 	}
 
-	spdk_trace_record(tpoint_id, io->trace, ppa_cnt, 0, ppa.ppa);
+	spdk_trace_record(tpoint_id, io->trace, addr_cnt, 0, addr.addr);
 }
 
 void

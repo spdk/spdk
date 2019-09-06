@@ -66,7 +66,7 @@ DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, si
 			      size_t num_lbks, int prio, bool defrag));
 DEFINE_STUB_V(ftl_trace_write_band, (struct spdk_ftl_dev *dev, const struct ftl_band *band));
 DEFINE_STUB_V(ftl_trace_submission, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
-				     struct ftl_ppa ppa, size_t ppa_cnt));
+				     struct ftl_addr addr, size_t addr_cnt));
 DEFINE_STUB_V(ftl_rwb_get_limits, (struct ftl_rwb *rwb, size_t limit[FTL_RWB_TYPE_MAX]));
 DEFINE_STUB_V(ftl_io_process_error, (struct ftl_io *io, const struct spdk_nvme_cpl *status));
 DEFINE_STUB_V(ftl_trace_limits, (struct spdk_ftl_dev *dev, const size_t *limits, size_t num_free));
@@ -164,7 +164,7 @@ test_wptr(void)
 
 		for (lbk = 0, offset = 0; lbk < ftl_dev_lbks_in_zone(dev) / xfer_size; ++lbk) {
 			for (zone = 0; zone < band->num_zones; ++zone) {
-				CU_ASSERT_EQUAL(wptr->ppa.lbk, (lbk * xfer_size));
+				CU_ASSERT_EQUAL(wptr->addr.offset, (lbk * xfer_size));
 				CU_ASSERT_EQUAL(wptr->offset, offset);
 				ftl_wptr_advance(wptr, xfer_size);
 				offset += xfer_size;
@@ -172,7 +172,7 @@ test_wptr(void)
 		}
 
 		CU_ASSERT_EQUAL(band->state, FTL_BAND_STATE_FULL);
-		CU_ASSERT_EQUAL(wptr->ppa.lbk, ftl_dev_lbks_in_zone(dev));
+		CU_ASSERT_EQUAL(wptr->addr.offset, ftl_dev_lbks_in_zone(dev));
 
 		ftl_band_set_state(band, FTL_BAND_STATE_CLOSING);
 
