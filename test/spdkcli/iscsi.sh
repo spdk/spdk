@@ -34,7 +34,7 @@ $spdkcli_job "'/bdevs/malloc create 32 512 Malloc0' 'Malloc0' True
 '/iscsi/initiator_groups add_initiator 2 ANW 10.0.2.16/32' 'hostname=ANW, netmask=10.0.2.16' True
 '/iscsi/target_nodes create Target0 Target0_alias \"Malloc0:0 Malloc1:1\" 1:2 64 g=1' 'Target0' True
 '/iscsi/target_nodes create Target1 Target1_alias Malloc2:0 1:2 64 g=1' 'Target1' True
-'/iscsi/target_nodes/iqn.2016-06.io.spdk:Target0 add_pg_ig_maps \"1:3 2:2\"' 'portal_group1 - initiator_group3' True
+'/iscsi/target_nodes/iqn.2016-06.io.spdk:Target0 iscsi_target_node_add_pg_ig_maps \"1:3 2:2\"' 'portal_group1 - initiator_group3' True
 '/iscsi/target_nodes add_lun iqn.2016-06.io.spdk:Target1 Malloc3 2' 'Malloc3' True
 '/iscsi/auth_groups create 1 \"user:test1 secret:test1 muser:mutual_test1 msecret:mutual_test1,\
 user:test3 secret:test3 muser:mutual_test3 msecret:mutual_test3\"' 'user=test3' True
