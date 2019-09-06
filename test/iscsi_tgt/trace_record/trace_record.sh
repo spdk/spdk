@@ -108,8 +108,8 @@ delete_tmp_files
 echo "entries numbers from trace record are:" $record_num
 echo "entries numbers from trace tool are:" $trace_tool_num
 
-arr_record_num=($record_num)
-arr_trace_tool_num=($trace_tool_num)
+arr_record_num=("$record_num")
+arr_trace_tool_num=("$trace_tool_num")
 len_arr_record_num=${#arr_record_num[@]}
 len_arr_trace_tool_num=${#arr_trace_tool_num[@]}
 

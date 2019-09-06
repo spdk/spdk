@@ -181,7 +181,7 @@ for (( i=0; i<$vm_count; i++)); do
     # Get all lvol bdevs associated with this VM number
     bdevs=$(jq -r "map(select(.aliases[] | contains(\"$vm\")) | \
             .aliases[]) | join(\" \")" <<< "$bdev_info")
-    bdevs=($bdevs)
+    bdevs=("$bdevs")
 
     setup_cmd="vm_setup --disk-type=$ctrl_type --force=$i"
     if [[ $i%2 -ne 0 ]] && [[ $multi_os ]]; then
