@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ece63326_8b78cc23",
+        "filename": "lib/iscsi/tgt_node.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-06T21:05:15Z",
+      "side": 1,
+      "message": "updated a remove?",
+      "revId": "875fdd54100a5f1356ae3be6ac6ffa4275c0f0a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
