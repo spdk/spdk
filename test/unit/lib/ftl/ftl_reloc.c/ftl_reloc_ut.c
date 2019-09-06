@@ -57,7 +57,7 @@ static struct spdk_ftl_punit_range g_range = {
 };
 
 DEFINE_STUB(ftl_dev_tail_md_disk_size, size_t, (const struct spdk_ftl_dev *dev), 1);
-DEFINE_STUB(ftl_ppa_is_written, bool, (struct ftl_band *band, struct ftl_ppa ppa), true);
+DEFINE_STUB(ftl_addr_is_written, bool, (struct ftl_band *band, struct ftl_addr addr), true);
 DEFINE_STUB_V(ftl_band_set_state, (struct ftl_band *band, enum ftl_band_state state));
 DEFINE_STUB_V(ftl_trace_lba_io_init, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
 DEFINE_STUB_V(ftl_free_io, (struct ftl_io *io));
@@ -104,25 +104,25 @@ ftl_band_read_lba_map(struct ftl_band *band, size_t offset,
 }
 
 uint64_t
-ftl_band_lbkoff_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
+ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
-	return test_offset_from_ppa(ppa, band);
+	return test_offset_from_addr(addr, band);
 }
 
-struct ftl_ppa
-ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
+struct ftl_addr
+ftl_band_addr_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 {
-	struct ftl_ppa ppa = { .ppa = 0 };
+	struct ftl_addr addr = { .addr = 0 };
 	struct spdk_ftl_dev *dev = band->dev;
 	uint64_t punit;
 
 	punit = lbkoff / ftl_dev_lbks_in_zone(dev) + dev->range.begin;
 
-	ppa.lbk = lbkoff % ftl_dev_lbks_in_zone(dev);
-	ppa.chk = band->id;
-	ppa.pu = punit;
+	addr.offset = lbkoff % ftl_dev_lbks_in_zone(dev);
+	addr.zone_id = band->id;
+	addr.pu = punit;
 
-	return ppa;
+	return addr;
 }
 
 void
@@ -259,7 +259,7 @@ test_reloc_iter_full(void)
 	struct ftl_reloc *reloc;
 	struct ftl_band_reloc *breloc;
 	struct ftl_band *band;
-	struct ftl_ppa ppa;
+	struct ftl_addr addr;
 
 	setup_reloc(&dev, &reloc, &g_geo, &g_range);
 
@@ -277,7 +277,7 @@ test_reloc_iter_full(void)
 		    (ftl_dev_lbks_in_zone(dev) / reloc->xfer_size);
 
 	for (i = 0; i < num_iters; i++) {
-		num_lbks = ftl_reloc_next_lbks(breloc, &ppa);
+		num_lbks = ftl_reloc_next_lbks(breloc, &addr);
 		CU_ASSERT_EQUAL(num_lbks, reloc->xfer_size);
 	}
 
@@ -289,7 +289,7 @@ test_reloc_iter_full(void)
 	/* is not divisible by xfer_size */
 	reminder = ftl_dev_lbks_in_zone(dev) % reloc->xfer_size;
 	for (i = 0; i < num_iters; i++) {
-		num_lbks = ftl_reloc_next_lbks(breloc, &ppa);
+		num_lbks = ftl_reloc_next_lbks(breloc, &addr);
 		CU_ASSERT_EQUAL(reminder, num_lbks);
 	}
 

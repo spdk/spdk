@@ -57,8 +57,8 @@ enum ftl_reloc_move_state {
 struct ftl_reloc_move {
 	struct ftl_band_reloc			*breloc;
 
-	/* Start ppa */
-	struct ftl_ppa				ppa;
+	/* Start addr */
+	struct ftl_addr				addr;
 
 	/* Number of logical blocks */
 	size_t					lbk_cnt;
@@ -197,7 +197,7 @@ ftl_reloc_read_lba_map(struct ftl_band_reloc *breloc, struct ftl_reloc_move *mov
 	struct ftl_band *band = breloc->band;
 
 	breloc->num_outstanding++;
-	return ftl_band_read_lba_map(band, ftl_band_lbkoff_from_ppa(band, move->ppa),
+	return ftl_band_read_lba_map(band, ftl_band_lbkoff_from_addr(band, move->addr),
 				     move->lbk_cnt, ftl_reloc_read_lba_map_cb, move);
 }
 
@@ -243,7 +243,7 @@ static void
 ftl_reloc_write_cb(struct ftl_io *io, void *arg, int status)
 {
 	struct ftl_reloc_move *move = arg;
-	struct ftl_ppa ppa = move->ppa;
+	struct ftl_addr addr = move->addr;
 	struct ftl_band_reloc *breloc = move->breloc;
 	size_t i;
 
@@ -256,8 +256,8 @@ ftl_reloc_write_cb(struct ftl_io *io, void *arg, int status)
 	}
 
 	for (i = 0; i < move->lbk_cnt; ++i) {
-		ppa.lbk = move->ppa.lbk + i;
-		size_t lbkoff = ftl_band_lbkoff_from_ppa(breloc->band, ppa);
+		addr.offset = move->addr.offset + i;
+		size_t lbkoff = ftl_band_lbkoff_from_addr(breloc->band, addr);
 		ftl_reloc_clr_lbk(breloc, lbkoff);
 	}
 
@@ -313,9 +313,9 @@ ftl_reloc_iter_next_zone(struct ftl_band_reloc *breloc)
 static int
 ftl_reloc_lbk_valid(struct ftl_band_reloc *breloc, size_t lbkoff)
 {
-	struct ftl_ppa ppa = ftl_band_ppa_from_lbkoff(breloc->band, lbkoff);
+	struct ftl_addr addr = ftl_band_addr_from_lbkoff(breloc->band, lbkoff);
 
-	return ftl_ppa_is_written(breloc->band, ppa) &&
+	return ftl_addr_is_written(breloc->band, addr) &&
 	       spdk_bit_array_get(breloc->reloc_map, lbkoff) &&
 	       ftl_band_lbkoff_valid(breloc->band, lbkoff);
 }
@@ -373,7 +373,7 @@ ftl_reloc_iter_done(struct ftl_band_reloc *breloc)
 
 static size_t
 ftl_reloc_find_valid_lbks(struct ftl_band_reloc *breloc,
-			  size_t num_lbk, struct ftl_ppa *ppa)
+			  size_t num_lbk, struct ftl_addr *addr)
 {
 	size_t lbkoff, lbk_cnt = 0;
 
@@ -381,7 +381,7 @@ ftl_reloc_find_valid_lbks(struct ftl_band_reloc *breloc,
 		return 0;
 	}
 
-	*ppa = ftl_band_ppa_from_lbkoff(breloc->band, lbkoff);
+	*addr = ftl_band_addr_from_lbkoff(breloc->band, lbkoff);
 
 	for (lbk_cnt = 1; lbk_cnt < num_lbk; lbk_cnt++) {
 		if (!ftl_reloc_iter_next(breloc, &lbkoff)) {
@@ -393,13 +393,13 @@ ftl_reloc_find_valid_lbks(struct ftl_band_reloc *breloc,
 }
 
 static size_t
-ftl_reloc_next_lbks(struct ftl_band_reloc *breloc, struct ftl_ppa *ppa)
+ftl_reloc_next_lbks(struct ftl_band_reloc *breloc, struct ftl_addr *addr)
 {
 	size_t i, lbk_cnt = 0;
 	struct spdk_ftl_dev *dev = breloc->parent->dev;
 
 	for (i = 0; i < ftl_dev_num_punits(dev); ++i) {
-		lbk_cnt = ftl_reloc_find_valid_lbks(breloc, breloc->parent->xfer_size, ppa);
+		lbk_cnt = ftl_reloc_find_valid_lbks(breloc, breloc->parent->xfer_size, addr);
 		ftl_reloc_iter_next_zone(breloc);
 
 		if (lbk_cnt || ftl_reloc_iter_done(breloc)) {
@@ -415,7 +415,7 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move,
 		  ftl_io_fn fn, enum ftl_io_type io_type, int flags)
 {
 	size_t lbkoff, i;
-	struct ftl_ppa ppa = move->ppa;
+	struct ftl_addr addr = move->addr;
 	struct ftl_io *io = NULL;
 	struct ftl_io_init_opts opts = {
 		.dev		= breloc->parent->dev,
@@ -434,11 +434,11 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move,
 	}
 
 	io->cb_ctx = move;
-	io->ppa = move->ppa;
+	io->addr = move->addr;
 
 	if (flags & FTL_IO_VECTOR_LBA) {
-		for (i = 0; i < io->lbk_cnt; ++i, ++ppa.lbk) {
-			lbkoff = ftl_band_lbkoff_from_ppa(breloc->band, ppa);
+		for (i = 0; i < io->lbk_cnt; ++i, ++addr.offset) {
+			lbkoff = ftl_band_lbkoff_from_addr(breloc->band, addr);
 
 			if (!ftl_band_lbkoff_valid(breloc->band, lbkoff)) {
 				io->lba.vector[i] = FTL_LBA_INVALID;
@@ -476,11 +476,11 @@ ftl_reloc_write(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move)
 static int
 ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_reloc_move *move)
 {
-	struct ftl_ppa ppa = {};
+	struct ftl_addr addr = {};
 
-	move->lbk_cnt = ftl_reloc_next_lbks(breloc, &ppa);
+	move->lbk_cnt = ftl_reloc_next_lbks(breloc, &addr);
 	move->breloc = breloc;
-	move->ppa = ppa;
+	move->addr = addr;
 
 	if (!move->lbk_cnt) {
 		return 0;
