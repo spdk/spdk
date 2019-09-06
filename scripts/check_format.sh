@@ -107,7 +107,7 @@ fi
 echo -n "Checking comment style..."
 
 git grep --line-number -e '/[*][^ *-]' -- '*.[ch]' > comment.log || true
-git grep --line-number -e '[^ ][*]/' -- '*.[ch]' ':!lib/vhost/rte_vhost*/*' >> comment.log || true
+git grep --line-number -e '[^ ][*]/' -- '*.[ch]' ':!lib/rte_vhost*/*' >> comment.log || true
 git grep --line-number -e '^[*]' -- '*.[ch]' >> comment.log || true
 git grep --line-number -e '\s//' -- '*.[ch]' >> comment.log || true
 git grep --line-number -e '^//' -- '*.[ch]' >> comment.log || true
@@ -147,7 +147,7 @@ rm -f whitespace.log
 
 echo -n "Checking for use of forbidden library functions..."
 
-git grep --line-number -w '\(atoi\|atol\|atoll\|strncpy\|strcpy\|strcat\|sprintf\|vsprintf\)' -- './*.c' ':!lib/vhost/rte_vhost*/**' > badfunc.log || true
+git grep --line-number -w '\(atoi\|atol\|atoll\|strncpy\|strcpy\|strcat\|sprintf\|vsprintf\)' -- './*.c' ':!lib/rte_vhost*/**' > badfunc.log || true
 if [ -s badfunc.log ]; then
 	echo " Forbidden library functions detected"
 	cat badfunc.log
@@ -182,7 +182,7 @@ fi
 rm -f eofnl.log
 
 echo -n "Checking for POSIX includes..."
-git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/vhost/rte_vhost*/**' ':!scripts/posix.txt' ':!*.patch' > scripts/posix.log || true
+git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/rte_vhost*/**' ':!scripts/posix.txt' ':!*.patch' > scripts/posix.log || true
 if [ -s scripts/posix.log ]; then
 	echo "POSIX includes detected. Please include spdk/stdinc.h instead."
 	cat scripts/posix.log
