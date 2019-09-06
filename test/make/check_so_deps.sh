@@ -45,10 +45,12 @@ function confirm_deps() {
 	lib_make_deps=($(cat $libdeps_file | grep "DEPDIRS-${lib_shortname}" | cut -d "=" -f 2 | xargs))
 	lib_make_deps=($(replace_defined_variables "${lib_make_deps[@]}"))
 
-	for dep in ${lib_make_deps[@]}; do
-		if [[ $dep == *'$'* ]]; then
-			dep_no_dollar=$(echo $dep | sed 's,$(,,g' | sed 's,),,g')
-		fi
+	for ign_dep in "${IGNORED_LIBS[@]}"; do
+		for i in "${!lib_make_deps[@]}"; do
+			if [[ ${lib_make_deps[i]} == "$ign_dep" ]]; then
+				unset 'lib_make_deps[i]'
+			fi
+		done
 	done
 
 	symbols=$(readelf -s $lib | grep -E "NOTYPE.*GLOBAL.*UND" | awk '{print $8}' | sort | uniq)
@@ -110,6 +112,11 @@ echo "---------------------------------------------------------------------"
 # symbols section.
 SPDK_LIBS=$(ls -1 $libdir/libspdk_*.so | grep -v libspdk_env_dpdk.so)
 DEP_LIBS=$(ls -1 $libdir/libspdk_*.so)
+
+IGNORED_LIBS=()
+if grep -q 'CONFIG_VHOST_INTERNAL_LIB?=n' $rootdir/mk/config.mk; then
+	IGNORED_LIBS+=("rte_vhost")
+fi
 
 fail_file=$output_dir/check_so_deps_fail
 
