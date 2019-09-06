@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/config.mk
 
 ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/vhost/rte_vhost
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/rte_vhost
 endif
 
 CFLAGS += $(ENV_CFLAGS)
