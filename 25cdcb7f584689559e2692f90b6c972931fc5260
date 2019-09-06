@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0afa4701_f66f1d90",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-06T07:15:36Z",
+      "side": 1,
+      "message": "I moved the commands around so that most of pacman commands are at the top. Next are AUR installs with any pacman installs they depend on",
+      "parentUuid": "b56289ef_3f28c721",
+      "revId": "25cdcb7f584689559e2692f90b6c972931fc5260",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea801b60_2c6d2fa5",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 7
@@ -33,6 +51,24 @@
       "revId": "25cdcb7f584689559e2692f90b6c972931fc5260",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48b82d44_fa3cbe0c",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-06T07:15:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea801b60_2c6d2fa5",
+      "revId": "25cdcb7f584689559e2692f90b6c972931fc5260",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
