@@ -568,8 +568,8 @@ SPDK_RPC_REGISTER("iscsi_target_node_add_pg_ig_maps",
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_add_pg_ig_maps, add_pg_ig_maps)
 
 static void
-spdk_rpc_delete_pg_ig_maps(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+spdk_rpc_iscsi_target_node_remove_pg_ig_maps(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
 {
 	struct rpc_tgt_node_pg_ig_maps req = {};
 	struct spdk_json_write_ctx *w;
@@ -596,7 +596,7 @@ spdk_rpc_delete_pg_ig_maps(struct spdk_jsonrpc_request *request,
 		ig_tags[i] = req.pg_ig_maps.maps[i].ig_tag;
 	}
 
-	rc = spdk_iscsi_tgt_node_delete_pg_ig_maps(target, pg_tags, ig_tags,
+	rc = spdk_iscsi_target_node_remove_pg_ig_maps(target, pg_tags, ig_tags,
 			req.pg_ig_maps.num_maps);
 	if (rc < 0) {
 		SPDK_ERRLOG("remove pg-ig maps failed\n");
@@ -615,7 +615,10 @@ invalid:
 					 "Invalid parameters");
 	free(req.name);
 }
-SPDK_RPC_REGISTER("delete_pg_ig_maps", spdk_rpc_delete_pg_ig_maps, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_target_node_remove_pg_ig_maps",
+		  spdk_rpc_iscsi_target_node_remove_pg_ig_maps, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_remove_pg_ig_maps,
+				   delete_pg_ig_maps)
 
 struct rpc_delete_target_node {
 	char *name;
