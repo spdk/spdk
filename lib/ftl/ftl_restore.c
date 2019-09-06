@@ -383,7 +383,7 @@ static int
 ftl_restore_l2p(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
-	struct ftl_ppa ppa;
+	struct ftl_addr addr;
 	uint64_t lba;
 	size_t i;
 
@@ -397,15 +397,15 @@ ftl_restore_l2p(struct ftl_band *band)
 			return -1;
 		}
 
-		ppa = ftl_l2p_get(dev, lba);
-		if (!ftl_ppa_invalid(ppa)) {
-			ftl_invalidate_addr(dev, ppa);
+		addr = ftl_l2p_get(dev, lba);
+		if (!ftl_addr_invalid(addr)) {
+			ftl_invalidate_addr(dev, addr);
 		}
 
-		ppa = ftl_band_ppa_from_lbkoff(band, i);
+		addr = ftl_band_addr_from_lbkoff(band, i);
 
-		ftl_band_set_addr(band, lba, ppa);
-		ftl_l2p_set(dev, lba, ppa);
+		ftl_band_set_addr(band, lba, addr);
+		ftl_l2p_set(dev, lba, addr);
 	}
 
 	return 0;
@@ -1115,7 +1115,7 @@ ftl_pad_zone_pad_finish(struct ftl_restore_band *rband, bool direct_access)
 
 static struct ftl_io *
 ftl_restore_init_pad_io(struct ftl_restore_band *rband, void *buffer,
-			struct ftl_ppa ppa)
+			struct ftl_addr addr)
 {
 	struct ftl_band *band = rband->band;
 	struct spdk_ftl_dev *dev = band->dev;
@@ -1142,7 +1142,7 @@ ftl_restore_init_pad_io(struct ftl_restore_band *rband, void *buffer,
 		return NULL;
 	}
 
-	io->ppa = ppa;
+	io->addr = addr;
 	rband->parent->num_ios++;
 
 	return io;
@@ -1164,13 +1164,13 @@ ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status)
 		goto end;
 	}
 
-	if (io->ppa.lbk + io->lbk_cnt == band->dev->geo.clba) {
-		zone = ftl_band_zone_from_ppa(band, io->ppa);
+	if (io->addr.offset + io->lbk_cnt == band->dev->geo.clba) {
+		zone = ftl_band_zone_from_addr(band, io->addr);
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
 	} else {
-		struct ftl_ppa ppa = io->ppa;
-		ppa.lbk += io->lbk_cnt;
-		new_io = ftl_restore_init_pad_io(rband, io->iov[0].iov_base, ppa);
+		struct ftl_addr addr = io->addr;
+		addr.offset += io->lbk_cnt;
+		new_io = ftl_restore_init_pad_io(rband, io->iov[0].iov_base, addr);
 		if (spdk_unlikely(!new_io)) {
 			restore->pad_status = -ENOMEM;
 			goto end;
@@ -1194,7 +1194,7 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 	struct spdk_ftl_dev *dev = band->dev;
 	void *buffer = NULL;
 	struct ftl_io *io;
-	struct ftl_ppa ppa;
+	struct ftl_addr addr;
 	size_t i;
 	int rc = 0;
 
@@ -1219,12 +1219,12 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 			continue;
 		}
 
-		rc = ftl_retrieve_chunk_info(dev, band->zone_buf[i].start_ppa, &info, 1);
+		rc = ftl_retrieve_chunk_info(dev, band->zone_buf[i].start_addr, &info, 1);
 		if (spdk_unlikely(rc)) {
 			goto error;
 		}
-		ppa = band->zone_buf[i].start_ppa;
-		ppa.lbk = info.wp;
+		addr = band->zone_buf[i].start_addr;
+		addr.offset = info.wp;
 
 		buffer = spdk_dma_zmalloc(FTL_BLOCK_SIZE * dev->xfer_size, 0, NULL);
 		if (spdk_unlikely(!buffer)) {
@@ -1232,7 +1232,7 @@ ftl_restore_pad_band(struct ftl_restore_band *rband)
 			goto error;
 		}
 
-		io = ftl_restore_init_pad_io(rband, buffer, ppa);
+		io = ftl_restore_init_pad_io(rband, buffer, addr);
 		if (spdk_unlikely(!io)) {
 			rc = -ENOMEM;
 			spdk_dma_free(buffer);
@@ -1312,7 +1312,7 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 		return -ENOMEM;
 	}
 
-	if (ftl_band_read_tail_md(band, band->tail_md_ppa, ftl_restore_tail_md_cb, rband)) {
+	if (ftl_band_read_tail_md(band, band->tail_md_addr, ftl_restore_tail_md_cb, rband)) {
 		SPDK_ERRLOG("Failed to send tail metadata read\n");
 		ftl_restore_complete(restore, -EIO);
 		return -EIO;

@@ -382,10 +382,10 @@ ftl_unpack_head_md(struct ftl_band *band)
 	return FTL_MD_SUCCESS;
 }
 
-struct ftl_ppa
-ftl_band_tail_md_ppa(struct ftl_band *band)
+struct ftl_addr
+ftl_band_tail_md_addr(struct ftl_band *band)
 {
-	struct ftl_ppa ppa = {};
+	struct ftl_addr addr = {};
 	struct ftl_zone *zone;
 	struct spdk_ftl_dev *dev = band->dev;
 	size_t xfer_size = dev->xfer_size;
@@ -393,7 +393,7 @@ ftl_band_tail_md_ppa(struct ftl_band *band)
 	size_t i;
 
 	if (spdk_unlikely(!band->num_zones)) {
-		return ftl_to_ppa(FTL_PPA_INVALID);
+		return ftl_to_addr(FTL_ADDR_INVALID);
 	}
 
 	/* Metadata should be aligned to xfer size */
@@ -404,26 +404,26 @@ ftl_band_tail_md_ppa(struct ftl_band *band)
 		zone = ftl_band_next_zone(band, zone);
 	}
 
-	ppa.lbk = (num_req / band->num_zones) * xfer_size;
-	ppa.chk = band->id;
-	ppa.pu = zone->punit->start_ppa.pu;
+	addr.offset = (num_req / band->num_zones) * xfer_size;
+	addr.zone_id = band->id;
+	addr.pu = zone->punit->start_addr.pu;
 
-	return ppa;
+	return addr;
 }
 
-struct ftl_ppa
-ftl_band_head_md_ppa(struct ftl_band *band)
+struct ftl_addr
+ftl_band_head_md_addr(struct ftl_band *band)
 {
-	struct ftl_ppa ppa;
+	struct ftl_addr addr;
 
 	if (spdk_unlikely(!band->num_zones)) {
-		return ftl_to_ppa(FTL_PPA_INVALID);
+		return ftl_to_addr(FTL_ADDR_INVALID);
 	}
 
-	ppa = CIRCLEQ_FIRST(&band->zones)->punit->start_ppa;
-	ppa.chk = band->id;
+	addr = CIRCLEQ_FIRST(&band->zones)->punit->start_addr;
+	addr.zone_id = band->id;
 
-	return ppa;
+	return addr;
 }
 
 void
@@ -455,14 +455,14 @@ ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state)
 }
 
 void
-ftl_band_set_addr(struct ftl_band *band, uint64_t lba, struct ftl_ppa ppa)
+ftl_band_set_addr(struct ftl_band *band, uint64_t lba, struct ftl_addr addr)
 {
 	struct ftl_lba_map *lba_map = &band->lba_map;
 	uint64_t offset;
 
 	assert(lba != FTL_LBA_INVALID);
 
-	offset = ftl_band_lbkoff_from_ppa(band, ppa);
+	offset = ftl_band_lbkoff_from_addr(band, addr);
 	pthread_spin_lock(&lba_map->lock);
 
 	lba_map->num_vld++;
@@ -509,51 +509,51 @@ ftl_band_user_lbks(const struct ftl_band *band)
 }
 
 struct ftl_band *
-ftl_band_from_ppa(struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
+ftl_band_from_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr)
 {
-	assert(ppa.chk < ftl_dev_num_bands(dev));
-	return &dev->bands[ppa.chk];
+	assert(addr.zone_id < ftl_dev_num_bands(dev));
+	return &dev->bands[addr.zone_id];
 }
 
 struct ftl_zone *
-ftl_band_zone_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
+ftl_band_zone_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	unsigned int punit;
 
-	punit = ftl_ppa_flatten_punit(dev, ppa);
+	punit = ftl_addr_flatten_punit(dev, addr);
 	assert(punit < ftl_dev_num_punits(dev));
 
 	return &band->zone_buf[punit];
 }
 
 uint64_t
-ftl_band_lbkoff_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
+ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	unsigned int punit;
 
-	punit = ftl_ppa_flatten_punit(dev, ppa);
-	assert(ppa.chk == band->id);
+	punit = ftl_addr_flatten_punit(dev, addr);
+	assert(addr.zone_id == band->id);
 
-	return punit * ftl_dev_lbks_in_zone(dev) + ppa.lbk;
+	return punit * ftl_dev_lbks_in_zone(dev) + addr.offset;
 }
 
-struct ftl_ppa
-ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbks)
+struct ftl_addr
+ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_lbks)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_zone *zone;
 	unsigned int punit_num;
 	size_t num_xfers, num_stripes;
 
-	assert(ppa.chk == band->id);
+	assert(addr.zone_id == band->id);
 
-	punit_num = ftl_ppa_flatten_punit(dev, ppa);
+	punit_num = ftl_addr_flatten_punit(dev, addr);
 	zone = &band->zone_buf[punit_num];
 
-	num_lbks += (ppa.lbk % dev->xfer_size);
-	ppa.lbk  -= (ppa.lbk % dev->xfer_size);
+	num_lbks += (addr.offset % dev->xfer_size);
+	addr.offset  -= (addr.offset % dev->xfer_size);
 
 #if defined(DEBUG)
 	/* Check that the number of zones has not been changed */
@@ -568,11 +568,11 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 #endif
 	assert(band->num_zones != 0);
 	num_stripes = (num_lbks / dev->xfer_size) / band->num_zones;
-	ppa.lbk  += num_stripes * dev->xfer_size;
+	addr.offset  += num_stripes * dev->xfer_size;
 	num_lbks -= num_stripes * dev->xfer_size * band->num_zones;
 
-	if (ppa.lbk > ftl_dev_lbks_in_zone(dev)) {
-		return ftl_to_ppa(FTL_PPA_INVALID);
+	if (addr.offset > ftl_dev_lbks_in_zone(dev)) {
+		return ftl_to_addr(FTL_ADDR_INVALID);
 	}
 
 	num_xfers = num_lbks / dev->xfer_size;
@@ -580,42 +580,42 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 		/* When the last zone is reached the lbk part of the address */
 		/* needs to be increased by xfer_size */
 		if (ftl_band_zone_is_last(band, zone)) {
-			ppa.lbk += dev->xfer_size;
-			if (ppa.lbk > ftl_dev_lbks_in_zone(dev)) {
-				return ftl_to_ppa(FTL_PPA_INVALID);
+			addr.offset += dev->xfer_size;
+			if (addr.offset > ftl_dev_lbks_in_zone(dev)) {
+				return ftl_to_addr(FTL_ADDR_INVALID);
 			}
 		}
 
 		zone = ftl_band_next_operational_zone(band, zone);
 		assert(zone);
-		ppa.pu = zone->start_ppa.pu;
+		addr.pu = zone->start_addr.pu;
 
 		num_lbks -= dev->xfer_size;
 	}
 
 	if (num_lbks) {
-		ppa.lbk += num_lbks;
-		if (ppa.lbk > ftl_dev_lbks_in_zone(dev)) {
-			return ftl_to_ppa(FTL_PPA_INVALID);
+		addr.offset += num_lbks;
+		if (addr.offset > ftl_dev_lbks_in_zone(dev)) {
+			return ftl_to_addr(FTL_ADDR_INVALID);
 		}
 	}
 
-	return ppa;
+	return addr;
 }
 
 static size_t
-ftl_xfer_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
+ftl_xfer_offset_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
 	struct ftl_zone *zone, *current_zone;
 	unsigned int punit_offset = 0;
 	size_t off, num_stripes, xfer_size = band->dev->xfer_size;
 
-	assert(ppa.chk == band->id);
+	assert(addr.zone_id == band->id);
 
-	num_stripes = (ppa.lbk / xfer_size) * band->num_zones;
-	off = ppa.lbk % xfer_size;
+	num_stripes = (addr.offset / xfer_size) * band->num_zones;
+	off = addr.offset % xfer_size;
 
-	current_zone = ftl_band_zone_from_ppa(band, ppa);
+	current_zone = ftl_band_zone_from_addr(band, addr);
 	CIRCLEQ_FOREACH(zone, &band->zones, circleq) {
 		if (current_zone == zone) {
 			break;
@@ -626,27 +626,27 @@ ftl_xfer_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
 	return xfer_size * (num_stripes + punit_offset) + off;
 }
 
-struct ftl_ppa
-ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
+struct ftl_addr
+ftl_band_addr_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 {
-	struct ftl_ppa ppa = { .ppa = 0 };
+	struct ftl_addr addr = { .addr = 0 };
 	struct spdk_ftl_dev *dev = band->dev;
 	uint64_t punit;
 
 	punit = lbkoff / ftl_dev_lbks_in_zone(dev) + dev->range.begin;
 
-	ppa.lbk = lbkoff % ftl_dev_lbks_in_zone(dev);
-	ppa.chk = band->id;
-	ppa.pu = punit;
+	addr.offset = lbkoff % ftl_dev_lbks_in_zone(dev);
+	addr.zone_id = band->id;
+	addr.pu = punit;
 
-	return ppa;
+	return addr;
 }
 
-struct ftl_ppa
-ftl_band_next_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t offset)
+struct ftl_addr
+ftl_band_next_addr(struct ftl_band *band, struct ftl_addr addr, size_t offset)
 {
-	uint64_t lbkoff = ftl_band_lbkoff_from_ppa(band, ppa);
-	return ftl_band_ppa_from_lbkoff(band, lbkoff + offset);
+	uint64_t lbkoff = ftl_band_lbkoff_from_addr(band, addr);
+	return ftl_band_addr_from_lbkoff(band, lbkoff + offset);
 }
 
 void
@@ -711,7 +711,7 @@ ftl_read_md_cb(struct ftl_io *io, void *arg, int status)
 }
 
 static struct ftl_md_io *
-ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
+ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_addr addr,
 		    struct ftl_band *band, size_t lbk_cnt, void *buf,
 		    ftl_io_fn fn, ftl_md_pack_fn pack_fn, ftl_io_fn cb_fn, void *cb_ctx)
 {
@@ -734,7 +734,7 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_ppa ppa,
 		return NULL;
 	}
 
-	io->io.ppa = ppa;
+	io->io.addr = addr;
 	io->pack_fn = pack_fn;
 	io->cb_fn = cb_fn;
 	io->cb_ctx = cb_ctx;
@@ -804,17 +804,17 @@ ftl_band_write_tail_md(struct ftl_band *band, ftl_io_fn cb)
 				 ftl_pack_tail_md, cb);
 }
 
-static struct ftl_ppa
-ftl_band_lba_map_ppa(struct ftl_band *band, size_t offset)
+static struct ftl_addr
+ftl_band_lba_map_addr(struct ftl_band *band, size_t offset)
 {
-	return ftl_band_next_xfer_ppa(band, band->tail_md_ppa,
-				      ftl_tail_md_hdr_num_lbks() +
-				      ftl_vld_map_num_lbks(band->dev) +
-				      offset);
+	return ftl_band_next_xfer_addr(band, band->tail_md_addr,
+				       ftl_tail_md_hdr_num_lbks() +
+				       ftl_vld_map_num_lbks(band->dev) +
+				       offset);
 }
 
 static int
-ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_ppa start_ppa,
+ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_addr start_addr,
 		 void *buf, ftl_io_fn fn, ftl_md_pack_fn pack_fn, ftl_io_fn cb_fn, void *cb_ctx)
 {
 	struct spdk_ftl_dev *dev = band->dev;
@@ -824,7 +824,7 @@ ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_ppa start_ppa
 		return -ENOENT;
 	}
 
-	io = ftl_io_init_md_read(dev, start_ppa, band, lbk_cnt, buf, fn, pack_fn, cb_fn, cb_ctx);
+	io = ftl_io_init_md_read(dev, start_addr, band, lbk_cnt, buf, fn, pack_fn, cb_fn, cb_ctx);
 	if (!io) {
 		return -ENOMEM;
 	}
@@ -834,9 +834,9 @@ ftl_band_read_md(struct ftl_band *band, size_t lbk_cnt, struct ftl_ppa start_ppa
 }
 
 int
-ftl_band_read_tail_md(struct ftl_band *band, struct ftl_ppa ppa, ftl_io_fn cb_fn, void *cb_ctx)
+ftl_band_read_tail_md(struct ftl_band *band, struct ftl_addr addr, ftl_io_fn cb_fn, void *cb_ctx)
 {
-	return ftl_band_read_md(band, ftl_tail_md_num_lbks(band->dev), ppa, band->lba_map.dma_buf,
+	return ftl_band_read_md(band, ftl_tail_md_num_lbks(band->dev), addr, band->lba_map.dma_buf,
 				ftl_read_md_cb, ftl_unpack_tail_md, cb_fn, cb_ctx);
 }
 
@@ -895,12 +895,12 @@ ftl_process_lba_map_requests(struct spdk_ftl_dev *dev, struct ftl_lba_map *lba_m
 }
 
 static size_t
-ftl_lba_map_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
+ftl_lba_map_offset_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
 	size_t offset;
-	struct ftl_ppa start_ppa = ftl_band_lba_map_ppa(band, 0);
+	struct ftl_addr start_addr = ftl_band_lba_map_addr(band, 0);
 
-	offset =  ftl_xfer_offset_from_ppa(band, ppa) - ftl_xfer_offset_from_ppa(band, start_ppa);
+	offset =  ftl_xfer_offset_from_addr(band, addr) - ftl_xfer_offset_from_addr(band, start_addr);
 	assert(offset < ftl_lba_map_num_lbks(band->dev));
 
 	return offset;
@@ -912,7 +912,7 @@ ftl_read_lba_map_cb(struct ftl_io *io, void *arg, int status)
 	struct ftl_lba_map *lba_map = &io->band->lba_map;
 	uint64_t lbk_off;
 
-	lbk_off = ftl_lba_map_offset_from_ppa(io->band, io->ppa);
+	lbk_off = ftl_lba_map_offset_from_addr(io->band, io->addr);
 	assert(lbk_off + io->lbk_cnt <= ftl_lba_map_num_lbks(io->dev));
 
 	if (!status) {
@@ -996,7 +996,7 @@ ftl_band_read_lba_map(struct ftl_band *band, size_t offset, size_t lba_cnt,
 		ftl_lba_map_set_segment_state(lba_map, lbk_off, num_read,
 					      FTL_LBA_MAP_SEG_PENDING);
 
-		rc = ftl_band_read_md(band, num_read, ftl_band_lba_map_ppa(band, lbk_off),
+		rc = ftl_band_read_md(band, num_read, ftl_band_lba_map_addr(band, lbk_off),
 				      (char *)band->lba_map.map + lbk_off * FTL_BLOCK_SIZE,
 				      ftl_read_lba_map_cb, NULL, cb_fn, cb_ctx);
 		if (rc) {
@@ -1024,7 +1024,7 @@ ftl_band_read_head_md(struct ftl_band *band, ftl_io_fn cb_fn, void *cb_ctx)
 {
 	return ftl_band_read_md(band,
 				ftl_head_md_num_lbks(band->dev),
-				ftl_band_head_md_ppa(band),
+				ftl_band_head_md_addr(band),
 				band->lba_map.dma_buf,
 				ftl_read_md_cb,
 				ftl_unpack_head_md,
@@ -1046,13 +1046,13 @@ ftl_erase_fail(struct ftl_io *io, int status)
 	struct ftl_band *band = io->band;
 	char buf[128];
 
-	SPDK_ERRLOG("Erase failed @ppa: %s, status: %d\n",
-		    ftl_ppa2str(io->ppa, buf, sizeof(buf)), status);
+	SPDK_ERRLOG("Erase failed @addr: %s, status: %d\n",
+		    ftl_addr2str(io->addr, buf, sizeof(buf)), status);
 
-	zone = ftl_band_zone_from_ppa(band, io->ppa);
+	zone = ftl_band_zone_from_addr(band, io->addr);
 	zone->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
 	ftl_band_remove_zone(band, zone);
-	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
+	band->tail_md_addr = ftl_band_tail_md_addr(band);
 }
 
 static void
@@ -1064,7 +1064,7 @@ ftl_band_erase_cb(struct ftl_io *io, void *ctx, int status)
 		ftl_erase_fail(io, status);
 		return;
 	}
-	zone = ftl_band_zone_from_ppa(io->band, io->ppa);
+	zone = ftl_band_zone_from_addr(io->band, io->addr);
 	zone->state = SPDK_BDEV_ZONE_STATE_EMPTY;
 	zone->write_offset = 0;
 }
@@ -1092,7 +1092,7 @@ ftl_band_erase(struct ftl_band *band)
 			break;
 		}
 
-		io->ppa = zone->start_ppa;
+		io->addr = zone->start_addr;
 		rc = ftl_io_erase(io);
 		if (rc) {
 			assert(0);
