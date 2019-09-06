@@ -263,7 +263,7 @@ Example response:
     "add_portal_group",
     "get_portal_groups",
     "delete_target_node",
-    "delete_pg_ig_maps",
+    "iscsi_target_node_remove_pg_ig_maps",
     "iscsi_target_node_add_pg_ig_maps",
     "iscsi_create_target_node",
     "iscsi_get_target_nodes",
@@ -3334,7 +3334,7 @@ Example response:
 }
 ~~~
 
-## delete_pg_ig_maps method {#rpc_delete_pg_ig_maps}
+## iscsi_target_node_remove_pg_ig_maps method {#rpc_iscsi_target_node_remove_pg_ig_maps}
 
 Delete initiator group to portal group mappings from an existing iSCSI target node.
 
@@ -3376,7 +3376,7 @@ Example request:
     "name": "iqn.2016-06.io.spdk:target3"
   },
   "jsonrpc": "2.0",
-  "method": "delete_pg_ig_maps",
+  "method": "iscsi_target_node_remove_pg_ig_maps",
   "id": 1
 }
 ~~~
