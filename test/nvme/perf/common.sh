@@ -98,8 +98,8 @@ function get_disks(){
 }
 
 function get_disks_on_numa(){
-	local devs=($1)
-	local numas=($2)
+	local devs=("$1")
+	local numas=("$2")
 	local numa_no=$3
 	local disks_on_numa=""
 	local i
@@ -116,9 +116,9 @@ function get_disks_on_numa(){
 function create_fio_config(){
 	local disk_no=$1
 	local plugin=$2
-	local disks=($3)
-	local disks_numa=($4)
-	local cores=($5)
+	local disks=("$3")
+	local disks_numa=("$4")
+	local cores=("$5")
 	local total_disks=${#disks[@]}
 	local no_cores=${#cores[@]}
 	local filename=""

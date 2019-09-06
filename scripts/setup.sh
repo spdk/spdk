@@ -147,7 +147,7 @@ function get_nvme_name_from_bdf {
 		fi
 		link_bdf=$(basename "$link_name")
 		if [ "$link_bdf" = "$1" ]; then
-			blknames+=($dev)
+			blknames+=("$dev")
 		fi
 	done
 
@@ -214,7 +214,7 @@ function configure_linux_pci {
 			mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
 			if [ "$mountpoints" != "0" ]; then
 				mount=true
-				blknames+=($blkname)
+				blknames+=("$blkname")
 			fi
 		done
 

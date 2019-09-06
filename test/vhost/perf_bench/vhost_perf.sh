@@ -191,7 +191,7 @@ if [[ $run_precondition == true ]]; then
 	# to --clear-method option. Lvols should not UNMAP on creation.
     $rootdir/scripts/gen_nvme.sh > $rootdir/nvme.cfg
     nvmes=$(cat $rootdir/nvme.cfg | grep -oP "Nvme\d+")
-    nvmes=($nvmes)
+    nvmes=("$nvmes")
     fio_filename=$(printf ":%sn1" "${nvmes[@]}")
     fio_filename=${fio_filename:1}
     $precond_fio_bin --name="precondition" \

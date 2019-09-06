@@ -2,8 +2,8 @@ set -e
 
 function nbd_start_disks() {
 	local rpc_server=$1
-	local bdev_list=($2)
-	local nbd_list=($3)
+	local bdev_list=("$2")
+	local nbd_list=("$3")
 	local i
 
 	for (( i=0; i<${#nbd_list[@]}; i++ )); do
@@ -15,7 +15,7 @@ function nbd_start_disks() {
 
 function nbd_start_disks_without_nbd_idx() {
 	local rpc_server=$1
-	local bdev_list=($2)
+	local bdev_list=("$2")
 	local i
 	local nbd_device
 
@@ -42,7 +42,7 @@ function waitfornbd_exit() {
 
 function nbd_stop_disks() {
 	local rpc_server=$1
-	local nbd_list=($2)
+	local nbd_list=("$2")
 	local i
 
 	for i in ${nbd_list[@]}; do
@@ -62,7 +62,7 @@ function nbd_get_count() {
 }
 
 function nbd_dd_data_verify() {
-	local nbd_list=($1)
+	local nbd_list=("$1")
 	local operation=$2
 	local tmp_file=/tmp/nbdrandtest
 
@@ -83,8 +83,8 @@ function nbd_dd_data_verify() {
 
 function nbd_rpc_data_verify() {
 	local rpc_server=$1
-	local bdev_list=($2)
-	local nbd_list=($3)
+	local bdev_list=("$2")
+	local nbd_list=("$3")
 
 	nbd_start_disks $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
 	count=$(nbd_get_count $rpc_server)
@@ -106,7 +106,7 @@ function nbd_rpc_data_verify() {
 
 function nbd_rpc_start_stop_verify() {
 	local rpc_server=$1
-	local bdev_list=($2)
+	local bdev_list=("$2")
 
 	nbd_start_disks_without_nbd_idx $rpc_server "${bdev_list[*]}"
 
