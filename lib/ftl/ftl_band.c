@@ -407,7 +407,6 @@ ftl_band_tail_md_ppa(struct ftl_band *band)
 	ppa.lbk = (num_req / band->num_zones) * xfer_size;
 	ppa.chk = band->id;
 	ppa.pu = zone->punit->start_ppa.pu;
-	ppa.grp = zone->punit->start_ppa.grp;
 
 	return ppa;
 }
@@ -589,7 +588,6 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 
 		zone = ftl_band_next_operational_zone(band, zone);
 		assert(zone);
-		ppa.grp = zone->start_ppa.grp;
 		ppa.pu = zone->start_ppa.pu;
 
 		num_lbks -= dev->xfer_size;
@@ -639,8 +637,7 @@ ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 
 	ppa.lbk = lbkoff % ftl_dev_lbks_in_zone(dev);
 	ppa.chk = band->id;
-	ppa.pu = punit / dev->geo.num_grp;
-	ppa.grp = punit % dev->geo.num_grp;
+	ppa.pu = punit;
 
 	return ppa;
 }
