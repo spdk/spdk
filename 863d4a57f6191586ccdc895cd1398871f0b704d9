@@ -139,6 +139,24 @@
       "revId": "863d4a57f6191586ccdc895cd1398871f0b704d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68cdecf0_eb162764",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1549,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-06T17:17:20Z",
+      "side": 1,
+      "message": "OK, gotcha. I see how I missed that case now. Thanks!",
+      "parentUuid": "11374415_46cb00b5",
+      "revId": "863d4a57f6191586ccdc895cd1398871f0b704d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
