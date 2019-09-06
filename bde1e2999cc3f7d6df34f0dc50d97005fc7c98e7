@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45a7f730_411e6357",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-06T21:21:23Z",
+      "side": 1,
+      "message": "what a PITA",
+      "revId": "bde1e2999cc3f7d6df34f0dc50d97005fc7c98e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9768eb0_42446ba6",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-06T21:21:23Z",
+      "side": 1,
+      "message": "so what doesn\u0027t work because of these? Well, the first one is obvious but it might be good to list the capabilities here that aren\u0027t expected to work",
+      "revId": "bde1e2999cc3f7d6df34f0dc50d97005fc7c98e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
