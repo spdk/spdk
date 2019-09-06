@@ -31,52 +31,52 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FTL_PPA_H
-#define FTL_PPA_H
+#ifndef FTL_ADDR_H
+#define FTL_ADDR_H
 
 #include "spdk/stdinc.h"
 
-/* Marks PPA as invalid */
-#define FTL_PPA_INVALID		(-1)
+/* Marks address as invalid */
+#define FTL_ADDR_INVALID	(-1)
 /* Marks LBA as invalid */
 #define FTL_LBA_INVALID		((uint64_t)-1)
 /* Smallest data unit size */
 #define FTL_BLOCK_SIZE		4096
 
-/* This structure represents PPA address. It can have one of the following */
+/* This structure represents on-disk address. It can have one of the following */
 /* formats: */
-/*        - PPA describing the on-disk address */
-/*        - offset inside the cache (indicated by the cached flag) */
+/*        - addr describing the raw address */
+/*        - cache_offset inside the cache (indicated by the cached flag) */
 /*        - packed version of the two formats above (can be only used when the */
-/*          on-disk PPA address can be represented in less than 32 bits) */
+/*          raw address can be represented in less than 32 bits) */
 /* Packed format is used, when possible, to avoid wasting RAM on the L2P table. */
-struct ftl_ppa {
+struct ftl_addr {
 	union {
 		struct {
-			uint64_t lbk	: 32;
-			uint64_t chk	: 16;
-			uint64_t pu	: 15;
-			uint64_t rsvd	: 1;
+			uint64_t offset	 : 32;
+			uint64_t zone_id : 16;
+			uint64_t pu	 : 15;
+			uint64_t rsvd	 : 1;
 		};
 
 		struct {
-			uint64_t offset	: 63;
-			uint64_t cached : 1;
+			uint64_t cache_offset : 63;
+			uint64_t cached	      : 1;
 		};
 
 		struct {
 			union {
 				struct  {
-					uint32_t offset : 31;
-					uint32_t cached : 1;
+					uint32_t cache_offset : 31;
+					uint32_t cached	      : 1;
 				};
 
-				uint32_t ppa;
+				uint32_t addr;
 			};
 			uint32_t rsvd;
 		} pack;
 
-		uint64_t ppa;
+		uint64_t addr;
 	};
 };
 
@@ -98,4 +98,4 @@ struct ftl_ppa_fmt {
 	unsigned int				grp_mask;
 };
 
-#endif /* FTL_PPA_H */
+#endif /* FTL_ADDR_H */

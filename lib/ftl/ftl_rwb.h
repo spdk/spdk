@@ -38,7 +38,7 @@
 #include "spdk/queue.h"
 
 #include "ftl_io.h"
-#include "ftl_ppa.h"
+#include "ftl_addr.h"
 #include "ftl_trace.h"
 
 struct ftl_rwb;
@@ -64,7 +64,7 @@ struct ftl_rwb_entry {
 	uint64_t				lba;
 
 	/* Physical address */
-	struct ftl_ppa				ppa;
+	struct ftl_addr				addr;
 
 	/* Band the data is moved from (only valid when relocating data) */
 	struct ftl_band				*band;

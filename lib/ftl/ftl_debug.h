@@ -34,7 +34,7 @@
 #ifndef FTL_DEBUG_H
 #define FTL_DEBUG_H
 
-#include "ftl_ppa.h"
+#include "ftl_addr.h"
 #include "ftl_band.h"
 #include "ftl_core.h"
 #include "ftl_rwb.h"
@@ -51,10 +51,10 @@
 #endif
 
 static inline const char *
-ftl_ppa2str(struct ftl_ppa ppa, char *buf, size_t size)
+ftl_addr2str(struct ftl_addr addr, char *buf, size_t size)
 {
 	snprintf(buf, size, "(pu: %u, chk: %u, lbk: %u)",
-		 ppa.pu, ppa.chk, ppa.lbk);
+		 addr.pu, addr.zone_id, addr.offset);
 	return buf;
 }
 
