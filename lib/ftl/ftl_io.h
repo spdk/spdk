@@ -38,7 +38,7 @@
 #include "spdk/nvme.h"
 #include "spdk/ftl.h"
 
-#include "ftl_ppa.h"
+#include "ftl_addr.h"
 #include "ftl_trace.h"
 
 struct spdk_ftl_dev;
@@ -150,8 +150,8 @@ struct ftl_io {
 		uint64_t			single;
 	} lba;
 
-	/* First PPA */
-	struct ftl_ppa				ppa;
+	/* First block address */
+	struct ftl_addr				addr;
 
 	/* Number of processed lbks */
 	size_t					pos;
@@ -235,7 +235,7 @@ struct ftl_md_io {
 };
 
 static inline bool
-ftl_io_mode_ppa(const struct ftl_io *io)
+ftl_io_mode_addr(const struct ftl_io *io)
 {
 	return io->flags & FTL_IO_PPA_MODE;
 }
@@ -243,7 +243,7 @@ ftl_io_mode_ppa(const struct ftl_io *io)
 static inline bool
 ftl_io_mode_lba(const struct ftl_io *io)
 {
-	return !ftl_io_mode_ppa(io);
+	return !ftl_io_mode_addr(io);
 }
 
 static inline bool
