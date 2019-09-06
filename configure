@@ -371,7 +371,7 @@ $rootdir/scripts/detect_cc.sh --cc="$CC" --cxx="$CXX" --lto="${CONFIG[LTO]}" --l
 CC=$(cat $rootdir/mk/cc.mk | grep "CC=" | cut -d "=" -f 2)
 CC_TYPE=$(cat $rootdir/mk/cc.mk | grep "CC_TYPE=" | cut -d "=" -f 2)
 
-BUILD_CMD="$CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS"
+BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
 
 # Detect architecture and force no ISA-L if non-x86 archtecture
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then
@@ -418,7 +418,7 @@ if [ -z "${CONFIG[ENV]}" ]; then
 			# program, just compile it
 			if ! echo -e '#include <rte_vhost.h>\n' \
 				'int main(void) { return rte_vhost_extern_callback_register(0, NULL, NULL); }\n' \
-				| $BUILD_CMD -c -Wno-deprecated-declarations -Werror \
+				| ${BUILD_CMD[@]} -c -Wno-deprecated-declarations -Werror \
 				-I"${CONFIG[DPDK_DIR]}/include" - &>/dev/null; then
 				echo "Notice: DPDK's rte_vhost not found or version < 19.05, using internal," \
 				     "legacy rte_vhost library."
