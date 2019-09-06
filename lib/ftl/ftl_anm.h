@@ -35,7 +35,7 @@
 #define FTL_ANM_H
 
 #include "spdk/thread.h"
-#include "ftl_ppa.h"
+#include "ftl_addr.h"
 
 struct ftl_nvme_ctrlr;
 struct ftl_anm_event;
@@ -54,8 +54,8 @@ struct ftl_anm_event {
 	/* Owner device */
 	struct spdk_ftl_dev		*dev;
 
-	/* Start PPA */
-	struct ftl_ppa			ppa;
+	/* First block address */
+	struct ftl_addr			addr;
 
 	/* Number of logical blocks */
 	size_t				num_lbks;

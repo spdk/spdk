@@ -41,7 +41,7 @@ struct spdk_ftl_dev *test_init_ftl_dev(const struct spdk_ocssd_geometry_data *ge
 struct ftl_band *test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id);
 void test_free_ftl_dev(struct spdk_ftl_dev *dev);
 void test_free_ftl_band(struct ftl_band *band);
-uint64_t test_offset_from_ppa(struct ftl_ppa ppa, struct ftl_band *band);
+uint64_t test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band);
 
 struct spdk_ftl_dev *
 test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
@@ -73,7 +73,7 @@ test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
 	for (size_t i = 0; i < ftl_dev_num_punits(dev); ++i) {
 		punit = range->begin + i;
 		dev->punits[i].dev = dev;
-		dev->punits[i].start_ppa.pu = punit;
+		dev->punits[i].start_addr.pu = punit;
 	}
 
 	LIST_INIT(&dev->free_bands);
@@ -113,8 +113,8 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 		zone->pos = i;
 		zone->state = SPDK_BDEV_ZONE_STATE_CLOSED;
 		zone->punit = &dev->punits[i];
-		zone->start_ppa = dev->punits[i].start_ppa;
-		zone->start_ppa.chk = band->id;
+		zone->start_addr = dev->punits[i].start_addr;
+		zone->start_addr.zone_id = band->id;
 		CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
 		band->num_zones++;
 	}
@@ -147,14 +147,14 @@ test_free_ftl_band(struct ftl_band *band)
 }
 
 uint64_t
-test_offset_from_ppa(struct ftl_ppa ppa, struct ftl_band *band)
+test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	unsigned int punit;
 
-	/* TODO: ftl_ppa_flatten_punit should return uint32_t */
-	punit = ftl_ppa_flatten_punit(dev, ppa);
-	CU_ASSERT_EQUAL(ppa.chk, band->id);
+	/* TODO: ftl_addr_flatten_punit should return uint32_t */
+	punit = ftl_addr_flatten_punit(dev, addr);
+	CU_ASSERT_EQUAL(addr.zone_id, band->id);
 
-	return punit * ftl_dev_lbks_in_zone(dev) + ppa.lbk;
+	return punit * ftl_dev_lbks_in_zone(dev) + addr.offset;
 }
