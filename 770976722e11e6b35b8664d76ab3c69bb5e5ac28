@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85a7815d_4e6564c1",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-06T21:17:09Z",
+      "side": 1,
+      "message": "not sure lines 185-187 need to be in the comment, maybe commit message? No big deal though...",
+      "revId": "770976722e11e6b35b8664d76ab3c69bb5e5ac28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
