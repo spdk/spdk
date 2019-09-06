@@ -358,8 +358,8 @@ ftl_ppa_addr_pack(const struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 
 	lbk = ppa.lbk;
 	chk = ppa.chk;
-	pu = ppa.pu;
-	grp = ppa.grp;
+	pu = ppa.pu / dev->geo.num_grp;
+	grp = ppa.pu % dev->geo.num_grp;
 
 	return (lbk << dev->ppaf.lbk_offset) |
 	       (chk << dev->ppaf.chk_offset) |
@@ -371,11 +371,13 @@ static inline struct ftl_ppa
 ftl_ppa_addr_unpack(const struct spdk_ftl_dev *dev, uint64_t ppa)
 {
 	struct ftl_ppa res = {};
+	unsigned int pu, grp;
 
 	res.lbk = (ppa >> dev->ppaf.lbk_offset) & dev->ppaf.lbk_mask;
 	res.chk = (ppa >> dev->ppaf.chk_offset) & dev->ppaf.chk_mask;
-	res.pu  = (ppa >> dev->ppaf.pu_offset)  & dev->ppaf.pu_mask;
-	res.grp = (ppa >> dev->ppaf.grp_offset) & dev->ppaf.grp_mask;
+	pu  = (ppa >> dev->ppaf.pu_offset)  & dev->ppaf.pu_mask;
+	grp = (ppa >> dev->ppaf.grp_offset) & dev->ppaf.grp_mask;
+	res.pu = grp * dev->geo.num_pu + pu;
 
 	return res;
 }
@@ -417,7 +419,7 @@ ftl_ppa_from_packed(const struct spdk_ftl_dev *dev, struct ftl_ppa p)
 static inline unsigned int
 ftl_ppa_flatten_punit(const struct spdk_ftl_dev *dev, struct ftl_ppa ppa)
 {
-	return ppa.pu * dev->geo.num_grp + ppa.grp - dev->range.begin;
+	return ppa.pu - dev->range.begin;
 }
 
 static inline int
