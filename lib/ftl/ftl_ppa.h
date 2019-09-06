@@ -55,8 +55,7 @@ struct ftl_ppa {
 		struct {
 			uint64_t lbk	: 32;
 			uint64_t chk	: 16;
-			uint64_t pu	: 8;
-			uint64_t grp	: 7;
+			uint64_t pu	: 15;
 			uint64_t rsvd	: 1;
 		};
 
