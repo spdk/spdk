@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1e1c834f_f3fbb8a2",
+        "filename": "module/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-08T21:26:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "715489f3_3bfc3520",
+      "range": {
+        "startLine": 96,
+        "startChar": 7,
+        "endLine": 96,
+        "endChar": 27
+      },
+      "revId": "9896b72a5443608ff1a78599c3b5c75933b81818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "317a524b_2d9551cb",
         "filename": "module/bdev/passthru/vbdev_passthru_rpc.c",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "f9ba6cae_fb546620",
+        "filename": "module/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-08T21:26:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "317a524b_2d9551cb",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 24
+      },
+      "revId": "9896b72a5443608ff1a78599c3b5c75933b81818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9c0de9a_fb03aa50",
         "filename": "module/bdev/passthru/vbdev_passthru_rpc.c",
         "patchSetId": 4
@@ -68,6 +116,30 @@
       "revId": "9896b72a5443608ff1a78599c3b5c75933b81818",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebcd94ff_6ecf10de",
+        "filename": "module/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-08T21:26:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9c0de9a_fb03aa50",
+      "range": {
+        "startLine": 106,
+        "startChar": 45,
+        "endLine": 106,
+        "endChar": 73
+      },
+      "revId": "9896b72a5443608ff1a78599c3b5c75933b81818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
