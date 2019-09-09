@@ -452,7 +452,8 @@ def delete_target_node(client, target_node_name):
     return client.call('delete_target_node', params)
 
 
-def delete_portal_group(client, tag):
+@deprecated_alias('delete_portal_group')
+def iscsi_delete_portal_group(client, tag):
     """Delete a portal group.
 
     Args:
@@ -462,7 +463,7 @@ def delete_portal_group(client, tag):
         True or False
     """
     params = {'tag': tag}
-    return client.call('delete_portal_group', params)
+    return client.call('iscsi_delete_portal_group', params)
 
 
 def delete_initiator_group(client, tag):
