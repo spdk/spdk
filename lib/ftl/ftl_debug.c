@@ -59,7 +59,7 @@ ftl_band_validate_md(struct ftl_band *band)
 	size_t i, size, seg_off;
 	bool valid = true;
 
-	size = ftl_num_band_lbks(dev);
+	size = ftl_blocks_in_band(dev);
 
 	pthread_spin_lock(&lba_map->lock);
 	for (i = 0; i < size; ++i) {
