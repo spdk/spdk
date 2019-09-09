@@ -5,19 +5,13 @@ set -e
 rootdir=$(readlink -f $(dirname $0))/..
 
 function usage {
-	echo "Usage: [-j] $0 -a TRANSPORT_ADDR -n BDEV_NAME [-u UUID] [-c CACHE]"
+	echo "Usage: [-j] $0 -n BDEV_NAME -d DISK_BDEV [-u UUID] [-c CACHE]"
 	echo "UUID is required when restoring device state"
 	echo
-	echo "-j json format"
-	echo "TRANSPORT_ADDR - SSD's PCIe address"
 	echo "BDEV_NAME - name of the bdev"
+	echo "DISK BDEV - name of the bdev to be used as underlying device"
 	echo "UUID - bdev's uuid (used when in restore mode)"
 	echo "CACHE - name of the bdev to be used as write buffer cache"
-}
-
-function create_classic_config {
-	echo "[Ftl]"
-	echo "  TransportID \"trtype:PCIe traddr:$1\" $2 $3 $4 $5"
 }
 
 function create_json_config()
@@ -28,10 +22,9 @@ function create_json_config()
 	echo '{'
 	echo '"method": "construct_ftl_bdev",'
 	echo '"params": {'
-	echo "\"name\": \"$2\","
-	echo '"trtype": "PCIe",'
-	echo "\"traddr\": \"$1\","
-	if [ -n "$5" ]; then
+	echo "\"name\": \"$1\","
+	echo "\"disk_bdev\": \"$2\","
+	if [ -n "$6" ]; then
 		echo "\"uuid\": \"$3\","
 		echo "\"cache\": \"$4\""
 	else
@@ -45,27 +38,22 @@ function create_json_config()
 
 uuid=00000000-0000-0000-0000-000000000000
 
-while getopts "ja:n:l:m:u:c:" arg; do
+while getopts ":n:d:u:c:" arg; do
 	case "$arg" in
-		j)	json=1		;;
-		a)	addr=$OPTARG	;;
 		n)	name=$OPTARG	;;
-		u)	uuid=$OPTARG	;;
-		c)	cache=$OPTARG	;;
+		d)	disk_bdev=$OPTARG	;;
+		u)	uuid=$OPTARG		;;
+		c)	cache=$OPTARG		;;
 		h)	usage
-			exit 0		;;
+			exit 0			;;
 		*)	usage
-			exit 1		;;
+			exit 1			;;
 	esac
 done
 
-if [[ -z "$addr" || -z "$name" ]]; then
+if [[ -z "$name" || -z "$disk_bdev" ]]; then
 	usage
 	exit 1
 fi
 
-if [ -n "$json" ]; then
-	create_json_config $addr $name $uuid $cache
-else
-	create_classic_config $addr $name $uuid $cache
-fi
+create_json_config $name $disk_bdev $uuid $cache

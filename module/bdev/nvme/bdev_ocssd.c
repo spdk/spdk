@@ -215,7 +215,7 @@ bdev_ocssd_create_ctrlr(const struct spdk_nvme_transport_id *trid, const char *n
 	ctrlr->ref = 0;
 	ctrlr->trid = *trid;
 	ctrlr->adminq_timer_poller = spdk_poller_register(bdev_ocssd_poll_adminq, ctrlr,
-				     1000000ULL);
+				     100ULL);
 	if (!ctrlr->adminq_timer_poller) {
 		spdk_nvme_detach(ctrlr->ctrlr);
 		free(ctrlr->bdevs);
@@ -737,6 +737,8 @@ bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 		bdev->max_open_zones = geometry->maxoc;
 		bdev->optimal_open_zones = geometry->num_grp * geometry->num_pu;
 		bdev->write_unit_size = geometry->ws_opt;
+		bdev->md_interleave = false;
+		bdev->md_len = 8;
 
 		if (geometry->maxocpu != 0 && geometry->maxocpu != geometry->maxoc) {
 			SPDK_WARNLOG("Maximum open chunks per PU is not zero. Reducing the maximum "

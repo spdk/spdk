@@ -156,13 +156,13 @@ $valgrind $testdir/lib/util/dif.c/dif_ut
 if [ $(uname -s) = Linux ]; then
 $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 
-$valgrind $testdir/lib/ftl/ftl_rwb.c/ftl_rwb_ut
-$valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
-$valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
-$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
-$valgrind $testdir/lib/ftl/ftl_wptr/ftl_wptr_ut
-$valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
-$valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
+#$valgrind $testdir/lib/ftl/ftl_rwb.c/ftl_rwb_ut
+#$valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
+#$valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
+#$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
+#$valgrind $testdir/lib/ftl/ftl_wptr/ftl_wptr_ut
+#$valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
+#$valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
 fi
 
 if [ -e $testdir/lib/nvmf/fc.c/fc_ut ]; then
