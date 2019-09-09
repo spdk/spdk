@@ -40,7 +40,7 @@ echo "iscsi_tgt is listening. Running tests..."
 timing_exit start_iscsi_tgt
 
 timing_enter setup
-$rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
+$rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 # Create the first LVS from a Raid-0 bdev, which is created from two malloc bdevs
 # Create remaining LVSs from a malloc bdev, respectively
 for i in $(seq 1 $NUM_LVS); do

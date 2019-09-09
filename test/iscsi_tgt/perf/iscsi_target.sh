@@ -97,7 +97,7 @@ elif [ $DISKNO -gt ${#bdevs[@]} ] || [ ! $DISKNO =~ ^[0-9]+$ ]; then
 	error "Required device number ($DISKNO) is not a valid number or it's larger than the number of devices found (${#bdevs[@]})"
 fi
 
-$rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
+$rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 
 for (( i=0; i < $DISKNO; i++ ))
