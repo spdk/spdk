@@ -22,6 +22,30 @@
       "revId": "18dd842ef56aa5fc47af318fc445a0766541d312",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f88d23cb_f461ff0d",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-09-09T10:05:36Z",
+      "side": 0,
+      "message": "There was nothing to fix.",
+      "parentUuid": "b42091c8_554441b9",
+      "range": {
+        "startLine": 245,
+        "startChar": 70,
+        "endLine": 245,
+        "endChar": 76
+      },
+      "revId": "18dd842ef56aa5fc47af318fc445a0766541d312",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
