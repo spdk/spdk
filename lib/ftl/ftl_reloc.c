@@ -162,7 +162,7 @@ ftl_reloc_iter_zone_offset(struct ftl_band_reloc *breloc)
 static size_t
 ftl_reloc_iter_zone_done(struct ftl_band_reloc *breloc)
 {
-	size_t num_lbks = ftl_dev_lbks_in_zone(breloc->parent->dev);
+	size_t num_lbks = ftl_blocks_in_zone(breloc->parent->dev);
 
 	return ftl_reloc_iter_zone_offset(breloc) == num_lbks;
 }
@@ -297,7 +297,7 @@ ftl_reloc_iter_reset(struct ftl_band_reloc *breloc)
 static size_t
 ftl_reloc_iter_lbkoff(struct ftl_band_reloc *breloc)
 {
-	size_t zone_offset = breloc->iter.zone_current * ftl_dev_lbks_in_zone(breloc->parent->dev);
+	size_t zone_offset = breloc->iter.zone_current * ftl_blocks_in_zone(breloc->parent->dev);
 
 	return breloc->iter.zone_offset[breloc->iter.zone_current] + zone_offset;
 }
@@ -344,7 +344,7 @@ ftl_reloc_iter_next(struct ftl_band_reloc *breloc, size_t *lbkoff)
 static int
 ftl_reloc_first_valid_lbk(struct ftl_band_reloc *breloc, size_t *lbkoff)
 {
-	size_t i, num_lbks = ftl_dev_lbks_in_zone(breloc->parent->dev);
+	size_t i, num_lbks = ftl_blocks_in_zone(breloc->parent->dev);
 
 	for (i = ftl_reloc_iter_zone_offset(breloc); i < num_lbks; ++i) {
 		if (ftl_reloc_iter_next(breloc, lbkoff)) {
@@ -360,7 +360,7 @@ ftl_reloc_iter_done(struct ftl_band_reloc *breloc)
 {
 	size_t i;
 	size_t num_zones = ftl_dev_num_punits(breloc->band->dev);
-	size_t num_lbks = ftl_dev_lbks_in_zone(breloc->parent->dev);
+	size_t num_lbks = ftl_blocks_in_zone(breloc->parent->dev);
 
 	for (i = 0; i < num_zones; ++i) {
 		if (breloc->iter.zone_offset[i] != num_lbks) {
@@ -598,7 +598,7 @@ ftl_band_reloc_init(struct ftl_reloc *reloc, struct ftl_band_reloc *breloc,
 	breloc->band = band;
 	breloc->parent = reloc;
 
-	breloc->reloc_map = spdk_bit_array_create(ftl_num_band_lbks(reloc->dev));
+	breloc->reloc_map = spdk_bit_array_create(ftl_blocks_in_band(reloc->dev));
 	if (!breloc->reloc_map) {
 		SPDK_ERRLOG("Failed to initialize reloc map");
 		return -1;
@@ -828,7 +828,7 @@ ftl_reloc_add(struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
 
 	/* If the band is coming from the defrag process, mark it appropriately */
 	if (is_defrag) {
-		assert(offset == 0 && num_lbks == ftl_num_band_lbks(band->dev));
+		assert(offset == 0 && num_lbks == ftl_blocks_in_band(band->dev));
 		reloc->num_defrag_bands++;
 		breloc->defrag = true;
 	}

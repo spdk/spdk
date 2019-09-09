@@ -31,14 +31,17 @@ restore_kill() {
 	rm -f $testdir/testfile2.md5
 	rm -f $testdir/config/ftl.json
 
-	$rpc_py bdev_ftl_delete -b nvme0
+	$rpc_py bdev_ftl_delete -b ftl0
+	$rpc_py bdev_ocssd_delete nvme0n1
+	$rpc_py delete_nvme_controller nvme0
+
 	killprocess $svcpid
 	rmmod nbd || true
 }
 
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
-$rootdir/app/spdk_tgt/spdk_tgt & svcpid=$!
+$rootdir/app/spdk_tgt/spdk_tgt -c $testdir/config/ftl.conf  & svcpid=$!
 # Wait until spdk_tgt starts
 waitforlisten $svcpid
 
@@ -46,7 +49,9 @@ if [ -n "$nv_cache" ]; then
 	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache $pu_count)
 fi
 
-ftl_construct_args="bdev_ftl_create -b nvme0 -a $device"
+$rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
+$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
+ftl_construct_args="bdev_ftl_create -b ftl0 -d nvme0n1"
 
 [ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
 [ -n "$nv_cache" ] && ftl_construct_args+=" -c $nvc_bdev"
@@ -55,7 +60,7 @@ $rpc_py $ftl_construct_args
 
 # Load the nbd driver
 modprobe nbd
-$rpc_py nbd_start_disk nvme0 /dev/nbd0
+$rpc_py nbd_start_disk ftl0 /dev/nbd0
 waitfornbd nbd0
 
 $rpc_py save_config > $testdir/config/ftl.json
@@ -72,7 +77,7 @@ md5sum $mount_dir/testfile > $testdir/testfile.md5
 umount $mount_dir
 killprocess $svcpid
 
-$rootdir/app/spdk_tgt/spdk_tgt -L ftl_init & svcpid=$!
+$rootdir/app/spdk_tgt/spdk_tgt -c $testdir/config/ftl.conf -L ftl_init & svcpid=$!
 # Wait until spdk_tgt starts
 waitforlisten $svcpid
 
