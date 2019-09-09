@@ -43,6 +43,7 @@ struct rpc_construct_ftl {
 	char *name;
 	char *trtype;
 	char *traddr;
+	char *zoned_bdev;
 	char *uuid;
 	char *cache_bdev;
 	struct spdk_ftl_conf ftl_conf;
@@ -54,6 +55,7 @@ free_rpc_construct_ftl(struct rpc_construct_ftl *req)
 	free(req->name);
 	free(req->trtype);
 	free(req->traddr);
+	free(req->zoned_bdev);
 	free(req->uuid);
 	free(req->cache_bdev);
 }
@@ -62,6 +64,7 @@ static const struct spdk_json_object_decoder rpc_construct_ftl_decoders[] = {
 	{"name", offsetof(struct rpc_construct_ftl, name), spdk_json_decode_string},
 	{"trtype", offsetof(struct rpc_construct_ftl, trtype), spdk_json_decode_string},
 	{"traddr", offsetof(struct rpc_construct_ftl, traddr), spdk_json_decode_string},
+	{"zoned_bdev", offsetof(struct rpc_construct_ftl, zoned_bdev), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_construct_ftl, uuid), spdk_json_decode_string, true},
 	{"cache", offsetof(struct rpc_construct_ftl, cache_bdev), spdk_json_decode_string, true},
 	{
@@ -171,6 +174,9 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 
 	opts.name = req.name;
 	opts.mode = SPDK_FTL_MODE_CREATE;
+	/* TODO: init it */
+	opts.zoned_bdev = NULL;
+	/* opts.zoned_bdev = req.zoned_bdev; */
 	opts.cache_bdev = req.cache_bdev;
 	opts.ftl_conf = req.ftl_conf;
 

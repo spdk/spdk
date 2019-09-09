@@ -45,7 +45,7 @@ if [ -n "$nv_cache" ]; then
 	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache $(($pu_end - $pu_start + 1)))
 fi
 
-ftl_construct_args="construct_ftl_bdev -b nvme0 -a $device"
+ftl_construct_args="construct_ftl_bdev -b nvme0 -a $device -z zoned_bdev0"
 
 [ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
 [ -n "$nv_cache" ] && ftl_construct_args+=" -c $nvc_bdev"

@@ -165,6 +165,9 @@ struct spdk_ftl_dev {
 	/* NVMe transport ID */
 	struct spdk_nvme_transport_id		trid;
 
+	/* Underlying zoned device */
+	struct spdk_bdev_desc			*zoned_bdev_desc;
+
 	/* Non-volatile write buffer cache */
 	struct ftl_nv_cache			nv_cache;
 
