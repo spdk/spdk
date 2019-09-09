@@ -335,7 +335,7 @@ class UIPortalGroups(UINode):
 
     def refresh(self):
         self._children = set([])
-        self.pgs = list(self.get_root().get_portal_groups())
+        self.pgs = list(self.get_root().iscsi_get_portal_groups())
         for pg in self.pgs:
             try:
                 UIPortalGroup(pg, self)
