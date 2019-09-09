@@ -457,11 +457,11 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
-		if (!verify_data(task->buf, g_buf_size, iovs[0].iov_base, iovs[0].iov_len,
-				 spdk_bdev_get_block_size(target->bdev),
-				 task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
-				 spdk_bdev_get_md_size(target->bdev),
-				 target->io_size_blocks, md_check) != 0) {
+		if (verify_data(task->buf, g_buf_size, iovs[0].iov_base, iovs[0].iov_len,
+				spdk_bdev_get_block_size(target->bdev),
+				task->md_buf, spdk_bdev_io_get_md_buf(bdev_io),
+				spdk_bdev_get_md_size(target->bdev),
+				target->io_size_blocks, md_check) == false) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset_blocks);
 			target->is_draining = true;
 			g_run_failed = true;
