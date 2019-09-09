@@ -188,10 +188,10 @@ def create_malloc_bdevs_rpc_methods(rpc_py, rpc_param):
 
 def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
-    output = rpc.get_portal_groups()
+    output = rpc.iscsi_get_portal_groups()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
-           "get_portal_groups returned {} groups, expected empty".format(jsonvalues))
+           "iscsi_get_portal_groups returned {} groups, expected empty".format(jsonvalues))
 
     lo_ip = (target_ip, other_ip)
     nics = json.loads(rpc.get_interfaces())
@@ -202,10 +202,10 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
         # The portal group tag must start at 1
         tag = idx + 1
         rpc.add_portal_group(tag, "{}:{}".format(value, rpc_param['port']))
-        output = rpc.get_portal_groups()
+        output = rpc.iscsi_get_portal_groups()
         jsonvalues = json.loads(output)
         verify(len(jsonvalues) == tag, 1,
-               "get_portal_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
+               "iscsi_get_portal_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
 
     tag_list = []
     for idx, value in enumerate(jsonvalues):
@@ -219,7 +219,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
 
     for idx, value in enumerate(tag_list):
         rpc.delete_portal_group(value)
-        output = rpc.get_portal_groups()
+        output = rpc.iscsi_get_portal_groups()
         jsonvalues = json.loads(output)
         verify(len(jsonvalues) == (len(tag_list) - (idx + 1)), 1,
                "get_portal_group returned {} groups, expected {}".format(len(jsonvalues), (len(tag_list) - (idx + 1))))
