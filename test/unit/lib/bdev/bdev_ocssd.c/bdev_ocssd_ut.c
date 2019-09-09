@@ -246,6 +246,12 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
+size_t
+spdk_bdev_get_zone_size(const struct spdk_bdev *bdev)
+{
+	return bdev->zone_size;
+}
+
 int
 spdk_nvme_ocssd_ctrlr_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				   void *payload, uint32_t payload_size,
@@ -349,6 +355,21 @@ spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair 
 				spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
 				spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
 				uint16_t apptag_mask, uint16_t apptag)
+{
+	struct nvme_request *req;
+
+	req = alloc_request(cb_fn, cb_arg);
+	TAILQ_INSERT_TAIL(&qpair->requests, req, tailq);
+
+	return 0;
+}
+
+int
+spdk_nvme_ocssd_ns_cmd_vector_reset(struct spdk_nvme_ns *ns,
+				    struct spdk_nvme_qpair *qpair,
+				    uint64_t *lba_list, uint32_t num_lbas,
+				    struct spdk_ocssd_chunk_information_entry *chunk_info,
+				    spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req;
 
