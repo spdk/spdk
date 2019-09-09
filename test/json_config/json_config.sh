@@ -25,7 +25,7 @@ if (( SPDK_TEST_BLOCKDEV + \
 	exit 0
 fi
 
-declare -A app_pid=([target]= [initiator]=)
+declare -A app_pid=([target]="" [initiator]="")
 declare -A app_socket=([target]='/var/tmp/spdk_tgt.sock' [initiator]='/var/tmp/spdk_initiator.sock')
 declare -A app_params=([target]='-m 0x1 -s 1024' [initiator]='-m 0x2 -g -u -s 1024')
 declare -A configs_path=([target]="$rootdir/spdk_tgt_config.json" [initiator]="$rootdir/spdk_initiator_config.json")
