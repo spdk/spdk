@@ -346,7 +346,7 @@ portal_grp_add_delete_case(void)
 	spdk_io_device_register(&g_spdk_iscsi, ut_poll_group_create, ut_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "ut_portal_grp");
 
-	/* internal of add_portal_group */
+	/* internal of iscsi_create_portal_group */
 	pg1 = spdk_iscsi_portal_grp_create(1);
 	CU_ASSERT(pg1 != NULL);
 
@@ -397,7 +397,7 @@ portal_grp_add_delete_twice_case(void)
 	spdk_io_device_register(&g_spdk_iscsi, ut_poll_group_create, ut_poll_group_destroy,
 				sizeof(struct spdk_iscsi_poll_group), "ut_portal_grp");
 
-	/* internal of add_portal_group related */
+	/* internal of iscsi_create_portal_group related */
 	pg1 = spdk_iscsi_portal_grp_create(1);
 	CU_ASSERT(pg1 != NULL);
 
@@ -413,7 +413,7 @@ portal_grp_add_delete_twice_case(void)
 	rc = spdk_iscsi_portal_grp_register(pg1);
 	CU_ASSERT(rc == 0);
 
-	/* internal of add_portal_group related */
+	/* internal of iscsi_create_portal_group related */
 	pg2 = spdk_iscsi_portal_grp_create(2);
 	CU_ASSERT(pg2 != NULL);
 

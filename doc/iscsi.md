@@ -80,14 +80,14 @@ In addition to the configuration file, the iSCSI target may also be configured v
 
 ### Portal groups
 
- - add_portal_group -- Add a portal group.
+ - iscsi_create_portal_group -- Add a portal group.
  - delete_portal_group -- Delete an existing portal group.
  - add_pg_ig_maps -- Add initiator group to portal group mappings to an existing iSCSI target node.
  - delete_pg_ig_maps -- Delete initiator group to portal group mappings from an existing iSCSI target node.
  - iscsi_get_portal_groups -- Show information about all available portal groups.
 
 ~~~
-/path/to/spdk/scripts/rpc.py add_portal_group 1 10.0.0.1:3260
+/path/to/spdk/scripts/rpc.py iscsi_create_portal_group 1 10.0.0.1:3260
 ~~~
 
 ### Initiator groups
@@ -240,7 +240,7 @@ $ ./scripts/rpc.py bdev_malloc_create -b Malloc1 64 512
 Create new portal group with id 1, and address 10.0.0.1:3260:
 
 ```
-$ ./scripts/rpc.py add_portal_group 1 10.0.0.1:3260
+$ ./scripts/rpc.py iscsi_create_portal_group 1 10.0.0.1:3260
 ```
 
 Create one initiator group with id 2 to accept any connection from 10.0.0.2/32:

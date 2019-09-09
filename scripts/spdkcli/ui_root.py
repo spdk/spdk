@@ -406,7 +406,7 @@ class UIRoot(UINode):
 
     @verbose
     def construct_portal_group(self, **kwargs):
-        rpc.iscsi.add_portal_group(self.client, **kwargs)
+        rpc.iscsi.iscsi_create_portal_group(self.client, **kwargs)
 
     @verbose
     def delete_portal_group(self, **kwargs):

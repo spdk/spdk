@@ -24,7 +24,7 @@ vhost_dict["construct_vhost_nvme_controller"] = []
 
 iscsi_dict = OrderedDict()
 iscsi_dict["set_iscsi_options"] = []
-iscsi_dict["add_portal_group"] = []
+iscsi_dict["iscsi_create_portal_group"] = []
 iscsi_dict["add_initiator_group"] = []
 iscsi_dict["iscsi_create_target_node"] = []
 
@@ -538,7 +538,7 @@ def get_iscsi_portal_group_json(config, name):
             "portals": portals,
             "tag": int(re.findall(r'\d+', name)[0])
         },
-        "method": "add_portal_group"
+        "method": "iscsi_create_portal_group"
     })
 
     return portal_group_json

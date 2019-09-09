@@ -48,7 +48,7 @@ $rpc_py start_subsystem_init
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 timing_exit start_iscsi_tgt
 
-$rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
+$rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 
 echo "Creating an iSCSI target node."

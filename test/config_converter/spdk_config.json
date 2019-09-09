@@ -442,7 +442,7 @@
             ],
             "tag": 1
           },
-          "method": "add_portal_group"
+          "method": "iscsi_create_portal_group"
         },
         {
           "params": {

@@ -779,8 +779,8 @@ static const struct spdk_json_object_decoder rpc_portal_group_decoders[] = {
 };
 
 static void
-spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+spdk_rpc_iscsi_create_portal_group(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
 {
 	struct rpc_portal_group req = {};
 	struct spdk_iscsi_portal_grp *pg = NULL;
@@ -841,7 +841,8 @@ out:
 	}
 	free_rpc_portal_group(&req);
 }
-SPDK_RPC_REGISTER("add_portal_group", spdk_rpc_add_portal_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_create_portal_group", spdk_rpc_iscsi_create_portal_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_portal_group, add_portal_group)
 
 struct rpc_delete_portal_group {
 	int32_t tag;
