@@ -113,6 +113,8 @@ struct spdk_ftl_dev_init_opts {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	/* Controller's transport ID */
 	struct spdk_nvme_transport_id		trid;
+	/* Underlying zoned device */
+	struct spdk_bdev_desc			*zoned_bdev_desc;
 	/* Write buffer cache */
 	struct spdk_bdev_desc			*cache_bdev_desc;
 
