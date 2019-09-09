@@ -46,3 +46,8 @@ function create_nv_cache_bdev() {
 	nvc_bdev=$($rootdir/scripts/rpc.py bdev_nvme_attach_controller -b $name -t PCIe -a $cache_bdf)
 	$rootdir/scripts/rpc.py bdev_split_create $nvc_bdev -s $size 1
 }
+
+function gen_ftl_nvme_conf() {
+	echo "[Nvme]"
+	echo "  AdminPollRate 100"
+}

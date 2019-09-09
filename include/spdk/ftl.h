@@ -35,8 +35,6 @@
 #define SPDK_FTL_H
 
 #include "spdk/stdinc.h"
-#include "spdk/nvme.h"
-#include "spdk/nvme_ocssd.h"
 #include "spdk/uuid.h"
 #include "spdk/thread.h"
 #include "spdk/bdev.h"
@@ -62,6 +60,11 @@ struct spdk_ftl_limit {
 
 	/* Limit percentage */
 	size_t					limit;
+};
+
+enum spdk_ftl_mode {
+	/* Create new device */
+	SPDK_FTL_MODE_CREATE = (1 << 0),
 };
 
 struct spdk_ftl_conf {
@@ -103,16 +106,9 @@ struct spdk_ftl_conf {
 	} nv_cache;
 };
 
-enum spdk_ftl_mode {
-	/* Create new device */
-	SPDK_FTL_MODE_CREATE = (1 << 0),
-};
-
 struct spdk_ftl_dev_init_opts {
-	/* NVMe controller */
-	struct spdk_nvme_ctrlr			*ctrlr;
-	/* Controller's transport ID */
-	struct spdk_nvme_transport_id		trid;
+	/* Underlying device */
+	struct spdk_bdev_desc			*base_bdev_desc;
 	/* Write buffer cache */
 	struct spdk_bdev_desc			*cache_bdev_desc;
 
@@ -152,11 +148,10 @@ typedef void (*spdk_ftl_fn)(void *, int);
 typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *, void *, int);
 
 /**
- * Initialize the FTL on given NVMe device and parallel unit range.
+ * Initialize the FTL on a given zoned bdev.
  *
  * Covers the following:
- * - initialize and register NVMe ctrlr,
- * - retrieve geometry and check if the device has proper configuration,
+ * - retrieve zone device information,
  * - allocate buffers and resources,
  * - initialize internal structures,
  * - initialize internal thread(s),
