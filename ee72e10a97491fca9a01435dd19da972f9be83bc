@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a23984b_7eff21a3",
+        "filename": "module/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-09T19:52:34Z",
+      "side": 1,
+      "message": "are you expecting this function to expand? If not I think it owuld be clearer if you just put this one If statement in create_ctrlr() otherwise on a casual read it looks like we\u0027re always init\u0027ing opal.  Not a big deal though",
+      "revId": "ee72e10a97491fca9a01435dd19da972f9be83bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
