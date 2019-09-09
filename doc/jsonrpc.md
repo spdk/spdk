@@ -257,7 +257,7 @@ Example response:
     "get_iscsi_global_params",
     "target_node_add_lun",
     "get_iscsi_connections",
-    "delete_portal_group",
+    "iscsi_delete_portal_group",
     "iscsi_create_portal_group",
     "iscsi_get_portal_groups",
     "delete_target_node",
@@ -3515,7 +3515,7 @@ Example response:
 }
 ~~~
 
-## delete_portal_group method {#rpc_delete_portal_group}
+## iscsi_delete_portal_group method {#rpc_iscsi_delete_portal_group}
 
 Delete an existing portal group.
 
@@ -3535,7 +3535,7 @@ Example request:
     "tag": 1
   },
   "jsonrpc": "2.0",
-  "method": "delete_portal_group",
+  "method": "iscsi_delete_portal_group",
   "id": 1
 }
 ~~~

@@ -844,24 +844,24 @@ out:
 SPDK_RPC_REGISTER("iscsi_create_portal_group", spdk_rpc_iscsi_create_portal_group, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_portal_group, add_portal_group)
 
-struct rpc_delete_portal_group {
+struct rpc_iscsi_delete_portal_group {
 	int32_t tag;
 };
 
-static const struct spdk_json_object_decoder rpc_delete_portal_group_decoders[] = {
-	{"tag", offsetof(struct rpc_delete_portal_group, tag), spdk_json_decode_int32},
+static const struct spdk_json_object_decoder rpc_iscsi_delete_portal_group_decoders[] = {
+	{"tag", offsetof(struct rpc_iscsi_delete_portal_group, tag), spdk_json_decode_int32},
 };
 
 static void
-spdk_rpc_delete_portal_group(struct spdk_jsonrpc_request *request,
-			     const struct spdk_json_val *params)
+spdk_rpc_iscsi_delete_portal_group(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
 {
-	struct rpc_delete_portal_group req = {};
+	struct rpc_iscsi_delete_portal_group req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_portal_grp *pg;
 
-	if (spdk_json_decode_object(params, rpc_delete_portal_group_decoders,
-				    SPDK_COUNTOF(rpc_delete_portal_group_decoders),
+	if (spdk_json_decode_object(params, rpc_iscsi_delete_portal_group_decoders,
+				    SPDK_COUNTOF(rpc_iscsi_delete_portal_group_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
@@ -883,7 +883,8 @@ spdk_rpc_delete_portal_group(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
-SPDK_RPC_REGISTER("delete_portal_group", spdk_rpc_delete_portal_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_delete_portal_group", spdk_rpc_iscsi_delete_portal_group, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_portal_group, delete_portal_group)
 
 struct rpc_get_iscsi_connections_ctx {
 	struct spdk_jsonrpc_request *request;

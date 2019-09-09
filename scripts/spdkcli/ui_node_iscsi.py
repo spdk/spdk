@@ -292,7 +292,7 @@ class UIPortalGroups(UINode):
         self.refresh()
 
     def delete(self, tag):
-        self.get_root().delete_portal_group(tag=tag)
+        self.get_root().iscsi_delete_portal_group(tag=tag)
 
     def ui_command_create(self, tag, portal_list):
         """Add a portal group.
