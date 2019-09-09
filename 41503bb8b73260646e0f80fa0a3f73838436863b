@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e99adbe2_06cd56b0",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-09T20:10:29Z",
+      "side": 1,
+      "message": "do you know why the original passthru delete is missing from master in this list? Seems like it would have been there",
+      "revId": "41503bb8b73260646e0f80fa0a3f73838436863b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5005873e_7b729697",
+        "filename": "module/bdev/passthru/vbdev_passthru.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-09T20:10:29Z",
+      "side": 1,
+      "message": "I noticed in most of your rename patches you are also renaming internal functions to the new naming scheme but didn\u0027t do so with just this one to bdev_passthru_create() any reason?",
+      "revId": "41503bb8b73260646e0f80fa0a3f73838436863b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a5088db_693040d6",
+        "filename": "module/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-09T20:10:29Z",
+      "side": 1,
+      "message": "this should be construct_passthru_bdev right?",
+      "revId": "41503bb8b73260646e0f80fa0a3f73838436863b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
