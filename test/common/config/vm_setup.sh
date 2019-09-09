@@ -228,7 +228,7 @@ function install_qemu()
         # If using tsocks, please make sure to complete this config before trying to build qemu.
         if echo $CONF | grep -q tsocks; then
             if hash tsocks 2> /dev/null; then
-                opt_params+=(--with-git='tsocks git')
+                opt_params+=("--with-git="'tsocks git')
             fi
         fi
 
