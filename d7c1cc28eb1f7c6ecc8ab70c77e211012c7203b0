@@ -46,6 +46,30 @@
       "revId": "d7c1cc28eb1f7c6ecc8ab70c77e211012c7203b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99bcdcf4_f84e350b",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1016727
+      },
+      "writtenOn": "2019-09-09T09:53:49Z",
+      "side": 0,
+      "message": "There was no errors with SC2026",
+      "parentUuid": "9100a568_09fd92fd",
+      "range": {
+        "startLine": 244,
+        "startChar": 63,
+        "endLine": 244,
+        "endChar": 69
+      },
+      "revId": "d7c1cc28eb1f7c6ecc8ab70c77e211012c7203b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
