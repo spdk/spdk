@@ -51,6 +51,9 @@ If not specified then by default each connected subsystem gets its own CPU core.
 ### nvmecli_dir
 Path to directory with nvme-cli application. If not provided then system-wide package will be used
 by default. Not used if "mode" is set to "spdk".
+### fio_dir
+Path to the fio binary that will be used to compile SPDK and run the test.
+If not specified, then the script will use /usr/src/fio as the default.
 
 ## fio
 Fio job parameters.
