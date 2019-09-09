@@ -36,26 +36,34 @@
 #include "spdk/ftl.h"
 #include "ftl/ftl_core.h"
 
-struct spdk_ftl_dev *test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo);
+struct base_bdev_geometry {
+	size_t write_unit_size;
+	size_t zone_size;
+	size_t optimal_open_zones;
+	size_t blockcnt;
+};
+
+struct spdk_ftl_dev *test_init_ftl_dev(const struct base_bdev_geometry *geo);
 struct ftl_band *test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id);
 void test_free_ftl_dev(struct spdk_ftl_dev *dev);
 void test_free_ftl_band(struct ftl_band *band);
 uint64_t test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band);
 
 struct spdk_ftl_dev *
-test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo)
+test_init_ftl_dev(const struct base_bdev_geometry *geo)
 {
 	struct spdk_ftl_dev *dev;
 
 	dev = calloc(1, sizeof(*dev));
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
 
-	dev->xfer_size = geo->ws_opt;
-	dev->geo = *geo;
+	dev->xfer_size = geo->write_unit_size;
 	dev->core_thread.thread = spdk_thread_create("unit_test_thread", NULL);
 	spdk_set_thread(dev->core_thread.thread);
-
-	dev->bands = calloc(geo->num_chk, sizeof(*dev->bands));
+	dev->core_thread.ioch = calloc(1, sizeof(*dev->core_thread.ioch)
+				       + sizeof(struct ftl_io_channel));
+	dev->num_bands = geo->blockcnt / (geo->zone_size * geo->optimal_open_zones);
+	dev->bands = calloc(dev->num_bands, sizeof(*dev->bands));
 	SPDK_CU_ASSERT_FATAL(dev->bands != NULL);
 
 	dev->lba_pool = spdk_mempool_create("ftl_ut", 2, 0x18000,
@@ -76,7 +84,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	struct ftl_zone *zone;
 
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
-	SPDK_CU_ASSERT_FATAL(id < dev->geo.num_chk);
+	SPDK_CU_ASSERT_FATAL(id < dev->num_bands);
 
 	band = &dev->bands[id];
 	band->dev = dev;
@@ -86,7 +94,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	LIST_INSERT_HEAD(&dev->shut_bands, band, list_entry);
 	CIRCLEQ_INIT(&band->zones);
 
-	band->lba_map.vld = spdk_bit_array_create(ftl_num_band_lbks(dev));
+	band->lba_map.vld = spdk_bit_array_create(ftl_num_blocks_in_band(dev));
 	SPDK_CU_ASSERT_FATAL(band->lba_map.vld != NULL);
 
 	band->zone_buf = calloc(ftl_dev_num_punits(dev), sizeof(*band->zone_buf));
@@ -112,6 +120,7 @@ void
 test_free_ftl_dev(struct spdk_ftl_dev *dev)
 {
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	free(dev->core_thread.ioch);
 	spdk_set_thread(dev->core_thread.thread);
 	spdk_thread_exit(dev->core_thread.thread);
 	spdk_thread_destroy(dev->core_thread.thread);
@@ -137,5 +146,5 @@ test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band)
 
 	CU_ASSERT_EQUAL(addr.zone_id, band->id);
 
-	return addr.pu * ftl_dev_lbks_in_zone(dev) + addr.offset;
+	return addr.pu * ftl_num_blocks_in_zone(dev) + addr.offset;
 }
