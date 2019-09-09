@@ -1028,12 +1028,25 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 	if (!opts.conf) {
 		opts.conf = &g_default_conf;
 	}
+#if 0
+	if (!opts.zoned_bdev_desc) {
+		SPDK_ERRLOG("Lack of underlying device in configuration\n");
+		goto fail_sync;
+	}
+
+	if (!spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(opts.zoned_bdev_desc))) {
+		SPDK_ERRLOG("Bdev dosen't support zone capabilities: %s\n",
+			    spdk_bdev_get_name(spdk_bdev_desc_get_bdev(opts.zoned_bdev_desc)));
+		goto fail_sync;
+	}
+#endif
 
 	TAILQ_INIT(&dev->retry_queue);
 	dev->conf = *opts.conf;
 	dev->init_ctx.cb_fn = cb_fn;
 	dev->init_ctx.cb_arg = cb_arg;
 	dev->init_ctx.thread = spdk_get_thread();
+	dev->zoned_bdev_desc = opts.zoned_bdev_desc;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
 
 	dev->name = strdup(opts.name);

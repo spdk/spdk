@@ -55,6 +55,8 @@ struct ftl_bdev_init_opts {
 	struct spdk_nvme_transport_id		trid;
 	/* Bdev's name */
 	const char				*name;
+	/* Zoned bdev's name */
+	const char				*zoned_bdev;
 	/* Write buffer bdev's name */
 	const char				*cache_bdev;
 	/* Bdev's mode */
