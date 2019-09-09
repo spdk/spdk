@@ -194,23 +194,23 @@ struct raid_base_bdev_config {
  */
 struct raid_bdev_config {
 	/* base bdev config per underlying bdev */
-	struct raid_base_bdev_config  *base_bdev;
+	struct raid_base_bdev_config	*base_bdev;
 
 	/* Points to already created raid bdev  */
-	struct raid_bdev              *raid_bdev;
+	struct raid_bdev		*raid_bdev;
 
-	char                          *name;
+	char				*name;
 
 	/* strip size of this raid bdev  in kilo bytes */
-	uint32_t                      strip_size;
+	uint32_t			strip_size;
 
 	/* number of base bdevs */
-	uint8_t                       num_base_bdevs;
+	uint8_t				num_base_bdevs;
 
 	/* raid level */
-	uint8_t                       raid_level;
+	uint8_t				raid_level;
 
-	TAILQ_ENTRY(raid_bdev_config) link;
+	TAILQ_ENTRY(raid_bdev_config)	link;
 };
 
 /*
