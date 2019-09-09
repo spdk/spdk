@@ -41,8 +41,7 @@
 
 struct rpc_construct_ftl {
 	char *name;
-	char *trtype;
-	char *traddr;
+	char *disk_bdev;
 	char *uuid;
 	char *cache_bdev;
 	struct spdk_ftl_conf ftl_conf;
@@ -52,16 +51,14 @@ static void
 free_rpc_construct_ftl(struct rpc_construct_ftl *req)
 {
 	free(req->name);
-	free(req->trtype);
-	free(req->traddr);
+	free(req->disk_bdev);
 	free(req->uuid);
 	free(req->cache_bdev);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_ftl_decoders[] = {
 	{"name", offsetof(struct rpc_construct_ftl, name), spdk_json_decode_string},
-	{"trtype", offsetof(struct rpc_construct_ftl, trtype), spdk_json_decode_string},
-	{"traddr", offsetof(struct rpc_construct_ftl, traddr), spdk_json_decode_string},
+	{"disk_bdev", offsetof(struct rpc_construct_ftl, disk_bdev), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_construct_ftl, uuid), spdk_json_decode_string, true},
 	{"cache", offsetof(struct rpc_construct_ftl, cache_bdev), spdk_json_decode_string, true},
 	{
@@ -171,27 +168,9 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 
 	opts.name = req.name;
 	opts.mode = SPDK_FTL_MODE_CREATE;
+	opts.disk_bdev = req.disk_bdev;
 	opts.cache_bdev = req.cache_bdev;
 	opts.ftl_conf = req.ftl_conf;
-
-	/* Parse trtype */
-	rc = spdk_nvme_transport_id_parse_trtype(&opts.trid.trtype, req.trtype);
-	if (rc) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Failed to parse trtype: %s, rc: %s",
-						     req.trtype, spdk_strerror(-rc));
-		goto invalid;
-	}
-
-	if (opts.trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid trtype: %s. Only PCIe is supported",
-						     req.trtype);
-		goto invalid;
-	}
-
-	/* Parse traddr */
-	snprintf(opts.trid.traddr, sizeof(opts.trid.traddr), "%s", req.traddr);
 
 	if (req.uuid) {
 		if (spdk_uuid_parse(&opts.uuid, req.uuid) < 0) {

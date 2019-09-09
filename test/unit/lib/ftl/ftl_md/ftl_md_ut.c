@@ -39,22 +39,35 @@
 #include "ftl/ftl_band.c"
 #include "../common/utils.c"
 
-static struct spdk_ocssd_geometry_data g_geo = {
-	.num_grp	= 4,
-	.num_pu		= 3,
-	.num_chk	= 1500,
-	.clba		= 100,
-	.ws_opt		= 16,
-	.ws_min		= 4,
+static struct test_geo g_geo = {
+	.write_unit_size    = 16,
+	.optimal_open_zones = 12,
+	.zone_size	    = 100,
+	.dev_size	    = 1500 * 100 * 12,
 };
 
+DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *desc), NULL);
+
+size_t
+spdk_bdev_get_zone_size(const struct spdk_bdev *bdev)
+{
+	return g_geo.zone_size;
+}
+
+size_t
+spdk_bdev_get_optimal_open_zones(const struct spdk_bdev *bdev)
+{
+	return g_geo.optimal_open_zones;
+}
+
 static void
-setup_band(struct ftl_band **band, const struct spdk_ocssd_geometry_data *geo)
+setup_band(struct ftl_band **band, const struct test_geo *geo)
 {
 	int rc;
 	struct spdk_ftl_dev *dev;
 
-	dev = test_init_ftl_dev(geo);
+	dev = test_init_ftl_dev(geo->write_unit_size, geo->zone_size, geo->optimal_open_zones,
+				geo->dev_size);
 	*band = test_init_ftl_band(dev, 0);
 	rc = ftl_band_alloc_lba_map(*band);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -122,7 +135,7 @@ test_md_unpack_fail(void)
 
 	/* check invalid size */
 	ftl_pack_tail_md(band);
-	band->dev->geo.clba--;
+	g_geo.zone_size--;
 	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band), FTL_MD_INVALID_SIZE);
 
 	cleanup_band(band);

@@ -42,20 +42,31 @@
 #define MAX_ACTIVE_RELOCS 5
 #define MAX_RELOC_QDEPTH  31
 
-static struct spdk_ocssd_geometry_data g_geo = {
-	.num_grp	= 4,
-	.num_pu		= 3,
-	.num_chk	= 500,
-	.clba		= 100,
-	.ws_opt		= 16,
-	.ws_min		= 4,
+static struct test_geo g_geo = {
+	.write_unit_size    = 16,
+	.optimal_open_zones = 12,
+	.zone_size	    = 100,
+	.dev_size	    = 1500 * 100 * 12,
 };
 
+DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *desc), NULL);
 DEFINE_STUB(ftl_dev_tail_md_disk_size, size_t, (const struct spdk_ftl_dev *dev), 1);
 DEFINE_STUB(ftl_addr_is_written, bool, (struct ftl_band *band, struct ftl_addr addr), true);
 DEFINE_STUB_V(ftl_band_set_state, (struct ftl_band *band, enum ftl_band_state state));
 DEFINE_STUB_V(ftl_trace_lba_io_init, (struct spdk_ftl_dev *dev, const struct ftl_io *io));
 DEFINE_STUB_V(ftl_free_io, (struct ftl_io *io));
+
+size_t
+spdk_bdev_get_zone_size(const struct spdk_bdev *bdev)
+{
+	return g_geo.zone_size;
+}
+
+size_t
+spdk_bdev_get_optimal_open_zones(const struct spdk_bdev *bdev)
+{
+	return g_geo.optimal_open_zones;
+}
 
 int
 ftl_band_alloc_lba_map(struct ftl_band *band)
@@ -191,13 +202,15 @@ single_reloc_move(struct ftl_band_reloc *breloc)
 
 static void
 setup_reloc(struct spdk_ftl_dev **_dev, struct ftl_reloc **_reloc,
-	    const struct spdk_ocssd_geometry_data *geo)
+	    const struct test_geo *geo)
 {
 	size_t i;
 	struct spdk_ftl_dev *dev;
 	struct ftl_reloc *reloc;
 
-	dev = test_init_ftl_dev(geo);
+	dev = test_init_ftl_dev(geo->write_unit_size, geo->zone_size, geo->optimal_open_zones,
+				geo->dev_size);
+
 	dev->conf.max_active_relocs = MAX_ACTIVE_RELOCS;
 	dev->conf.max_reloc_qdepth = MAX_RELOC_QDEPTH;
 
@@ -258,7 +271,7 @@ test_reloc_iter_full(void)
 
 	setup_reloc(&dev, &reloc, &g_geo);
 
-	dev->geo.clba = 100;
+	g_geo.zone_size = 100;
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
 

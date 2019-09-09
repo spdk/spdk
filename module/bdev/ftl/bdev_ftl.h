@@ -35,12 +35,8 @@
 #define SPDK_BDEV_FTL_H
 
 #include "spdk/stdinc.h"
-#include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
 #include "spdk/ftl.h"
-
-#define FTL_MAX_CONTROLLERS	64
-#define FTL_MAX_BDEVS		(FTL_MAX_CONTROLLERS * 128)
 
 struct spdk_bdev;
 struct spdk_uuid;
@@ -51,10 +47,10 @@ struct ftl_bdev_info {
 };
 
 struct ftl_bdev_init_opts {
-	/* NVMe controller's transport ID */
-	struct spdk_nvme_transport_id		trid;
 	/* Bdev's name */
 	const char				*name;
+	/* Disk bdev's name */
+	const char				*disk_bdev;
 	/* Write buffer bdev's name */
 	const char				*cache_bdev;
 	/* Bdev's mode */

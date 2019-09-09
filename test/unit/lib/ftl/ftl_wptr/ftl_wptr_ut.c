@@ -40,18 +40,17 @@
 #include "ftl/ftl_band.c"
 #include "../common/utils.c"
 
-static struct spdk_ocssd_geometry_data g_geo = {
-	.num_grp	= 4,
-	.num_pu		= 3,
-	.num_chk	= 20,
-	.clba		= 128,
-	.ws_opt		= 16,
-	.ws_min		= 4,
+static struct test_geo g_geo = {
+	.write_unit_size    = 16,
+	.optimal_open_zones = 12,
+	.zone_size	    = 128,
+	.dev_size	    = 20 * 128 * 12,
 };
 
 #if defined(DEBUG)
 DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band), true);
 #endif
+DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 DEFINE_STUB_V(ftl_io_dec_req, (struct ftl_io *io));
 DEFINE_STUB_V(ftl_io_inc_req, (struct ftl_io *io));
 DEFINE_STUB_V(ftl_io_fail, (struct ftl_io *io, int status));
@@ -67,12 +66,22 @@ DEFINE_STUB_V(ftl_io_process_error, (struct ftl_io *io, const struct spdk_nvme_c
 DEFINE_STUB_V(ftl_trace_limits, (struct spdk_ftl_dev *dev, const size_t *limits, size_t num_free));
 DEFINE_STUB(ftl_rwb_entry_cnt, size_t, (const struct ftl_rwb *rwb), 0);
 DEFINE_STUB_V(ftl_rwb_set_limits, (struct ftl_rwb *rwb, const size_t limit[FTL_RWB_TYPE_MAX]));
-DEFINE_STUB(spdk_nvme_ocssd_ns_cmd_vector_reset, int, (struct spdk_nvme_ns *ns,
-		struct spdk_nvme_qpair *qpair, uint64_t *lba_list, uint32_t num_lbas,
-		struct spdk_ocssd_chunk_information_entry *chunk_info,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *dsc), NULL);
 DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_zone_reset, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+					uint64_t zone_id, spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+
+size_t
+spdk_bdev_get_zone_size(const struct spdk_bdev *bdev)
+{
+	return g_geo.zone_size;
+}
+
+size_t
+spdk_bdev_get_optimal_open_zones(const struct spdk_bdev *bdev)
+{
+	return g_geo.optimal_open_zones;
+}
 
 struct ftl_io *
 ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, ftl_io_fn cb)
@@ -104,13 +113,13 @@ ftl_io_complete(struct ftl_io *io)
 }
 
 static void
-setup_wptr_test(struct spdk_ftl_dev **dev, const struct spdk_ocssd_geometry_data *geo)
+setup_wptr_test(struct spdk_ftl_dev **dev, const struct test_geo *geo)
 {
 	size_t i;
 	struct spdk_ftl_dev *t_dev;
 
-	t_dev = test_init_ftl_dev(geo);
-
+	t_dev = test_init_ftl_dev(geo->write_unit_size, geo->zone_size, geo->optimal_open_zones,
+				  geo->dev_size);
 	for (i = 0; i < ftl_dev_num_bands(t_dev); ++i) {
 		test_init_ftl_band(t_dev, i);
 		t_dev->bands[i].state = FTL_BAND_STATE_CLOSED;
