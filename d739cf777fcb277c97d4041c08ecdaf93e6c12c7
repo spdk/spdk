@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28536025_f27dbbbf",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-09T01:55:08Z",
+      "side": 1,
+      "message": "Instead let\u0027s say something like:\n\nNumber of commands that may be executed from the low priority queue in each arbitration round.  This field is only valid when arb_mechanism is set to SPDK_NVME_CC_AMS_WRR (weighted round robin).\n\nSame for medium and high comments below.",
+      "revId": "d739cf777fcb277c97d4041c08ecdaf93e6c12c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f81a4202_2e55fdd0",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-09T01:55:08Z",
+      "side": 1,
+      "message": "I don\u0027t think this comment is clear.  It may be confusing what this comment has to do with arbitration burst \u003c 2.\n\nMaybe it would be better to have the user specify the arbitration burst value explicitly?  I mean, explain that this field means 2^value.  And that valid values are 0-6, and also 7 which means unlimited.\n\nThis avoids case where user specifies invalid values like 43.  This patch would round that down to 32, but really it would be better to make it an error in that case.",
+      "revId": "d739cf777fcb277c97d4041c08ecdaf93e6c12c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa742da2_21ebdf26",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-09T01:55:08Z",
+      "side": 1,
+      "message": "suggest putting an error message here - you can also remove the \"return\" - function will just return normally after this",
+      "revId": "d739cf777fcb277c97d4041c08ecdaf93e6c12c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41af2863_b7c8a88b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 558,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-09T01:55:08Z",
+      "side": 1,
+      "message": "return not needed at end of void function",
+      "revId": "d739cf777fcb277c97d4041c08ecdaf93e6c12c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
