@@ -632,8 +632,8 @@ bdev_ocssd_reset_zone(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io
 	}
 
 	rc = spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_bdev->ns, ocdev_ioch->qpair,
-						 ocdev_io->lba, num_zones, NULL,
-						 bdev_ocssd_reset_zone_cb, bdev_io);
+			ocdev_io->lba, num_zones, NULL,
+			bdev_ocssd_reset_zone_cb, bdev_io);
 	if (spdk_unlikely(rc != 0)) {
 		__atomic_store_n(&ocdev_io->zone->busy, false, __ATOMIC_SEQ_CST);
 	}

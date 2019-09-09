@@ -1,0 +1,151 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "copy",
+      "config": null
+    },
+    {
+      "subsystem": "interface",
+      "config": null
+    },
+    {
+      "subsystem": "net_framework",
+      "config": null
+    },
+    {
+      "subsystem": "vmd",
+      "config": null
+    },
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "method": "set_bdev_options",
+          "params": {
+            "bdev_io_pool_size": 65535,
+            "bdev_io_cache_size": 256
+          }
+        },
+        {
+          "method": "bdev_nvme_set_options",
+          "params": {
+            "action_on_timeout": "none",
+            "timeout_us": 0,
+            "retry_count": 4,
+            "nvme_adminq_poll_period_us": 1000000,
+            "nvme_ioq_poll_period_us": 0,
+            "io_queue_requests": 0
+          }
+        },
+        {
+          "method": "construct_nvme_bdev",
+          "params": {
+            "name": "nvme0",
+            "mode": "OCSSD",
+            "trtype": "PCIe",
+            "traddr": "0000:00:04.0",
+            "prchk_reftag": false,
+            "prchk_guard": false
+          }
+        },
+        {
+          "method": "bdev_nvme_set_hotplug",
+          "params": {
+            "period_us": 100000,
+            "enable": false
+          }
+        },
+        {
+          "method": "bdev_ocssd_create",
+          "params": {
+            "ctrlr_name": "nvme0",
+            "bdev_name": "nvme0n1",
+            "nsid": 1
+          }
+        },
+        {
+          "method": "construct_ftl_bdev",
+          "params": {
+            "name": "ftl0",
+            "allow_open_bands": false,
+            "overprovisioning": 20,
+            "limit_crit": 0,
+            "limit_crit_threshold": 5,
+            "limit_high": 5,
+            "limit_high_threshold": 10,
+            "limit_low": 40,
+            "limit_low_threshold": 20,
+            "limit_start": 100,
+            "limit_start_threshold": 40,
+            "uuid": "73fe92d5-60c9-4872-ba63-12613ebd31fa",
+            "disk_bdev": "nvme0n1"
+          }
+        }
+      ]
+    },
+    {
+      "subsystem": "scsi",
+      "config": null
+    },
+    {
+      "subsystem": "nvmf",
+      "config": [
+        {
+          "method": "set_nvmf_target_config",
+          "params": {
+            "acceptor_poll_rate": 10000,
+            "conn_sched": "roundrobin"
+          }
+        },
+        {
+          "method": "set_nvmf_target_max_subsystems",
+          "params": {
+            "max_subsystems": 1024
+          }
+        }
+      ]
+    },
+    {
+      "subsystem": "nbd",
+      "config": [
+        {
+          "method": "start_nbd_disk",
+          "params": {
+            "nbd_device": "/dev/nbd0",
+            "bdev_name": "ftl0"
+          }
+        }
+      ]
+    },
+    {
+      "subsystem": "vhost",
+      "config": []
+    },
+    {
+      "subsystem": "iscsi",
+      "config": [
+        {
+          "method": "set_iscsi_options",
+          "params": {
+            "node_base": "iqn.2016-06.io.spdk",
+            "max_sessions": 128,
+            "max_connections_per_session": 2,
+            "max_queue_depth": 64,
+            "default_time2wait": 2,
+            "default_time2retain": 20,
+            "first_burst_length": 8192,
+            "immediate_data": true,
+            "allow_duplicated_isid": false,
+            "error_recovery_level": 0,
+            "nop_timeout": 60,
+            "nop_in_interval": 30,
+            "disable_chap": false,
+            "require_chap": false,
+            "mutual_chap": false,
+            "chap_group": 0
+          }
+        }
+      ]
+    }
+  ]
+}
