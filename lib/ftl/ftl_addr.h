@@ -80,22 +80,4 @@ struct ftl_addr {
 	};
 };
 
-struct ftl_ppa_fmt {
-	/* Logical block */
-	unsigned int				lbk_offset;
-	unsigned int				lbk_mask;
-
-	/* Chunk */
-	unsigned int				chk_offset;
-	unsigned int				chk_mask;
-
-	/* Parallel unit (NAND die) */
-	unsigned int				pu_offset;
-	unsigned int				pu_mask;
-
-	/* Group */
-	unsigned int				grp_offset;
-	unsigned int				grp_mask;
-};
-
 #endif /* FTL_ADDR_H */
