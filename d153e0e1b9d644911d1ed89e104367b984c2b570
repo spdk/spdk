@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3556009_5ba08c1e",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-09T08:40:02Z",
+      "side": 1,
+      "message": "this is a nit, but you don\u0027t need a return statement at the end of a void function (we typically omit it in SPDK)",
+      "revId": "d153e0e1b9d644911d1ed89e104367b984c2b570",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
