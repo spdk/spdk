@@ -37,7 +37,11 @@ def main():
     add_quotes_to_shell(spdk_shell)
 
     parser = argparse.ArgumentParser(description="SPDK command line interface")
-    parser.add_argument("-s", dest="socket", help="RPC socket path", default="/var/tmp/spdk.sock")
+    parser.add_argument('-s', dest='server_addr',
+                        help='RPC domain socket path or IP address', default='/var/tmp/spdk.sock')
+    parser.add_argument('-p', dest='port',
+                        help='RPC port number (if server_addr is IP address)',
+                        default=None, type=int)
     parser.add_argument("-v", dest="verbose", help="Print request/response JSON for configuration calls",
                         default=False, action="store_true")
     parser.add_argument("commands", metavar="command", type=str, nargs="*", default="",
@@ -45,7 +49,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        client = rpc.client.JSONRPCClient(args.socket)
+        client = rpc.client.JSONRPCClient(args.server_addr, port=args.port)
     except JSONRPCException as e:
         spdk_shell.log.error("%s. SPDK not running?" % e)
         sys.exit(1)
