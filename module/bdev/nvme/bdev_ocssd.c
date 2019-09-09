@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/bdev_module.h"
+#include "spdk/bdev_zone.h"
 #include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
@@ -51,8 +52,9 @@ struct bdev_ocssd_lba_offsets {
 };
 
 struct bdev_ocssd_io {
-	size_t iov_pos;
-	size_t iov_off;
+	size_t		iov_pos;
+	size_t		iov_off;
+	uint64_t	lba[SPDK_NVME_OCSSD_MAX_LBAL_ENTRIES];
 };
 
 struct ocssd_bdev {
@@ -298,6 +300,50 @@ bdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev
 }
 
 static void
+bdev_ocssd_reset_zone_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, 0, cpl->status.sct, cpl->status.sc);
+}
+
+static int
+bdev_ocssd_reset_zone(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io,
+		      uint64_t slba, size_t num_zones)
+{
+	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
+	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
+	struct nvme_io_channel *nvme_ioch = spdk_io_channel_get_ctx(ioch);
+	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
+	uint64_t offset, zone_size = nvme_bdev->disk.zone_size;
+
+	if (num_zones > 1) {
+		SPDK_ERRLOG("Exceeded maximum number of zones per single reset: 1\n");
+		return -EINVAL;
+	}
+
+	for (offset = 0; offset < num_zones; ++offset) {
+		ocdev_io->lba[offset] = bdev_ocssd_to_disk_lba(ocssd_bdev,
+					slba + offset * zone_size);
+	}
+
+	return spdk_nvme_ocssd_ns_cmd_vector_reset(nvme_bdev->nvme_ns->ns, nvme_ioch->qpair, ocdev_io->lba,
+			num_zones, NULL, bdev_ocssd_reset_zone_cb, bdev_io);
+}
+
+static int
+bdev_ocssd_zone_management(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->u.zone_mgmt.zone_action) {
+	case SPDK_BDEV_ZONE_RESET:
+		return bdev_ocssd_reset_zone(ioch, bdev_io, bdev_io->u.zone_mgmt.zone_id,
+					     bdev_io->u.zone_mgmt.num_zones);
+	default:
+		return -EINVAL;
+	}
+}
+
+static void
 bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bdev_io)
 {
 	int rc = 0;
@@ -310,6 +356,10 @@ bdev_ocssd_submit_request(struct spdk_io_channel *ioch, struct spdk_bdev_io *bde
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		rc = bdev_ocssd_write(ioch, bdev_io);
+		break;
+
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
+		rc = bdev_ocssd_zone_management(ioch, bdev_io);
 		break;
 
 	default:
@@ -332,6 +382,8 @@ bdev_ocssd_io_type_supported(void *ctx, enum spdk_bdev_io_type type)
 	switch (type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_ZONE_MANAGEMENT:
 		return true;
 
 	default:
