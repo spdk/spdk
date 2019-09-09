@@ -27,10 +27,17 @@ def execute_command(cmd, element=None, element_exists=False):
 
 if __name__ == "__main__":
     socket = "/var/tmp/spdk.sock"
+    port = None
     if len(sys.argv) == 3:
         socket = sys.argv[2]
+    elif len(sys.argv) == 4:
+        port = sys.argv[3]
     testdir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py") + " -s %s" % socket)
+
+    if port is None:
+        child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py") + " -s %s" % socket)
+    else:
+        child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py") + " -s %s -p %s" % (socket, port))
     child.expect(">")
     child.sendline("cd /")
     child.expect("/>")
