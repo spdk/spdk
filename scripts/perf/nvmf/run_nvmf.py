@@ -176,10 +176,12 @@ class Target(Server):
 
 
 class Initiator(Server):
-    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", nvmecli_dir=None, workspace="/tmp/spdk"):
+    def __init__(self, name, username, password, mode, nic_ips, ip, transport="rdma", nvmecli_dir=None, workspace="/tmp/spdk",
+                 fio_dir="/usr/src/fio"):
         super(Initiator, self).__init__(name, username, password, mode, nic_ips, transport)
         self.ip = ip
         self.spdk_dir = workspace
+        self.fio_dir = fio_dir
 
         if nvmecli_dir:
             self.nvmecli_bin = os.path.join(nvmecli_dir, "nvme")
@@ -307,16 +309,18 @@ runtime={run_time}
     def run_fio(self, fio_config_file, run_num=None):
         job_name, _ = os.path.splitext(fio_config_file)
         self.log_print("Starting FIO run for job: %s" % job_name)
+        fio_bin = os.path.join(self.fio_dir, "fio")
+        self.log_print("Using FIO: %s" % fio_bin)
         if run_num:
             for i in range(1, run_num + 1):
                 output_filename = job_name + "_run_" + str(i) + "_" + self.name + ".json"
-                cmd = "sudo /usr/src/fio/fio %s --output-format=json --output=%s" % (fio_config_file, output_filename)
+                cmd = "sudo %s %s --output-format=json --output=%s" % (fio_bin, fio_config_file, output_filename)
                 output, error = self.remote_call(cmd)
                 self.log_print(output)
                 self.log_print(error)
         else:
             output_filename = job_name + "_" + self.name + ".json"
-            cmd = "sudo /usr/src/fio/fio %s --output-format=json --output=%s" % (fio_config_file, output_filename)
+            cmd = "sudo %s %s --output-format=json --output=%s" % (fio_bin, fio_config_file, output_filename)
             output, error = self.remote_call(cmd)
             self.log_print(output)
             self.log_print(error)
@@ -564,7 +568,7 @@ class SPDKTarget(Target):
 
 class KernelInitiator(Initiator):
     def __init__(self, name, username, password, mode, nic_ips, ip, transport, **kwargs):
-        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport)
+        super(KernelInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, fio_dir)
 
     def __del__(self):
         self.ssh_connection.close()
@@ -598,7 +602,7 @@ class KernelInitiator(Initiator):
 
 class SPDKInitiator(Initiator):
     def __init__(self, name, username, password, mode, nic_ips, ip, num_cores=None, transport="rdma", **kwargs):
-        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport)
+        super(SPDKInitiator, self).__init__(name, username, password, mode, nic_ips, ip, transport, fio_dir)
         if num_cores:
             self.num_cores = num_cores
 
@@ -608,8 +612,9 @@ class SPDKInitiator(Initiator):
         self.remote_call("unzip -qo /tmp/spdk_drop.zip -d %s" % self.spdk_dir)
 
         self.log_print("Sources unpacked")
-        self.remote_call("cd %s; git submodule update --init; ./configure --with-rdma --with-fio=/usr/src/fio;"
-                         "make clean; make -j$(($(nproc)*2))" % self.spdk_dir)
+        self.log_print("Using fio directory %s" % self.fio_dir)
+        self.remote_call("cd %s; git submodule update --init; ./configure --with-rdma --with-fio=%s;"
+                         "make clean; make -j$(($(nproc)*2))" % (self.spdk_dir, self.fio_dir))
 
         self.log_print("SPDK built")
         self.remote_call("sudo %s/scripts/setup.sh" % self.spdk_dir)
