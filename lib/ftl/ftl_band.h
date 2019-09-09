@@ -59,6 +59,9 @@ struct ftl_zone {
 	/* Current logical block's offset */
 	uint64_t				write_offset;
 
+	/* Zone capacity */
+	uint64_t				capacity;
+
 	/* First logical block of a zone */
 	struct ftl_addr				start_addr;
 
