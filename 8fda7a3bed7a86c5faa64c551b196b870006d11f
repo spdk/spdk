@@ -16,6 +16,24 @@
       "revId": "8fda7a3bed7a86c5faa64c551b196b870006d11f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b637d1ea_90c5ee8a",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-09T00:42:10Z",
+      "side": 1,
+      "message": "It indicates an error elsewhere in the transport code.  I guess this is more of an assert than anything.  But this patch is just moving this exact error message from the per-transport code to this common file.  There\u0027s no change in funcionality.",
+      "parentUuid": "ad900569_f65af911",
+      "revId": "8fda7a3bed7a86c5faa64c551b196b870006d11f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
