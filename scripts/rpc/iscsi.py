@@ -362,7 +362,8 @@ def add_pg_ig_maps(client, pg_ig_maps, name):
     return client.call('add_pg_ig_maps', params)
 
 
-def add_portal_group(client, portals, tag):
+@deprecated_alias('add_portal_group')
+def iscsi_create_portal_group(client, portals, tag):
     """Add a portal group.
 
     Args:
@@ -373,7 +374,7 @@ def add_portal_group(client, portals, tag):
         True or False
     """
     params = {'tag': tag, 'portals': portals}
-    return client.call('add_portal_group', params)
+    return client.call('iscsi_create_portal_group', params)
 
 
 def add_initiator_group(client, tag, initiators, netmasks):

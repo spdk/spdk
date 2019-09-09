@@ -34,7 +34,7 @@ function rpc_config() {
 
 function rpc_add_target_node() {
 	$rpc_py -s $1 add_ip_address 1 $MIGRATION_ADDRESS
-	$rpc_py -s $1 add_portal_group $PORTAL_TAG $MIGRATION_ADDRESS:$ISCSI_PORT
+	$rpc_py -s $1 iscsi_create_portal_group $PORTAL_TAG $MIGRATION_ADDRESS:$ISCSI_PORT
 	$rpc_py -s $1 iscsi_create_target_node target1 target1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
 }
 

@@ -298,7 +298,7 @@ function create_vhost_subsystem_config() {
 function create_iscsi_subsystem_config() {
 	timing_enter $FUNCNAME
 	tgt_rpc bdev_malloc_create 64 1024 --name MallocForIscsi0
-	tgt_rpc add_portal_group $PORTAL_TAG 127.0.0.1:$ISCSI_PORT
+	tgt_rpc iscsi_create_portal_group $PORTAL_TAG 127.0.0.1:$ISCSI_PORT
 	tgt_rpc add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 	tgt_rpc iscsi_create_target_node Target3 Target3_alias 'MallocForIscsi0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
 	timing_exit $FUNCNAME

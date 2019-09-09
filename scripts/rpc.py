@@ -931,7 +931,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     *** The Portal/Initiator Groups must be precreated ***""")
     p.set_defaults(func=delete_pg_ig_maps)
 
-    def add_portal_group(args):
+    def iscsi_create_portal_group(args):
         portals = []
         for p in args.portal_list.strip().split(' '):
             ip, separator, port_cpumask = p.rpartition(':')
@@ -944,17 +944,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                 cpumask = split_port_cpumask[1]
                 portals.append({'host': ip, 'port': port})
                 print("WARNING: Specifying a portal group with a CPU mask is no longer supported. Ignoring it.")
-        rpc.iscsi.add_portal_group(
+        rpc.iscsi.iscsi_create_portal_group(
             args.client,
             portals=portals,
             tag=args.tag)
 
-    p = subparsers.add_parser('add_portal_group', help='Add a portal group')
+    p = subparsers.add_parser('iscsi_create_portal_group', aliases=['add_portal_group'],
+                              help='Add a portal group')
     p.add_argument(
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.add_argument('portal_list', help="""List of portals in host:port format, separated by whitespace
     Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262""")
-    p.set_defaults(func=add_portal_group)
+    p.set_defaults(func=iscsi_create_portal_group)
 
     def add_initiator_group(args):
         initiators = []

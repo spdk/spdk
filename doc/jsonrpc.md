@@ -258,7 +258,7 @@ Example response:
     "target_node_add_lun",
     "get_iscsi_connections",
     "delete_portal_group",
-    "add_portal_group",
+    "iscsi_create_portal_group",
     "iscsi_get_portal_groups",
     "delete_target_node",
     "delete_pg_ig_maps",
@@ -3466,7 +3466,7 @@ Example response:
 }
 ~~~
 
-## add_portal_group method {#rpc_add_portal_group}
+## iscsi_create_portal_group method {#rpc_iscsi_create_portal_group}
 
 Add a portal group.
 
@@ -3500,7 +3500,7 @@ Example request:
     "tag": 1
   },
   "jsonrpc": "2.0",
-  "method": "add_portal_group",
+  "method": "iscsi_create_portal_group",
   "id": 1
 }
 ~~~
