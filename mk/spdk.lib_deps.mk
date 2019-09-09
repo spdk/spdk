@@ -71,7 +71,7 @@ DEPDIRS-bdev := log util conf thread $(JSON_LIBS) notify trace
 DEPDIRS-blobfs := log conf thread blob trace
 DEPDIRS-event := log util conf thread $(JSON_LIBS) trace
 
-DEPDIRS-ftl := log util nvme thread trace bdev
+DEPDIRS-ftl := log util thread trace bdev
 DEPDIRS-nbd := log util thread $(JSON_LIBS) bdev
 DEPDIRS-nvmf := log sock util nvme thread $(JSON_LIBS) trace bdev
 DEPDIRS-scsi := log util thread $(JSON_LIBS) trace bdev
@@ -118,15 +118,13 @@ DEPDIRS-bdev_crypto := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_iscsi := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_null := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_nvme = $(BDEV_DEPS_CONF_THREAD) nvme
-ifeq ($(OS),Linux)
-DEPDIRS-bdev_nvme += ftl
-endif
 DEPDIRS-bdev_ocf := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_passthru := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_pmem := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_raid := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_rbd := $(BDEV_DEPS_CONF_THREAD)
 DEPDIRS-bdev_virtio := $(BDEV_DEPS_CONF_THREAD) virtio
+DEPDIRS-bdev_ftl := $(BDEV_DEPS_THREAD) ftl
 
 # module/event
 # module/event/app
