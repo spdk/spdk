@@ -686,14 +686,14 @@ invalid:
 SPDK_RPC_REGISTER("delete_target_node", spdk_rpc_delete_target_node, SPDK_RPC_RUNTIME)
 
 static void
-spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+spdk_rpc_iscsi_get_portal_groups(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_portal_groups requires no parameters");
+						 "iscsi_get_portal_groups requires no parameters");
 		return;
 	}
 
@@ -704,7 +704,8 @@ spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_portal_groups", spdk_rpc_get_portal_groups, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_get_portal_groups", spdk_rpc_iscsi_get_portal_groups, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_portal_groups, get_portal_groups)
 
 struct rpc_portal {
 	char *host;

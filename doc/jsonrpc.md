@@ -259,7 +259,7 @@ Example response:
     "get_iscsi_connections",
     "delete_portal_group",
     "add_portal_group",
-    "get_portal_groups",
+    "iscsi_get_portal_groups",
     "delete_target_node",
     "delete_pg_ig_maps",
     "add_pg_ig_maps",
@@ -3424,7 +3424,7 @@ Example response:
 }
 ~~~
 
-## get_portal_groups method {#rpc_get_portal_groups}
+## iscsi_get_portal_groups method {#rpc_iscsi_get_portal_groups}
 
 Show information about all available portal groups.
 
@@ -3440,7 +3440,7 @@ Example request:
 request:
 {
   "jsonrpc": "2.0",
-  "method": "get_portal_groups",
+  "method": "iscsi_get_portal_groups",
   "id": 1
 }
 ~~~

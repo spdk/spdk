@@ -392,9 +392,9 @@ class UIRoot(UINode):
 
     @verbose
     @is_method_available
-    def get_portal_groups(self):
+    def iscsi_get_portal_groups(self):
         if self.is_init:
-            for pg in rpc.iscsi.get_portal_groups(self.client):
+            for pg in rpc.iscsi.iscsi_get_portal_groups(self.client):
                 yield ScsiObj(pg)
 
     @verbose

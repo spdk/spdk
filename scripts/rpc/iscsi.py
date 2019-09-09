@@ -124,13 +124,14 @@ def get_iscsi_auth_groups(client):
     return client.call('get_iscsi_auth_groups')
 
 
-def get_portal_groups(client):
+@deprecated_alias('get_portal_groups')
+def iscsi_get_portal_groups(client):
     """Display current portal group configuration.
 
     Returns:
         List of current portal group configuration.
     """
-    return client.call('get_portal_groups')
+    return client.call('iscsi_get_portal_groups')
 
 
 def get_initiator_groups(client):

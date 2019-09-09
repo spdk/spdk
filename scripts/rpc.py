@@ -782,12 +782,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Display current authentication group configuration')
     p.set_defaults(func=get_iscsi_auth_groups)
 
-    def get_portal_groups(args):
-        print_dict(rpc.iscsi.get_portal_groups(args.client))
+    def iscsi_get_portal_groups(args):
+        print_dict(rpc.iscsi.iscsi_get_portal_groups(args.client))
 
     p = subparsers.add_parser(
-        'get_portal_groups', help='Display current portal group configuration')
-    p.set_defaults(func=get_portal_groups)
+        'iscsi_get_portal_groups', aliases=['get_portal_groups'],
+        help='Display current portal group configuration')
+    p.set_defaults(func=iscsi_get_portal_groups)
 
     def get_initiator_groups(args):
         print_dict(rpc.iscsi.get_initiator_groups(args.client))
