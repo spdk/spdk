@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44524b50_2439217b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2129,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-09T02:45:26Z",
+      "side": 1,
+      "message": "Sorry a nit pick. This can be removed.",
+      "range": {
+        "startLine": 2129,
+        "startChar": 6,
+        "endLine": 2129,
+        "endChar": 12
+      },
+      "revId": "a8b43df4d04c97aae13a902e248e05b50921662d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
