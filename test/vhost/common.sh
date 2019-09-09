@@ -899,7 +899,7 @@ function vm_wait_for_boot()
 
 	notice "Waiting for VMs to boot"
 	shift
-	if [[ "$@" == "" ]]; then
+	if [[ "$*" == 0 ]]; then
 		local vms_to_check="$VM_DIR/[0-9]*"
 	else
 		local vms_to_check=""
