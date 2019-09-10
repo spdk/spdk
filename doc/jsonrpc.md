@@ -5288,7 +5288,7 @@ Example response:
 
 # RAID
 
-## get_raid_bdevs {#rpc_get_raid_bdevs}
+## bdev_raid_get_bdevs {#rpc_bdev_raid_get_bdevs}
 
 This is used to list all the raid bdev names based on the input category requested. Category should be one
 of 'all', 'online', 'configuring' or 'offline'. 'all' means all the raid bdevs whether they are online or
@@ -5310,7 +5310,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_raid_bdevs",
+  "method": "bdev_raid_get_bdevs",
   "id": 1,
   "params": {
     "category": "all"
