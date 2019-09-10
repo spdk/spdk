@@ -5,6 +5,16 @@ function get_chunk_size() {
 		grep 'Logical blks per chunk' | sed 's/[^0-9]//g')
 }
 
+function get_num_group() {
+	echo $($rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:$1" | \
+		grep 'Groups' | sed 's/[^0-9]//g')
+}
+
+function get_num_pu() {
+	echo $($rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:$1" | \
+		grep 'PUs' | sed 's/[^0-9]//g')
+}
+
 function has_separate_md() {
 	local md_type=$($rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:$1" | \
 		grep 'Metadata Transferred' | cut -d: -f2)
