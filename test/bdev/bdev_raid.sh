@@ -81,7 +81,7 @@ function raid_function_test() {
 		waitforlisten $raid_pid $rpc_server
 
 		configure_raid_bdev
-		raid_bdev=$($rpc_py get_raid_bdevs online | cut -d ' ' -f 1)
+		raid_bdev=$($rpc_py bdev_raid_get_bdevs online | cut -d ' ' -f 1)
 		if [ $raid_bdev = "" ]; then
 			echo "No raid0 device in SPDK app"
 			return 1

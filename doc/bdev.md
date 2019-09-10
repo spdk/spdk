@@ -485,7 +485,7 @@ Example commands
 
 `rpc.py construct_raid_bdev -n Raid0 -z 64 -r 0 -b "lvol0 lvol1 lvol2 lvol3"`
 
-`rpc.py get_raid_bdevs`
+`rpc.py bdev_raid_get_bdevs`
 
 `rpc.py destroy_raid_bdev Raid0`
 
