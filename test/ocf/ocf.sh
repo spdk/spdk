@@ -19,6 +19,7 @@ suite "$testdir/integrity/bdevperf-iotypes.sh"
 suite "$testdir/management/create-destruct.sh"
 suite "$testdir/management/multicore.sh"
 suite "$testdir/management/persistent-metadata.sh"
+suite "$testdir/management/remove.sh"
 
 timing_exit ocf
 report_test_completion "ocf"
