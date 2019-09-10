@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5b0f985e_e150de90",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-10T12:09:02Z",
+      "side": 1,
+      "message": "I removed this field",
+      "parentUuid": "bb416d2e_aeae3ace",
+      "range": {
+        "startLine": 272,
+        "startChar": 13,
+        "endLine": 272,
+        "endChar": 36
+      },
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3a853f9_25846f2b",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 15
@@ -39,6 +63,24 @@
       "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54a90cf3_90f070f0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1660,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-10T12:09:02Z",
+      "side": 1,
+      "message": "Thanks for the comment, I added num_extra_wrs as a parameter to spdk_nvmf_rdma_request_fill_iovs and nvmf_rdma_fill_buffers_with_md_interleave functions and removed num_extra_wrs_from_pool from struct nvmf_rdma_request",
+      "parentUuid": "f3a853f9_25846f2b",
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "35c4fda1_fd2d0d34",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-10T12:09:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "42ed1742_9b26546e",
+      "range": {
+        "startLine": 1664,
+        "startChar": 11,
+        "endLine": 1664,
+        "endChar": 12
+      },
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b7c58c48_335d21b2",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 15
@@ -82,6 +148,24 @@
     },
     {
       "key": {
+        "uuid": "e3162411_e0019491",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1665,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-10T12:09:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b7c58c48_335d21b2",
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb9edb95_e7c03eb1",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 15
@@ -96,6 +180,24 @@
       "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3316f6c_dd70c391",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1668,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-10T12:09:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eb9edb95_e7c03eb1",
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -122,6 +224,30 @@
     },
     {
       "key": {
+        "uuid": "e25974b0_e6c318c1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1892,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-10T12:09:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff7ea234_402db149",
+      "range": {
+        "startLine": 1892,
+        "startChar": 3,
+        "endLine": 1892,
+        "endChar": 8
+      },
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "62c7391d_cbaf3399",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 15
@@ -136,6 +262,24 @@
       "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6b9c2a0_c658ce93",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1894,
+      "author": {
+        "id": 1016482
+      },
+      "writtenOn": "2019-09-10T12:09:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "62c7391d_cbaf3399",
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
