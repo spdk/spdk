@@ -250,8 +250,8 @@ class UIRoot(UINode):
         return response
 
     @verbose
-    def construct_raid_bdev(self, **kwargs):
-        rpc.bdev.construct_raid_bdev(self.client, **kwargs)
+    def bdev_raid_create(self, **kwargs):
+        rpc.bdev.bdev_raid_create(self.client, **kwargs)
 
     @verbose
     def destroy_raid_bdev(self, **kwargs):
