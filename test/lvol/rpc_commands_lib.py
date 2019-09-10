@@ -154,9 +154,13 @@ class Commands_Rpc(object):
         output, rc = self.rpc.bdev_malloc_delete(base_name)
         return rc
 
-    def bdev_lvol_delete(self, bdev_name):
+    def bdev_lvol_delete(self, bdev_name, clear_method=None):
         print("INFO: RPC COMMAND bdev_lvol_delete")
-        output, rc = self.rpc.bdev_lvol_delete(bdev_name)
+        if clear_method:
+            output, rc = self.rpc.bdev_lvol_delete(bdev_name,
+                                                   "--clear-method {clear_m}".format(clear_m=clear_method))
+        else:
+            output, rc = self.rpc.bdev_lvol_delete(bdev_name)
         return rc
 
     def bdev_lvol_resize(self, uuid, new_size):
