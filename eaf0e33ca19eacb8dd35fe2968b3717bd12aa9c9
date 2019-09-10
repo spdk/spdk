@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08550ad8_5e6653dd",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-10T08:24:56Z",
+      "side": 1,
+      "message": "Can we refine the patch https://review.gerrithub.io/c/spdk/spdk/+/447558 ?\n\nif we remove change the location of this after spdk_dif_ctx_init(). We can remove the line from 792 to 795. They are duplicated and spdk_dif_ctx_init() was called both for read and write originally.",
+      "range": {
+        "startLine": 798,
+        "startChar": 30,
+        "endLine": 798,
+        "endChar": 54
+      },
+      "revId": "eaf0e33ca19eacb8dd35fe2968b3717bd12aa9c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
