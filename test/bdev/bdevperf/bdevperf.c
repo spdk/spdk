@@ -556,48 +556,6 @@ bdevperf_zcopy_populate_complete(struct spdk_bdev_io *bdev_io, bool success, voi
 	spdk_bdev_zcopy_end(bdev_io, false, bdevperf_complete, cb_arg);
 }
 
-static __thread unsigned int seed = 0;
-
-static void
-bdevperf_prep_task(struct bdevperf_task *task)
-{
-	struct io_target *target = task->target;
-	uint64_t offset_in_ios;
-
-	if (g_is_random) {
-		offset_in_ios = rand_r(&seed) % target->size_in_ios;
-	} else {
-		offset_in_ios = target->offset_in_ios++;
-		if (target->offset_in_ios == target->size_in_ios) {
-			target->offset_in_ios = 0;
-		}
-	}
-
-	task->offset_blocks = offset_in_ios * target->io_size_blocks;
-	if (g_verify || g_reset) {
-		generate_data(task->buf, g_buf_size,
-			      spdk_bdev_get_block_size(target->bdev),
-			      task->md_buf, spdk_bdev_get_md_size(target->bdev),
-			      target->io_size_blocks, rand_r(&seed) % 256);
-		task->iov.iov_base = task->buf;
-		task->iov.iov_len = g_buf_size;
-		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
-	} else if (g_flush) {
-		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
-	} else if (g_unmap) {
-		task->io_type = SPDK_BDEV_IO_TYPE_UNMAP;
-	} else if (g_write_zeroes) {
-		task->io_type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
-	} else if ((g_rw_percentage == 100) ||
-		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
-		task->io_type = SPDK_BDEV_IO_TYPE_READ;
-	} else {
-		task->iov.iov_base = task->buf;
-		task->iov.iov_len = g_buf_size;
-		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
-	}
-}
-
 static int
 bdevperf_generate_dif(struct bdevperf_task *task)
 {
@@ -719,6 +677,50 @@ bdevperf_submit_task(void *arg)
 	target->current_queue_depth++;
 }
 
+static __thread unsigned int seed = 0;
+
+static void
+bdevperf_prep_task(struct bdevperf_task *task)
+{
+	struct io_target *target = task->target;
+	uint64_t offset_in_ios;
+
+	if (g_is_random) {
+		offset_in_ios = rand_r(&seed) % target->size_in_ios;
+	} else {
+		offset_in_ios = target->offset_in_ios++;
+		if (target->offset_in_ios == target->size_in_ios) {
+			target->offset_in_ios = 0;
+		}
+	}
+
+	task->offset_blocks = offset_in_ios * target->io_size_blocks;
+	if (g_verify || g_reset) {
+		generate_data(task->buf, g_buf_size,
+			      spdk_bdev_get_block_size(target->bdev),
+			      task->md_buf, spdk_bdev_get_md_size(target->bdev),
+			      target->io_size_blocks, rand_r(&seed) % 256);
+		task->iov.iov_base = task->buf;
+		task->iov.iov_len = g_buf_size;
+		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
+	} else if (g_flush) {
+		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
+	} else if (g_unmap) {
+		task->io_type = SPDK_BDEV_IO_TYPE_UNMAP;
+	} else if (g_write_zeroes) {
+		task->io_type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
+	} else if ((g_rw_percentage == 100) ||
+		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
+		task->io_type = SPDK_BDEV_IO_TYPE_READ;
+	} else {
+		task->iov.iov_base = task->buf;
+		task->iov.iov_len = g_buf_size;
+		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
+	}
+
+	bdevperf_submit_task(task);
+}
+
 static void
 bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 {
@@ -733,7 +735,6 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 	}
 
 	bdevperf_prep_task(task);
-	bdevperf_submit_task(task);
 }
 
 static void
