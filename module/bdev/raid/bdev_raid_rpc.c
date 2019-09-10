@@ -44,9 +44,9 @@
 SPDK_LOG_REGISTER_COMPONENT("raidrpc", SPDK_LOG_RAID_RPC)
 
 /*
- * Input structure for get_raid_bdevs RPC
+ * Input structure for bdev_raid_get_bdevs RPC
  */
-struct rpc_get_raid_bdevs {
+struct rpc_bdev_raid_get_bdevs {
 	/* category - all or online or configuring or offline */
 	char *category;
 };
@@ -60,7 +60,7 @@ struct rpc_get_raid_bdevs {
  * none
  */
 static void
-free_rpc_get_raid_bdevs(struct rpc_get_raid_bdevs *req)
+free_rpc_bdev_raid_get_bdevs(struct rpc_bdev_raid_get_bdevs *req)
 {
 	free(req->category);
 }
@@ -68,8 +68,8 @@ free_rpc_get_raid_bdevs(struct rpc_get_raid_bdevs *req)
 /*
  * Decoder object for RPC get_raids
  */
-static const struct spdk_json_object_decoder rpc_get_raid_bdevs_decoders[] = {
-	{"category", offsetof(struct rpc_get_raid_bdevs, category), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_raid_get_bdevs_decoders[] = {
+	{"category", offsetof(struct rpc_bdev_raid_get_bdevs, category), spdk_json_decode_string},
 };
 
 /*
@@ -89,15 +89,15 @@ static const struct spdk_json_object_decoder rpc_get_raid_bdevs_decoders[] = {
  * none
  */
 static void
-spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request,
-			const struct spdk_json_val *params)
+spdk_rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
-	struct rpc_get_raid_bdevs   req = {};
+	struct rpc_bdev_raid_get_bdevs   req = {};
 	struct spdk_json_write_ctx  *w;
 	struct raid_bdev            *raid_bdev;
 
-	if (spdk_json_decode_object(params, rpc_get_raid_bdevs_decoders,
-				    SPDK_COUNTOF(rpc_get_raid_bdevs_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_raid_get_bdevs_decoders,
+				    SPDK_COUNTOF(rpc_bdev_raid_get_bdevs_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -137,9 +137,10 @@ spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_get_raid_bdevs(&req);
+	free_rpc_bdev_raid_get_bdevs(&req);
 }
-SPDK_RPC_REGISTER("get_raid_bdevs", spdk_rpc_get_raid_bdevs, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_raid_get_bdevs", spdk_rpc_bdev_raid_get_bdevs, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_get_bdevs, get_raid_bdevs)
 
 /*
  * Base bdevs in RPC construct_raid
