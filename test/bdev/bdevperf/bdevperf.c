@@ -546,7 +546,7 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 static void
-bdevperf_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+bdevperf_zcopy_populate_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	if (!success) {
 		bdevperf_complete(bdev_io, success, cb_arg);
@@ -687,7 +687,7 @@ bdevperf_submit_task(void *arg)
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (g_zcopy) {
 			rc = spdk_bdev_zcopy_start(desc, ch, task->offset_blocks, target->io_size_blocks,
-						   true, bdevperf_zcopy_complete, task);
+						   true, bdevperf_zcopy_populate_complete, task);
 		} else {
 			if (spdk_bdev_is_md_separate(target->bdev)) {
 				rc = spdk_bdev_read_blocks_with_md(desc, ch, task->buf, task->md_buf,
