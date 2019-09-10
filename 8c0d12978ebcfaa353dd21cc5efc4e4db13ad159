@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24b100ae_a72166bd",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:51:44Z",
+      "side": 1,
+      "message": "Is the generic nvme layer holding that lock today?",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c08c289f_0e1f53d9",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:51:44Z",
+      "side": 1,
+      "message": "I think you\u0027ll be set up better for the future if you make the rdma_get_cm_event simply receive the event to a stack location first. Then, based on what qpair it\u0027s targeted at, you can take action. Because as soon as the cm_event channel is shared, it is no longer true that the next event will be for this qpair.",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92cd30b3_8e624dd6",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:51:44Z",
+      "side": 1,
+      "message": "When if statements return, I like to avoid using an else if. For example, I think this is often less clear:\n\nif (condition) {\n   return something;\n} else if (another condition) {\n   return something else;\n}\n\nthan this:\n\nif (condition) {\n    return something;\n}\n\nif (another condition) {\n   return something else;\n}\n\nThey compile to more or less the same thing.",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf078787_4d8b1376",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:51:44Z",
+      "side": 1,
+      "message": "You would need a barrier here to ensure that the write to evt occurs before the write to the bool, but if you move to using a single pointer you don\u0027t have to worry about that.",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce6e6089_1902a4fa",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:51:44Z",
+      "side": 1,
+      "message": "Agreed - should probably have some number of entries for queueing pre-allocated. If you exhaust those, simply stop requesting new events. As long as there are as many entries as queue pairs I don\u0027t think you\u0027ll ever end up stuck.",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4761226_92bf6fbf",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:51:44Z",
+      "side": 1,
+      "message": "Instead of recursing, can we write this function as a while loop that keeps getting events until it finds what it\u0027s looking for or hits resource exhaustion?",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
