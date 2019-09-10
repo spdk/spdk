@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "10ce5731_91ff9708",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T15:59:25Z",
+      "side": 1,
+      "message": "didn\u0027t see that, yeah that works",
+      "parentUuid": "ed0ee63b_56501061",
+      "revId": "33b3ce157c2deba5fb40c6b66f4e24f9b63cf3a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8858b284_f0d09618",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-09T22:03:40Z",
       "side": 1,
       "message": "instead of setting a global, could you pass it to bdev_io_initialize?  then that function can save it in the internal.ch field of the bdev_io",
+      "revId": "33b3ce157c2deba5fb40c6b66f4e24f9b63cf3a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5830321c_1a3615ca",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1486,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T15:59:25Z",
+      "side": 1,
+      "message": "so I\u0027ve got an io ch and the internal is a bdev - for this purpose, just using it for storage in my tests as bdev layer isn\u0027t doing anything with it, I assume its OK to cast it? I\u0027ll push and let you see what I mean",
+      "parentUuid": "8858b284_f0d09618",
       "revId": "33b3ce157c2deba5fb40c6b66f4e24f9b63cf3a0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
