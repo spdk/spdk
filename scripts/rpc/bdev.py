@@ -235,7 +235,8 @@ def bdev_null_delete(client, name):
     return client.call('bdev_null_delete', params)
 
 
-def get_raid_bdevs(client, category):
+@deprecated_alias('get_raid_bdevs')
+def bdev_raid_get_bdevs(client, category):
     """Get list of raid bdevs based on category
 
     Args:
@@ -245,7 +246,7 @@ def get_raid_bdevs(client, category):
         List of raid bdev names
     """
     params = {'category': category}
-    return client.call('get_raid_bdevs', params)
+    return client.call('bdev_raid_get_bdevs', params)
 
 
 def construct_raid_bdev(client, name, raid_level, base_bdevs, strip_size=None, strip_size_kb=None):
