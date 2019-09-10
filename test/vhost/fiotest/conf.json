@@ -78,7 +78,7 @@
           "method": "bdev_malloc_create"
         },
         {
-          "method": "construct_raid_bdev",
+          "method": "bdev_raid_create",
           "params": {
             "name": "RaidBdev0",
             "strip_size": 128,
@@ -90,7 +90,7 @@
           }
         },
         {
-          "method": "construct_raid_bdev",
+          "method": "bdev_raid_create",
           "params": {
             "name": "RaidBdev1",
             "strip_size": 128,
@@ -102,7 +102,7 @@
           }
         },
         {
-          "method": "construct_raid_bdev",
+          "method": "bdev_raid_create",
           "params": {
             "name": "RaidBdev2",
             "strip_size": 128,

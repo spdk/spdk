@@ -473,7 +473,7 @@ Example commands
 
 RAID virtual bdev module provides functionality to combine any SPDK bdevs into
 one RAID bdev. Currently SPDK supports only RAID 0. RAID functionality does not
-store on-disk metadata on the member disks, so user must reconstruct the RAID
+store on-disk metadata on the member disks, so user must recreate the RAID
 volume when restarting application. User may specify member disks to create RAID
 volume event if they do not exists yet - as the member disks are registered at
 a later time, the RAID module will claim them and will surface the RAID volume
@@ -483,7 +483,7 @@ each member disk.
 
 Example commands
 
-`rpc.py construct_raid_bdev -n Raid0 -z 64 -r 0 -b "lvol0 lvol1 lvol2 lvol3"`
+`rpc.py bdev_raid_create -n Raid0 -z 64 -r 0 -b "lvol0 lvol1 lvol2 lvol3"`
 
 `rpc.py bdev_raid_get_bdevs`
 
