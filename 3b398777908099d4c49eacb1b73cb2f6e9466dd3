@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06999bd6_ee78c1aa",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-10T11:34:44Z",
+      "side": 1,
+      "message": "IMO quoting is wrong. See line 210 - whole option is quoted (parameter name + value).\nHere you first quote parameter and than, separately - the value. It should be \"--with-git\u003d\u0027tsocks git\u0027\"",
+      "range": {
+        "startLine": 216,
+        "startChar": 29,
+        "endLine": 216,
+        "endChar": 54
+      },
+      "revId": "3b398777908099d4c49eacb1b73cb2f6e9466dd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
