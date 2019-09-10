@@ -44,23 +44,23 @@
 SPDK_LOG_REGISTER_COMPONENT("raidrpc", SPDK_LOG_RAID_RPC)
 
 /*
- * Input structure for get_raid_bdevs RPC
+ * Input structure for bdev_raid_get_bdevs RPC
  */
-struct rpc_get_raid_bdevs {
+struct rpc_bdev_raid_get_bdevs {
 	/* category - all or online or configuring or offline */
 	char *category;
 };
 
 /*
  * brief:
- * free_rpc_get_raids function frees RPC get_raids related parameters
+ * free_rpc_bdev_raid_get_bdevs function frees RPC bdev_raid_get_bdevs related parameters
  * params:
  * req - pointer to RPC request
  * returns:
  * none
  */
 static void
-free_rpc_get_raid_bdevs(struct rpc_get_raid_bdevs *req)
+free_rpc_bdev_raid_get_bdevs(struct rpc_bdev_raid_get_bdevs *req)
 {
 	free(req->category);
 }
@@ -68,13 +68,13 @@ free_rpc_get_raid_bdevs(struct rpc_get_raid_bdevs *req)
 /*
  * Decoder object for RPC get_raids
  */
-static const struct spdk_json_object_decoder rpc_get_raid_bdevs_decoders[] = {
-	{"category", offsetof(struct rpc_get_raid_bdevs, category), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_raid_get_bdevs_decoders[] = {
+	{"category", offsetof(struct rpc_bdev_raid_get_bdevs, category), spdk_json_decode_string},
 };
 
 /*
  * brief:
- * spdk_rpc_get_raids function is the RPC for get_raids. This is used to list
+ * spdk_rpc_bdev_raid_get_bdevs function is the RPC for spdk_rpc_bdev_raid_get_bdevs. This is used to list
  * all the raid bdev names based on the input category requested. Category should be
  * one of "all", "online", "configuring" or "offline". "all" means all the raids
  * whether they are online or configuring or offline. "online" is the raid bdev which
@@ -89,15 +89,15 @@ static const struct spdk_json_object_decoder rpc_get_raid_bdevs_decoders[] = {
  * none
  */
 static void
-spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request,
-			const struct spdk_json_val *params)
+spdk_rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
-	struct rpc_get_raid_bdevs   req = {};
+	struct rpc_bdev_raid_get_bdevs   req = {};
 	struct spdk_json_write_ctx  *w;
 	struct raid_bdev            *raid_bdev;
 
-	if (spdk_json_decode_object(params, rpc_get_raid_bdevs_decoders,
-				    SPDK_COUNTOF(rpc_get_raid_bdevs_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_raid_get_bdevs_decoders,
+				    SPDK_COUNTOF(rpc_bdev_raid_get_bdevs_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -137,9 +137,10 @@ spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_get_raid_bdevs(&req);
+	free_rpc_bdev_raid_get_bdevs(&req);
 }
-SPDK_RPC_REGISTER("get_raid_bdevs", spdk_rpc_get_raid_bdevs, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_raid_get_bdevs", spdk_rpc_bdev_raid_get_bdevs, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_get_bdevs, get_raid_bdevs)
 
 /*
  * Base bdevs in RPC construct_raid
