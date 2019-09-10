@@ -487,7 +487,7 @@ Example commands
 
 `rpc.py bdev_raid_get_bdevs`
 
-`rpc.py destroy_raid_bdev Raid0`
+`rpc.py bdev_raid_delete Raid0`
 
 # Passthru {#bdev_config_passthru}
 
