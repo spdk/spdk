@@ -51,11 +51,6 @@ static struct spdk_ocssd_geometry_data g_geo = {
 	.ws_min		= 4,
 };
 
-static struct spdk_ftl_punit_range g_range = {
-	.begin		= 2,
-	.end		= 9,
-};
-
 DEFINE_STUB(ftl_dev_tail_md_disk_size, size_t, (const struct spdk_ftl_dev *dev), 1);
 DEFINE_STUB(ftl_addr_is_written, bool, (struct ftl_band *band, struct ftl_addr addr), true);
 DEFINE_STUB_V(ftl_band_set_state, (struct ftl_band *band, enum ftl_band_state state));
@@ -196,13 +191,13 @@ single_reloc_move(struct ftl_band_reloc *breloc)
 
 static void
 setup_reloc(struct spdk_ftl_dev **_dev, struct ftl_reloc **_reloc,
-	    const struct spdk_ocssd_geometry_data *geo, const struct spdk_ftl_punit_range *range)
+	    const struct spdk_ocssd_geometry_data *geo)
 {
 	size_t i;
 	struct spdk_ftl_dev *dev;
 	struct ftl_reloc *reloc;
 
-	dev = test_init_ftl_dev(geo, range);
+	dev = test_init_ftl_dev(geo);
 	dev->conf.max_active_relocs = MAX_ACTIVE_RELOCS;
 	dev->conf.max_reloc_qdepth = MAX_RELOC_QDEPTH;
 
@@ -261,7 +256,7 @@ test_reloc_iter_full(void)
 	struct ftl_band *band;
 	struct ftl_addr addr;
 
-	setup_reloc(&dev, &reloc, &g_geo, &g_range);
+	setup_reloc(&dev, &reloc, &g_geo);
 
 	dev->geo.clba = 100;
 	breloc = &reloc->brelocs[0];
@@ -307,7 +302,7 @@ test_reloc_empty_band(void)
 	struct ftl_band_reloc *breloc;
 	struct ftl_band *band;
 
-	setup_reloc(&dev, &reloc, &g_geo, &g_range);
+	setup_reloc(&dev, &reloc, &g_geo);
 
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
@@ -328,7 +323,7 @@ test_reloc_full_band(void)
 	struct ftl_band *band;
 	size_t num_moves, num_iters, num_lbk, i;
 
-	setup_reloc(&dev, &reloc, &g_geo, &g_range);
+	setup_reloc(&dev, &reloc, &g_geo);
 
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
@@ -371,7 +366,7 @@ test_reloc_scatter_band(void)
 	struct ftl_band *band;
 	size_t num_iters, i;
 
-	setup_reloc(&dev, &reloc, &g_geo, &g_range);
+	setup_reloc(&dev, &reloc, &g_geo);
 
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
@@ -408,7 +403,7 @@ test_reloc_zone(void)
 	struct ftl_band *band;
 	size_t num_io, num_iters, num_lbk, i;
 
-	setup_reloc(&dev, &reloc, &g_geo, &g_range);
+	setup_reloc(&dev, &reloc, &g_geo);
 
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;
@@ -454,7 +449,7 @@ test_reloc_single_lbk(void)
 	struct ftl_band *band;
 #define TEST_RELOC_OFFSET 6
 
-	setup_reloc(&dev, &reloc, &g_geo, &g_range);
+	setup_reloc(&dev, &reloc, &g_geo);
 
 	breloc = &reloc->brelocs[0];
 	band = breloc->band;

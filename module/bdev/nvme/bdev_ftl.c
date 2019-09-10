@@ -418,7 +418,6 @@ _bdev_ftl_write_config_info(struct ftl_bdev *ftl_bdev, struct spdk_json_write_ct
 	}
 
 	spdk_json_write_named_string(w, "traddr", ftl_bdev->ctrlr->trid.traddr);
-	spdk_json_write_named_string_fmt(w, "punits", "%d-%d", attrs.range.begin, attrs.range.end);
 
 	if (ftl_bdev->cache_bdev_desc) {
 		cache_bdev = spdk_bdev_get_name(spdk_bdev_desc_get_bdev(ftl_bdev->cache_bdev_desc));
@@ -492,15 +491,6 @@ static const struct spdk_bdev_fn_table ftl_fn_table = {
 	.dump_info_json		= bdev_ftl_dump_info_json,
 };
 
-int
-bdev_ftl_parse_punits(struct spdk_ftl_punit_range *range, const char *range_string)
-{
-	range->begin = 0;
-	range->end = 0;
-
-	return 0;
-}
-
 static int
 bdev_ftl_defer_init(struct ftl_bdev_init_opts *opts)
 {
@@ -556,19 +546,6 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 2);
 		if (!val) {
-			SPDK_ERRLOG("No punit range provided for TransportID: %s\n", trid);
-			rc = -1;
-			break;
-		}
-
-		if (bdev_ftl_parse_punits(&opts->range, val)) {
-			SPDK_ERRLOG("Invalid punit range for TransportID: %s\n", trid);
-			rc = -1;
-			break;
-		}
-
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 3);
-		if (!val) {
 			SPDK_ERRLOG("No UUID provided for TransportID: %s\n", trid);
 			rc = -1;
 			break;
@@ -587,7 +564,7 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			opts->mode = 0;
 		}
 
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 4);
+		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 3);
 		if (!val) {
 			continue;
 		}
@@ -697,8 +674,6 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "Creating bdev %s:\n", ftl_bdev->bdev.name);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tblock_len:\t%zu\n", attrs.lbk_size);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tblock_cnt:\t%"PRIu64"\n", attrs.lbk_cnt);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tpunits:\t\t%u-%u\n", attrs.range.begin,
-		      attrs.range.end);
 
 	ftl_bdev->bdev.ctxt = ftl_bdev;
 	ftl_bdev->bdev.fn_table = &ftl_fn_table;
@@ -797,7 +772,6 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *
 
 	opts.ctrlr = ctrlr;
 	opts.trid = bdev_opts->trid;
-	opts.range = bdev_opts->range;
 	opts.mode = bdev_opts->mode;
 	opts.uuid = bdev_opts->uuid;
 	opts.name = ftl_bdev->bdev.name;
