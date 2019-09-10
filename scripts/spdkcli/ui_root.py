@@ -254,8 +254,8 @@ class UIRoot(UINode):
         rpc.bdev.bdev_raid_create(self.client, **kwargs)
 
     @verbose
-    def destroy_raid_bdev(self, **kwargs):
-        rpc.bdev.destroy_raid_bdev(self.client, **kwargs)
+    def bdev_raid_delete(self, **kwargs):
+        rpc.bdev.bdev_raid_delete(self.client, **kwargs)
 
     @verbose
     @is_method_available

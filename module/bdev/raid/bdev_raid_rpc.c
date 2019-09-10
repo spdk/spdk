@@ -300,36 +300,36 @@ SPDK_RPC_REGISTER("bdev_raid_create", spdk_rpc_bdev_raid_create, SPDK_RPC_RUNTIM
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_create, construct_raid_bdev)
 
 /*
- * Input structure for RPC destroy_raid
+ * Input structure for RPC deleting a raid bdev
  */
-struct rpc_destroy_raid_bdev {
+struct rpc_bdev_raid_delete {
 	/* raid bdev name */
 	char *name;
 };
 
 /*
  * brief:
- * free_rpc_destroy_raid_bdev function is used to free RPC destroy_raid_bdev related parameters
+ * free_rpc_bdev_raid_delete function is used to free RPC bdev_raid_delete related parameters
  * params:
  * req - pointer to RPC request
  * params:
  * none
  */
 static void
-free_rpc_destroy_raid_bdev(struct rpc_destroy_raid_bdev *req)
+free_rpc_bdev_raid_delete(struct rpc_bdev_raid_delete *req)
 {
 	free(req->name);
 }
 
 /*
- * Decoder object for RPC destroy_raid
+ * Decoder object for RPC raid_bdev_delete
  */
-static const struct spdk_json_object_decoder rpc_destroy_raid_bdev_decoders[] = {
-	{"name", offsetof(struct rpc_destroy_raid_bdev, name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_raid_delete_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_raid_delete, name), spdk_json_decode_string},
 };
 
-struct rpc_destroy_raid_bdev_ctx {
-	struct rpc_destroy_raid_bdev req;
+struct rpc_bdev_raid_delete_ctx {
+	struct rpc_bdev_raid_delete req;
 	struct raid_bdev_config *raid_cfg;
 	struct spdk_jsonrpc_request *request;
 };
@@ -338,20 +338,20 @@ struct rpc_destroy_raid_bdev_ctx {
  * brief:
  * params:
  * cb_arg - pointer to the callback context.
- * rc - return code of the destruction of the raid bdev.
+ * rc - return code of the deletion of the raid bdev.
  * returns:
  * none
  */
 static void
-destroy_raid_bdev_done(void *cb_arg, int rc)
+bdev_raid_delete_done(void *cb_arg, int rc)
 {
-	struct rpc_destroy_raid_bdev_ctx *ctx = cb_arg;
+	struct rpc_bdev_raid_delete_ctx *ctx = cb_arg;
 	struct raid_bdev_config *raid_cfg;
 	struct spdk_jsonrpc_request *request = ctx->request;
 	struct spdk_json_write_ctx *w;
 
 	if (rc != 0) {
-		SPDK_ERRLOG("Failed to destroy raid bdev %s (%d): %s\n",
+		SPDK_ERRLOG("Failed to delete raid bdev %s (%d): %s\n",
 			    ctx->req.name, rc, spdk_strerror(-rc));
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(-rc));
@@ -367,14 +367,14 @@ destroy_raid_bdev_done(void *cb_arg, int rc)
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 exit:
-	free_rpc_destroy_raid_bdev(&ctx->req);
+	free_rpc_bdev_raid_delete(&ctx->req);
 	free(ctx);
 }
 
 /*
  * brief:
- * spdk_rpc_destroy_raid_bdev function is the RPC for destroy_raid. It takes raid
- * name as input and destroy that raid bdev including freeing the base bdev
+ * spdk_rpc_bdev_raid_delete function is the RPC for deleting a raid bdev. It takes raid
+ * name as input and delete that raid bdev including freeing the base bdev
  * resources.
  * params:
  * requuest - pointer to json rpc request
@@ -383,10 +383,10 @@ exit:
  * none
  */
 static void
-spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+spdk_rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
-	struct rpc_destroy_raid_bdev_ctx *ctx;
+	struct rpc_bdev_raid_delete_ctx *ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -394,8 +394,8 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_json_decode_object(params, rpc_destroy_raid_bdev_decoders,
-				    SPDK_COUNTOF(rpc_destroy_raid_bdev_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_raid_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_raid_delete_decoders),
 				    &ctx->req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -412,13 +412,14 @@ spdk_rpc_destroy_raid_bdev(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
-	/* Remove all the base bdevs from this raid bdev before destroying the raid bdev */
-	raid_bdev_remove_base_devices(ctx->raid_cfg, destroy_raid_bdev_done, ctx);
+	/* Remove all the base bdevs from this raid bdev before deleting the raid bdev */
+	raid_bdev_remove_base_devices(ctx->raid_cfg, bdev_raid_delete_done, ctx);
 
 	return;
 
 cleanup:
-	free_rpc_destroy_raid_bdev(&ctx->req);
+	free_rpc_bdev_raid_delete(&ctx->req);
 	free(ctx);
 }
-SPDK_RPC_REGISTER("destroy_raid_bdev", spdk_rpc_destroy_raid_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_raid_delete", spdk_rpc_bdev_raid_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_delete, destroy_raid_bdev)

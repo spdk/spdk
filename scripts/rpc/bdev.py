@@ -274,8 +274,9 @@ def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size=None, stri
     return client.call('bdev_raid_create', params)
 
 
-def destroy_raid_bdev(client, name):
-    """Destroy raid bdev
+@deprecated_alias('destroy_raid_bdev')
+def bdev_raid_delete(client, name):
+    """Delete raid bdev
 
     Args:
         name: raid bdev name
@@ -284,7 +285,7 @@ def destroy_raid_bdev(client, name):
         None
     """
     params = {'name': name}
-    return client.call('destroy_raid_bdev', params)
+    return client.call('bdev_raid_delete', params)
 
 
 @deprecated_alias('construct_aio_bdev')
