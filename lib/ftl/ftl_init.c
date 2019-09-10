@@ -1106,7 +1106,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 	dev->init_ctx.cb_fn = cb_fn;
 	dev->init_ctx.cb_arg = cb_arg;
 	dev->init_ctx.thread = spdk_get_thread();
-	dev->range = opts.range;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
 
 	dev->name = strdup(opts.name);
@@ -1126,6 +1125,9 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		SPDK_ERRLOG("Unable to retrieve geometry\n");
 		goto fail_sync;
 	}
+
+	dev->range.begin = 0;
+	dev->range.end = dev->geo.num_pu * dev->geo.num_grp - 1;
 
 	if (ftl_check_init_opts(&opts, &dev->geo)) {
 		SPDK_ERRLOG("Invalid device configuration\n");
