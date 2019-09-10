@@ -54,9 +54,6 @@
 #define FTL_INIT_TIMEOUT	30
 #define FTL_NSID		1
 
-#define ftl_range_intersect(s1, e1, s2, e2) \
-	((s1) <= (e2) && (s2) <= (e1))
-
 struct ftl_admin_cmpl {
 	struct spdk_nvme_cpl			status;
 
@@ -165,41 +162,6 @@ ftl_check_conf(const struct spdk_ftl_conf *conf,
 	}
 
 	return 0;
-}
-
-static int
-ftl_check_init_opts(const struct spdk_ftl_dev_init_opts *opts,
-		    const struct spdk_ocssd_geometry_data *geo)
-{
-	struct spdk_ftl_dev *dev;
-	size_t num_punits = geo->num_pu * geo->num_grp;
-	int rc = 0;
-
-	if (opts->range.begin > opts->range.end || opts->range.end >= num_punits) {
-		return -1;
-	}
-
-	if (ftl_check_conf(opts->conf, geo)) {
-		return -1;
-	}
-
-	pthread_mutex_lock(&g_ftl_queue_lock);
-
-	STAILQ_FOREACH(dev, &g_ftl_queue, stailq) {
-		if (spdk_nvme_transport_id_compare(&dev->trid, &opts->trid)) {
-			continue;
-		}
-
-		if (ftl_range_intersect(opts->range.begin, opts->range.end,
-					dev->range.begin, dev->range.end)) {
-			rc = -1;
-			goto out;
-		}
-	}
-
-out:
-	pthread_mutex_unlock(&g_ftl_queue_lock);
-	return rc;
 }
 
 int
@@ -401,7 +363,7 @@ out:
 static int
 ftl_dev_init_punits(struct spdk_ftl_dev *dev)
 {
-	unsigned int i, punit;
+	size_t i;
 
 	dev->punits = calloc(ftl_dev_num_punits(dev), sizeof(*dev->punits));
 	if (!dev->punits) {
@@ -410,10 +372,8 @@ ftl_dev_init_punits(struct spdk_ftl_dev *dev)
 
 	for (i = 0; i < ftl_dev_num_punits(dev); ++i) {
 		dev->punits[i].dev = dev;
-		punit = dev->range.begin + i;
-
 		dev->punits[i].start_addr.addr = 0;
-		dev->punits[i].start_addr.pu = punit;
+		dev->punits[i].start_addr.pu = i;
 	}
 
 	return 0;
@@ -1106,7 +1066,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 	dev->init_ctx.cb_fn = cb_fn;
 	dev->init_ctx.cb_arg = cb_arg;
 	dev->init_ctx.thread = spdk_get_thread();
-	dev->range = opts.range;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
 
 	dev->name = strdup(opts.name);
@@ -1127,7 +1086,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *_opts, spdk_ftl_init_fn c
 		goto fail_sync;
 	}
 
-	if (ftl_check_init_opts(&opts, &dev->geo)) {
+	if (ftl_check_conf(opts.conf, &dev->geo)) {
 		SPDK_ERRLOG("Invalid device configuration\n");
 		goto fail_sync;
 	}

@@ -192,10 +192,6 @@ ftl_anm_in_poller_range(struct ftl_anm_poller *poller,
 		return false;
 	}
 
-	if (!ftl_addr_in_range(dev, addr)) {
-		return false;
-	}
-
 	return true;
 }
 
