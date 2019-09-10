@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b55b2c0d_9329023b",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T11:22:24Z",
+      "side": 1,
+      "message": "should add g_ prefix to make it clear these are global variables",
+      "revId": "f5f5b891c8d6ef5812a48011cefea7b77cd26151",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52c1e3d7_38649f7d",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T11:22:24Z",
+      "side": 1,
+      "message": "I still think we should have helper functions here - or at least use a loop.  This is still all very hardcoded - UT_MBUFS_PER_OP_BOUND_TEST may be set to 4, but all of the code here still implicitly depends on that value being set to 4.\n\nUsing a loop makes the code more flexible, in case we need to add more mbufs in the future.",
+      "revId": "f5f5b891c8d6ef5812a48011cefea7b77cd26151",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
