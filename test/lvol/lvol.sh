@@ -80,6 +80,7 @@ function usage() {
                                     802: 'rename_lvs_EEXIST',
                                     803: 'bdev_lvol_rename_nonexistent',
                                     804: 'bdev_lvol_rename_EEXIST',
+                                    850: 'clear_method_none',
                                     10000: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
