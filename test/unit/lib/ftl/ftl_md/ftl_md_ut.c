@@ -48,19 +48,13 @@ static struct spdk_ocssd_geometry_data g_geo = {
 	.ws_min		= 4,
 };
 
-static struct spdk_ftl_punit_range g_range = {
-	.begin		= 2,
-	.end		= 9,
-};
-
 static void
-setup_band(struct ftl_band **band, const struct spdk_ocssd_geometry_data *geo,
-	   const struct spdk_ftl_punit_range *range)
+setup_band(struct ftl_band **band, const struct spdk_ocssd_geometry_data *geo)
 {
 	int rc;
 	struct spdk_ftl_dev *dev;
 
-	dev = test_init_ftl_dev(geo, range);
+	dev = test_init_ftl_dev(geo);
 	*band = test_init_ftl_band(dev, 0);
 	rc = ftl_band_alloc_lba_map(*band);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -83,7 +77,7 @@ test_md_unpack(void)
 	struct ftl_band *band;
 	struct ftl_lba_map *lba_map;
 
-	setup_band(&band, &g_geo, &g_range);
+	setup_band(&band, &g_geo);
 
 	lba_map = &band->lba_map;
 	SPDK_CU_ASSERT_FATAL(lba_map->dma_buf);
@@ -104,7 +98,7 @@ test_md_unpack_fail(void)
 	struct ftl_lba_map *lba_map;
 	struct ftl_md_hdr *hdr;
 
-	setup_band(&band, &g_geo, &g_range);
+	setup_band(&band, &g_geo);
 
 	lba_map = &band->lba_map;
 	SPDK_CU_ASSERT_FATAL(lba_map->dma_buf);
