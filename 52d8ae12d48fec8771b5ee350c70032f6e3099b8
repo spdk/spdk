@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62703aaa_03a4eb7e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T19:01:55Z",
+      "side": 1,
+      "message": "Once we simplify event_ctx down to just a pointer, then in the case where queued \u003d true this function does very little. It\u0027s just event_qpair-\u003eevt \u003d evt;\n\nI think that means we could eliminate this function and instead just inline the code into the two places where it\u0027s called below. That cleans up this queued parameter because the particulars of the queue handling are specific to where it is being called from.",
+      "revId": "52d8ae12d48fec8771b5ee350c70032f6e3099b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f28bc84_f28d3d28",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T19:01:55Z",
+      "side": 1,
+      "message": "The only place where flush_events is called is right before a poll_events. I think the code gets simpler if you just merge these two functions so that when you poll, you first try to flush any pending events, then poll.",
+      "revId": "52d8ae12d48fec8771b5ee350c70032f6e3099b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33fdfcae_ce153ce4",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T19:01:55Z",
+      "side": 1,
+      "message": "Do you need this poll? If the fd is non-blocking, won\u0027t rdma_get_cm_event just fail with EWOULDBLOCK if there are no events?",
+      "revId": "52d8ae12d48fec8771b5ee350c70032f6e3099b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
