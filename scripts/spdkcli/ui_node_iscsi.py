@@ -481,7 +481,7 @@ class UIISCSIConnections(UINode):
 
     def refresh(self):
         self._children = set([])
-        self.iscsicons = list(self.get_root().get_iscsi_connections())
+        self.iscsicons = list(self.get_root().iscsi_get_connections())
         for ic in self.iscsicons:
             UIISCSIConnection(ic, self)
 
