@@ -434,6 +434,17 @@ end_run(void *arg1, void *arg2)
 }
 
 static void
+bdevperf_queue_io_wait_with_cb(struct bdevperf_task *task, spdk_bdev_io_wait_cb cb_fn)
+{
+	struct io_target	*target = task->target;
+
+	task->bdev_io_wait.bdev = target->bdev;
+	task->bdev_io_wait.cb_fn = cb_fn;
+	task->bdev_io_wait.cb_arg = task;
+	spdk_bdev_queue_io_wait(target->bdev, target->ch, &task->bdev_io_wait);
+}
+
+static void
 bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct io_target	*target;
@@ -514,10 +525,7 @@ bdevperf_verify_submit_read(void *cb_arg)
 	}
 
 	if (rc == -ENOMEM) {
-		task->bdev_io_wait.bdev = target->bdev;
-		task->bdev_io_wait.cb_fn = bdevperf_verify_submit_read;
-		task->bdev_io_wait.cb_arg = task;
-		spdk_bdev_queue_io_wait(target->bdev, target->ch, &task->bdev_io_wait);
+		bdevperf_queue_io_wait_with_cb(task, bdevperf_verify_submit_read);
 	} else if (rc != 0) {
 		printf("Failed to submit read: %d\n", rc);
 		target->is_draining = true;
@@ -699,10 +707,7 @@ bdevperf_submit_task(void *arg)
 	}
 
 	if (rc == -ENOMEM) {
-		task->bdev_io_wait.bdev = target->bdev;
-		task->bdev_io_wait.cb_fn = bdevperf_submit_task;
-		task->bdev_io_wait.cb_arg = task;
-		spdk_bdev_queue_io_wait(target->bdev, ch, &task->bdev_io_wait);
+		bdevperf_queue_io_wait_with_cb(task, bdevperf_submit_task);
 		return;
 	} else if (rc != 0) {
 		printf("Failed to submit bdev_io: %d\n", rc);
