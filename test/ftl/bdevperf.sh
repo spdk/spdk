@@ -8,7 +8,7 @@ tests=('-q 1 -w randwrite -t 4 -o 69632' '-q 128 -w randwrite -t 4 -o 4096' '-q 
 device=$1
 ftl_bdev_conf=$testdir/config/ftl.conf
 
-$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 -l 0-3 > $ftl_bdev_conf
+$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 > $ftl_bdev_conf
 
 for (( i=0; i<${#tests[@]}; i++ )) do
 	timing_enter "${tests[$i]}"

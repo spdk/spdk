@@ -41,7 +41,6 @@
 
 #define FTL_MAX_CONTROLLERS	64
 #define FTL_MAX_BDEVS		(FTL_MAX_CONTROLLERS * 128)
-#define FTL_RANGE_MAX_LENGTH	32
 
 struct spdk_bdev;
 struct spdk_uuid;
@@ -54,8 +53,6 @@ struct ftl_bdev_info {
 struct ftl_bdev_init_opts {
 	/* NVMe controller's transport ID */
 	struct spdk_nvme_transport_id		trid;
-	/* Parallel unit range */
-	struct spdk_ftl_punit_range		range;
 	/* Bdev's name */
 	const char				*name;
 	/* Write buffer bdev's name */
@@ -70,7 +67,6 @@ struct ftl_bdev_init_opts {
 
 typedef void (*ftl_bdev_init_fn)(const struct ftl_bdev_info *, void *, int);
 
-int	bdev_ftl_parse_punits(struct spdk_ftl_punit_range *range, const char *range_string);
 int	bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb,
 			   void *cb_arg);
 void	bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
