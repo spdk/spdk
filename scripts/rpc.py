@@ -1071,12 +1071,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=delete_initiator_group)
 
-    def get_iscsi_connections(args):
-        print_dict(rpc.iscsi.get_iscsi_connections(args.client))
+    def iscsi_get_connections(args):
+        print_dict(rpc.iscsi.iscsi_get_connections(args.client))
 
-    p = subparsers.add_parser('get_iscsi_connections',
+    p = subparsers.add_parser('iscsi_get_connections', aliases=['get_iscsi_connections'],
                               help='Display iSCSI connections')
-    p.set_defaults(func=get_iscsi_connections)
+    p.set_defaults(func=iscsi_get_connections)
 
     def get_iscsi_global_params(args):
         print_dict(rpc.iscsi.get_iscsi_global_params(args.client))
