@@ -16,6 +16,24 @@
       "revId": "7e260ad51fd76988153cc4d977963622106bcaef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "631bfcd6_2ed84dff",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T21:55:27Z",
+      "side": 1,
+      "message": "I agree with Paul that comments aren\u0027t necessary.  But I think it\u0027s ok to remove these in a separate patch.  Typically when we move code like this (for ordering or refactoring reasons) we try to not make additional changes to the code while moving it.",
+      "parentUuid": "b7bcdd68_6d6eee26",
+      "revId": "7e260ad51fd76988153cc4d977963622106bcaef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
