@@ -860,20 +860,21 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help='Data Digest should be required for this target node.', action='store_true')
     p.set_defaults(func=iscsi_create_target_node)
 
-    def target_node_add_lun(args):
-        rpc.iscsi.target_node_add_lun(
+    def iscsi_target_node_add_lun(args):
+        rpc.iscsi.iscsi_target_node_add_lun(
             args.client,
             name=args.name,
             bdev_name=args.bdev_name,
             lun_id=args.lun_id)
 
-    p = subparsers.add_parser('target_node_add_lun', help='Add LUN to the target node')
+    p = subparsers.add_parser('iscsi_target_node_add_lun', aliases=['target_node_add_lun'],
+                              help='Add LUN to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('bdev_name', help="""bdev name enclosed in quotes.
     *** bdev name cannot contain space or colon characters ***""")
     p.add_argument('-i', dest='lun_id', help="""LUN ID (integer >= 0)
     *** If LUN ID is omitted or -1, the lowest free one is assigned ***""", type=int, required=False)
-    p.set_defaults(func=target_node_add_lun)
+    p.set_defaults(func=iscsi_target_node_add_lun)
 
     def set_iscsi_target_node_auth(args):
         rpc.iscsi.set_iscsi_target_node_auth(

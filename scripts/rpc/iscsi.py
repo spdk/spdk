@@ -209,7 +209,8 @@ def iscsi_create_target_node(
     return client.call('iscsi_create_target_node', params)
 
 
-def target_node_add_lun(client, name, bdev_name, lun_id=None):
+@deprecated_alias('target_node_add_lun')
+def iscsi_target_node_add_lun(client, name, bdev_name, lun_id=None):
     """Add LUN to the target node.
 
     Args:
@@ -226,7 +227,7 @@ def target_node_add_lun(client, name, bdev_name, lun_id=None):
     }
     if lun_id:
         params['lun_id'] = lun_id
-    return client.call('target_node_add_lun', params)
+    return client.call('iscsi_target_node_add_lun', params)
 
 
 def set_iscsi_target_node_auth(
