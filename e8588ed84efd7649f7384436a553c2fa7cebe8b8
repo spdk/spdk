@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ddb3e45_624765f2",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:33:26Z",
+      "side": 1,
+      "message": "You can actually do this logic with just a single struct rdma_cm_event pointer with how it\u0027s set up. No bool or barriers required.",
+      "revId": "e8588ed84efd7649f7384436a553c2fa7cebe8b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "340687e4_89f498e8",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:33:26Z",
+      "side": 1,
+      "message": "This function is only called from one place. Maybe just move the logic there.",
+      "revId": "e8588ed84efd7649f7384436a553c2fa7cebe8b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f646c787_b0ab67f5",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:33:26Z",
+      "side": 1,
+      "message": "If you eliminate the bool, it would be safe to just set this to NULL.",
+      "revId": "e8588ed84efd7649f7384436a553c2fa7cebe8b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2cb6775_2b0e6acd",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:33:26Z",
+      "side": 1,
+      "message": "You can\u0027t make this call unless you know that evt is NULL. I\u0027d add a check for that here. It\u0027s safe to simply check whether the pointer is NULL because there are only two threads at most involved here - this one which sets to to non-NULL, and the qpair thread which only sets it to NULL.",
+      "revId": "e8588ed84efd7649f7384436a553c2fa7cebe8b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e34048c4_62670d6a",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1414,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-10T18:33:26Z",
+      "side": 1,
+      "message": "You can look at whether evt is NULL here instead",
+      "revId": "e8588ed84efd7649f7384436a553c2fa7cebe8b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
