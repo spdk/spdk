@@ -881,8 +881,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     *** If LUN ID is omitted or -1, the lowest free one is assigned ***""", type=int, required=False)
     p.set_defaults(func=iscsi_target_node_add_lun)
 
-    def set_iscsi_target_node_auth(args):
-        rpc.iscsi.set_iscsi_target_node_auth(
+    def iscsi_target_node_set_auth(args):
+        rpc.iscsi.iscsi_target_node_set_auth(
             args.client,
             name=args.name,
             chap_group=args.chap_group,
@@ -890,7 +890,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             require_chap=args.require_chap,
             mutual_chap=args.mutual_chap)
 
-    p = subparsers.add_parser('set_iscsi_target_node_auth', help='Set CHAP authentication for the target node')
+    p = subparsers.add_parser('iscsi_target_node_set_auth', aliases=['set_iscsi_target_node_auth'],
+                              help='Set CHAP authentication for the target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('-g', '--chap-group', help="""Authentication group ID for this target node.
     *** Authentication group must be precreated ***""", type=int, default=0)
@@ -900,7 +901,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     *** Mutually exclusive with --disable-chap ***""", action='store_true')
     p.add_argument('-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.',
                    action='store_true')
-    p.set_defaults(func=set_iscsi_target_node_auth)
+    p.set_defaults(func=iscsi_target_node_set_auth)
 
     def add_pg_ig_maps(args):
         pg_ig_maps = []
