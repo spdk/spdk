@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c194de3_ad7ec9e6",
+        "filename": "test/vhost/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-09-10T11:42:46Z",
+      "side": 1,
+      "message": "You gave the rationale for SC2199 in commit message but you don\u0027t follow it.\n\nYou used neither:\n  - loop\n  - $* instead of $#\nInstead you changed string comparison to int comparison in the condition. I\u0027m fine with that, it will work, but I think it should be described in commit message what and why are you doing here.",
+      "range": {
+        "startLine": 904,
+        "startChar": 1,
+        "endLine": 904,
+        "endChar": 25
+      },
+      "revId": "8f3a144ef0a03579827f9a714c77fd76f66af7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
