@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a9b3029_ea422646",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T06:17:02Z",
+      "side": 1,
+      "message": "could you break this up into two patches?  for example, first patch modifies this function to use the opts structure, second patch breaks the function up into multiple pieces\n\nit will make the patches easier to review",
+      "revId": "5bea9d3f23754ac639e02f5510316da2f8f9254e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
