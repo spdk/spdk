@@ -103,12 +103,6 @@ struct spdk_ftl_conf {
 	} nv_cache;
 };
 
-/* Range of parallel units (inclusive) */
-struct spdk_ftl_punit_range {
-	unsigned int				begin;
-	unsigned int				end;
-};
-
 enum spdk_ftl_mode {
 	/* Create new device */
 	SPDK_FTL_MODE_CREATE = (1 << 0),
@@ -131,8 +125,6 @@ struct spdk_ftl_dev_init_opts {
 	const struct spdk_ftl_conf		*conf;
 	/* Device's name */
 	const char				*name;
-	/* Parallel unit range */
-	struct spdk_ftl_punit_range		range;
 	/* Mode flags */
 	unsigned int				mode;
 	/* Device UUID (valid when restoring device from disk) */
@@ -142,8 +134,6 @@ struct spdk_ftl_dev_init_opts {
 struct spdk_ftl_attrs {
 	/* Device's UUID */
 	struct spdk_uuid			uuid;
-	/* Parallel unit range */
-	struct spdk_ftl_punit_range		range;
 	/* Number of logical blocks */
 	uint64_t				lbk_cnt;
 	/* Logical block size */

@@ -26,9 +26,9 @@ export FTL_BDEV_CONF=$testdir/config/ftl.conf
 export FTL_BDEV_NAME=nvme0
 
 if [ -z "$uuid" ]; then
-	$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 -l 0-3 > $FTL_BDEV_CONF
+	$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 > $FTL_BDEV_CONF
 else
-	$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 -l 0-3 -u $uuid > $FTL_BDEV_CONF
+	$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 -u $uuid > $FTL_BDEV_CONF
 fi
 
 for test in ${tests[@]}; do

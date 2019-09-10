@@ -672,20 +672,18 @@ def destruct_split_vbdev(client, base_bdev):
     return client.call('destruct_split_vbdev', params)
 
 
-def construct_ftl_bdev(client, name, trtype, traddr, punits, **kwargs):
+def construct_ftl_bdev(client, name, trtype, traddr, **kwargs):
     """Construct FTL bdev
 
     Args:
         name: name of the bdev
         trtype: transport type
         traddr: transport address
-        punit: parallel unit range
         kwargs: optional parameters
     """
     params = {'name': name,
               'trtype': trtype,
-              'traddr': traddr,
-              'punits': punits}
+              'traddr': traddr}
     for key, value in kwargs.items():
         if value is not None:
             params[key] = value

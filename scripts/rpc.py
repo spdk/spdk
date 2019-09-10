@@ -1388,7 +1388,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                name=args.name,
                                                trtype=args.trtype,
                                                traddr=args.traddr,
-                                               punits=args.punits,
                                                uuid=args.uuid,
                                                cache=args.cache,
                                                allow_open_bands=args.allow_open_bands,
@@ -1402,8 +1401,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help='NVMe target trtype: e.g., pcie', default='pcie')
     p.add_argument('-a', '--traddr',
                    help='NVMe target address: e.g., an ip address or BDF', required=True)
-    p.add_argument('-l', '--punits', help='Parallel unit range in the form of start-end: e.g. 4-8',
-                   required=True)
     p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
                    'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)')
     p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache (optional)')

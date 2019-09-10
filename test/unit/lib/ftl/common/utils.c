@@ -36,16 +36,14 @@
 #include "spdk/ftl.h"
 #include "ftl/ftl_core.h"
 
-struct spdk_ftl_dev *test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
-				       const struct spdk_ftl_punit_range *range);
+struct spdk_ftl_dev *test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo);
 struct ftl_band *test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id);
 void test_free_ftl_dev(struct spdk_ftl_dev *dev);
 void test_free_ftl_band(struct ftl_band *band);
 uint64_t test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band);
 
 struct spdk_ftl_dev *
-test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
-		  const struct spdk_ftl_punit_range *range)
+test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo)
 {
 	struct spdk_ftl_dev *dev;
 
