@@ -480,13 +480,14 @@ def delete_initiator_group(client, tag):
     return client.call('delete_initiator_group', params)
 
 
-def get_iscsi_connections(client):
+@deprecated_alias('get_iscsi_connections')
+def iscsi_get_connections(client):
     """Display iSCSI connections.
 
     Returns:
         List of iSCSI connection.
     """
-    return client.call('get_iscsi_connections')
+    return client.call('iscsi_get_connections')
 
 
 def get_iscsi_global_params(client):
