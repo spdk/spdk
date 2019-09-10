@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2de51442_df3faed8",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T17:54:55Z",
+      "side": 1,
+      "message": "cant you use \u0027struct nvme_bdev_info \u0027 here?",
+      "revId": "d6f9ab6cb2b15d361351fd56d30efef265677168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14656a83_03f96996",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T17:54:55Z",
+      "side": 1,
+      "message": "should there be \u0027rpc\u0027 in the name of this function?",
+      "revId": "d6f9ab6cb2b15d361351fd56d30efef265677168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be2babce_5549e528",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T17:54:55Z",
+      "side": 1,
+      "message": "personally I\u0027d prefer to see the ctx free\u0027d here and not at the invalid label so you\u0027re not freeing a ptr that not allocated (in the case of line 222). I knows its safe but I think it\u0027s more consistent with the rest of the codebase to free it here",
+      "revId": "d6f9ab6cb2b15d361351fd56d30efef265677168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9064c00_18e47a62",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T17:54:55Z",
+      "side": 1,
+      "message": "Sorry I\u0027m a little confused by the naming.  the rpc is doesn\u0027t use the word \"standard\" but there\u0027s an unconditional call to \u0027spdk_rpc_construct_standard_nvme_bdev()\u0027 below. Can you explain this a little? It might become clearer later in the series but it would be good to have the context in this patch wrt why you made of the choices you did, thanks!",
+      "revId": "d6f9ab6cb2b15d361351fd56d30efef265677168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
