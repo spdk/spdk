@@ -29,7 +29,7 @@ $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 # Construct a RAID volume for the logical volume store
 base_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 base_bdevs+=$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
-$rpc_py construct_raid_bdev -n raid0 -z 64 -r 0 -b "$base_bdevs"
+$rpc_py bdev_raid_create -n raid0 -z 64 -r 0 -b "$base_bdevs"
 
 # Create the logical volume store on the RAID volume
 lvs=$($rpc_py bdev_lvol_create_lvstore raid0 lvs)

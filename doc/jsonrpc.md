@@ -5329,7 +5329,7 @@ Example response:
 }
 ~~~
 
-## construct_raid_bdev {#rpc_construct_raid_bdev}
+## bdev_raid_create {#rpc_bdev_raid_create}
 
 Constructs new RAID bdev.
 
@@ -5350,7 +5350,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "construct_raid_bdev",
+  "method": "bdev_raid_create",
   "id": 1,
   "params": {
     "name": "Raid0",

@@ -846,10 +846,10 @@ class UIRaidBdev(UIBdev):
         raid_level = self.ui_eval_param(raid_level, "number", None)
         strip_size_kb = self.ui_eval_param(strip_size_kb, "number", None)
 
-        ret_name = self.get_root().construct_raid_bdev(name=name,
-                                                       raid_level=raid_level,
-                                                       base_bdevs=base_bdevs_array,
-                                                       strip_size_kb=strip_size_kb)
+        ret_name = self.get_root().bdev_raid_create(name=name,
+                                                    raid_level=raid_level,
+                                                    base_bdevs=base_bdevs_array,
+                                                    strip_size_kb=strip_size_kb)
         self.shell.log.info(ret_name)
 
     def ui_command_delete(self, name):
