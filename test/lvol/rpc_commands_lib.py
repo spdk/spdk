@@ -126,7 +126,7 @@ class Commands_Rpc(object):
             output = self.rpc.bdev_lvol_create_lvstore(base_name, lvs_name)[0]
         return output.rstrip('\n')
 
-    def bdev_lvol_create(self, uuid, lbd_name, size, thin=False):
+    def bdev_lvol_create(self, uuid, lbd_name, size, thin=False, clear_method=None):
         print("INFO: RPC COMMAND bdev_lvol_create")
         try:
             uuid_obj = UUID(uuid)
@@ -136,7 +136,10 @@ class Commands_Rpc(object):
         thin_provisioned = ""
         if thin:
             thin_provisioned = "-t"
-        output = self.rpc.bdev_lvol_create(name_opt, uuid, lbd_name, size, thin_provisioned)[0]
+        clear_method_tmp = ""
+        if clear_method:
+            clear_method_tmp = "--clear-method {clear_m}".format(clear_m=clear_method)
+        output = self.rpc.bdev_lvol_create(name_opt, uuid, lbd_name, size, thin_provisioned, clear_method_tmp)[0]
         return output.rstrip('\n')
 
     def bdev_lvol_delete_lvstore(self, uuid):

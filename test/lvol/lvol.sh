@@ -80,6 +80,7 @@ function usage() {
                                     802: 'rename_lvs_EEXIST',
                                     803: 'bdev_lvol_rename_nonexistent',
                                     804: 'bdev_lvol_rename_EEXIST',
+                                    850: 'clear_method_none',
                                     10000: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
@@ -127,7 +128,7 @@ function vhost_kill()
     rm $testdir/vhost.pid || true
 }
 
-trap 'vhost_kill; rm -f $testdir/aio_bdev_0 $testdir/aio_bdev_1; exit 1' SIGINT SIGTERM EXIT
+trap 'vhost_kill; rm -f $testdir/aio_bdev_0 $testdir/aio_bdev_1 $testdir/testfile0 $testdir/testfile1; exit 1' SIGINT SIGTERM EXIT
 
 truncate -s 400M $testdir/aio_bdev_0 $testdir/aio_bdev_1
 vhost_start

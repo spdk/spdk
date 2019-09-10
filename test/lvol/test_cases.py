@@ -180,6 +180,8 @@ def case_message(func):
             802: 'rename_lvs_EEXIST',
             803: 'bdev_lvol_rename_nonexistent',
             804: 'bdev_lvol_rename_EEXIST',
+            # logical volume clear_method test
+            850: 'clear_method_none',
             # SIGTERM
             10000: 'SIGTERM',
         }
@@ -3375,6 +3377,75 @@ class TestCases(object):
         # Expected results:
         # - bdev_lvol_rename return code != 0; not possible to rename to already
         #   used name
+        # - no other operation fails
+        return fail_count
+
+    @case_message
+    def test_case850(self):
+        """"
+        Clear_method
+
+        Test for clear_method equals to none
+        """
+        base_path = path.dirname(sys.argv[0])
+        base_name = "aio_bdev0"
+        aio_bdev = path.join(base_path, "aio_bdev_0")
+        # Construct aio bdev
+        self.c.bdev_aio_create(aio_bdev, base_name, 4096)
+
+        # Construct lvol store on created malloc bddev
+        lvs_uuid = self.c.bdev_lvol_create_lvstore(base_name,
+                                                   self.lvs_name,
+                                                   clear_method="none")
+        # Check correct uuid values in response bdev_lvol_get_lvstores command
+        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, lvs_uuid,
+                                                         self.cluster_size)
+        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
+        # Construct lvol bdevs on lvol store
+        lvs_size = self.get_lvs_size(self.lvs_name)
+        bdev_uuid = self.c.bdev_lvol_create(lvs_uuid,
+                                            self.lbd_name,
+                                            lvs_size,
+                                            clear_method="none")
+        lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_uuid)
+
+        nbd_name = "/dev/nbd0"
+        fail_count += self.c.start_nbd_disk(lvol_bdev['name'], nbd_name)
+
+        # write data to created lvol bdev starting from offset 0.
+        bdev_size = int(int(lvol_bdev['num_blocks']) * int(lvol_bdev['block_size'])/8)
+        fail_count += self.run_fio_test("/dev/nbd0", 0, bdev_size, "write", "0xdd")
+        fail_count += self.c.stop_nbd_disk(nbd_name)
+
+        # bdev lvol delete
+        fail_count += self.c.bdev_lvol_delete(bdev_uuid)
+        self.c.bdev_aio_delete(base_name)
+
+        # dump data of lvs to testfile1
+        filename0 = path.join(base_path, "testfile0")
+        cmd = "dd if=%s of=%s bs=%sM count=1" % (aio_bdev, filename0, int(lvs['cluster_size'] / MEGABYTE))
+        subprocess.check_output(cmd.split(" "))
+        self.c.bdev_aio_create(aio_bdev, base_name, 4096)
+
+        # delete lvol store
+        fail_count = self.c.bdev_lvol_delete_lvstore(lvs_uuid)
+
+        # check if data on lvol bdev remained unchanged
+        fail_count += self.c.start_nbd_disk(base_name, nbd_name)
+        offset = lvs['cluster_size']
+        fail_count += self.run_fio_test("/dev/nbd0", offset, bdev_size, "read", "0xdd")
+        fail_count += self.c.stop_nbd_disk(nbd_name)
+
+        # check if data on lvs remained unchanged
+        filename1 = path.join(base_path, "testfile1")
+        cmd = "dd if=%s of=%s bs=%sM count=1" % (aio_bdev, filename1, int(lvs['cluster_size'] / MEGABYTE))
+        subprocess.check_output(cmd.split(" "))
+        fail_count += self.compare_two_disks(filename0, filename1, 0)
+
+        fail_count += self.c.delete_aio_bdev(base_bdev)
+        # Expected result:
+        # - calls successful, return code = 0
+        # - get_bdevs: no change
         # - no other operation fails
         return fail_count
 
