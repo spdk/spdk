@@ -417,7 +417,6 @@ _bdev_ftl_write_config_info(struct ftl_bdev *ftl_bdev, struct spdk_json_write_ct
 	}
 
 	spdk_json_write_named_string(w, "traddr", ftl_bdev->ctrlr->trid.traddr);
-	spdk_json_write_named_string_fmt(w, "punits", "%d-%d", attrs.range.begin, attrs.range.end);
 
 	if (ftl_bdev->cache_bdev_desc) {
 		cache_bdev = spdk_bdev_get_name(spdk_bdev_desc_get_bdev(ftl_bdev->cache_bdev_desc));
@@ -491,59 +490,6 @@ static const struct spdk_bdev_fn_table ftl_fn_table = {
 	.dump_info_json		= bdev_ftl_dump_info_json,
 };
 
-int
-bdev_ftl_parse_punits(struct spdk_ftl_punit_range *range, const char *range_string)
-{
-	regex_t range_regex;
-	regmatch_t range_match;
-	unsigned long begin = 0, end = 0;
-	char *str_ptr;
-	int rc = -1;
-
-	if (regcomp(&range_regex, "\\b[[:digit:]]+-[[:digit:]]+\\b", REG_EXTENDED)) {
-		SPDK_ERRLOG("Regex init error\n");
-		return -1;
-	}
-
-	if (regexec(&range_regex, range_string, 1, &range_match, 0)) {
-		SPDK_WARNLOG("Invalid range\n");
-		goto out;
-	}
-
-	errno = 0;
-	begin = strtoul(range_string + range_match.rm_so, &str_ptr, 10);
-	if ((begin == ULONG_MAX && errno == ERANGE) || (begin == 0 && errno == EINVAL)) {
-		SPDK_WARNLOG("Invalid range '%s'\n", range_string);
-		goto out;
-	}
-
-	errno = 0;
-	/* +1 to skip the '-' delimiter */
-	end = strtoul(str_ptr + 1, NULL, 10);
-	if ((end == ULONG_MAX && errno == ERANGE) || (end == 0 && errno == EINVAL)) {
-		SPDK_WARNLOG("Invalid range '%s'\n", range_string);
-		goto out;
-	}
-
-	if (begin > UINT_MAX || end > UINT_MAX) {
-		SPDK_WARNLOG("Invalid range '%s'\n", range_string);
-		goto out;
-	}
-
-	if (begin > end) {
-		SPDK_WARNLOG("Invalid range '%s'\n", range_string);
-		goto out;
-	}
-
-	range->begin = (unsigned int)begin;
-	range->end = (unsigned int)end;
-
-	rc = 0;
-out:
-	regfree(&range_regex);
-	return rc;
-}
-
 static int
 bdev_ftl_defer_init(struct ftl_bdev_init_opts *opts)
 {
@@ -599,19 +545,6 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 2);
 		if (!val) {
-			SPDK_ERRLOG("No punit range provided for TransportID: %s\n", trid);
-			rc = -1;
-			break;
-		}
-
-		if (bdev_ftl_parse_punits(&opts->range, val)) {
-			SPDK_ERRLOG("Invalid punit range for TransportID: %s\n", trid);
-			rc = -1;
-			break;
-		}
-
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 3);
-		if (!val) {
 			SPDK_ERRLOG("No UUID provided for TransportID: %s\n", trid);
 			rc = -1;
 			break;
@@ -630,7 +563,7 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			opts->mode = 0;
 		}
 
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 4);
+		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 3);
 		if (!val) {
 			continue;
 		}
@@ -740,8 +673,6 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "Creating bdev %s:\n", ftl_bdev->bdev.name);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tblock_len:\t%zu\n", attrs.lbk_size);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tblock_cnt:\t%"PRIu64"\n", attrs.lbk_cnt);
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "\tpunits:\t\t%u-%u\n", attrs.range.begin,
-		      attrs.range.end);
 
 	ftl_bdev->bdev.ctxt = ftl_bdev;
 	ftl_bdev->bdev.fn_table = &ftl_fn_table;
@@ -840,7 +771,6 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *
 
 	opts.ctrlr = ctrlr;
 	opts.trid = bdev_opts->trid;
-	opts.range = bdev_opts->range;
 	opts.mode = bdev_opts->mode;
 	opts.uuid = bdev_opts->uuid;
 	opts.name = ftl_bdev->bdev.name;
