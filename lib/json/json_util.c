@@ -364,6 +364,17 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 	return invalid ? -1 : 0;
 }
 
+void
+spdk_json_decode_objects(const struct spdk_json_val *values, int num_objects,
+			 const struct spdk_json_object_decoder **decoders, size_t *num_decoders, void **out, int *results)
+{
+	uint8_t i;
+
+	for (i = 0; i < num_objects; i++) {
+		results[i] = spdk_json_decode_object(values, decoders[i], num_decoders[i], out[i]);
+	}
+}
+
 int
 spdk_json_decode_array(const struct spdk_json_val *values, spdk_json_decode_fn decode_func,
 		       void *out, size_t max_size, size_t *out_size, size_t stride)
