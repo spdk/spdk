@@ -6,8 +6,6 @@ source $rootdir/test/common/autotest_common.sh
 source $testdir/common.sh
 
 rpc_py=$rootdir/scripts/rpc.py
-pu_start=0
-pu_end=3
 
 while getopts ':u:c:' opt; do
 	case $opt in
@@ -33,7 +31,9 @@ restore_kill() {
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
 chunk_size=$(get_chunk_size $device)
-pu_count=$(($pu_end - $pu_start + 1))
+num_group=$(get_num_group $device)
+num_pu=$(get_num_pu $device)
+pu_count=$(($num_group * $num_pu))
 
 # Write one band worth of data + one extra chunk
 data_size=$(($chunk_size * ($pu_count + 1)))
@@ -45,7 +45,7 @@ if [ -n "$nv_cache" ]; then
 	nvc_bdev=$(create_nv_cache_bdev nvc0 $device $nv_cache $pu_count)
 fi
 
-ftl_construct_args="construct_ftl_bdev -b nvme0 -a $device -l $pu_start-$pu_end -o"
+ftl_construct_args="construct_ftl_bdev -b nvme0 -a $device -o"
 
 [ -n "$nvc_bdev" ] && ftl_construct_args+=" -c $nvc_bdev"
 [ -n "$uuid" ]     && ftl_construct_args+=" -u $uuid"
