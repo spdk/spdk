@@ -3231,7 +3231,7 @@ Example response:
 }
 ~~~
 
-## set_iscsi_target_node_auth method {#rpc_set_iscsi_target_node_auth}
+## iscsi_target_node_set_auth method {#rpc_iscsi_target_node_set_auth}
 
 Set CHAP authentication to an existing iSCSI target node.
 
@@ -3260,7 +3260,7 @@ Example request:
     "mutual_chap": true
   },
   "jsonrpc": "2.0",
-  "method": "set_iscsi_target_node_auth",
+  "method": "iscsi_target_node_set_auth",
   "id": 1
 }
 ~~~
