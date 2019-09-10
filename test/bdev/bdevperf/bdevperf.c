@@ -152,6 +152,25 @@ generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
 }
 
 static bool
+copy_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int block_size,
+	  void *wr_md_buf, void *rd_md_buf, int md_size, int num_blocks)
+{
+	if (wr_buf_len < num_blocks * block_size || rd_buf_len < num_blocks * block_size) {
+		return false;
+	}
+
+	assert((wr_md_buf != NULL) == (rd_md_buf != NULL));
+
+	memcpy(wr_buf, rd_buf, block_size * num_blocks);
+
+	if (wr_md_buf != NULL) {
+		memcpy(wr_md_buf, rd_md_buf, md_size * num_blocks);
+	}
+
+	return true;
+}
+
+static bool
 verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len, int block_size,
 	    void *wr_md_buf, void *rd_md_buf, int md_size, int num_blocks, bool md_check)
 {
@@ -617,7 +636,7 @@ bdevperf_submit_task(void *arg)
 		if (rc == 0) {
 			cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
 
-			if (g_zcopy && !g_verify && !g_reset) {
+			if (g_zcopy) {
 				spdk_bdev_zcopy_end(task->bdev_io, true, cb_fn, task);
 				return;
 			} else {
@@ -688,6 +707,8 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 {
 	struct bdevperf_task	*task = cb_arg;
 	struct io_target	*target = task->target;
+	struct iovec		*iovs;
+	int			iovcnt;
 
 	if (!success) {
 		target->is_draining = true;
@@ -697,6 +718,23 @@ bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void
 
 	task->bdev_io = bdev_io;
 	task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
+
+	if (g_verify || g_reset) {
+		/* When g_verify or g_reset is enabled, task->buf is used for
+		 *  verification of read after write.  For write I/O, when zcopy APIs
+		 *  are used, task->buf cannot be used, and data must be written to
+		 *  the data buffer allocated underneath bdev layer instead.
+		 *  Hence we copy task->buf to the allocated data buffer here.
+		 */
+		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
+		assert(iovcnt == 1);
+		assert(iovs != NULL);
+
+		copy_data(iovs[0].iov_base, iovs[0].iov_len, task->buf, g_buf_size,
+			  spdk_bdev_get_block_size(target->bdev),
+			  spdk_bdev_io_get_md_buf(bdev_io), task->md_buf,
+			  spdk_bdev_get_md_size(target->bdev), target->io_size_blocks);
+	}
 
 	bdevperf_submit_task(task);
 }
@@ -743,9 +781,14 @@ bdevperf_prep_task(struct bdevperf_task *task)
 			      spdk_bdev_get_block_size(target->bdev),
 			      task->md_buf, spdk_bdev_get_md_size(target->bdev),
 			      target->io_size_blocks, rand_r(&seed) % 256);
-		task->iov.iov_base = task->buf;
-		task->iov.iov_len = g_buf_size;
-		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
+		if (g_zcopy) {
+			bdevperf_prep_zcopy_write_task(task);
+			return;
+		} else {
+			task->iov.iov_base = task->buf;
+			task->iov.iov_len = g_buf_size;
+			task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
+		}
 	} else if (g_flush) {
 		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
 	} else if (g_unmap) {
