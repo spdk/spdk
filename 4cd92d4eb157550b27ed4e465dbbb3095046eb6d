@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e85aa072_eb41a0fe",
+        "filename": "configure",
+        "patchSetId": 7
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T08:35:28Z",
+      "side": 1,
+      "message": "this is a nit, but the space between mk and | was removed",
+      "revId": "4cd92d4eb157550b27ed4e465dbbb3095046eb6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12707afc_17338415",
+        "filename": "mk/spdk.unittest.mk",
+        "patchSetId": 7
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T08:35:28Z",
+      "side": 1,
+      "message": "need space between # and throws",
+      "revId": "4cd92d4eb157550b27ed4e465dbbb3095046eb6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
