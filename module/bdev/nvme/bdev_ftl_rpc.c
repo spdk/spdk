@@ -43,7 +43,6 @@ struct rpc_bdev_ftl_create {
 	char *name;
 	char *trtype;
 	char *traddr;
-	char *punits;
 	char *uuid;
 	char *cache_bdev;
 	struct spdk_ftl_conf ftl_conf;
@@ -55,7 +54,6 @@ free_rpc_bdev_ftl_create(struct rpc_bdev_ftl_create *req)
 	free(req->name);
 	free(req->trtype);
 	free(req->traddr);
-	free(req->punits);
 	free(req->uuid);
 	free(req->cache_bdev);
 }
@@ -64,7 +62,6 @@ static const struct spdk_json_object_decoder rpc_bdev_ftl_create_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_ftl_create, name), spdk_json_decode_string},
 	{"trtype", offsetof(struct rpc_bdev_ftl_create, trtype), spdk_json_decode_string},
 	{"traddr", offsetof(struct rpc_bdev_ftl_create, traddr), spdk_json_decode_string},
-	{"punits", offsetof(struct rpc_bdev_ftl_create, punits), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_bdev_ftl_create, uuid), spdk_json_decode_string, true},
 	{"cache", offsetof(struct rpc_bdev_ftl_create, cache_bdev), spdk_json_decode_string, true},
 	{
@@ -125,8 +122,6 @@ static const struct spdk_json_object_decoder rpc_bdev_ftl_create_decoders[] = {
 	},
 };
 
-#define FTL_RANGE_MAX_LENGTH 32
-
 static void
 _spdk_rpc_bdev_ftl_create_cb(const struct ftl_bdev_info *bdev_info, void *ctx, int status)
 {
@@ -156,7 +151,6 @@ spdk_rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_ftl_create req = {};
 	struct ftl_bdev_init_opts opts = {};
-	char range[FTL_RANGE_MAX_LENGTH];
 	int rc;
 
 	spdk_ftl_conf_init_defaults(&req.ftl_conf);
@@ -198,14 +192,6 @@ spdk_rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 
 	/* Parse traddr */
 	snprintf(opts.trid.traddr, sizeof(opts.trid.traddr), "%s", req.traddr);
-	snprintf(range, sizeof(range), "%s", req.punits);
-
-	if (bdev_ftl_parse_punits(&opts.range, req.punits)) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Failed to parse parallel unit range: %s",
-						     req.punits);
-		goto invalid;
-	}
 
 	if (req.uuid) {
 		if (spdk_uuid_parse(&opts.uuid, req.uuid) < 0) {
