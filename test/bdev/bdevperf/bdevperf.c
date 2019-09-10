@@ -47,6 +47,7 @@
 struct bdevperf_task {
 	struct iovec			iov;
 	struct io_target		*target;
+	struct spdk_bdev_io		*bdev_io;
 	void				*buf;
 	void				*md_buf;
 	uint64_t			offset_blocks;
@@ -616,17 +617,22 @@ bdevperf_submit_task(void *arg)
 		if (rc == 0) {
 			cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
 
-			if (spdk_bdev_is_md_separate(target->bdev)) {
-				rc = spdk_bdev_writev_blocks_with_md(desc, ch, &task->iov, 1,
-								     task->md_buf,
+			if (g_zcopy && !g_verify && !g_reset) {
+				spdk_bdev_zcopy_end(task->bdev_io, true, cb_fn, task);
+				return;
+			} else {
+				if (spdk_bdev_is_md_separate(target->bdev)) {
+					rc = spdk_bdev_writev_blocks_with_md(desc, ch, &task->iov, 1,
+									     task->md_buf,
+									     task->offset_blocks,
+									     target->io_size_blocks,
+									     cb_fn, task);
+				} else {
+					rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1,
 								     task->offset_blocks,
 								     target->io_size_blocks,
 								     cb_fn, task);
-			} else {
-				rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1,
-							     task->offset_blocks,
-							     target->io_size_blocks,
-							     cb_fn, task);
+				}
 			}
 		}
 		break;
@@ -677,6 +683,43 @@ bdevperf_submit_task(void *arg)
 	target->current_queue_depth++;
 }
 
+static void
+bdevperf_zcopy_get_buf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct bdevperf_task	*task = cb_arg;
+	struct io_target	*target = task->target;
+
+	if (!success) {
+		target->is_draining = true;
+		g_run_failed = true;
+		return;
+	}
+
+	task->bdev_io = bdev_io;
+	task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
+
+	bdevperf_submit_task(task);
+}
+
+static void
+bdevperf_prep_zcopy_write_task(void *arg)
+{
+	struct bdevperf_task	*task = arg;
+	struct io_target	*target = task->target;
+	int			rc;
+
+	rc = spdk_bdev_zcopy_start(target->bdev_desc, target->ch,
+				   task->offset_blocks, target->io_size_blocks,
+				   false, bdevperf_zcopy_get_buf_complete, task);
+	if (rc != 0) {
+		assert(rc == -ENOMEM);
+		bdevperf_queue_io_wait_with_cb(task, bdevperf_prep_zcopy_write_task);
+		return;
+	}
+
+	target->current_queue_depth++;
+}
+
 static __thread unsigned int seed = 0;
 
 static void
@@ -713,9 +756,14 @@ bdevperf_prep_task(struct bdevperf_task *task)
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
-		task->iov.iov_base = task->buf;
-		task->iov.iov_len = g_buf_size;
-		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
+		if (g_zcopy) {
+			bdevperf_prep_zcopy_write_task(task);
+			return;
+		} else {
+			task->iov.iov_base = task->buf;
+			task->iov.iov_len = g_buf_size;
+			task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
+		}
 	}
 
 	bdevperf_submit_task(task);
