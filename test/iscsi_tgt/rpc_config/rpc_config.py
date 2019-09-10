@@ -373,7 +373,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     verify(jsonvalues[0]['data_digest'] == rpc_param['data_digest'], 1,
            "data digest value is {}, expected {}".format(jsonvalues[0]['data_digest'], rpc_param['data_digest']))
     lun_id = '1'
-    rpc.target_node_add_lun(name, bdev_name, "-i", lun_id)
+    rpc.iscsi_target_node_add_lun(name, bdev_name, "-i", lun_id)
     output = rpc.iscsi_get_target_nodes()
     jsonvalues = json.loads(output)
     verify(jsonvalues[0]['luns'][1]['bdev_name'] == "Malloc" + str(rpc_param['lun_total']), 1,
