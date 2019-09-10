@@ -180,6 +180,8 @@ def case_message(func):
             802: 'rename_lvs_EEXIST',
             803: 'bdev_lvol_rename_nonexistent',
             804: 'bdev_lvol_rename_EEXIST',
+            # logical volume clear_method test
+            850: 'clear_method_none',
             # SIGTERM
             10000: 'SIGTERM',
         }
@@ -3375,6 +3377,65 @@ class TestCases(object):
         # Expected results:
         # - bdev_lvol_rename return code != 0; not possible to rename to already
         #   used name
+        # - no other operation fails
+        return fail_count
+
+    @case_message
+    def test_case850(self):
+        """"
+        Clear_method
+
+        Test for clear_method equals to none
+        """
+        # Create malloc bdev
+        base_name = self.c.bdev_malloc_create(self.total_size,
+                                              self.block_size)
+        nbd_name = "/dev/nbd0"
+        fail_count = self.c.nbd_start_disk(base_name, nbd_name)
+
+        # Write data to malloc bdev starting from offset 0.
+        fail_count += self.run_fio_test(nbd_name, 0, self.total_size * MEGABYTE,
+                                        "write", "0xdd")
+        fail_count += self.c.nbd_stop_disk(nbd_name)
+
+        # Construct lvol store on created malloc bddev
+        lvs_uuid = self.c.bdev_lvol_create_lvstore(base_name,
+	                                           self.lvs_name,
+                                                   clear_method="none")
+        # Check correct uuid values in response bdev_lvol_get_lvstores command
+        fail_count = self.c.check_bdev_lvol_get_lvstores(base_name, lvs_uuid,
+                                                         self.cluster_size)
+        lvs = self.c.bdev_lvol_get_lvstores(self.lvs_name)[0]
+        # Construct lvol bdev on lvol store
+        #lvs_size = self.get_lvs_size(self.lvs_name)
+        lbd_size = int(lvs['cluster_size'] / MEGABYTE)
+        lbd_name1 = self.lbd_name + "1"
+        bdev_uuid1 = self.c.bdev_lvol_create(lvs_uuid,
+                                            lbd_name1,
+                                            lbd_size)
+        lvol_bdev1 = self.c.get_lvol_bdev_with_name(bdev_uuid1)
+        lbd_name2 = self.lbd_name + "2"
+        bdev_uuid2 = self.c.bdev_lvol_create(lvs_uuid,
+                                             lbd_name2,
+                                             lbd_size)
+        lvol_bdev2 = self.c.get_lvol_bdev_with_name(bdev_uuid2)
+        # Bdev lvol delete
+        fail_count += self.c.bdev_lvol_delete(bdev_uuid2, clear_method='none')
+
+        # Delete lvol store
+        fail_count = self.c.bdev_lvol_delete_lvstore(lvs_uuid)
+
+        fail_count += self.c.nbd_start_disk(base_name, nbd_name)
+        offset = lvs['cluster_size']
+        # Check if data on first lvol bdevs changed.
+        fail_count += self.run_fio_test("/dev/nbd0", offset, lvs['cluster_size'], "read", "0x00")
+        # Check if data on second lvol bdevs remain unchanged.
+        fail_count += self.run_fio_test("/dev/nbd0", offset * 2, lvs['cluster_size'], "read", "0xdd")
+        fail_count += self.c.nbd_stop_disk(nbd_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - get_bdevs: no change
         # - no other operation fails
         return fail_count
 
