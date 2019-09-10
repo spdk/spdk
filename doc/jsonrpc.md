@@ -255,7 +255,7 @@ Example response:
     "get_log_print_level",
     "set_log_print_level",
     "get_iscsi_global_params",
-    "target_node_add_lun",
+    "iscsi_target_node_add_lun",
     "iscsi_get_connections",
     "delete_portal_group",
     "add_portal_group",
@@ -3604,7 +3604,7 @@ Example response:
 }
 ~~~
 
-## target_node_add_lun method {#rpc_target_node_add_lun}
+## iscsi_target_node_add_lun method {#rpc_iscsi_target_node_add_lun}
 
 Add an LUN to an existing iSCSI target node.
 
@@ -3628,7 +3628,7 @@ Example request:
     "bdev_name": "Malloc0"
   },
   "jsonrpc": "2.0",
-  "method": "target_node_add_lun",
+  "method": "iscsi_target_node_add_lun",
   "id": 1
 }
 ~~~

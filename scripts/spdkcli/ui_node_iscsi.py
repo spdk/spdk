@@ -146,7 +146,7 @@ class UIISCSIDevices(UINode):
         """
         if lun_id:
             lun_id = self.ui_eval_param(lun_id, "number", None)
-        self.get_root().target_node_add_lun(
+        self.get_root().iscsi_target_node_add_lun(
             name=name, bdev_name=bdev_name, lun_id=lun_id)
 
     def summary(self):

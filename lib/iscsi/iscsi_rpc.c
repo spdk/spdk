@@ -966,8 +966,8 @@ static const struct spdk_json_object_decoder rpc_target_lun_decoders[] = {
 };
 
 static void
-spdk_rpc_target_node_add_lun(struct spdk_jsonrpc_request *request,
-			     const struct spdk_json_val *params)
+spdk_rpc_iscsi_target_node_add_lun(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
 {
 	struct rpc_target_lun req = {};
 	struct spdk_json_write_ctx *w;
@@ -1006,7 +1006,8 @@ invalid:
 					 "Invalid parameters");
 	free_rpc_target_lun(&req);
 }
-SPDK_RPC_REGISTER("target_node_add_lun", spdk_rpc_target_node_add_lun, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_target_node_add_lun", spdk_rpc_iscsi_target_node_add_lun, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_add_lun, target_node_add_lun)
 
 struct rpc_target_auth {
 	char *name;
