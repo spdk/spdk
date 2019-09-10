@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ba2c07b_875e9ae1",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T14:34:01Z",
+      "side": 1,
+      "message": "I know this isn\u0027t part of your patch I think its OK to fix one work here, the comment says \"Add\"",
+      "revId": "7c77c0e6d1e5475fac95ab63f4a64097dae692cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
