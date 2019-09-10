@@ -33,8 +33,6 @@ $rpc_py bdev_ftl_delete -b nvme0
 $rpc_py bdev_ftl_create -b nvme2 -a $device
 
 $rpc_py bdev_ftl_delete -b nvme2
-$rpc_py bdev_ftl_delete -b nvme0
-$rpc_py bdev_ftl_delete -b nvme1
 
 # TODO: add negative test cases
 
