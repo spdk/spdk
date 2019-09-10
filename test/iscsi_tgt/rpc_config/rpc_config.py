@@ -96,10 +96,10 @@ def verify_log_flag_rpc_methods(rpc_py, rpc_param):
 
 def verify_iscsi_connection_rpc_methods(rpc_py):
     rpc = spdk_rpc(rpc_py)
-    output = rpc.get_iscsi_connections()
+    output = rpc.iscsi_get_connections()
     jsonvalue = json.loads(output)
     verify(not jsonvalue, 1,
-           "get_iscsi_connections returned {}, expected empty".format(jsonvalue))
+           "iscsi_get_connections returned {}, expected empty".format(jsonvalue))
 
     rpc.bdev_malloc_create(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
@@ -112,7 +112,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     check_output('iscsiadm -m discovery -t st -p {}'.format(rpc_param['target_ip']), shell=True)
     check_output('iscsiadm -m node --login', shell=True)
     name = json.loads(rpc.iscsi_get_target_nodes())[0]['name']
-    output = rpc.get_iscsi_connections()
+    output = rpc.iscsi_get_connections()
     jsonvalues = json.loads(output)
     verify(jsonvalues[0]['target_node_name'] == rpc_param['target_name'], 1,
            "target node name vaule is {}, expected {}".format(jsonvalues[0]['target_node_name'], rpc_param['target_name']))
@@ -128,10 +128,10 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     rpc.delete_initiator_group(initiator_tag)
     rpc.delete_portal_group(portal_tag)
     rpc.delete_target_node(name)
-    output = rpc.get_iscsi_connections()
+    output = rpc.iscsi_get_connections()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
-           "get_iscsi_connections returned {}, expected empty".format(jsonvalues))
+           "iscsi_get_connections returned {}, expected empty".format(jsonvalues))
 
     print("verify_iscsi_connection_rpc_methods passed")
 

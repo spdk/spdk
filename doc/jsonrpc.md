@@ -256,7 +256,7 @@ Example response:
     "set_log_print_level",
     "get_iscsi_global_params",
     "target_node_add_lun",
-    "get_iscsi_connections",
+    "iscsi_get_connections",
     "delete_portal_group",
     "add_portal_group",
     "get_portal_groups",
@@ -3550,7 +3550,7 @@ Example response:
 }
 ~~~
 
-## get_iscsi_connections method {#rpc_get_iscsi_connections}
+## iscsi_get_connections method {#rpc_iscsi_get_connections}
 
 Show information about all active connections.
 
@@ -3579,7 +3579,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "get_iscsi_connections",
+  "method": "iscsi_get_connections",
   "id": 1
 }
 ~~~

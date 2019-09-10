@@ -422,9 +422,9 @@ class UIRoot(UINode):
 
     @verbose
     @is_method_available
-    def get_iscsi_connections(self, **kwargs):
+    def iscsi_get_connections(self, **kwargs):
         if self.is_init:
-            for ic in rpc.iscsi.get_iscsi_connections(self.client, **kwargs):
+            for ic in rpc.iscsi.iscsi_get_connections(self.client, **kwargs):
                 yield ic
 
     @verbose
