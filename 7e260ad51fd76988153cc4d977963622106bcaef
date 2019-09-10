@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7bcdd68_6d6eee26",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T17:34:34Z",
+      "side": 1,
+      "message": "just a nit but these comments don\u0027t add any value and there isn\u0027t one in front of every \"if req-\u003e\" either so might as well delete them (I realize you just moved them though)",
+      "revId": "7e260ad51fd76988153cc4d977963622106bcaef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
