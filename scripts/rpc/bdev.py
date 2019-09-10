@@ -249,8 +249,9 @@ def bdev_raid_get_bdevs(client, category):
     return client.call('bdev_raid_get_bdevs', params)
 
 
-def construct_raid_bdev(client, name, raid_level, base_bdevs, strip_size=None, strip_size_kb=None):
-    """Construct raid bdev. Either strip size arg will work but one is required.
+@deprecated_alias('construct_raid_bdev')
+def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size=None, strip_size_kb=None):
+    """Create raid bdev. Either strip size arg will work but one is required.
 
     Args:
         name: user defined raid bdev name
@@ -270,7 +271,7 @@ def construct_raid_bdev(client, name, raid_level, base_bdevs, strip_size=None, s
     if strip_size_kb:
         params['strip_size_kb'] = strip_size_kb
 
-    return client.call('construct_raid_bdev', params)
+    return client.call('bdev_raid_create', params)
 
 
 def destroy_raid_bdev(client, name):
