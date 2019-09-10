@@ -223,6 +223,52 @@ exit:
 	free(ctx);
 }
 
+static int
+spdk_rpc_parse_construct_bdev_args(struct rpc_construct_nvme *req,
+				   struct nvme_bdev_construct_opts *opts)
+{
+	int rc;
+
+	/* Parse adrfam */
+	if (req->adrfam) {
+		rc = spdk_nvme_transport_id_parse_adrfam(&opts->trid.adrfam, req->adrfam);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to parse adrfam: %s\n", req->adrfam);
+			return -EINVAL;
+		}
+	}
+
+	/* Parse trsvcid */
+	if (req->trsvcid) {
+		snprintf(opts->trid.trsvcid, sizeof(opts->trid.trsvcid), "%s", req->trsvcid);
+	}
+
+	/* Parse subnqn */
+	if (req->subnqn) {
+		snprintf(opts->trid.subnqn, sizeof(opts->trid.subnqn), "%s", req->subnqn);
+	}
+
+	if (req->hostaddr) {
+		snprintf(opts->hostid.hostaddr, sizeof(opts->hostid.hostaddr), "%s", req->hostaddr);
+	}
+
+	if (req->hostsvcid) {
+		snprintf(opts->hostid.hostsvcid, sizeof(opts->hostid.hostsvcid), "%s", req->hostsvcid);
+	}
+
+	if (req->prchk_reftag) {
+		opts->prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	}
+
+	if (req->prchk_guard) {
+		opts->prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	}
+
+	opts->hostnqn = req->hostnqn;
+
+	return 0;
+}
+
 static void
 spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
@@ -258,41 +304,10 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	/* Parse traddr */
 	snprintf(opts.trid.traddr, sizeof(opts.trid.traddr), "%s", ctx->req.traddr);
 
-	/* Parse adrfam */
-	if (ctx->req.adrfam) {
-		rc = spdk_nvme_transport_id_parse_adrfam(&opts.trid.adrfam, ctx->req.adrfam);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to parse adrfam: %s\n", ctx->req.adrfam);
-			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse adrfam: %s",
-							     ctx->req.adrfam);
-			goto cleanup;
-		}
-	}
-
-	/* Parse trsvcid */
-	if (ctx->req.trsvcid) {
-		snprintf(opts.trid.trsvcid, sizeof(opts.trid.trsvcid), "%s", ctx->req.trsvcid);
-	}
-
-	/* Parse subnqn */
-	if (ctx->req.subnqn) {
-		snprintf(opts.trid.subnqn, sizeof(opts.trid.subnqn), "%s", ctx->req.subnqn);
-	}
-
-	if (ctx->req.hostaddr) {
-		snprintf(opts.hostid.hostaddr, sizeof(opts.hostid.hostaddr), "%s", ctx->req.hostaddr);
-	}
-
-	if (ctx->req.hostsvcid) {
-		snprintf(opts.hostid.hostsvcid, sizeof(opts.hostid.hostsvcid), "%s", ctx->req.hostsvcid);
-	}
-
-	if (ctx->req.prchk_reftag) {
-		opts.prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
-	}
-
-	if (ctx->req.prchk_guard) {
-		opts.prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	rc = spdk_rpc_parse_construct_bdev_args(&ctx->req, &opts);
+	if (rc < 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse parameters");
+		goto cleanup;
 	}
 
 	ctx->request = request;
