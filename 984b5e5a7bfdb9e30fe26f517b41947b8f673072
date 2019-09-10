@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a850d91_45c3145c",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T11:14:57Z",
+      "side": 1,
+      "message": "My concern is that we still have hardcoding here.  We have UT_MBUFS_PER_OP defined, but then here we explicitly use g_src_mbufs[0], [1] and [2].  Shouldn\u0027t that be in a loop instead so we avoid UT_MBUFS_PER_OP and the code being out of sync?",
+      "revId": "984b5e5a7bfdb9e30fe26f517b41947b8f673072",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
