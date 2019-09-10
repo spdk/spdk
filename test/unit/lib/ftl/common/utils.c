@@ -48,14 +48,12 @@ test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
 		  const struct spdk_ftl_punit_range *range)
 {
 	struct spdk_ftl_dev *dev;
-	unsigned int punit;
 
 	dev = calloc(1, sizeof(*dev));
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
 
 	dev->xfer_size = geo->ws_opt;
 	dev->geo = *geo;
-	dev->range = *range;
 	dev->core_thread.thread = spdk_thread_create("unit_test_thread", NULL);
 	spdk_set_thread(dev->core_thread.thread);
 
@@ -71,9 +69,8 @@ test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
 	SPDK_CU_ASSERT_FATAL(dev->lba_pool != NULL);
 
 	for (size_t i = 0; i < ftl_dev_num_punits(dev); ++i) {
-		punit = range->begin + i;
 		dev->punits[i].dev = dev;
-		dev->punits[i].start_addr.pu = punit;
+		dev->punits[i].start_addr.pu = i;
 	}
 
 	LIST_INIT(&dev->free_bands);
@@ -150,11 +147,8 @@ uint64_t
 test_offset_from_addr(struct ftl_addr addr, struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
-	unsigned int punit;
 
-	/* TODO: ftl_addr_flatten_punit should return uint32_t */
-	punit = ftl_addr_flatten_punit(dev, addr);
 	CU_ASSERT_EQUAL(addr.zone_id, band->id);
 
-	return punit * ftl_dev_lbks_in_zone(dev) + addr.offset;
+	return addr.pu * ftl_dev_lbks_in_zone(dev) + addr.offset;
 }

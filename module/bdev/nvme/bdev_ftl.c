@@ -495,54 +495,10 @@ static const struct spdk_bdev_fn_table ftl_fn_table = {
 int
 bdev_ftl_parse_punits(struct spdk_ftl_punit_range *range, const char *range_string)
 {
-	regex_t range_regex;
-	regmatch_t range_match;
-	unsigned long begin = 0, end = 0;
-	char *str_ptr;
-	int rc = -1;
+	range->begin = 0;
+	range->end = 0;
 
-	if (regcomp(&range_regex, "\\b[[:digit:]]+-[[:digit:]]+\\b", REG_EXTENDED)) {
-		SPDK_ERRLOG("Regex init error\n");
-		return -1;
-	}
-
-	if (regexec(&range_regex, range_string, 1, &range_match, 0)) {
-		SPDK_WARNLOG("Invalid range\n");
-		goto out;
-	}
-
-	errno = 0;
-	begin = strtoul(range_string + range_match.rm_so, &str_ptr, 10);
-	if ((begin == ULONG_MAX && errno == ERANGE) || (begin == 0 && errno == EINVAL)) {
-		SPDK_WARNLOG("Invalid range '%s'\n", range_string);
-		goto out;
-	}
-
-	errno = 0;
-	/* +1 to skip the '-' delimiter */
-	end = strtoul(str_ptr + 1, NULL, 10);
-	if ((end == ULONG_MAX && errno == ERANGE) || (end == 0 && errno == EINVAL)) {
-		SPDK_WARNLOG("Invalid range '%s'\n", range_string);
-		goto out;
-	}
-
-	if (begin > UINT_MAX || end > UINT_MAX) {
-		SPDK_WARNLOG("Invalid range '%s'\n", range_string);
-		goto out;
-	}
-
-	if (begin > end) {
-		SPDK_WARNLOG("Invalid range '%s'\n", range_string);
-		goto out;
-	}
-
-	range->begin = (unsigned int)begin;
-	range->end = (unsigned int)end;
-
-	rc = 0;
-out:
-	regfree(&range_regex);
-	return rc;
+	return 0;
 }
 
 static int
