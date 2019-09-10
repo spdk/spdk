@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e54b878d_eaf8aec3",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 882,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-09-10T04:52:50Z",
+      "side": 1,
+      "message": "type error.here is a.",
+      "revId": "b67b6aca8967ea359e01d6d91ff03a3b3ea0676a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afc6fd8e_34123530",
+        "filename": "module/bdev/nvme/vbdev_opal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-09-10T04:52:50Z",
+      "side": 1,
+      "message": "you can put these \"free(part-\u003ebdev)\" to err.",
+      "revId": "b67b6aca8967ea359e01d6d91ff03a3b3ea0676a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9d57aa6_7ccf90a0",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-09-10T04:52:50Z",
+      "side": 1,
+      "message": "I can see there are many get_bdevs ? Do you just want to print the bdevs or check if there\u0027re bdevs that meet your ideas?",
+      "revId": "b67b6aca8967ea359e01d6d91ff03a3b3ea0676a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2e4e9f1_9f3c17e4",
+        "filename": "test/nvme/nvme_opal.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-09-10T04:52:50Z",
+      "side": 1,
+      "message": "should exit trap here.",
+      "revId": "b67b6aca8967ea359e01d6d91ff03a3b3ea0676a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
