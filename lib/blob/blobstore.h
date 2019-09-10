@@ -242,7 +242,7 @@ struct spdk_bs_md_mask {
 };
 
 #define SPDK_MD_DESCRIPTOR_TYPE_PADDING 0
-#define SPDK_MD_DESCRIPTOR_TYPE_EXTENT 1
+#define SPDK_MD_DESCRIPTOR_TYPE_EXTENT_RLE 1
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR 2
 #define SPDK_MD_DESCRIPTOR_TYPE_FLAGS 3
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL 4
@@ -258,7 +258,7 @@ struct spdk_blob_md_descriptor_xattr {
 	/* String name immediately followed by string value. */
 };
 
-struct spdk_blob_md_descriptor_extent {
+struct spdk_blob_md_descriptor_extent_rle {
 	uint8_t		type;
 	uint32_t	length;
 
