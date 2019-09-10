@@ -67,6 +67,24 @@
       "revId": "fd770a9fbd85b390d3f84504d5e9f97e4d5805c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eeb17c87_70904db2",
+        "filename": "lib/blobfs/blobfs_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T17:52:22Z",
+      "side": 1,
+      "message": "Hi xiaodong, Like Jim mentioned, this creates a dependency between blobfs and the blob_bdev module. If you were to rebase on master, this would fail autotest because of mismatched dependencies.\nThere isn\u0027t a very clean way of fixing this dependency chain. We don\u0027t want to move blob_bdev inside of the blob or blobstore libraries because they should be able to exist independent of it. We also don\u0027t want to make blobfs depend directly or indirectly on the bdev library which making it depend on blob_bdev does.\n\nAfter talking with Jim, I think the best solution is to create a new directory / module under module/blobfs/blob_bdev_rpc (name can be updated). You can copy the Makefiles from the other directories for an example, then you will have to add a line to mk/spdk.lib_deps.mk with the new module\u0027s dependencies. You can find those dependencies by running test/make/check_so_deps.sh on top of your updated SPDK repo. It will spit them out in a readable format.\n\nI know it seems weird to create an entirely new library for just a couple of RPCs, but that is the only way we can keep the dependency chain clean.",
+      "parentUuid": "b2ad4513_f43e4eaa",
+      "revId": "fd770a9fbd85b390d3f84504d5e9f97e4d5805c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
