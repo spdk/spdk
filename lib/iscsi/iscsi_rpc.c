@@ -1032,7 +1032,7 @@ static const struct spdk_json_object_decoder rpc_target_auth_decoders[] = {
 };
 
 static void
-spdk_rpc_set_iscsi_target_node_auth(struct spdk_jsonrpc_request *request,
+spdk_rpc_iscsi_target_node_set_auth(struct spdk_jsonrpc_request *request,
 				    const struct spdk_json_val *params)
 {
 	struct rpc_target_auth req = {};
@@ -1073,8 +1073,9 @@ spdk_rpc_set_iscsi_target_node_auth(struct spdk_jsonrpc_request *request,
 exit:
 	free_rpc_target_auth(&req);
 }
-SPDK_RPC_REGISTER("set_iscsi_target_node_auth", spdk_rpc_set_iscsi_target_node_auth,
+SPDK_RPC_REGISTER("iscsi_target_node_set_auth", spdk_rpc_iscsi_target_node_set_auth,
 		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_set_auth, set_iscsi_target_node_auth)
 
 static void
 spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,

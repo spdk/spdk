@@ -228,7 +228,8 @@ def iscsi_target_node_add_lun(client, name, bdev_name, lun_id=None):
     return client.call('iscsi_target_node_add_lun', params)
 
 
-def set_iscsi_target_node_auth(
+@deprecated_alias('set_iscsi_target_node_auth')
+def iscsi_target_node_set_auth(
         client,
         name,
         chap_group=None,
@@ -259,7 +260,7 @@ def set_iscsi_target_node_auth(
         params['require_chap'] = require_chap
     if mutual_chap:
         params['mutual_chap'] = mutual_chap
-    return client.call('set_iscsi_target_node_auth', params)
+    return client.call('iscsi_target_node_set_auth', params)
 
 
 def add_iscsi_auth_group(client, tag, secrets=None):

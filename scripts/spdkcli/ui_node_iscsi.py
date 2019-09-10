@@ -179,7 +179,7 @@ class UIISCSIDevice(UINode):
         disable_chap = self.ui_eval_param(d, "bool", None)
         require_chap = self.ui_eval_param(r, "bool", None)
         mutual_chap = self.ui_eval_param(m, "bool", None)
-        self.get_root().set_iscsi_target_node_auth(
+        self.get_root().iscsi_target_node_set_auth(
             name=self.device.device_name, chap_group=chap_group,
             disable_chap=disable_chap,
             require_chap=require_chap, mutual_chap=mutual_chap)
