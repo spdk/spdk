@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c768f777_fcbb43ca",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T23:00:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "62703aaa_03a4eb7e",
+      "revId": "52d8ae12d48fec8771b5ee350c70032f6e3099b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f28bc84_f28d3d28",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "43b343d1_a2b3bdf9",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T23:00:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f28bc84_f28d3d28",
+      "revId": "52d8ae12d48fec8771b5ee350c70032f6e3099b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33fdfcae_ce153ce4",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2019-09-10T19:01:55Z",
       "side": 1,
       "message": "Do you need this poll? If the fd is non-blocking, won\u0027t rdma_get_cm_event just fail with EWOULDBLOCK if there are no events?",
+      "revId": "52d8ae12d48fec8771b5ee350c70032f6e3099b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72d0088c_17eb2715",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T23:00:02Z",
+      "side": 1,
+      "message": "Not sure. We do the poll in the target side, but we are polling as a group with all of the ibv event stuff, so maybe not. It doesn\u0027t say anything about it in the man page.",
+      "parentUuid": "33fdfcae_ce153ce4",
       "revId": "52d8ae12d48fec8771b5ee350c70032f6e3099b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
