@@ -183,8 +183,6 @@ struct spdk_ftl_dev {
 	/* Statistics */
 	struct ftl_stats			stats;
 
-	/* Parallel unit range */
-	struct spdk_ftl_punit_range		range;
 	/* Array of parallel units */
 	struct ftl_punit			*punits;
 
@@ -416,24 +414,6 @@ ftl_addr_from_packed(const struct spdk_ftl_dev *dev, struct ftl_addr p)
 	return addr;
 }
 
-static inline unsigned int
-ftl_addr_flatten_punit(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
-{
-	return addr.pu - dev->range.begin;
-}
-
-static inline int
-ftl_addr_in_range(const struct spdk_ftl_dev *dev, struct ftl_addr addr)
-{
-	unsigned int punit = ftl_addr_flatten_punit(dev, addr) + dev->range.begin;
-
-	if (punit >= dev->range.begin && punit <= dev->range.end) {
-		return 1;
-	}
-
-	return 0;
-}
-
 #define _ftl_l2p_set(l2p, off, val, bits) \
 	__atomic_store_n(((uint##bits##_t *)(l2p)) + (off), val, __ATOMIC_SEQ_CST)
 
@@ -494,7 +474,7 @@ ftl_dev_lbks_in_zone(const struct spdk_ftl_dev *dev)
 static inline size_t
 ftl_dev_num_punits(const struct spdk_ftl_dev *dev)
 {
-	return dev->range.end - dev->range.begin + 1;
+	return dev->geo.num_pu * dev->geo.num_grp;
 }
 
 static inline uint64_t

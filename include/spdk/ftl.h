@@ -142,7 +142,6 @@ struct spdk_ftl_dev_init_opts {
 struct spdk_ftl_attrs {
 	/* Device's UUID */
 	struct spdk_uuid			uuid;
-	/* Parallel unit range */
 	struct spdk_ftl_punit_range		range;
 	/* Number of logical blocks */
 	uint64_t				lbk_cnt;
