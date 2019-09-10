@@ -1887,7 +1887,6 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->uuid = dev->uuid;
 	attrs->lbk_cnt = dev->num_lbas;
 	attrs->lbk_size = FTL_BLOCK_SIZE;
-	attrs->range = dev->range;
 	attrs->cache_bdev_desc = dev->nv_cache.bdev_desc;
 	attrs->num_zones = dev->geo.num_chk;
 	attrs->zone_size = dev->geo.clba;

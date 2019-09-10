@@ -518,25 +518,16 @@ ftl_band_from_addr(struct spdk_ftl_dev *dev, struct ftl_addr addr)
 struct ftl_zone *
 ftl_band_zone_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
-	struct spdk_ftl_dev *dev = band->dev;
-	unsigned int punit;
-
-	punit = ftl_addr_flatten_punit(dev, addr);
-	assert(punit < ftl_dev_num_punits(dev));
-
-	return &band->zone_buf[punit];
+	assert(addr.pu < ftl_dev_num_punits(band->dev));
+	return &band->zone_buf[addr.pu];
 }
 
 uint64_t
 ftl_band_lbkoff_from_addr(struct ftl_band *band, struct ftl_addr addr)
 {
-	struct spdk_ftl_dev *dev = band->dev;
-	unsigned int punit;
-
-	punit = ftl_addr_flatten_punit(dev, addr);
 	assert(addr.zone_id == band->id);
-
-	return punit * ftl_dev_lbks_in_zone(dev) + addr.offset;
+	assert(addr.pu < ftl_dev_num_punits(band->dev));
+	return addr.pu * ftl_dev_lbks_in_zone(band->dev) + addr.offset;
 }
 
 struct ftl_addr
@@ -544,13 +535,11 @@ ftl_band_next_xfer_addr(struct ftl_band *band, struct ftl_addr addr, size_t num_
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_zone *zone;
-	unsigned int punit_num;
 	size_t num_xfers, num_stripes;
 
 	assert(addr.zone_id == band->id);
 
-	punit_num = ftl_addr_flatten_punit(dev, addr);
-	zone = &band->zone_buf[punit_num];
+	zone = ftl_band_zone_from_addr(band, addr);
 
 	num_lbks += (addr.offset % dev->xfer_size);
 	addr.offset  -= (addr.offset % dev->xfer_size);
@@ -633,7 +622,7 @@ ftl_band_addr_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 	struct spdk_ftl_dev *dev = band->dev;
 	uint64_t punit;
 
-	punit = lbkoff / ftl_dev_lbks_in_zone(dev) + dev->range.begin;
+	punit = lbkoff / ftl_dev_lbks_in_zone(dev);
 
 	addr.offset = lbkoff % ftl_dev_lbks_in_zone(dev);
 	addr.zone_id = band->id;

@@ -116,7 +116,7 @@ ftl_band_addr_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 	struct spdk_ftl_dev *dev = band->dev;
 	uint64_t punit;
 
-	punit = lbkoff / ftl_dev_lbks_in_zone(dev) + dev->range.begin;
+	punit = lbkoff / ftl_dev_lbks_in_zone(dev);
 
 	addr.offset = lbkoff % ftl_dev_lbks_in_zone(dev);
 	addr.zone_id = band->id;
