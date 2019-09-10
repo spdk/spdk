@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "84ef3adc_9635c34e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T23:06:07Z",
+      "side": 1,
+      "message": "Yes. It takes the lock for connect, disconnect, and polling the admin qpair which are the only times we use this function.",
+      "parentUuid": "24b100ae_a72166bd",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c08c289f_0e1f53d9",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 5
@@ -33,6 +51,24 @@
       "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b944550e_379d520f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T23:06:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c08c289f_0e1f53d9",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "4a51600a_64bd2e7f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T23:06:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "92cd30b3_8e624dd6",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf078787_4d8b1376",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 5
@@ -67,6 +121,24 @@
       "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0799b40a_d760ac59",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T23:06:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bf078787_4d8b1376",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "a8e24179_b2b2e437",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T23:06:07Z",
+      "side": 1,
+      "message": "Do you know for sure if the stailq macros are thread safe in c? I am assuming that they aren\u0027t, but want to make sure before I implement an array with memory barriers and an index tracker.",
+      "parentUuid": "ce6e6089_1902a4fa",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d4761226_92bf6fbf",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 5
@@ -101,6 +191,24 @@
       "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbfb1954_ffc960f3",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-09-10T23:06:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d4761226_92bf6fbf",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
