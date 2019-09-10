@@ -49,11 +49,6 @@ static struct spdk_ocssd_geometry_data g_geo = {
 	.ws_min		= 4,
 };
 
-static struct spdk_ftl_punit_range g_range = {
-	.begin		= 2,
-	.end		= 9,
-};
-
 #if defined(DEBUG)
 DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band), true);
 #endif
@@ -109,13 +104,12 @@ ftl_io_complete(struct ftl_io *io)
 }
 
 static void
-setup_wptr_test(struct spdk_ftl_dev **dev, const struct spdk_ocssd_geometry_data *geo,
-		const struct spdk_ftl_punit_range *range)
+setup_wptr_test(struct spdk_ftl_dev **dev, const struct spdk_ocssd_geometry_data *geo)
 {
 	size_t i;
 	struct spdk_ftl_dev *t_dev;
 
-	t_dev = test_init_ftl_dev(geo, range);
+	t_dev = test_init_ftl_dev(geo);
 
 	for (i = 0; i < ftl_dev_num_bands(t_dev); ++i) {
 		test_init_ftl_band(t_dev, i);
@@ -150,7 +144,7 @@ test_wptr(void)
 	size_t zone, lbk, offset, i;
 	int rc;
 
-	setup_wptr_test(&dev, &g_geo, &g_range);
+	setup_wptr_test(&dev, &g_geo);
 
 	xfer_size = dev->xfer_size;
 	ftl_add_wptr(dev);
