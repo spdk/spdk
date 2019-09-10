@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "806ad9f1_1b802af0",
+        "filename": "lib/vhost/vhost_fs.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1016653
+      },
+      "writtenOn": "2019-09-10T08:45:05Z",
+      "side": 1,
+      "message": "In which case, positive_errno will be set EBUSY?",
+      "revId": "7bf1e44aa497bf1a751a2141b70b6894522cb2bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4af6e437_51a1d6da",
         "filename": "lib/vhost/vhost_fs.c",
         "patchSetId": 10
