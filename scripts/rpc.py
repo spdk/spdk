@@ -1354,12 +1354,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-b', '--base-bdevs', help='base bdevs name, whitespace separated list in quotes', required=True)
     p.set_defaults(func=bdev_raid_create)
 
-    def destroy_raid_bdev(args):
-        rpc.bdev.destroy_raid_bdev(args.client,
-                                   name=args.name)
-    p = subparsers.add_parser('destroy_raid_bdev', help='Destroy existing raid bdev')
+    def bdev_raid_delete(args):
+        rpc.bdev.bdev_raid_delete(args.client,
+                                  name=args.name)
+    p = subparsers.add_parser('bdev_raid_delete', aliases=['destroy_raid_bdev'],
+                              help='Delete existing raid bdev')
     p.add_argument('name', help='raid bdev name')
-    p.set_defaults(func=destroy_raid_bdev)
+    p.set_defaults(func=bdev_raid_delete)
 
     # split
     def bdev_split_create(args):

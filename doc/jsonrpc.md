@@ -5377,7 +5377,7 @@ Example response:
 }
 ~~~
 
-## destroy_raid_bdev {#rpc_destroy_raid_bdev}
+## bdev_raid_delete {#rpc_bdev_raid_delete}
 
 Removes RAID bdev.
 
@@ -5394,7 +5394,7 @@ Example request:
 ~~~
 {
   "jsonrpc": "2.0",
-  "method": "destroy_raid_bdev",
+  "method": "bdev_raid_delete",
   "id": 1,
   "params": {
     "name": "Raid0"

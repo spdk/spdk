@@ -120,7 +120,7 @@ fio_pid=$!
 sleep 3
 
 # Delete raid0 blockdev
-$rpc_py destroy_raid_bdev 'raid0'
+$rpc_py bdev_raid_delete 'raid0'
 
 # Delete all allocated malloc blockdevs
 for malloc_bdev in $malloc_bdevs; do
