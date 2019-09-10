@@ -19,6 +19,40 @@
     },
     {
       "key": {
+        "uuid": "30d7fbef_10c2e51e",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T22:13:57Z",
+      "side": 1,
+      "message": "construct_nvme_decoders",
+      "revId": "a0d5ba6ba088f52e70d86a3681b4e7a3df3cb6e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e20cea9_1054b54d",
+        "filename": "module/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T22:13:57Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct.  Or at least it could be a lot simpler.  You can just pass ctx-\u003ereq to this function.  Then in the loop, do:\n\nfree(req[i].trtype);",
+      "revId": "a0d5ba6ba088f52e70d86a3681b4e7a3df3cb6e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c33c2881_1f1e0821",
         "filename": "scripts/rpc.py",
         "patchSetId": 33
