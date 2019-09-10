@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdabaf29_fdade372",
+        "filename": "module/bdev/nvme/common.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T06:12:39Z",
+      "side": 1,
+      "message": "spdk_ prefix should not be used here, since this is not part of public API",
+      "revId": "93fb232d98683dcc6336c8eea6db1159eb74ad0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
