@@ -22,6 +22,30 @@
       "revId": "eaf0e33ca19eacb8dd35fe2968b3717bd12aa9c9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2db9062_8f316216",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-10T08:38:23Z",
+      "side": 1,
+      "message": "I think that works, just move io_u-\u003eddir \u003d\u003d DDIR_WRITE after the spdk_dif_ctx_init(), I can\u0027t remember why moving the condition out of that function through.",
+      "parentUuid": "08550ad8_5e6653dd",
+      "range": {
+        "startLine": 798,
+        "startChar": 30,
+        "endLine": 798,
+        "endChar": 54
+      },
+      "revId": "eaf0e33ca19eacb8dd35fe2968b3717bd12aa9c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
