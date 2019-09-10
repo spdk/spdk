@@ -483,7 +483,7 @@ each member disk.
 
 Example commands
 
-`rpc.py construct_raid_bdev -n Raid0 -z 64 -r 0 -b "lvol0 lvol1 lvol2 lvol3"`
+`rpc.py bdev_raid_create -n Raid0 -z 64 -r 0 -b "lvol0 lvol1 lvol2 lvol3"`
 
 `rpc.py bdev_raid_get_bdevs`
 
