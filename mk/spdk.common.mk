@@ -75,7 +75,7 @@ endif
 TARGET_ARCHITECTURE ?= $(CONFIG_ARCH)
 TARGET_MACHINE := $(firstword $(TARGET_TRIPLET_WORDS))
 
-COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
+COMMON_CFLAGS = $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
 ifneq ($(filter powerpc%,$(TARGET_MACHINE)),)
 COMMON_CFLAGS += -mcpu=$(TARGET_ARCHITECTURE)
@@ -182,7 +182,7 @@ endif
 endif
 
 ifeq ($(CONFIG_DEBUG), y)
-COMMON_CFLAGS += -DDEBUG -O0 -fno-omit-frame-pointer
+COMMON_CFLAGS += -g -DDEBUG -O0 -fno-omit-frame-pointer
 else
 COMMON_CFLAGS += -DNDEBUG -O2
 # Enable _FORTIFY_SOURCE checks - these only work when optimizations are enabled.
