@@ -44,7 +44,7 @@
 #define TEST_LBA		0x68676564
 
 static struct spdk_ocssd_geometry_data g_geo = {
-	.num_grp	= 4,
+	.num_grp	= 3,
 	.num_pu		= 3,
 	.num_chk	= 1500,
 	.clba		= 100,
@@ -53,8 +53,8 @@ static struct spdk_ocssd_geometry_data g_geo = {
 };
 
 static struct spdk_ftl_punit_range g_range = {
-	.begin		= 2,
-	.end		= 9,
+	.begin		= 0,
+	.end		= 8,
 };
 
 static struct spdk_ftl_dev		*g_dev;
