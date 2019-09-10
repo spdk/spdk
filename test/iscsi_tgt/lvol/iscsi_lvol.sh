@@ -50,7 +50,7 @@ for i in $(seq 1 $NUM_LVS); do
 		# construct RAID bdev and put its name in $bdev
 		malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 		malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-		$rpc_py construct_raid_bdev -n raid0 -z 64 -r 0 -b "$malloc_bdevs"
+		$rpc_py bdev_raid_create -n raid0 -z 64 -r 0 -b "$malloc_bdevs"
 		bdev="raid0"
 	else
 		# construct malloc bdev and put its name in $bdev
