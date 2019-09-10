@@ -469,8 +469,8 @@ class UIRoot(UINode):
         rpc.iscsi.set_iscsi_target_node_auth(self.client, **kwargs)
 
     @verbose
-    def target_node_add_lun(self, **kwargs):
-        rpc.iscsi.target_node_add_lun(self.client, **kwargs)
+    def iscsi_target_node_add_lun(self, **kwargs):
+        rpc.iscsi.iscsi_target_node_add_lun(self.client, **kwargs)
 
     @verbose
     def set_iscsi_discovery_auth(self, **kwargs):
