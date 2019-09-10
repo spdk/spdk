@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24f5a7c0_174332ee",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 33
+      },
+      "lineNbr": 1503,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T18:04:14Z",
+      "side": 1,
+      "message": "I think we\u0027re going to need a doc update somewhere and/or maybe changelog I\u0027m sure \"NVMe working mode\" is going to raise questions.  Example of \u0027standard doesn\u0027t say a whole lot either, what does standard mean? (as opposed to what?)",
+      "revId": "a0d5ba6ba088f52e70d86a3681b4e7a3df3cb6e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c33c2881_1f1e0821",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 33
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T18:04:14Z",
+      "side": 1,
+      "message": "same thing here wrt describing what \u0027mode\u0027 means",
+      "revId": "a0d5ba6ba088f52e70d86a3681b4e7a3df3cb6e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab190ffc_0771f629",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 33
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-10T18:04:14Z",
+      "side": 1,
+      "message": "same thing here, I would suggest wording if I thought I had a solid grasp on what it means now and potentially in the future (given it may become clearer as I move up the chain though)",
+      "revId": "a0d5ba6ba088f52e70d86a3681b4e7a3df3cb6e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
