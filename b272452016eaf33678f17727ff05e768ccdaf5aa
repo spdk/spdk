@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e39d977_e73a61e2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-09-10T22:00:54Z",
+      "side": 1,
+      "message": "very small nit but spdk_ should be removed from the commit message too :)\n\ndon\u0027t worry about updating this unless you have to rebase for other reasons though",
+      "revId": "b272452016eaf33678f17727ff05e768ccdaf5aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
