@@ -1,0 +1,141 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb416d2e_aeae3ace",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-10T09:18:39Z",
+      "side": 1,
+      "message": "Just num_alloc_wrs (\u003d num_extra_wrs_from_pool + 1) may simplify the code?",
+      "range": {
+        "startLine": 272,
+        "startChar": 13,
+        "endLine": 272,
+        "endChar": 36
+      },
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3a853f9_25846f2b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1660,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-10T09:18:39Z",
+      "side": 1,
+      "message": "Can we extract the whole block (line 1661 to 1683) from spdk_nvmf_rdma_request_fill_iovs() and expand it into the line around 1865?\n\nThen we can remove num_extra_wrs_from_pool from struct nvmf_rdma_request and allocate it as a local variable in spdk_nvmf_rdma_request_fill_iovs()?\n\n(I also asked if we can use num_alloc_wrs instead of num_extra_wrs_from_pool simply.)",
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42ed1742_9b26546e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-10T09:18:39Z",
+      "side": 1,
+      "message": "using i cause any issue?",
+      "range": {
+        "startLine": 1664,
+        "startChar": 11,
+        "endLine": 1664,
+        "endChar": 12
+      },
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7c58c48_335d21b2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1665,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-10T09:18:39Z",
+      "side": 1,
+      "message": "Will you add an empty line between 1665 and 1666?",
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb9edb95_e7c03eb1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1668,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-10T09:18:39Z",
+      "side": 1,
+      "message": "Will you insert an empty line between 1668 and 1669?",
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff7ea234_402db149",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1892,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-10T09:18:39Z",
+      "side": 1,
+      "message": "Using j may cause any issue?",
+      "range": {
+        "startLine": 1892,
+        "startChar": 3,
+        "endLine": 1892,
+        "endChar": 8
+      },
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62c7391d_cbaf3399",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1894,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-10T09:18:39Z",
+      "side": 1,
+      "message": "Will you insert an empty line between 1894 and 1895?",
+      "revId": "25030a494e8c36cbfae1befae68bd8f0e8742327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
