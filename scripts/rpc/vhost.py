@@ -133,8 +133,9 @@ def remove_vhost_controller(client, ctrlr):
     return client.call('remove_vhost_controller', params)
 
 
-def construct_virtio_dev(client, name, trtype, traddr, dev_type, vq_count=None, vq_size=None):
-    """Construct new virtio device using provided
+@deprecated_alias('construct_virtio_dev')
+def bdev_virtio_attach_controller(client, name, trtype, traddr, dev_type, vq_count=None, vq_size=None):
+    """Create new virtio device using provided
     transport type and device type.
     Args:
         name: name base for new created bdevs
@@ -155,7 +156,7 @@ def construct_virtio_dev(client, name, trtype, traddr, dev_type, vq_count=None, 
         params['vq_count'] = vq_count
     if vq_size:
         params['vq_size'] = vq_size
-    return client.call('construct_virtio_dev', params)
+    return client.call('bdev_virtio_attach_controller', params)
 
 
 @deprecated_alias('remove_virtio_bdev ')
