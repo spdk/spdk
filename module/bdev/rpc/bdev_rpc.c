@@ -354,33 +354,33 @@ spdk_rpc_bdev_get_bdevs(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("bdev_get_bdevs", spdk_rpc_bdev_get_bdevs, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_get_bdevs, get_bdevs)
 
-struct rpc_set_bdev_qd_sampling_period {
+struct rpc_bdev_set_qd_sampling_period {
 	char *name;
 	uint64_t period;
 };
 
 static void
-free_rpc_set_bdev_qd_sampling_period(struct rpc_set_bdev_qd_sampling_period *r)
+free_rpc_bdev_set_qd_sampling_period(struct rpc_bdev_set_qd_sampling_period *r)
 {
 	free(r->name);
 }
 
 static const struct spdk_json_object_decoder
-	rpc_set_bdev_qd_sampling_period_decoders[] = {
-	{"name", offsetof(struct rpc_set_bdev_qd_sampling_period, name), spdk_json_decode_string},
-	{"period", offsetof(struct rpc_set_bdev_qd_sampling_period, period), spdk_json_decode_uint64},
+	rpc_bdev_set_qd_sampling_period_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_set_qd_sampling_period, name), spdk_json_decode_string},
+	{"period", offsetof(struct rpc_bdev_set_qd_sampling_period, period), spdk_json_decode_uint64},
 };
 
 static void
-spdk_rpc_set_bdev_qd_sampling_period(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_set_qd_sampling_period(struct spdk_jsonrpc_request *request,
 				     const struct spdk_json_val *params)
 {
-	struct rpc_set_bdev_qd_sampling_period req = {0};
+	struct rpc_bdev_set_qd_sampling_period req = {0};
 	struct spdk_bdev *bdev;
 	struct spdk_json_write_ctx *w;
 
-	if (spdk_json_decode_object(params, rpc_set_bdev_qd_sampling_period_decoders,
-				    SPDK_COUNTOF(rpc_set_bdev_qd_sampling_period_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_set_qd_sampling_period_decoders,
+				    SPDK_COUNTOF(rpc_bdev_set_qd_sampling_period_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -402,11 +402,13 @@ spdk_rpc_set_bdev_qd_sampling_period(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 
 cleanup:
-	free_rpc_set_bdev_qd_sampling_period(&req);
+	free_rpc_bdev_set_qd_sampling_period(&req);
 }
-SPDK_RPC_REGISTER("set_bdev_qd_sampling_period",
-		  spdk_rpc_set_bdev_qd_sampling_period,
+SPDK_RPC_REGISTER("bdev_set_qd_sampling_period",
+		  spdk_rpc_bdev_set_qd_sampling_period,
 		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_set_qd_sampling_period,
+				   set_bdev_qd_sampling_period)
 
 struct rpc_set_bdev_qos_limit {
 	char		*name;
