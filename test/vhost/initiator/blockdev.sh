@@ -63,7 +63,7 @@ function create_bdev_config()
 		error "Nvme0n1 bdev not found!"
 	fi
 
-	$RPC_PY construct_split_vbdev Nvme0n1 6
+	$RPC_PY bdev_split_create Nvme0n1 6
 
 	$RPC_PY construct_vhost_scsi_controller naa.Nvme0n1_scsi0.0
 	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1_scsi0.0 0 Nvme0n1p0

@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 bdev_dict = OrderedDict()
 bdev_dict["set_bdev_options"] = []
-bdev_dict["construct_split_vbdev"] = []
+bdev_dict["bdev_split_create"] = []
 bdev_dict["bdev_nvme_set_options"] = []
 bdev_dict["bdev_nvme_attach_controller"] = []
 bdev_dict["bdev_nvme_set_hotplug"] = []
@@ -285,7 +285,7 @@ def get_split_bdev_json(config, section):
                 "split_size_mb": split_size_mb,
                 "split_count": split_count
             },
-            "method": "construct_split_vbdev"
+            "method": "bdev_split_create"
         })
 
     return split_json

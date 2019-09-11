@@ -640,8 +640,9 @@ def bdev_passthru_delete(client, name):
     return client.call('bdev_passthru_delete', params)
 
 
-def construct_split_vbdev(client, base_bdev, split_count, split_size_mb=None):
-    """Construct split block devices from a base bdev.
+@deprecated_alias('construct_split_vbdev')
+def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
+    """Create split block devices from a base bdev.
 
     Args:
         base_bdev: name of bdev to split
@@ -658,7 +659,7 @@ def construct_split_vbdev(client, base_bdev, split_count, split_size_mb=None):
     if split_size_mb:
         params['split_size_mb'] = split_size_mb
 
-    return client.call('construct_split_vbdev', params)
+    return client.call('bdev_split_create', params)
 
 
 def destruct_split_vbdev(client, base_bdev):

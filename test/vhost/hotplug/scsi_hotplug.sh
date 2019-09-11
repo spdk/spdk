@@ -63,13 +63,13 @@ notice "running SPDK"
 notice ""
 vhost_run 0
 $rpc_py bdev_nvme_set_hotplug -e
-$rpc_py construct_split_vbdev Nvme0n1 16
+$rpc_py bdev_split_create Nvme0n1 16
 $rpc_py bdev_malloc_create 128 512 -b Malloc
-$rpc_py construct_split_vbdev Malloc 4
-$rpc_py construct_split_vbdev HotInNvme0n1 2
-$rpc_py construct_split_vbdev HotInNvme1n1 2
-$rpc_py construct_split_vbdev HotInNvme2n1 2
-$rpc_py construct_split_vbdev HotInNvme3n1 2
+$rpc_py bdev_split_create Malloc 4
+$rpc_py bdev_split_create HotInNvme0n1 2
+$rpc_py bdev_split_create HotInNvme1n1 2
+$rpc_py bdev_split_create HotInNvme2n1 2
+$rpc_py bdev_split_create HotInNvme3n1 2
 $rpc_py bdev_get_bdevs
 
 if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
