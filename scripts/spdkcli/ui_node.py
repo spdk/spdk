@@ -541,7 +541,7 @@ class UIVirtioBlkBdev(UIBdev):
         Arguments:
         name - Is a unique identifier of the virtio scsi bdev to be deleted - UUID number or name alias.
         """
-        self.get_root().remove_virtio_bdev(name=name)
+        self.get_root().bdev_virtio_detach_controller(name=name)
 
 
 class UIVirtioScsiBdev(UIBdev):
@@ -569,7 +569,7 @@ class UIVirtioScsiBdev(UIBdev):
         self.shell.log.info(ret)
 
     def ui_command_delete(self, name):
-        self.get_root().remove_virtio_bdev(name=name)
+        self.get_root().bdev_virtio_detach_controller(name=name)
 
 
 class UIBdevObj(UINode):
