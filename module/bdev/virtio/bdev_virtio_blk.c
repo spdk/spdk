@@ -321,7 +321,7 @@ bdev_virtio_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "construct_virtio_dev");
+	spdk_json_write_named_string(w, "method", "bdev_virtio_attach_controller");
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bvdev->vdev.name);
