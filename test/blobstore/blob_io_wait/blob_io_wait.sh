@@ -40,7 +40,7 @@ bdev_perf_pid=$!
 waitforlisten $bdev_perf_pid
 $rpc_py bdev_enable_histogram aio0 -e
 sleep 2
-$rpc_py get_bdev_histogram aio0 | $rootdir/scripts/histogram.py
+$rpc_py bdev_get_histogram aio0 | $rootdir/scripts/histogram.py
 $rpc_py bdev_enable_histogram aio0 -d
 wait $bdev_perf_pid
 
@@ -49,7 +49,7 @@ bdev_perf_pid=$!
 waitforlisten $bdev_perf_pid
 $rpc_py bdev_enable_histogram aio0 -e
 sleep 2
-$rpc_py get_bdev_histogram aio0 | $rootdir/scripts/histogram.py
+$rpc_py bdev_get_histogram aio0 | $rootdir/scripts/histogram.py
 $rpc_py bdev_enable_histogram aio0 -d
 wait $bdev_perf_pid
 

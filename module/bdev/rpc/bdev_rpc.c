@@ -568,16 +568,16 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_enable_histogram, enable_bdev_histogram)
 
 /* SPDK_RPC_GET_BDEV_HISTOGRAM */
 
-struct rpc_get_bdev_histogram_request {
+struct rpc_bdev_get_histogram_request {
 	char *name;
 };
 
-static const struct spdk_json_object_decoder rpc_get_bdev_histogram_request_decoders[] = {
-	{"name", offsetof(struct rpc_get_bdev_histogram_request, name), spdk_json_decode_string}
+static const struct spdk_json_object_decoder rpc_bdev_get_histogram_request_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_get_histogram_request, name), spdk_json_decode_string}
 };
 
 static void
-free_rpc_get_bdev_histogram_request(struct rpc_get_bdev_histogram_request *r)
+free_rpc_bdev_get_histogram_request(struct rpc_bdev_get_histogram_request *r)
 {
 	free(r->name);
 }
@@ -630,15 +630,15 @@ invalid:
 }
 
 static void
-spdk_rpc_get_bdev_histogram(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_get_histogram(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_get_bdev_histogram_request req = {NULL};
+	struct rpc_bdev_get_histogram_request req = {NULL};
 	struct spdk_histogram_data *histogram;
 	struct spdk_bdev *bdev;
 
-	if (spdk_json_decode_object(params, rpc_get_bdev_histogram_request_decoders,
-				    SPDK_COUNTOF(rpc_get_bdev_histogram_request_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_get_histogram_request_decoders,
+				    SPDK_COUNTOF(rpc_bdev_get_histogram_request_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -661,7 +661,8 @@ spdk_rpc_get_bdev_histogram(struct spdk_jsonrpc_request *request,
 	spdk_bdev_histogram_get(bdev, histogram, _spdk_rpc_bdev_histogram_data_cb, request);
 
 cleanup:
-	free_rpc_get_bdev_histogram_request(&req);
+	free_rpc_bdev_get_histogram_request(&req);
 }
 
-SPDK_RPC_REGISTER("get_bdev_histogram", spdk_rpc_get_bdev_histogram, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_get_histogram", spdk_rpc_bdev_get_histogram, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_get_histogram, get_bdev_histogram)
