@@ -84,7 +84,7 @@ pid=$!
 trap 'rm -f $testdir/perf.job; killprocess $pid; print_backtrace; exit 1' ERR SIGTERM SIGABRT
 waitforlisten "$pid" "$testdir/rpc_iscsi.sock"
 $rpc_py iscsi_set_options -b "iqn.2016-06.io.spdk" -f "/usr/local/etc/spdk/auth.conf" -o 30 -i -l 0 -a 16
-$rpc_py start_subsystem_init
+$rpc_py framework_start_init
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 sleep 1
 timing_exit run_iscsi_app

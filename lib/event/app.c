@@ -1056,7 +1056,7 @@ spdk_app_usage(void)
 }
 
 static void
-spdk_rpc_start_subsystem_init_cpl(int rc, void *arg1)
+spdk_rpc_framework_start_init_cpl(int rc, void *arg1)
 {
 	struct spdk_jsonrpc_request *request = arg1;
 	struct spdk_json_write_ctx *w;
@@ -1065,7 +1065,7 @@ spdk_rpc_start_subsystem_init_cpl(int rc, void *arg1)
 
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "subsystem_initialization failed");
+						 "framework_initialization failed");
 		return;
 	}
 
@@ -1078,18 +1078,19 @@ spdk_rpc_start_subsystem_init_cpl(int rc, void *arg1)
 }
 
 static void
-spdk_rpc_start_subsystem_init(struct spdk_jsonrpc_request *request,
+spdk_rpc_framework_start_init(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "start_subsystem_init requires no parameters");
+						 "framework_start_init requires no parameters");
 		return;
 	}
 
-	spdk_subsystem_init(spdk_rpc_start_subsystem_init_cpl, request);
+	spdk_subsystem_init(spdk_rpc_framework_start_init_cpl, request);
 }
-SPDK_RPC_REGISTER("start_subsystem_init", spdk_rpc_start_subsystem_init, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("framework_start_init", spdk_rpc_framework_start_init, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_start_init, start_subsystem_init)
 
 struct subsystem_init_poller_ctx {
 	struct spdk_poller *init_poller;
