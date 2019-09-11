@@ -21,7 +21,7 @@ pid=$!
 echo "iSCSI target launched. pid: $pid"
 trap 'killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $pid
-$rpc_py set_iscsi_options -o 30 -a 4
+$rpc_py iscsi_set_options -o 30 -a 4
 # Minimal number of bdev io pool (5) and cache (1)
 $rpc_py set_bdev_options -p 5 -c 1
 $rpc_py start_subsystem_init

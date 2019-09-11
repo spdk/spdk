@@ -9,7 +9,7 @@
         "max_sessions": 256,
         "error_recovery_level": 2
       },
-      "method": "set_iscsi_options"
+      "method": "iscsi_set_options"
     }
   ]
 }
