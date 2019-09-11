@@ -810,10 +810,10 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		if (!g_spdk_enable_sgl) {
 			rc = spdk_nvme_ns_cmd_read_with_md(ns, fio_qpair->qpair, io_u->buf, md_buf, lba, lba_count,
 							   spdk_fio_completion_cb, fio_req,
-							   dif_ctx->dif_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
+							   fio_qpair->io_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
 		} else {
 			rc = spdk_nvme_ns_cmd_readv_with_md(ns, fio_qpair->qpair, lba,
-							    lba_count, spdk_fio_completion_cb, fio_req, dif_ctx->dif_flags,
+							    lba_count, spdk_fio_completion_cb, fio_req, fio_qpair->io_flags,
 							    spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
 							    dif_ctx->apptag_mask, dif_ctx->app_tag);
 		}
@@ -823,10 +823,10 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 			rc = spdk_nvme_ns_cmd_write_with_md(ns, fio_qpair->qpair, io_u->buf, md_buf, lba,
 							    lba_count,
 							    spdk_fio_completion_cb, fio_req,
-							    dif_ctx->dif_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
+							    fio_qpair->io_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
 		} else {
 			rc = spdk_nvme_ns_cmd_writev_with_md(ns, fio_qpair->qpair, lba,
-							     lba_count, spdk_fio_completion_cb, fio_req, dif_ctx->dif_flags,
+							     lba_count, spdk_fio_completion_cb, fio_req, fio_qpair->io_flags,
 							     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
 							     dif_ctx->apptag_mask, dif_ctx->app_tag);
 		}
