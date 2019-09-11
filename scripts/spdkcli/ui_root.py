@@ -235,8 +235,8 @@ class UIRoot(UINode):
         return response
 
     @verbose
-    def delete_rbd_bdev(self, **kwargs):
-        response = rpc.bdev.delete_rbd_bdev(self.client, **kwargs)
+    def bdev_rbd_delete(self, **kwargs):
+        response = rpc.bdev.bdev_rbd_delete(self.client, **kwargs)
         return response
 
     @verbose
