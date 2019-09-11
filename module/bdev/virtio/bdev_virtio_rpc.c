@@ -100,14 +100,14 @@ SPDK_RPC_REGISTER("bdev_virtio_detach_controller",
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_virtio_detach_controller, remove_virtio_bdev)
 
 static void
-spdk_rpc_get_virtio_scsi_devs(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+spdk_rpc_bdev_virtio_scsi_get_devices(struct spdk_jsonrpc_request *request,
+				      const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_virtio_scsi_devs requires no parameters");
+						 "bdev_virtio_scsi_get_devices requires no parameters");
 		return;
 	}
 
@@ -115,7 +115,9 @@ spdk_rpc_get_virtio_scsi_devs(struct spdk_jsonrpc_request *request,
 	bdev_virtio_scsi_dev_list(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_virtio_scsi_devs", spdk_rpc_get_virtio_scsi_devs, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_virtio_scsi_get_devices",
+		  spdk_rpc_bdev_virtio_scsi_get_devices, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_virtio_scsi_get_devices, get_virtio_scsi_devs)
 
 struct rpc_construct_virtio_dev {
 	char *name;
