@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -284,6 +284,7 @@ struct spdk_bdev_desc {
 	bool				remove_scheduled;
 	bool				closed;
 	bool				write;
+	uint32_t			refs;
 	TAILQ_ENTRY(spdk_bdev_desc)	link;
 };
 
@@ -2647,9 +2648,27 @@ spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period)
 	}
 }
 
+static void
+_update_notify(void *arg)
+{
+	struct spdk_bdev_desc *desc = arg;
+
+	__sync_fetch_and_sub(&desc->refs, 1);
+	if (desc->closed) {
+		if (0 == desc->refs) {
+			free(desc);
+		}
+	} else if (desc->callback.open_with_ext) {
+		desc->callback.event_fn(SPDK_BDEV_EVENT_CHANGE,
+					desc->bdev,
+					desc->callback.ctx);
+	}
+}
+
 int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 {
+	struct spdk_bdev_desc *desc;
 	int ret;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
@@ -2660,6 +2679,12 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 		ret = -EBUSY;
 	} else {
 		bdev->blockcnt = size;
+		TAILQ_FOREACH(desc, &bdev->internal.open_descs, link) {
+			if (!desc->closed && !desc->remove_scheduled) {
+				__sync_fetch_and_add(&desc->refs, 1);
+				spdk_thread_send_msg(desc->thread, _update_notify, desc);
+			}
+		}
 		ret = 0;
 	}
 
@@ -4195,10 +4220,13 @@ _remove_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
 
+	__sync_fetch_and_sub(&desc->refs, 1);
 	desc->remove_scheduled = false;
 
 	if (desc->closed) {
-		free(desc);
+		if (0 == desc->refs) {
+			free(desc);
+		}
 	} else {
 		if (desc->callback.open_with_ext) {
 			desc->callback.event_fn(SPDK_BDEV_EVENT_REMOVE, desc->bdev, desc->callback.ctx);
@@ -4228,6 +4256,7 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 		 */
 		if (!desc->remove_scheduled) {
 			/* Avoid scheduling removal of the same descriptor multiple times. */
+			__sync_fetch_and_add(&desc->refs, 1);
 			desc->remove_scheduled = true;
 			spdk_thread_send_msg(desc->thread, _remove_notify, desc);
 		}
@@ -4444,7 +4473,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 
 	desc->closed = true;
 
-	if (!desc->remove_scheduled) {
+	if (!desc->remove_scheduled && (0 == desc->refs)) {
 		free(desc);
 	}
 
