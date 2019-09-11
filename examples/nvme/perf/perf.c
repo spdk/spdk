@@ -1499,7 +1499,7 @@ parse_metadata(const char *metacfg_str)
 
 		if (strcmp(key, "PRACT") == 0) {
 			if (*val == '1') {
-				g_metacfg_prchk_flags = SPDK_NVME_IO_FLAGS_PRACT;
+				g_metacfg_pract_flag = SPDK_NVME_IO_FLAGS_PRACT;
 			}
 		} else if (strcmp(key, "PRCHK") == 0) {
 			if (strstr(val, "GUARD") != NULL) {
