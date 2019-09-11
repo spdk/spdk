@@ -570,14 +570,14 @@ if __name__ == "__main__":
     p.add_argument('name', help='pass through bdev name')
     p.set_defaults(func=delete_passthru_bdev)
 
-    def get_bdevs(args):
-        print_dict(rpc.bdev.get_bdevs(args.client,
-                                      name=args.name))
+    def bdev_get_bdevs(args):
+        print_dict(rpc.bdev.bdev_get_bdevs(args.client,
+                                           name=args.name))
 
-    p = subparsers.add_parser(
-        'get_bdevs', help='Display current blockdev list or required blockdev')
+    p = subparsers.add_parser('bdev_get_bdevs', aliases=['get_bdevs'],
+                              help='Display current blockdev list or required blockdev')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
-    p.set_defaults(func=get_bdevs)
+    p.set_defaults(func=bdev_get_bdevs)
 
     def bdev_get_iostat(args):
         print_dict(rpc.bdev.bdev_get_iostat(args.client,

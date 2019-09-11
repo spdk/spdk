@@ -55,7 +55,7 @@ timing_exit start_iscsi_tgt
 
 $rpc_config_py $rpc_py $TARGET_IP $INITIATOR_IP $ISCSI_PORT $NETMASK $TARGET_NAMESPACE $TEST_TYPE
 
-$rpc_py get_bdevs
+$rpc_py bdev_get_bdevs
 
 trap - SIGINT SIGTERM EXIT
 

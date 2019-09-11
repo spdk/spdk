@@ -77,7 +77,7 @@ function blk_ro_tc1()
 		disk=$disk_name
 	else
 		disk_name=${disk%%_*}
-		if ! $rpc_py get_bdevs | jq -r '.[] .name' | grep -qi $disk_name$; then
+		if ! $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qi $disk_name$; then
 			fail "$disk_name bdev not found!"
 		fi
 	fi

@@ -26,14 +26,14 @@ Status 200 with resultant JSON object included on success.
 
 ## Client side
 
-Below is a sample python script acting as a client side. It sends `get_bdevs` method with optional `name` parameter and prints JSON object returned from remote_rpc script.
+Below is a sample python script acting as a client side. It sends `bdev_get_bdevs` method with optional `name` parameter and prints JSON object returned from remote_rpc script.
 
 ~~~
 import json
 import requests
 
 if __name__ == '__main__':
-	payload = {'id':1, 'method': 'get_bdevs', 'params': {'name': 'Malloc0'}}
+	payload = {'id':1, 'method': 'bdev_get_bdevs', 'params': {'name': 'Malloc0'}}
 	url = 'http://192.168.0.2:8000/'
 	req = requests.post(url,
                         data=json.dumps(payload),
