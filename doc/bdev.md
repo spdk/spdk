@@ -115,9 +115,9 @@ Example command
 
 This command will create a bdev that represents the 'foo' image from a pool called 'rbd'.
 
-To remove a block device representation use the delete_rbd_bdev command.
+To remove a block device representation use the bdev_rbd_delete command.
 
-`rpc.py delete_rbd_bdev Rbd0`
+`rpc.py bdev_rbd_delete Rbd0`
 
 # Compression Virtual Bdev Module {#bdev_config_compress}
 

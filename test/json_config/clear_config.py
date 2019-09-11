@@ -30,25 +30,25 @@ def get_bdev_name(bdev):
     return bdev_name
 
 
-def get_bdev_destroy_method(bdev):
-    destroy_method_map = {'bdev_malloc_create': "bdev_malloc_delete",
-                          'bdev_null_create': "bdev_null_delete",
-                          'bdev_rbd_create': "delete_rbd_bdev",
-                          'bdev_pmem_create': "bdev_pmem_delete",
-                          'bdev_aio_create': "bdev_aio_delete",
-                          'bdev_error_create': "bdev_error_delete",
-                          'construct_split_vbdev': "destruct_split_vbdev",
-                          'construct_virtio_dev': "remove_virtio_bdev",
-                          'bdev_crypto_create': "bdev_crypto_delete",
-                          'bdev_delay_create': "bdev_delay_delete",
-                          'construct_passthru_bdev': "delete_passthru_bdev",
-                          'bdev_compress_create': 'bdev_compress_delete',
-                          }
+def get_bdev_delete_method(bdev):
+    delete_method_map = {'bdev_malloc_create': "bdev_malloc_delete",
+                         'bdev_null_create': "bdev_null_delete",
+                         'bdev_rbd_create': "bdev_rbd_delete",
+                         'bdev_pmem_create': "bdev_pmem_delete",
+                         'bdev_aio_create': "bdev_aio_delete",
+                         'bdev_error_create': "bdev_error_delete",
+                         'construct_split_vbdev': "destruct_split_vbdev",
+                         'construct_virtio_dev': "remove_virtio_bdev",
+                         'bdev_crypto_create': "bdev_crypto_delete",
+                         'bdev_delay_create': "bdev_delay_delete",
+                         'construct_passthru_bdev': "delete_passthru_bdev",
+                         'bdev_compress_create': 'bdev_compress_delete',
+                         }
     destroy_method = None
     if 'method' in bdev:
         construct_method = bdev['method']
-        if construct_method in list(destroy_method_map.keys()):
-            destroy_method = destroy_method_map[construct_method]
+        if construct_method in list(delete_method_map.keys()):
+            destroy_method = delete_method_map[construct_method]
 
     return destroy_method
 
@@ -58,7 +58,7 @@ def clear_bdev_subsystem(args, bdev_config):
     for bdev in bdev_config:
         bdev_name_key = get_bdev_name_key(bdev)
         bdev_name = get_bdev_name(bdev)
-        destroy_method = get_bdev_destroy_method(bdev)
+        destroy_method = get_bdev_delete_method(bdev)
         if destroy_method:
             args.client.call(destroy_method, {bdev_name_key: bdev_name})
 
@@ -71,9 +71,9 @@ def clear_bdev_subsystem(args, bdev_config):
 
 
 def get_nvmf_destroy_method(nvmf):
-    destroy_method_map = {'nvmf_subsystem_create': "delete_nvmf_subsystem"}
+    delete_method_map = {'nvmf_subsystem_create': "delete_nvmf_subsystem"}
     try:
-        return destroy_method_map[nvmf['method']]
+        return delete_method_map[nvmf['method']]
     except KeyError:
         return None
 
@@ -86,12 +86,12 @@ def clear_nvmf_subsystem(args, nvmf_config):
 
 
 def get_iscsi_destroy_method(iscsi):
-    destroy_method_map = {'iscsi_create_portal_group': "iscsi_delete_portal_group",
+    delete_method_map = {'iscsi_create_portal_group': "iscsi_delete_portal_group",
                           'add_initiator_group': "delete_initiator_group",
                           'iscsi_create_target_node': "delete_target_node",
                           'set_iscsi_options': None
                           }
-    return destroy_method_map[iscsi['method']]
+    return delete_method_map[iscsi['method']]
 
 
 def get_iscsi_name(iscsi):
@@ -116,9 +116,9 @@ def clear_iscsi_subsystem(args, iscsi_config):
 
 
 def get_nbd_destroy_method(nbd):
-    destroy_method_map = {'start_nbd_disk': "stop_nbd_disk"
+    delete_method_map = {'start_nbd_disk': "stop_nbd_disk"
                           }
-    return destroy_method_map[nbd['method']]
+    return delete_method_map[nbd['method']]
 
 
 def clear_nbd_subsystem(args, nbd_config):
