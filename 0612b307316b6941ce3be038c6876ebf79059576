@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e4ed17a_6e148673",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "destroy_raid --\u003e deleting a raid bdev",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c220886_b03a94b0",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "destruction --\u003e deletion",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46717d9e_c1e49373",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "destroy --\u003e delete",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25133bd2_be271de1",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "destroy -\u003e delete",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d1f06bc_858d0c39",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "destroying -\u003e deleting",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8028a3eb_8128f07e",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1349,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "Destroy -\u003e Delete",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb4c42aa_f81e3ed7",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "Destroy -\u003e Delete",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "457ed742_4f026760",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1149,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "destroy_req -\u003e delete_req",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b655dbc6_65a52302",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1163,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "delete_req",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f4e15d0_46a9f62d",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1175,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "destroy_req -\u003e delete_req",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a50e16a9_65ac0a3a",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1189,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T18:39:16Z",
+      "side": 1,
+      "message": "delete_req",
+      "revId": "0612b307316b6941ce3be038c6876ebf79059576",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
