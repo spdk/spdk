@@ -48,7 +48,7 @@
             "traddr": "naa.vhost.0",
             "vq_count": 8
           },
-          "method": "construct_virtio_dev"
+          "method": "bdev_virtio_attach_controller"
         },
         {
           "params": {
@@ -59,7 +59,7 @@
             "traddr": "naa.vhost.1",
             "vq_count": 8
           },
-          "method": "construct_virtio_dev"
+          "method": "bdev_virtio_attach_controller"
         },
         {
           "params": {
@@ -70,7 +70,7 @@
             "traddr": "vhost.1",
             "vq_count": 1
           },
-          "method": "construct_virtio_dev"
+          "method": "bdev_virtio_attach_controller"
         }
       ]
     },

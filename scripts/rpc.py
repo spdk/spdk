@@ -1879,18 +1879,20 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('ctrlr', help='controller name')
     p.set_defaults(func=remove_vhost_controller)
 
-    def construct_virtio_dev(args):
-        print_array(rpc.vhost.construct_virtio_dev(args.client,
-                                                   name=args.name,
-                                                   trtype=args.trtype,
-                                                   traddr=args.traddr,
-                                                   dev_type=args.dev_type,
-                                                   vq_count=args.vq_count,
-                                                   vq_size=args.vq_size))
+    def bdev_virtio_attach_controller(args):
+        print_array(rpc.vhost.bdev_virtio_attach_controller(args.client,
+                                                            name=args.name,
+                                                            trtype=args.trtype,
+                                                            traddr=args.traddr,
+                                                            dev_type=args.dev_type,
+                                                            vq_count=args.vq_count,
+                                                            vq_size=args.vq_size))
 
-    p = subparsers.add_parser('construct_virtio_dev', help="""Construct new virtio device using provided
-    transport type and device type. In case of SCSI device type this implies scan and add bdevs offered by
-    remote side. Result is array of added bdevs.""")
+    p = subparsers.add_parser('bdev_virtio_attach_controller', aliases=['construct_virtio_dev'],
+                              help="""Attach virtio controller using provided
+    transport type and device type. This will also create bdevs for any block devices connected to the
+    controller (for example, SCSI devices for a virtio-scsi controller).
+    Result is array of added bdevs.""")
     p.add_argument('name', help="Use this name as base for new created bdevs")
     p.add_argument('-t', '--trtype',
                    help='Virtio target transport type: pci or user', required=True)
@@ -1900,7 +1902,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help='Device type: blk or scsi', required=True)
     p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=int)
     p.add_argument('--vq-size', help='Size of each queue', type=int)
-    p.set_defaults(func=construct_virtio_dev)
+    p.set_defaults(func=bdev_virtio_attach_controller)
 
     def bdev_virtio_scsi_get_devices(args):
         print_dict(rpc.vhost.bdev_virtio_scsi_get_devices(args.client))
