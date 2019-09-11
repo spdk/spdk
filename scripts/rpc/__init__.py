@@ -21,9 +21,10 @@ from . import client as rpc_client
 from .helpers import deprecated_alias
 
 
-def start_subsystem_init(client):
+@deprecated_alias('start_subsystem_init')
+def framework_start_init(client):
     """Start initialization of subsystems"""
-    return client.call('start_subsystem_init')
+    return client.call('framework_start_init')
 
 
 def wait_subsystem_init(client):
@@ -98,8 +99,8 @@ def load_config(client, fd, include_aliases=False):
 
     # check if methods in the config file are known
     allowed_methods = client.call('rpc_get_methods', {'include_aliases': include_aliases})
-    if not subsystems and 'start_subsystem_init' in allowed_methods:
-        start_subsystem_init(client)
+    if not subsystems and 'framework_start_init' in allowed_methods:
+        framework_start_init(client)
         return
 
     for subsystem in list(subsystems):
@@ -126,8 +127,8 @@ def load_config(client, fd, include_aliases=False):
             if not config:
                 subsystems.remove(subsystem)
 
-        if 'start_subsystem_init' in allowed_methods:
-            start_subsystem_init(client)
+        if 'framework_start_init' in allowed_methods:
+            framework_start_init(client)
             allowed_found = True
 
         if not allowed_found:

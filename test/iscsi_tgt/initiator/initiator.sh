@@ -24,7 +24,7 @@ echo "iSCSI target launched. pid: $pid"
 trap 'killprocess $pid;exit 1' SIGINT SIGTERM EXIT
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 4
-$rpc_py start_subsystem_init
+$rpc_py framework_start_init
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt

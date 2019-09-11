@@ -80,8 +80,8 @@ subsystem initialization. This state is called `STARTUP`. The JSON RPC server is
 ready but only a small subsystem of commands are available to set up initialization
 parameters. Those parameters can't be changed after the SPDK application enters
 `RUNTIME` state. When the client finishes configuring the SPDK subsystems it
-needs to issue the @ref rpc_start_subsystem_init RPC command to begin the
-initialization process. After `rpc_start_subsystem_init` returns `true` SPDK
+needs to issue the @ref rpc_framework_start_init RPC command to begin the
+initialization process. After `rpc_framework_start_init` returns `true` SPDK
 will enter the `RUNTIME` state and the list of available commands becomes much
 larger.
 
