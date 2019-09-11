@@ -253,7 +253,7 @@ else
 		trap 'cleanup_split_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
 		split_bdevs=()
 		for (( i=0; i<$max_disks; i++ ));do
-			out=$($rpc_py construct_split_vbdev Nvme${i}n1 ${splits[$i]})
+			out=$($rpc_py bdev_split_create Nvme${i}n1 ${splits[$i]})
 			for s in $(seq 0 $((${splits[$i]}-1))); do
 				split_bdevs+=("Nvme${i}n1p${s}")
 			done
