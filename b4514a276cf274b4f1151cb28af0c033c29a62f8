@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "f71a7f7b_e7ea7609",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-11T17:04:09Z",
+      "side": 1,
+      "message": "Extra line",
+      "revId": "b4514a276cf274b4f1151cb28af0c033c29a62f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50d4a611_b2bc11ab",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-11T17:04:09Z",
+      "side": 1,
+      "message": "Instead of doing two loads here (rqpair-\u003eevt and event \u003d rqpair-\u003eevt), do one at the top:\n\nevent \u003d rqpair-\u003eevt;\n\nif (event \u003d\u003d NULL) {\n    return 0;\n}\n\nswitch (event-\u003eevent) {\n...\n}",
+      "revId": "b4514a276cf274b4f1151cb28af0c033c29a62f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4da60ed6_65f0e79c",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 6
@@ -19,6 +53,23 @@
         "endLine": 242,
         "endChar": 24
       },
+      "revId": "b4514a276cf274b4f1151cb28af0c033c29a62f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4dc4946e_aee43eb3",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-11T17:04:09Z",
+      "side": 1,
+      "message": "Use the pointer that\u0027s already on the stack (event)",
       "revId": "b4514a276cf274b4f1151cb28af0c033c29a62f8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
