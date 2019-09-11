@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc19ad55_57fb5c9b",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T17:09:35Z",
+      "side": 1,
+      "message": "\"construct_raid\" just a comment but should update with the new full name  to be consistent",
+      "revId": "c64f63ca9b331e45a0442dae038af95cc533e3ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "239565d4_d85d0249",
+        "filename": "module/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T17:09:35Z",
+      "side": 1,
+      "message": "\"construct_raids\" --\u003e creating RAID bdevs (or something like that).  Lets just get rid of the word construct",
+      "revId": "c64f63ca9b331e45a0442dae038af95cc533e3ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cec57659_0ebb72a7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T17:09:35Z",
+      "side": 1,
+      "message": "Construct --\u003e Create",
+      "revId": "c64f63ca9b331e45a0442dae038af95cc533e3ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d90084f5_aa48ef2d",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T17:09:35Z",
+      "side": 1,
+      "message": "Construct --\u003e Create",
+      "revId": "c64f63ca9b331e45a0442dae038af95cc533e3ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
