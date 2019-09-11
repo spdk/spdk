@@ -432,8 +432,9 @@ def delete_nvme_controller(client, name):
     return client.call('delete_nvme_controller', params)
 
 
-def construct_rbd_bdev(client, pool_name, rbd_name, block_size, name=None, user=None, config=None):
-    """Construct a Ceph RBD block device.
+@deprecated_alias('construct_rbd_bdev')
+def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None):
+    """Create a Ceph RBD block device.
 
     Args:
         pool_name: Ceph RBD pool name
@@ -459,7 +460,7 @@ def construct_rbd_bdev(client, pool_name, rbd_name, block_size, name=None, user=
     if config is not None:
         params['config'] = config
 
-    return client.call('construct_rbd_bdev', params)
+    return client.call('bdev_rbd_create', params)
 
 
 def delete_rbd_bdev(client, name):
