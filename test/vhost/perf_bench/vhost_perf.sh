@@ -87,7 +87,7 @@ function cleanup_split_cfg()
 {
 	notice "Removing split vbdevs"
 	for (( i=0; i<$max_disks; i++ ));do
-		$rpc_py destruct_split_vbdev Nvme${i}n1
+		$rpc_py bdev_split_delete Nvme${i}n1
 	done
 }
 

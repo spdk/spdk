@@ -122,8 +122,8 @@ class UIRoot(UINode):
         return self.print_array(response)
 
     @verbose
-    def destruct_split_bdev(self, **kwargs):
-        rpc.bdev.destruct_split_vbdev(self.client, **kwargs)
+    def bdev_split_delete(self, **kwargs):
+        rpc.bdev.bdev_split_delete(self.client, **kwargs)
 
     @verbose
     def create_malloc_bdev(self, **kwargs):
