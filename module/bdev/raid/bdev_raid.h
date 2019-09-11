@@ -36,6 +36,10 @@
 
 #include "spdk/bdev_module.h"
 
+#define RAID0 0
+#define RAID1E 1
+#define MAX_NUM_COPIES 6
+
 /*
  * Raid state describes the state of the raid. This raid bdev can be either in
  * configured list or configuring list
@@ -116,8 +120,8 @@ struct raid_fn_table {
 	void (*start_rw_request)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 	void (*waitq_io_process)(void *ctx);
 	uint8_t (*get_curr_base_index)(struct raid_bdev *raid_bdev, struct raid_bdev_io *raid_io);
-	void (*get_io_range)(struct raid_bdev_io_range *io_range,
-			     uint8_t num_base_bdevs, uint64_t strip_size, uint64_t strip_size_shift,
+	void (*get_io_range)(struct raid_bdev_io_range io_range[MAX_NUM_COPIES],
+			     struct raid_bdev *raid_bdev,
 			     uint64_t offset_blocks, uint64_t num_blocks);
 	void (*split_io_range)(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
 			       uint64_t *_offset_in_disk, uint64_t *_nblocks_in_disk);
@@ -168,6 +172,12 @@ struct raid_bdev {
 	/* Raid Level of this raid bdev */
 	uint8_t				raid_level;
 
+	/* Number of data copies for this raid bdev */
+	uint8_t				num_copies;
+
+	/* The most recent data copy that was read from for RAID1E */
+	uint8_t				most_recent;
+
 	/* Set to true if destruct is called for this raid bdev */
 	bool				destruct_called;
 
@@ -208,6 +218,9 @@ struct raid_bdev_config {
 
 	/* raid level */
 	uint8_t				raid_level;
+
+	/* Number of data copies for this raid bdev */
+	uint8_t				num_copies;
 
 	TAILQ_ENTRY(raid_bdev_config)	link;
 };
