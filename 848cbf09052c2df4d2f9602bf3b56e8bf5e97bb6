@@ -16,6 +16,24 @@
       "revId": "848cbf09052c2df4d2f9602bf3b56e8bf5e97bb6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c56b698_4a44dd0f",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T02:43:32Z",
+      "side": 1,
+      "message": "When g_verify or g_reset is enabled, task-\u003ebuf is used for verification of read after write (if the contents are same between the buffer written from and the buffer read to).\n\nWhen zcopy APIs are not used, 1)setup task-\u003ebuf, 2)write I/O from task-\u003ebuf, 3)read I/O to buffer allocated underneath bdev, 4)compare task-\u003ebuf with the buffer of 3).\n\nWhen zcopy APIs are used, we cannot do 2) because write I/O is done directly to the buffer allocated underneath bdev directly.\n\nHence when zcopy APIs are used, we change 2) slightly to:\n get buffer allocated underneath bdev, copy task-\u003ebuf to the buffer, and commit the buffer.\n\nDoes this make sense to you?",
+      "parentUuid": "0184819e_91878164",
+      "revId": "848cbf09052c2df4d2f9602bf3b56e8bf5e97bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
