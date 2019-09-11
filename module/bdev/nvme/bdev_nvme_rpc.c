@@ -160,6 +160,7 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_set_hotplug, set_bdev_nvme_hotplug)
 
 enum construt_nvme_decoders {
 	STANDARD_NVME_DECODERS,
+	FTL_NVME_DECODERS,
 	NVME_DECODERS_COUNT,
 };
 
@@ -178,6 +179,9 @@ free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 		free(req[i].hostnqn);
 		free(req[i].hostaddr);
 		free(req[i].hostsvcid);
+		free(req[i].punits);
+		free(req[i].uuid);
+		free(req[i].cache_bdev);
 		free(req[i].mode);
 	}
 }
@@ -197,6 +201,72 @@ static const struct spdk_json_object_decoder rpc_construct_standard_nvme_decoder
 	{"prchk_reftag", offsetof(struct rpc_construct_nvme, prchk_reftag), spdk_json_decode_bool, true},
 	{"prchk_guard", offsetof(struct rpc_construct_nvme, prchk_guard), spdk_json_decode_bool, true},
 	{"mode", offsetof(struct rpc_construct_nvme, mode), spdk_json_decode_string, true}
+};
+
+static const struct spdk_json_object_decoder rpc_construct_ftl_nvme_decoders[] = {
+	{"name", offsetof(struct rpc_construct_nvme, name), spdk_json_decode_string},
+	{"trtype", offsetof(struct rpc_construct_nvme, trtype), spdk_json_decode_string},
+	{"traddr", offsetof(struct rpc_construct_nvme, traddr), spdk_json_decode_string},
+	{"punits", offsetof(struct rpc_construct_nvme, punits), spdk_json_decode_string},
+	{"uuid", offsetof(struct rpc_construct_nvme, uuid), spdk_json_decode_string, true},
+	{"mode", offsetof(struct rpc_construct_nvme, mode), spdk_json_decode_string},
+	{"cache", offsetof(struct rpc_construct_nvme, cache_bdev), spdk_json_decode_string, true},
+	{
+		"allow_open_bands", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, allow_open_bands), spdk_json_decode_bool, true
+	},
+	{
+		"overprovisioning", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, lba_rsvd), spdk_json_decode_uint64, true
+	},
+	{
+		"limit_crit", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_CRIT]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_crit_threshold", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_CRIT]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_high", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_HIGH]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_high_threshold", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_HIGH]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_low", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_LOW]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_low_threshold", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_LOW]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_start", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_START]) +
+		offsetof(struct spdk_ftl_limit, limit),
+		spdk_json_decode_uint64, true
+	},
+	{
+		"limit_start_threshold", offsetof(struct rpc_construct_nvme, ftl_conf) +
+		offsetof(struct spdk_ftl_conf, limits[SPDK_FTL_LIMIT_START]) +
+		offsetof(struct spdk_ftl_limit, thld),
+		spdk_json_decode_uint64, true
+	},
 };
 
 struct rpc_create_nvme_bdev_ctx {
@@ -345,8 +415,13 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	nvme_bdev_ftl_conf_init_defaults(&ctx->req[FTL_NVME_DECODERS].ftl_conf);
+
 	decoders[STANDARD_NVME_DECODERS] = rpc_construct_standard_nvme_decoders;
 	num_decoders[STANDARD_NVME_DECODERS] = SPDK_COUNTOF(rpc_construct_standard_nvme_decoders);
+
+	decoders[FTL_NVME_DECODERS] = rpc_construct_ftl_nvme_decoders;
+	num_decoders[FTL_NVME_DECODERS] = SPDK_COUNTOF(rpc_construct_ftl_nvme_decoders);
 
 	spdk_json_decode_objects(params, NVME_DECODERS_COUNT, decoders, num_decoders, ctx->req,
 				 sizeof(struct rpc_construct_nvme),
@@ -391,6 +466,14 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 		}
 
 		spdk_rpc_construct_standard_nvme_bdev(&opts, spdk_rpc_construct_nvme_bdev_cb, ctx);
+	} else if (!strcasecmp(ctx->req[nvme_decoder].mode, "ftl")) {
+		rc = spdk_rpc_parse_ftl_bdev_args(&ctx->req[FTL_NVME_DECODERS], &opts);
+		if (rc < 0) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse parameters");
+			goto cleanup;
+		}
+
+		spdk_rpc_construct_ftl_bdev(&opts, spdk_rpc_construct_nvme_bdev_cb, ctx);
 	} else {
 		SPDK_ERRLOG("Unknown NVMe bdev type\n");
 		goto cleanup;

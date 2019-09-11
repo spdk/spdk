@@ -32,10 +32,70 @@
  */
 
 #include "spdk/env.h"
+#include "spdk/string.h"
 #include "common.h"
+#include "bdev_ftl.h"
 
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
 pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void
+nvme_bdev_ftl_conf_init_defaults(struct spdk_ftl_conf *conf)
+{
+	*conf = g_default_ftl_conf;
+}
+
+void
+spdk_rpc_construct_ftl_bdev(struct nvme_bdev_construct_opts *opts,
+			    spdk_rpc_construct_bdev_cb_fn cb_fn, void *cb_arg)
+{
+	struct ftl_bdev_init_opts ftl_opts = {};
+	int rc;
+
+	ftl_opts.name = opts->name;
+	ftl_opts.mode = SPDK_FTL_MODE_CREATE;
+	ftl_opts.cache_bdev = opts->cache_bdev;
+	ftl_opts.ftl_conf = opts->ftl_conf;
+	ftl_opts.trid = opts->trid;
+	ftl_opts.range = opts->range;
+	if (opts->uuid) {
+		ftl_opts.uuid = *opts->uuid;
+
+		if (!spdk_mem_all_zero(&opts->uuid, sizeof(opts->uuid))) {
+			ftl_opts.mode &= ~SPDK_FTL_MODE_CREATE;
+		}
+	}
+
+	rc = bdev_ftl_init_bdev(&ftl_opts, cb_fn, cb_arg);
+	if (rc) {
+		cb_fn(NULL, cb_arg, rc);
+	}
+	free(opts->uuid);
+}
+
+int
+spdk_rpc_parse_ftl_bdev_args(struct rpc_construct_nvme *req,
+			     struct nvme_bdev_construct_opts *opts)
+{
+	if (req->cache_bdev && !spdk_bdev_get_by_name(req->cache_bdev)) {
+		return -EINVAL;
+	}
+
+	if (bdev_ftl_parse_punits(&opts->range, req->punits)) {
+		return -EINVAL;
+	}
+
+	if (req->uuid) {
+		opts->uuid = calloc(1, sizeof(struct spdk_uuid));
+		if (spdk_uuid_parse(opts->uuid, req->uuid) < 0) {
+			return -EINVAL;
+		}
+	}
+
+	memcpy(&opts->ftl_conf, &req->ftl_conf, sizeof(struct spdk_ftl_conf));
+
+	return 0;
+}
 
 struct nvme_bdev_ctrlr *
 nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid)

@@ -36,6 +36,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
+#include "spdk/ftl.h"
 
 TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
 extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
@@ -78,6 +79,23 @@ struct nvme_bdev {
 	struct spdk_nvme_ns	*ns;
 };
 
+struct ftl_bdev_init_opts {
+	/* NVMe controller's transport ID */
+	struct spdk_nvme_transport_id		trid;
+	/* Parallel unit range */
+	struct spdk_ftl_punit_range		range;
+	/* Bdev's name */
+	const char				*name;
+	/* Write buffer bdev's name */
+	const char				*cache_bdev;
+	/* Bdev's mode */
+	uint32_t				mode;
+	/* UUID if device is restored from SSD */
+	struct spdk_uuid			uuid;
+	/* FTL library configuration */
+	struct spdk_ftl_conf			ftl_conf;
+};
+
 #define NVME_MAX_BDEVS_PER_RPC 128
 
 struct nvme_bdev_info {
@@ -94,6 +112,14 @@ struct nvme_bdev_construct_opts {
 	struct spdk_nvme_host_id		hostid;
 	/* Host NQN */
 	const char				*hostnqn;
+	/* Parallel unit range (FTL bdev specific) */
+	struct spdk_ftl_punit_range		range;
+	/* UUID if device is restored from SSD (FTL bdev specific) */
+	struct spdk_uuid			*uuid;
+	/* Name of the bdev to be used as a write buffer cache (FTL bdev specific) */
+	const char				*cache_bdev;
+	/* FTL bdev configuration */
+	struct spdk_ftl_conf			ftl_conf;
 	uint32_t				prchk_flags;
 };
 
@@ -107,6 +133,10 @@ struct rpc_construct_nvme {
 	char *hostnqn;
 	char *hostaddr;
 	char *hostsvcid;
+	char *punits;
+	char *uuid;
+	char *cache_bdev;
+	struct spdk_ftl_conf ftl_conf;
 	char *mode;
 	bool prchk_reftag;
 	bool prchk_guard;
@@ -122,5 +152,11 @@ struct nvme_bdev_ctrlr *nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev);
 
 void nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
+
+void nvme_bdev_ftl_conf_init_defaults(struct spdk_ftl_conf *conf);
+void spdk_rpc_construct_ftl_bdev(struct nvme_bdev_construct_opts *opts,
+				 spdk_rpc_construct_bdev_cb_fn cb_fn, void *cb_arg);
+int spdk_rpc_parse_ftl_bdev_args(struct rpc_construct_nvme *req,
+				 struct nvme_bdev_construct_opts *opts);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
