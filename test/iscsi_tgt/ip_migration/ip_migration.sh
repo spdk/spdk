@@ -55,7 +55,7 @@ for ((i = 0; i < 2; i++)); do
 
 	waitforlisten $pid $rpc_addr
 	$rpc_py -s $rpc_addr iscsi_set_options -o 30 -a 64
-	$rpc_py -s $rpc_addr start_subsystem_init
+	$rpc_py -s $rpc_addr framework_start_init
 	echo "iscsi_tgt is listening. Running tests..."
 
 	timing_exit start_iscsi_tgt_$i
