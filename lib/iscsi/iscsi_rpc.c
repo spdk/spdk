@@ -1092,14 +1092,14 @@ SPDK_RPC_REGISTER("iscsi_target_node_set_auth", spdk_rpc_iscsi_target_node_set_a
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_set_auth, set_iscsi_target_node_auth)
 
 static void
-spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
+spdk_rpc_iscsi_get_options(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_iscsi_global_params requires no parameters");
+						 "iscsi_get_options requires no parameters");
 		return;
 	}
 
@@ -1108,7 +1108,8 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_iscsi_global_params", spdk_rpc_get_iscsi_global_params, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("iscsi_get_options", spdk_rpc_iscsi_get_options, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_options, get_iscsi_global_params)
 
 struct rpc_discovery_auth {
 	bool disable_chap;

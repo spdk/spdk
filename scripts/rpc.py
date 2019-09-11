@@ -1103,11 +1103,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Display iSCSI connections')
     p.set_defaults(func=iscsi_get_connections)
 
-    def get_iscsi_global_params(args):
-        print_dict(rpc.iscsi.get_iscsi_global_params(args.client))
+    def iscsi_get_options(args):
+        print_dict(rpc.iscsi.iscsi_get_options(args.client))
 
-    p = subparsers.add_parser('get_iscsi_global_params', help='Display iSCSI global parameters')
-    p.set_defaults(func=get_iscsi_global_params)
+    p = subparsers.add_parser('iscsi_get_options', aliases=['get_iscsi_global_params'],
+                              help='Display iSCSI global parameters')
+    p.set_defaults(func=iscsi_get_options)
 
     def get_scsi_devices(args):
         print_dict(rpc.iscsi.get_scsi_devices(args.client))

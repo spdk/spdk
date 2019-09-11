@@ -154,7 +154,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     check_output('iscsiadm -m discovery -t st -p {}'.format(rpc_param['target_ip']), shell=True)
     check_output('iscsiadm -m node --login', shell=True)
     name = json.loads(rpc.iscsi_get_target_nodes())[0]['name']
-    output = rpc.get_iscsi_global_params()
+    output = rpc.iscsi_get_options()
     jsonvalues = json.loads(output)
     nodebase = jsonvalues['node_base']
     output = rpc.get_scsi_devices()
@@ -324,7 +324,7 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
 
 def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
-    output = rpc.get_iscsi_global_params()
+    output = rpc.iscsi_get_options()
     jsonvalues = json.loads(output)
     nodebase = jsonvalues['node_base']
     output = rpc.iscsi_get_target_nodes()

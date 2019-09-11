@@ -478,8 +478,8 @@ class UIRoot(UINode):
 
     @verbose
     @is_method_available
-    def get_iscsi_global_params(self, **kwargs):
-        return rpc.iscsi.get_iscsi_global_params(self.client, **kwargs)
+    def iscsi_get_options(self, **kwargs):
+        return rpc.iscsi.iscsi_get_options(self.client, **kwargs)
 
     def has_subsystem(self, subsystem):
         for system in rpc.subsystem.get_subsystems(self.client):
