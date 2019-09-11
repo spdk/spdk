@@ -579,14 +579,14 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=get_bdevs)
 
-    def get_bdevs_iostat(args):
-        print_dict(rpc.bdev.get_bdevs_iostat(args.client,
-                                             name=args.name))
+    def bdev_get_iostat(args):
+        print_dict(rpc.bdev.bdev_get_iostat(args.client,
+                                            name=args.name))
 
-    p = subparsers.add_parser(
-        'get_bdevs_iostat', help='Display current I/O statistics of all the blockdevs or required blockdev.')
+    p = subparsers.add_parser('bdev_get_iostat', aliases=['get_bdevs_iostat'],
+                              help='Display current I/O statistics of all the blockdevs or required blockdev.')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
-    p.set_defaults(func=get_bdevs_iostat)
+    p.set_defaults(func=bdev_get_iostat)
 
     def enable_bdev_histogram(args):
         rpc.bdev.enable_bdev_histogram(args.client, name=args.name, enable=args.enable)
