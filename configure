@@ -478,6 +478,10 @@ if [[ "$OSTYPE" == "freebsd"* ]]; then
 		echo "Vhost is only supported on Linux. Disabling it."
 		CONFIG[VHOST]="n"
 	fi
+	if [[ "${CONFIG[VHOST_INTERNAL_LIB]}" == "y" ]]; then
+		echo "Internal rte_vhost library is only supported on Linux. Disabling it."
+		CONFIG[VHOST_INTERNAL_LIB]="n"
+	fi
 	if [[ "${CONFIG[VIRTIO]}" == "y" ]]; then
 		echo "Virtio is only supported on Linux. Disabling it."
 		CONFIG[VIRTIO]="n"
