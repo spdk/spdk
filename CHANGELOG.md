@@ -24,6 +24,10 @@ asynchronous event such as bdev removal. spdk_bdev_open_ext function takes bdev 
 an argument instead of bdev structure to avoid a race condition that can happen when the bdev
 is being removed between a call to get its structure based on a name and actually openning it.
 
+New 'change' event has been added to notify about changes of block device properties. Currently,
+it is generated on block device resize. Event is delivered only if block device was opened
+with spdk_bdev_open_ext function.
+
 ### blobstore
 
 A new spdk_bdev_create_bs_dev_from_desc function has been added and spdk_bdev_create_bs_dev
