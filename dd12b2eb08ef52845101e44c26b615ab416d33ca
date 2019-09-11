@@ -22,6 +22,30 @@
       "revId": "dd12b2eb08ef52845101e44c26b615ab416d33ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d9c766f_4000f5a3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1102,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T22:18:51Z",
+      "side": 1,
+      "message": "Cool, thanks.  Yes as I mention in #944 I don\u0027t think this addresses that behavior but when we delete an lvol we don\u0027t honor the clear_method flag as the delete code calls open, not open_ext so the opts is NULL.\n\nOn #944, I\u0027m very curious as to your thoughts on my observation that even if we did use open_etx() in his steps to repro he\u0027s not writing any data so we wouldn\u0027t clear the data clusters anyway, right? Probably better to have that disussion on the issue in GitHub, I\u0027ll circle back to this later and look at using open_ext() which is what I was going to do initially but this patch is much simpler and, BTW, when I test it, I do indeed get the correct clear_method back from the ext attr as it is persisted from everything I see, are you saying it\u0027s not?",
+      "parentUuid": "86a9f006_9e12a75a",
+      "range": {
+        "startLine": 1102,
+        "startChar": 1,
+        "endLine": 1102,
+        "endChar": 101
+      },
+      "revId": "dd12b2eb08ef52845101e44c26b615ab416d33ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
