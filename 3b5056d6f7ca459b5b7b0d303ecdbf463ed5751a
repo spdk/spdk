@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55c4a9be_517a0a5d",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1622,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T19:18:32Z",
+      "side": 1,
+      "message": "Construct -\u003e Create",
+      "revId": "3b5056d6f7ca459b5b7b0d303ecdbf463ed5751a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee66fdf6_94a56339",
+        "filename": "module/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T19:18:32Z",
+      "side": 1,
+      "message": "rpc_construct_rbd -\u003e rpc_create_rbd",
+      "revId": "3b5056d6f7ca459b5b7b0d303ecdbf463ed5751a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c80bdc4b_e45fd8ee",
+        "filename": "module/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T19:18:32Z",
+      "side": 1,
+      "message": "rpc_construct_rbd_decoders -\u003e create (here and in other places in the file too",
+      "revId": "3b5056d6f7ca459b5b7b0d303ecdbf463ed5751a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7570423_e4ae06a9",
+        "filename": "module/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T19:18:32Z",
+      "side": 1,
+      "message": "rpc_construct_rbd -\u003e rpc_create_rbd",
+      "revId": "3b5056d6f7ca459b5b7b0d303ecdbf463ed5751a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c943ab49_8ddf2d8d",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T19:18:32Z",
+      "side": 1,
+      "message": "Construct -\u003e Create",
+      "revId": "3b5056d6f7ca459b5b7b0d303ecdbf463ed5751a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
