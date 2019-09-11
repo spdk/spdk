@@ -1617,7 +1617,7 @@ Example response:
 }
 ~~~
 
-## construct_rbd_bdev {#rpc_construct_rbd_bdev}
+## bdev_rbd_create {#rpc_bdev_rbd_create}
 
 Construct @ref bdev_config_rbd bdev
 
@@ -1664,7 +1664,7 @@ Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
     "block_size": 4096
   },
   "jsonrpc": "2.0",
-  "method": "construct_rbd_bdev",
+  "method": "bdev_rbd_create",
   "id": 1
 }
 ~~~

@@ -239,7 +239,7 @@ function create_bdev_subsystem_config() {
 
 	if [[ $SPDK_TEST_RBD -eq 1 ]]; then
 		rbd_setup 127.0.0.1
-		tgt_rpc construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+		tgt_rpc bdev_rbd_create $RBD_POOL $RBD_NAME 4096
 		expected_notifications+=( bdev_register:Ceph0 )
 	fi
 

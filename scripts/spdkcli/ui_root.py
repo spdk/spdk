@@ -231,7 +231,7 @@ class UIRoot(UINode):
 
     @verbose
     def create_rbd_bdev(self, **kwargs):
-        response = rpc.bdev.construct_rbd_bdev(self.client, **kwargs)
+        response = rpc.bdev.bdev_rbd_create(self.client, **kwargs)
         return response
 
     @verbose
