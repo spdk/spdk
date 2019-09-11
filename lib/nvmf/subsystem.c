@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -961,6 +961,27 @@ spdk_nvmf_ns_hot_remove(void *remove_ctx)
 	}
 }
 
+static void
+spdk_nvmf_ns_event(enum spdk_bdev_event_type type,
+		   struct spdk_bdev *bdev,
+		   void *event_ctx)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Bdev event: type %d, name %s, subsystem_id %d, ns_id %d\n",
+		      type,
+		      bdev->name,
+		      ((struct spdk_nvmf_ns *)event_ctx)->subsystem->id,
+		      ((struct spdk_nvmf_ns *)event_ctx)->nsid);
+
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		spdk_nvmf_ns_hot_remove(event_ctx);
+		break;
+	default:
+		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
+		break;
+	}
+}
+
 void
 spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
 {
@@ -1067,7 +1088,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	ns->bdev = bdev;
 	ns->opts = opts;
 	ns->subsystem = subsystem;
-	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ns_hot_remove, ns, &ns->desc);
+	rc = spdk_bdev_open_ext(bdev->name, true, spdk_nvmf_ns_event, ns, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
