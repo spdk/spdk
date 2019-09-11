@@ -24,7 +24,7 @@ waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 4
 # Minimal number of bdev io pool (5) and cache (1)
 $rpc_py set_bdev_options -p 5 -c 1
-$rpc_py start_subsystem_init
+$rpc_py framework_start_init
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
