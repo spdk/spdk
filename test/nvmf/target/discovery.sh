@@ -39,7 +39,7 @@ for i in $(seq 1 4); do
 	$rpc_py bdev_null_delete Null$i
 done
 
-check_bdevs=$($rpc_py get_bdevs | jq -r '.[].name')
+check_bdevs=$($rpc_py bdev_get_bdevs | jq -r '.[].name')
 if [ -n "$check_bdevs" ]; then
 	echo $check_bdevs
 	exit 1

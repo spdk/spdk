@@ -416,7 +416,7 @@ function waitforbdev() {
 	local i
 
 	for ((i=1; i<=20; i++)); do
-		if ! $rpc_py get_bdevs | jq -r '.[] .name' | grep -qw $bdev_name; then
+		if ! $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qw $bdev_name; then
 			sleep 0.1
 		else
 			return 0
@@ -635,9 +635,9 @@ function discover_bdevs()
 
 	# Get all of the bdevs
 	if [ -z "$rpc_server" ]; then
-		$rootdir/scripts/rpc.py get_bdevs
+		$rootdir/scripts/rpc.py bdev_get_bdevs
 	else
-		$rootdir/scripts/rpc.py -s "$rpc_server" get_bdevs
+		$rootdir/scripts/rpc.py -s "$rpc_server" bdev_get_bdevs
 	fi
 
 	# Shut down the bdev service
@@ -790,7 +790,7 @@ function get_lvs_free_mb()
 function get_bdev_size()
 {
 	local bdev_name=$1
-	local bdev_info=$($rpc_py get_bdevs -b $bdev_name)
+	local bdev_info=$($rpc_py bdev_get_bdevs -b $bdev_name)
 	local bs=$(jq ".[] .block_size" <<< "$bdev_info")
 	local nb=$(jq ".[] .num_blocks" <<< "$bdev_info")
 

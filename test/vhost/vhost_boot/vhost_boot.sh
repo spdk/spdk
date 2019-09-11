@@ -66,7 +66,7 @@ timing_exit start_vhost
 
 timing_enter create_lvol
 
-nvme_bdev=$($rpc_py get_bdevs -b Nvme0n1)
+nvme_bdev=$($rpc_py bdev_get_bdevs -b Nvme0n1)
 nvme_bdev_bs=$(jq ".[] .block_size" <<< "$nvme_bdev")
 nvme_bdev_name=$(jq ".[] .name" <<< "$nvme_bdev")
 if [[ $nvme_bdev_bs != 512 ]]; then

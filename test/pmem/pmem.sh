@@ -466,7 +466,7 @@ function bdev_pmem_create_tc2()
 		error "Created pmem bdev w/out valid pool file!"
 	fi
 
-	if $rpc_py get_bdevs | jq -r '.[] .name' | grep -qi pmem; then
+	if $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qi pmem; then
 		error "bdev_pmem_create passed with invalid argument!"
 	fi
 
@@ -529,7 +529,7 @@ function bdev_pmem_create_tc5()
 		error "Failed to create pmem bdev"
 	fi
 
-	if ! $rpc_py get_bdevs | jq -r '.[] .name' | grep -qi $pmem_bdev_name; then
+	if ! $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qi $pmem_bdev_name; then
 		error "Pmem bdev not found!"
 	fi
 
@@ -561,7 +561,7 @@ function bdev_pmem_create_tc6()
 		error "Failed to create pmem bdev!"
 	fi
 
-	if ! $rpc_py get_bdevs | jq -r '.[] .name' | grep -qi $pmem_bdev_name; then
+	if ! $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qi $pmem_bdev_name; then
 		error "Pmem bdev not found!"
 	fi
 
@@ -601,7 +601,7 @@ function delete_bdev_tc1()
 		error "Failed to create pmem bdev!"
 	fi
 
-	if ! $rpc_py get_bdevs | jq -r '.[] .name' | grep -qi $pmem_bdev_name; then
+	if ! $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qi $pmem_bdev_name; then
 		error "$pmem_bdev_name bdev not found!"
 	fi
 
@@ -609,7 +609,7 @@ function delete_bdev_tc1()
 		error "Failed to delete $pmem_bdev_name bdev!"
 	fi
 
-	bdevs_names=$($rpc_py get_bdevs | jq -r '.[] .name')
+	bdevs_names=$($rpc_py bdev_get_bdevs | jq -r '.[] .name')
 	if echo $bdevs_names | grep -qi $pmem_bdev_name; then
 		error "$pmem_bdev_name bdev is not deleted!"
 	fi
@@ -634,7 +634,7 @@ function delete_bdev_tc2()
 		error "Failed to create pmem bdev"
 	fi
 
-	if ! $rpc_py get_bdevs | jq -r '.[] .name' | grep -qi $pmem_bdev_name; then
+	if ! $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qi $pmem_bdev_name; then
 		error "Pmem bdev not found!"
 	fi
 

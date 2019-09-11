@@ -367,9 +367,9 @@ class TestCases(object):
         uuid_bdev = self.c.bdev_lvol_create(uuid_store,
                                             self.lbd_name,
                                             lvs_size)
-        # Check correct uuid values in response get_bdevs command
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     lvs_size)
+        # Check correct uuid values in response bdev_get_bdevs command
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev,
+                                                          lvs_size)
         self.c.bdev_lvol_delete(uuid_bdev)
         self.c.bdev_lvol_delete_lvstore(uuid_store)
         self.c.bdev_malloc_delete(base_name)
@@ -412,7 +412,7 @@ class TestCases(object):
                                                     self.lbd_name + str(i),
                                                     size)
                 uuid_bdevs.append(uuid_bdev)
-                fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+                fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
 
             for uuid_bdev in uuid_bdevs:
                 self.c.bdev_lvol_delete(uuid_bdev)
@@ -450,8 +450,8 @@ class TestCases(object):
                                             self.lbd_name,
                                             lvs_size)
         # Verify logical volume was correctly created
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     lvs_size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev,
+                                                          lvs_size)
 
         fail_count += self.c.bdev_lvol_delete(uuid_bdev)
         fail_count += self.c.bdev_lvol_delete_lvstore(uuid_store)
@@ -498,8 +498,8 @@ class TestCases(object):
                                               self.lbd_name,
                                               lvs_size)
         # Verify two lvol bdevs were correctly created
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev_1, lvs_size)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev_2, lvs_size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev_1, lvs_size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev_2, lvs_size)
 
         fail_count += self.c.bdev_lvol_delete(uuid_bdev_1)
         fail_count += self.c.bdev_lvol_delete(uuid_bdev_2)
@@ -557,8 +557,8 @@ class TestCases(object):
                                             self.lbd_name,
                                             lvs_size)
         # Verify if lvol bdev was correctly created
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     lvs_size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev,
+                                                          lvs_size)
         # Try construct lvol bdev on the same lvs_uuid as in last step
         # This call should fail as lvol store space is taken by previously
         # created bdev
@@ -600,8 +600,8 @@ class TestCases(object):
         uuid_bdev = self.c.bdev_lvol_create(uuid_store,
                                             self.lbd_name,
                                             size)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev,
+                                                          size)
         # Try to create another logical volume on the same lvol store using
         # the same friendly name as in previous step
         # This step should fail
@@ -642,29 +642,29 @@ class TestCases(object):
         # size is equal to one quarter of size malloc bdev
         size = self.get_lvs_divided_size(4)
         uuid_bdev = self.c.bdev_lvol_create(uuid_store, self.lbd_name, size)
-        # Check size of the lvol bdev by rpc command get_bdevs
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+        # Check size of the lvol bdev by rpc command bdev_get_bdevs
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
 
         # Resize lvol bdev on correct lvs_uuid and
         # size is equal to half  of size malloc bdev
         size = self.get_lvs_divided_size(2)
         self.c.bdev_lvol_resize(uuid_bdev, size)
-        # Check size of the lvol bdev by rpc command get_bdevs
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+        # Check size of the lvol bdev by rpc command bdev_get_bdevs
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
 
         # Resize lvol bdev on the correct lvs_uuid and
         # size is smaller by 1 cluster
         size = (self.get_lvs_size() - self.get_lvs_cluster_size())
         self.c.bdev_lvol_resize(uuid_bdev, size)
-        # Check size of the lvol bdev by rpc command get_bdevs
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+        # Check size of the lvol bdev by rpc command bdev_get_bdevs
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
 
         # Resize lvol bdev on the correct lvs_uuid and
         # size is equal 0 MiB
         size = 0
         self.c.bdev_lvol_resize(uuid_bdev, size)
-        # Check size of the lvol bdev by rpc command get_bdevs
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+        # Check size of the lvol bdev by rpc command bdev_get_bdevs
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
 
         self.c.bdev_lvol_delete(uuid_bdev)
         self.c.bdev_lvol_delete_lvstore(uuid_store)
@@ -717,8 +717,8 @@ class TestCases(object):
         uuid_bdev = self.c.bdev_lvol_create(uuid_store,
                                             self.lbd_name,
                                             lvs_size)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     lvs_size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev,
+                                                          lvs_size)
         # Try bdev_lvol_resize on correct lvs_uuid and size is
         # equal to size malloc bdev + 1MiB; this call should fail
         if self.c.bdev_lvol_resize(uuid_bdev, self.total_size + 1) == 0:
@@ -820,8 +820,8 @@ class TestCases(object):
         uuid_bdev = self.c.bdev_lvol_create(uuid_store,
                                             self.lbd_name,
                                             lvs_size)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     lvs_size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev,
+                                                          lvs_size)
         # Destroy lvol store
         if self.c.bdev_lvol_delete_lvstore(uuid_store) != 0:
             fail_count += 1
@@ -863,7 +863,7 @@ class TestCases(object):
             uuid_bdev = self.c.bdev_lvol_create(uuid_store,
                                                 self.lbd_name + str(i),
                                                 size)
-            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
 
         # Destroy lvol store
         self.c.bdev_lvol_delete_lvstore(uuid_store)
@@ -903,36 +903,36 @@ class TestCases(object):
                                             self.lbd_name,
                                             size)
         # check size of the lvol bdev
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
         sz = size + 4
         # Resize_lvol_bdev on correct lvs_uuid and size is
         # equal to one quarter of size malloc bdev plus 4 MB
         self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : get_bdevs
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
+        # check size of the lvol bdev by command RPC : bdev_get_bdevs
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
         # Resize_lvol_bdev on correct lvs_uuid and size is
         # equal half of size malloc bdev
         sz = size * 2
         self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : get_bdevs
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
+        # check size of the lvol bdev by command RPC : bdev_get_bdevs
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
         # Resize_lvol_bdev on correct lvs_uuid and size is
         # equal to three quarters of size malloc bdev
         sz = size * 3
         self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : get_bdevs
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
+        # check size of the lvol bdev by command RPC : bdev_get_bdevs
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
         # Resize_lvol_bdev on correct lvs_uuid and size is
         # equal to size if malloc bdev minus 4 MB
         sz = (size * 4) - 4
         self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : get_bdevs
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
+        # check size of the lvol bdev by command RPC : bdev_get_bdevs
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
         # Resize_lvol_bdev on the correct lvs_uuid and size is equal 0 MiB
         sz = 0
         self.c.bdev_lvol_resize(uuid_bdev, sz)
-        # check size of the lvol bdev by command RPC : get_bdevs
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
+        # check size of the lvol bdev by command RPC : bdev_get_bdevs
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, sz)
 
         # Destroy lvol store
         self.c.bdev_lvol_delete_lvstore(uuid_store)
@@ -1154,7 +1154,7 @@ class TestCases(object):
         nested_lbd_name = self.lbd_name + "_nested"
         nested_uuid_bdev = self.c.bdev_lvol_create(nested_lvs_uuid,
                                                    nested_lbd_name, nested_size)
-        fail_count += self.c.check_get_bdevs_methods(nested_uuid_bdev, nested_size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(nested_uuid_bdev, nested_size)
 
         # Try construct another lvol bdev as in previous step; this call should fail
         # as nested lvol store space is already claimed by lvol bdev
@@ -1662,7 +1662,7 @@ class TestCases(object):
         size = self.get_lvs_divided_size(2)
         uuid_bdev = self.c.bdev_lvol_create(uuid_store,
                                             self.lbd_name, size, thin=True)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
         # Fill all free space of lvol bdev with data
         nbd_name = "/dev/nbd0"
         fail_count += self.c.start_nbd_disk(uuid_bdev, nbd_name)
@@ -1882,8 +1882,8 @@ class TestCases(object):
                                                 self.lbd_name + str(i),
                                                 size)
             uuid_bdevs.append(uuid_bdev)
-            # Using get_bdevs command verify lvol bdevs were correctly created
-            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+            # Using bdev_get_bdevs command verify lvol bdevs were correctly created
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
 
         old_bdevs = sorted(self.c.get_lvol_bdevs(), key=lambda x: x["name"])
         old_stores = self.c.bdev_lvol_get_lvstores()
@@ -1931,7 +1931,7 @@ class TestCases(object):
                                                 self.lbd_name + str(i),
                                                 size)
             uuid_bdevs.append(uuid_bdev)
-            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
 
         for uuid_bdev in uuid_bdevs:
             self.c.bdev_lvol_delete(uuid_bdev)
@@ -1954,7 +1954,7 @@ class TestCases(object):
                                                 self.lbd_name + str(i),
                                                 size)
             uuid_bdevs.append(uuid_bdev)
-            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size)
 
         # Destroy lvol store
         if self.c.bdev_lvol_delete_lvstore(uuid_store) != 0:
@@ -2052,16 +2052,16 @@ class TestCases(object):
                                                 self.lbd_name + str(i) + "_1M",
                                                 size_1M)
             uuid_bdevs.append(uuid_bdev)
-            # Using get_bdevs command verify lvol bdevs were correctly created
-            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size_1M)
+            # Using bdev_get_bdevs command verify lvol bdevs were correctly created
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size_1M)
 
         for i in range(5):
             uuid_bdev = self.c.bdev_lvol_create(uuid_store_32M,
                                                 self.lbd_name + str(i) + "_32M",
                                                 size_32M)
             uuid_bdevs.append(uuid_bdev)
-            # Using get_bdevs command verify lvol bdevs were correctly created
-            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size_32M)
+            # Using bdev_get_bdevs command verify lvol bdevs were correctly created
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid_bdev, size_32M)
 
         old_bdevs = sorted(self.c.get_lvol_bdevs(), key=lambda x: x["name"])
         old_stores = sorted(self.c.bdev_lvol_get_lvstores(), key=lambda x: x["name"])
@@ -3130,9 +3130,9 @@ class TestCases(object):
             uuid = self.c.bdev_lvol_create(lvs_uuid,
                                            name,
                                            bdev_size)
-            fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size,
-                                                         alias)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid,
+                                                              bdev_size,
+                                                              alias)
             bdev_uuids.append(uuid)
 
         # Rename lvol store and check if lvol store name and
@@ -3148,9 +3148,9 @@ class TestCases(object):
                                                           new_lvs_name)
 
         for uuid, alias in zip(bdev_uuids, bdev_aliases):
-            fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size,
-                                                         alias)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid,
+                                                              bdev_size,
+                                                              alias)
 
         # Now try to rename the bdevs using their uuid as "old_name"
         # Verify that all bdev names were successfully updated
@@ -3159,9 +3159,9 @@ class TestCases(object):
         print(bdev_aliases)
         for uuid, new_name, new_alias in zip(bdev_uuids, bdev_names, bdev_aliases):
             fail_count += self.c.bdev_lvol_rename(uuid, new_name)
-            fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size,
-                                                         new_alias)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid,
+                                                              bdev_size,
+                                                              new_alias)
         # Rename lvol bdevs. Use lvols alias name to point which lvol bdev name to change
         # Verify that all bdev names were successfully updated
         bdev_names = ["lbd_even_newer" + str(i) for i in range(4)]
@@ -3169,9 +3169,9 @@ class TestCases(object):
         print(bdev_aliases)
         for uuid, old_alias, new_alias, new_name in zip(bdev_uuids, bdev_aliases, new_bdev_aliases, bdev_names):
             fail_count += self.c.bdev_lvol_rename(old_alias, new_name)
-            fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size,
-                                                         new_alias)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid,
+                                                              bdev_size,
+                                                              new_alias)
 
         # Delete configuration using names after rename operation
         for bdev in new_bdev_aliases:
@@ -3253,17 +3253,17 @@ class TestCases(object):
             uuid = self.c.bdev_lvol_create(lvs_uuid_1,
                                            name,
                                            bdev_size_1)
-            fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size_1,
-                                                         alias)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid,
+                                                              bdev_size_1,
+                                                              alias)
             bdev_uuids_1.append(uuid)
         for name, alias in zip(bdev_names_2, bdev_aliases_2):
             uuid = self.c.bdev_lvol_create(lvs_uuid_2,
                                            name,
                                            bdev_size_2)
-            fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size_2,
-                                                         alias)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid,
+                                                              bdev_size_2,
+                                                              alias)
             bdev_uuids_2.append(uuid)
 
         # Call bdev_lvol_rename_lvstore on first lvol store and try to change its name to
@@ -3282,14 +3282,14 @@ class TestCases(object):
                                                           lvs_name_2)
 
         for name, alias, uuid in zip(bdev_names_1, bdev_aliases_1, bdev_uuids_1):
-            fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size_1,
-                                                         alias)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid,
+                                                              bdev_size_1,
+                                                              alias)
 
         for name, alias, uuid in zip(bdev_names_2, bdev_aliases_2, bdev_uuids_2):
-            fail_count += self.c.check_get_bdevs_methods(uuid,
-                                                         bdev_size_2,
-                                                         alias)
+            fail_count += self.c.check_bdev_get_bdevs_methods(uuid,
+                                                              bdev_size_2,
+                                                              alias)
 
         # Clean configuration
         for lvol_uuid in bdev_uuids_1 + bdev_uuids_2:
@@ -3350,22 +3350,22 @@ class TestCases(object):
         bdev_uuid_1 = self.c.bdev_lvol_create(lvs_uuid,
                                               self.lbd_name + "1",
                                               bdev_size)
-        fail_count += self.c.check_get_bdevs_methods(bdev_uuid_1,
-                                                     bdev_size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(bdev_uuid_1,
+                                                          bdev_size)
         bdev_uuid_2 = self.c.bdev_lvol_create(lvs_uuid,
                                               self.lbd_name + "2",
                                               bdev_size)
-        fail_count += self.c.check_get_bdevs_methods(bdev_uuid_2,
-                                                     bdev_size)
+        fail_count += self.c.check_bdev_get_bdevs_methods(bdev_uuid_2,
+                                                          bdev_size)
 
         # Call bdev_lvol_rename on first lvol bdev and try to change its name to
         # the same name as used by second lvol bdev
         if self.c.bdev_lvol_rename(self.lbd_name + "1", self.lbd_name + "2") == 0:
             fail_count += 1
         # Verify that lvol bdev still have the same names as before
-        fail_count += self.c.check_get_bdevs_methods(bdev_uuid_1,
-                                                     bdev_size,
-                                                     "/".join([self.lvs_name, self.lbd_name + "1"]))
+        fail_count += self.c.check_bdev_get_bdevs_methods(bdev_uuid_1,
+                                                          bdev_size,
+                                                          "/".join([self.lvs_name, self.lbd_name + "1"]))
 
         fail_count += self.c.bdev_lvol_delete(bdev_uuid_1)
         fail_count += self.c.bdev_lvol_delete(bdev_uuid_2)
@@ -3401,6 +3401,6 @@ class TestCases(object):
 
         # Expected result:
         # - calls successful, return code = 0
-        # - get_bdevs: no change
+        # - bdev_get_bdevs: no change
         # - no other operation fails
         return fail_count
