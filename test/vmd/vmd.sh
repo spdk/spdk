@@ -48,7 +48,7 @@ trap 'killprocess $svcpid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $svcpid
 
 $rpc_py enable_vmd
-$rpc_py start_subsystem_init
+$rpc_py framework_start_init
 
 for bdf in $pci_devs; do
 	$rpc_py bdev_nvme_attach_controller -b NVMe_$bdf -t PCIe -a $bdf

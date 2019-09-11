@@ -97,7 +97,7 @@ function migration_tc2_configure_vhost()
 	local nvmf_tgt_pid=$!
 	echo $nvmf_tgt_pid > $nvmf_dir/nvmf_tgt.pid
 	waitforlisten "$nvmf_tgt_pid" "$nvmf_dir/rpc.sock"
-	$rpc_nvmf start_subsystem_init
+	$rpc_nvmf framework_start_init
 	$rpc_nvmf nvmf_create_transport -t RDMA -u 8192
 	$rootdir/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 	timing_exit start_nvmf_tgt

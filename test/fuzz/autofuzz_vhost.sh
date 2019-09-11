@@ -65,7 +65,7 @@ if [ "$TEST_TRANSPORT" == "scsi" ] || [ "$TEST_TRANSPORT" == "all" ]; then
 fi
 
 # The test won't actually begin until this option is passed in.
-$fuzz_generic_rpc_py start_subsystem_init
+$fuzz_generic_rpc_py framework_start_init
 
 wait $fuzzpid
 
