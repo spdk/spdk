@@ -229,7 +229,6 @@ spdk_rpc_parse_construct_bdev_args(struct rpc_construct_nvme *req,
 {
 	int rc;
 
-	/* Parse adrfam */
 	if (req->adrfam) {
 		rc = spdk_nvme_transport_id_parse_adrfam(&opts->trid.adrfam, req->adrfam);
 		if (rc < 0) {
@@ -238,12 +237,10 @@ spdk_rpc_parse_construct_bdev_args(struct rpc_construct_nvme *req,
 		}
 	}
 
-	/* Parse trsvcid */
 	if (req->trsvcid) {
 		snprintf(opts->trid.trsvcid, sizeof(opts->trid.trsvcid), "%s", req->trsvcid);
 	}
 
-	/* Parse subnqn */
 	if (req->subnqn) {
 		snprintf(opts->trid.subnqn, sizeof(opts->trid.subnqn), "%s", req->subnqn);
 	}
