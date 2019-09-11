@@ -662,8 +662,9 @@ def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     return client.call('bdev_split_create', params)
 
 
-def destruct_split_vbdev(client, base_bdev):
-    """Destroy split block devices.
+@deprecated_alias('destruct_split_vbdev')
+def bdev_split_delete(client, base_bdev):
+    """Delete split block devices.
 
     Args:
         base_bdev: name of previously split bdev
@@ -672,7 +673,7 @@ def destruct_split_vbdev(client, base_bdev):
         'base_bdev': base_bdev,
     }
 
-    return client.call('destruct_split_vbdev', params)
+    return client.call('bdev_split_delete', params)
 
 
 @deprecated_alias('construct_ftl_bdev')

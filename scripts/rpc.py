@@ -1376,13 +1376,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     exceed the base bdev size.""", type=int)
     p.set_defaults(func=bdev_split_create)
 
-    def destruct_split_vbdev(args):
-        rpc.bdev.destruct_split_vbdev(args.client,
-                                      base_bdev=args.base_bdev)
+    def bdev_split_delete(args):
+        rpc.bdev.bdev_split_delete(args.client,
+                                   base_bdev=args.base_bdev)
 
-    p = subparsers.add_parser('destruct_split_vbdev', help="""Delete split config with all created splits.""")
+    p = subparsers.add_parser('bdev_split_delete', aliases=['destruct_split_vbdev'],
+                              help="""Delete split config with all created splits.""")
     p.add_argument('base_bdev', help='base bdev name')
-    p.set_defaults(func=destruct_split_vbdev)
+    p.set_defaults(func=bdev_split_delete)
 
     # ftl
     ftl_valid_limits = ('crit', 'high', 'low', 'start')

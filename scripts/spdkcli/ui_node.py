@@ -47,7 +47,7 @@ class UINode(ConfigNode):
                 command in ["create", "delete", "delete_all", "add_initiator",
                             "allow_any_host", "bdev_split_create", "add_lun",
                             "iscsi_target_node_add_pg_ig_maps", "remove_target", "add_secret",
-                            "destruct_split_bdev", "bdev_pmem_delete_pool",
+                            "bdev_split_delete", "bdev_pmem_delete_pool",
                             "bdev_pmem_create_pool", "delete_secret_all",
                             "delete_initiator", "set_auth", "delete_secret",
                             "iscsi_target_node_remove_pg_ig_maps", "load_config",
@@ -408,14 +408,14 @@ class UISplitBdev(UIBdev):
                                                      split_size_mb=split_size_mb)
         self.shell.log.info(ret_name)
 
-    def ui_command_destruct_split_bdev(self, base_bdev):
-        """Destroy split block devices associated with base bdev.
+    def ui_command_bdev_split_delete(self, base_bdev):
+        """Delete split block devices associated with base bdev.
 
         Args:
             base_bdev: name of previously split bdev
         """
 
-        self.get_root().destruct_split_bdev(base_bdev=base_bdev)
+        self.get_root().bdev_split_delete(base_bdev=base_bdev)
 
 
 class UIPmemBdev(UIBdev):

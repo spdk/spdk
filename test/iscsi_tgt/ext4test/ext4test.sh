@@ -20,7 +20,7 @@ $ISCSI_APP --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap '$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
+trap '$rpc_py bdev_split_delete Name0n1 || true; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 4 -b $node_base
@@ -123,7 +123,7 @@ done
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
-$rpc_py destruct_split_vbdev Nvme0n1
+$rpc_py bdev_split_delete Nvme0n1
 $rpc_py bdev_error_delete EE_Malloc0
 
 if [ -z "$NO_NVME" ]; then
