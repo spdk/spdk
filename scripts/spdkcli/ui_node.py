@@ -550,7 +550,7 @@ class UIVirtioScsiBdev(UIBdev):
 
     def refresh(self):
         self._children = set([])
-        for bdev in self.get_root().get_virtio_scsi_devs():
+        for bdev in self.get_root().bdev_virtio_scsi_get_devices():
             UIVirtioScsiBdevObj(bdev, self)
 
     def ui_command_create(self, name, trtype, traddr,
