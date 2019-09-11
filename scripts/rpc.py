@@ -46,11 +46,12 @@ if __name__ == "__main__":
                               help='Start initialization of subsystems')
     p.set_defaults(func=framework_start_init)
 
-    def wait_subsystem_init(args):
-        rpc.wait_subsystem_init(args.client)
+    def framework_wait_init(args):
+        rpc.framework_wait_init(args.client)
 
-    p = subparsers.add_parser('wait_subsystem_init', help='Block until subsystems have been initialized')
-    p.set_defaults(func=wait_subsystem_init)
+    p = subparsers.add_parser('framework_wait_init', aliases=['wait_subsystem_init'],
+                              help='Block until subsystems have been initialized')
+    p.set_defaults(func=framework_wait_init)
 
     def rpc_get_methods(args):
         print_dict(rpc.rpc_get_methods(args.client,
