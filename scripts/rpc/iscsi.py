@@ -497,13 +497,14 @@ def iscsi_get_connections(client):
     return client.call('iscsi_get_connections')
 
 
-def get_iscsi_global_params(client):
+@deprecated_alias('get_iscsi_global_params')
+def iscsi_get_options(client):
     """Display iSCSI global parameters.
 
     Returns:
         List of iSCSI global parameter.
     """
-    return client.call('get_iscsi_global_params')
+    return client.call('iscsi_get_options')
 
 
 def get_scsi_devices(client):

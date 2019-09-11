@@ -25,7 +25,7 @@ class UIISCSIGlobalParams(UINode):
 
     def refresh(self):
         self._children = set([])
-        iscsi_global_params = self.get_root().get_iscsi_global_params()
+        iscsi_global_params = self.get_root().iscsi_get_options()
         if not iscsi_global_params:
             return
         for param, val in iscsi_global_params.items():

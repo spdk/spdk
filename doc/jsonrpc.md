@@ -254,7 +254,7 @@ Example response:
     "log_set_level",
     "log_get_print_level",
     "log_set_print_level",
-    "get_iscsi_global_params",
+    "iscsi_get_options",
     "iscsi_target_node_add_lun",
     "iscsi_get_connections",
     "iscsi_delete_portal_group",
@@ -2605,7 +2605,7 @@ Example response:
 }
 ~~~
 
-## get_iscsi_global_params method {#rpc_get_iscsi_global_params}
+## iscsi_get_options method {#rpc_iscsi_get_options}
 
 Show global parameters of iSCSI targets.
 
@@ -2621,7 +2621,7 @@ Example request:
 request:
 {
   "jsonrpc": "2.0",
-  "method": "get_iscsi_global_params",
+  "method": "iscsi_get_options",
   "id": 1
 }
 ~~~
