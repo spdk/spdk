@@ -1680,7 +1680,7 @@ response:
 }
 ~~~
 
-## delete_rbd_bdev {#rpc_delete_rbd_bdev}
+## bdev_rbd_delete {#rpc_bdev_rbd_delete}
 
 Delete @ref bdev_config_rbd bdev
 
@@ -1706,7 +1706,7 @@ Example request:
     "name": "Rbd0"
   },
   "jsonrpc": "2.0",
-  "method": "delete_rbd_bdev",
+  "method": "bdev_rbd_delete",
   "id": 1
 }
 ~~~

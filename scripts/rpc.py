@@ -439,13 +439,14 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='rbd block size', type=int)
     p.set_defaults(func=bdev_rbd_create)
 
-    def delete_rbd_bdev(args):
-        rpc.bdev.delete_rbd_bdev(args.client,
+    def bdev_rbd_delete(args):
+        rpc.bdev.bdev_rbd_delete(args.client,
                                  name=args.name)
 
-    p = subparsers.add_parser('delete_rbd_bdev', help='Delete a rbd bdev')
+    p = subparsers.add_parser('bdev_rbd_delete', aliases=['delete_rbd_bdev'],
+                              help='Delete a rbd bdev')
     p.add_argument('name', help='rbd bdev name')
-    p.set_defaults(func=delete_rbd_bdev)
+    p.set_defaults(func=bdev_rbd_delete)
 
     def bdev_delay_create(args):
         print_json(rpc.bdev.bdev_delay_create(args.client,

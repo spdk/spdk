@@ -461,7 +461,7 @@ class UIRbdBdev(UIBdev):
         UIBdev.__init__(self, "rbd", parent)
 
     def delete(self, name):
-        self.get_root().delete_rbd_bdev(name=name)
+        self.get_root().bdev_rbd_delete(name=name)
 
     def ui_command_create(self, pool_name, rbd_name, block_size, name=None):
         block_size = self.ui_eval_param(block_size, "number", None)
