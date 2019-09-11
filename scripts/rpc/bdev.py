@@ -735,14 +735,15 @@ def bdev_get_iostat(client, name=None):
     return client.call('bdev_get_iostat', params)
 
 
-def enable_bdev_histogram(client, name, enable):
+@deprecated_alias('enable_bdev_histogram')
+def bdev_enable_histogram(client, name, enable):
     """Control whether histogram is enabled for specified bdev.
 
     Args:
         bdev_name: name of bdev
     """
     params = {'name': name, "enable": enable}
-    return client.call('enable_bdev_histogram', params)
+    return client.call('bdev_enable_histogram', params)
 
 
 def get_bdev_histogram(client, name):

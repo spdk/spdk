@@ -588,14 +588,15 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=bdev_get_iostat)
 
-    def enable_bdev_histogram(args):
-        rpc.bdev.enable_bdev_histogram(args.client, name=args.name, enable=args.enable)
+    def bdev_enable_histogram(args):
+        rpc.bdev.bdev_enable_histogram(args.client, name=args.name, enable=args.enable)
 
-    p = subparsers.add_parser('enable_bdev_histogram', help='Enable or disable histogram for specified bdev')
+    p = subparsers.add_parser('bdev_enable_histogram', aliases=['enable_bdev_histogram'],
+                              help='Enable or disable histogram for specified bdev')
     p.add_argument('-e', '--enable', default=True, dest='enable', action='store_true', help='Enable histograms on specified device')
     p.add_argument('-d', '--disable', dest='enable', action='store_false', help='Disable histograms on specified device')
     p.add_argument('name', help='bdev name')
-    p.set_defaults(func=enable_bdev_histogram)
+    p.set_defaults(func=bdev_enable_histogram)
 
     def get_bdev_histogram(args):
         print_dict(rpc.bdev.get_bdev_histogram(args.client, name=args.name))
