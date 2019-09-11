@@ -155,14 +155,14 @@ def construct_virtio_dev(client, name, trtype, traddr, dev_type, vq_count=None, 
     return client.call('construct_virtio_dev', params)
 
 
-def remove_virtio_bdev(client, name):
+def bdev_virtio_detach_controller(client, name):
     """Remove a Virtio device
     This will delete all bdevs exposed by this device.
     Args:
         name: virtio device name
     """
     params = {'name': name}
-    return client.call('remove_virtio_bdev', params)
+    return client.call('bdev_virtio_detach_controller', params)
 
 
 def get_virtio_scsi_devs(client):
