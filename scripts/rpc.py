@@ -1922,17 +1922,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=bdev_virtio_detach_controller)
 
     # ioat
-    def scan_ioat_copy_engine(args):
+    def ioat_scan_copy_engine(args):
         pci_whitelist = []
         if args.pci_whitelist:
             for w in args.pci_whitelist.strip().split(" "):
                 pci_whitelist.append(w)
-        rpc.ioat.scan_ioat_copy_engine(args.client, pci_whitelist)
+        rpc.ioat.ioat_scan_copy_engine(args.client, pci_whitelist)
 
-    p = subparsers.add_parser('scan_ioat_copy_engine', help='Set scan and enable IOAT copy engine offload.')
+    p = subparsers.add_parser('ioat_scan_copy_engine', aliases=['scan_ioat_copy_engine'],
+                              help='Set scan and enable IOAT copy engine offload.')
     p.add_argument('-w', '--pci-whitelist', help="""Whitespace-separated list of PCI addresses in
     domain:bus:device.function format or domain.bus.device.function format""")
-    p.set_defaults(func=scan_ioat_copy_engine)
+    p.set_defaults(func=ioat_scan_copy_engine)
 
     # bdev_nvme_send_cmd
     def bdev_nvme_send_cmd(args):

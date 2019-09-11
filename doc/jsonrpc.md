@@ -279,7 +279,7 @@ Example response:
     "get_subsystems",
     "context_switch_monitor",
     "kill_instance",
-    "scan_ioat_copy_engine",
+    "ioat_scan_copy_engine",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
