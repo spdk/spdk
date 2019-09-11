@@ -24,7 +24,7 @@ trap '$rpc_py bdev_split_delete Name0n1 || true; killprocess $pid; iscsitestfini
 
 waitforlisten $pid
 $rpc_py iscsi_set_options -o 30 -a 4 -b $node_base
-$rpc_py start_subsystem_init
+$rpc_py framework_start_init
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 $rpc_py bdev_malloc_create 512 4096 --name Malloc0
 echo "iscsi_tgt is listening. Running tests..."

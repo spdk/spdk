@@ -401,7 +401,7 @@ subsystem_init_done(int rc, void *arg1)
 
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
 	/* Another round. This time for RUNTIME methods */
-	SPDK_DEBUG_APP_CFG("'start_subsystem_init' done - continuing configuration\n");
+	SPDK_DEBUG_APP_CFG("'framework_start_init' done - continuing configuration\n");
 
 	assert(ctx != NULL);
 	if (ctx->subsystems) {
@@ -424,7 +424,7 @@ static struct spdk_json_object_decoder subsystem_decoders[] = {
  * There are two iterations:
  *
  * In first iteration only STARTUP RPC methods are used, other methods are ignored. When
- * allsubsystems are walked the ctx->subsystems_it became NULL and "start_subsystem_init"
+ * allsubsystems are walked the ctx->subsystems_it became NULL and "framework_start_init"
  * is called to let the SPDK move to RUNTIME state (initialize all subsystems) and
  * second iteration begins.
  *
@@ -440,7 +440,7 @@ spdk_app_json_config_load_subsystem(void *_ctx)
 
 	if (ctx->subsystems_it == NULL) {
 		if (spdk_rpc_get_state() == SPDK_RPC_STARTUP) {
-			SPDK_DEBUG_APP_CFG("No more entries for current state, calling 'start_subsystem_init'\n");
+			SPDK_DEBUG_APP_CFG("No more entries for current state, calling 'framework_start_init'\n");
 			spdk_subsystem_init(subsystem_init_done, ctx);
 		} else {
 			spdk_app_json_config_load_done(ctx, 0);

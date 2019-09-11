@@ -27,7 +27,7 @@ class UIRoot(UINode):
         if self.is_init is False:
             methods = "\n".join(self.methods)
             self.shell.log.warning("SPDK Application is not yet initialized.\n"
-                                   "Please initialize subsystems with start_subsystem_init command.\n"
+                                   "Please initialize subsystems with framework_start_init command.\n"
                                    "List of available commands in current state:\n"
                                    "%s" % methods)
         else:
@@ -74,8 +74,8 @@ class UIRoot(UINode):
             return []
         return w
 
-    def ui_command_start_subsystem_init(self):
-        if rpc.start_subsystem_init(self.client):
+    def ui_command_framework_start_init(self):
+        if rpc.framework_start_init(self.client):
             self.is_init = True
             self.refresh()
 
@@ -99,7 +99,7 @@ class UIRoot(UINode):
         return rpc.rpc_get_methods(self.client, current=current)
 
     def check_init(self):
-        return "start_subsystem_init" not in self.rpc_get_methods(current=True)
+        return "framework_start_init" not in self.rpc_get_methods(current=True)
 
     def bdev_get_bdevs(self, bdev_type):
         if self.is_init:
