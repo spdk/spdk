@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56631ac0_99316e66",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-09-11T13:54:55Z",
+      "side": 1,
+      "message": "Change name to bdev_split_create",
+      "range": {
+        "startLine": 120,
+        "startChar": 8,
+        "endLine": 120,
+        "endChar": 18
+      },
+      "revId": "a3f39e563bec21e7d32931df0228b29ef94ba642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
