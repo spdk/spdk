@@ -15,7 +15,7 @@ bdev_dict["bdev_nvme_set_hotplug"] = []
 bdev_dict["bdev_malloc_create"] = []
 bdev_dict["bdev_aio_create"] = []
 bdev_dict["bdev_pmem_create"] = []
-bdev_dict["construct_virtio_dev"] = []
+bdev_dict["bdev_virtio_attach_controller"] = []
 
 vhost_dict = OrderedDict()
 vhost_dict["construct_vhost_scsi_controller"] = []
@@ -489,7 +489,7 @@ def get_virtio_user_json(config, section):
 
     return [{
         "params": to_json_params(params),
-        "method": "construct_virtio_dev"
+        "method": "bdev_virtio_attach_controller"
     }]
 
 

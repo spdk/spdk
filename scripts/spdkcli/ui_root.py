@@ -241,7 +241,7 @@ class UIRoot(UINode):
 
     @verbose
     def create_virtio_dev(self, **kwargs):
-        response = rpc.vhost.construct_virtio_dev(self.client, **kwargs)
+        response = rpc.vhost.bdev_virtio_attach_controller(self.client, **kwargs)
         return self.print_array(response)
 
     @verbose

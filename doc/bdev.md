@@ -546,14 +546,14 @@ The following command creates a Virtio-Block device named `VirtioBlk0` from a vh
 socket `/tmp/vhost.0` exposed directly by SPDK @ref vhost. Optional `vq-count` and
 `vq-size` params specify number of request queues and queue depth to be used.
 
-`rpc.py construct_virtio_dev --dev-type blk --trtype user --traddr /tmp/vhost.0 --vq-count 2 --vq-size 512 VirtioBlk0`
+`rpc.py bdev_virtio_attach_controller --dev-type blk --trtype user --traddr /tmp/vhost.0 --vq-count 2 --vq-size 512 VirtioBlk0`
 
 The driver can be also used inside QEMU-based VMs. The following command creates a Virtio
 Block device named `VirtioBlk0` from a Virtio PCI device at address `0000:00:01.0`.
 The entire configuration will be read automatically from PCI Configuration Space. It will
 reflect all parameters passed to QEMU's vhost-user-scsi-pci device.
 
-`rpc.py construct_virtio_dev --dev-type blk --trtype pci --traddr 0000:01:00.0 VirtioBlk1`
+`rpc.py bdev_virtio_attach_controller --dev-type blk --trtype pci --traddr 0000:01:00.0 VirtioBlk1`
 
 Virtio-Block devices can be removed with the following command
 
@@ -563,11 +563,11 @@ Virtio-Block devices can be removed with the following command
 
 The Virtio-SCSI driver allows creating SPDK block devices from Virtio-SCSI LUNs.
 
-Virtio-SCSI bdevs are constructed the same way as Virtio-Block ones.
+Virtio-SCSI bdevs are created the same way as Virtio-Block ones.
 
-`rpc.py construct_virtio_dev --dev-type scsi --trtype user --traddr /tmp/vhost.0 --vq-count 2 --vq-size 512 VirtioScsi0`
+`rpc.py bdev_virtio_attach_controller --dev-type scsi --trtype user --traddr /tmp/vhost.0 --vq-count 2 --vq-size 512 VirtioScsi0`
 
-`rpc.py construct_virtio_dev --dev-type scsi --trtype pci --traddr 0000:01:00.0 VirtioScsi0`
+`rpc.py bdev_virtio_attach_controller --dev-type scsi --trtype pci --traddr 0000:01:00.0 VirtioScsi0`
 
 Each Virtio-SCSI device may export up to 64 block devices named VirtioScsi0t0 ~ VirtioScsi0t63,
 one LUN (LUN0) per SCSI device. The above 2 commands will output names of all exposed bdevs.
