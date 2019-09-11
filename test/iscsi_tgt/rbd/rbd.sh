@@ -62,7 +62,7 @@ rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
-$rpc_py delete_rbd_bdev $rbd_bdev
+$rpc_py bdev_rbd_delete $rbd_bdev
 killprocess $pid
 rbd_cleanup
 

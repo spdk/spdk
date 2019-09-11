@@ -144,22 +144,22 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_rbd_create", spdk_rpc_bdev_rbd_create, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_rbd_create, construct_rbd_bdev)
 
-struct rpc_delete_rbd {
+struct rpc_bdev_rbd_delete {
 	char *name;
 };
 
 static void
-free_rpc_delete_rbd(struct rpc_delete_rbd *req)
+free_rpc_bdev_rbd_delete(struct rpc_bdev_rbd_delete *req)
 {
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_rbd_decoders[] = {
-	{"name", offsetof(struct rpc_delete_rbd, name), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_bdev_rbd_delete_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_rbd_delete, name), spdk_json_decode_string},
 };
 
 static void
-_spdk_rpc_delete_rbd_bdev_cb(void *cb_arg, int bdeverrno)
+_spdk_rpc_bdev_rbd_delete_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
@@ -170,14 +170,14 @@ _spdk_rpc_delete_rbd_bdev_cb(void *cb_arg, int bdeverrno)
 }
 
 static void
-spdk_rpc_delete_rbd_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_bdev_rbd_delete(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
-	struct rpc_delete_rbd req = {NULL};
+	struct rpc_bdev_rbd_delete req = {NULL};
 	struct spdk_bdev *bdev;
 
-	if (spdk_json_decode_object(params, rpc_delete_rbd_decoders,
-				    SPDK_COUNTOF(rpc_delete_rbd_decoders),
+	if (spdk_json_decode_object(params, rpc_bdev_rbd_delete_decoders,
+				    SPDK_COUNTOF(rpc_bdev_rbd_delete_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -190,9 +190,10 @@ spdk_rpc_delete_rbd_bdev(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	spdk_bdev_rbd_delete(bdev, _spdk_rpc_delete_rbd_bdev_cb, request);
+	spdk_bdev_rbd_delete(bdev, _spdk_rpc_bdev_rbd_delete_cb, request);
 
 cleanup:
-	free_rpc_delete_rbd(&req);
+	free_rpc_bdev_rbd_delete(&req);
 }
-SPDK_RPC_REGISTER("delete_rbd_bdev", spdk_rpc_delete_rbd_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_rbd_delete", spdk_rpc_bdev_rbd_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_rbd_delete, delete_rbd_bdev)
