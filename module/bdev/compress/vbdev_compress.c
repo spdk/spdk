@@ -54,7 +54,7 @@
 #define NUM_MAX_XFORMS 2
 #define NUM_MAX_INFLIGHT_OPS 128
 #define DEFAULT_WINDOW_SIZE 15
-/* We need extra mbufs per operation to accomodate host buffers that
+/* We need extra mbufs per operation to accommodate host buffers that
  *  span a 2MB boundary.
  */
 #define MAX_MBUFS_PER_OP (REDUCE_MAX_IOVECS * 2)
@@ -154,7 +154,7 @@ static struct rte_mbuf_ext_shared_info g_shinfo = {};		/* used by DPDK mbuf macr
 static bool g_qat_available = false;
 static bool g_isal_available = false;
 
-/* Create shrared (between all ops per PMD) compress xforms. */
+/* Create shared (between all ops per PMD) compress xforms. */
 static struct rte_comp_xform g_comp_xform = {
 	.type = RTE_COMP_COMPRESS,
 	.compress = {
@@ -166,7 +166,7 @@ static struct rte_comp_xform g_comp_xform = {
 		.hash_algo = RTE_COMP_HASH_ALGO_NONE
 	}
 };
-/* Create shrared (between all ops per PMD) decompress xforms. */
+/* Create shared (between all ops per PMD) decompress xforms. */
 static struct rte_comp_xform g_decomp_xform = {
 	.type = RTE_COMP_DECOMPRESS,
 	.decompress = {
@@ -623,7 +623,7 @@ error_enqueue:
 error_get_op:
 	op_to_queue = calloc(1, sizeof(struct vbdev_comp_op));
 	if (op_to_queue == NULL) {
-		SPDK_ERRLOG("unable to alocate operation for queueing.\n");
+		SPDK_ERRLOG("unable to allocate operation for queueing.\n");
 		return -ENOMEM;
 	}
 	op_to_queue->backing_dev = backing_dev;
@@ -1157,7 +1157,7 @@ _comp_reduce_writev(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int 
 	}
 }
 
-/* This is the function provided to the reduceLib for sending umaps directly to
+/* This is the function provided to the reduceLib for sending unmaps directly to
  * the backing device.
  */
 static void
@@ -1207,7 +1207,7 @@ vbdev_compress_base_bdev_hotremove_cb(void *ctx)
 
 	TAILQ_FOREACH_SAFE(comp_bdev, &g_vbdev_comp, link, tmp) {
 		if (bdev_find == comp_bdev->base_bdev) {
-			/* Tell reduceLiib that we're done with this volume. */
+			/* Tell reduceLib that we're done with this volume. */
 			spdk_reduce_vol_unload(comp_bdev->vol, bdev_hotremove_vol_unload_cb, comp_bdev);
 		}
 	}
@@ -1230,7 +1230,7 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 
 	meta_ctx = calloc(1, sizeof(struct vbdev_compress));
 	if (meta_ctx == NULL) {
-		SPDK_ERRLOG("failed to alloc init contexs\n");
+		SPDK_ERRLOG("failed to alloc init contexts\n");
 		return NULL;
 	}
 
@@ -1318,7 +1318,7 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	struct vbdev_compress *comp_bdev = io_device;
 	struct comp_device_qp *device_qp;
 
-	/* We use this queue to track outstanding IO in our lyaer. */
+	/* We use this queue to track outstanding IO in our layer. */
 	TAILQ_INIT(&comp_bdev->pending_comp_ios);
 
 	/* We use this to queue up compression operations as needed. */
@@ -1653,7 +1653,7 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 		}
 
 		/* We still want to open and claim the backing device to protect the data until
-		 * either the pm metadata file is reocvered or the comp bdev is deleted.
+		 * either the pm metadata file is recovered or the comp bdev is deleted.
 		 */
 		rc = spdk_bdev_open(meta_ctx->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
 				    meta_ctx->base_bdev, &meta_ctx->base_desc);
