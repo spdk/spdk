@@ -11,7 +11,7 @@ from rpc.client import print_dict, JSONRPCException  # noqa
 
 def get_bdev_name_key(bdev):
     bdev_name_key = 'name'
-    if 'method' in bdev and bdev['method'] == 'construct_split_vbdev':
+    if 'method' in bdev and bdev['method'] == 'bdev_split_create':
         bdev_name_key = "base_bdev"
     return bdev_name_key
 
@@ -37,7 +37,7 @@ def get_bdev_destroy_method(bdev):
                           'bdev_pmem_create': "bdev_pmem_delete",
                           'bdev_aio_create': "bdev_aio_delete",
                           'bdev_error_create': "bdev_error_delete",
-                          'construct_split_vbdev': "destruct_split_vbdev",
+                          'bdev_split_create': "destruct_split_vbdev",
                           'construct_virtio_dev': "remove_virtio_bdev",
                           'bdev_crypto_create': "bdev_crypto_delete",
                           'bdev_delay_create': "bdev_delay_delete",
