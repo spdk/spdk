@@ -1,4 +1,8 @@
-def scan_ioat_copy_engine(client, pci_whitelist):
+from .helpers import deprecated_alias
+
+
+@deprecated_alias('scan_ioat_copy_engine')
+def ioat_scan_copy_engine(client, pci_whitelist):
     """Scan and enable IOAT copy engine.
 
     Args:
@@ -9,4 +13,4 @@ def scan_ioat_copy_engine(client, pci_whitelist):
     params = {}
     if pci_whitelist:
         params['pci_whitelist'] = pci_whitelist
-    return client.call('scan_ioat_copy_engine', params)
+    return client.call('ioat_scan_copy_engine', params)
