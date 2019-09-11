@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b46dc494_5e36b700",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T06:31:12Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nIs reactor-\u003eis_scheduler can be toggled dynamically, checking reactor-\u003eis_scheduler only once per constant interval may look natural?\n\nif ((now - last_sched) \u003e sched_period) {\n  last_sched \u003d now;\n  if (reactor-\u003eis_scheduler) {\n    (snip)\n  }\n}",
+      "revId": "9c70375c976d0a3a2b19cd4d882fe7eda00aacec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3b9d8636_b8ff0da0",
         "filename": "lib/event/reactor.c",
         "patchSetId": 4
