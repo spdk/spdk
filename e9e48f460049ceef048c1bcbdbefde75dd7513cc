@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "434163a4_54c47b67",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T02:48:42Z",
+      "side": 1,
+      "message": "Please see the next patch.\nIn this patch, when g_zcopy\u003dtrue and (g_verify\u003dtrue or g_reset\u003dtrue), zcopy is not started. So this case will be processed as same as before. The next patch will start zcopy even when g_zcopy\u003dtrue and (g_verify\u003dtrue or g_reset\u003dtrue).",
+      "parentUuid": "6d1e10bd_3b111490",
+      "revId": "e9e48f460049ceef048c1bcbdbefde75dd7513cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4ac7ec95_c2fa1709",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-09-11T01:27:21Z",
       "side": 1,
       "message": "I think inside this if you want an if (rc \u003d\u003d -ENOMEM) then queue else return instead of the assert",
+      "revId": "e9e48f460049ceef048c1bcbdbefde75dd7513cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f848df5_51cc2fc9",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-09-11T02:48:42Z",
+      "side": 1,
+      "message": "bdevperf_prep_task() which is the caller of this function expects only normal case now. So your comment is reasonable but I want to improve error handling separately later.",
+      "parentUuid": "4ac7ec95_c2fa1709",
       "revId": "e9e48f460049ceef048c1bcbdbefde75dd7513cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
