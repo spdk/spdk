@@ -598,12 +598,13 @@ if __name__ == "__main__":
     p.add_argument('name', help='bdev name')
     p.set_defaults(func=bdev_enable_histogram)
 
-    def get_bdev_histogram(args):
-        print_dict(rpc.bdev.get_bdev_histogram(args.client, name=args.name))
+    def bdev_get_histogram(args):
+        print_dict(rpc.bdev.bdev_get_histogram(args.client, name=args.name))
 
-    p = subparsers.add_parser('get_bdev_histogram', help='Get histogram for specified bdev')
+    p = subparsers.add_parser('bdev_get_histogram', aliases=['get_bdev_histogram'],
+                              help='Get histogram for specified bdev')
     p.add_argument('name', help='bdev name')
-    p.set_defaults(func=get_bdev_histogram)
+    p.set_defaults(func=bdev_get_histogram)
 
     def bdev_set_qd_sampling_period(args):
         rpc.bdev.bdev_set_qd_sampling_period(args.client,
