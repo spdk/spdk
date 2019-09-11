@@ -270,7 +270,7 @@ Example response:
     "iscsi_initiator_group_add_initiators",
     "add_initiator_group",
     "iscsi_get_initiator_groups",
-    "set_iscsi_options",
+    "iscsi_set_options",
     "set_bdev_options",
     "set_bdev_qos_limit",
     "get_bdevs",
@@ -2529,7 +2529,7 @@ Example response:
 
 # iSCSI Target {#jsonrpc_components_iscsi_tgt}
 
-## set_iscsi_options method {#rpc_set_iscsi_options}
+## iscsi_set_options method {#rpc_iscsi_set_options}
 
 Set global parameters for iSCSI targets.
 
@@ -2581,7 +2581,7 @@ Example request:
     "default_time2wait": 2
   },
   "jsonrpc": "2.0",
-  "method": "set_iscsi_options",
+  "method": "iscsi_set_options",
   "id": 1
 }
 ~~~
