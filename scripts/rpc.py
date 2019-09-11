@@ -245,7 +245,7 @@ if __name__ == "__main__":
                                                name=args.name,
                                                uuid=args.uuid))
     p = subparsers.add_parser('bdev_malloc_create', aliases=['construct_malloc_bdev'],
-                              help='Add a bdev with malloc backend')
+                              help='Create a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
     p.add_argument(
@@ -411,7 +411,7 @@ if __name__ == "__main__":
     p.add_argument('name', help="Name of the controller")
     p.set_defaults(func=delete_nvme_controller)
 
-    def construct_rbd_bdev(args):
+    def bdev_rbd_create(args):
         config = None
         if args.config:
             config = {}
@@ -420,15 +420,15 @@ if __name__ == "__main__":
                 if len(parts) != 2:
                     raise Exception('--config %s not in key=value form' % entry)
                 config[parts[0]] = parts[1]
-        print_json(rpc.bdev.construct_rbd_bdev(args.client,
-                                               name=args.name,
-                                               user=args.user,
-                                               config=config,
-                                               pool_name=args.pool_name,
-                                               rbd_name=args.rbd_name,
-                                               block_size=args.block_size))
+        print_json(rpc.bdev.bdev_rbd_create(args.client,
+                                            name=args.name,
+                                            user=args.user,
+                                            config=config,
+                                            pool_name=args.pool_name,
+                                            rbd_name=args.rbd_name,
+                                            block_size=args.block_size))
 
-    p = subparsers.add_parser('construct_rbd_bdev',
+    p = subparsers.add_parser('bdev_rbd_create', aliases=['construct_rbd_bdev'],
                               help='Add a bdev with ceph rbd backend')
     p.add_argument('-b', '--name', help="Name of the bdev", required=False)
     p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)", required=False)
@@ -437,7 +437,7 @@ if __name__ == "__main__":
     p.add_argument('pool_name', help='rbd pool name')
     p.add_argument('rbd_name', help='rbd image name')
     p.add_argument('block_size', help='rbd block size', type=int)
-    p.set_defaults(func=construct_rbd_bdev)
+    p.set_defaults(func=bdev_rbd_create)
 
     def delete_rbd_bdev(args):
         rpc.bdev.delete_rbd_bdev(args.client,
