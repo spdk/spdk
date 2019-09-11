@@ -285,7 +285,7 @@ Example response:
     "remove_virtio_bdev",
     "bdev_aio_delete",
     "bdev_aio_create",
-    "destruct_split_vbdev",
+    "bdev_split_delete",
     "bdev_split_create",
     "bdev_error_inject_error",
     "bdev_error_delete",
