@@ -118,7 +118,7 @@ class UIRoot(UINode):
 
     @verbose
     def split_bdev(self, **kwargs):
-        response = rpc.bdev.construct_split_vbdev(self.client, **kwargs)
+        response = rpc.bdev.bdev_split_create(self.client, **kwargs)
         return self.print_array(response)
 
     @verbose

@@ -76,7 +76,7 @@ if [ -z "$NO_NVME" ]; then
 	if [ $split_size -gt 10000 ]; then
 		split_size=10000
 	fi
-	$rpc_py construct_split_vbdev Nvme0n1 2 -s $split_size
+	$rpc_py bdev_split_create Nvme0n1 2 -s $split_size
 	$rpc_py iscsi_create_target_node Target1 Target1_alias Nvme0n1p0:0 1:2 64 -d
 fi
 
