@@ -22,7 +22,7 @@ function waitforio() {
 	local ret=1
 	local i
 	for (( i = 10; i != 0; i-- )); do
-		read_io_count=$($rpc_py -s $1 get_bdevs_iostat -b $2 | jq -r '.bdevs[0].num_read_ops')
+		read_io_count=$($rpc_py -s $1 bdev_get_iostat -b $2 | jq -r '.bdevs[0].num_read_ops')
 		# A few I/O will happen during initial examine.  So wait until at least 100 I/O
 		#  have completed to know that bdevperf is really generating the I/O.
 		if [ $read_io_count -ge 100 ]; then

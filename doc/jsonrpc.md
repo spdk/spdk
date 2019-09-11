@@ -274,7 +274,7 @@ Example response:
     "set_bdev_options",
     "set_bdev_qos_limit",
     "get_bdevs",
-    "get_bdevs_iostat",
+    "bdev_get_iostat",
     "get_subsystem_config",
     "get_subsystems",
     "context_switch_monitor",
@@ -626,7 +626,7 @@ Example response:
 }
 ~~~
 
-## get_bdevs_iostat {#rpc_get_bdevs_iostat}
+## bdev_get_iostat {#rpc_bdev_get_iostat}
 
 Get I/O statistics of block devices (bdevs).
 
@@ -651,7 +651,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "get_bdevs_iostat",
+  "method": "bdev_get_iostat",
   "params": {
     "name": "Nvme0n1"
   }

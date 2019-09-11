@@ -143,7 +143,7 @@ class UIBdev(UINode):
             UIBdevObj(bdev, self)
 
     def ui_command_get_bdev_iostat(self, name=None):
-        ret = self.get_root().get_bdevs_iostat(name=name)
+        ret = self.get_root().bdev_get_iostat(name=name)
         self.shell.log.info(json.dumps(ret, indent=2))
 
     def ui_command_delete_all(self):
