@@ -41,17 +41,17 @@
 
 #include "spdk/bdev_module.h"
 
-struct rpc_get_bdevs_iostat_ctx {
+struct rpc_bdev_get_iostat_ctx {
 	int bdev_count;
 	struct spdk_jsonrpc_request *request;
 	struct spdk_json_write_ctx *w;
 };
 
 static void
-spdk_rpc_get_bdevs_iostat_cb(struct spdk_bdev *bdev,
-			     struct spdk_bdev_io_stat *stat, void *cb_arg, int rc)
+spdk_rpc_bdev_get_iostat_cb(struct spdk_bdev *bdev,
+			    struct spdk_bdev_io_stat *stat, void *cb_arg, int rc)
 {
-	struct rpc_get_bdevs_iostat_ctx *ctx = cb_arg;
+	struct rpc_bdev_get_iostat_ctx *ctx = cb_arg;
 	struct spdk_json_write_ctx *w = ctx->w;
 	const char *bdev_name;
 
@@ -108,38 +108,38 @@ done:
 	}
 }
 
-struct rpc_get_bdevs_iostat {
+struct rpc_bdev_get_iostat {
 	char *name;
 };
 
 static void
-free_rpc_get_bdevs_iostat(struct rpc_get_bdevs_iostat *r)
+free_rpc_bdev_get_iostat(struct rpc_bdev_get_iostat *r)
 {
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_get_bdevs_iostat_decoders[] = {
-	{"name", offsetof(struct rpc_get_bdevs_iostat, name), spdk_json_decode_string, true},
+static const struct spdk_json_object_decoder rpc_bdev_get_iostat_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_get_iostat, name), spdk_json_decode_string, true},
 };
 
 static void
-spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+spdk_rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
 {
-	struct rpc_get_bdevs_iostat req = {};
+	struct rpc_bdev_get_iostat req = {};
 	struct spdk_bdev *bdev = NULL;
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev_io_stat *stat;
-	struct rpc_get_bdevs_iostat_ctx *ctx;
+	struct rpc_bdev_get_iostat_ctx *ctx;
 
 	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_get_bdevs_iostat_decoders,
-					    SPDK_COUNTOF(rpc_get_bdevs_iostat_decoders),
+		if (spdk_json_decode_object(params, rpc_bdev_get_iostat_decoders,
+					    SPDK_COUNTOF(rpc_bdev_get_iostat_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "spdk_json_decode_object failed");
-			free_rpc_get_bdevs_iostat(&req);
+			free_rpc_bdev_get_iostat(&req);
 			return;
 		}
 
@@ -148,17 +148,17 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 			if (bdev == NULL) {
 				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
 				spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-				free_rpc_get_bdevs_iostat(&req);
+				free_rpc_bdev_get_iostat(&req);
 				return;
 			}
 		}
 	}
 
-	free_rpc_get_bdevs_iostat(&req);
+	free_rpc_bdev_get_iostat(&req);
 
-	ctx = calloc(1, sizeof(struct rpc_get_bdevs_iostat_ctx));
+	ctx = calloc(1, sizeof(struct rpc_bdev_get_iostat_ctx));
 	if (ctx == NULL) {
-		SPDK_ERRLOG("Failed to allocate rpc_get_bdevs_iostat_ctx struct\n");
+		SPDK_ERRLOG("Failed to allocate rpc_bdev_get_iostat_ctx struct\n");
 		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		return;
 	}
@@ -181,10 +181,10 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 	if (bdev != NULL) {
 		stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
 		if (stat == NULL) {
-			SPDK_ERRLOG("Failed to allocate rpc_get_bdevs_iostat_ctx struct\n");
+			SPDK_ERRLOG("Failed to allocate rpc_bdev_get_iostat_ctx struct\n");
 		} else {
 			ctx->bdev_count++;
-			spdk_bdev_get_device_stat(bdev, stat, spdk_rpc_get_bdevs_iostat_cb, ctx);
+			spdk_bdev_get_device_stat(bdev, stat, spdk_rpc_bdev_get_iostat_cb, ctx);
 		}
 	} else {
 		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
@@ -194,7 +194,7 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 				break;
 			}
 			ctx->bdev_count++;
-			spdk_bdev_get_device_stat(bdev, stat, spdk_rpc_get_bdevs_iostat_cb, ctx);
+			spdk_bdev_get_device_stat(bdev, stat, spdk_rpc_bdev_get_iostat_cb, ctx);
 		}
 	}
 
@@ -205,7 +205,8 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 		free(ctx);
 	}
 }
-SPDK_RPC_REGISTER("get_bdevs_iostat", spdk_rpc_get_bdevs_iostat, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_get_iostat", spdk_rpc_bdev_get_iostat, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_get_iostat, get_bdevs_iostat)
 
 static void
 spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
