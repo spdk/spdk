@@ -1,7 +1,8 @@
 from .helpers import deprecated_alias
 
 
-def set_iscsi_options(
+@deprecated_alias('set_iscsi_options')
+def iscsi_set_options(
         client,
         auth_file=None,
         node_base=None,
@@ -81,7 +82,7 @@ def set_iscsi_options(
     if allow_duplicated_isid:
         params['allow_duplicated_isid'] = allow_duplicated_isid
 
-    return client.call('set_iscsi_options', params)
+    return client.call('iscsi_set_options', params)
 
 
 def set_iscsi_discovery_auth(

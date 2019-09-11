@@ -33,7 +33,7 @@ echo "Process pid: $pid"
 trap 'iscsicleanup; killprocess $pid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $pid
-$rpc_py set_iscsi_options -o 30 -a 16
+$rpc_py iscsi_set_options -o 30 -a 16
 $rpc_py start_subsystem_init
 echo "iscsi_tgt is listening. Running tests..."
 

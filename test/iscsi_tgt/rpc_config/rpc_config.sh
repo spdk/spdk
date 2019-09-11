@@ -34,7 +34,7 @@ trap 'killprocess $pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $pid
 $rpc_py wait_subsystem_init &
 rpc_wait_pid=$!
-$rpc_py set_iscsi_options -o 30 -a 16
+$rpc_py iscsi_set_options -o 30 -a 16
 
 # RPC wait_subsystem_init should be blocked, so its process must be existed
 ps $rpc_wait_pid

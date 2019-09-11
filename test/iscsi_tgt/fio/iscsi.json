@@ -18,7 +18,7 @@
       "subsystem": "iscsi",
       "config": [
         {
-          "method": "set_iscsi_options",
+          "method": "iscsi_set_options",
           "params": {
             "nop_timeout": 30,
             "node_base": "iqn.2016-06.io.spdk",

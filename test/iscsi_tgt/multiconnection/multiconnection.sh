@@ -43,7 +43,7 @@ echo "iSCSI target launched. pid: $iscsipid"
 trap 'remove_backends; iscsicleanup; killprocess $iscsipid; iscsitestfini $1 $2; exit 1' SIGINT SIGTERM EXIT
 
 waitforlisten $iscsipid
-$rpc_py set_iscsi_options -o 30 -a 128
+$rpc_py iscsi_set_options -o 30 -a 128
 $rpc_py start_subsystem_init
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 timing_exit start_iscsi_tgt

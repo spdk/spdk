@@ -673,8 +673,8 @@ if __name__ == "__main__":
     p.set_defaults(func=bdev_nvme_apply_firmware)
 
     # iSCSI
-    def set_iscsi_options(args):
-        rpc.iscsi.set_iscsi_options(
+    def iscsi_set_options(args):
+        rpc.iscsi.iscsi_set_options(
             args.client,
             auth_file=args.auth_file,
             node_base=args.node_base,
@@ -694,7 +694,8 @@ if __name__ == "__main__":
             error_recovery_level=args.error_recovery_level,
             allow_duplicated_isid=args.allow_duplicated_isid)
 
-    p = subparsers.add_parser('set_iscsi_options', help="""Set options of iSCSI subsystem""")
+    p = subparsers.add_parser('iscsi_set_options', aliases=['set_iscsi_options'],
+                              help="""Set options of iSCSI subsystem""")
     p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file')
     p.add_argument('-b', '--node-base', help='Prefix of the name of iSCSI target node')
     p.add_argument('-o', '--nop-timeout', help='Timeout in seconds to nop-in request to the initiator', type=int)
@@ -715,7 +716,7 @@ if __name__ == "__main__":
     p.add_argument('-i', '--immediate-data', help='Negotiated parameter, ImmediateData.', action='store_true')
     p.add_argument('-l', '--error-recovery-level', help='Negotiated parameter, ErrorRecoveryLevel', type=int)
     p.add_argument('-p', '--allow-duplicated-isid', help='Allow duplicated initiator session ID.', action='store_true')
-    p.set_defaults(func=set_iscsi_options)
+    p.set_defaults(func=iscsi_set_options)
 
     def set_iscsi_discovery_auth(args):
         rpc.iscsi.set_iscsi_discovery_auth(

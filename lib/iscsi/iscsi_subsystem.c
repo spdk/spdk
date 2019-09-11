@@ -1527,7 +1527,7 @@ iscsi_opts_config_json(struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "set_iscsi_options");
+	spdk_json_write_named_string(w, "method", "iscsi_set_options");
 
 	spdk_json_write_name(w, "params");
 	spdk_iscsi_opts_info_json(w);

@@ -29,7 +29,7 @@ function run_nvme_remote() {
 	echo "iSCSI target launched. pid: $iscsipid"
 	trap 'killprocess $iscsipid; iscsitestfini $1 $2; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $iscsipid "$iscsi_rpc_addr"
-	$rpc_py -s "$iscsi_rpc_addr" set_iscsi_options -o 30 -a 16
+	$rpc_py -s "$iscsi_rpc_addr" iscsi_set_options -o 30 -a 16
 	$rpc_py -s "$iscsi_rpc_addr" start_subsystem_init
 	if [ "$1" = "remote" ]; then
 		$rpc_py -s $iscsi_rpc_addr bdev_nvme_attach_controller -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
