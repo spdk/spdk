@@ -259,9 +259,9 @@ class UIRoot(UINode):
 
     @verbose
     @is_method_available
-    def get_virtio_scsi_devs(self):
+    def bdev_virtio_scsi_get_devices(self):
         if self.is_init:
-            for bdev in rpc.vhost.get_virtio_scsi_devs(self.client):
+            for bdev in rpc.vhost.bdev_virtio_scsi_get_devices(self.client):
                 test = Bdev(bdev)
                 yield test
 
