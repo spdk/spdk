@@ -114,8 +114,8 @@ static const struct spdk_json_object_decoder rpc_destruct_split_decoders[] = {
 };
 
 static void
-spdk_rpc_destruct_split_vbdev(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+spdk_rpc_bdev_split_delete(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct rpc_destruct_split req = {};
 	struct spdk_json_write_ctx *w;
@@ -141,4 +141,5 @@ spdk_rpc_destruct_split_vbdev(struct spdk_jsonrpc_request *request,
 out:
 	free(req.base_bdev);
 }
-SPDK_RPC_REGISTER("destruct_split_vbdev", spdk_rpc_destruct_split_vbdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_split_delete", spdk_rpc_bdev_split_delete, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_split_delete, destruct_split_vbdev)
