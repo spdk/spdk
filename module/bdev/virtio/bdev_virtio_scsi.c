@@ -427,7 +427,7 @@ bdev_virtio_scsi_config_json(struct spdk_json_write_ctx *w)
 	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
 		spdk_json_write_object_begin(w);
 
-		spdk_json_write_named_string(w, "method", "construct_virtio_dev");
+		spdk_json_write_named_string(w, "method", "bdev_virtio_attach_controller");
 
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "name", svdev->vdev.name);

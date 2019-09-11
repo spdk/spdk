@@ -119,7 +119,7 @@ SPDK_RPC_REGISTER("bdev_virtio_scsi_get_devices",
 		  spdk_rpc_bdev_virtio_scsi_get_devices, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_virtio_scsi_get_devices, get_virtio_scsi_devs)
 
-struct rpc_construct_virtio_dev {
+struct rpc_bdev_virtio_attach_controller {
 	char *name;
 	char *trtype;
 	char *traddr;
@@ -129,17 +129,17 @@ struct rpc_construct_virtio_dev {
 	struct spdk_jsonrpc_request *request;
 };
 
-static const struct spdk_json_object_decoder rpc_construct_virtio_dev[] = {
-	{"name", offsetof(struct rpc_construct_virtio_dev, name), spdk_json_decode_string },
-	{"trtype", offsetof(struct rpc_construct_virtio_dev, trtype), spdk_json_decode_string },
-	{"traddr", offsetof(struct rpc_construct_virtio_dev, traddr), spdk_json_decode_string },
-	{"dev_type", offsetof(struct rpc_construct_virtio_dev, dev_type), spdk_json_decode_string },
-	{"vq_count", offsetof(struct rpc_construct_virtio_dev, vq_count), spdk_json_decode_uint32, true },
-	{"vq_size", offsetof(struct rpc_construct_virtio_dev, vq_size), spdk_json_decode_uint32, true },
+static const struct spdk_json_object_decoder rpc_bdev_virtio_attach_controller[] = {
+	{"name", offsetof(struct rpc_bdev_virtio_attach_controller, name), spdk_json_decode_string },
+	{"trtype", offsetof(struct rpc_bdev_virtio_attach_controller, trtype), spdk_json_decode_string },
+	{"traddr", offsetof(struct rpc_bdev_virtio_attach_controller, traddr), spdk_json_decode_string },
+	{"dev_type", offsetof(struct rpc_bdev_virtio_attach_controller, dev_type), spdk_json_decode_string },
+	{"vq_count", offsetof(struct rpc_bdev_virtio_attach_controller, vq_count), spdk_json_decode_uint32, true },
+	{"vq_size", offsetof(struct rpc_bdev_virtio_attach_controller, vq_size), spdk_json_decode_uint32, true },
 };
 
 static void
-free_rpc_construct_virtio_dev(struct rpc_construct_virtio_dev *req)
+free_rpc_bdev_virtio_attach_controller(struct rpc_bdev_virtio_attach_controller *req)
 {
 	free(req->name);
 	free(req->trtype);
@@ -151,14 +151,14 @@ free_rpc_construct_virtio_dev(struct rpc_construct_virtio_dev *req)
 static void
 spdk_rpc_create_virtio_dev_cb(void *ctx, int result, struct spdk_bdev **bdevs, size_t cnt)
 {
-	struct rpc_construct_virtio_dev *req = ctx;
+	struct rpc_bdev_virtio_attach_controller *req = ctx;
 	struct spdk_json_write_ctx *w;
 	size_t i;
 
 	if (result) {
 		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 spdk_strerror(-result));
-		free_rpc_construct_virtio_dev(req);
+		free_rpc_bdev_virtio_attach_controller(req);
 		return;
 	}
 
@@ -172,14 +172,14 @@ spdk_rpc_create_virtio_dev_cb(void *ctx, int result, struct spdk_bdev **bdevs, s
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(req->request, w);
 
-	free_rpc_construct_virtio_dev(ctx);
+	free_rpc_bdev_virtio_attach_controller(ctx);
 }
 
 static void
-spdk_rpc_construct_virtio_dev(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
+spdk_rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
+				       const struct spdk_json_val *params)
 {
-	struct rpc_construct_virtio_dev *req;
+	struct rpc_bdev_virtio_attach_controller *req;
 	struct spdk_bdev *bdev;
 	struct spdk_pci_addr pci_addr;
 	bool pci;
@@ -192,8 +192,8 @@ spdk_rpc_construct_virtio_dev(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_json_decode_object(params, rpc_construct_virtio_dev,
-				    SPDK_COUNTOF(rpc_construct_virtio_dev),
+	if (spdk_json_decode_object(params, rpc_bdev_virtio_attach_controller,
+				    SPDK_COUNTOF(rpc_bdev_virtio_attach_controller),
 				    req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
@@ -257,6 +257,8 @@ spdk_rpc_construct_virtio_dev(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_construct_virtio_dev(req);
+	free_rpc_bdev_virtio_attach_controller(req);
 }
-SPDK_RPC_REGISTER("construct_virtio_dev", spdk_rpc_construct_virtio_dev, SPDK_RPC_RUNTIME);
+SPDK_RPC_REGISTER("bdev_virtio_attach_controller",
+		  spdk_rpc_bdev_virtio_attach_controller, SPDK_RPC_RUNTIME);
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_virtio_attach_controller, construct_virtio_dev)

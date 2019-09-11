@@ -280,7 +280,7 @@ Example response:
     "context_switch_monitor",
     "kill_instance",
     "scan_ioat_copy_engine",
-    "construct_virtio_dev",
+    "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
     "bdev_aio_delete",
@@ -2394,7 +2394,7 @@ Example response:
 }
 ~~~
 
-## construct_virtio_dev {#rpc_construct_virtio_dev}
+## bdev_virtio_attach_controller {#rpc_bdev_virtio_attach_controller}
 
 Create new initiator @ref bdev_config_virtio_scsi or @ref bdev_config_virtio_blk and expose all found bdevs.
 
@@ -2433,7 +2433,7 @@ Example request:
     "vq_count": 4
   },
   "jsonrpc": "2.0",
-  "method": "construct_virtio_dev",
+  "method": "bdev_virtio_attach_controller",
   "id": 1
 }
 ~~~
