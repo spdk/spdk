@@ -54,7 +54,7 @@ for ((i = 0; i < 2; i++)); do
 	trap 'kill_all_iscsi_target; exit 1' SIGINT SIGTERM EXIT
 
 	waitforlisten $pid $rpc_addr
-	$rpc_py -s $rpc_addr set_iscsi_options -o 30 -a 64
+	$rpc_py -s $rpc_addr iscsi_set_options -o 30 -a 64
 	$rpc_py -s $rpc_addr start_subsystem_init
 	echo "iscsi_tgt is listening. Running tests..."
 

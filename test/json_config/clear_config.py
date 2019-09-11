@@ -89,9 +89,9 @@ def get_iscsi_destroy_method(iscsi):
     delete_method_map = {'iscsi_create_portal_group': "iscsi_delete_portal_group",
                          'add_initiator_group': "delete_initiator_group",
                          'iscsi_create_target_node': "delete_target_node",
-                         'set_iscsi_options': None
-                         }
-    return delete_method_map[iscsi['method']]
+                          'iscsi_set_options': None
+                          }
+    return destroy_method_map[iscsi['method']]
 
 
 def get_iscsi_name(iscsi):
