@@ -11,7 +11,7 @@ from rpc.client import print_dict, JSONRPCException  # noqa
 
 def get_bdev_name_key(bdev):
     bdev_name_key = 'name'
-    if 'method' in bdev and bdev['method'] == 'construct_split_vbdev':
+    if 'method' in bdev and bdev['method'] == 'bdev_split_create':
         bdev_name_key = "base_bdev"
     return bdev_name_key
 
