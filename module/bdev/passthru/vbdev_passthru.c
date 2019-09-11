@@ -362,7 +362,7 @@ vbdev_passthru_get_io_channel(void *ctx)
 	return pt_ch;
 }
 
-/* This is the output for get_bdevs() for this vbdev */
+/* This is the output for bdev_get_bdevs() for this vbdev */
 static int
 vbdev_passthru_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {

@@ -703,7 +703,8 @@ def delete_ftl_bdev(client, name):
     return client.call('delete_ftl_bdev', params)
 
 
-def get_bdevs(client, name=None):
+@deprecated_alias('get_bdevs')
+def bdev_get_bdevs(client, name=None):
     """Get information about block devices.
 
     Args:
@@ -715,7 +716,7 @@ def get_bdevs(client, name=None):
     params = {}
     if name:
         params['name'] = name
-    return client.call('get_bdevs', params)
+    return client.call('bdev_get_bdevs', params)
 
 
 @deprecated_alias('get_bdevs_iostat')

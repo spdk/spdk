@@ -480,7 +480,7 @@ class SPDKTarget(Target):
         self.log_print("Adding null block bdev to config via RPC")
         rpc.bdev.bdev_null_create(self.client, 102400, 4096, "Nvme0n1")
         self.log_print("SPDK Bdevs configuration:")
-        rpc.client.print_dict(rpc.bdev.get_bdevs(self.client))
+        rpc.client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
 
     def spdk_tgt_add_nvme_conf(self, req_num_disks=None):
         self.log_print("Adding NVMe bdevs to config via RPC")
@@ -499,7 +499,7 @@ class SPDKTarget(Target):
             rpc.bdev.construct_nvme_bdev(self.client, name="Nvme%s" % i, trtype="PCIe", traddr=bdf)
 
         self.log_print("SPDK Bdevs configuration:")
-        rpc.client.print_dict(rpc.bdev.get_bdevs(self.client))
+        rpc.client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
 
     def spdk_tgt_add_subsystem_conf(self, ips=None, req_num_disks=None):
         self.log_print("Adding subsystems to config")

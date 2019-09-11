@@ -42,7 +42,7 @@ for null_bdev in $null_bdevs; do
 	$rpc_py bdev_null_delete $null_bdev
 done
 
-check_bdevs=$($rpc_py get_bdevs | jq -r '.[].name')
+check_bdevs=$($rpc_py bdev_get_bdevs | jq -r '.[].name')
 if [ -n "$check_bdevs" ]; then
 	echo $check_bdevs
 	exit 1

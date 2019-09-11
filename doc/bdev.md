@@ -37,10 +37,10 @@ command parameter.
 
 # General Purpose RPCs {#bdev_ug_general_rpcs}
 
-## get_bdevs {#bdev_ug_get_bdevs}
+## bdev_get_bdevs {#bdev_ug_get_bdevs}
 
 List of currently available block devices including detailed information about
-them can be get by using `get_bdevs` RPC command. User can add optional
+them can be get by using `bdev_get_bdevs` RPC command. User can add optional
 parameter `name` to get details about specified by that name bdev.
 
 Example response

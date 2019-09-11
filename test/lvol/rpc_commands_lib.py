@@ -29,9 +29,9 @@ class Commands_Rpc(object):
     def __init__(self, rpc_py):
         self.rpc = Spdk_Rpc(rpc_py)
 
-    def check_get_bdevs_methods(self, uuid_bdev, bdev_size_mb, bdev_alias=""):
-        print("INFO: Check RPC COMMAND get_bdevs")
-        output = self.rpc.get_bdevs()[0]
+    def check_bdev_get_bdevs_methods(self, uuid_bdev, bdev_size_mb, bdev_alias=""):
+        print("INFO: Check RPC COMMAND bdev_get_bdevs")
+        output = self.rpc.bdev_get_bdevs()[0]
         json_value = json.loads(output)
         for i in range(len(json_value)):
             uuid_json = json_value[i]['name']
@@ -51,13 +51,13 @@ class Commands_Rpc(object):
                 num_blocks = json_value[i]['num_blocks']
                 block_size = json_value[i]['block_size']
                 if num_blocks * block_size == bdev_size_mb * 1024 * 1024:
-                    print("Info: Response get_bdevs command is "
+                    print("Info: Response bdev_get_bdevs command is "
                           "correct. Params: uuid_bdevs: {uuid}, bdev_size "
                           "{size}".format(uuid=uuid_bdev,
                                           size=bdev_size_mb))
                     return 0
         print("INFO: UUID:{uuid} or bdev_size:{bdev_size_mb} not found in "
-              "RPC COMMAND get_bdevs: "
+              "RPC COMMAND bdev_get_bdevs: "
               "{json_value}".format(uuid=uuid_bdev, bdev_size_mb=bdev_size_mb,
                                     json_value=json_value))
         return 1
@@ -188,17 +188,17 @@ class Commands_Rpc(object):
         return output
 
     def get_lvol_bdevs(self):
-        print("INFO: RPC COMMAND get_bdevs; lvol bdevs only")
+        print("INFO: RPC COMMAND bdev_get_bdevs; lvol bdevs only")
         output = []
-        rpc_output = json.loads(self.rpc.get_bdevs()[0])
+        rpc_output = json.loads(self.rpc.bdev_get_bdevs()[0])
         for bdev in rpc_output:
             if bdev["product_name"] == "Logical Volume":
                 output.append(bdev)
         return output
 
     def get_lvol_bdev_with_name(self, name):
-        print("INFO: RPC COMMAND get_bdevs; lvol bdevs only")
-        rpc_output = json.loads(self.rpc.get_bdevs("-b", name)[0])
+        print("INFO: RPC COMMAND bdev_get_bdevs; lvol bdevs only")
+        rpc_output = json.loads(self.rpc.bdev_get_bdevs("-b", name)[0])
         if len(rpc_output) > 0:
             return rpc_output[0]
 

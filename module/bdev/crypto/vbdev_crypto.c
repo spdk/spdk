@@ -1121,7 +1121,7 @@ vbdev_crypto_get_io_channel(void *ctx)
 	return spdk_get_io_channel(crypto_bdev);
 }
 
-/* This is the output for get_bdevs() for this vbdev */
+/* This is the output for bdev_get_bdevs() for this vbdev */
 static int
 vbdev_crypto_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {

@@ -70,7 +70,7 @@ $rpc_py construct_split_vbdev HotInNvme0n1 2
 $rpc_py construct_split_vbdev HotInNvme1n1 2
 $rpc_py construct_split_vbdev HotInNvme2n1 2
 $rpc_py construct_split_vbdev HotInNvme3n1 2
-$rpc_py get_bdevs
+$rpc_py bdev_get_bdevs
 
 if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
     pre_hot_attach_detach_test_case
