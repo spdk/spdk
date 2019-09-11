@@ -149,6 +149,7 @@ struct spdk_nvmf_subsystem_pg_ns_info {
 	struct spdk_uuid		holder_id;
 	/* Host ID for the registrants with the namespace */
 	struct spdk_uuid		reg_hostid[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+	uint64_t			num_blocks;
 };
 
 typedef void(*spdk_nvmf_poll_group_mod_done)(void *cb_arg, int status);
