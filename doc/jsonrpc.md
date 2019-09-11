@@ -725,7 +725,7 @@ Example response:
 }
 ~~~
 
-## get_bdev_histogram {#rpc_get_bdev_histogram}
+## bdev_get_histogram {#rpc_bdev_get_histogram}
 
 Get latency histogram for specified bdev.
 
@@ -751,7 +751,7 @@ Example request:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "get_bdev_histogram",
+  "method": "bdev_get_histogram",
   "params": {
     "name": "Nvme0n1"
   }

@@ -749,14 +749,15 @@ def bdev_enable_histogram(client, name, enable):
     return client.call('bdev_enable_histogram', params)
 
 
-def get_bdev_histogram(client, name):
+@deprecated_alias('get_bdev_histogram')
+def bdev_get_histogram(client, name):
     """Get histogram for specified bdev.
 
     Args:
         bdev_name: name of bdev
     """
     params = {'name': name}
-    return client.call('get_bdev_histogram', params)
+    return client.call('bdev_get_histogram', params)
 
 
 @deprecated_alias('bdev_inject_error')
