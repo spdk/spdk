@@ -293,35 +293,35 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-struct rpc_get_bdevs {
+struct rpc_bdev_get_bdevs {
 	char *name;
 };
 
 static void
-free_rpc_get_bdevs(struct rpc_get_bdevs *r)
+free_rpc_bdev_get_bdevs(struct rpc_bdev_get_bdevs *r)
 {
 	free(r->name);
 }
 
-static const struct spdk_json_object_decoder rpc_get_bdevs_decoders[] = {
-	{"name", offsetof(struct rpc_get_bdevs, name), spdk_json_decode_string, true},
+static const struct spdk_json_object_decoder rpc_bdev_get_bdevs_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_get_bdevs, name), spdk_json_decode_string, true},
 };
 
 static void
-spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
-		   const struct spdk_json_val *params)
+spdk_rpc_bdev_get_bdevs(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
 {
-	struct rpc_get_bdevs req = {};
+	struct rpc_bdev_get_bdevs req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev = NULL;
 
-	if (params && spdk_json_decode_object(params, rpc_get_bdevs_decoders,
-					      SPDK_COUNTOF(rpc_get_bdevs_decoders),
+	if (params && spdk_json_decode_object(params, rpc_bdev_get_bdevs_decoders,
+					      SPDK_COUNTOF(rpc_bdev_get_bdevs_decoders),
 					      &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		free_rpc_get_bdevs(&req);
+		free_rpc_bdev_get_bdevs(&req);
 		return;
 	}
 
@@ -330,12 +330,12 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 		if (bdev == NULL) {
 			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
 			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-			free_rpc_get_bdevs(&req);
+			free_rpc_bdev_get_bdevs(&req);
 			return;
 		}
 	}
 
-	free_rpc_get_bdevs(&req);
+	free_rpc_bdev_get_bdevs(&req);
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
 
@@ -351,7 +351,8 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("bdev_get_bdevs", spdk_rpc_bdev_get_bdevs, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_get_bdevs, get_bdevs)
 
 struct rpc_set_bdev_qd_sampling_period {
 	char *name;

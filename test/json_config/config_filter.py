@@ -87,7 +87,7 @@ sort
         check_empty()
     elif args.method == "sort":
         """ Wrap input into JSON object so any input is possible here
-        like output from get_bdevs RPC method"""
+        like output from bdev_get_bdevs RPC method"""
         o = json.loads('{ "the_object": ' + sys.stdin.read() + ' }')
         print(json.dumps(sort_json_object(o)['the_object'], indent=2))
     else:

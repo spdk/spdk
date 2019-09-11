@@ -32,10 +32,10 @@ rpc_proxy_pid=$!
 timing_exit run_rpc_proxy
 
 timing_enter configure_spdk
-$rpc_py get_bdevs
+$rpc_py bdev_get_bdevs
 $rpc_py bdev_lvol_delete_lvstore -l lvs0 || true
 $rpc_py bdev_lvol_create_lvstore Nvme0n1 lvs0
-$rpc_py get_bdevs
+$rpc_py bdev_get_bdevs
 timing_exit configure_spdk
 
 timing_enter restart_cinder

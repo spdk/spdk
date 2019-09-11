@@ -120,7 +120,7 @@ bdev_lvol_create [-h] [-u UUID] [-l LVS_NAME] [-t] [-c CLEAR_METHOD] lvol_name s
     optional arguments:
     -h, --help  show help
     -c, --clear-method specify data clusters clear method "none", "unmap" (default), "write_zeroes"
-get_bdevs [-h] [-b NAME]
+bdev_get_bdevs [-h] [-b NAME]
     User can view created bdevs using this call including those created on top of lvols.
     optional arguments:
     -h, --help  show help

@@ -139,7 +139,7 @@ class UIBdev(UINode):
 
     def refresh(self):
         self._children = set([])
-        for bdev in self.get_root().get_bdevs(self.name):
+        for bdev in self.get_root().bdev_get_bdevs(self.name):
             UIBdevObj(bdev, self)
 
     def ui_command_get_bdev_iostat(self, name=None):
@@ -613,7 +613,7 @@ class UIVirtioScsiBdevObj(UIBdevObj):
 
     def refresh(self):
         self._children = set([])
-        for bdev in self.get_root().get_bdevs("virtio_scsi_disk"):
+        for bdev in self.get_root().bdev_get_bdevs("virtio_scsi_disk"):
             if self.bdev.name in bdev.name:
                 UIBdevObj(bdev, self)
 
