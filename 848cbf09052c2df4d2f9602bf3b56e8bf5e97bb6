@@ -34,6 +34,24 @@
       "revId": "848cbf09052c2df4d2f9602bf3b56e8bf5e97bb6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d993c43_e61b914f",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-09-11T16:02:22Z",
+      "side": 1,
+      "message": "It does, thanks!! It just seemed ironic in this case that adding zcopy support required an extra memcpy :)",
+      "parentUuid": "3c56b698_4a44dd0f",
+      "revId": "848cbf09052c2df4d2f9602bf3b56e8bf5e97bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
