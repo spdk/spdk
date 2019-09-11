@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b9d8636_b8ff0da0",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-09-11T03:01:24Z",
+      "side": 1,
+      "message": "Is this only valid for master reactor?",
+      "revId": "9c70375c976d0a3a2b19cd4d882fe7eda00aacec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
