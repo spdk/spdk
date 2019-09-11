@@ -1115,7 +1115,7 @@ spdk_rpc_subsystem_init_poller_ctx(void *ctx)
 }
 
 static void
-spdk_rpc_wait_subsystem_init(struct spdk_jsonrpc_request *request,
+spdk_rpc_framework_wait_init(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
@@ -1136,5 +1136,6 @@ spdk_rpc_wait_subsystem_init(struct spdk_jsonrpc_request *request,
 		ctx->init_poller = spdk_poller_register(spdk_rpc_subsystem_init_poller_ctx, ctx, 0);
 	}
 }
-SPDK_RPC_REGISTER("wait_subsystem_init", spdk_rpc_wait_subsystem_init,
+SPDK_RPC_REGISTER("framework_wait_init", spdk_rpc_framework_wait_init,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_wait_init, wait_subsystem_init)
