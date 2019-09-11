@@ -27,9 +27,10 @@ def framework_start_init(client):
     return client.call('framework_start_init')
 
 
-def wait_subsystem_init(client):
+@deprecated_alias('wait_subsystem_init')
+def framework_wait_init(client):
     """Block until subsystems have been initialized"""
-    return client.call('wait_subsystem_init')
+    return client.call('framework_wait_init')
 
 
 @deprecated_alias("get_rpc_methods")
