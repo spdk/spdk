@@ -23,7 +23,7 @@ vhost_dict["construct_vhost_blk_controller"] = []
 vhost_dict["construct_vhost_nvme_controller"] = []
 
 iscsi_dict = OrderedDict()
-iscsi_dict["set_iscsi_options"] = []
+iscsi_dict["iscsi_set_options"] = []
 iscsi_dict["iscsi_create_portal_group"] = []
 iscsi_dict["add_initiator_group"] = []
 iscsi_dict["iscsi_create_target_node"] = []
@@ -515,7 +515,7 @@ def get_iscsi_options_json(config, section):
     ]
     for option in config.options(section):
         set_param(params, option, config.get(section, option))
-    return [{"method": "set_iscsi_options", "params": to_json_params(params)}]
+    return [{"method": "iscsi_set_options", "params": to_json_params(params)}]
 
 
 def get_iscsi_portal_group_json(config, name):

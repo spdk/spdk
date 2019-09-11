@@ -424,7 +424,7 @@
             "auth_file": "/usr/local/etc/spdk/auth.conf",
             "default_time2wait": 2
           },
-          "method": "set_iscsi_options"
+          "method": "iscsi_set_options"
         },
         {
           "params": {
