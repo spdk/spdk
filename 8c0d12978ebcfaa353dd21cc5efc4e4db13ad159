@@ -177,6 +177,24 @@
     },
     {
       "key": {
+        "uuid": "6f7398ff_8cb41951",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-09-11T17:10:58Z",
+      "side": 1,
+      "message": "They\u0027re not thread safe. But to make sure we\u0027re on the same page, we\u0027re talking about putting a single tailq on the controller right? Not a tailq on each queue pair?",
+      "parentUuid": "a8e24179_b2b2e437",
+      "revId": "8c0d12978ebcfaa353dd21cc5efc4e4db13ad159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d4761226_92bf6fbf",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 5
